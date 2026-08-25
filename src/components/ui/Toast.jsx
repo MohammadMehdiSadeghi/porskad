@@ -5,9 +5,10 @@ const ToastContext = createContext(null);
 let toastId = 0;
 
 const TOAST_STYLES = {
-  success: { icon: "✅", border: "border-teal-text", title: "text-teal-text" },
-  error: { icon: "⚠️", border: "border-magenta-text", title: "text-magenta-text" },
-  info: { icon: "💬", border: "border-navy", title: "text-navy" },
+  success: { icon: "✅", bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700" },
+  error: { icon: "❌", bg: "bg-red-50", border: "border-red-200", text: "text-red-700" },
+  info: { icon: "ℹ️", bg: "bg-indigo-50", border: "border-indigo-200", text: "text-indigo-700" },
+  warning: { icon: "⚠️", bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700" },
 };
 
 export function ToastProvider({ children }) {
@@ -21,32 +22,31 @@ export function ToastProvider({ children }) {
   }, []);
 
   const push = useCallback(
-    (message, type = "success", duration = 3500) => {
+    (message, type = "info", duration = 3500) => {
       const id = ++toastId;
-      setToasts((list) => [...list.slice(-3), { id, message, type }]);
+      setToasts((list) => [...list.slice(-4), { id, message, type }]);
       timers.current[id] = setTimeout(() => dismiss(id), duration);
     },
-    [dismiss],
+    [dismiss]
   );
 
   return (
     <ToastContext.Provider value={{ push }}>
       {children}
-      {/* کانتینر توست — گوشه‌ی پایین چپ (در RTL انتهای بینایی) */}
-      <div className="fixed bottom-4 left-4 z-[60] flex flex-col gap-2 max-w-[22rem]">
+      <div className="fixed bottom-4 left-4 z-[60] flex flex-col gap-2 max-w-sm">
         {toasts.map((t) => {
           const s = TOAST_STYLES[t.type] ?? TOAST_STYLES.info;
           return (
             <div
               key={t.id}
-              className={`relative bg-white border-2 ${s.border} rounded-pill-md shadow-soft px-4 py-3 flex items-center gap-2.5 animate-[toast-in_0.25s_ease-out]`}
+              className={`relative bg-white border ${s.border} rounded-lg shadow-md px-4 py-3 flex items-center gap-2.5`}
               role="status"
             >
-              <span className="text-lg">{s.icon}</span>
-              <span className={`text-sm font-bold ${s.title}`}>{t.message}</span>
+              <span className="text-base">{s.icon}</span>
+              <span className={`text-sm font-medium flex-1 ${s.text}`}>{t.message}</span>
               <button
                 onClick={() => dismiss(t.id)}
-                className="mr-auto text-ink/50 hover:text-ink text-xs font-black"
+                className="text-gray-400 hover:text-gray-600 text-sm font-bold"
                 aria-label="بستن"
               >
                 ✕
@@ -55,7 +55,6 @@ export function ToastProvider({ children }) {
           );
         })}
       </div>
-      <style>{`@keyframes toast-in { from { opacity: 0; transform: translateY(0.75rem); } to { opacity: 1; transform: none; } }`}</style>
     </ToastContext.Provider>
   );
 }

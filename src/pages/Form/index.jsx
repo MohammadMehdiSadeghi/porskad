@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import StickerCard from "../../components/ui/StickerCard";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import ProgressBar from "../../components/ui/ProgressBar";
@@ -12,21 +11,19 @@ import { normalizeAnswerValue } from "../../lib/validators";
 import { faNum, faDuration, parseUserAgent } from "../../lib/utils";
 import QuestionStep from "./QuestionStep";
 
-const draftKey = (slug) => `porsyar_draft_${slug}`;
+const draftKey = (slug) => `porskad_draft_${slug}`;
 
 // ─── صفحه‌ی «فرم در دسترس نیست» ───
 function NotAvailable({ message }) {
   return (
-    <div className="min-h-screen dot-pattern bg-bg-lavender flex items-center justify-center p-4">
-      <div className="w-full max-w-md -rotate-[1deg]">
-        <StickerCard theme="magenta">
-          <div className="p-8 flex flex-col items-center text-center gap-4">
-            <span className="text-5xl rotate-[3deg]">🔒</span>
-            <h1 className="text-2xl font-black text-navy">این فرم در دسترس نیست</h1>
-            <p className="text-sm font-semibold text-ink-subtle leading-8">{message}</p>
-            <Button as="a" href="/" variant="navy" size="sm">برگشت به خانه</Button>
-          </div>
-        </StickerCard>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-2xl border border-gray-100 p-8 flex flex-col items-center text-center gap-4">
+          <span className="text-5xl">🔒</span>
+          <h1 className="text-2xl font-black text-gray-900">این فرم در دسترس نیست</h1>
+          <p className="text-sm text-gray-500 leading-8">{message}</p>
+          <Button as="a" href="/" variant="indigo" size="sm">برگشت به خانه</Button>
+        </div>
       </div>
     </div>
   );
@@ -39,18 +36,16 @@ export default function FormFill() {
   const [loading, setLoading] = useState(true);
   const [unavailable, setUnavailable] = useState(null);
 
-  // وضعیت ویزارد: -1 = خوش‌آمد، 0..n-1 = سوال‌ها، n = تمام
   const [step, setStep] = useState(-1);
-  const [dir, setDir] = useState(1); // جهت انیمیشن
+  const [dir, setDir] = useState(1);
   const [answers, setAnswers] = useState({});
-  const [times, setTimes] = useState({}); // {questionId: ثانیه}
+  const [times, setTimes] = useState({});
   const [startedAt, setStartedAt] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [honeypot, setHoneypot] = useState("");
   const stepEnteredAt = useRef(Date.now());
 
-  // ─── بارگذاری فرم ───
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -64,7 +59,7 @@ export default function FormFill() {
       if (cancelled) return;
       if (formError || !formData) {
         setUnavailable(
-          "این فرم حذف شده، منتشرنشده یا لینک اشتباه است. اگر فکر می‌کنی لینک درست است با سازنده‌ی فرم هماهنگ کن.",
+          "این فرم حذف شده، منتشرنشده یا لینک اشتباه است."
         );
         setLoading(false);
         return;
@@ -88,21 +83,17 @@ export default function FormFill() {
       setLoading(false);
     }
     load();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [slug]);
 
   const total = questions.length;
 
-  // ─── بازیابی پیش‌نویس ───
   useEffect(() => {
     if (!form || !total) return;
     try {
       const raw = localStorage.getItem(draftKey(slug));
       if (!raw) return;
       const draft = JSON.parse(raw);
-      // پیش‌نویس‌های قدیمی‌تر از ۷ روز نادیده گرفته می‌شوند
       if (draft.savedAt && Date.now() - draft.savedAt < 7 * 86400_000) {
         if (draft.answers) setAnswers(draft.answers);
         if (draft.times) setTimes(draft.times);
@@ -112,28 +103,23 @@ export default function FormFill() {
           setDir(1);
         }
       }
-    } catch {
-      /* پیش‌نویس خراب — نادیده بگیر */
-    }
+    } catch { /* ignore */ }
   }, [form, total, slug]);
 
-  // ─── ذخیره‌ی پیش‌نویس ───
   useEffect(() => {
     if (!form || !startedAt || step < 0 || step >= total) return;
     localStorage.setItem(
       draftKey(slug),
-      JSON.stringify({ step, answers, times, startedAt, savedAt: Date.now() }),
+      JSON.stringify({ step, answers, times, startedAt, savedAt: Date.now() })
     );
   }, [form, slug, step, answers, times, startedAt, total]);
 
-  // زمان‌گیری هر قدم
   useEffect(() => {
     stepEnteredAt.current = Date.now();
   }, [step]);
 
   const currentQuestion = questions[step];
 
-  // ثبت زمان صرف‌شده‌ی سوال فعلی هنگام ترک قدم
   const accrueTime = useCallback(() => {
     if (!currentQuestion) return;
     const spent = (Date.now() - stepEnteredAt.current) / 1000;
@@ -145,7 +131,7 @@ export default function FormFill() {
       if (!currentQuestion) return;
       setAnswers((a) => ({ ...a, [currentQuestion.id]: val }));
     },
-    [currentQuestion],
+    [currentQuestion]
   );
 
   const goNext = useCallback(() => {
@@ -167,10 +153,8 @@ export default function FormFill() {
     setStep((s) => s - 1);
   }, [step, accrueTime]);
 
-  // ─── ثبت نهایی ───
   const submit = useCallback(async () => {
     if (submitting) return;
-    // اگر ربات honeypot را پر کرده باشد، ثبتِ خاموش رد می‌شود
     if (honeypot.trim() !== "") return;
 
     setSubmitting(true);
@@ -218,10 +202,10 @@ export default function FormFill() {
 
       localStorage.removeItem(draftKey(slug));
       setDir(1);
-      setStep(total); // صفحه‌ی خروج
+      setStep(total);
     } catch (err) {
       console.error(err);
-      setSubmitError("ثبت جواب ناموفق بود؛ اتصال اینترنت را چک کن و دوباره بزن.");
+      setSubmitError("ثبت جواب ناموفق بود؛ اتصال اینترنت را چک کن.");
     } finally {
       setSubmitting(false);
     }
@@ -232,27 +216,24 @@ export default function FormFill() {
 
   if (loading) {
     return (
-      <div className="min-h-screen dot-pattern bg-bg-mint">
-        <Spinner label="فرم داره لود می‌شه..." />
+      <div className="min-h-screen bg-gray-50">
+        <Spinner label="فرم در حال بارگذاری..." />
       </div>
     );
   }
 
   if (unavailable) return <NotAvailable message={unavailable} />;
-
   if (!form) return null;
 
   return (
-    <div className="min-h-screen dot-pattern bg-bg-mint flex flex-col">
-      {/* هدر باریک */}
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <div className="w-full max-w-[75rem] mx-auto flex items-center justify-between px-4 py-3">
-        <Logo to="/" size="sm" />
-        <span className="text-xs font-bold text-ink-subtle truncate max-w-[50vw]">
+        <Logo />
+        <span className="text-xs font-medium text-gray-400 truncate max-w-[50vw]">
           {form.title}
         </span>
       </div>
 
-      {/* نوار پیشرفت */}
       {step >= 0 && step < total && (
         <div className="w-full max-w-xl mx-auto px-4 pb-2">
           <ProgressBar value={progressValue} max={total} showLabel />
@@ -260,9 +241,8 @@ export default function FormFill() {
       )}
 
       <main className="flex-1 flex items-start sm:items-center justify-center px-4 py-6">
-        <div className={`w-full max-w-xl ${step === -1 ? "-rotate-[0.6deg]" : "rotate-[0.4deg]"}`}>
-          <StickerCard theme="white" radius="rounded-tl-[2rem] rounded-br-[2rem] rounded-tr-none rounded-bl-none">
-            {/* تله‌ی ربات‌ها — از دید کاربر مخفی است */}
+        <div className={`w-full max-w-xl ${step === -1 ? "" : ""}`}>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
             <input
               type="text"
               name="website"
@@ -276,7 +256,6 @@ export default function FormFill() {
 
             <div className="p-6 sm:p-9 min-h-[22rem] flex flex-col">
               <AnimatePresence mode="wait" custom={dir}>
-                {/* ─── صفحه‌ی خوش‌آمد ─── */}
                 {step === -1 && (
                   <motion.div
                     key="welcome"
@@ -288,22 +267,21 @@ export default function FormFill() {
                     className="flex-1 flex flex-col items-center text-center justify-center gap-4"
                   >
                     {total > 0 && (
-                      <Badge color="navy" rotate="rotate-[2deg]">
+                      <Badge color="indigo">
                         {faNum(total)} سوال · حدود {faNum(approxMinutes)} دقیقه
                       </Badge>
                     )}
-                    <span className="text-5xl rotate-[4deg]">👋</span>
-                    <h1 className="text-3xl font-black text-navy leading-snug">
+                    <span className="text-5xl">👋</span>
+                    <h1 className="text-3xl font-black text-gray-900 leading-snug">
                       {form.welcome_title}
                     </h1>
-                    <p className="font-semibold text-ink-soft leading-8 max-w-md">
+                    <p className="font-medium text-gray-500 leading-8 max-w-md">
                       {form.welcome_message}
                     </p>
                     <div className="mt-3">
                       <Button
-                        variant="teal"
+                        variant="indigo"
                         size="lg"
-                        rotate="-rotate-[1.5deg]"
                         disabled={total === 0}
                         onClick={goNext}
                       >
@@ -313,7 +291,6 @@ export default function FormFill() {
                   </motion.div>
                 )}
 
-                {/* ─── سوال‌ها ─── */}
                 {step >= 0 && step < total && currentQuestion && (
                   <motion.div
                     key={currentQuestion.id}
@@ -335,32 +312,30 @@ export default function FormFill() {
                     />
                     <div className="mt-6 flex items-center justify-between">
                       <Button variant="ghost" size="sm" onClick={goBack}>
-                        ↩ برگشت
+                        ← برگشت
                       </Button>
                       {step < total - 1 ? (
-                        <Button variant="navy" onClick={goNext}>
+                        <Button variant="indigo" onClick={goNext}>
                           سوال بعدی ←
                         </Button>
                       ) : (
                         <Button
-                          variant="magenta"
+                          variant="emerald"
                           onClick={submit}
                           disabled={submitting}
-                          rotate="rotate-[1deg]"
                         >
                           {submitting ? "در حال ثبت..." : "ثبت نهایی ✨"}
                         </Button>
                       )}
                     </div>
                     {submitError && (
-                      <div className="mt-3 self-end rotate-[-1deg] bg-white border-2 border-magenta rounded-pill-md px-3.5 py-2 text-sm font-bold text-magenta-text">
+                      <div className="mt-3 self-end bg-red-50 border border-red-200 rounded-lg px-4 py-2 text-sm font-medium text-red-600">
                         {submitError}
                       </div>
                     )}
                   </motion.div>
                 )}
 
-                {/* ─── صفحه‌ی خروج ─── */}
                 {step >= total && (
                   <motion.div
                     key="done"
@@ -376,27 +351,27 @@ export default function FormFill() {
                     >
                       🎉
                     </motion.span>
-                    <h1 className="text-3xl font-black text-navy leading-snug">
+                    <h1 className="text-3xl font-black text-gray-900 leading-snug">
                       {form.exit_title}
                     </h1>
-                    <p className="font-semibold text-ink-soft leading-8 max-w-md">
+                    <p className="font-medium text-gray-500 leading-8 max-w-md">
                       {form.exit_message}
                     </p>
                     {startedAt && (
-                      <span className="text-xs font-medium text-ink-subtle">
+                      <span className="text-xs text-gray-400">
                         این پاسخ در {faDuration(Math.round((Date.now() - startedAt) / 1000))} ثبت شد
                       </span>
                     )}
                     <div className="mt-2">
-                      <Button as="a" href="/" variant="white" size="sm">
-                        رفتن به صفحه‌ی اصلی
+                      <Button as="a" href="/" variant="ghost" size="sm">
+                        رفتن به صفحه اصلی
                       </Button>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
-          </StickerCard>
+          </div>
         </div>
       </main>
     </div>

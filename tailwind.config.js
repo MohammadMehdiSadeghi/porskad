@@ -1,10 +1,4 @@
 import defaultTheme from "tailwindcss/defaultTheme";
-// توکن‌های دیزاین‌سیستم — کپی‌شده از DESIGN.md پروژه رکاد (rokad-web)
-// تا دیزاین پرس‌یار دقیقاً با همان زبان بصری (استیکر-کولاژ، سایه دو لایه،
-// گوشه نامتقارن) ساخته شود.
-import mdTheme from "./tailwind.theme.json";
-
-const md = mdTheme.theme.extend;
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -16,32 +10,80 @@ export default {
         },
         extend: {
             fontFamily: {
-                // Montserrat اول می‌شینه تا هر گلیف لاتین با اون رندر بشه؛
-                // حروف فارسی در Montserrat وجود ندارن و به IRANSansX
-                // برمی‌گردن (fallback per-character توسط مرورگر)
-                sans: ["Montserrat", "IRANSansX", "Tahoma", "sans-serif"],
-                ...md.fontFamily,
+                sans: ["IRANSansX", "Montserrat", "Tahoma", "sans-serif"],
             },
             colors: {
+                // Brand colors — Porskad
+                indigo: {
+                    50: "#eef2ff",
+                    100: "#e0e7ff",
+                    200: "#c7d2fe",
+                    300: "#a5b4fc",
+                    400: "#818cf8",
+                    500: "#6366f1",
+                    600: "#4f46e5",
+                    700: "#4338ca",
+                    800: "#3730a3",
+                    900: "#312e81",
+                    950: "#1e1b4b",
+                },
+                emerald: {
+                    50: "#ecfdf5",
+                    100: "#d1fae5",
+                    200: "#a7f3d0",
+                    300: "#6ee7b7",
+                    400: "#34d399",
+                    500: "#10b981",
+                    600: "#059669",
+                    700: "#047857",
+                    800: "#065f46",
+                    900: "#064e3b",
+                    950: "#022c22",
+                },
+                amber: {
+                    50: "#fffbeb",
+                    100: "#fef3c7",
+                    200: "#fde68a",
+                    300: "#fcd34d",
+                    400: "#fbbf24",
+                    500: "#f59e0b",
+                    600: "#d97706",
+                    700: "#b45309",
+                    800: "#92400e",
+                    900: "#78350f",
+                    950: "#451a03",
+                },
+                violet: {
+                    50: "#f5f3ff",
+                    100: "#ede9fe",
+                    200: "#ddd6fe",
+                    300: "#c4b5fd",
+                    400: "#a78bfa",
+                    500: "#8b5cf6",
+                    600: "#7c3aed",
+                    700: "#6d28d9",
+                    800: "#5b21b6",
+                    900: "#4c1d95",
+                    950: "#2e1065",
+                },
+                // Legacy colors (kept for compatibility)
                 navy: "#21295a",
                 "navy-alt": "#202a5a",
                 teal: "#58bdaf",
                 "teal-alt": "#59bbaf",
                 "teal-text": "#347e75",
                 "teal-text-alt": "#2e7068",
-                "teal-wordmark": "#4bb5a8",
-                "teal-light": "#e4f4f2",
                 magenta: "#e0195b",
                 "magenta-text": "#ce1754",
                 orange: "#f4971f",
                 "orange-alt": "#f9a21d",
-                purple: "#4F215A",
                 ink: "#292827",
+                "ink-subtle": "#6b7280",
+                "ink-soft": "#4b5563",
                 "bg-mint": "#f2faf9",
                 "bg-blush": "#fefafb",
                 "bg-lavender": "#f4f5fb",
                 "bg-neutral": "#f6f6f6",
-                ...md.colors,
             },
             borderRadius: {
                 "pill-sm": "0.1875rem",
@@ -49,46 +91,13 @@ export default {
                 "pill-lg": "0.625rem",
                 badge: "0.475rem",
                 chip: "0.51875rem",
-                "card-sm": "0.8375rem",
-                "card-lg": "2.5625rem",
-                navbar: "1.375rem",
-                ...md.borderRadius,
-            },
-            fontSize: {
-                "2xs": "0.81875rem",
-                xs2: "0.89375rem",
-                base2: "0.9375rem",
-                "sm-alt": "0.9875rem",
-                md2: "1rem",
-                lg2: "1.09375rem",
-                xl2: "1.275rem",
-                "2xl2": "2rem",
-                "3xl2": "2.6875rem",
-                "4xl2": "3.325rem",
-                "5xl2": "3.7125rem",
-                "6xl2": "4.40625rem",
-                ...md.fontSize,
-            },
-            spacing: {
-                "section": "4rem",
-                "section-sm": "3rem",
-                "section-lg": "6rem",
-                "section-xl": "8rem",
-                "gutter": "3rem",
-                "gutter-md": "4rem",
-                "gutter-lg": "6rem",
-                "gutter-xl": "7.5rem",
-                ...md.spacing,
-            },
-            maxWidth: {
-                content: "75rem",
-                canvas: "90rem",
-                container: "75rem",
+                ...defaultTheme.borderRadius,
             },
             boxShadow: {
-                soft: "0 1.25rem 3.75rem -1.25rem rgba(33,41,90,0.25)",
-                navbar:
-                    "0 0.0625rem 0.1875rem rgba(0,0,0,0.04), 0 0.5rem 1.25rem rgba(33,41,90,0.05), 0 1.25rem 2.5rem -0.25rem rgba(33,41,90,0.06)",
+                sm: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+                DEFAULT: "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+                md: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+                lg: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
             },
         },
     },

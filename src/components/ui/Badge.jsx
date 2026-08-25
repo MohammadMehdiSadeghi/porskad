@@ -1,23 +1,19 @@
 import clsx from "./clsx";
 
 const COLORS = {
-  teal: "border-teal-text text-teal-text bg-[#F2FAF9]",
-  navy: "border-navy text-navy bg-[#F4F5FB]",
-  magenta: "border-magenta-text text-magenta-text bg-[#FEFAFB]",
-  orange: "border-orange text-orange bg-[#FEF7EC]",
-  gray: "border-[#bdbdbd] text-[#777] bg-bg-neutral",
-  green: "border-[#2e9e6b] text-[#20794f] bg-[#effaf4]",
+  indigo: "bg-indigo-50 text-indigo-700 border-indigo-200",
+  emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  amber: "bg-amber-50 text-amber-700 border-amber-200",
+  red: "bg-red-50 text-red-700 border-red-200",
+  gray: "bg-gray-100 text-gray-600 border-gray-200",
 };
 
-// بج استیکری سفید با بوردر رنگی — مثل بج‌های StatCard رکاد
-export default function Badge({ color = "teal", rotate = "", className = "", children }) {
+export default function Badge({ color = "indigo", className = "", children }) {
   return (
     <span
       className={clsx(
-        "inline-block bg-white border rounded-xl [corner-shape:squircle]",
-        "px-2.5 py-0.5 text-[0.8125rem] font-bold whitespace-nowrap shadow-sm",
-        COLORS[color] ?? COLORS.teal,
-        rotate,
+        "inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold border rounded-full",
+        COLORS[color] ?? COLORS.indigo,
         className,
       )}
     >
