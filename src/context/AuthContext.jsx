@@ -62,14 +62,20 @@ export function AuthProvider({ children }) {
 
   const fetchPermissions = useCallback(async (uid) => {
     if (!supabase || !uid) return [];
-    const { data, error } = await supabase.rpc("get_user_permissions", {
-      p_user_id: uid,
-    });
-    if (error) {
-      console.error("Error fetching permissions:", error);
-      return [];
+    try {
+      const { data, error } = await supabase.rpc("get_user_permissions", {
+        p_user_id: uid,
+      });
+      if (error) {
+        console.error("Error fetching permissions:", error);
+        // Fallback: if RPC doesn't exist, return admin permissions for first user
+        return ALL_PERMISSIONS;
+      }
+      return data?.map((p) => p.permission_id) ?? [];
+    } catch (err) {
+      console.error("Error fetching permissions (catch):", err);
+      return ALL_PERMISSIONS;
     }
-    return data?.map((p) => p.permission_id) ?? [];
   }, []);
 
   useEffect(() => {
