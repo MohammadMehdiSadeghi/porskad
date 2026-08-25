@@ -1,0 +1,169 @@
+{
+  "theme": {
+    "extend": {
+      "colors": {
+        "primary": "#21295a",
+        "primary-alt": "#202a5a",
+        "secondary": "#58bdaf",
+        "secondary-alt": "#59bbaf",
+        "secondary-dark": "#347e75",
+        "secondary-alt-dark": "#2e7068",
+        "secondary-wordmark": "#4bb5a8",
+        "accent": "#e0195b",
+        "accent-text": "#ce1754",
+        "tertiary": "#f4971f",
+        "tertiary-alt": "#f9a21d",
+        "purple": "#4f215a",
+        "ink": "#292827",
+        "ink-light": "#202a5a",
+        "bg-mint": "#f2faf9",
+        "bg-blush": "#fefafb",
+        "bg-lavender": "#f4f5fb",
+        "bg-neutral": "#f6f6f6",
+        "overlay-white-15": "#ffffff26",
+        "overlay-white-58": "#ffffff94",
+        "overlay-white-69": "#ffffffb0",
+        "overlay-grey-22": "#b4b4b438"
+      },
+      "fontFamily": {
+        "h1-hero": [
+          "IRANSansX"
+        ],
+        "h2-section": [
+          "IRANSansX"
+        ],
+        "h3-card": [
+          "IRANSansX"
+        ],
+        "stat-number": [
+          "IRANSansX"
+        ],
+        "label-pill": [
+          "IRANSansX"
+        ],
+        "body-lg": [
+          "IRANSansX"
+        ],
+        "body-md": [
+          "IRANSansX"
+        ],
+        "body-sm": [
+          "IRANSansX"
+        ],
+        "caption": [
+          "IRANSansX"
+        ],
+        "nav-link": [
+          "IRANSansX"
+        ],
+        "nav-cta": [
+          "IRANSansX"
+        ]
+      },
+      "fontSize": {
+        "h1-hero": [
+          "3.7125rem",
+          {
+            "lineHeight": "1.1",
+            "letterSpacing": "-0.02em",
+            "fontWeight": "950"
+          }
+        ],
+        "h2-section": [
+          "3.325rem",
+          {
+            "lineHeight": "1.2",
+            "letterSpacing": "-0.01em",
+            "fontWeight": "950"
+          }
+        ],
+        "h3-card": [
+          "2rem",
+          {
+            "lineHeight": "1.1",
+            "fontWeight": "900"
+          }
+        ],
+        "stat-number": [
+          "4.375rem",
+          {
+            "lineHeight": "1",
+            "fontWeight": "950"
+          }
+        ],
+        "label-pill": [
+          "0.9375rem",
+          {
+            "lineHeight": "1.35",
+            "fontWeight": "700"
+          }
+        ],
+        "body-lg": [
+          "1.09375rem",
+          {
+            "lineHeight": "1.7",
+            "fontWeight": "600"
+          }
+        ],
+        "body-md": [
+          "1rem",
+          {
+            "lineHeight": "1.6",
+            "fontWeight": "600"
+          }
+        ],
+        "body-sm": [
+          "0.875rem",
+          {
+            "lineHeight": "1.5",
+            "fontWeight": "500"
+          }
+        ],
+        "caption": [
+          "0.75rem",
+          {
+            "lineHeight": "1.4",
+            "fontWeight": "400"
+          }
+        ],
+        "nav-link": [
+          "0.9375rem",
+          {
+            "lineHeight": "1.25",
+            "fontWeight": "600"
+          }
+        ],
+        "nav-cta": [
+          "0.9375rem",
+          {
+            "lineHeight": "1.25",
+            "fontWeight": "900"
+          }
+        ]
+      },
+      "borderRadius": {
+        "pill-sm": "0.1875rem",
+        "pill-md": "0.5rem",
+        "pill-lg": "0.625rem",
+        "badge": "0.475rem",
+        "chip": "0.51875rem",
+        "card-sm": "0.8375rem",
+        "card-lg": "2.5625rem",
+        "navbar": "1.375rem",
+        "squircle-sm": "0.75rem",
+        "squircle-lg": "2.75rem"
+      },
+      "spacing": {
+        "section": "4rem",
+        "section-sm": "3rem",
+        "section-lg": "6rem",
+        "section-xl": "8rem",
+        "gutter": "3rem",
+        "gutter-md": "4rem",
+        "gutter-lg": "6rem",
+        "gutter-xl": "7.5rem",
+        "content-max": "75rem"
+      }
+    }
+  }
+}

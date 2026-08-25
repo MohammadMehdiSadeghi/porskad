@@ -1,0 +1,110 @@
+/*
+  IRANSansX — self-hosted, served from /public/fonts (copied verbatim from
+  the supplied assets.zip). Replaces the earlier Vazirmatn placeholder.
+  Each weight is its own static file, so each gets its own @font-face
+  with a matching numeric font-weight — Tailwind's font-thin…font-black
+  utilities map onto these directly (see tailwind.config.js fontWeight).
+*/
+
+/*
+  Montserrat — self-hosted variable font (wght 100-900) برای همه‌ی
+  متن‌های انگلیسی/لاتین. چون Montserrat گلیف عربی/فارسی نداره، در
+  font-stack قبل از IRANSansX قرار می‌گیره: کاراکترهای لاتین از
+  Montserrat رندر می‌شن و فارسی خودکار به IRANSansX برمی‌گرده.
+*/
+
+@font-face {
+    font-family: "Montserrat";
+    src: url("/fonts/Montserrat-VariableFont.ttf") format("truetype");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "IRANSansX";
+    src: url("/fonts/IRANSansX-ThinD4.ttf") format("truetype");
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "IRANSansX";
+    src: url("/fonts/IRANSansX-UltraLightD4.ttf") format("truetype");
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "IRANSansX";
+    src: url("/fonts/IRANSansX-LightD4.ttf") format("truetype");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "IRANSansX";
+    src: url("/fonts/IRANSansX-RegularD4.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "IRANSansX";
+    src: url("/fonts/IRANSansX-MediumD4.ttf") format("truetype");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "IRANSansX";
+    src: url("/fonts/IRANSansX-DemiBoldD4.ttf") format("truetype");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "IRANSansX";
+    src: url("/fonts/IRANSansX-BoldD4.ttf") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "IRANSansX";
+    src: url("/fonts/IRANSansX-ExtraBoldD4.ttf") format("truetype");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "IRANSansX";
+    src: url("/fonts/IRANSansX-HeavyD4.ttf") format("truetype");
+    font-weight: 850;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "IRANSansX";
+    src: url("/fonts/IRANSansX-BlackD4.ttf") format("truetype");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "IRANSansX";
+    src: url("/fonts/IRANSansX-ExtraBlackD4.ttf") format("truetype");
+    font-weight: 950;
+    font-style: normal;
+    font-display: swap;
+}
