@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Outlet, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Outlet, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./components/ui/Toast";
 import SetupNotice from "./components/ui/SetupNotice";
