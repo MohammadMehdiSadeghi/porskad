@@ -47,7 +47,7 @@ class ErrorBoundary extends React.Component {
             >
               رفرش صفحه
             </button>
-            {process.env.NODE_ENV === "development" && this.state.error && (
+            {this.state.error && (
               <details className="mt-4 text-left text-xs text-gray-500">
                 <summary>جزئیات خطا</summary>
                 <pre className="mt-2 bg-gray-100 p-2 rounded overflow-auto">
