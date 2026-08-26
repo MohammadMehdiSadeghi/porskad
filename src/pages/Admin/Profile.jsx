@@ -23,6 +23,11 @@ const ROLE_LABELS = {
   manager: "مدیر",
 };
 
+const OWNER_BADGE = {
+  label: "👑 صاحب اصلی سایت",
+  color: "bg-amber-100 text-amber-700 border-amber-200",
+};
+
 export default function Profile() {
   const { user, profile, role, permissions, changePassword, updateProfile } = useAuth();
   const { push } = useToast();
@@ -98,6 +103,15 @@ export default function Profile() {
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
+      {profile?.is_owner && (
+        <div className="flex items-center gap-3 bg-amber-50 border-2 border-amber-200 rounded-xl px-4 py-3">
+          <span className="text-2xl">👑</span>
+          <div>
+            <p className="text-sm font-bold text-amber-800">حساب صاحب اصلی سایت</p>
+            <p className="text-xs text-amber-600">این حساب غیرقابل حذف و غیرفعال شدن است و به تمام بخش‌های سایت دسترسی کامل دارد.</p>
+          </div>
+        </div>
+      )}
       <SEO
         title="پروفایل من"
         description="اطلاعات حساب کاربری و تنظیمات امنیتی — پرسکاد"
@@ -136,6 +150,11 @@ export default function Profile() {
               <Badge color={role === "admin" ? "navy" : "teal"}>
                 {ROLE_LABELS[role] ?? role}
               </Badge>
+              {profile?.is_owner && (
+                <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full border ${OWNER_BADGE.color}`}>
+                  {OWNER_BADGE.label}
+                </span>
+              )}
             </div>
 
             {/* مجوزها */}

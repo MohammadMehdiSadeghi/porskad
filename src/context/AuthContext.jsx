@@ -37,7 +37,7 @@ export function AuthProvider({ children }) {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, email, full_name, avatar_url, is_active, created_by")
+        .select("id, email, full_name, avatar_url, is_active, is_owner, created_by")
         .eq("id", uid)
         .maybeSingle();
       if (error) {
@@ -202,6 +202,25 @@ export function AuthProvider({ children }) {
   }
 
   async function updateManager(managerId, { fullName, isActive, permissions } = {}) {
+    // بررسی سمت کلاینت: owner فقط نامش قابل تغییر است
+    const { data: targetProfile } = await supabase
+      .from("profiles")
+      .select("is_owner")
+      .eq("id", managerId)
+      .single();
+
+    if (targetProfile?.is_owner) {
+      // owner فقط نامش قابل تغییر است، مجوز و وضعیتش غیرقابل تغییر
+      if (fullName !== undefined) {
+        const { error } = await supabase
+          .from("profiles")
+          .update({ full_name: fullName })
+          .eq("id", managerId);
+        if (error) throw error;
+      }
+      return;
+    }
+
     const updates = {};
     if (fullName !== undefined) updates.full_name = fullName;
     if (isActive !== undefined) updates.is_active = isActive;
@@ -224,18 +243,17 @@ export function AuthProvider({ children }) {
   }
 
   async function setManagerActive(managerId, active) {
+    // بررسی سمت کلاینت: owner قابل غیرفعال کردن نیست
+    if (profile?.is_owner && managerId === user?.id) {
+      throw new Error("امکان غیرفعال کردن صاحب اصلی سایت وجود ندارد.");
+    }
     try {
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .update({ active })
-        .eq("user_id", managerId);
-      if (roleError) throw roleError;
-
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ is_active: active })
-        .eq("id", managerId);
-      if (profileError) throw profileError;
+      // استفاده از تابع محافظت‌شده سمت سرور
+      const { error } = await supabase.rpc("set_manager_active", {
+        p_user_id: managerId,
+        p_active: active,
+      });
+      if (error) throw error;
     } catch (err) {
       console.error("setManagerActive error:", err);
       throw err;
@@ -243,6 +261,10 @@ export function AuthProvider({ children }) {
   }
 
   async function deleteManager(managerId) {
+    // بررسی سمت کلاینت: owner قابل حذف نیست
+    if (profile?.is_owner && managerId === user?.id) {
+      throw new Error("امکان حذف صاحب اصلی سایت وجود ندارد.");
+    }
     // حذف auth user سمت سرور انجام می‌شود و پروفایل/نقش‌ها cascade می‌شوند
     const { error } = await supabase.rpc("delete_manager", {
       p_user_id: managerId,
@@ -255,7 +277,7 @@ export function AuthProvider({ children }) {
       const [{ data, error }, { data: userRoles }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id, email, full_name, is_active, created_at, created_by")
+          .select("id, email, full_name, is_active, is_owner, created_at, created_by")
           .order("created_at", { ascending: true }),
         supabase.from("user_roles").select("user_id, role_id, active"),
       ]);
@@ -308,6 +330,7 @@ export function AuthProvider({ children }) {
     configured: isSupabaseConfigured,
     hasPermission: (permissionId) => permissions.includes(permissionId),
     canManage: () => role === "admin",
+    isOwner: () => profile?.is_owner === true,
     login,
     logout,
     changePassword,

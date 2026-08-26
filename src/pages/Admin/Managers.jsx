@@ -17,6 +17,7 @@ import {
   Mail,
   Calendar,
   UserCircle,
+  Crown,
 } from "lucide-react";
 import SEO from "../../components/ui/SEO";
 
@@ -33,7 +34,7 @@ const PERMISSION_LABELS = {
 
 export default function Managers() {
   const { push } = useToast();
-  const { listManagers, createManager, updateManager, deactivateManager, activateManager, deleteManager } = useAuth();
+  const { listManagers, createManager, updateManager, deactivateManager, activateManager, deleteManager, isOwner } = useAuth();
   const [loading, setLoading] = useState(true);
   const [managers, setManagers] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -166,7 +167,7 @@ export default function Managers() {
         <div>
           <h1 className="text-2xl font-black text-navy">مدیریت مدیران</h1>
           <p className="text-sm text-ink/50 mt-0.5">
-            {managers.length} مدیر فعال
+            {managers.filter((m) => m.is_active).length} مدیر فعال
           </p>
         </div>
         <Button variant="indigo" size="md" onClick={() => setShowCreateModal(true)}>
@@ -201,10 +202,8 @@ export default function Managers() {
                 </tr>
               </thead>
               <tbody>
-                {managers.map((m) => (
-                  <tr
-                    key={m.id}
-                    className="border-b border-ink/5 last:border-0 hover:bg-bg-neutral/50"
+                {managers.map((m) => (                  <tr key={m.id}
+                    className={`border-b border-ink/5 last:border-0 hover:bg-bg-neutral/50 ${m.is_owner ? 'bg-amber-50/50' : ''}`}
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
@@ -213,9 +212,17 @@ export default function Managers() {
                             m.email?.[0]?.toUpperCase() ??
                             "U"}
                         </div>
-                        <span className="font-medium text-navy">
-                          {m.full_name || "—"}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-medium text-navy">
+                            {m.full_name || "—"}
+                          </span>
+                          {m.is_owner && (
+                            <span className="inline-flex items-center gap-0.5 text-[0.6rem] font-bold text-amber-700 bg-amber-100 border border-amber-200 px-1.5 py-0.5 rounded-full">
+                              <Crown size={10} />
+                              صاحب اصلی
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-ink/50 font-mono text-left" dir="ltr">
@@ -264,25 +271,30 @@ export default function Managers() {
                           variant="ghost"
                           size="sm"
                           onClick={() => openEdit(m)}
+                          title={m.is_owner ? "فقط نام صاحب اصلی قابل تغییر است" : "ویرایش"}
                         >
                           <Edit size={14} />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="!text-amber-600 hover:!bg-amber-50"
-                          onClick={() => handleDeactivate(m.id)}
-                        >
-                          {m.is_active ? <Shield size={14} /> : <Check size={14} />}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="!text-magenta hover:!bg-blush"
-                          onClick={() => setDeleteTarget(m)}
-                        >
-                          <Trash2 size={14} />
-                        </Button>
+                        {!m.is_owner && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="!text-amber-600 hover:!bg-amber-50"
+                              onClick={() => handleDeactivate(m.id)}
+                            >
+                              {m.is_active ? <Shield size={14} /> : <Check size={14} />}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="!text-magenta hover:!bg-blush"
+                              onClick={() => setDeleteTarget(m)}
+                            >
+                              <Trash2 size={14} />
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -390,9 +402,15 @@ export default function Managers() {
       <Modal
         open={showEditModal}
         onClose={() => setShowEditModal(false)}
-        title="ویرایش مدیر"
+        title={selectedManager?.is_owner ? "ویرایش صاحب اصلی" : "ویرایش مدیر"}
       >
         <div className="flex flex-col gap-4">
+          {selectedManager?.is_owner && (
+            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-sm font-semibold text-amber-700">
+              <Crown size={16} />
+              صاحب اصلی سایت — فقط نام قابل تغییر است
+            </div>
+          )}
           <div>
             <label className="block text-sm font-semibold text-ink mb-1">
               نام نمایشی
@@ -404,31 +422,33 @@ export default function Managers() {
               className="w-full bg-bg-neutral border border-ink/15 rounded-lg px-3 py-2 text-sm font-medium text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
             />
           </div>
-          <div>
-            <label className="block text-sm font-semibold text-ink mb-2">
-              مجوزها
-            </label>
-            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-ink/15 rounded-lg p-3 bg-bg-neutral">
-              {ALL_PERMISSIONS.filter((p) => p !== "manage_managers").map((p) => (
-                <label
-                  key={p}
-                  className="flex items-center gap-2 text-sm font-medium text-ink cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    checked={editPermissions.includes(p)}
-                    onChange={(e) =>
-                      setEditPermissions((prev) =>
-                        e.target.checked ? [...prev, p] : prev.filter((x) => x !== p)
-                      )
-                    }
-                    className="accent-teal w-4 h-4"
-                  />
-                  {PERMISSION_LABELS[p]}
-                </label>
-              ))}
+          {!selectedManager?.is_owner && (
+            <div>
+              <label className="block text-sm font-semibold text-ink mb-2">
+                مجوزها
+              </label>
+              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-ink/15 rounded-lg p-3 bg-bg-neutral">
+                {ALL_PERMISSIONS.filter((p) => p !== "manage_managers").map((p) => (
+                  <label
+                    key={p}
+                    className="flex items-center gap-2 text-sm font-medium text-ink cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={editPermissions.includes(p)}
+                      onChange={(e) =>
+                        setEditPermissions((prev) =>
+                          e.target.checked ? [...prev, p] : prev.filter((x) => x !== p)
+                        )
+                      }
+                      className="accent-teal w-4 h-4"
+                    />
+                    {PERMISSION_LABELS[p]}
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
           <div className="flex gap-3 justify-end pt-2">
             <Button
               variant="indigo"
@@ -436,11 +456,18 @@ export default function Managers() {
               onClick={async () => {
                 if (selectedManager) {
                   try {
-                    await updateManager(selectedManager.id, {
-                      fullName: editName,
-                      isActive: selectedManager.is_active,
-                      permissions: editPermissions,
-                    });
+                    if (selectedManager.is_owner) {
+                      // owner فقط نامش قابل تغییر است
+                      await updateManager(selectedManager.id, {
+                        fullName: editName,
+                      });
+                    } else {
+                      await updateManager(selectedManager.id, {
+                        fullName: editName,
+                        isActive: selectedManager.is_active,
+                        permissions: editPermissions,
+                      });
+                    }
                     push("تغییرات ذخیره شد ✅");
                     setShowEditModal(false);
                     load();
