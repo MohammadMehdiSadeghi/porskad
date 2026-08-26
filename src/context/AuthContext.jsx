@@ -94,7 +94,9 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    const unsubscribe = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       setSession(newSession);
       if (newSession?.user) {
         try {
@@ -139,7 +141,9 @@ export function AuthProvider({ children }) {
     });
 
     return () => {
-      unsubscribe.unsubscribe();
+      if (subscription) {
+        subscription.unsubscribe();
+      }
     };
   }, [fetchProfile, fetchRole, fetchPermissions]);
 
