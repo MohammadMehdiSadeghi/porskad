@@ -73,6 +73,14 @@ export function validateAnswer(question, value) {
       return String(value).trim().length > 200 ? "جواب خیلی طولانیه؛ کوتاه‌تر بنویس." : null;
     case "long_text":
       return String(value).trim().length > 3000 ? "جواب خیلی طولانیه؛ کوتاه‌تر بنویس." : null;
+    case "telegram_id": {
+      const s = String(value).trim();
+      if (!s.startsWith("@")) return "آیدی تلگرام باید با @ شروع بشه.";
+      if (s.length < 5) return "آیدی تلگرام خیلی کوتاهه.";
+      if (s.length > 64) return "آیدی تلگرام خیلی طولانیه.";
+      if (!/^@[a-zA-Z0-9_]{4,63}$/.test(s)) return "آیدی تلگرام فقط حروف انگلیسی، عدد و _ مجازه.";
+      return null;
+    }
     default:
       return null;
   }
@@ -89,6 +97,7 @@ export function normalizeAnswerValue(question, value) {
     case "short_text":
     case "long_text":
     case "email":
+    case "telegram_id":
       return String(value).trim();
     default:
       return value;

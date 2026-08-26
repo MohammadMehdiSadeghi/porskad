@@ -30,6 +30,29 @@ function FlagIcon({ className }) {
   );
 }
 
+function TelegramIcon({ className }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M22 2 11 13"/>
+      <path d="m22 2-7 20-4-9-9-4z"/>
+    </svg>
+  );
+}
+
+// ─── رنگ‌بندی交替 سوال‌ها (alternating) ───
+const STEP_THEMES = [
+  { bg: "bg-white", border: "border-ink/10" },           // سفید
+  { bg: "bg-bg-mint", border: "border-teal/15" },        // سبز ملایم
+  { bg: "bg-bg-lavender", border: "border-navy/10" },    // بنفش ملایم
+  { bg: "bg-white", border: "border-ink/10" },           // سفید
+  { bg: "bg-bg-blush", border: "border-magenta/10" },    // صورتی ملایم
+  { bg: "bg-bg-mint", border: "border-teal/15" },        // سبز ملایم
+];
+
+function getStepTheme(index) {
+  return STEP_THEMES[index % STEP_THEMES.length];
+}
+
 // ورودی متنی مشترک
 function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, onEnter, ...rest }) {
   const shared = clsx(
@@ -62,6 +85,33 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
     );
   }
 
+  if (type === "telegram_id") {
+    return (
+      <div className="relative">
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none select-none">
+          <TelegramIcon className="text-teal-text" />
+        </span>
+        <input
+          ref={inputRef}
+          type="text"
+          dir="ltr"
+          value={value ?? ""}
+          autoFocus={autoFocus}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && onEnter) {
+              e.preventDefault();
+              onEnter();
+            }
+          }}
+          className={clsx(shared, "text-left pr-11")}
+          placeholder="@username"
+          {...rest}
+        />
+      </div>
+    );
+  }
+
   const isLtr = type === "email" || type === "phone_ir";
   const placeholders = {
     short_text: "جوابت رو این‌جا بنویس...",
@@ -77,7 +127,6 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ink-subtle">
             <rect width="14" height="20" x="5" y="2" rx="2" ry="2"/>
             <path d="M12 18h.01"/>
-            <path d="M9 2l3 4-3 4" strokeWidth="1.5"/>
           </svg>
         </span>
       )}
@@ -157,8 +206,8 @@ function ChoiceOptions({ options = [], value, onChange, onEnter }) {
 // بله / خیر
 function YesNoOptions({ value, onChange, onEnter }) {
   const opts = [
-    { label: "بله", icon: " thumbs-up", color: "teal" },
-    { label: "خیر", icon: "thumbs-down", color: "magenta" },
+    { label: "بله", color: "teal" },
+    { label: "خیر", color: "magenta" },
   ];
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -253,23 +302,33 @@ export default function QuestionStep({
     if (!err) onAdvance();
   }
 
+  const theme = getStepTheme(index);
+
   return (
-    <div className="flex flex-col gap-5">
-      {/* شماره سوال + برچسب اختیاری */}
+    <div className={clsx("flex flex-col gap-5 rounded-pill-md p-4 sm:p-5 -mx-1 transition-colors", theme.bg, theme.border, "border-2")}>
+      {/* شماره سوال + برچسب اختیاری/اجباری */}
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-black text-teal-text">
-          <FlagIcon className="inline-block ml-1.5 -mt-0.5" />
+        <span className="text-sm font-black text-teal-text flex items-center gap-1.5">
+          <FlagIcon className="text-teal-text/60" />
           سوال {faNum(index + 1)} از {faNum(total)}
         </span>
-        {!question.required && (
-          <span className="text-xs font-bold text-ink-subtle bg-bg-neutral rounded-pill-sm px-2 py-1">
+        {question.required ? (
+          <span className="text-xs font-bold text-magenta-text bg-bg-blush rounded-pill-sm px-2 py-0.5 flex items-center gap-1">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+            اجباری
+          </span>
+        ) : (
+          <span className="text-xs font-bold text-ink-subtle bg-bg-neutral rounded-pill-sm px-2 py-0.5">
             اختیاری
           </span>
         )}
       </div>
 
-      <h2 className="text-2xl sm:text-[1.7rem] font-black text-navy leading-[1.4]">
+      <h2 className="text-xl sm:text-2xl font-black text-navy leading-[1.4]">
         {question.title}
+        {question.required && <span className="text-magenta-text mr-1">*</span>}
       </h2>
       {question.description && (
         <p className="text-sm font-semibold text-ink-subtle leading-7 -mt-2">
@@ -281,7 +340,8 @@ export default function QuestionStep({
         question.type === "long_text" ||
         question.type === "email" ||
         question.type === "number" ||
-        question.type === "phone_ir") && (
+        question.type === "phone_ir" ||
+        question.type === "telegram_id") && (
         <TextInput
           type={question.type}
           value={value}
@@ -307,7 +367,12 @@ export default function QuestionStep({
       {question.type === "rating" && <RatingStars value={value} onChange={onChange} />}
 
       {error && (
-        <div className="self-start rotate-[-1deg] bg-white border-2 border-magenta rounded-pill-md px-3.5 py-2 text-sm font-bold text-magenta-text">
+        <div className="self-start rotate-[-1deg] bg-white border-2 border-magenta rounded-pill-md px-3.5 py-2 text-sm font-bold text-magenta-text flex items-center gap-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="15" y1="9" x2="9" y2="15"/>
+            <line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
           {error}
         </div>
       )}

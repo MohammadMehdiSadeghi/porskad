@@ -237,7 +237,7 @@ export default function FormFill() {
     <div className="min-h-screen dot-pattern bg-bg-mint flex flex-col">
       {/* هدر باریک */}
       <div className="w-full max-w-[75rem] mx-auto flex items-center justify-between px-4 py-3">
-        <Logo to="/" size="sm" />
+        <Logo linked={false} size="sm" />
         <span className="text-xs font-bold text-ink-subtle truncate max-w-[50vw]">
           {form.title}
         </span>

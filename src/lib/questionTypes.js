@@ -58,6 +58,13 @@ export const QUESTION_TYPES = {
     hint: "دو گزینه ساده",
     hasOptions: false,
   },
+  telegram_id: {
+    label: "آیدی تلگرام",
+    icon: "✈️",
+    color: "teal",
+    hint: "آیدی تلگرام با @",
+    hasOptions: false,
+  },
 };
 
 export const QUESTION_TYPE_ORDER = [
@@ -69,6 +76,7 @@ export const QUESTION_TYPE_ORDER = [
   "number",
   "rating",
   "yes_no",
+  "telegram_id",
 ];
 
 export function makeQuestion(type, position = 0) {
