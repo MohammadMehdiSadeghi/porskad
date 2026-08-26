@@ -5,12 +5,12 @@ import { validateAnswer } from "../../lib/validators";
 
 function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, onEnter, ...rest }) {
   const shared = clsx(
-    "w-full bg-white border rounded-lg px-4 py-3",
-    "font-medium text-navy placeholder:text-ink/30 placeholder:font-medium",
-    "focus:outline-none focus:ring-2 transition-all",
+    "w-full bg-white border-2 rounded-pill-md px-4 py-3",
+    "font-semibold text-navy placeholder:text-ink-subtle placeholder:font-semibold",
+    "focus:outline-none focus:ring-4 transition-all",
     error
-      ? "border-red-300 focus:ring-red-200 focus:border-magenta"
-      : "border-ink/15 focus:border-teal focus:ring-teal/15",
+      ? "border-magenta focus:ring-magenta/20"
+      : "border-ink/25 focus:border-teal focus:ring-teal/20",
   );
 
   if (type === "long_text") {
@@ -94,11 +94,11 @@ function ChoiceOptions({ options = [], value, onChange, onEnter }) {
             }}
             className={clsx(
               "group flex items-center gap-3.5 text-right w-full",
-              "border rounded-lg px-4 py-3.5 transition-all duration-150 cursor-pointer",
+              "border-2 rounded-pill-md px-4 py-3.5 transition-all duration-150 cursor-pointer",
               "hover:-translate-y-0.5 hover:shadow-sm",
               selected
-                ? "border-teal bg-bg-mint"
-                : "border-ink/15 bg-white hover:border-teal/30",
+                ? "border-teal bg-teal/10"
+                : "border-ink/25 bg-white hover:border-teal/40",
             )}
           >
             <span
@@ -144,8 +144,8 @@ function YesNoOptions({ value, onChange, onEnter }) {
               setTimeout(onEnter, 300);
             }}
             className={clsx(
-              "flex flex-col items-center gap-2 border rounded-xl py-6",
-              "text-xl font-bold transition-all hover:-translate-y-0.5 cursor-pointer",
+              "flex flex-col items-center gap-2 border-2 rounded-pill-lg py-6",
+              "text-xl font-extrabold transition-all hover:-translate-y-0.5 cursor-pointer",
               active,
             )}
           >
@@ -255,7 +255,7 @@ export default function QuestionStep({
       {question.type === "rating" && <RatingStars value={value} onChange={onChange} />}
 
       {error && (
-        <div className="self-start bg-blush border border-magenta-text/25 rounded-lg px-3.5 py-2 text-sm font-medium text-magenta-text">
+        <div className="self-start rotate-[-1deg] bg-white border-2 border-magenta rounded-pill-md px-3.5 py-2.5 text-sm font-bold text-magenta-text">
           {error}
         </div>
       )}

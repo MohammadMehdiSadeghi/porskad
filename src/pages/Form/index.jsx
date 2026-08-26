@@ -16,7 +16,7 @@ const draftKey = (slug) => `porskad_draft_${slug}`;
 // ─── صفحه‌ی «فرم در دسترس نیست» ───
 function NotAvailable({ message }) {
   return (
-    <div className="min-h-screen bg-bg-neutral flex items-center justify-center p-4">
+    <div className="min-h-screen dot-pattern bg-bg-lavender flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl border border-ink/10 p-8 flex flex-col items-center text-center gap-4">
           <span className="text-5xl">🔒</span>
@@ -216,7 +216,7 @@ export default function FormFill() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-bg-neutral">
+      <div className="min-h-screen dot-pattern bg-bg-lavender">
         <Spinner label="فرم در حال بارگذاری..." />
       </div>
     );
@@ -226,7 +226,7 @@ export default function FormFill() {
   if (!form) return null;
 
   return (
-    <div className="min-h-screen bg-bg-neutral flex flex-col">
+    <div className="min-h-screen dot-pattern bg-bg-lavender flex flex-col">
       <div className="w-full max-w-[75rem] mx-auto flex items-center justify-between px-4 py-3">
         <Logo />
         <span className="text-xs font-medium text-ink/40 truncate max-w-[50vw]">
@@ -242,7 +242,7 @@ export default function FormFill() {
 
       <main className="flex-1 flex items-start sm:items-center justify-center px-4 py-6">
         <div className={`w-full max-w-xl ${step === -1 ? "" : ""}`}>
-          <div className="bg-white rounded-2xl border border-ink/10 shadow-sm">
+          <div className="bg-white rounded-tl-[2rem] rounded-br-[2rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] border-2 border-ink shadow-soft">
             <input
               type="text"
               name="website"
@@ -329,7 +329,7 @@ export default function FormFill() {
                       )}
                     </div>
                     {submitError && (
-                      <div className="mt-3 self-end bg-blush border border-magenta-text/25 rounded-lg px-4 py-2 text-sm font-medium text-magenta-text">
+                      <div className="mt-3 self-end rotate-[-1deg] bg-white border-2 border-magenta rounded-pill-md px-4 py-2.5 text-sm font-bold text-magenta-text">
                         {submitError}
                       </div>
                     )}

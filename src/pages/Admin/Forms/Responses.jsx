@@ -5,6 +5,7 @@ import Button from "../../../components/ui/Button";
 import Badge from "../../../components/ui/Badge";
 import Spinner from "../../../components/ui/Spinner";
 import EmptyState from "../../../components/ui/EmptyState";
+import StickerCard from "../../../components/ui/StickerCard";
 import { useToast } from "../../../components/ui/Toast";
 import { useAuth } from "../../../context/AuthContext";
 import { downloadCsv } from "../../../lib/csv";
@@ -492,11 +493,12 @@ export default function Responses() {
             ) : null}
           />
         ) : (
-          <div className="bg-white rounded-xl border border-ink/10 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-bg-neutral border-b border-ink/10">
+          <div className="rotate-[0.3deg]">
+            <StickerCard theme="white" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-navy border-b-2 border-ink/10">
                     <th className="text-right font-semibold text-ink/70 px-4 py-3">#</th>
                     <th className="text-right font-semibold text-ink/70 px-4 py-3">زمان ثبت</th>
                     <th className="text-right font-semibold text-ink/70 px-4 py-3">وضعیت</th>
@@ -548,7 +550,8 @@ export default function Responses() {
                   })}
                 </tbody>
               </table>
-            </div>
+              </div>
+            </StickerCard>
           </div>
         )
       )}
@@ -574,15 +577,18 @@ export default function Responses() {
       {/* Detail Modal */}
       {detail && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-[2px]"
           onClick={() => setDetail(null)}
           role="dialog"
           aria-modal="true"
         >
           <div
-            className="w-full max-w-2xl bg-white rounded-2xl shadow-xl max-h-[85vh] flex flex-col"
+            className="w-full max-w-2xl" 
             onClick={(e) => e.stopPropagation()}
           >
+          <StickerCard theme="white" rotate="-rotate-[0.5deg]">
+          <div
+            className="bg-white max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-ink/10">
               <h3 className="text-lg font-bold text-navy">جزئیات پاسخ</h3>
               <button
@@ -643,6 +649,8 @@ export default function Responses() {
               </Button>
             </div>
           </div>
+          </StickerCard>
+          </div>
         </div>
       )}
     </div>
@@ -651,21 +659,21 @@ export default function Responses() {
 
 function SummaryCard({ icon: Icon, label, value, sub, color }) {
   const colors = {
-    indigo: "bg-bg-mint text-teal-text",
+    indigo: "bg-bg-lavender text-navy",
     emerald: "bg-bg-mint text-teal-text",
-    amber: "bg-amber-50 text-amber-600",
-    violet: "bg-violet-50 text-violet-600",
+    amber: "bg-[#FEF7EC] text-orange",
+    violet: "bg-[#FEFAFB] text-magenta-text",
   };
   return (
-    <div className="bg-white rounded-xl border border-ink/10 p-4">
+    <div className="bg-white rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] border-2 border-ink/10 p-4">
       <div className="flex items-center gap-3">
-        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${colors[color]}`}>
+        <div className={`w-9 h-9 rounded-pill-md [corner-shape:squircle] flex items-center justify-center ${colors[color]}`}>
           <Icon size={16} />
         </div>
         <div>
-          <p className="text-xs text-ink/40">{label}</p>
+          <p className="text-xs font-bold text-ink-subtle">{label}</p>
           <p className="text-xl font-black text-navy">{value}</p>
-          {sub && <p className="text-xs text-ink/40">{sub}</p>}
+          {sub && <p className="text-xs font-semibold text-ink-subtle">{sub}</p>}
         </div>
       </div>
     </div>

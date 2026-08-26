@@ -1,22 +1,31 @@
+import StickerCard from "./StickerCard";
+import Button from "./Button";
+
 export default function SetupNotice() {
   return (
-    <div className="min-h-screen bg-bg-mint flex items-center justify-center p-4">
-      <div className="relative w-full max-w-md rotate-[0.5deg]">
-        <div aria-hidden="true" className="absolute top-2 left-2 w-full h-full bg-navy rounded-[1.5rem] [corner-shape:squircle]" />
-        <div className="relative z-10 bg-white border-2 border-navy rounded-[1.5rem] [corner-shape:squircle] p-8 text-center">
-          <div className="w-16 h-16 bg-bg-mint border-2 border-teal-text/30 rounded-[0_1rem_0_1rem] [corner-shape:squircle] flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">🔒</span>
+    <div className="min-h-screen dot-pattern bg-bg-mint flex items-center justify-center p-4">
+      <div className="w-full max-w-2xl -rotate-[0.5deg]">
+        <StickerCard theme="white">
+          <div className="p-7 sm:p-10 flex flex-col gap-4">
+            <div className="text-5xl rotate-[2deg] self-start">🔌</div>
+            <h1 className="text-2xl sm:text-3xl font-black text-navy">
+              پرسکاد هنوز به دیتابیس وصل نشده!
+            </h1>
+            <p className="font-semibold text-ink-soft leading-8">
+              برای راه‌اندازی، سه قدم ساده لازم است:
+            </p>
+            <ol className="list-decimal pr-6 space-y-2 font-semibold text-ink-soft leading-7 text-sm">
+              <li>در <span className="font-black">supabase.com</span> یک پروژه بسازید و فایل migration را در SQL Editor اجرا کنید.</li>
+              <li>در بخش Authentication یک کاربر ادمین بسازید.</li>
+              <li>فایل <span className="font-black">.env.example</span> را به <span className="font-black">.env</span> تغییر نام دهید و کلیدها را قرار دهید.</li>
+            </ol>
+            <div className="mt-2">
+              <Button variant="navy" onClick={() => window.location.reload()}>
+                بعد از تنظیم .env دوباره امتحان کن 🔄
+              </Button>
+            </div>
           </div>
-          <h1 className="text-2xl font-black text-navy mb-2">پرسکاد</h1>
-          <p className="text-sm text-ink/50 mb-6 leading-7">
-            برای شروع، کلیدهای Supabase را در فایل <code className="bg-bg-neutral px-1.5 py-0.5 rounded text-xs font-mono">.env</code> تنظیم کنید.
-          </p>
-          <div className="space-y-2 text-xs text-ink/40 text-right leading-7">
-            <p>1. یک پروژه Supabase بسازید</p>
-            <p>2. migration را در SQL Editor اجرا کنید</p>
-            <p>3. کلیدها را در .env کپی کنید</p>
-          </div>
-        </div>
+        </StickerCard>
       </div>
     </div>
   );

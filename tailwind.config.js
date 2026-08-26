@@ -1,7 +1,4 @@
 import defaultTheme from "tailwindcss/defaultTheme";
-// توکن‌های دیزاین‌سیستم (منبع: DESIGN.md) — به‌صورت افزودنی مرج می‌شن
-// تا کلاس‌های موجود (bg-navy، text-teal و…) نشکنن؛ توکن‌های معنایی جدید
-// (primary/secondary/accent + تایپوگرافی نقش‌محور) در کنارشون اضافه می‌شن
 import mdTheme from "./tailwind.theme.json";
 
 const md = mdTheme.theme.extend;
@@ -16,28 +13,30 @@ export default {
         },
         extend: {
             fontFamily: {
-                // Montserrat اول می‌شینه تا هر گلیف لاتین با اون رندر بشه؛
-                // حروف فارسی در Montserrat وجود ندارن و به IRANSansX
-                // برمی‌گردن (fallback per-character توسط مرورگر)
                 sans: ["Montserrat", "IRANSansX", "Tahoma", "sans-serif"],
                 ...md.fontFamily,
             },
             colors: {
                 navy: "#21295a",
                 "navy-alt": "#202a5a",
+                "navy-hover": "#15244a",
                 teal: "#58bdaf",
                 "teal-alt": "#59bbaf",
                 "teal-text": "#347e75",
                 "teal-text-alt": "#2e7068",
                 "teal-wordmark": "#4bb5a8",
+                "teal-light": "#e4f4f2",
                 magenta: "#e0195b",
                 "magenta-text": "#ce1754",
                 orange: "#f4971f",
                 "orange-alt": "#f9a21d",
-
                 purple: "#4F215A",
-
+                violet: "#5b3e9e",
                 ink: "#292827",
+                "ink-faq": "#3d3b3a",
+                "ink-subtle": "#777777",
+                "ink-soft": "#333230",
+                "progress-bg": "#ededec",
                 "bg-mint": "#f2faf9",
                 "bg-blush": "#fefafb",
                 "bg-lavender": "#f4f5fb",
@@ -88,6 +87,10 @@ export default {
             },
             boxShadow: {
                 soft: "0 1.25rem 3.75rem -1.25rem rgba(33,41,90,0.25)",
+                navbar:
+                    "0 0.0625rem 0.1875rem rgba(0,0,0,0.04), 0 0.5rem 1.25rem rgba(33,41,90,0.05), 0 1.25rem 2.5rem -0.25rem rgba(33,41,90,0.06)",
+                "card-offset": "6px 8px 0 0",
+                "card-offset-sm": "4px 4px 0 0",
             },
         },
     },

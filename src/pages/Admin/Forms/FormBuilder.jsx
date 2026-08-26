@@ -4,6 +4,7 @@ import { supabase } from "../../../lib/supabaseClient";
 import Button from "../../../components/ui/Button";
 import Badge from "../../../components/ui/Badge";
 import Spinner from "../../../components/ui/Spinner";
+import StickerCard from "../../../components/ui/StickerCard";
 import { useToast } from "../../../components/ui/Toast";
 import { QUESTION_TYPES, QUESTION_TYPE_ORDER, makeQuestion } from "../../../lib/questionTypes";
 import { slugify, copyToClipboard } from "../../../lib/utils";
@@ -20,12 +21,12 @@ import {
 } from "lucide-react";
 
 const inputCls =
-  "w-full bg-white border border-ink/15 focus:border-teal focus:ring-2 focus:ring-teal/20 rounded-lg px-3 py-2 text-sm font-medium text-navy focus:outline-none transition-all";
+  "w-full bg-white border-2 border-ink/25 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy focus:outline-none transition-all";
 
 function Field({ label, children, hint }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-sm font-semibold text-ink">{label}</span>
+      <span className="text-sm font-extrabold text-navy">{label}</span>
       {children}
       {hint && <span className="text-xs text-ink/40">{hint}</span>}
     </label>
@@ -42,7 +43,7 @@ function QuestionEditor({ q, index, total, onChange, onMove, onDelete }) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-ink/10 p-4 sm:p-5">
+    <div className="bg-white rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] border-2 border-ink/10 p-4 sm:p-5">
       {/* Header */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <span className="w-7 h-7 flex items-center justify-center bg-teal text-white rounded-lg text-xs font-black">
@@ -327,12 +328,14 @@ export default function FormBuilder() {
 
   if (notFound) {
     return (
-      <div className="max-w-md mx-auto mt-10">
-        <div className="bg-blush border border-red-100 rounded-xl p-8 text-center flex flex-col items-center gap-4">
-          <span className="text-5xl">🤷</span>
-          <h2 className="text-xl font-bold text-navy">این فرم پیدا نشد!</h2>
-          <Button as={Link} to="/admin/forms" variant="indigo">برگشت به لیست فرم‌ها</Button>
-        </div>
+      <div className="max-w-md mx-auto mt-10 rotate-[0.5deg]">
+        <StickerCard theme="magenta">
+          <div className="p-8 text-center flex flex-col items-center gap-4">
+            <span className="text-5xl -rotate-[3deg]">🤷</span>
+            <h2 className="text-xl font-black text-navy">این فرم پیدا نشد!</h2>
+            <Button as={Link} to="/admin/forms" variant="navy">برگشت به لیست فرم‌ها</Button>
+          </div>
+        </StickerCard>
       </div>
     );
   }
@@ -384,8 +387,7 @@ export default function FormBuilder() {
         </div>
       </div>
 
-      {/* Form Settings */}
-      <div className="bg-white rounded-xl border border-ink/10 p-5 sm:p-6">
+      {/* Form Settings */}        <div className="bg-white rounded-tl-[1.5rem] rounded-br-[1.5rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] border-2 border-ink/10 p-5 sm:p-6">
         <h2 className="font-bold text-navy mb-4 flex items-center gap-2">
           <Settings size={18} className="text-teal-text" />
           تنظیمات فرم
@@ -486,7 +488,7 @@ export default function FormBuilder() {
         ))}
 
         {/* Add question */}
-        <div className="bg-white rounded-xl border-2 border-dashed border-ink/15 p-4 sm:p-5">
+        <div className="bg-white rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] border-2 border-dashed border-ink/15 p-4 sm:p-5">
           <span className="text-sm font-bold text-ink/70 mb-3 block">
             ➕ افزودن سوال جدید
           </span>

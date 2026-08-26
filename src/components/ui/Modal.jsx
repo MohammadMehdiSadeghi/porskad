@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import clsx from "./clsx";
+import StickerCard from "./StickerCard";
 
 export default function Modal({ open, onClose, title, children, wide = false }) {
   useEffect(() => {
@@ -17,31 +17,33 @@ export default function Modal({ open, onClose, title, children, wide = false }) 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-[2px]"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
-      <div
-        className={clsx(
-          "w-full bg-white rounded-[1.5rem] [corner-shape:squircle] border-2 border-ink/10 shadow-xl",
-          wide ? "max-w-3xl" : "max-w-xl",
-        )}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-ink/10">
-          {title && (
-            <h3 className="text-lg font-black text-navy">{title}</h3>
-          )}
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-[0.5rem] [corner-shape:squircle] text-ink/40 hover:text-ink hover:bg-ink/5 transition-colors"
-            aria-label="بستن"
-          >
-            ✕
-          </button>
-        </div>
-        <div className="px-6 py-5 max-h-[70vh] overflow-y-auto">{children}</div>
+      <div className="w-full" onClick={(e) => e.stopPropagation()}>
+        <StickerCard
+          theme="white"
+          rotate="-rotate-[0.5deg]"
+          className={wide ? "max-w-3xl mx-auto" : "max-w-xl mx-auto"}
+        >
+          <div className="max-h-[80vh] overflow-y-auto p-5 sm:p-7">
+            {title && (
+              <div className="flex items-center justify-between gap-4 mb-5">
+                <h3 className="text-xl font-black text-navy">{title}</h3>
+                <button
+                  onClick={onClose}
+                  className="w-9 h-9 flex items-center justify-center rounded-pill-md border-2 border-ink bg-white text-ink font-black hover:bg-bg-neutral transition-colors"
+                  aria-label="بستن"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+            {children}
+          </div>
+        </StickerCard>
       </div>
     </div>
   );
