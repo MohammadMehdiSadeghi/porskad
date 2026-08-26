@@ -1,79 +1,49 @@
-// ─── کارت استیکری دوسطحی — امضای دیزاین رکاد ───
-// یک لایه‌ی پس‌زمینه‌ی توپر با آفست ۳ تا ۵ پیکسل بالا-چپ (درست مثل
-// سایه‌ی استیکر کولاژ) + لایه‌ی اصلی با بوردر ۲ تا ۳ پیکسلی.
-// گوشه‌ها نامتقارن (بالا-چپ و پایین-راست گرد) با [corner-shape:squircle].
-
+// ─── کارت استیکری — سایه‌ی دولایه‌ی افست + گوشه‌ی برش‌خورده، زبان بصری رکاد ───
 import clsx from "./clsx";
 
-export const STICKER_THEMES = {
-  white: {
-    back: "bg-ink",
-    border: "border-ink",
-    bg: "bg-white",
-  },
-  teal: {
-    back: "bg-teal-alt",
-    border: "border-teal",
-    bg: "bg-[#F2FAF9]",
-  },
-  navy: {
-    back: "bg-navy-alt",
-    border: "border-navy",
-    bg: "bg-[#F4F5FB]",
-  },
-  magenta: {
-    back: "bg-magenta",
-    border: "border-magenta",
-    bg: "bg-[#FEFAFB]",
-  },
-  orange: {
-    back: "bg-orange-alt",
-    border: "border-orange",
-    bg: "bg-[#FEF7EC]",
-  },
+const RADIUS = {
+  cut: "rounded-tl-[1.5rem] rounded-br-[1.5rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]",
+  "cut-inv": "rounded-tr-[1.5rem] rounded-bl-[1.5rem] rounded-tl-none rounded-br-none [corner-shape:squircle]",
+  soft: "rounded-[1.25rem] [corner-shape:squircle]",
+};
+
+const ACCENT = {
+  navy: "bg-navy",
+  teal: "bg-teal",
+  magenta: "bg-magenta",
+  orange: "bg-orange",
+  ink: "bg-ink",
 };
 
 export default function StickerCard({
-  theme = "white",
+  accent = "ink",
+  radius = "soft",
   rotate = "",
-  offset = "top-[0.3rem] left-[0.3rem]",
-  radius = "rounded-tl-[1.5rem] rounded-br-[1.5rem] rounded-tr-none rounded-bl-none",
-  border = "border-[0.1875rem]",
   className = "",
-  backClassName = "",
   children,
-  as: Tag = "div",
   ...rest
 }) {
-  const t = STICKER_THEMES[theme] ?? STICKER_THEMES.white;
+  const shape = RADIUS[radius] ?? RADIUS.soft;
   return (
-    <div className={`relative ${rotate} ${className}`}>
-      {/* لایه‌ی سایه‌ی استیکر */}
+    <div className={clsx("relative", rotate)} {...rest}>
       <div
         aria-hidden="true"
-        className={clsx(
-          "absolute w-full h-full",
-          offset,
-          radius,
-          "[corner-shape:squircle]",
-          t.back,
-          backClassName,
-        )}
+        className={clsx("absolute top-[0.25rem] left-[0.25rem] w-full h-full", shape, ACCENT[accent] ?? ACCENT.ink)}
       />
-      {/* کارت اصلی */}
-      <Tag
+      <div
         className={clsx(
-          "relative z-10",
-          radius,
-          "[corner-shape:squircle]",
-          border,
-          t.border,
-          t.bg,
+          "relative z-10 bg-white border-2",
+          accent === "navy" && "border-navy",
+          accent === "teal" && "border-teal",
+          accent === "magenta" && "border-magenta",
+          accent === "orange" && "border-orange",
+          accent === "ink" && "border-ink",
+          shape,
+          className,
         )}
-        {...rest}
       >
         {children}
-      </Tag>
+      </div>
     </div>
   );
 }

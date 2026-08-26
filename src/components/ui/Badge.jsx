@@ -1,23 +1,23 @@
+// ─── نشان — همون پیل لِیبل کارت‌های استیکری رکاد (بوردر رنگی روی سفید) ───
 import clsx from "./clsx";
 
 const COLORS = {
-  teal: "border-teal-text text-teal-text bg-[#F2FAF9]",
-  navy: "border-navy text-navy bg-[#F4F5FB]",
-  magenta: "border-magenta-text text-magenta-text bg-[#FEFAFB]",
-  orange: "border-orange text-orange bg-[#FEF7EC]",
-  gray: "border-[#bdbdbd] text-[#777] bg-bg-neutral",
-  green: "border-[#2e9e6b] text-[#20794f] bg-[#effaf4]",
+  navy: "bg-white text-navy-alt border-navy-alt",
+  indigo: "bg-white text-navy-alt border-navy-alt",
+  teal: "bg-white text-teal-text border-teal-text",
+  emerald: "bg-white text-teal-text border-teal-text",
+  orange: "bg-white text-orange border-orange",
+  amber: "bg-white text-orange border-orange",
+  red: "bg-white text-magenta-text border-magenta-text",
+  gray: "bg-white text-ink/50 border-ink/20",
 };
 
-// بج استیکری سفید با بوردر رنگی — مثل بج‌های StatCard رکاد
-export default function Badge({ color = "teal", rotate = "", className = "", children }) {
+export default function Badge({ color = "navy", className = "", children }) {
   return (
     <span
       className={clsx(
-        "inline-block bg-white border rounded-xl [corner-shape:squircle]",
-        "px-2.5 py-0.5 text-[0.8125rem] font-bold whitespace-nowrap shadow-sm",
-        COLORS[color] ?? COLORS.teal,
-        rotate,
+        "inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold border-[0.09375rem] rounded-[0.5rem] [corner-shape:squircle]",
+        COLORS[color] ?? COLORS.navy,
         className,
       )}
     >

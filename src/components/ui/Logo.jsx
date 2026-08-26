@@ -1,21 +1,13 @@
-import { Link } from "react-router-dom";
-
-// لوگوی پرس‌یار — بج استیکری تیل با چرخش خفیف؛ «پرس» سرمه‌ای، «یار» تک‌رنگ
-export default function Logo({ to = "/", size = "md", className = "" }) {
-  const sizes = {
-    sm: "text-lg px-2.5 py-1 rounded-[0.6rem]",
-    md: "text-2xl px-3.5 py-1.5 rounded-[0.85rem]",
-    lg: "text-4xl px-5 py-2 rounded-[1.2rem]",
-  };
+export default function Logo({ className = "" }) {
   return (
-    <Link to={to} className={`inline-block rotate-[-2deg] hover:rotate-0 transition-transform duration-200 ${className}`} aria-label="پرس‌یار — صفحه اصلی">
-      <span
-        className={`inline-flex items-baseline gap-1 bg-white border-[0.1875rem] border-ink [corner-shape:squircle] ${sizes[size]} font-black shadow-sm select-none`}
-      >
-        <span className="text-navy">پرس</span>
-        <span className="text-teal-text">‌یار</span>
-        <span className="text-magenta-text" aria-hidden="true">.</span>
-      </span>
-    </Link>
+    <div className={`inline-flex items-center gap-2 ${className}`} aria-label="پرسکاد">
+      <div className="relative">
+        <div aria-hidden="true" className="absolute top-[0.1rem] left-[0.1rem] w-full h-full bg-teal-text rounded-[0_0.5rem_0_0.5rem] [corner-shape:squircle]" />
+        <div className="relative w-8 h-8 bg-teal border-2 border-ink/10 rounded-[0_0.5rem_0_0.5rem] [corner-shape:squircle] flex items-center justify-center">
+          <span className="text-white font-black text-sm">پ</span>
+        </div>
+      </div>
+      <span className="font-black text-xl text-navy">پرسکاد</span>
+    </div>
   );
 }

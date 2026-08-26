@@ -1,9 +1,9 @@
 {
-  "name": "porsyar",
+  "name": "porskad",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
-  "description": "پرس‌یار — سرویس ساخت فرم و نظرسنجی آنلاین (v1) — React + Vite + Tailwind + Supabase",
+  "description": "پرسکاد — پلتفرم حرفه‌ای مدیریت فرم و تحلیل داده (v2) — React + Vite + Tailwind + Supabase",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -12,9 +12,12 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
     "framer-motion": "^11.3.0",
+    "lucide-react": "^0.469.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.26.1"
+    "react-router-dom": "^6.26.1",
+    "recharts": "^2.13.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",

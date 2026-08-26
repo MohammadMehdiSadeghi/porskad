@@ -166,6 +166,24 @@ begin
 end;
 $$;
 
+
+-- ─── تابع: چک ادمین بودن (SECURITY DEFINER تا RLS خودِ user_roles را دور بزند) ───
+create or replace function public.is_admin(p_user_id uuid default auth.uid())
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.user_roles ur
+    join public.roles r on r.id = ur.role_id
+    where ur.user_id = p_user_id and r.id = 'admin' and ur.active
+  );
+$$;
+
+grant execute on function public.is_admin(uuid) to authenticated, anon;
+
 -- ════════════════════════════════════════════════════════════════
 -- RLS — امنیت سطح ردیف (به‌روز شده)
 -- ════════════════════════════════════════════════════════════════
@@ -176,9 +194,7 @@ create policy "admin read all profiles"
   on public.profiles for select
   to authenticated
   using (
-    exists (select 1 from public.user_roles ur
-      join public.roles r on r.id = ur.role_id
-      where ur.user_id = auth.uid() and r.id = 'admin' and ur.active)
+    public.is_admin(auth.uid())
     or id = auth.uid()
   );
 
@@ -187,9 +203,7 @@ create policy "admin manage profiles"
   on public.profiles for all
   to authenticated
   using (
-    exists (select 1 from public.user_roles ur
-      join public.roles r on r.id = ur.role_id
-      where ur.user_id = auth.uid() and r.id = 'admin' and ur.active)
+    public.is_admin(auth.uid())
   );
 
 -- user_roles: فقط ادمین می‌تواند بخواند/تغییر دهد
@@ -198,9 +212,7 @@ create policy "admin read user_roles"
   on public.user_roles for select
   to authenticated
   using (
-    exists (select 1 from public.user_roles ur
-      join public.roles r on r.id = ur.role_id
-      where ur.user_id = auth.uid() and r.id = 'admin' and ur.active)
+    public.is_admin(auth.uid())
   );
 
 drop policy if exists "admin manage user_roles" on public.user_roles;
@@ -208,9 +220,7 @@ create policy "admin manage user_roles"
   on public.user_roles for all
   to authenticated
   using (
-    exists (select 1 from public.user_roles ur
-      join public.roles r on r.id = ur.role_id
-      where ur.user_id = auth.uid() and r.id = 'admin' and ur.active)
+    public.is_admin(auth.uid())
   );
 
 -- forms
@@ -234,9 +244,7 @@ create policy "admin manage forms"
   on public.forms for all
   to authenticated
   using (
-    exists (select 1 from public.user_roles ur
-      join public.roles r on r.id = ur.role_id
-      where ur.user_id = auth.uid() and r.id = 'admin' and ur.active)
+    public.is_admin(auth.uid())
   );
 
 drop policy if exists "manager manage own forms" on public.forms;
@@ -245,9 +253,7 @@ create policy "manager manage own forms"
   to authenticated
   using (
     manager_id = auth.uid()
-    or exists (select 1 from public.user_roles ur
-      join public.roles r on r.id = ur.role_id
-      where ur.user_id = auth.uid() and r.id = 'admin' and ur.active)
+    or public.is_admin(auth.uid())
   );
 
 -- questions: عموم فقط SELECT برای فرم‌های منتشرشده
