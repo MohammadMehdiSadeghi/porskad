@@ -30,8 +30,6 @@ function Field({ label, children, hint }) {
 function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDelete }) {
   const meta = QUESTION_TYPES[q.type];
   const rots = index % 2 ? "rotate-[0.4deg]" : "-rotate-[0.4deg]";
-  const [condOpen, setCondOpen] = useState(false);
-
   function setOpt(i, val) {
     const opts = [...q.options];
     opts[i] = val;
@@ -83,21 +81,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
               >
                 🗑
               </button>
-              {index > 0 && (
-                <button
-                  onClick={() => setCondOpen(!condOpen)}
-                  className={`w-8 h-8 rounded-pill-md border-2 font-black transition-colors ${
-                    q.condition
-                      ? 'border-teal/50 bg-teal/10 text-teal-text'
-                      : condOpen
-                        ? 'border-navy/30 bg-navy/5 text-navy'
-                        : 'border-ink/20 bg-white text-ink-subtle hover:bg-bg-neutral'
-                  }`}
-                  title="شرط نمایش"
-                >
-                  ⋯
-                </button>
-              )}
+
             </div>
           </div>
 
@@ -151,7 +135,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
           )}
 
           {/* ─── پنل شرطی (Conditional Logic Panel) ─── */}
-          {condOpen && index > 0 && (
+          {index > 0 && (
             <div className="flex flex-col gap-2 border-2 border-dashed border-navy/20 rounded-pill-md bg-bg-lavender/40 p-3">
               <div className="flex items-center gap-2">
                 <span className="text-sm">🔀</span>
