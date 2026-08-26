@@ -39,9 +39,14 @@ export default function Login() {
     <div className="min-h-screen dot-pattern bg-bg-mint flex items-center justify-center p-4">
       <div className="w-full max-w-md -rotate-[0.7deg]">
         <StickerCard theme="white">
-          <form onSubmit={handleSubmit} className="p-7 sm:p-9 flex flex-col gap-5">
+          <form
+            onSubmit={handleSubmit}
+            className="p-7 sm:p-9 flex flex-col gap-5"
+          >
             <div className="flex flex-col items-center gap-3 text-center">
-              <Badge color="navy" rotate="rotate-[2deg]">پنل مدیریت پرسکاد</Badge>
+              <Badge color="navy" rotate="rotate-[2deg]">
+                پنل مدیریت پرسکاد
+              </Badge>
               <h1 className="text-2xl font-black text-navy">ورود ادمین</h1>
               <p className="text-sm font-semibold text-ink-subtle">
                 فقط مدیران مجاز به ورود به این بخش هستند.
@@ -58,7 +63,7 @@ export default function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-white border-2 border-ink/25 focus:border-teal focus:ring-4 focus:ring-teal/20
                   rounded-pill-md px-4 py-3 font-semibold text-ink text-left focus:outline-none transition-all"
-                placeholder="admin@porskad.ir"
+                placeholder="Example@gmail.com"
                 autoComplete="username"
               />
             </label>
@@ -85,10 +90,19 @@ export default function Login() {
             )}
 
             <div className="flex items-center justify-between gap-3 mt-1">
-              <Button type="submit" variant="teal" size="lg" disabled={busy} rotate="-rotate-[1deg]">
+              <Button
+                type="submit"
+                variant="teal"
+                size="lg"
+                disabled={busy}
+                rotate="-rotate-[1deg]"
+              >
                 {busy ? "در حال ورود..." : "ورود 🚪"}
               </Button>
-              <Link to="/" className="text-sm font-bold text-ink-subtle hover:text-navy transition-colors">
+              <Link
+                to="/"
+                className="text-sm font-bold text-ink-subtle hover:text-navy transition-colors"
+              >
                 برگشت به سایت ↩
               </Link>
             </div>
