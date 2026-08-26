@@ -9,6 +9,7 @@ import Spinner from "../../components/ui/Spinner";
 import Logo from "../../components/ui/Logo";
 import { supabase } from "../../lib/supabaseClient";
 import { normalizeAnswerValue, validateAnswer } from "../../lib/validators";
+import { evaluateCondition } from "../../lib/questionTypes";
 import { faNum, faDuration, parseUserAgent } from "../../lib/utils";
 import QuestionStep from "./QuestionStep";
 import SEO from "../../components/ui/SEO";
@@ -145,6 +146,35 @@ export default function FormFill() {
     [currentQuestion]
   );
 
+  // ─── سوالات قابل مشاهده بر اساس شرط‌ها ───
+  const visibleQuestions = useMemo(() => {
+    return questions.filter((q) => evaluateCondition(q.condition, answers));
+  }, [questions, answers]);
+
+  const visibleTotal = visibleQuestions.length;
+
+  // شمارهی نمایشی سوال فعلی (بر اساس سوالات قابل مشاهده)
+  const currentVisibleIndex = useMemo(() => {
+    if (step < 0 || !currentQuestion) return 0;
+    return visibleQuestions.findIndex((q) => q.id === currentQuestion.id) + 1;
+  }, [step, currentQuestion, visibleQuestions]);
+
+  // پیدا کردن مرحلهی بعدی قابل نمایش
+  const findNextVisibleStep = useCallback((fromStep) => {
+    for (let i = fromStep + 1; i < total; i++) {
+      if (evaluateCondition(questions[i]?.condition, answers)) return i;
+    }
+    return total; // همه سوالات تمام شد → صفحه خروج
+  }, [questions, total, answers]);
+
+  // پیدا کردن مرحلهی قبلی قابل نمایش
+  const findPrevVisibleStep = useCallback((fromStep) => {
+    for (let i = fromStep - 1; i >= 0; i--) {
+      if (evaluateCondition(questions[i]?.condition, answers)) return i;
+    }
+    return -1; // برگشت به صفحه خوش‌آمد
+  }, [questions, answers]);
+
   // اعتبارسنجی سوال فعلی
   const validateCurrent = useCallback(() => {
     if (!currentQuestion) return { valid: true };
@@ -157,7 +187,9 @@ export default function FormFill() {
     if (step === -1) {
       setStartedAt((prev) => prev ?? Date.now());
       setDir(1);
-      setStep(0);
+      // اگه سوال اول شرط داره و برآورده نیست، رد شو
+      const first = findNextVisibleStep(-1);
+      setStep(first);
       setRequiredError(null);
       return;
     }
@@ -169,22 +201,22 @@ export default function FormFill() {
     setRequiredError(null);
     accrueTime();
     setDir(1);
-    setStep((s) => Math.min(s + 1, total));
-  }, [step, total, accrueTime, validateCurrent]);
+    setStep((s) => findNextVisibleStep(s));
+  }, [step, accrueTime, validateCurrent, findNextVisibleStep]);
 
   const goBack = useCallback(() => {
     if (step <= -1) return;
     accrueTime();
     setDir(-1);
-    setStep((s) => s - 1);
-  }, [step, accrueTime]);
+    setStep((s) => findPrevVisibleStep(s));
+  }, [step, accrueTime, findPrevVisibleStep]);
 
   const submit = useCallback(async () => {
     if (submitting) return;
     if (honeypot.trim() !== "") return;
 
-    // اعتبارسنجی تمام سوالات اجباری
-    for (const q of questions) {
+    // اعتبارسنجی تمام سوالات اجباری (فقط سوالات قابل مشاهده)
+    for (const q of visibleQuestions) {
       if (q.required) {
         const v = answers[q.id];
         const isEmpty = v === null || v === undefined || (typeof v === "string" && v.trim() === "");
@@ -226,7 +258,7 @@ export default function FormFill() {
 
       if (respError) throw respError;
 
-      const rows = questions
+      const rows = visibleQuestions
         .filter((q) => {
           const v = answers[q.id];
           return !(v === undefined || v === null || String(v ?? "").trim() === "");
@@ -252,10 +284,10 @@ export default function FormFill() {
     } finally {
       setSubmitting(false);
     }
-  }, [submitting, honeypot, form, questions, answers, times, startedAt, slug, total]);
+  }, [submitting, honeypot, form, visibleQuestions, questions, answers, times, startedAt, slug, total]);
 
-  const progressValue = step < 0 ? 0 : Math.min(step, total);
-  const approxMinutes = useMemo(() => Math.max(1, Math.round(total * 0.4)), [total]);
+  const progressValue = step < 0 ? 0 : Math.min(step, visibleTotal);
+  const approxMinutes = useMemo(() => Math.max(1, Math.round(visibleTotal * 0.4)), [visibleTotal]);
 
   if (loading) {
     return (
@@ -286,7 +318,7 @@ export default function FormFill() {
       {/* نوار پیشرفت */}
       {step >= 0 && step < total && (
         <div className="w-full max-w-xl mx-auto px-4 pb-2">
-          <ProgressBar value={progressValue} max={total} showLabel />
+          <ProgressBar value={progressValue} max={visibleTotal} showLabel />
         </div>
       )}
 
@@ -318,9 +350,9 @@ export default function FormFill() {
                     transition={{ duration: 0.28, ease: "easeOut" }}
                     className="flex-1 flex flex-col items-center text-center justify-center gap-4"
                   >
-                    {total > 0 && (
+                    {visibleTotal > 0 && (
                       <Badge color="navy" rotate="rotate-[2deg]">
-                        {faNum(total)} سوال · حدود {faNum(approxMinutes)} دقیقه
+                        {faNum(visibleTotal)} سوال · حدود {faNum(approxMinutes)} دقیقه
                       </Badge>
                     )}
                     <span className="text-5xl rotate-[4deg]">
@@ -342,10 +374,10 @@ export default function FormFill() {
                         variant="teal"
                         size="lg"
                         rotate="-rotate-[1.5deg]"
-                        disabled={total === 0}
+                        disabled={visibleTotal === 0}
                         onClick={goNext}
                       >
-                        {total === 0 ? "این فرم هنوز سوالی ندارد" : "بزن بریم! 🚀"}
+                        {visibleTotal === 0 ? "این فرم هنوز سوالی ندارد" : "بزن بریم! 🚀"}
                       </Button>
                     </div>
                   </motion.div>
@@ -364,8 +396,8 @@ export default function FormFill() {
                   >
                     <QuestionStep
                       question={currentQuestion}
-                      index={step}
-                      total={total}
+                      index={currentVisibleIndex - 1}
+                      total={visibleTotal}
                       value={answers[currentQuestion.id]}
                       timeSpent={times[currentQuestion.id] ?? 0}
                       onChange={setAnswer}

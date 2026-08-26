@@ -312,7 +312,13 @@ export default function QuestionStep({
           <FlagIcon className="opacity-60" />
           سوال {faNum(index + 1)} از {faNum(total)}
         </span>
-        {question.required ? (
+        <div className="flex items-center gap-1.5 mr-auto">
+          {question.condition && (
+            <span className="text-[0.65rem] font-bold text-navy bg-bg-lavender rounded-pill-sm px-2 py-0.5 flex items-center gap-1">
+              🔀 شرطی
+            </span>
+          )}
+          {question.required ? (
           <span className="text-xs font-bold text-magenta-text bg-bg-blush rounded-pill-sm px-2 py-0.5 flex items-center gap-1">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
@@ -324,6 +330,7 @@ export default function QuestionStep({
             اختیاری
           </span>
         )}
+        </div>
       </div>
 
       <h2 className="text-xl sm:text-2xl font-black text-navy leading-[1.4]">

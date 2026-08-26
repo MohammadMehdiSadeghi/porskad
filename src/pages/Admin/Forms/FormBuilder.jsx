@@ -6,7 +6,7 @@ import Button from "../../../components/ui/Button";
 import Badge from "../../../components/ui/Badge";
 import Spinner from "../../../components/ui/Spinner";
 import { useToast } from "../../../components/ui/Toast";
-import { QUESTION_TYPES, QUESTION_TYPE_ORDER, makeQuestion } from "../../../lib/questionTypes";
+import { QUESTION_TYPES, QUESTION_TYPE_ORDER, makeQuestion, CONDITION_OPERATORS, CONDITION_OPERATOR_ORDER } from "../../../lib/questionTypes";
 import { faNum, slugify, copyToClipboard } from "../../../lib/utils";
 import SEO from "../../../components/ui/SEO";
 
@@ -24,7 +24,7 @@ function Field({ label, children, hint }) {
 }
 
 // ─── کارت ویرایش یک سوال ───
-function QuestionEditor({ q, index, total, onChange, onMove, onDelete }) {
+function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDelete }) {
   const meta = QUESTION_TYPES[q.type];
   const rots = index % 2 ? "rotate-[0.4deg]" : "-rotate-[0.4deg]";
 
@@ -128,6 +128,104 @@ function QuestionEditor({ q, index, total, onChange, onMove, onDelete }) {
               >
                 + افزودن گزینه
               </button>
+            </div>
+          )}
+
+          {/* ─── شرطی‌سازی (Conditional Logic) ─── */}
+          {index > 0 && (
+            <div className="flex flex-col gap-2 border-2 border-dashed border-navy/20 rounded-pill-md bg-bg-lavender/40 p-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-extrabold text-navy">
+                  🔀 شرط نمایش (اختیاری)
+                </span>
+                {q.condition && (
+                  <button
+                    onClick={() => onChange({ condition: null })}
+                    className="text-[0.65rem] font-bold text-magenta-text hover:underline mr-auto"
+                  >
+                    حذف شرط
+                  </button>
+                )}
+              </div>
+
+              {/* دکمه افزودن شرط */}
+              {!q.condition && (
+                <button
+                  onClick={() =>
+                    onChange({
+                      condition: {
+                        source_question_id: allQuestions[index - 1]?.id ?? null,
+                        operator: "equals",
+                        value: "",
+                      },
+                    })
+                  }
+                  className="self-start text-[0.7rem] font-extrabold text-navy hover:text-teal-text transition-colors"
+                >
+                  + افزودن شرط
+                </button>
+              )}
+
+              {/* فرم تنظیم شرط */}
+              {q.condition && (
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[0.65rem] font-bold text-ink-subtle">سوال مرجع:</span>
+                    <select
+                      value={q.condition.source_question_id ?? ""}
+                      onChange={(e) =>
+                        onChange({
+                          condition: { ...q.condition, source_question_id: e.target.value || null },
+                        })
+                      }
+                      className={`${inputCls} !py-1.5 !text-xs`}
+                    >
+                      {allQuestions
+                        .filter((_, j) => j < index)
+                        .map((sq) => (
+                          <option key={sq.id} value={sq.id}>
+                            {faNum(allQuestions.indexOf(sq) + 1)}. {sq.title?.slice(0, 40) || "—"}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[0.65rem] font-bold text-ink-subtle">شرط:</span>
+                    <select
+                      value={q.condition.operator}
+                      onChange={(e) =>
+                        onChange({
+                          condition: { ...q.condition, operator: e.target.value },
+                        })
+                      }
+                      className={`${inputCls} !py-1.5 !text-xs`}
+                    >
+                      {CONDITION_OPERATOR_ORDER.map((op) => (
+                        <option key={op} value={op}>
+                          {CONDITION_OPERATORS[op].label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {CONDITION_OPERATORS[q.condition.operator]?.needsValue && (
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[0.65rem] font-bold text-ink-subtle">مقدار:</span>
+                      <input
+                        value={q.condition.value ?? ""}
+                        onChange={(e) =>
+                          onChange({
+                            condition: { ...q.condition, value: e.target.value },
+                          })
+                        }
+                        placeholder="مقدار مقایسه..."
+                        className={`${inputCls} !py-1.5 !text-xs`}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -263,6 +361,7 @@ export default function FormBuilder() {
         required: !!q.required,
         options: q.type === "choice" ? q.options.map((o) => o.trim()) : [],
         position: i,
+        condition: q.condition ?? null,
       }));
 
       const { data: freshQs, error } = await supabase.rpc("save_form", {
@@ -418,6 +517,7 @@ export default function FormBuilder() {
             q={q}
             index={i}
             total={questions.length}
+            allQuestions={questions}
             onChange={(patch) => updateQuestion(q.localId, patch)}
             onMove={(dir) => moveQuestion(q.localId, dir)}
             onDelete={() => deleteQuestion(q.localId)}
