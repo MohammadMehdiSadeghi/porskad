@@ -51,6 +51,7 @@ export default function FormFill() {
   const [startedAt, setStartedAt] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [requiredError, setRequiredError] = useState(null);
   const [honeypot, setHoneypot] = useState("");
   const stepEnteredAt = useRef(Date.now());
 
@@ -138,15 +139,17 @@ export default function FormFill() {
     (val) => {
       if (!currentQuestion) return;
       setAnswers((a) => ({ ...a, [currentQuestion.id]: val }));
+      setRequiredError(null);
     },
     [currentQuestion]
   );
 
   // اعتبارسنجی سوال فعلی
   const validateCurrent = useCallback(() => {
-    if (!currentQuestion) return true;
+    if (!currentQuestion) return { valid: true };
     const err = validateAnswer(currentQuestion, answers[currentQuestion.id]);
-    return !err;
+    if (err) return { valid: false, error: err, title: currentQuestion.title };
+    return { valid: true };
   }, [currentQuestion, answers]);
 
   const goNext = useCallback(() => {
@@ -154,9 +157,15 @@ export default function FormFill() {
       setStartedAt((prev) => prev ?? Date.now());
       setDir(1);
       setStep(0);
+      setRequiredError(null);
       return;
     }
-    if (!validateCurrent()) return;
+    const result = validateCurrent();
+    if (!result.valid) {
+      setRequiredError(result.error);
+      return;
+    }
+    setRequiredError(null);
     accrueTime();
     setDir(1);
     setStep((s) => Math.min(s + 1, total));
@@ -356,7 +365,23 @@ export default function FormFill() {
                       onChange={setAnswer}
                       onAdvance={goNext}
                     />
-                    <div className="mt-6 flex items-center justify-between">
+                    {requiredError && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        className="flex items-center gap-3 bg-magenta/10 border-2 border-magenta rounded-pill-md px-4 py-3 mt-4"
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-magenta-text shrink-0">
+                          <circle cx="12" cy="12" r="10"/>
+                          <line x1="12" y1="8" x2="12" y2="12"/>
+                          <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        <span className="text-sm font-bold text-magenta-text">
+                          {requiredError}
+                        </span>
+                      </motion.div>
+                    )}
+                    <div className="mt-4 flex items-center justify-between">
                       <Button variant="ghost" size="sm" onClick={goBack}>
                         ↩ برگشت
                       </Button>
@@ -413,11 +438,6 @@ export default function FormFill() {
                         این پاسخ در {faDuration(Math.round((Date.now() - startedAt) / 1000))} ثبت شد
                       </span>
                     )}
-                    <div className="mt-2">
-                      <Button as="a" href="/" variant="white" size="sm">
-                        رفتن به صفحه‌ی اصلی
-                      </Button>
-                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
