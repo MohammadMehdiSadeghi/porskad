@@ -6,11 +6,11 @@ import { validateAnswer } from "../../lib/validators";
 function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, onEnter, ...rest }) {
   const shared = clsx(
     "w-full bg-white border rounded-lg px-4 py-3",
-    "font-medium text-gray-900 placeholder:text-gray-300 placeholder:font-medium",
+    "font-medium text-navy placeholder:text-ink/30 placeholder:font-medium",
     "focus:outline-none focus:ring-2 transition-all",
     error
-      ? "border-red-300 focus:ring-red-200 focus:border-red-400"
-      : "border-gray-200 focus:border-indigo-500 focus:ring-indigo-100",
+      ? "border-red-300 focus:ring-red-200 focus:border-magenta"
+      : "border-ink/15 focus:border-teal focus:ring-teal/15",
   );
 
   if (type === "long_text") {
@@ -97,8 +97,8 @@ function ChoiceOptions({ options = [], value, onChange, onEnter }) {
               "border rounded-lg px-4 py-3.5 transition-all duration-150 cursor-pointer",
               "hover:-translate-y-0.5 hover:shadow-sm",
               selected
-                ? "border-indigo-400 bg-indigo-50"
-                : "border-gray-200 bg-white hover:border-indigo-200",
+                ? "border-teal bg-bg-mint"
+                : "border-ink/15 bg-white hover:border-teal/30",
             )}
           >
             <span
@@ -106,14 +106,14 @@ function ChoiceOptions({ options = [], value, onChange, onEnter }) {
                 "w-8 h-8 shrink-0 flex items-center justify-center rounded-full",
                 "border font-bold text-sm transition-colors",
                 selected
-                  ? "border-indigo-500 bg-indigo-500 text-white"
-                  : "border-gray-200 text-gray-500 group-hover:border-indigo-300",
+                  ? "border-teal bg-teal text-white"
+                  : "border-ink/15 text-ink/50 group-hover:border-teal/40",
               )}
             >
               {faNum(i + 1)}
             </span>
-            <span className="font-medium text-gray-900">{opt}</span>
-            {selected && <span className="mr-auto text-indigo-500 text-lg">✓</span>}
+            <span className="font-medium text-navy">{opt}</span>
+            {selected && <span className="mr-auto text-teal-text text-lg">✓</span>}
           </button>
         );
       })}
@@ -132,9 +132,9 @@ function YesNoOptions({ value, onChange, onEnter }) {
         const selected = value === o.label;
         const active = selected
           ? o.color === "emerald"
-            ? "border-emerald-400 bg-emerald-50 text-emerald-700"
-            : "border-red-400 bg-red-50 text-red-700"
-          : "border-gray-200 bg-white text-gray-700";
+            ? "border-teal bg-bg-mint text-teal-text"
+            : "border-red-400 bg-blush text-magenta-text"
+          : "border-ink/15 bg-white text-ink";
         return (
           <button
             key={o.label}
@@ -206,21 +206,21 @@ export default function QuestionStep({
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-bold text-indigo-600">
+        <span className="text-sm font-bold text-teal-text">
           سوال {faNum(index + 1)} از {faNum(total)}
         </span>
         {!question.required && (
-          <span className="text-xs font-medium text-gray-400 bg-gray-100 rounded-md px-2 py-0.5">
+          <span className="text-xs font-medium text-ink/40 bg-bg-neutral rounded-md px-2 py-0.5">
             اختیاری
           </span>
         )}
       </div>
 
-      <h2 className="text-xl sm:text-[1.6rem] font-black text-gray-900 leading-[1.4]">
+      <h2 className="text-xl sm:text-[1.6rem] font-black text-navy leading-[1.4]">
         {question.title}
       </h2>
       {question.description && (
-        <p className="text-sm font-medium text-gray-400 leading-7 -mt-1">
+        <p className="text-sm font-medium text-ink/40 leading-7 -mt-1">
           {question.description}
         </p>
       )}
@@ -255,13 +255,13 @@ export default function QuestionStep({
       {question.type === "rating" && <RatingStars value={value} onChange={onChange} />}
 
       {error && (
-        <div className="self-start bg-red-50 border border-red-200 rounded-lg px-3.5 py-2 text-sm font-medium text-red-600">
+        <div className="self-start bg-blush border border-magenta-text/25 rounded-lg px-3.5 py-2 text-sm font-medium text-magenta-text">
           {error}
         </div>
       )}
 
       {timeSpent > 5 && (
-        <span className="text-[0.65rem] font-medium text-gray-300 self-start">
+        <span className="text-[0.65rem] font-medium text-ink/30 self-start">
           ⏱ {faDuration(timeSpent)} روی این سوال
         </span>
       )}

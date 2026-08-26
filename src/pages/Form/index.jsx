@@ -16,12 +16,12 @@ const draftKey = (slug) => `porskad_draft_${slug}`;
 // ─── صفحه‌ی «فرم در دسترس نیست» ───
 function NotAvailable({ message }) {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-bg-neutral flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl border border-gray-100 p-8 flex flex-col items-center text-center gap-4">
+        <div className="bg-white rounded-2xl border border-ink/10 p-8 flex flex-col items-center text-center gap-4">
           <span className="text-5xl">🔒</span>
-          <h1 className="text-2xl font-black text-gray-900">این فرم در دسترس نیست</h1>
-          <p className="text-sm text-gray-500 leading-8">{message}</p>
+          <h1 className="text-2xl font-black text-navy">این فرم در دسترس نیست</h1>
+          <p className="text-sm text-ink/50 leading-8">{message}</p>
           <Button as="a" href="/" variant="indigo" size="sm">برگشت به خانه</Button>
         </div>
       </div>
@@ -216,7 +216,7 @@ export default function FormFill() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-bg-neutral">
         <Spinner label="فرم در حال بارگذاری..." />
       </div>
     );
@@ -226,10 +226,10 @@ export default function FormFill() {
   if (!form) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-bg-neutral flex flex-col">
       <div className="w-full max-w-[75rem] mx-auto flex items-center justify-between px-4 py-3">
         <Logo />
-        <span className="text-xs font-medium text-gray-400 truncate max-w-[50vw]">
+        <span className="text-xs font-medium text-ink/40 truncate max-w-[50vw]">
           {form.title}
         </span>
       </div>
@@ -242,7 +242,7 @@ export default function FormFill() {
 
       <main className="flex-1 flex items-start sm:items-center justify-center px-4 py-6">
         <div className={`w-full max-w-xl ${step === -1 ? "" : ""}`}>
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <div className="bg-white rounded-2xl border border-ink/10 shadow-sm">
             <input
               type="text"
               name="website"
@@ -272,10 +272,10 @@ export default function FormFill() {
                       </Badge>
                     )}
                     <span className="text-5xl">👋</span>
-                    <h1 className="text-3xl font-black text-gray-900 leading-snug">
+                    <h1 className="text-3xl font-black text-navy leading-snug">
                       {form.welcome_title}
                     </h1>
-                    <p className="font-medium text-gray-500 leading-8 max-w-md">
+                    <p className="font-medium text-ink/50 leading-8 max-w-md">
                       {form.welcome_message}
                     </p>
                     <div className="mt-3">
@@ -329,7 +329,7 @@ export default function FormFill() {
                       )}
                     </div>
                     {submitError && (
-                      <div className="mt-3 self-end bg-red-50 border border-red-200 rounded-lg px-4 py-2 text-sm font-medium text-red-600">
+                      <div className="mt-3 self-end bg-blush border border-magenta-text/25 rounded-lg px-4 py-2 text-sm font-medium text-magenta-text">
                         {submitError}
                       </div>
                     )}
@@ -351,14 +351,14 @@ export default function FormFill() {
                     >
                       🎉
                     </motion.span>
-                    <h1 className="text-3xl font-black text-gray-900 leading-snug">
+                    <h1 className="text-3xl font-black text-navy leading-snug">
                       {form.exit_title}
                     </h1>
-                    <p className="font-medium text-gray-500 leading-8 max-w-md">
+                    <p className="font-medium text-ink/50 leading-8 max-w-md">
                       {form.exit_message}
                     </p>
                     {startedAt && (
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-ink/40">
                         این پاسخ در {faDuration(Math.round((Date.now() - startedAt) / 1000))} ثبت شد
                       </span>
                     )}

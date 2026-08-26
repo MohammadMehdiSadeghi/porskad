@@ -34,27 +34,30 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl border border-red-100 p-8 max-w-md text-center">
-            <div className="text-4xl mb-4">⚠️</div>
-            <h1 className="text-xl font-bold text-gray-900 mb-2">خطا در بارگذاری</h1>
-            <p className="text-sm text-gray-500 mb-4">
-              یک خطا رخ داد. لطفاً صفحه را رفرش کنید.
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700"
-            >
-              رفرش صفحه
-            </button>
-            {this.state.error && (
-              <details className="mt-4 text-left text-xs text-gray-500">
-                <summary>جزئیات خطا</summary>
-                <pre className="mt-2 bg-gray-100 p-2 rounded overflow-auto">
-                  {this.state.error.toString()}
-                </pre>
-              </details>
-            )}
+        <div className="min-h-screen bg-bg-mint flex items-center justify-center p-4">
+          <div className="relative w-full max-w-md rotate-[0.5deg]">
+            <div aria-hidden="true" className="absolute top-2 left-2 w-full h-full bg-navy rounded-[1.5rem] [corner-shape:squircle]" />
+            <div className="relative z-10 bg-white border-2 border-navy rounded-[1.5rem] [corner-shape:squircle] p-8 text-center">
+              <div className="text-4xl mb-4">⚠️</div>
+              <h1 className="text-xl font-black text-navy mb-2">خطا در بارگذاری</h1>
+              <p className="text-sm text-ink/50 mb-4">
+                یک خطا رخ داد. لطفاً صفحه را رفرش کنید.
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="bg-teal text-white px-4 py-2 rounded-[0.625rem] [corner-shape:squircle] text-sm font-bold hover:bg-teal-text transition-colors"
+              >
+                رفرش صفحه
+              </button>
+              {this.state.error && (
+                <details className="mt-4 text-left text-xs text-ink/50">
+                  <summary>جزئیات خطا</summary>
+                  <pre className="mt-2 bg-bg-neutral p-2 rounded overflow-auto">
+                    {this.state.error.toString()}
+                  </pre>
+                </details>
+              )}
+            </div>
           </div>
         </div>
       );

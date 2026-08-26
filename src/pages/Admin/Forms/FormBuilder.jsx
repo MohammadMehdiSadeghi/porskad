@@ -20,14 +20,14 @@ import {
 } from "lucide-react";
 
 const inputCls =
-  "w-full bg-white border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 focus:outline-none transition-all";
+  "w-full bg-white border border-ink/15 focus:border-teal focus:ring-2 focus:ring-teal/20 rounded-lg px-3 py-2 text-sm font-medium text-navy focus:outline-none transition-all";
 
 function Field({ label, children, hint }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-sm font-semibold text-gray-700">{label}</span>
+      <span className="text-sm font-semibold text-ink">{label}</span>
       {children}
-      {hint && <span className="text-xs text-gray-400">{hint}</span>}
+      {hint && <span className="text-xs text-ink/40">{hint}</span>}
     </label>
   );
 }
@@ -42,21 +42,21 @@ function QuestionEditor({ q, index, total, onChange, onMove, onDelete }) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-4 sm:p-5">
+    <div className="bg-white rounded-xl border border-ink/10 p-4 sm:p-5">
       {/* Header */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
-        <span className="w-7 h-7 flex items-center justify-center bg-indigo-600 text-white rounded-lg text-xs font-black">
+        <span className="w-7 h-7 flex items-center justify-center bg-teal text-white rounded-lg text-xs font-black">
           {index + 1}
         </span>
         <Badge color="indigo">
           {meta.icon} {meta.label}
         </Badge>
-        <label className="flex items-center gap-1.5 text-xs font-medium text-gray-500 mr-auto cursor-pointer">
+        <label className="flex items-center gap-1.5 text-xs font-medium text-ink/50 mr-auto cursor-pointer">
           <input
             type="checkbox"
             checked={q.required}
             onChange={(e) => onChange({ required: e.target.checked })}
-            className="accent-indigo-600 w-4 h-4"
+            className="accent-teal w-4 h-4"
           />
           اجباری
         </label>
@@ -64,20 +64,20 @@ function QuestionEditor({ q, index, total, onChange, onMove, onDelete }) {
           <button
             onClick={() => onMove(-1)}
             disabled={index === 0}
-            className="w-7 h-7 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-30 flex items-center justify-center transition-colors"
+            className="w-7 h-7 rounded-lg border border-ink/15 bg-white text-ink/50 hover:bg-bg-neutral disabled:opacity-30 flex items-center justify-center transition-colors"
           >
             <ArrowUp size={14} />
           </button>
           <button
             onClick={() => onMove(1)}
             disabled={index === total - 1}
-            className="w-7 h-7 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-30 flex items-center justify-center transition-colors"
+            className="w-7 h-7 rounded-lg border border-ink/15 bg-white text-ink/50 hover:bg-bg-neutral disabled:opacity-30 flex items-center justify-center transition-colors"
           >
             <ArrowDown size={14} />
           </button>
           <button
             onClick={onDelete}
-            className="w-7 h-7 rounded-lg border border-red-200 bg-white text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors"
+            className="w-7 h-7 rounded-lg border border-magenta-text/25 bg-white text-magenta hover:bg-blush flex items-center justify-center transition-colors"
           >
             <Trash2 size={14} />
           </button>
@@ -117,7 +117,7 @@ function QuestionEditor({ q, index, total, onChange, onMove, onDelete }) {
               <button
                 onClick={() => onChange({ options: q.options.filter((_, j) => j !== i) })}
                 disabled={q.options.length <= 2}
-                className="w-6 h-6 shrink-0 rounded text-gray-400 hover:text-red-500 disabled:opacity-30 flex items-center justify-center"
+                className="w-6 h-6 shrink-0 rounded text-ink/40 hover:text-magenta disabled:opacity-30 flex items-center justify-center"
               >
                 ✕
               </button>
@@ -328,9 +328,9 @@ export default function FormBuilder() {
   if (notFound) {
     return (
       <div className="max-w-md mx-auto mt-10">
-        <div className="bg-red-50 border border-red-100 rounded-xl p-8 text-center flex flex-col items-center gap-4">
+        <div className="bg-blush border border-red-100 rounded-xl p-8 text-center flex flex-col items-center gap-4">
           <span className="text-5xl">🤷</span>
-          <h2 className="text-xl font-bold text-gray-900">این فرم پیدا نشد!</h2>
+          <h2 className="text-xl font-bold text-navy">این فرم پیدا نشد!</h2>
           <Button as={Link} to="/admin/forms" variant="indigo">برگشت به لیست فرم‌ها</Button>
         </div>
       </div>
@@ -345,7 +345,7 @@ export default function FormBuilder() {
           <Button as={Link} to="/admin/forms" variant="ghost" size="sm">
             ← فرم‌ها
           </Button>
-          <h1 className="text-xl font-black text-gray-900">فرم‌ساز</h1>
+          <h1 className="text-xl font-black text-navy">فرم‌ساز</h1>
           {dirty && <Badge color="amber">• تغییرات ذخیره‌نشده</Badge>}
         </div>
         <div className="flex items-center gap-2">
@@ -385,19 +385,19 @@ export default function FormBuilder() {
       </div>
 
       {/* Form Settings */}
-      <div className="bg-white rounded-xl border border-gray-100 p-5 sm:p-6">
-        <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Settings size={18} className="text-indigo-500" />
+      <div className="bg-white rounded-xl border border-ink/10 p-5 sm:p-6">
+        <h2 className="font-bold text-navy mb-4 flex items-center gap-2">
+          <Settings size={18} className="text-teal-text" />
           تنظیمات فرم
         </h2>
 
-        <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
+        <div className="flex items-center gap-3 mb-4 pb-4 border-b border-ink/10">
           <label className="flex items-center gap-2 text-sm font-semibold cursor-pointer">
             <input
               type="checkbox"
               checked={form.published}
               onChange={(e) => setFormField({ published: e.target.checked })}
-              className="accent-indigo-600 w-5 h-5"
+              className="accent-teal w-5 h-5"
             />
             {form.published ? "✓ منتشرشده" : "پیش‌نویس"}
           </label>
@@ -418,7 +418,7 @@ export default function FormBuilder() {
               onChange={(e) => setFormField({ slug: e.target.value })}
               className={`${inputCls} text-left ${slugError ? "!border-red-400" : ""}`}
             />
-            {slugError && <p className="text-xs text-red-500 mt-0.5">{slugError}</p>}
+            {slugError && <p className="text-xs text-magenta mt-0.5">{slugError}</p>}
           </Field>
         </div>
 
@@ -433,7 +433,7 @@ export default function FormBuilder() {
           </Field>
         </div>
 
-        <div className="mt-4 pt-4 border-t border-gray-100 grid sm:grid-cols-2 gap-4">
+        <div className="mt-4 pt-4 border-t border-ink/10 grid sm:grid-cols-2 gap-4">
           <Field label="👋 عنوان پیام ورود">
             <input
               value={form.welcome_title}
@@ -469,7 +469,7 @@ export default function FormBuilder() {
 
       {/* Questions */}
       <div className="flex flex-col gap-4">
-        <h2 className="font-bold text-gray-900">
+        <h2 className="font-bold text-navy">
           🧩 سوال‌ها ({questions.length})
         </h2>
 
@@ -486,8 +486,8 @@ export default function FormBuilder() {
         ))}
 
         {/* Add question */}
-        <div className="bg-white rounded-xl border-2 border-dashed border-gray-200 p-4 sm:p-5">
-          <span className="text-sm font-bold text-gray-600 mb-3 block">
+        <div className="bg-white rounded-xl border-2 border-dashed border-ink/15 p-4 sm:p-5">
+          <span className="text-sm font-bold text-ink/70 mb-3 block">
             ➕ افزودن سوال جدید
           </span>
           <div className="flex flex-wrap gap-2">
@@ -498,7 +498,7 @@ export default function FormBuilder() {
                   key={key}
                   onClick={() => addQuestion(key)}
                   title={t.hint}
-                  className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 bg-bg-neutral border border-ink/15 rounded-lg px-3 py-2 text-xs font-bold text-ink hover:bg-bg-mint hover:border-teal/30 hover:text-teal-text transition-colors cursor-pointer"
                 >
                   <span className="text-base">{t.icon}</span>
                   {t.label}
@@ -510,7 +510,7 @@ export default function FormBuilder() {
       </div>
 
       {/* Bottom save bar */}
-      <div className="sticky bottom-0 bg-white/80 backdrop-blur border-t border-gray-100 px-4 py-3 flex items-center justify-end gap-3 -mx-4 -mb-4 z-10">
+      <div className="sticky bottom-0 bg-white/80 backdrop-blur border-t border-ink/10 px-4 py-3 flex items-center justify-end gap-3 -mx-4 -mb-4 z-10">
         {dirty && <Badge color="amber">تغییرات ذخیره‌نشده</Badge>}
         <Button variant="ghost" size="sm" as={Link} to="/admin/forms">
           انصراف

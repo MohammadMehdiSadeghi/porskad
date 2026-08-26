@@ -139,8 +139,8 @@ export default function Managers() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black text-gray-900">مدیریت مدیران</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-2xl font-black text-navy">مدیریت مدیران</h1>
+          <p className="text-sm text-ink/50 mt-0.5">
             {managers.length} مدیر فعال
           </p>
         </div>
@@ -162,54 +162,54 @@ export default function Managers() {
           }
         />
       ) : (
-        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl border border-ink/10 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="text-right font-semibold text-gray-600 px-4 py-3">مدیر</th>
-                  <th className="text-right font-semibold text-gray-600 px-4 py-3">ایمیل</th>
-                  <th className="text-right font-semibold text-gray-600 px-4 py-3">وضعیت</th>
-                  <th className="text-right font-semibold text-gray-600 px-4 py-3">تاریخ عضویت</th>
-                  <th className="text-right font-semibold text-gray-600 px-4 py-3">مجوزها</th>
-                  <th className="text-left font-semibold text-gray-600 px-4 py-3">عملیات</th>
+                <tr className="bg-bg-neutral border-b border-ink/10">
+                  <th className="text-right font-semibold text-ink/70 px-4 py-3">مدیر</th>
+                  <th className="text-right font-semibold text-ink/70 px-4 py-3">ایمیل</th>
+                  <th className="text-right font-semibold text-ink/70 px-4 py-3">وضعیت</th>
+                  <th className="text-right font-semibold text-ink/70 px-4 py-3">تاریخ عضویت</th>
+                  <th className="text-right font-semibold text-ink/70 px-4 py-3">مجوزها</th>
+                  <th className="text-left font-semibold text-ink/70 px-4 py-3">عملیات</th>
                 </tr>
               </thead>
               <tbody>
                 {managers.map((m) => (
                   <tr
                     key={m.id}
-                    className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50"
+                    className="border-b border-ink/5 last:border-0 hover:bg-bg-neutral/50"
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 font-bold text-sm">
+                        <div className="w-8 h-8 bg-bg-mint rounded-full flex items-center justify-center text-teal-text font-bold text-sm">
                           {m.full_name?.[0]?.toUpperCase() ??
                             m.email?.[0]?.toUpperCase() ??
                             "U"}
                         </div>
-                        <span className="font-medium text-gray-900">
+                        <span className="font-medium text-navy">
                           {m.full_name || "—"}
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 font-mono text-left" dir="ltr">
+                    <td className="px-4 py-3 text-ink/50 font-mono text-left" dir="ltr">
                       {m.email}
                     </td>
                     <td className="px-4 py-3">
                       {m.is_active ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-teal-text bg-bg-mint px-2 py-0.5 rounded-full">
                           <Check size={12} />
                           فعال
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink/50 bg-bg-neutral px-2 py-0.5 rounded-full">
                           <X size={12} />
                           غیرفعال
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-gray-500">
+                    <td className="px-4 py-3 text-ink/50">
                       {new Date(m.created_at).toLocaleDateString("fa-IR")}
                     </td>
                     <td className="px-4 py-3">
@@ -219,14 +219,14 @@ export default function Managers() {
                           .map((p) => (
                             <span
                               key={p}
-                              className="text-[0.65rem] font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded"
+                              className="text-[0.65rem] font-medium text-teal-text bg-bg-mint px-1.5 py-0.5 rounded"
                             >
                               {PERMISSION_LABELS[p]}
                             </span>
                           ))}
                         {ALL_PERMISSIONS.filter((p) => p !== "manage_managers").length >
                           3 && (
-                          <span className="text-[0.65rem] text-gray-400">
+                          <span className="text-[0.65rem] text-ink/40">
                             +
                             {ALL_PERMISSIONS.filter((p) => p !== "manage_managers").length - 3}
                           </span>
@@ -253,7 +253,7 @@ export default function Managers() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="!text-red-500 hover:!bg-red-50"
+                          className="!text-magenta hover:!bg-blush"
                           onClick={() => setDeleteTarget(m)}
                         >
                           <Trash2 size={14} />
@@ -279,7 +279,7 @@ export default function Managers() {
       >
         <div className="flex flex-col gap-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-ink mb-1">
               ایمیل
             </label>
             <input
@@ -287,12 +287,12 @@ export default function Managers() {
               dir="ltr"
               value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+              className="w-full bg-bg-neutral border border-ink/15 rounded-lg px-3 py-2 text-sm font-medium text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
               placeholder="manager@porskad.ir"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-ink mb-1">
               رمز عبور
             </label>
             <input
@@ -300,31 +300,31 @@ export default function Managers() {
               dir="ltr"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+              className="w-full bg-bg-neutral border border-ink/15 rounded-lg px-3 py-2 text-sm font-medium text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
               placeholder="••••••••"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-ink mb-1">
               نام نمایشی
             </label>
             <input
               type="text"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+              className="w-full bg-bg-neutral border border-ink/15 rounded-lg px-3 py-2 text-sm font-medium text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
               placeholder="نام و نام خانوادگی"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-ink mb-2">
               مجوزها
             </label>
-            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-ink/15 rounded-lg p-3 bg-bg-neutral">
               {ALL_PERMISSIONS.filter((p) => p !== "manage_managers").map((p) => (
                 <label
                   key={p}
-                  className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer"
+                  className="flex items-center gap-2 text-sm font-medium text-ink cursor-pointer"
                 >
                   <input
                     type="checkbox"
@@ -334,7 +334,7 @@ export default function Managers() {
                         e.target.checked ? [...prev, p] : prev.filter((x) => x !== p)
                       )
                     }
-                    className="accent-indigo-600 w-4 h-4"
+                    className="accent-teal w-4 h-4"
                   />
                   {PERMISSION_LABELS[p]}
                 </label>
@@ -342,7 +342,7 @@ export default function Managers() {
             </div>
           </div>
           {createError && (
-            <div className="text-sm font-semibold text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+            <div className="text-sm font-semibold text-magenta-text bg-blush border border-red-100 rounded-lg px-3 py-2">
               {createError}
             </div>
           )}
@@ -369,25 +369,25 @@ export default function Managers() {
       >
         <div className="flex flex-col gap-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-ink mb-1">
               نام نمایشی
             </label>
             <input
               type="text"
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+              className="w-full bg-bg-neutral border border-ink/15 rounded-lg px-3 py-2 text-sm font-medium text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-ink mb-2">
               مجوزها
             </label>
-            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-ink/15 rounded-lg p-3 bg-bg-neutral">
               {ALL_PERMISSIONS.filter((p) => p !== "manage_managers").map((p) => (
                 <label
                   key={p}
-                  className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer"
+                  className="flex items-center gap-2 text-sm font-medium text-ink cursor-pointer"
                 >
                   <input
                     type="checkbox"
@@ -397,7 +397,7 @@ export default function Managers() {
                         e.target.checked ? [...prev, p] : prev.filter((x) => x !== p)
                       )
                     }
-                    className="accent-indigo-600 w-4 h-4"
+                    className="accent-teal w-4 h-4"
                   />
                   {PERMISSION_LABELS[p]}
                 </label>
@@ -435,9 +435,9 @@ export default function Managers() {
         onClose={() => setDeleteTarget(null)}
         title="حذف مدیر؟"
       >
-        <p className="text-sm text-gray-600 leading-7 mb-5">
+        <p className="text-sm text-ink/70 leading-7 mb-5">
           مدیر «
-          <span className="font-bold text-red-600">
+          <span className="font-bold text-magenta-text">
             {deleteTarget?.full_name || deleteTarget?.email}
           </span>
           » به‌طور کامل حذف خواهد شد.

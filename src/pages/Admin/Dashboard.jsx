@@ -149,10 +149,10 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black text-gray-900">داشبورد</h1>
-          <p className="text-sm text-gray-500 mt-0.5">نمای کلی فعالیت‌ها</p>
+          <h1 className="text-2xl font-black text-navy">داشبورد</h1>
+          <p className="text-sm text-ink/50 mt-0.5">نمای کلی فعالیت‌ها</p>
         </div>
-        <Button as={Link} to="/admin/forms" variant="indigo" size="md">
+        <Button as={Link} to="/admin/forms" variant="teal" size="md">
           <Plus size={16} />
           فرم جدید
         </Button>
@@ -165,37 +165,37 @@ export default function Dashboard() {
           label="کل فرم‌ها"
           value={stats.totalForms}
           sub={`${stats.activeForms} منتشرشده`}
-          color="indigo"
+          color="navy"
         />
         <StatBox
           icon={MessagesSquare}
           label="کل پاسخ‌ها"
           value={stats.totalResponses}
           sub={`${stats.completeRate}٪ تکمیل`}
-          color="emerald"
+          color="teal"
         />
         <StatBox
           icon={TrendingUp}
           label="پاسخ‌های امروز"
           value={stats.todayResponses}
           sub={`این هفته: ${stats.weekResponses}`}
-          color="amber"
+          color="orange"
         />
         <StatBox
           icon={Clock}
           label="میانگین زمان"
           value={stats.avgDuration ? `${stats.avgDuration}ث` : "—"}
           sub="ثانیه"
-          color="violet"
+          color="magenta"
         />
       </div>
 
       {/* Charts */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Time series */}
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <LineChart size={16} className="text-indigo-500" />
+        <div className="bg-white rounded-[1.25rem] [corner-shape:squircle] border-2 border-ink/10 p-5">
+          <h3 className="font-black text-navy mb-4 flex items-center gap-2">
+            <LineChart size={16} className="text-teal-text" />
             روند پاسخ‌ها (۷ روز اخیر)
           </h3>
           {timeSeries.length > 0 && timeSeries.some((d) => d.responses > 0) ? (
@@ -215,9 +215,9 @@ export default function Dashboard() {
                 <Line
                   type="monotone"
                   dataKey="responses"
-                  stroke="#6366f1"
-                  strokeWidth={2}
-                  dot={{ fill: "#6366f1", r: 3 }}
+                  stroke="#58bdaf"
+                  strokeWidth={2.5}
+                  dot={{ fill: "#58bdaf", r: 3 }}
                   activeDot={{ r: 5 }}
                 />
               </RCLineChart>
@@ -228,9 +228,9 @@ export default function Dashboard() {
         </div>
 
         {/* By form */}
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <BarChart2 size={16} className="text-indigo-500" />
+        <div className="bg-white rounded-[1.25rem] [corner-shape:squircle] border-2 border-ink/10 p-5">
+          <h3 className="font-black text-navy mb-4 flex items-center gap-2">
+            <BarChart2 size={16} className="text-teal-text" />
             پاسخ‌ها بر اساس فرم
           </h3>
           {byForm.length > 0 ? (
@@ -247,7 +247,7 @@ export default function Dashboard() {
                     fontSize: "12px",
                   }}
                 />
-                <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" fill="#21295a" radius={[4, 4, 0, 0]} />
               </RCBarChart>
             </ResponsiveContainer>
           ) : (
@@ -259,7 +259,7 @@ export default function Dashboard() {
       {/* Recent Responses */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold text-gray-900">آخرین پاسخ‌ها</h2>
+          <h2 className="font-black text-navy">آخرین پاسخ‌ها</h2>
           <Button as={Link} to="/admin/forms" variant="ghost" size="sm">
             مشاهده همه
           </Button>
@@ -269,42 +269,42 @@ export default function Dashboard() {
             icon="📭"
             title="هنوز پاسخی ثبت نشده!"
             subtitle="اولین فرم خود را بسازید و لینکش را بفرستید."
-            action={<Button as={Link} to="/admin/forms" variant="indigo">ساخت اولین فرم</Button>}
+            action={<Button as={Link} to="/admin/forms" variant="teal">ساخت اولین فرم</Button>}
           />
         ) : (
-          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-[1.25rem] [corner-shape:squircle] border-2 border-ink/10 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-100">
-                    <th className="text-right font-semibold text-gray-600 px-4 py-3">فرم</th>
-                    <th className="text-right font-semibold text-gray-600 px-4 py-3">زمان ثبت</th>
-                    <th className="text-right font-semibold text-gray-600 px-4 py-3">وضعیت</th>
-                    <th className="text-right font-semibold text-gray-600 px-4 py-3">مدت</th>
-                    <th className="text-left font-semibold text-gray-600 px-4 py-3"></th>
+                  <tr className="bg-bg-neutral border-b border-ink/10">
+                    <th className="text-right font-bold text-navy/70 px-4 py-3">فرم</th>
+                    <th className="text-right font-bold text-navy/70 px-4 py-3">زمان ثبت</th>
+                    <th className="text-right font-bold text-navy/70 px-4 py-3">وضعیت</th>
+                    <th className="text-right font-bold text-navy/70 px-4 py-3">مدت</th>
+                    <th className="text-left font-bold text-navy/70 px-4 py-3"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {recent.map((r) => {
                     const f = forms.find((f) => f.id === r.form_id);
                     return (
-                      <tr key={r.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
-                        <td className="px-4 py-3 font-medium text-gray-900">{f?.title ?? "—"}</td>
-                        <td className="px-4 py-3 text-gray-500">
+                      <tr key={r.id} className="border-b border-ink/5 last:border-0 hover:bg-bg-neutral/60">
+                        <td className="px-4 py-3 font-bold text-ink">{f?.title ?? "—"}</td>
+                        <td className="px-4 py-3 text-ink/50">
                           {new Date(r.submitted_at || r.created_at).toLocaleString("fa-IR")}
                         </td>
                         <td className="px-4 py-3">
                           {r.is_complete ? (
-                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                            <span className="inline-flex items-center gap-1 text-xs font-bold text-teal-text bg-bg-mint border border-teal-text/25 px-2 py-0.5 rounded-[0.4rem] [corner-shape:squircle]">
                               ✓ کامل
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                            <span className="inline-flex items-center gap-1 text-xs font-bold text-ink/50 bg-bg-neutral border border-ink/10 px-2 py-0.5 rounded-[0.4rem] [corner-shape:squircle]">
                               ناقص
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-gray-500">
+                        <td className="px-4 py-3 text-ink/50">
                           {r.duration_seconds ? `${r.duration_seconds}ث` : "—"}
                         </td>
                         <td className="px-4 py-3 text-left">
@@ -332,20 +332,20 @@ export default function Dashboard() {
 
 function StatBox({ icon: Icon, label, value, sub, color }) {
   const colors = {
-    indigo: "bg-indigo-50 text-indigo-600",
-    emerald: "bg-emerald-50 text-emerald-600",
-    amber: "bg-amber-50 text-amber-600",
-    violet: "bg-violet-50 text-violet-600",
+    navy: "bg-bg-lavender text-navy",
+    teal: "bg-bg-mint text-teal-text",
+    orange: "bg-orange-50 text-orange",
+    magenta: "bg-blush text-magenta-text",
   };
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-4">
+    <div className="bg-white rounded-[1.25rem] [corner-shape:squircle] border-2 border-ink/10 p-4">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium text-gray-500 mb-1">{label}</p>
-          <p className="text-2xl font-black text-gray-900">{value}</p>
-          <p className="text-xs text-gray-400 mt-0.5">{sub}</p>
+          <p className="text-xs font-bold text-ink/50 mb-1">{label}</p>
+          <p className="text-2xl font-black text-navy">{value}</p>
+          <p className="text-xs text-ink/40 mt-0.5">{sub}</p>
         </div>
-        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${colors[color]}`}>
+        <div className={`w-9 h-9 rounded-[0.6rem] [corner-shape:squircle] flex items-center justify-center ${colors[color]}`}>
           <Icon size={16} />
         </div>
       </div>

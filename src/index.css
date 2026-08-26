@@ -10,14 +10,14 @@
         font-size: 16px;
     }
     body {
-        @apply font-sans text-gray-900 bg-gray-50 antialiased;
+        @apply font-sans text-ink bg-bg-neutral antialiased;
         direction: rtl;
         overflow-x: hidden;
         line-height: 1.6;
     }
     a:focus-visible,
     button:focus-visible {
-        outline: 2px solid #6366f1;
+        outline: 2px solid #58bdaf;
         outline-offset: 2px;
         border-radius: 4px;
     }
@@ -38,7 +38,7 @@
 /* ─── اسکرول‌بار ─── */
 html {
     scrollbar-width: thin;
-    scrollbar-color: #6366f1 transparent;
+    scrollbar-color: #58bdaf transparent;
 }
 ::-webkit-scrollbar {
     width: 6px;
@@ -47,6 +47,6 @@ html {
     background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-    background-color: #6366f1;
+    background-color: #58bdaf;
     border-radius: 3px;
 }

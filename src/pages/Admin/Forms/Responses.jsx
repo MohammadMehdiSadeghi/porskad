@@ -50,7 +50,7 @@ import {
 const CHART_COLORS = ["#6366f1", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#3b82f6", "#14b8a6", "#f97316"];
 
 function AnswerValue({ question, value }) {
-  if (value === null || value === undefined || value === "") return <span className="text-gray-400">—</span>;
+  if (value === null || value === undefined || value === "") return <span className="text-ink/40">—</span>;
   if (question.type === "rating") return <span>{"⭐".repeat(Number(value))}</span>;
   if (question.type === "phone_ir" || question.type === "email")
     return <span dir="ltr" className="font-mono font-bold">{String(value)}</span>;
@@ -97,13 +97,13 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
   }, [question.type, values]);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-5">
+    <div className="bg-white rounded-xl border border-ink/10 p-5">
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
-          <h4 className="font-bold text-gray-900">
+          <h4 className="font-bold text-navy">
             {QUESTION_TYPES[question.type]?.icon} {question.title}
           </h4>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="text-xs text-ink/40 mt-0.5">
             {question.type === "choice" ? "چندگزینه‌ای" :
              question.type === "yes_no" ? "بله/خیر" :
              question.type === "rating" ? "امتیاز" :
@@ -114,7 +114,7 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
       </div>
 
       {total === 0 && (
-        <p className="text-sm text-gray-400">هنوز جوابی ثبت نشده.</p>
+        <p className="text-sm text-ink/40">هنوز جوابی ثبت نشده.</p>
       )}
 
       {/* Distribution chart for choice/yes_no/rating */}
@@ -123,16 +123,16 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
           <div className="flex-1 flex flex-col gap-2">
             {dist.map((d) => (
               <div key={String(d.key)} className="flex items-center gap-2">
-                <span className="w-20 shrink-0 text-xs font-medium text-gray-600 truncate">
+                <span className="w-20 shrink-0 text-xs font-medium text-ink/70 truncate">
                   {question.type === "rating" ? "⭐".repeat(Number(d.key)) : d.key}
                 </span>
-                <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="flex-1 h-5 bg-bg-neutral rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-indigo-500 rounded-full transition-all"
+                    className="h-full bg-teal rounded-full transition-all"
                     style={{ width: `${d.pct}%` }}
                   />
                 </div>
-                <span className="w-14 text-xs font-bold text-indigo-600 text-left" dir="ltr">
+                <span className="w-14 text-xs font-bold text-teal-text text-left" dir="ltr">
                   {d.pct}٪
                 </span>
               </div>
@@ -156,7 +156,7 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
-            <p className="text-center text-[0.65rem] text-gray-400 mt-1">توزیع</p>
+            <p className="text-center text-[0.65rem] text-ink/40 mt-1">توزیع</p>
           </div>
         </div>
       )}
@@ -179,7 +179,7 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
           {values.map((v, i) => (
             <li
               key={i}
-              className="bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-sm font-medium text-gray-700"
+              className="bg-bg-neutral border border-ink/10 rounded-lg px-3 py-2 text-sm font-medium text-ink"
             >
               {question.type === "rating" ? "⭐".repeat(Number(v)) : String(v)}
             </li>
@@ -192,9 +192,9 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
 
 function StatItem({ label, value }) {
   return (
-    <div className="bg-gray-50 rounded-lg px-3 py-2">
-      <p className="text-[0.65rem] text-gray-400">{label}</p>
-      <p className="text-sm font-bold text-gray-900">{value}</p>
+    <div className="bg-bg-neutral rounded-lg px-3 py-2">
+      <p className="text-[0.65rem] text-ink/40">{label}</p>
+      <p className="text-sm font-bold text-navy">{value}</p>
     </div>
   );
 }
@@ -380,15 +380,15 @@ export default function Responses() {
             ویرایش فرم
           </Button>
           <div>
-            <h1 className="text-xl font-black text-gray-900">{form.title}</h1>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <h1 className="text-xl font-black text-navy">{form.title}</h1>
+            <p className="text-xs text-ink/40 mt-0.5">
               {questions.length} سوال • {stats.total} پاسخ
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-teal-text bg-bg-mint px-2 py-1 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-teal animate-pulse" />
             زنده
           </span>
           {hasPermission("export_excel") && (
@@ -438,28 +438,28 @@ export default function Responses() {
       {/* Search & Filter */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40" size={16} />
           <input
             type="text"
             placeholder="جستجو در پاسخ‌ها..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white border border-gray-200 rounded-lg pr-9 pl-4 py-2 text-sm font-medium text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+            className="w-full bg-white border border-ink/15 rounded-lg pr-9 pl-4 py-2 text-sm font-medium text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
           />
         </div>
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-600 cursor-pointer bg-white border border-gray-200 rounded-lg px-3 py-2">
+        <label className="flex items-center gap-2 text-sm font-medium text-ink/70 cursor-pointer bg-white border border-ink/15 rounded-lg px-3 py-2">
           <input
             type="checkbox"
             checked={onlyComplete}
             onChange={(e) => setOnlyComplete(e.target.checked)}
-            className="accent-indigo-600 w-4 h-4"
+            className="accent-teal w-4 h-4"
           />
           فقط کامل‌ها
         </label>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+      <div className="flex gap-1 bg-bg-neutral rounded-lg p-1 w-fit">
         {[
           { key: "list", label: `📋 پاسخ‌ها (${filtered.length})` },
           { key: "analysis", label: "📊 تحلیل سوال‌ها" },
@@ -469,8 +469,8 @@ export default function Responses() {
             onClick={() => setTab(t.key)}
             className={`px-4 py-1.5 rounded-md text-sm font-bold transition-colors ${
               tab === t.key
-                ? "bg-white text-indigo-700 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
+                ? "bg-white text-teal-text shadow-sm"
+                : "text-ink/50 hover:text-ink"
             }`}
           >
             {t.label}
@@ -492,18 +492,18 @@ export default function Responses() {
             ) : null}
           />
         ) : (
-          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-xl border border-ink/10 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-100">
-                    <th className="text-right font-semibold text-gray-600 px-4 py-3">#</th>
-                    <th className="text-right font-semibold text-gray-600 px-4 py-3">زمان ثبت</th>
-                    <th className="text-right font-semibold text-gray-600 px-4 py-3">وضعیت</th>
-                    <th className="text-right font-semibold text-gray-600 px-4 py-3">مدت</th>
-                    <th className="text-right font-semibold text-gray-600 px-4 py-3">دستگاه</th>
-                    <th className="text-right font-semibold text-gray-600 px-4 py-3">پاسخ نمونه</th>
-                    <th className="text-left font-semibold text-gray-600 px-4 py-3"></th>
+                  <tr className="bg-bg-neutral border-b border-ink/10">
+                    <th className="text-right font-semibold text-ink/70 px-4 py-3">#</th>
+                    <th className="text-right font-semibold text-ink/70 px-4 py-3">زمان ثبت</th>
+                    <th className="text-right font-semibold text-ink/70 px-4 py-3">وضعیت</th>
+                    <th className="text-right font-semibold text-ink/70 px-4 py-3">مدت</th>
+                    <th className="text-right font-semibold text-ink/70 px-4 py-3">دستگاه</th>
+                    <th className="text-right font-semibold text-ink/70 px-4 py-3">پاسخ نمونه</th>
+                    <th className="text-left font-semibold text-ink/70 px-4 py-3"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -513,29 +513,29 @@ export default function Responses() {
                       .map((q) => rAns.find((a) => a.question_id === q.id))
                       .find((a) => a && a.value !== null && a.value !== undefined && String(a.value) !== "");
                     return (
-                      <tr key={r.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
-                        <td className="px-4 py-3 font-mono text-gray-400 text-xs">{i + 1}</td>
-                        <td className="px-4 py-3 font-medium text-gray-900">
+                      <tr key={r.id} className="border-b border-ink/5 last:border-0 hover:bg-bg-neutral/50">
+                        <td className="px-4 py-3 font-mono text-ink/40 text-xs">{i + 1}</td>
+                        <td className="px-4 py-3 font-medium text-navy">
                           {faDateTime(r.submitted_at || r.created_at)}
                         </td>
                         <td className="px-4 py-3">
                           {r.is_complete ? (
-                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-teal-text bg-bg-mint px-2 py-0.5 rounded-full">
                               <CheckCircle2 size={12} /> کامل
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink/50 bg-bg-neutral px-2 py-0.5 rounded-full">
                               <AlertCircle size={12} /> ناقص
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-gray-500">
+                        <td className="px-4 py-3 text-ink/50">
                           {r.duration_seconds ? faDuration(r.duration_seconds) : "—"}
                         </td>
-                        <td className="px-4 py-3 text-gray-500">
+                        <td className="px-4 py-3 text-ink/50">
                           {DEVICE_FA[r.device] ?? r.device ?? "—"}
                         </td>
-                        <td className="px-4 py-3 text-gray-600 max-w-[12rem] truncate">
+                        <td className="px-4 py-3 text-ink/70 max-w-[12rem] truncate">
                           {firstText ? String(firstText.value).slice(0, 40) : "—"}
                         </td>
                         <td className="px-4 py-3">
@@ -574,7 +574,7 @@ export default function Responses() {
       {/* Detail Modal */}
       {detail && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-sm"
           onClick={() => setDetail(null)}
           role="dialog"
           aria-modal="true"
@@ -583,18 +583,18 @@ export default function Responses() {
             className="w-full max-w-2xl bg-white rounded-2xl shadow-xl max-h-[85vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-bold text-gray-900">جزئیات پاسخ</h3>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-ink/10">
+              <h3 className="text-lg font-bold text-navy">جزئیات پاسخ</h3>
               <button
                 onClick={() => setDetail(null)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-ink/40 hover:text-ink/70 hover:bg-bg-neutral"
               >
                 ✕
               </button>
             </div>
             <div className="flex-1 overflow-y-auto px-6 py-4">
               {/* Metadata */}
-              <div className="bg-gray-50 rounded-xl p-4 grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm mb-5">
+              <div className="bg-bg-neutral rounded-xl p-4 grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm mb-5">
                 <MetaItem label="شروع" value={faDateTime(detail.started_at)} />
                 <MetaItem label="ثبت" value={faDateTime(detail.submitted_at || detail.created_at)} />
                 <MetaItem label="مدت" value={detail.duration_seconds ? faDuration(detail.duration_seconds) : "—"} />
@@ -611,18 +611,18 @@ export default function Responses() {
                 {questions.map((q, i) => {
                   const a = (answersByResponse[detail.id] ?? []).find((x) => x.question_id === q.id);
                   return (
-                    <div key={q.id} className="border border-gray-100 rounded-xl p-4">
+                    <div key={q.id} className="border border-ink/10 rounded-xl p-4">
                       <div className="flex items-start justify-between gap-3 mb-2">
-                        <span className="text-sm font-bold text-gray-900">
+                        <span className="text-sm font-bold text-navy">
                           {i + 1}. {q.title}
                         </span>
                         {a?.time_spent_seconds > 0 && (
-                          <span className="text-[0.65rem] font-medium text-gray-400 whitespace-nowrap">
+                          <span className="text-[0.65rem] font-medium text-ink/40 whitespace-nowrap">
                             ⏱ {faDuration(a.time_spent_seconds)}
                           </span>
                         )}
                       </div>
-                      <div className="text-sm text-gray-700">
+                      <div className="text-sm text-ink">
                         <AnswerValue question={q} value={a?.value} />
                       </div>
                     </div>
@@ -630,7 +630,7 @@ export default function Responses() {
                 })}
               </div>
             </div>
-            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100">
+            <div className="flex items-center justify-between px-6 py-4 border-t border-ink/10">
               <Button
                 variant="red"
                 size="sm"
@@ -651,21 +651,21 @@ export default function Responses() {
 
 function SummaryCard({ icon: Icon, label, value, sub, color }) {
   const colors = {
-    indigo: "bg-indigo-50 text-indigo-600",
-    emerald: "bg-emerald-50 text-emerald-600",
+    indigo: "bg-bg-mint text-teal-text",
+    emerald: "bg-bg-mint text-teal-text",
     amber: "bg-amber-50 text-amber-600",
     violet: "bg-violet-50 text-violet-600",
   };
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-4">
+    <div className="bg-white rounded-xl border border-ink/10 p-4">
       <div className="flex items-center gap-3">
         <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${colors[color]}`}>
           <Icon size={16} />
         </div>
         <div>
-          <p className="text-xs text-gray-400">{label}</p>
-          <p className="text-xl font-black text-gray-900">{value}</p>
-          {sub && <p className="text-xs text-gray-400">{sub}</p>}
+          <p className="text-xs text-ink/40">{label}</p>
+          <p className="text-xl font-black text-navy">{value}</p>
+          {sub && <p className="text-xs text-ink/40">{sub}</p>}
         </div>
       </div>
     </div>
@@ -675,8 +675,8 @@ function SummaryCard({ icon: Icon, label, value, sub, color }) {
 function MetaItem({ label, value }) {
   return (
     <div>
-      <span className="block text-xs font-medium text-gray-400">{label}</span>
-      <span className="font-semibold text-gray-900">{value}</span>
+      <span className="block text-xs font-medium text-ink/40">{label}</span>
+      <span className="font-semibold text-navy">{value}</span>
     </div>
   );
 }

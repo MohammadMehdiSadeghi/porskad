@@ -5,10 +5,10 @@ const ToastContext = createContext(null);
 let toastId = 0;
 
 const TOAST_STYLES = {
-  success: { icon: "✅", bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700" },
-  error: { icon: "❌", bg: "bg-red-50", border: "border-red-200", text: "text-red-700" },
-  info: { icon: "ℹ️", bg: "bg-indigo-50", border: "border-indigo-200", text: "text-indigo-700" },
-  warning: { icon: "⚠️", bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700" },
+  success: { icon: "✅", border: "border-teal-text/30", text: "text-teal-text" },
+  error: { icon: "❌", border: "border-magenta-text/30", text: "text-magenta-text" },
+  info: { icon: "ℹ️", border: "border-navy/25", text: "text-navy" },
+  warning: { icon: "⚠️", border: "border-orange/40", text: "text-orange" },
 };
 
 export function ToastProvider({ children }) {
@@ -39,14 +39,14 @@ export function ToastProvider({ children }) {
           return (
             <div
               key={t.id}
-              className={`relative bg-white border ${s.border} rounded-lg shadow-md px-4 py-3 flex items-center gap-2.5`}
+              className={`relative bg-white border-2 ${s.border} rounded-[0.75rem] [corner-shape:squircle] shadow-md px-4 py-3 flex items-center gap-2.5`}
               role="status"
             >
               <span className="text-base">{s.icon}</span>
-              <span className={`text-sm font-medium flex-1 ${s.text}`}>{t.message}</span>
+              <span className={`text-sm font-bold flex-1 ${s.text}`}>{t.message}</span>
               <button
                 onClick={() => dismiss(t.id)}
-                className="text-gray-400 hover:text-gray-600 text-sm font-bold"
+                className="text-ink/30 hover:text-ink/60 text-sm font-bold"
                 aria-label="بستن"
               >
                 ✕

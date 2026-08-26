@@ -189,8 +189,8 @@ export default function FormsList() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black text-gray-900">فرم‌ها</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-2xl font-black text-navy">فرم‌ها</h1>
+          <p className="text-sm text-ink/50 mt-0.5">
             {forms.length} فرم — برای ویرایش روی هر فرم بزنید
           </p>
         </div>
@@ -204,7 +204,7 @@ export default function FormsList() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px]">
           <Search
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40"
             size={16}
           />
           <input
@@ -212,10 +212,10 @@ export default function FormsList() {
             placeholder="جستجوی فرم..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white border border-gray-200 rounded-lg pr-9 pl-4 py-2 text-sm font-medium text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+            className="w-full bg-white border border-ink/15 rounded-lg pr-9 pl-4 py-2 text-sm font-medium text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
           />
         </div>
-        <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-white border border-ink/15 rounded-lg p-1">
           {[
             { key: "all", label: "همه" },
             { key: "published", label: "منتشرشده" },
@@ -226,8 +226,8 @@ export default function FormsList() {
               onClick={() => setFilter(f.key)}
               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                 filter === f.key
-                  ? "bg-indigo-50 text-indigo-700"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-bg-mint text-teal-text"
+                  : "text-ink/50 hover:text-ink"
               }`}
             >
               {f.label}
@@ -261,29 +261,29 @@ export default function FormsList() {
             return (
               <div
                 key={f.id}
-                className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-sm transition-shadow"
+                className="bg-white rounded-xl border border-ink/10 p-5 hover:shadow-sm transition-shadow"
               >
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center">
-                      <FileText size={16} className="text-indigo-600" />
+                    <div className="w-8 h-8 bg-bg-mint rounded-lg flex items-center justify-center">
+                      <FileText size={16} className="text-teal-text" />
                     </div>
-                    <h3 className="font-bold text-gray-900 leading-6 line-clamp-1">
+                    <h3 className="font-bold text-navy leading-6 line-clamp-1">
                       {f.title}
                     </h3>
                   </div>
                   {f.published ? (
-                    <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-semibold text-teal-text bg-bg-mint px-2 py-0.5 rounded-full">
                       ✓ منتشر
                     </span>
                   ) : (
-                    <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-semibold text-ink/50 bg-bg-neutral px-2 py-0.5 rounded-full">
                       پیش‌نویس
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
+                <div className="flex items-center gap-4 text-xs text-ink/50 mb-4">
                   <span>📥 {c.total} پاسخ</span>
                   <span>✓ {c.complete} کامل</span>
                   <span className="mr-auto">
@@ -334,7 +334,7 @@ export default function FormsList() {
                       variant="ghost"
                       size="sm"
                       onClick={() => togglePublish(f)}
-                      className={f.published ? "!text-amber-600" : "!text-emerald-600"}
+                      className={f.published ? "!text-amber-600" : "!text-teal-text"}
                     >
                       {f.published ? <ToggleLeft size={14} /> : <ToggleRight size={14} />}
                       {f.published ? "لغو انتشار" : "انتشار"}
@@ -353,7 +353,7 @@ export default function FormsList() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="!text-red-500 hover:!bg-red-50"
+                      className="!text-magenta hover:!bg-blush"
                       onClick={() => setDeleting(f)}
                     >
                       <Trash2 size={14} />
@@ -368,7 +368,7 @@ export default function FormsList() {
                     target="_blank"
                     rel="noreferrer"
                     dir="ltr"
-                    className="block mt-3 text-xs font-mono text-indigo-500 hover:underline truncate"
+                    className="block mt-3 text-xs font-mono text-teal-text hover:underline truncate"
                   >
                     /f/{f.slug}
                   </a>
@@ -381,8 +381,8 @@ export default function FormsList() {
 
       {/* Delete Modal */}
       <Modal open={!!deleting} onClose={() => setDeleting(null)} title="حذف فرم؟">
-        <p className="text-sm text-gray-600 leading-7 mb-5">
-          فرم «<span className="font-bold text-red-600">{deleting?.title}</span>» و همه‌ی سوال‌ها و پاسخ‌هایش
+        <p className="text-sm text-ink/70 leading-7 mb-5">
+          فرم «<span className="font-bold text-magenta-text">{deleting?.title}</span>» و همه‌ی سوال‌ها و پاسخ‌هایش
           برای همیشه حذف می‌شود. مطمئنید؟
         </p>
         <div className="flex gap-3 justify-end">

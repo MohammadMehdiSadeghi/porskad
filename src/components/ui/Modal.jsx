@@ -17,25 +17,25 @@ export default function Modal({ open, onClose, title, children, wide = false }) 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-sm"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <div
         className={clsx(
-          "w-full bg-white rounded-2xl shadow-xl",
+          "w-full bg-white rounded-[1.5rem] [corner-shape:squircle] border-2 border-ink/10 shadow-xl",
           wide ? "max-w-3xl" : "max-w-xl",
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-ink/10">
           {title && (
-            <h3 className="text-lg font-bold text-gray-900">{title}</h3>
+            <h3 className="text-lg font-black text-navy">{title}</h3>
           )}
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-[0.5rem] [corner-shape:squircle] text-ink/40 hover:text-ink hover:bg-ink/5 transition-colors"
             aria-label="بستن"
           >
             ✕
