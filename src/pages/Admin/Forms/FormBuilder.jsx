@@ -7,7 +7,6 @@ import Badge from "../../../components/ui/Badge";
 import Spinner from "../../../components/ui/Spinner";
 import { useToast } from "../../../components/ui/Toast";
 import { QUESTION_TYPES, QUESTION_TYPE_ORDER, makeQuestion } from "../../../lib/questionTypes";
-import { OPERATORS, OPERATOR_ORDER } from "../../../lib/logic/types";
 import ConditionBuilder from "../../../components/logic/ConditionBuilder";
 import LogicEditor from "../../../components/logic/LogicEditor";
 import LogicDebug from "../../../components/logic/LogicDebug";
@@ -27,105 +26,11 @@ function Field({ label, children, hint }) {
   );
 }
 
-// ─── پنل شرطی هر سوال ───
-function QuestionConditionPanel({ q, index, allQuestions, onChange }) {
-  const [expanded, setExpanded] = useState(!!q.condition);
-  const sourceQ = allQuestions.find((sq) => sq.id === q.condition?.source_question_id);
-  const opMeta = OPERATORS[q.condition?.operator] || {};
-
-  return (
-    <div className="border-2 border-dashed border-navy/20 rounded-pill-md bg-bg-lavender/40 overflow-hidden">
-      {/* هدر پنل — کلیک‌پذیر */}
-      <button
-        type="button"
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-navy/5 transition-colors"
-      >
-        <span className="text-sm">🔀</span>
-        <span className="text-xs font-extrabold text-navy">شرط نمایش</span>
-
-        {/* وضعیت شرط */}
-        {q.condition ? (
-          <span className="text-[0.6rem] font-bold text-teal bg-teal/10 border border-teal/30 rounded-pill-sm px-2 py-0.5">
-            ✅ فعال
-          </span>
-        ) : (
-          <span className="text-[0.6rem] font-bold text-ink-subtle bg-ink/5 border border-ink/10 rounded-pill-sm px-2 py-0.5">
-            بدون شرط
-          </span>
-        )}
-
-        {/* پیش‌نمایش متنی شرط در حالت بسته */}
-        {!expanded && q.condition && sourceQ && (
-          <span className="text-[0.6rem] font-medium text-navy/60 truncate mr-auto">
-            «{sourceQ.title?.slice(0, 25)}» {opMeta.label}
-            {q.condition.value ? ` «${q.condition.value}»` : ''}
-          </span>
-        )}
-
-        <span className="text-ink-subtle text-[0.65rem] mr-auto"></span>
-        <span className="text-xs text-ink-subtle shrink-0">
-          {expanded ? '▲' : '▼'}
-        </span>
-      </button>
-
-      {/* بدنه پنل */}
-      {expanded && (
-        <div className="px-3 pb-3 border-t-2 border-dashed border-navy/15 pt-3 flex flex-col gap-2">
-          {q.condition ? (
-            <>
-              {/* استفاده از ConditionBuilder */}
-              <ConditionBuilder
-                condition={q.condition}
-                questions={allQuestions.filter((_, j) => j < index)}
-                index={0}
-                removable={false}
-                onChange={(patch) => onChange({ condition: { ...q.condition, ...patch } })}
-                onDelete={() => {}}
-              />
-
-              {/* پیش‌نمایش متنی */}
-              <div className="text-[0.6rem] font-medium text-navy/70 bg-white/80 rounded-pill-sm px-2.5 py-1.5 leading-5">
-                اگر «{sourceQ?.title?.slice(0, 30) || '?'}» {opMeta.label}
-                {q.condition.value ? ` «${q.condition.value}»` : ''}
-                {' '}آنگاه این سوال نمایش داده شود
-              </div>
-
-              {/* دکمه حذف شرط */}
-              <button
-                onClick={() => onChange({ condition: null })}
-                className="self-start text-[0.65rem] font-bold text-magenta-text hover:underline"
-              >
-                ✕ حذف شرط
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => {
-                onChange({
-                  condition: {
-                    source_question_id: allQuestions[index - 1]?.id ?? null,
-                    operator: 'equals',
-                    value: '',
-                  },
-                });
-              }}
-              className="self-start text-[0.7rem] font-extrabold text-teal hover:text-teal-text transition-colors
-                border-2 border-dashed border-teal/40 rounded-pill-md px-3 py-2 hover:border-teal"
-            >
-              + افزودن شرط نمایش
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── کارت ویرایش یک سوال ───
 function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDelete }) {
   const meta = QUESTION_TYPES[q.type];
   const rots = index % 2 ? "rotate-[0.4deg]" : "-rotate-[0.4deg]";
+  const [condOpen, setCondOpen] = useState(false);
 
   function setOpt(i, val) {
     const opts = [...q.options];
@@ -178,6 +83,21 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
               >
                 🗑
               </button>
+              {index > 0 && (
+                <button
+                  onClick={() => setCondOpen(!condOpen)}
+                  className={`w-8 h-8 rounded-pill-md border-2 font-black transition-colors ${
+                    q.condition
+                      ? 'border-teal/50 bg-teal/10 text-teal-text'
+                      : condOpen
+                        ? 'border-navy/30 bg-navy/5 text-navy'
+                        : 'border-ink/20 bg-white text-ink-subtle hover:bg-bg-neutral'
+                  }`}
+                  title="شرط نمایش"
+                >
+                  ⋯
+                </button>
+              )}
             </div>
           </div>
 
@@ -231,13 +151,57 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
           )}
 
           {/* ─── پنل شرطی (Conditional Logic Panel) ─── */}
-          {index > 0 && (
-            <QuestionConditionPanel
-              q={q}
-              index={index}
-              allQuestions={allQuestions}
-              onChange={onChange}
-            />
+          {condOpen && index > 0 && (
+            <div className="flex flex-col gap-2 border-2 border-dashed border-navy/20 rounded-pill-md bg-bg-lavender/40 p-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm">🔀</span>
+                <span className="text-xs font-extrabold text-navy">شرط نمایش</span>
+                {q.condition ? (
+                  <span className="text-[0.6rem] font-bold text-teal bg-teal/10 border border-teal/30 rounded-pill-sm px-2 py-0.5">
+                    ✅ فعال
+                  </span>
+                ) : (
+                  <span className="text-[0.6rem] font-bold text-ink-subtle bg-ink/5 border border-ink/10 rounded-pill-sm px-2 py-0.5">
+                    بدون شرط
+                  </span>
+                )}
+                {q.condition && (
+                  <button
+                    onClick={() => onChange({ condition: null })}
+                    className="text-[0.65rem] font-bold text-magenta-text hover:underline mr-auto"
+                  >
+                    ✕ حذف شرط
+                  </button>
+                )}
+              </div>
+
+              {q.condition ? (
+                <ConditionBuilder
+                  condition={q.condition}
+                  questions={allQuestions.filter((_, j) => j < index)}
+                  index={0}
+                  removable={false}
+                  onChange={(patch) => onChange({ condition: { ...q.condition, ...patch } })}
+                  onDelete={() => {}}
+                />
+              ) : (
+                <button
+                  onClick={() =>
+                    onChange({
+                      condition: {
+                        source_question_id: allQuestions[index - 1]?.id ?? null,
+                        operator: "equals",
+                        value: "",
+                      },
+                    })
+                  }
+                  className="self-start text-[0.7rem] font-extrabold text-teal hover:text-teal-text transition-colors
+                    border-2 border-dashed border-teal/40 rounded-pill-md px-3 py-2 hover:border-teal"
+                >
+                  + افزودن شرط نمایش
+                </button>
+              )}
+            </div>
           )}
         </div>
       </StickerCard>
