@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import StickerCard from "../../components/ui/StickerCard";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
@@ -14,8 +14,7 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
 
   if (user) {
-    navigate("/admin", { replace: true });
-    return null;
+    return <Navigate to="/admin" replace />;
   }
 
   async function handleSubmit(e) {

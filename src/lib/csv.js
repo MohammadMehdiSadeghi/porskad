@@ -1,8 +1,14 @@
 // خروجی CSV سازگار با اکسل فارسی (UTF-8 با BOM)
+// ضد CSV/Formula Injection: سلول‌های خطرناک با ' ایمن می‌شوند
+function isNumericLike(s) {
+  return /^-?\d+([.,]\d+)?$/.test(s);
+}
+
 function csvCell(v) {
   if (v === null || v === undefined) return "";
   let s = typeof v === "object" ? JSON.stringify(v) : String(v);
-  if (/[",\n\r]/.test(s)) s = `"${s.replace(/"/g, '""')}"`;
+  if (/^[=+\-@\t\r]/.test(s) && !isNumericLike(s)) s = `'${s}`;
+  if (/[",\n\r;]/.test(s)) s = `"${s.replace(/"/g, '""')}"`;
   return s;
 }
 

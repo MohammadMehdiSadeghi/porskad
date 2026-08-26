@@ -243,77 +243,47 @@ export default function FormBuilder() {
     setSaving(true);
     setSlugError(null);
     try {
-      const { error: formError } = await supabase
-        .from("forms")
-        .update({
-          title: form.title.trim(),
-          description: form.description ?? "",
-          slug: cleanSlug,
-          welcome_title: form.welcome_title,
-          welcome_message: form.welcome_message,
-          exit_title: form.exit_title,
-          exit_message: form.exit_message,
-          published: form.published,
-        })
-        .eq("id", id);
+      // ذخیره‌ی اتمیک فرم و سوالات در یک تراکنش سمت سرور
+      const pForm = {
+        title: form.title.trim(),
+        description: form.description ?? "",
+        slug: cleanSlug,
+        welcome_title: form.welcome_title,
+        welcome_message: form.welcome_message,
+        exit_title: form.exit_title,
+        exit_message: form.exit_message,
+        published: form.published,
+      };
+      const pQuestions = questions.map((q, i) => ({
+        id: q.id ?? null,
+        type: q.type,
+        title: q.title.trim(),
+        description: q.description ?? "",
+        required: !!q.required,
+        options: q.type === "choice" ? q.options.map((o) => o.trim()) : [],
+        position: i,
+      }));
 
-      if (formError) {
-        if (formError.code === "23505") setSlugError("این اسلاگ قبلاً استفاده شده.");
-        throw formError;
-      }
+      const { data: freshQs, error } = await supabase.rpc("save_form", {
+        p_form_id: id,
+        p_form: pForm,
+        p_questions: pQuestions,
+      });
 
-      const { data: dbQuestions } = await supabase
-        .from("questions")
-        .select("id")
-        .eq("form_id", id);
-      const localIds = new Set(questions.filter((q) => q.id).map((q) => q.id));
-      const toDelete = (dbQuestions ?? []).filter((q) => !localIds.has(q.id));
-      if (toDelete.length) {
-        const { error: delError } = await supabase
-          .from("questions")
-          .delete()
-          .in("id", toDelete.map((q) => q.id));
-        if (delError) throw delError;
-      }
-
-      for (let i = 0; i < questions.length; i++) {
-        const q = questions[i];
-        if (q.id) {
-          const { error } = await supabase
-            .from("questions")
-            .update({
-              title: q.title.trim(),
-              description: q.description ?? "",
-              required: q.required,
-              options: q.type === "choice" ? q.options.map((o) => o.trim()) : [],
-              position: i,
-            })
-            .eq("id", q.id);
-          if (error) throw error;
+      if (error) {
+        if (
+          error.code === "23505" ||
+          (error.message ?? "").includes("forms_slug_key") ||
+          (error.message ?? "").includes("duplicate key")
+        ) {
+          setSlugError("این اسلاگ قبلاً استفاده شده.");
         }
+        throw error;
       }
 
-      const newOnes = questions.filter((q) => !q.id);
-      if (newOnes.length) {
-        const rows = newOnes.map((q) => ({
-          form_id: id,
-          type: q.type,
-          title: q.title.trim(),
-          description: q.description ?? "",
-          required: q.required,
-          options: q.type === "choice" ? q.options.map((o) => o.trim()) : [],
-          position: questions.findIndex((qq) => qq.localId === q.localId),
-        }));
-        const { error: insError } = await supabase.from("questions").insert(rows);
-        if (insError) throw insError;
+      if (Array.isArray(freshQs)) {
+        setQuestions(freshQs.map((q) => ({ ...q, localId: q.id })));
       }
-
-      const { data: fresh } = await supabase
-        .from("questions")
-        .select("*")
-        .eq("form_id", id)
-        .order("position");
-      if (fresh) setQuestions(fresh.map((q) => ({ ...q, localId: q.id })));
       setForm((f) => ({ ...f, slug: cleanSlug }));
       setDirty(false);
       push("همه‌چیز ذخیره شد ✅");

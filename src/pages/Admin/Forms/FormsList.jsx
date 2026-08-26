@@ -9,11 +9,11 @@ import EmptyState from "../../../components/ui/EmptyState";
 import Modal from "../../../components/ui/Modal";
 import { useToast } from "../../../components/ui/Toast";
 import { useAuth } from "../../../context/AuthContext";
-import { copyToClipboard } from "../../../lib/utils";
+import { copyToClipboard, randomSlug } from "../../../lib/utils";
 
 export default function FormsList() {
   const { push } = useToast();
-  const { hasPermission, canManage } = useAuth();
+  const { hasPermission, canManage, user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [forms, setForms] = useState([]);
@@ -23,21 +23,46 @@ export default function FormsList() {
   const [deleting, setDeleting] = useState(null);
   const [busy, setBusy] = useState(false);
 
+  const PAGE_SIZE = 500;
+
   async function load() {
     setLoading(true);
-    const [{ data: formsData }, { data: respData }] = await Promise.all([
-      supabase.from("forms").select("*").order("created_at", { ascending: false }),
-      supabase.from("responses").select("form_id, is_complete"),
-    ]);
-    setForms(formsData ?? []);
-    const c = {};
-    for (const r of respData ?? []) {
-      c[r.form_id] = c[r.form_id] ?? { total: 0, complete: 0 };
-      c[r.form_id].total++;
-      if (r.is_complete) c[r.form_id].complete++;
+    try {
+      const [{ data: formsData, error: formsError }, { data: respData }] =
+        await Promise.all([
+          supabase.from("forms").select("*").order("created_at", { ascending: false }),
+          // شمارش پاسخ‌ها صفحه‌به‌صفحه
+          (async () => {
+            let all = [];
+            let from = 0;
+            for (;;) {
+              const { data, error } = await supabase
+                .from("responses")
+                .select("form_id, is_complete")
+                .range(from, from + PAGE_SIZE - 1);
+              if (error) throw error;
+              all = all.concat(data ?? []);
+              if (!data || data.length < PAGE_SIZE) break;
+              from += PAGE_SIZE;
+            }
+            return { data: all };
+          })(),
+        ]);
+      if (formsError) throw formsError;
+      setForms(formsData ?? []);
+      const c = {};
+      for (const r of respData?.data ?? []) {
+        c[r.form_id] = c[r.form_id] ?? { total: 0, complete: 0 };
+        c[r.form_id].total++;
+        if (r.is_complete) c[r.form_id].complete++;
+      }
+      setCounts(c);
+    } catch (err) {
+      console.error("load error:", err);
+      push("خطا در بارگذاری فرم‌ها: " + (err.message || ""), "error");
+    } finally {
+      setLoading(false);
     }
-    setCounts(c);
-    setLoading(false);
   }
 
   useEffect(() => { load(); }, []);
@@ -49,10 +74,10 @@ export default function FormsList() {
     }
     setBusy(true);
     const base = {
-      slug: `form-${Math.random().toString(36).slice(2, 8)}`,
+      slug: `form-${randomSlug(6)}`,
       title: "فرم جدید",
       published: false,
-      manager_id: null,
+      manager_id: user?.id ?? null,
     };
     const { data, error } = await supabase.from("forms").insert(base).select().single();
     setBusy(false);
@@ -85,7 +110,7 @@ export default function FormsList() {
     }
     setBusy(true);
     const copy = {
-      slug: `form-${Math.random().toString(36).slice(2, 8)}`,
+      slug: `form-${randomSlug(6)}`,
       title: `${form.title} (کپی)`,
       description: form.description,
       welcome_title: form.welcome_title,
@@ -93,6 +118,7 @@ export default function FormsList() {
       exit_title: form.exit_title,
       exit_message: form.exit_message,
       published: false,
+      manager_id: user?.id ?? null,
     };
     const { data: newForm, error } = await supabase.from("forms").insert(copy).select().single();
     if (!error) {
@@ -101,7 +127,10 @@ export default function FormsList() {
         form_id: newForm.id, type: q.type, title: q.title, description: q.description,
         required: q.required, options: q.options, position: i,
       }));
-      if (rows.length) await supabase.from("questions").insert(rows);
+      if (rows.length) {
+        const { error: qError } = await supabase.from("questions").insert(rows);
+        if (qError) push("کپی سوال‌ها ناموفق بود", "error");
+      }
       push("کپی ساخته شد");
       load();
     } else {

@@ -32,7 +32,7 @@ const PERMISSION_LABELS = {
 
 export default function Managers() {
   const { push } = useToast();
-  const { listManagers, createManager, updateManager, deactivateManager, deleteManager } = useAuth();
+  const { listManagers, createManager, updateManager, deactivateManager, activateManager, deleteManager } = useAuth();
   const [loading, setLoading] = useState(true);
   const [managers, setManagers] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -98,15 +98,33 @@ export default function Managers() {
   function openEdit(manager) {
     setSelectedManager(manager);
     setEditName(manager.full_name || manager.email.split("@")[0]);
-    setEditPermissions([...ALL_PERMISSIONS].filter((p) => p !== "manage_managers"));
+    setEditPermissions(
+      manager.permissions?.length
+        ? [...manager.permissions]
+        : [...ALL_PERMISSIONS].filter((p) => p !== "manage_managers")
+    );
     setShowEditModal(true);
   }
 
   async function handleDeactivate(managerId) {
-    if (!confirm("آیا از غیرفعال‌سازی این مدیر مطمئنید؟")) return;
+    const manager = managers.find((m) => m.id === managerId);
+    const activating = manager ? !manager.is_active : false;
+    if (
+      !confirm(
+        activating
+          ? "آیا از فعال‌سازی این مدیر مطمئنید؟"
+          : "آیا از غیرفعال‌سازی این مدیر مطمئنید؟"
+      )
+    )
+      return;
     try {
-      await deactivateManager(managerId);
-      push("مدیر غیرفعال شد");
+      if (activating) {
+        await activateManager(managerId);
+        push("مدیر فعال شد");
+      } else {
+        await deactivateManager(managerId);
+        push("مدیر غیرفعال شد");
+      }
       load();
     } catch (err) {
       push("خطا: " + err.message, "error");
@@ -410,13 +428,18 @@ export default function Managers() {
               size="sm"
               onClick={async () => {
                 if (selectedManager) {
-                  await updateManager(selectedManager.id, {
-                    fullName: editName,
-                    isActive: selectedManager.is_active,
-                  });
-                  push("تغییرات ذخیره شد ✅");
-                  setShowEditModal(false);
-                  load();
+                  try {
+                    await updateManager(selectedManager.id, {
+                      fullName: editName,
+                      isActive: selectedManager.is_active,
+                      permissions: editPermissions,
+                    });
+                    push("تغییرات ذخیره شد ✅");
+                    setShowEditModal(false);
+                    load();
+                  } catch (err) {
+                    push("خطا در ذخیره: " + (err.message || "ناموفق بود"), "error");
+                  }
                 }
               }}
             >

@@ -74,17 +74,18 @@ export function AuthProvider({ children }) {
   const fetchPermissions = useCallback(async (uid) => {
     if (!supabase || !uid) return [];
     try {
+      // fail-closed: در صورت خطا هیچ مجوزی برنمی‌گردد
       const { data, error } = await supabase.rpc("get_user_permissions", {
         p_user_id: uid,
       });
       if (error) {
         console.error("Error fetching permissions:", error);
-        return ALL_PERMISSIONS;
+        return [];
       }
       return data?.map((p) => p.permission_id) ?? [];
     } catch (err) {
       console.error("fetchPermissions error:", err);
-      return ALL_PERMISSIONS;
+      return [];
     }
   }, []);
 
@@ -179,43 +180,28 @@ export function AuthProvider({ children }) {
     email,
     password,
     fullName,
-    permissionIds = DEFAULT_MANAGER_PERMISSIONS,
+    permissionIds = null,
   }) {
-    try {
-      const { data: authData, error: authError } =
-        await supabase.auth.admin.createUser({
-          email,
-          password,
-          email_confirm: true,
-        });
-      if (authError) throw authError;
+    // ساخت کاربر باید سمت سرور انجام شود (Admin API از مرورگر قابل استفاده نیست)
+    const { data: userId, error } = await supabase.rpc("create_manager", {
+      p_email: email.trim(),
+      p_password: password,
+      p_full_name: fullName ?? email.split("@")[0],
+    });
+    if (error) throw error;
 
-      const userId = authData.user.id;
-
-      const { error: profileError } = await supabase.from("profiles").insert({
-        id: userId,
-        email,
-        full_name: fullName ?? email.split("@")[0],
-        is_active: true,
-        created_by: user?.id,
+    if (Array.isArray(permissionIds) && userId) {
+      const { error: permError } = await supabase.rpc("set_user_permissions", {
+        p_user_id: userId,
+        p_permissions: permissionIds,
       });
-      if (profileError) throw profileError;
-
-      const { error: roleError } = await supabase.from("user_roles").insert({
-        user_id: userId,
-        role_id: "manager",
-        active: true,
-      });
-      if (roleError) throw roleError;
-
-      return userId;
-    } catch (err) {
-      console.error("createManager error:", err);
-      throw err;
+      if (permError) throw permError;
     }
+
+    return userId;
   }
 
-  async function updateManager(managerId, { fullName, isActive, role } = {}) {
+  async function updateManager(managerId, { fullName, isActive, permissions } = {}) {
     const updates = {};
     if (fullName !== undefined) updates.full_name = fullName;
     if (isActive !== undefined) updates.is_active = isActive;
@@ -228,69 +214,81 @@ export function AuthProvider({ children }) {
       if (error) throw error;
     }
 
-    if (role) {
-      const { error } = await supabase
-        .from("user_roles")
-        .update({ role_id: role, active: true })
-        .eq("user_id", managerId);
+    if (Array.isArray(permissions)) {
+      const { error } = await supabase.rpc("set_user_permissions", {
+        p_user_id: managerId,
+        p_permissions: permissions,
+      });
       if (error) throw error;
     }
   }
 
-  async function deactivateManager(managerId) {
+  async function setManagerActive(managerId, active) {
     try {
-      const { error } = await supabase
+      const { error: roleError } = await supabase
         .from("user_roles")
-        .update({ active: false })
+        .update({ active })
         .eq("user_id", managerId);
-      if (error) throw error;
+      if (roleError) throw roleError;
 
-      await supabase
+      const { error: profileError } = await supabase
         .from("profiles")
-        .update({ is_active: false })
+        .update({ is_active: active })
         .eq("id", managerId);
+      if (profileError) throw profileError;
     } catch (err) {
-      console.error("deactivateManager error:", err);
+      console.error("setManagerActive error:", err);
       throw err;
     }
   }
 
   async function deleteManager(managerId) {
-    try {
-      await supabase.from("user_roles").delete().eq("user_id", managerId);
-      await supabase.from("profiles").delete().eq("id", managerId);
-      const { error } = await supabase.auth.admin.deleteUser(managerId);
-      if (error && !error.message?.includes("500")) {
-        console.warn("Could not delete auth user:", error);
-      }
-    } catch (err) {
-      console.error("deleteManager error:", err);
-      throw err;
-    }
+    // حذف auth user سمت سرور انجام می‌شود و پروفایل/نقش‌ها cascade می‌شوند
+    const { error } = await supabase.rpc("delete_manager", {
+      p_user_id: managerId,
+    });
+    if (error) throw error;
   }
 
   async function listManagers() {
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, email, full_name, is_active, created_at, created_by")
-        .eq("is_active", true);
+      const [{ data, error }, { data: userRoles }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, email, full_name, is_active, created_at, created_by")
+          .order("created_at", { ascending: true }),
+        supabase.from("user_roles").select("user_id, role_id, active"),
+      ]);
       if (error) throw error;
 
-      const userRoles = await supabase
-        .from("user_roles")
-        .select("user_id, role_id, active")
-        .in(
-          "user_id",
-          data.map((p) => p.id)
-        );
+      let overrides = [];
+      if (data?.length) {
+        const res = await supabase
+          .from("user_permissions")
+          .select("user_id, permission_id")
+          .in(
+            "user_id",
+            data.map((p) => p.id)
+          );
+        overrides = res.data ?? [];
+      }
 
       return data.map((p) => {
-        const roleData = userRoles.data?.find((ur) => ur.user_id === p.id);
+        const roleData = userRoles?.find((ur) => ur.user_id === p.id);
+        const roleId = roleData?.role_id ?? "manager";
+        const ownOverrides = overrides
+          .filter((o) => o.user_id === p.id)
+          .map((o) => o.permission_id);
+        const effectivePermissions = ownOverrides.length
+          ? ownOverrides
+          : roleId === "admin"
+            ? [...ALL_PERMISSIONS]
+            : [...DEFAULT_MANAGER_PERMISSIONS];
         return {
           ...p,
-          role: roleData?.role_id ?? "manager",
+          role: roleId,
           roleActive: roleData?.active ?? true,
+          permissions: effectivePermissions,
         };
       });
     } catch (err) {
@@ -316,7 +314,8 @@ export function AuthProvider({ children }) {
     updateProfile,
     createManager,
     updateManager,
-    deactivateManager,
+    deactivateManager: (id) => setManagerActive(id, false),
+    activateManager: (id) => setManagerActive(id, true),
     deleteManager,
     listManagers,
   };

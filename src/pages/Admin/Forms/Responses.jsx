@@ -89,7 +89,9 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
     const sorted = [...nums].sort((a, b) => a - b);
     const sum = nums.reduce((a, b) => a + b, 0);
     const avg = sum / nums.length;
-    const median = sorted[Math.floor(sorted.length / 2)];
+    const mid = Math.floor(sorted.length / 2);
+    const median =
+      sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
     const min = sorted[0];
     const max = sorted[sorted.length - 1];
     const variance = nums.reduce((acc, n) => acc + Math.pow(n - avg, 2), 0) / nums.length;
@@ -214,29 +216,59 @@ export default function Responses() {
   const [onlyComplete, setOnlyComplete] = useState(false);
   const [search, setSearch] = useState("");
 
+  const PAGE_SIZE = 500;
+  const ANSWER_CHUNK = 100;
+
   async function load() {
-    const [{ data: f }, { data: qs }, { data: rs }] = await Promise.all([
-      supabase.from("forms").select("*").eq("id", id).maybeSingle(),
-      supabase.from("questions").select("*").eq("form_id", id).order("position"),
-      supabase
-        .from("responses")
-        .select("*")
-        .eq("form_id", id)
-        .order("created_at", { ascending: false }),
-    ]);
-    setForm(f);
-    setQuestions(qs ?? []);
-    setResponses(rs ?? []);
-    if (rs?.length) {
-      const { data: ans } = await supabase
-        .from("answers")
-        .select("id, response_id, question_id, value, time_spent_seconds")
-        .in("response_id", rs.map((r) => r.id));
-      setAnswers(ans ?? []);
-    } else {
-      setAnswers([]);
+    try {
+      // بارگذاری صفحه‌به‌صفحه‌ی پاسخ‌ها (جلوگیری از کوئری‌های خیلی بزرگ)
+      let allResponses = [];
+      let from = 0;
+      for (;;) {
+        const { data, error } = await supabase
+          .from("responses")
+          .select("*")
+          .eq("form_id", id)
+          .order("created_at", { ascending: false })
+          .range(from, from + PAGE_SIZE - 1);
+        if (error) throw error;
+        allResponses = allResponses.concat(data ?? []);
+        if (!data || data.length < PAGE_SIZE) break;
+        from += PAGE_SIZE;
+      }
+
+      const [{ data: f, error: formError }, { data: qs, error: qError }] =
+        await Promise.all([
+          supabase.from("forms").select("*").eq("id", id).maybeSingle(),
+          supabase.from("questions").select("*").eq("form_id", id).order("position"),
+        ]);
+      if (formError) throw formError;
+      if (qError) throw qError;
+
+      setForm(f);
+      setQuestions(qs ?? []);
+      setResponses(allResponses);
+
+      let allAnswers = [];
+      if (allResponses.length) {
+        const ids = allResponses.map((r) => r.id);
+        for (let i = 0; i < ids.length; i += ANSWER_CHUNK) {
+          const chunk = ids.slice(i, i + ANSWER_CHUNK);
+          const { data: ans, error: ansError } = await supabase
+            .from("answers")
+            .select("id, response_id, question_id, value, time_spent_seconds")
+            .in("response_id", chunk);
+          if (ansError) throw ansError;
+          allAnswers = allAnswers.concat(ans ?? []);
+        }
+      }
+      setAnswers(allAnswers);
+    } catch (err) {
+      console.error("load error:", err);
+      push("خطا در بارگذاری پاسخ‌ها: " + (err.message || ""), "error");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   useEffect(() => {
@@ -289,10 +321,16 @@ export default function Responses() {
   const stats = useMemo(() => {
     const complete = responses.filter((r) => r.is_complete);
     const durations = complete.map((r) => r.duration_seconds).filter((d) => d > 0);
+    // تاریخ «امروز» بر اساس timezone محلی کاربر (نه UTC)
+    const now = new Date();
+    const localDateStr = (d) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+        d.getDate()
+      ).padStart(2, "0")}`;
+    const todayStr = localDateStr(now);
     const today = responses.filter((r) => {
       const d = new Date(r.submitted_at || r.created_at);
-      const todayStr = new Date().toISOString().slice(0, 10);
-      return d.toISOString().slice(0, 10) === todayStr;
+      return localDateStr(d) === todayStr;
     });
     return {
       total: responses.length,
