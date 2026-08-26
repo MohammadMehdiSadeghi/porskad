@@ -1,6 +1,6 @@
-# پرس‌یار (PorsYar) 📋✨
+# پرسکاد (Porskad) 📋✨
 
-فرم‌ساز و نظرسنجی آنلاین فارسی — مشابه پرس‌لاین — با دیزاین‌سیستم «استیکر-کولاژ» رکاد.
+سیستم اختصاصی فرم و نظرسنجی مؤسسه رکاد — با دیزاین‌سیستم «استیکر-کولاژ» رکاد.
 
 ساخته‌شده با **React 18 + Vite + Tailwind CSS + Supabase** و آماده‌ی دیپلوی روی **Vercel**.
 
@@ -49,7 +49,7 @@
 ## ساختار پروژه
 
 ```
-porsyar/
+porskad/
 ├── index.html                  # ورودی HTML (RTL، فارسی)
 ├── package.json
 ├── vite.config.js
@@ -88,7 +88,7 @@ porsyar/
 
 ### قدم ۱ — ساخت پروژه Supabase (۵ دقیقه، رایگان)
 1. برو به [supabase.com](https://supabase.com) → **New Project**
-2. نام دلخواه (مثلاً `porsyar`) و یک رمز دیتابیس بده و منتظر بمان پروژه ساخته شود.
+2. نام دلخواه (مثلاً `porskad`) و یک رمز دیتابیس بده و منتظر بمان پروژه ساخته شود.
 3. در داشبورد پروژه → **SQL Editor** → **New query**
 4. کل محتوای فایل `supabase/migrations/0001_init.sql` را کپی‌کن، **Paste** و **Run** کن.
    - پیام `Success. No rows returned` یعنی همه‌چیز درست است.
@@ -96,8 +96,8 @@ porsyar/
 ### قدم ۲ — ساخت یوزر ادمین تستی
 1. در داشبورد Supabase → **Authentication** → **Users** → **Add user** → *Create new user*
 2. مثلاً:
-   - Email: `admin@porsyar.ir`
-   - Password: `Porsyar@1404`
+   - Email: `admin@porskad.ir`
+   - Password: `Porskad@1404`
    - تیک **Auto Confirm User** بزن.
 3. **Create user** — تمام! (پروفایل به‌صورت خودکار توسط تریگر ساخته می‌شود.)
 
@@ -105,7 +105,7 @@ porsyar/
 
 ### قدم ۳ — اجرای محلی
 ```bash
-cd Desktop/porsyar
+cd Documents/GitHub/porskad
 npm install
 cp .env.example .env   # در ویندوز: copy .env.example .env
 ```
