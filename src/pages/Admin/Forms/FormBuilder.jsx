@@ -7,6 +7,8 @@ import Badge from "../../../components/ui/Badge";
 import Spinner from "../../../components/ui/Spinner";
 import { useToast } from "../../../components/ui/Toast";
 import { QUESTION_TYPES, QUESTION_TYPE_ORDER, makeQuestion, CONDITION_OPERATORS, CONDITION_OPERATOR_ORDER } from "../../../lib/questionTypes";
+import LogicEditor from "../../../components/logic/LogicEditor";
+import LogicDebug from "../../../components/logic/LogicDebug";
 import { faNum, slugify, copyToClipboard } from "../../../lib/utils";
 import SEO from "../../../components/ui/SEO";
 
@@ -246,6 +248,7 @@ export default function FormBuilder() {
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [slugError, setSlugError] = useState(null);
+  const [logicRules, setLogicRules] = useState([]);
 
   useEffect(() => {
     async function load() {
@@ -262,6 +265,21 @@ export default function FormBuilder() {
         .order("position");
       setForm(f);
       setQuestions((qs ?? []).map((q) => ({ ...q, localId: q.id })));
+
+      // بارگذاری Ruleهای منطقی
+      const { data: lrs } = await supabase
+        .from("logic_rules")
+        .select("*")
+        .eq("form_id", id)
+        .order("priority");
+      setLogicRules(
+        (lrs ?? []).map((r) => ({
+          ...r,
+          conditions: r.conditions_json ?? [],
+          action: { type: r.action_type, target_id: r.action_target_id },
+        }))
+      );
+
       setLoading(false);
     }
     load();
@@ -307,6 +325,11 @@ export default function FormBuilder() {
       [copy[i], copy[j]] = [copy[j], copy[i]];
       return copy;
     });
+    setDirty(true);
+  }, []);
+
+  const updateLogicRules = useCallback((newRules) => {
+    setLogicRules(newRules);
     setDirty(true);
   }, []);
 
@@ -384,6 +407,25 @@ export default function FormBuilder() {
       if (Array.isArray(freshQs)) {
         setQuestions(freshQs.map((q) => ({ ...q, localId: q.id })));
       }
+
+      // ذخیره Ruleهای منطقی
+      const pRules = logicRules.map((r) => ({
+        id: r.id,
+        name: r.name || '',
+        enabled: !!r.enabled,
+        priority: r.priority ?? 0,
+        source_question_id: r.source_question_id ?? null,
+        group_operator: r.group_operator || 'AND',
+        conditions_json: r.conditions || [],
+        action_type: r.action?.type || 'SHOW_QUESTION',
+        action_target_id: r.action?.target_id ?? null,
+      }));
+      const { error: lrError } = await supabase.rpc('save_logic_rules', {
+        p_form_id: id,
+        p_rules: pRules,
+      });
+      if (lrError) throw lrError;
+
       setForm((f) => ({ ...f, slug: cleanSlug }));
       setDirty(false);
       push("همه‌چیز ذخیره شد ✅");
@@ -549,6 +591,24 @@ export default function FormBuilder() {
             </div>
           </StickerCard>
         </div>
+
+        {/* ─── قوانین منطقی ─── */}
+        <div className="rotate-[-0.3deg]">
+          <StickerCard theme="teal" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
+            <div className="p-4 sm:p-5">
+              <LogicEditor
+                rules={logicRules}
+                questions={questions}
+                onChange={updateLogicRules}
+              />
+            </div>
+          </StickerCard>
+        </div>
+
+        {/* پیش‌نمایش مسیر فرم */}
+        {logicRules.length > 0 && (
+          <LogicDebug questions={questions} rules={logicRules} />
+        )}
 
         {/* نوار ذخیره پایین */}
         <div className="sticky bottom-4 flex justify-end">

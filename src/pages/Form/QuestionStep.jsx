@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import clsx from "../../components/ui/clsx";
 import { faNum, faDuration } from "../../lib/utils";
 import { validateAnswer } from "../../lib/validators";
@@ -291,16 +291,22 @@ export default function QuestionStep({
   onAdvance,
 }) {
   const [error, setError] = useState(null);
+  const valueRef = useRef(value);
+
+  // همیشه مقدار لحظه‌ای جواب رو نگه میداره
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
 
   useEffect(() => {
     setError(null);
   }, [question.id]);
 
-  function handleNext() {
-    const err = validateAnswer(question, value);
+  const handleNext = useCallback(() => {
+    const err = validateAnswer(question, valueRef.current);
     setError(err);
     if (!err) onAdvance();
-  }
+  }, [question, onAdvance]);
 
   const theme = getStepTheme(index);
 

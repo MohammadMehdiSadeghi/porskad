@@ -9,7 +9,7 @@ import Spinner from "../../components/ui/Spinner";
 import Logo from "../../components/ui/Logo";
 import { supabase } from "../../lib/supabaseClient";
 import { normalizeAnswerValue, validateAnswer } from "../../lib/validators";
-import { evaluateCondition } from "../../lib/questionTypes";
+import { calculateFlow } from "../../lib/logic/flowEngine";
 import { faNum, faDuration, parseUserAgent } from "../../lib/utils";
 import QuestionStep from "./QuestionStep";
 import SEO from "../../components/ui/SEO";
@@ -45,6 +45,7 @@ export default function FormFill() {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [unavailable, setUnavailable] = useState(null);
+  const [logicRules, setLogicRules] = useState([]);
 
   const [step, setStep] = useState(-1);
   const [dir, setDir] = useState(1);
@@ -91,6 +92,21 @@ export default function FormFill() {
 
       setForm(formData);
       setQuestions(qData ?? []);
+
+      // بارگذاری Ruleهای منطقی
+      const { data: lrs } = await supabase
+        .from("logic_rules")
+        .select("*")
+        .eq("form_id", formData.id)
+        .order("priority");
+      setLogicRules(
+        (lrs ?? []).map((r) => ({
+          ...r,
+          conditions: r.conditions_json ?? [],
+          action: { type: r.action_type, target_id: r.action_target_id },
+        }))
+      );
+
       setLoading(false);
     }
     load();
@@ -129,6 +145,16 @@ export default function FormFill() {
     stepEnteredAt.current = Date.now();
   }, [step]);
 
+  // ─── محاسبه مسیر با Flow Engine ───
+  const flow = useMemo(
+    () => calculateFlow(questions, logicRules, answers),
+    [questions, logicRules, answers]
+  );
+  const visibleQuestions = flow.visibleQuestions;
+  const visibleIds = flow.visibleIds;
+  const visibleTotal = visibleQuestions.length;
+  const formEnded = flow.ended;
+
   const currentQuestion = questions[step];
 
   const accrueTime = useCallback(() => {
@@ -146,12 +172,9 @@ export default function FormFill() {
     [currentQuestion]
   );
 
-  // ─── سوالات قابل مشاهده بر اساس شرط‌ها ───
-  const visibleQuestions = useMemo(() => {
-    return questions.filter((q) => evaluateCondition(q.condition, answers));
-  }, [questions, answers]);
 
-  const visibleTotal = visibleQuestions.length;
+
+
 
   // شمارهی نمایشی سوال فعلی (بر اساس سوالات قابل مشاهده)
   const currentVisibleIndex = useMemo(() => {
@@ -162,18 +185,18 @@ export default function FormFill() {
   // پیدا کردن مرحلهی بعدی قابل نمایش
   const findNextVisibleStep = useCallback((fromStep) => {
     for (let i = fromStep + 1; i < total; i++) {
-      if (evaluateCondition(questions[i]?.condition, answers)) return i;
+      if (visibleIds.has(questions[i]?.id)) return i;
     }
     return total; // همه سوالات تمام شد → صفحه خروج
-  }, [questions, total, answers]);
+  }, [questions, total, visibleIds]);
 
   // پیدا کردن مرحلهی قبلی قابل نمایش
   const findPrevVisibleStep = useCallback((fromStep) => {
     for (let i = fromStep - 1; i >= 0; i--) {
-      if (evaluateCondition(questions[i]?.condition, answers)) return i;
+      if (visibleIds.has(questions[i]?.id)) return i;
     }
     return -1; // برگشت به صفحه خوش‌آمد
-  }, [questions, answers]);
+  }, [questions, visibleIds]);
 
   // اعتبارسنجی سوال فعلی
   const validateCurrent = useCallback(() => {
@@ -285,6 +308,15 @@ export default function FormFill() {
       setSubmitting(false);
     }
   }, [submitting, honeypot, form, visibleQuestions, questions, answers, times, startedAt, slug, total]);
+
+  // اگه END_FORM فعال شد، مستقیم به صفحه خروج برو
+  useEffect(() => {
+    if (formEnded && step >= 0 && step < total) {
+      accrueTime();
+      setDir(1);
+      setStep(total);
+    }
+  }, [formEnded]);
 
   const progressValue = step < 0 ? 0 : Math.min(step, visibleTotal);
   const approxMinutes = useMemo(() => Math.max(1, Math.round(visibleTotal * 0.4)), [visibleTotal]);
