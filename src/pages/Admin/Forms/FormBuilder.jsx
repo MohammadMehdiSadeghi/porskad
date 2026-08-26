@@ -6,7 +6,9 @@ import Button from "../../../components/ui/Button";
 import Badge from "../../../components/ui/Badge";
 import Spinner from "../../../components/ui/Spinner";
 import { useToast } from "../../../components/ui/Toast";
-import { QUESTION_TYPES, QUESTION_TYPE_ORDER, makeQuestion, CONDITION_OPERATORS, CONDITION_OPERATOR_ORDER } from "../../../lib/questionTypes";
+import { QUESTION_TYPES, QUESTION_TYPE_ORDER, makeQuestion } from "../../../lib/questionTypes";
+import { OPERATORS, OPERATOR_ORDER } from "../../../lib/logic/types";
+import ConditionBuilder from "../../../components/logic/ConditionBuilder";
 import LogicEditor from "../../../components/logic/LogicEditor";
 import LogicDebug from "../../../components/logic/LogicDebug";
 import { faNum, slugify, copyToClipboard } from "../../../lib/utils";
@@ -22,6 +24,101 @@ function Field({ label, children, hint }) {
       {children}
       {hint && <span className="text-[0.7rem] font-medium text-ink-subtle">{hint}</span>}
     </label>
+  );
+}
+
+// ─── پنل شرطی هر سوال ───
+function QuestionConditionPanel({ q, index, allQuestions, onChange }) {
+  const [expanded, setExpanded] = useState(!!q.condition);
+  const sourceQ = allQuestions.find((sq) => sq.id === q.condition?.source_question_id);
+  const opMeta = OPERATORS[q.condition?.operator] || {};
+
+  return (
+    <div className="border-2 border-dashed border-navy/20 rounded-pill-md bg-bg-lavender/40 overflow-hidden">
+      {/* هدر پنل — کلیک‌پذیر */}
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-navy/5 transition-colors"
+      >
+        <span className="text-sm">🔀</span>
+        <span className="text-xs font-extrabold text-navy">شرط نمایش</span>
+
+        {/* وضعیت شرط */}
+        {q.condition ? (
+          <span className="text-[0.6rem] font-bold text-teal bg-teal/10 border border-teal/30 rounded-pill-sm px-2 py-0.5">
+            ✅ فعال
+          </span>
+        ) : (
+          <span className="text-[0.6rem] font-bold text-ink-subtle bg-ink/5 border border-ink/10 rounded-pill-sm px-2 py-0.5">
+            بدون شرط
+          </span>
+        )}
+
+        {/* پیش‌نمایش متنی شرط در حالت بسته */}
+        {!expanded && q.condition && sourceQ && (
+          <span className="text-[0.6rem] font-medium text-navy/60 truncate mr-auto">
+            «{sourceQ.title?.slice(0, 25)}» {opMeta.label}
+            {q.condition.value ? ` «${q.condition.value}»` : ''}
+          </span>
+        )}
+
+        <span className="text-ink-subtle text-[0.65rem] mr-auto"></span>
+        <span className="text-xs text-ink-subtle shrink-0">
+          {expanded ? '▲' : '▼'}
+        </span>
+      </button>
+
+      {/* بدنه پنل */}
+      {expanded && (
+        <div className="px-3 pb-3 border-t-2 border-dashed border-navy/15 pt-3 flex flex-col gap-2">
+          {q.condition ? (
+            <>
+              {/* استفاده از ConditionBuilder */}
+              <ConditionBuilder
+                condition={q.condition}
+                questions={allQuestions.filter((_, j) => j < index)}
+                index={0}
+                removable={false}
+                onChange={(patch) => onChange({ condition: { ...q.condition, ...patch } })}
+                onDelete={() => {}}
+              />
+
+              {/* پیش‌نمایش متنی */}
+              <div className="text-[0.6rem] font-medium text-navy/70 bg-white/80 rounded-pill-sm px-2.5 py-1.5 leading-5">
+                اگر «{sourceQ?.title?.slice(0, 30) || '?'}» {opMeta.label}
+                {q.condition.value ? ` «${q.condition.value}»` : ''}
+                {' '}آنگاه این سوال نمایش داده شود
+              </div>
+
+              {/* دکمه حذف شرط */}
+              <button
+                onClick={() => onChange({ condition: null })}
+                className="self-start text-[0.65rem] font-bold text-magenta-text hover:underline"
+              >
+                ✕ حذف شرط
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => {
+                onChange({
+                  condition: {
+                    source_question_id: allQuestions[index - 1]?.id ?? null,
+                    operator: 'equals',
+                    value: '',
+                  },
+                });
+              }}
+              className="self-start text-[0.7rem] font-extrabold text-teal hover:text-teal-text transition-colors
+                border-2 border-dashed border-teal/40 rounded-pill-md px-3 py-2 hover:border-teal"
+            >
+              + افزودن شرط نمایش
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -133,102 +230,14 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
             </div>
           )}
 
-          {/* ─── شرطی‌سازی (Conditional Logic) ─── */}
+          {/* ─── پنل شرطی (Conditional Logic Panel) ─── */}
           {index > 0 && (
-            <div className="flex flex-col gap-2 border-2 border-dashed border-navy/20 rounded-pill-md bg-bg-lavender/40 p-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-extrabold text-navy">
-                  🔀 شرط نمایش (اختیاری)
-                </span>
-                {q.condition && (
-                  <button
-                    onClick={() => onChange({ condition: null })}
-                    className="text-[0.65rem] font-bold text-magenta-text hover:underline mr-auto"
-                  >
-                    حذف شرط
-                  </button>
-                )}
-              </div>
-
-              {/* دکمه افزودن شرط */}
-              {!q.condition && (
-                <button
-                  onClick={() =>
-                    onChange({
-                      condition: {
-                        source_question_id: allQuestions[index - 1]?.id ?? null,
-                        operator: "equals",
-                        value: "",
-                      },
-                    })
-                  }
-                  className="self-start text-[0.7rem] font-extrabold text-navy hover:text-teal-text transition-colors"
-                >
-                  + افزودن شرط
-                </button>
-              )}
-
-              {/* فرم تنظیم شرط */}
-              {q.condition && (
-                <div className="flex flex-col gap-2">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[0.65rem] font-bold text-ink-subtle">سوال مرجع:</span>
-                    <select
-                      value={q.condition.source_question_id ?? ""}
-                      onChange={(e) =>
-                        onChange({
-                          condition: { ...q.condition, source_question_id: e.target.value || null },
-                        })
-                      }
-                      className={`${inputCls} !py-1.5 !text-xs`}
-                    >
-                      {allQuestions
-                        .filter((_, j) => j < index)
-                        .map((sq) => (
-                          <option key={sq.id} value={sq.id}>
-                            {faNum(allQuestions.indexOf(sq) + 1)}. {sq.title?.slice(0, 40) || "—"}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[0.65rem] font-bold text-ink-subtle">شرط:</span>
-                    <select
-                      value={q.condition.operator}
-                      onChange={(e) =>
-                        onChange({
-                          condition: { ...q.condition, operator: e.target.value },
-                        })
-                      }
-                      className={`${inputCls} !py-1.5 !text-xs`}
-                    >
-                      {CONDITION_OPERATOR_ORDER.map((op) => (
-                        <option key={op} value={op}>
-                          {CONDITION_OPERATORS[op].label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {CONDITION_OPERATORS[q.condition.operator]?.needsValue && (
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[0.65rem] font-bold text-ink-subtle">مقدار:</span>
-                      <input
-                        value={q.condition.value ?? ""}
-                        onChange={(e) =>
-                          onChange({
-                            condition: { ...q.condition, value: e.target.value },
-                          })
-                        }
-                        placeholder="مقدار مقایسه..."
-                        className={`${inputCls} !py-1.5 !text-xs`}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            <QuestionConditionPanel
+              q={q}
+              index={index}
+              allQuestions={allQuestions}
+              onChange={onChange}
+            />
           )}
         </div>
       </StickerCard>
