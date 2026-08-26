@@ -8,7 +8,7 @@ import ProgressBar from "../../components/ui/ProgressBar";
 import Spinner from "../../components/ui/Spinner";
 import Logo from "../../components/ui/Logo";
 import { supabase } from "../../lib/supabaseClient";
-import { normalizeAnswerValue } from "../../lib/validators";
+import { normalizeAnswerValue, validateAnswer } from "../../lib/validators";
 import { faNum, faDuration, parseUserAgent } from "../../lib/utils";
 import QuestionStep from "./QuestionStep";
 
@@ -142,6 +142,13 @@ export default function FormFill() {
     [currentQuestion]
   );
 
+  // اعتبارسنجی سوال فعلی
+  const validateCurrent = useCallback(() => {
+    if (!currentQuestion) return true;
+    const err = validateAnswer(currentQuestion, answers[currentQuestion.id]);
+    return !err;
+  }, [currentQuestion, answers]);
+
   const goNext = useCallback(() => {
     if (step === -1) {
       setStartedAt((prev) => prev ?? Date.now());
@@ -149,10 +156,11 @@ export default function FormFill() {
       setStep(0);
       return;
     }
+    if (!validateCurrent()) return;
     accrueTime();
     setDir(1);
     setStep((s) => Math.min(s + 1, total));
-  }, [step, total, accrueTime]);
+  }, [step, total, accrueTime, validateCurrent]);
 
   const goBack = useCallback(() => {
     if (step <= -1) return;
@@ -164,6 +172,23 @@ export default function FormFill() {
   const submit = useCallback(async () => {
     if (submitting) return;
     if (honeypot.trim() !== "") return;
+
+    // اعتبارسنجی تمام سوالات اجباری
+    for (const q of questions) {
+      if (q.required) {
+        const v = answers[q.id];
+        const isEmpty = v === null || v === undefined || (typeof v === "string" && v.trim() === "");
+        if (isEmpty) {
+          // برگرد به سوال اجباری خالی
+          const idx = questions.indexOf(q);
+          accrueTime();
+          setDir(-1);
+          setStep(idx);
+          setSubmitError(`سوال «${q.title}» اجباریه و جواب ندادی!`);
+          return;
+        }
+      }
+    }
 
     setSubmitting(true);
     setSubmitError(null);
@@ -234,7 +259,7 @@ export default function FormFill() {
   if (!form) return null;
 
   return (
-    <div className="min-h-screen dot-pattern bg-bg-mint flex flex-col">
+    <div className="min-h-dvh dot-pattern bg-bg-mint flex flex-col overflow-x-hidden">
       {/* هدر باریک */}
       <div className="w-full max-w-[75rem] mx-auto flex items-center justify-between px-4 py-3">
         <Logo linked={false} size="sm" />
@@ -250,8 +275,8 @@ export default function FormFill() {
         </div>
       )}
 
-      <main className="flex-1 flex items-start sm:items-center justify-center px-4 py-6">
-        <div className={`w-full max-w-xl ${step === -1 ? "-rotate-[0.6deg]" : "rotate-[0.4deg]"}`}>
+      <main className="flex-1 flex items-start sm:items-center justify-center px-4 sm:px-6 py-4 sm:py-6 overflow-x-hidden">
+        <div className={`w-full max-w-xl ${step === -1 ? "-rotate-[0.6deg]" : "rotate-[0.4deg]"}`}>  
           <StickerCard theme="white" radius="rounded-tl-[2rem] rounded-br-[2rem] rounded-tr-none rounded-bl-none">
             {/* تله‌ی ربات‌ها */}
             <input

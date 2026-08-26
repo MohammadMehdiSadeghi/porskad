@@ -39,14 +39,14 @@ function TelegramIcon({ className }) {
   );
 }
 
-// ─── رنگ‌بندی交替 سوال‌ها (alternating) ───
+// ─── رنگ‌بندی交替 سوال‌ها — رنگ‌های سازمانی ───
 const STEP_THEMES = [
-  { bg: "bg-white", border: "border-ink/10" },           // سفید
-  { bg: "bg-bg-mint", border: "border-teal/15" },        // سبز ملایم
-  { bg: "bg-bg-lavender", border: "border-navy/10" },    // بنفش ملایم
-  { bg: "bg-white", border: "border-ink/10" },           // سفید
-  { bg: "bg-bg-blush", border: "border-magenta/10" },    // صورتی ملایم
-  { bg: "bg-bg-mint", border: "border-teal/15" },        // سبز ملایم
+  { bg: "bg-white", border: "border-ink/15", label: "text-ink" },                     // سفید + مشکی
+  { bg: "bg-bg-mint", border: "border-teal/20", label: "text-teal-text" },           // سبز تیلی
+  { bg: "bg-bg-lavender", border: "border-navy/15", label: "text-navy" },            // آبی سرمه‌ای
+  { bg: "bg-bg-blush", border: "border-magenta/15", label: "text-magenta-text" },    // صورتی
+  { bg: "bg-white", border: "border-ink/15", label: "text-ink" },                     // سفید + مشکی
+  { bg: "bg-bg-mint", border: "border-teal/20", label: "text-teal-text" },           // سبز تیلی
 ];
 
 function getStepTheme(index) {
@@ -308,8 +308,8 @@ export default function QuestionStep({
     <div className={clsx("flex flex-col gap-5 rounded-pill-md p-4 sm:p-5 -mx-1 transition-colors", theme.bg, theme.border, "border-2")}>
       {/* شماره سوال + برچسب اختیاری/اجباری */}
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-black text-teal-text flex items-center gap-1.5">
-          <FlagIcon className="text-teal-text/60" />
+        <span className={clsx("text-sm font-black flex items-center gap-1.5", theme.label)}>
+          <FlagIcon className="opacity-60" />
           سوال {faNum(index + 1)} از {faNum(total)}
         </span>
         {question.required ? (
