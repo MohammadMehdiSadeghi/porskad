@@ -85,13 +85,16 @@ export function AuthProvider({ children }) {
     }
 
     supabase.auth.getSession().then(({ data }) => {
-      const sess = data.session;
+      const sess = data?.session;
       setSession(sess);
       if (sess?.user) {
         handleAuthChange(sess.user);
       } else {
         setLoading(false);
       }
+    }).catch((err) => {
+      console.error("Error getting session:", err);
+      setLoading(false);
     });
 
     const {
@@ -113,6 +116,10 @@ export function AuthProvider({ children }) {
   }, []);
 
   async function handleAuthChange(uidOrUser) {
+    if (!uidOrUser) {
+      console.warn("handleAuthChange called with null/undefined");
+      return;
+    }
     const uid = typeof uidOrUser === "string" ? uidOrUser : uidOrUser.id;
     const email = typeof uidOrUser === "string" ? null : uidOrUser.email;
 
