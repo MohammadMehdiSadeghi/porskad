@@ -14,6 +14,7 @@ import FormsList from "./pages/Admin/Forms/FormsList";
 import FormBuilder from "./pages/Admin/Forms/FormBuilder";
 import Responses from "./pages/Admin/Forms/Responses";
 import Managers from "./pages/Admin/Managers";
+import Profile from "./pages/Admin/Profile";
 import AuthGuard from "./components/guards/AuthGuard";
 
 // Error Boundary
@@ -93,14 +94,8 @@ export default function App() {
               <Route path="forms" element={<FormsList />} />
               <Route path="forms/:id" element={<FormBuilder />} />
               <Route path="forms/:id/responses" element={<Responses />} />
-              <Route
-                path="managers"
-                element={
-                  <AuthGuard adminOnly={true}>
-                    <Managers />
-                  </AuthGuard>
-                }
-              />
+              <Route path="managers" element={<AuthGuard adminOnly={true}><Managers /></AuthGuard>} />
+              <Route path="profile" element={<Profile />} />
             </Route>
 
             {/* هدایت پیش‌فرض */}

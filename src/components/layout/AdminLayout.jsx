@@ -2,14 +2,17 @@ import { NavLink, Navigate, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Spinner from "../ui/Spinner";
 import Button from "../ui/Button";
+import Badge from "../ui/Badge";
 
 const NAV_ITEMS = [
   { to: "/admin", label: "داشبورد", icon: "📊", end: true },
   { to: "/admin/forms", label: "فرم‌ها", icon: "🗂️", end: false },
+  { to: "/admin/managers", label: "مدیران", icon: "👥", end: false, adminOnly: true },
+  { to: "/admin/profile", label: "پروفایل", icon: "👤", end: false },
 ];
 
 export default function AdminLayout() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, role, logout } = useAuth();
   const navigate = useNavigate();
 
   if (loading) {
@@ -40,7 +43,7 @@ export default function AdminLayout() {
         </div>
 
         <nav className="flex sm:flex-col gap-1 px-3 py-3 overflow-x-auto">
-          {NAV_ITEMS.map((item) => (
+          {NAV_ITEMS.filter((item) => !item.adminOnly || role === "admin").map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

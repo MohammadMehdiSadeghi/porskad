@@ -160,6 +160,21 @@ export function AuthProvider({ children }) {
     await supabase.auth.signOut();
   }
 
+  async function changePassword(newPassword) {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+  }
+
+  async function updateProfile(updates) {
+    if (!user?.id) throw new Error("کاربر لاگین نیست");
+    const { error } = await supabase
+      .from("profiles")
+      .update(updates)
+      .eq("id", user.id);
+    if (error) throw error;
+    setProfile((prev) => (prev ? { ...prev, ...updates } : prev));
+  }
+
   async function createManager({
     email,
     password,
@@ -297,6 +312,8 @@ export function AuthProvider({ children }) {
     canManage: () => role === "admin",
     login,
     logout,
+    changePassword,
+    updateProfile,
     createManager,
     updateManager,
     deactivateManager,
