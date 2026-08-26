@@ -4,6 +4,7 @@ import StickerCard from "../../components/ui/StickerCard";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import { useAuth } from "../../context/AuthContext";
+import SEO from "../../components/ui/SEO";
 
 export default function Login() {
   const { login, user } = useAuth();
@@ -37,6 +38,12 @@ export default function Login() {
 
   return (
     <div className="min-h-screen dot-pattern bg-bg-mint flex items-center justify-center p-4">
+      <SEO
+        title="ورود ادمین"
+        description="ورود به پنل مدیریت پرسکاد — سیستم اختصاصی فرم و نظرسنجی مؤسسه رکاد"
+        url="/admin/login"
+        noIndex
+      />
       <div className="w-full max-w-md -rotate-[0.7deg]">
         <StickerCard theme="white">
           <form

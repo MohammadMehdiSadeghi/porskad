@@ -30,6 +30,7 @@ import {
   AlertCircle,
   MessagesSquare,
 } from "lucide-react";
+import SEO from "../../../components/ui/SEO";
 import {
   BarChart,
   Bar,
@@ -411,6 +412,12 @@ export default function Responses() {
 
   return (
     <div className="flex flex-col gap-6">
+      <SEO
+        title={`پاسخ‌ها: ${form.title}`}
+        description={`مشاهده پاسخ‌های فرم ${form.title} — پرسکاد`}
+        url={`/admin/forms/${id}/responses`}
+        noIndex
+      />
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">

@@ -8,6 +8,7 @@ import Spinner from "../../../components/ui/Spinner";
 import { useToast } from "../../../components/ui/Toast";
 import { QUESTION_TYPES, QUESTION_TYPE_ORDER, makeQuestion } from "../../../lib/questionTypes";
 import { faNum, slugify, copyToClipboard } from "../../../lib/utils";
+import SEO from "../../../components/ui/SEO";
 
 const inputCls =
   "w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink focus:outline-none transition-all";
@@ -313,6 +314,12 @@ export default function FormBuilder() {
 
   return (
     <div className="flex flex-col gap-7 max-w-4xl">
+      <SEO
+        title={`ویرایش فرم: ${form.title}`}
+        description={form.description || `فرم‌ساز — ${form.title}`}
+        url={`/admin/forms/${id}`}
+        noIndex
+      />
       {/* هدر */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">

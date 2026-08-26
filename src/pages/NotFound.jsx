@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
 import StickerCard from "../components/ui/StickerCard";
 import Button from "../components/ui/Button";
+import SEO from "../components/ui/SEO";
 
 export default function NotFound() {
   return (
     <div className="min-h-screen dot-pattern bg-bg-lavender flex items-center justify-center p-4">
+      <SEO title="صفحه یافت نشد" description="صفحه مورد نظر شما وجود ندارد." noIndex />
       <div className="w-full max-w-md rotate-[1deg]">
         <StickerCard theme="orange">
           <div className="p-9 flex flex-col items-center text-center gap-4">

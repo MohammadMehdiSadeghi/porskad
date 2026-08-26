@@ -18,6 +18,7 @@ import {
   Calendar,
   UserCircle,
 } from "lucide-react";
+import SEO from "../../components/ui/SEO";
 
 const PERMISSION_LABELS = {
   create_form: "ایجاد فرم",
@@ -155,6 +156,12 @@ export default function Managers() {
 
   return (
     <div className="flex flex-col gap-6">
+      <SEO
+        title="مدیریت مدیران"
+        description="مدیریت مدیران و مجوزهای پنل ادمین — پرسکاد"
+        url="/admin/managers"
+        noIndex
+      />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-black text-navy">مدیریت مدیران</h1>

@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabaseClient";
 import Button from "../../components/ui/Button";
 import StickerCard from "../../components/ui/StickerCard";
 import Badge from "../../components/ui/Badge";
+import SEO from "../../components/ui/SEO";
 
 const PERMISSION_LABELS = {
   create_form: "ایجاد فرم",
@@ -97,6 +98,12 @@ export default function Profile() {
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
+      <SEO
+        title="پروفایل من"
+        description="اطلاعات حساب کاربری و تنظیمات امنیتی — پرسکاد"
+        url="/admin/profile"
+        noIndex
+      />
       <div>
         <h1 className="text-2xl font-black text-navy">پروفایل من</h1>
         <p className="text-sm text-ink/50 mt-0.5">

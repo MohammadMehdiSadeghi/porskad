@@ -10,6 +10,7 @@ import Modal from "../../../components/ui/Modal";
 import { useToast } from "../../../components/ui/Toast";
 import { useAuth } from "../../../context/AuthContext";
 import { copyToClipboard, randomSlug } from "../../../lib/utils";
+import SEO from "../../../components/ui/SEO";
 
 export default function FormsList() {
   const { push } = useToast();
@@ -177,6 +178,12 @@ export default function FormsList() {
 
   return (
     <div className="flex flex-col gap-6">
+      <SEO
+        title="مدیریت فرم‌ها"
+        description="ساخت، ویرایش و مدیریت فرم‌های نظرسنجی — پرسکاد"
+        url="/admin/forms"
+        noIndex
+      />
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>

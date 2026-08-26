@@ -9,6 +9,7 @@ import Spinner from "../../components/ui/Spinner";
 import EmptyState from "../../components/ui/EmptyState";
 import { useToast } from "../../components/ui/Toast";
 import { faNum, faRelative, faDuration, DEVICE_FA } from "../../lib/utils";
+import SEO from "../../components/ui/SEO";
 
 export default function Dashboard() {
   const { push } = useToast();
@@ -73,6 +74,12 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col gap-8">
+      <SEO
+        title="داشبورد"
+        description="نمای کلی فرم‌ها و پاسخ‌ها — پنل مدیریت پرسکاد"
+        url="/admin"
+        noIndex
+      />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-navy">داشبورد</h1>

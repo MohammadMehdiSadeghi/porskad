@@ -11,6 +11,7 @@ import { supabase } from "../../lib/supabaseClient";
 import { normalizeAnswerValue, validateAnswer } from "../../lib/validators";
 import { faNum, faDuration, parseUserAgent } from "../../lib/utils";
 import QuestionStep from "./QuestionStep";
+import SEO from "../../components/ui/SEO";
 
 const draftKey = (slug) => `porskad_draft_${slug}`;
 
@@ -269,6 +270,11 @@ export default function FormFill() {
 
   return (
     <div className="min-h-dvh dot-pattern bg-bg-mint flex flex-col overflow-x-hidden">
+      <SEO
+        title={form.title}
+        description={form.description || `فرم ${form.title} — پرسکاد`}
+        url={`/f/${slug}`}
+      />
       {/* هدر باریک */}
       <div className="w-full max-w-[75rem] mx-auto flex items-center justify-between px-4 py-3">
         <Logo linked={false} size="sm" />
