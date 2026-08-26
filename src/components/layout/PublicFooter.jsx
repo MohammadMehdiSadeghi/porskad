@@ -1,21 +1,21 @@
+import Logo from "../ui/Logo";
+
 export default function PublicFooter() {
   return (
     <footer className="bg-navy text-white">
-      <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col items-center gap-4">
-        <div className="flex items-center gap-2.5">
-          <div className="relative">
-            <div aria-hidden="true" className="absolute top-[0.1rem] left-[0.1rem] w-full h-full bg-teal-text rounded-[0_0.5rem_0_0.5rem] [corner-shape:squircle]" />
-            <div className="relative w-8 h-8 bg-teal border-2 border-white/20 rounded-[0_0.5rem_0_0.5rem] [corner-shape:squircle] flex items-center justify-center">
-              <span className="text-white font-black text-sm">پ</span>
-            </div>
-          </div>
-          <span className="font-black text-lg">پرسکاد</span>
+      <div className="w-full max-w-[75rem] mx-auto px-4 py-10 flex flex-col items-center gap-6">
+        <div className="rotate-[-2deg]">
+          <span className="inline-flex items-baseline gap-1 bg-white border-[0.1875rem] border-ink [corner-shape:squircle] rounded-[0.85rem] px-3.5 py-1.5 text-2xl font-black shadow-sm">
+            <span className="text-navy">پرس</span>
+            <span className="text-teal-text">‌یار</span>
+            <span className="text-magenta-text" aria-hidden="true">.</span>
+          </span>
         </div>
-        <p className="text-sm text-white/50">
-          پلتفرم حرفه‌ای مدیریت فرم و تحلیل داده
+        <p className="text-sm font-semibold text-white/70 text-center leading-7 max-w-md">
+          فرم‌ساز و نظرسنجی آنلاین فارسی — با عشق و React + Supabase ساخته شده.
         </p>
-        <div className="text-xs text-white/35">
-          © ۱۴۰۵ پرسکاد — ساخته‌شده با React + Supabase
+        <div className="text-xs font-medium text-white/50">
+          © ۱۴۰۵ پرس‌یار — نسخه ۱.۰
         </div>
       </div>
     </footer>
