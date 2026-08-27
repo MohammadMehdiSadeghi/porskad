@@ -18,6 +18,9 @@ import {
   AlertTriangle,
   RefreshCw,
   Zap,
+  Inbox,
+  History,
+  BarChart3,
 } from "lucide-react";
 
 const inputCls =
@@ -55,99 +58,104 @@ export default function SmsPanel() {
   const { push } = useToast();
 
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("status"); // status | send | settings
+  const [tab, setTab] = useState("dashboard"); // dashboard | send | history | inbox | settings
 
-  // ─── Settings ───
-  const [apiToken, setApiToken] = useState("");
-  const [lineNumber, setLineNumber] = useState("public");
-  const [senderName, setSenderName] = useState("پرسکاد");
-  const [saving, setSaving] = useState(false);
-
-  // ─── Account Status ───
+  // ─── Dashboard ───
+  const [stats, setStats] = useState(null);
   const [accountInfo, setAccountInfo] = useState(null);
   const [fetchingStatus, setFetchingStatus] = useState(false);
 
   // ─── Send SMS ───
   const [smsNumbers, setSmsNumbers] = useState("");
   const [smsText, setSmsText] = useState("");
+  const [lineNumber, setLineNumber] = useState("public");
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState(null);
+
+  // ─── History ───
+  const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  // ─── Inbox ───
+  const [inbox, setInbox] = useState([]);
+  const [inboxLoading, setInboxLoading] = useState(false);
 
   // ─── Permission check ───
   const canSms = hasPermission("manage_sms");
 
-  // ─── Load saved settings ───
-  const loadSettings = useCallback(async () => {
+  // ─── Load stats ───
+  const loadStats = useCallback(async () => {
     if (!supabase) return;
     try {
-      const { data, error } = await supabase.rpc("get_active_sms_settings");
-      if (error) {
-        // ممکنه تابع وجود نداشته باشه (مایگریشن اجرا نشده)
-        console.warn("SMS settings not available:", error.message);
-        return;
-      }
-      if (data && data.length > 0) {
-        const s = data[0];
-        setApiToken(s.api_token || "");
-        setLineNumber(s.line_number || "public");
-        setSenderName(s.sender_name || "پرسکاد");
-      }
+      const { data } = await supabase.rpc("get_sms_stats");
+      if (data) setStats(data);
     } catch (err) {
-      console.warn("loadSettings error:", err);
+      console.warn("loadStats error:", err);
     }
   }, []);
 
   // ─── Load account status ───
   const loadAccountStatus = useCallback(async () => {
-    if (!apiToken) return;
     setFetchingStatus(true);
     try {
-      const data = await amootFetch("AccountStatus", apiToken);
+      const data = await amootFetch("AccountStatus");
       if (data.Status === 0 || data.Status === "0") {
         setAccountInfo(data);
       } else {
         push("خطا در دریافت اطلاعات حساب: " + (data.Message || "نامشخص"), "error");
       }
     } catch (err) {
-      push("خطا در اتصال به سرور آموت: " + err.message, "error");
+      push("خطا در اتصال به سرور: " + err.message, "error");
     } finally {
       setFetchingStatus(false);
     }
-  }, [apiToken, push]);
+  }, [push]);
 
-  useEffect(() => {
-    loadSettings().then(() => setLoading(false));
-  }, [loadSettings]);
-
-  useEffect(() => {
-    if (tab === "status" && apiToken) {
-      loadAccountStatus();
-    }
-  }, [tab, apiToken, loadAccountStatus]);
-
-  // ─── Save settings ───
-  async function handleSaveSettings() {
-    if (!apiToken.trim()) {
-      push("توکن API الزامی است.", "error");
-      return;
-    }
-    setSaving(true);
+  // ─── Load history ───
+  const loadHistory = useCallback(async () => {
+    setHistoryLoading(true);
     try {
-      const { error } = await supabase.rpc("save_sms_settings", {
-        p_api_token: apiToken.trim(),
-        p_line_number: lineNumber.trim() || "public",
-        p_sender_name: senderName.trim() || "پرسکاد",
-      });
+      const { data, error } = await supabase
+        .from("sms_outbox")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(50);
       if (error) throw error;
-      push("تنظیمات با موفقیت ذخیره شد! ✅");
-      // بعد از ذخیره، وضعیت حساب رو بگیر
-      loadAccountStatus();
+      setHistory(data || []);
     } catch (err) {
-      push("خطا در ذخیره: " + (err.message || "ناموفق"), "error");
+      push("خطا در بارگذاری تاریخچه: " + err.message, "error");
     } finally {
-      setSaving(false);
+      setHistoryLoading(false);
     }
-  }
+  }, [push]);
+
+  // ─── Load inbox ───
+  const loadInbox = useCallback(async () => {
+    setInboxLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("sms_inbox")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      setInbox(data || []);
+    } catch (err) {
+      push("خطا در بارگذاری پیامک‌ها: " + err.message, "error");
+    } finally {
+      setInboxLoading(false);
+    }
+  }, [push]);
+
+  useEffect(() => {
+    Promise.all([loadStats(), loadAccountStatus()]).then(() => setLoading(false));
+  }, [loadStats, loadAccountStatus]);
+
+  useEffect(() => {
+    if (tab === "history") loadHistory();
+    if (tab === "inbox") loadInbox();
+    if (tab === "dashboard") { loadStats(); loadAccountStatus(); }
+  }, [tab, loadHistory, loadInbox, loadStats, loadAccountStatus]);
 
   // ─── Send SMS ───
   async function handleSendSms() {
@@ -163,27 +171,43 @@ export default function SmsPanel() {
     setSendResult(null);
     try {
       // جدا کردن شماره‌ها با کاما یا خط جدید
-      const numbers = smsNumbers
+      const numbersArr = smsNumbers
         .split(/[,;\n]+/)
         .map((n) => n.trim().replace(/^0/, ""))
-        .filter(Boolean)
-        .join(",");
+        .filter(Boolean);
+      const numbers = numbersArr.join(",");
 
-      const data = await amootFetch("SendSimple", apiToken, {
-        SendDateTime: new Date().toISOString(),
+      const data = await amootFetch("SendSimple", {
+        SendDateTime: "0",
         SMSMessageText: smsText,
         LineNumber: lineNumber || "public",
         Mobiles: numbers,
       });
 
-      if (data.Status === 0 || data.Status === "0") {
+      if (data.Status === 0 || data.Status === "0" || data.Data) {
         setSendResult({ success: true, data });
         push("پیامک با موفقیت ارسال شد! ✅");
+
+        // ذخیره در outbox
+        const results = Array.isArray(data.Data) ? data.Data : [data.Data];
+        for (const r of results) {
+          if (r?.Mobile) {
+            await supabase.rpc("log_sms_outbox", {
+              p_mobile: r.Mobile,
+              p_line_number: lineNumber || "public",
+              p_text: smsText,
+              p_message_id: r.MessageID ? String(r.MessageID) : null,
+              p_status: "sent",
+            });
+          }
+        }
+
         setSmsText("");
         setSmsNumbers("");
+        loadStats();
       } else {
         setSendResult({ success: false, data });
-        push("خطا در ارسال: " + (data.Message || "نامشخص"), "error");
+        push("خطا در ارسال: " + (data.explanation || data.Message || "نامشخص"), "error");
       }
     } catch (err) {
       setSendResult({ success: false, error: err.message });
@@ -236,16 +260,17 @@ export default function SmsPanel() {
       </div>
 
       {/* تب‌ها */}
-      <div className="flex gap-2 bg-white/60 backdrop-blur-sm rounded-pill-lg p-1.5 border-2 border-navy/10">
+      <div className="flex gap-2 bg-white/60 backdrop-blur-sm rounded-pill-lg p-1.5 border-2 border-navy/10 overflow-x-auto">
         {[
-          { id: "status", label: "وضعیت حساب", icon: CreditCard },
+          { id: "dashboard", label: "داشبورد", icon: BarChart3 },
           { id: "send", label: "ارسال پیامک", icon: Send },
-          { id: "settings", label: "تنظیمات", icon: Settings },
+          { id: "history", label: "تاریخچه", icon: History },
+          { id: "inbox", label: "دریافتی", icon: Inbox },
         ].map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-pill-md text-sm font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-pill-md text-sm font-bold transition-all whitespace-nowrap ${
               tab === t.id
                 ? "bg-teal text-white shadow-[2px_2px_0_0_rgba(0,0,0,0.2)]"
                 : "text-ink-subtle hover:text-ink hover:bg-white"
@@ -257,117 +282,78 @@ export default function SmsPanel() {
         ))}
       </div>
 
-      {/* ─── تب وضعیت حساب ─── */}
-      {tab === "status" && (
+      {/* ─── تب داشبورد ─── */}
+      {tab === "dashboard" && (
         <div className="flex flex-col gap-5">
-          {!apiToken ? (
-            <div className="bg-amber-50 border-2 border-amber-200 rounded-pill-lg p-6 text-center">
-              <AlertTriangle size={40} className="mx-auto text-amber-500 mb-3" />
-              <h3 className="font-black text-amber-800 mb-2">توکن API تنظیم نشده</h3>
-              <p className="text-sm text-amber-700 mb-4">
-                ابتدا توکن وب‌سرویس آموت را در بخش تنظیمات وارد کنید.
-              </p>
-              <Button variant="teal" size="sm" onClick={() => setTab("settings")}>
-                رفتن به تنظیمات
-              </Button>
-            </div>
-          ) : fetchingStatus ? (
-            <Spinner label="دریافت اطلاعات حساب..." />
-          ) : accountInfo ? (
-            <>
-              {/* کارت اطلاعات حساب */}
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <StickerCard theme="teal" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
-                  <div className="p-5">
-                    <div className="text-xs font-bold text-teal/70 mb-1">موجودی حساب</div>
-                    <div className="text-2xl font-black text-teal-text">
-                      {formatRial(accountInfo.RemaindCredit)}
+          {/* آمار */}
+          {stats && (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { label: "ارسال امروز", value: stats.today_sent || 0, icon: Send, color: "teal" },
+                { label: "ارسال ماه", value: stats.month_sent || 0, icon: BarChart3, color: "navy" },
+                { label: "تحویل شده", value: stats.delivered || 0, icon: CheckCircle, color: "green" },
+                { label: "دریافتی امروز", value: stats.inbox_today || 0, icon: Inbox, color: "orange" },
+              ].map((s, i) => (
+                <StickerCard key={i} theme="white" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <s.icon size={16} className={`text-${s.color}`} />
+                      <span className="text-xs font-bold text-ink-subtle">{s.label}</span>
                     </div>
+                    <div className="text-2xl font-black text-navy">{s.value.toLocaleString("fa-IR")}</div>
                   </div>
                 </StickerCard>
-
-                <StickerCard theme="white" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
-                  <div className="p-5">
-                    <div className="text-xs font-bold text-ink-subtle mb-1">نام حساب</div>
-                    <div className="text-lg font-black text-navy">
-                      {accountInfo.AccountName || "—"}
-                    </div>
-                  </div>
-                </StickerCard>
-
-                <StickerCard theme="white" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
-                  <div className="p-5">
-                    <div className="text-xs font-bold text-ink-subtle mb-1">خطوط فعال</div>
-                    <div className="flex flex-wrap gap-1.5 mt-1">
-                      {accountInfo.ListLineNumbers?.length > 0 ? (
-                        accountInfo.ListLineNumbers.map((line, i) => (
-                          <Badge key={i} color="blue">{line}</Badge>
-                        ))
-                      ) : (
-                        <span className="text-sm text-ink-subtle">—</span>
-                      )}
-                    </div>
-                  </div>
-                </StickerCard>
-              </div>
-
-              {/* تعرفه‌ها */}
-              <div className="bg-white/70 backdrop-blur-sm rounded-pill-lg border-2 border-navy/10 p-5">
-                <h3 className="font-black text-navy mb-3 flex items-center gap-2">
-                  <Zap size={18} className="text-orange" />
-                  تعرفه‌های ارسال
-                </h3>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {[
-                    { label: "پایه فارسی", value: accountInfo.BaseSMS_PersianPrice, color: "teal" },
-                    { label: "پایه انگلیسی", value: accountInfo.BaseSMS_EnglishPrice, color: "teal" },
-                    { label: "خدماتی فارسی", value: accountInfo.ServiceSMS_PersianPrice, color: "blue" },
-                    { label: "خدماتی انگلیسی", value: accountInfo.ServiceSMS_EnglishPrice, color: "blue" },
-                    { label: "تبلیغاتی فارسی", value: accountInfo.AdsSMS_PersianPrice, color: "orange" },
-                    { label: "تبلیغاتی انگلیسی", value: accountInfo.AdsSMS_EnglishPrice, color: "orange" },
-                  ].map((item) => (
-                    <div key={item.label} className="flex items-center justify-between bg-bg-lavender/50 rounded-pill-md px-3 py-2">
-                      <span className="text-xs font-bold text-ink-subtle">{item.label}</span>
-                      <span className="text-sm font-black text-navy">{formatRial(item.value)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* دکمه رفرش */}
-              <div className="flex justify-center">
-                <Button variant="ghost" size="sm" onClick={loadAccountStatus}>
-                  <RefreshCw size={14} className="ml-1" /> بروزرسانی اطلاعات
-                </Button>
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-10 text-ink-subtle">
-              <p className="text-sm">برای مشاهده اطلاعات حساب، دکمه زیر را بزنید.</p>
-              <Button variant="teal" size="sm" className="mt-3" onClick={loadAccountStatus}>
-                دریافت اطلاعات حساب
-              </Button>
+              ))}
             </div>
           )}
+
+          {/* وضعیت حساب */}
+          {fetchingStatus ? (
+            <Spinner label="دریافت اطلاعات حساب..." />
+          ) : accountInfo ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <StickerCard theme="teal" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
+                <div className="p-5">
+                  <div className="text-xs font-bold text-teal/70 mb-1">موجودی حساب</div>
+                  <div className="text-2xl font-black text-teal-text">
+                    {formatRial(accountInfo.RemaindCredit)}
+                  </div>
+                </div>
+              </StickerCard>
+              <StickerCard theme="white" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
+                <div className="p-5">
+                  <div className="text-xs font-bold text-ink-subtle mb-1">نام حساب</div>
+                  <div className="text-lg font-black text-navy">{accountInfo.AccountName || "—"}</div>
+                </div>
+              </StickerCard>
+              <StickerCard theme="white" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
+                <div className="p-5">
+                  <div className="text-xs font-bold text-ink-subtle mb-1">خطوط فعال</div>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {accountInfo.ListLineNumbers?.length > 0 ? (
+                      accountInfo.ListLineNumbers.map((line, i) => (
+                        <Badge key={i} color="blue">{line}</Badge>
+                      ))
+                    ) : (
+                      <span className="text-sm text-ink-subtle">—</span>
+                    )}
+                  </div>
+                </div>
+              </StickerCard>
+            </div>
+          ) : null}
+
+          <div className="flex justify-center">
+            <Button variant="ghost" size="sm" onClick={() => { loadStats(); loadAccountStatus(); }}>
+              <RefreshCw size={14} className="ml-1" /> بروزرسانی
+            </Button>
+          </div>
         </div>
       )}
 
       {/* ─── تب ارسال پیامک ─── */}
       {tab === "send" && (
         <div className="flex flex-col gap-5 max-w-2xl">
-          {!apiToken ? (
-            <div className="bg-amber-50 border-2 border-amber-200 rounded-pill-lg p-6 text-center">
-              <AlertTriangle size={40} className="mx-auto text-amber-500 mb-3" />
-              <h3 className="font-black text-amber-800 mb-2">توکن API تنظیم نشده</h3>
-              <p className="text-sm text-amber-700 mb-4">
-                ابتدا توکن وب‌سرویس آموت را در بخش تنظیمات وارد کنید.
-              </p>
-              <Button variant="teal" size="sm" onClick={() => setTab("settings")}>
-                رفتن به تنظیمات
-              </Button>
-            </div>
-          ) : (
-            <>
               {/* شماره موبایل‌ها */}
               <div>
                 <label className="block text-sm font-extrabold text-navy mb-1.5">
@@ -410,19 +396,7 @@ export default function SmsPanel() {
                 </div>
               </div>
 
-              {/* خط ارسال */}
-              <div>
-                <label className="block text-sm font-extrabold text-navy mb-1.5">
-                  خط ارسال
-                </label>
-                <input
-                  type="text"
-                  value={lineNumber}
-                  onChange={(e) => setLineNumber(e.target.value)}
-                  className={inputCls}
-                  dir="ltr"
-                />
-              </div>
+
 
               {/* نتیجه ارسال */}
               {sendResult && (
@@ -470,107 +444,97 @@ export default function SmsPanel() {
                   </>
                 )}
               </Button>
-            </>
-          )}
         </div>
       )}
 
-      {/* ─── تب تنظیمات ─── */}
-      {tab === "settings" && (
-        <div className="flex flex-col gap-5 max-w-2xl">
-          {/* راهنما */}
-          <div className="bg-bg-mint/30 border-2 border-teal/20 rounded-pill-lg p-4">
-            <h3 className="font-black text-navy text-sm mb-2">راهنمای دریافت توکن</h3>
-            <ol className="text-xs text-ink/70 space-y-1 list-decimal list-inside leading-6">
-              <li>
-                وارد{" "}
-                <a
-                  href="https://portal.amootsms.com"
-                  target="_blank"
-                  rel="noopener"
-                  className="text-teal font-bold underline"
-                >
-                  پنل آموت
-                </a>{" "}
-                شوید
-              </li>
-              <li>از منوی <strong>وب‌سرویس ← توکن‌ها</strong> یک توکن REST بسازید</li>
-              <li>توکن را در فیلد زیر کپی کنید</li>
-              <li>برای تست رایگان، خط <code className="bg-white px-1 rounded">public</code> را انتخاب کنید</li>
-            </ol>
-          </div>
-
-          {/* توکن API */}
-          <div>
-            <label className="block text-sm font-extrabold text-navy mb-1.5">
-              توکن API آموت *
-            </label>
-            <input
-              type="password"
-              dir="ltr"
-              value={apiToken}
-              onChange={(e) => setApiToken(e.target.value)}
-              className={inputCls}
-              placeholder="توکن وب‌سرویس آموت را اینجا وارد کنید"
-            />
-          </div>
-
-          {/* شماره خط */}
-          <div>
-            <label className="block text-sm font-extrabold text-navy mb-1.5">
-              شماره خط ارسال
-            </label>
-            <input
-              type="text"
-              dir="ltr"
-              value={lineNumber}
-              onChange={(e) => setLineNumber(e.target.value)}
-              className={inputCls}
-              placeholder="public"
-            />
-            <p className="text-xs text-ink-subtle mt-1">
-              برای تست رایگان: <code>public</code> — برای خط اختصاصی: شماره خط را وارد کنید
-            </p>
-          </div>
-
-          {/* نام فرستنده */}
-          <div>
-            <label className="block text-sm font-extrabold text-navy mb-1.5">
-              نام فرستنده / برند
-            </label>
-            <input
-              type="text"
-              value={senderName}
-              onChange={(e) => setSenderName(e.target.value)}
-              className={inputCls}
-              placeholder="پرسکاد"
-            />
-            <p className="text-xs text-ink-subtle mt-1">
-              طبق قوانین اپراتور، نام برند در انتهای پیامک OTP الزامی است
-            </p>
-          </div>
-
-          {/* دکمه ذخیره */}
-          <div className="flex gap-3 pt-2">
-            <Button
-              variant="teal"
-              size="md"
-              onClick={handleSaveSettings}
-              disabled={saving || !apiToken.trim()}
-            >
-              {saving ? "در حال ذخیره..." : "ذخیره تنظیمات ✅"}
+      {/* ─── تب تاریخچه ارسال ─── */}
+      {tab === "history" && (
+        <div className="flex flex-col gap-4">
+          {historyLoading ? (
+            <Spinner label="بارگذاری تاریخچه..." />
+          ) : history.length === 0 ? (
+            <div className="text-center py-10 text-ink-subtle">
+              <History size={48} className="mx-auto mb-3 text-ink/20" />
+              <p className="text-sm font-bold">هنوز پیامکی ارسال نشده</p>
+            </div>
+          ) : (
+            <div className="bg-white/70 backdrop-blur-sm rounded-pill-lg border-2 border-navy/10 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b-2 border-navy/10 bg-bg-lavender/30">
+                    <th className="px-4 py-3 text-right font-black text-navy">شماره</th>
+                    <th className="px-4 py-3 text-right font-black text-navy">متن</th>
+                    <th className="px-4 py-3 text-right font-black text-navy">وضعیت</th>
+                    <th className="px-4 py-3 text-right font-black text-navy">تاریخ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.map((h) => (
+                    <tr key={h.id} className="border-b border-navy/5 hover:bg-bg-lavender/20">
+                      <td className="px-4 py-3 font-mono text-xs" dir="ltr">{h.mobile}</td>
+                      <td className="px-4 py-3 text-xs line-clamp-1 max-w-[200px]">{h.text}</td>
+                      <td className="px-4 py-3">
+                        <Badge color={
+                          h.status === "delivered" ? "green" :
+                          h.status === "failed" ? "red" :
+                          h.status === "sent" ? "blue" : "gray"
+                        }>{h.status}</Badge>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-ink-subtle">
+                        {new Date(h.created_at).toLocaleDateString("fa-IR")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <div className="flex justify-center">
+            <Button variant="ghost" size="sm" onClick={loadHistory}>
+              <RefreshCw size={14} className="ml-1" /> بروزرسانی
             </Button>
-            {apiToken && (
-              <Button
-                variant="ghost"
-                size="md"
-                onClick={() => {
-                  setTab("status");
-                }}
-              >
-                مشاهده وضعیت حساب
-              </Button>
-            )}
+          </div>
+        </div>
+      )}
+
+      {/* ─── تب پیامک‌های دریافتی ─── */}
+      {tab === "inbox" && (
+        <div className="flex flex-col gap-4">
+          {inboxLoading ? (
+            <Spinner label="بارگذاری پیامک‌ها..." />
+          ) : inbox.length === 0 ? (
+            <div className="text-center py-10 text-ink-subtle">
+              <Inbox size={48} className="mx-auto mb-3 text-ink/20" />
+              <p className="text-sm font-bold">هنوز پیامک دریافتی وجود ندارد</p>
+            </div>
+          ) : (
+            <div className="bg-white/70 backdrop-blur-sm rounded-pill-lg border-2 border-navy/10 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b-2 border-navy/10 bg-bg-lavender/30">
+                    <th className="px-4 py-3 text-right font-black text-navy">شماره</th>
+                    <th className="px-4 py-3 text-right font-black text-navy">متن</th>
+                    <th className="px-4 py-3 text-right font-black text-navy">تاریخ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {inbox.map((m) => (
+                    <tr key={m.id} className="border-b border-navy/5 hover:bg-bg-lavender/20">
+                      <td className="px-4 py-3 font-mono text-xs" dir="ltr">{m.mobile}</td>
+                      <td className="px-4 py-3 text-xs line-clamp-1 max-w-[300px]">{m.text}</td>
+                      <td className="px-4 py-3 text-xs text-ink-subtle">
+                        {new Date(m.created_at).toLocaleDateString("fa-IR")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <div className="flex justify-center">
+            <Button variant="ghost" size="sm" onClick={loadInbox}>
+              <RefreshCw size={14} className="ml-1" /> بروزرسانی
+            </Button>
           </div>
         </div>
       )}

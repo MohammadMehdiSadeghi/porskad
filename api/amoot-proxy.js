@@ -56,11 +56,20 @@ export default async function handler(req, res) {
     }
 
     // دریافت body
-    const { endpoint, params } = req.body;
+    const { endpoint, params = {} } = req.body;
 
     if (!endpoint) {
       return res.status(400).json({ error: "Missing endpoint" });
     }
+
+    // توکن آموت از Environment Variable (امنیت)
+    const amootToken = process.env.AMOOT_TOKEN;
+    if (!amootToken) {
+      return res.status(500).json({ error: "AMOOT_TOKEN not configured" });
+    }
+
+    // توکن رو خودکار اضافه کن (کاربر نیازی به دانستن توکن نداره)
+    params.Token = amootToken;
 
     // مجاز کردن فقط endpointهای مشخص
     const allowedEndpoints = [
