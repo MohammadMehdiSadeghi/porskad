@@ -8,7 +8,7 @@ import Spinner from "../../../components/ui/Spinner";
 import { useToast } from "../../../components/ui/Toast";
 import { QUESTION_TYPES, QUESTION_TYPE_ORDER, makeQuestion } from "../../../lib/questionTypes";
 import ConditionBuilder from "../../../components/logic/ConditionBuilder";
-import { makeCondition, makeConditionGroup, makeJumpAction, JUMP_ACTION_TYPES, JUMP_ACTION_TYPE_ORDER, GROUP_OPERATORS } from "../../../lib/logic/types";
+import { makeCondition, makeConditionGroup, makeJumpAction, GROUP_OPERATORS } from "../../../lib/logic/types";
 import { faNum, slugify, copyToClipboard } from "../../../lib/utils";
 import SEO from "../../../components/ui/SEO";
 
@@ -29,7 +29,7 @@ function Field({ label, children, hint }) {
 function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDelete }) {
   const meta = QUESTION_TYPES[q.type];
   const rots = index % 2 ? "rotate-[0.4deg]" : "-rotate-[0.4deg]";
-  const isChoice = q.type === "choice" || q.type === "yes_no";
+  const isChoice = q.type === "choice" || q.type === "yes_no" || q.type === "checkbox";
 
   function setOpt(i, val) {
     const opts = [...q.options];
@@ -61,6 +61,19 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
     const newConds = [...(conditions.conditions || [])];
     newConds[condIndex] = { ...newConds[condIndex], ...patch };
     updateConditionGroup({ conditions: newConds });
+  }
+
+  // ساختار شرط سازگار با مدل جدید: اگه source نداشت، از questionId قدیمی بساز
+  function normalizeCondition(cond) {
+    if (cond.source) return cond; // مدل جدید
+    return {
+      ...cond,
+      source: "answer",
+      questionId: cond.source_question_id || cond.questionId || null,
+      variableKey: null,
+      optionId: null,
+      rowId: null,
+    };
   }
 
   function removeGroupCondition(condIndex) {
@@ -237,25 +250,28 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                   )}
 
                   {/* لیست شرط‌ها */}
-                  {(conditions.conditions || []).map((cond, i) => (
-                    <div key={cond.id || i} className="flex items-start gap-2">
-                      {i > 0 && (
-                        <span className="text-[0.6rem] font-black text-navy mt-3 shrink-0 px-1.5 py-0.5 bg-bg-lavender rounded-pill-sm">
-                          {conditions.group_operator}
-                        </span>
-                      )}
-                      <div className="flex-1">
-                        <ConditionBuilder
-                          condition={cond}
-                          questions={sourceQuestions}
-                          index={i}
-                          removable={(conditions.conditions || []).length > 1}
-                          onChange={(patch) => updateGroupCondition(i, patch)}
-                          onDelete={() => removeGroupCondition(i)}
-                        />
+                  {(conditions.conditions || []).map((cond, i) => {
+                    const normalized = normalizeCondition(cond);
+                    return (
+                      <div key={cond.id || i} className="flex items-start gap-2">
+                        {i > 0 && (
+                          <span className="text-[0.6rem] font-black text-navy mt-3 shrink-0 px-1.5 py-0.5 bg-bg-lavender rounded-pill-sm">
+                            {conditions.group_operator}
+                          </span>
+                        )}
+                        <div className="flex-1">
+                          <ConditionBuilder
+                            condition={normalized}
+                            questions={sourceQuestions}
+                            index={i}
+                            removable={(conditions.conditions || []).length > 1}
+                            onChange={(patch) => updateGroupCondition(i, patch)}
+                            onDelete={() => removeGroupCondition(i)}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
 
                   <button
                     onClick={addConditionToGroup}

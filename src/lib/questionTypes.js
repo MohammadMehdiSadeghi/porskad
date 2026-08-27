@@ -29,13 +29,26 @@ export const QUESTION_TYPES = {
     valueFieldType: "text",
   },
   choice: {
-    label: "چهارگزینه‌ای (چندگزینه‌ای)",
+    label: "چهارگزینه‌ای (تک‌انتخابی)",
     icon: "🎯",
     color: "orange",
     hint: "۲ تا ۶ گزینه، انتخاب یکی",
     hasOptions: true,
+    isMultiChoice: false,
     defaultOptions: ["گزینه ۱", "گزینه ۲", "گزینه ۳", "گزینه ۴"],
     conditionOperators: ["is_selected", "is_not_selected", "is_empty", "is_not_empty"],
+    valueFieldType: "option_select",
+  },
+  checkbox: {
+    label: "چندگزینه‌ای (چک‌باکس)",
+    icon: "☑️",
+    color: "navy",
+    hint: "چند انتخاب هم‌زمان",
+    hasOptions: true,
+    isMultiChoice: true,
+    defaultOptions: ["گزینه ۱", "گزینه ۲", "گزینه ۳"],
+    conditionOperators: ["is_selected", "is_not_selected", "is_empty", "is_not_empty",
+                         "selected_count_equals", "selected_count_greater_than", "selected_count_less_than"],
     valueFieldType: "option_select",
   },
   email: {
@@ -90,6 +103,7 @@ export const QUESTION_TYPE_ORDER = [
   "long_text",
   "phone_ir",
   "choice",
+  "checkbox",
   "email",
   "number",
   "rating",
@@ -101,15 +115,14 @@ export function makeQuestion(type, position = 0) {
   const meta = QUESTION_TYPES[type];
   return {
     localId: `new_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-    id: null, // بعد از insert در دیتابیس پر می‌شود
+    id: null,
     type,
     title: meta.label,
     description: "",
     required: true,
     options: meta.hasOptions ? [...meta.defaultOptions] : [],
     position,
-    // ─── منطق شرطی (پرس‌لاین) ───
-    conditions: null,       // { group_operator: "AND"|"OR", conditions: [...] }
-    jump_actions: [],       // [{ option_index, action_type, target_id, target_url }]
+    conditions: null,
+    jump_actions: [],
   };
 }

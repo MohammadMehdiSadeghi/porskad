@@ -11,29 +11,45 @@
 export function validateRules(rules, questions) {
   const errors = [];
   const questionIds = new Set(questions.map((q) => q.id));
-  const questionPositions = new Map(questions.map((q, i) => [q.id, i]));
+  const questionMap = new Map(questions.map((q) => [q.id, q]));
 
   for (const rule of rules) {
     if (!rule.enabled) continue;
 
+    const ruleLabel = rule.name || rule.id?.slice(0, 8) || "?";
+
     // ─── بررسی شرط‌ها ───
-    for (const cond of (rule.conditions || [])) {
-      if (cond.source_question_id && !questionIds.has(cond.source_question_id)) {
-        errors.push(`Rule «${rule.name || rule.id}»: سوال مرجع شرط (${cond.source_question_id}) وجود ندارد.`);
+    for (const group of (rule.conditions || [])) {
+      for (const cond of (group.conditions || [])) {
+        if (cond.source === "answer" && cond.questionId && !questionIds.has(cond.questionId)) {
+          errors.push(`Rule «${ruleLabel}»: سوال مرجع شرط (${cond.questionId}) وجود ندارد.`);
+        }
       }
     }
 
     // ─── بررسی Action ───
     const action = rule.action;
-    if (action?.target_id && action.type !== "END_FORM") {
-      if (!questionIds.has(action.target_id)) {
-        errors.push(`Rule «${rule.name || rule.id}»: سوال مقصد (${action.target_id}) وجود ندارد.`);
-      }
+    if (!action) continue;
 
-      // ─── Self Loop ───
-      if (action.type === "GO_TO_QUESTION" && action.target_id === rule.source_question_id) {
-        errors.push(`Rule «${rule.name || rule.id}»: حلقه خودی (Self Loop) — سوال به خودش ارجاع دارد.`);
+    if (action.type !== "END_FORM" && action.type !== "REDIRECT_URL" && action.type !== "ADD_TO_VARIABLE") {
+      if (action.targetId && !questionIds.has(action.targetId)) {
+        errors.push(`Rule «${ruleLabel}»: سوال مقصد (${action.targetId}) وجود ندارد.`);
       }
+    }
+
+    // ─── Self Loop ───
+    if (action.type === "GO_TO_QUESTION" && action.targetId === rule.sourceQuestionId) {
+      errors.push(`Rule «${ruleLabel}»: حلقه خودی (Self Loop) — سوال به خودش ارجاع دارد.`);
+    }
+
+    // ─── REDIRECT_URL بدون URL ───
+    if (action.type === "REDIRECT_URL" && (!action.url || !action.url.trim())) {
+      errors.push(`Rule «${ruleLabel}»: اکشن REDIRECT_URL بدون URL تعریف شده.`);
+    }
+
+    // ─── ADD_TO_VARIABLE بدون key ───
+    if (action.type === "ADD_TO_VARIABLE" && !action.variableKey) {
+      errors.push(`Rule «${ruleLabel}»: اکشن ADD_TO_VARIABLE بدون variableKey.`);
     }
   }
 
@@ -43,21 +59,23 @@ export function validateRules(rules, questions) {
 
   for (const rule of goToRules) {
     visited.clear();
-    let currentId = rule.source_question_id;
+    let currentId = rule.sourceQuestionId;
     let safety = 0;
 
     while (currentId && safety < 100) {
       safety++;
       if (visited.has(currentId)) {
-        errors.push(`حلقه بازگشتی تشخیص داده شد: ${[...visited, currentId].join(" → ")}`);
+        const cyclePath = [...visited, currentId]
+          .map((id) => questionMap.get(id)?.title || id)
+          .join(" → ");
+        errors.push(`حلقه بازگشتی: ${cyclePath}`);
         break;
       }
       visited.add(currentId);
 
-      // پیدا کردن Rule بعدی که از این سوال شروع میشه
-      const nextRule = goToRules.find((r) => r.source_question_id === currentId);
-      if (nextRule && nextRule.action?.target_id) {
-        currentId = nextRule.action.target_id;
+      const nextRule = goToRules.find((r) => r.sourceQuestionId === currentId);
+      if (nextRule && nextRule.action?.targetId) {
+        currentId = nextRule.action.targetId;
       } else {
         break;
       }
@@ -68,10 +86,7 @@ export function validateRules(rules, questions) {
 }
 
 /**
- * تشخیص سوالات غیرقابل‌دسترس
- * @param {Array} questions
- * @param {Array} rules
- * @returns {string[]} - آیدی سوالات غیرقابل‌دسترس
+ * پیدا کردن سوالات غیرقابل‌دسترس
  */
 export function findUnreachableQuestions(questions, rules) {
   if (!questions.length) return [];
@@ -79,21 +94,30 @@ export function findUnreachableQuestions(questions, rules) {
   const reachable = new Set();
   reachable.add(questions[0].id); // اولین سوال همیشه reachable
 
-  // سوالات بدون شرط reachable هستن
+  // سوالات بدون شرط visibility reachable هستن
   for (const q of questions) {
-    if (!q.condition || !q.condition.source_question_id) {
+    if (!q.conditions || !q.conditions.conditions || q.conditions.conditions.length === 0) {
       reachable.add(q.id);
     }
   }
 
-  // GO_TO ها reachable می‌سازن
+  // GO_TO ها + SHOW ها reachable می‌سازن
   for (const rule of rules) {
-    if (rule.enabled && rule.action?.type === "GO_TO_QUESTION" && rule.action?.target_id) {
-      reachable.add(rule.action.target_id);
+    if (!rule.enabled) continue;
+    if (rule.action?.type === "GO_TO_QUESTION" && rule.action?.targetId) {
+      reachable.add(rule.action.targetId);
     }
-    // SHOW ها هم reachable می‌سازن
-    if (rule.enabled && rule.action?.type === "SHOW_QUESTION" && rule.action?.target_id) {
-      reachable.add(rule.action.target_id);
+    if (rule.action?.type === "SHOW_QUESTION" && rule.action?.targetId) {
+      reachable.add(rule.action.targetId);
+    }
+  }
+
+  // jump_actions هم reachable می‌سازن
+  for (const q of questions) {
+    for (const ja of (q.jump_actions || [])) {
+      if (ja.action_type === "jump_to_question" && ja.target_id) {
+        reachable.add(ja.target_id);
+      }
     }
   }
 

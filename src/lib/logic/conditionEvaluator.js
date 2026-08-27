@@ -1,24 +1,48 @@
 // ════════════════════════════════════════════════════════════════
 // Condition Evaluator — ارزیابی شرط‌ها
-// پشتیبانی از شرط‌های گروهی (AND/OR) روی هر سوال
+// پشتیبانی از answer/variable/score + عملگرهای checkbox
 // ════════════════════════════════════════════════════════════════
 
 /**
- * ارزیابی یک شرط تکی
- * @param {Object} condition - شرط { source_question_id, operator, value }
- * @param {Object} answers - پاسخ‌های کاربر { questionId: value }
- * @param {Object} hiddenFields - اطلاعات مخفی (URL params) { key: value }
- * @returns {boolean}
+ * دریافت مقدار منبع شرط
+ * @param {Object} condition - شرط
+ * @param {Object} answers - پاسخ‌ها
+ * @param {Object} variables - متغیرهای سفارشی (شامل score)
+ * @param {Object} hiddenFields - اطلاعات مخفی URL
+ * @returns {*}
  */
-export function evaluateCondition(condition, answers, hiddenFields = {}) {
-  if (!condition || !condition.source_question_id) return true;
+function getSourceValue(condition, answers, variables, hiddenFields) {
+  const { source, questionId, variableKey } = condition;
 
-  // پشتیبانی از hidden fields
-  let srcVal = answers[condition.source_question_id];
-  if (srcVal === undefined && hiddenFields[condition.source_question_id] !== undefined) {
-    srcVal = hiddenFields[condition.source_question_id];
+  if (source === "variable" || source === "score") {
+    const key = source === "score" ? "score" : variableKey;
+    return variables?.[key] ?? null;
   }
 
+  // source === "answer"
+  if (questionId) {
+    let val = answers[questionId];
+    if (val === undefined && hiddenFields?.[questionId] !== undefined) {
+      val = hiddenFields[questionId];
+    }
+    return val;
+  }
+
+  return null;
+}
+
+/**
+ * ارزیابی یک شرط تکی
+ * @param {Object} condition - شرط
+ * @param {Object} answers - پاسخ‌ها
+ * @param {Object} variables - متغیرها (شامل score)
+ * @param {Object} hiddenFields - اطلاعات مخفی
+ * @returns {boolean}
+ */
+export function evaluateCondition(condition, answers, variables = {}, hiddenFields = {}) {
+  if (!condition) return true;
+
+  const srcVal = getSourceValue(condition, answers, variables, hiddenFields);
   const op = condition.operator;
   const target = condition.value;
 
@@ -28,6 +52,15 @@ export function evaluateCondition(condition, answers, hiddenFields = {}) {
   }
   if (op === "is_not_empty") {
     return !(srcVal === undefined || srcVal === null || String(srcVal).trim() === "");
+  }
+
+  // ─── عملگرهای تعداد انتخاب (checkbox) ───
+  if (op === "selected_count_equals" || op === "selected_count_greater_than" || op === "selected_count_less_than") {
+    const count = Array.isArray(srcVal) ? srcVal.length : 0;
+    const num = Number(target);
+    if (op === "selected_count_equals") return count === num;
+    if (op === "selected_count_greater_than") return count > num;
+    if (op === "selected_count_less_than") return count < num;
   }
 
   // ─── اگه مقدار مرجع وجود نداره ───
@@ -41,7 +74,6 @@ export function evaluateCondition(condition, answers, hiddenFields = {}) {
     if (op === "is_not_selected") {
       return !srcVal.includes(target);
     }
-    // سایر عملگرها روی اولین مقدار
     return evaluateSingleValue(String(srcVal[0] ?? "").trim(), op, target);
   }
 
@@ -67,7 +99,6 @@ function evaluateSingleValue(src, op, target) {
     case "less_than":            return Number(src) < Number(tgt);
     case "less_than_or_equal":   return Number(src) <= Number(tgt);
     case "between": {
-      // مقدار فرمت "min|max"
       const parts = String(tgt).split("|");
       const min = Number(parts[0] ?? 0);
       const max = Number(parts[1] ?? 0);
@@ -82,46 +113,36 @@ function evaluateSingleValue(src, op, target) {
 
 /**
  * ارزیابی یک گروه شرط (AND/OR)
- * @param {string} groupOp - "AND" یا "OR"
- * @param {Array} conditions - آرایه شرط‌ها
- * @param {Object} answers - پاسخ‌ها
- * @param {Object} hiddenFields - اطلاعات مخفی
- * @returns {boolean}
  */
-export function evaluateConditionGroup(groupOp, conditions, answers, hiddenFields = {}) {
+export function evaluateConditionGroup(groupOp, conditions, answers, variables = {}, hiddenFields = {}) {
   if (!conditions || conditions.length === 0) return true;
 
   if (groupOp === "OR") {
-    return conditions.some((c) => evaluateCondition(c, answers, hiddenFields));
+    return conditions.some((c) => evaluateCondition(c, answers, variables, hiddenFields));
   }
-
-  // پیش‌فرض: AND
-  return conditions.every((c) => evaluateCondition(c, answers, hiddenFields));
+  return conditions.every((c) => evaluateCondition(c, answers, variables, hiddenFields));
 }
 
 /**
- * ارزیابی کامل یک Rule (قدیمی — برای سازگاری با LogicEditor)
- * @param {Object} rule - LogicRule
- * @param {Object} answers - پاسخ‌ها
- * @param {Object} hiddenFields - اطلاعات مخفی
- * @returns {boolean}
+ * ارزیابی یک LogicRule
+ * rule.conditions = LogicConditionGroup[] (بین گروه‌ها = OR)
  */
-export function evaluateRule(rule, answers, hiddenFields = {}) {
+export function evaluateRule(rule, answers, variables = {}, hiddenFields = {}) {
   if (!rule || !rule.enabled) return false;
-  return evaluateConditionGroup(rule.group_operator, rule.conditions, answers, hiddenFields);
+  const groups = rule.conditions || [];
+  if (groups.length === 0) return true;
+  // بین گروه‌ها = OR
+  return groups.some((group) =>
+    evaluateConditionGroup(group.operator || "AND", group.conditions || [], answers, variables, hiddenFields)
+  );
 }
 
 /**
- * ارزیابی شرط‌های visibility یک سوال
- * فیلد conditions سوال: { group_operator, conditions }
- * @param {Object} questionConditions - شرط‌های سوال
- * @param {Object} answers - پاسخ‌ها
- * @param {Object} hiddenFields - اطلاعات مخفی
- * @returns {boolean}
+ * ارزیابی شرط‌های visibility سوال (ساختار قدیمی per-question)
  */
-export function evaluateQuestionConditions(questionConditions, answers, hiddenFields = {}) {
-  if (!questionConditions) return true; // بدون شرط → همیشه نمایش
+export function evaluateQuestionConditions(questionConditions, answers, variables = {}, hiddenFields = {}) {
+  if (!questionConditions) return true;
   const { group_operator, conditions } = questionConditions;
   if (!conditions || conditions.length === 0) return true;
-  return evaluateConditionGroup(group_operator || "AND", conditions, answers, hiddenFields);
+  return evaluateConditionGroup(group_operator || "AND", conditions, answers, variables, hiddenFields);
 }

@@ -58,6 +58,7 @@ export default function FormFill() {
   const [honeypot, setHoneypot] = useState("");
   const stepEnteredAt = useRef(Date.now());
   const jumpQueueRef = useRef([]); // صف پرش‌ها (برای checkbox)
+  const [variables, setVariables] = useState({}); // متغیرهای سفارشی
 
   // ─── اطلاعات مخفی (Hidden Fields) از URL ───
   const hiddenFields = useMemo(() => {
@@ -165,13 +166,26 @@ export default function FormFill() {
 
   // ─── محاسبه مسیر با Flow Engine ───
   const flow = useMemo(
-    () => calculateFlow(questions, logicRules, answers, hiddenFields),
-    [questions, logicRules, answers, hiddenFields]
+    () => calculateFlow(questions, logicRules, answers, variables, hiddenFields),
+    [questions, logicRules, answers, variables, hiddenFields]
   );
   const visibleQuestions = flow.visibleQuestions;
   const visibleIds = flow.visibleIds;
   const visibleTotal = visibleQuestions.length;
   const formEnded = flow.ended;
+
+  // ─── اعمال تغییرات متغیرها ───
+  useEffect(() => {
+    if (flow.variableChanges?.length > 0) {
+      setVariables((prev) => {
+        const next = { ...prev };
+        for (const vc of flow.variableChanges) {
+          next[vc.variableKey] = (Number(next[vc.variableKey]) || 0) + vc.amount;
+        }
+        return next;
+      });
+    }
+  }, [flow.variableChanges]);
 
   const currentQuestion = questions[step];
 

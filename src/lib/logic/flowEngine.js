@@ -1,65 +1,72 @@
 // ════════════════════════════════════════════════════════════════
 // Flow Engine — محاسبه مسیر قابل‌مشاهده فرم
-// مدل پرس‌لاین: شرط visibility روی هر سوال + پرش روی هر گزینه
+// مدل پرس‌لاین: LogicRule متمرکز + متغیرها + Checkbox multi-branch
 // ════════════════════════════════════════════════════════════════
 
-import { evaluateQuestionConditions, evaluateRule } from "./conditionEvaluator";
-
-const MAX_FLOW_STEPS = 1000;
+import { evaluateRule, evaluateQuestionConditions } from "./conditionEvaluator";
+import { MAX_FLOW_STEPS } from "./types";
 
 /**
- * محاسبه مسیر نهایی فرم بر اساس شرط‌های هر سوال و پاسخ‌ها
+ * محاسبه مسیر نهایی فرم
  *
  * @param {Array} questions - سوالات فرم (مرتب‌شده بر اساس position)
- * @param {Array} rules - Ruleهای منطقی قدیمی (سازگاری)
- * @param {Object} answers - پاسخ‌های کاربر { questionId: value }
- * @param {Object} hiddenFields - اطلاعات مخفی (URL params) { key: value }
- * @returns {{
- *   visibleQuestions: Array,
- *   visibleIds: Set,
- *   triggeredRules: Array,
- *   ended: boolean,
- *   endTarget: null|string,
- * }}
+ * @param {Array} rules - LogicRuleها
+ * @param {Object} answers - پاسخ‌های کاربر
+ * @param {Object} variables - متغیرهای سفارشی (شامل score)
+ * @param {Object} hiddenFields - اطلاعات مخفی URL
+ * @returns {Object} FlowResult
  */
-export function calculateFlow(questions, rules, answers, hiddenFields = {}) {
-  // ─── ۱. شرط visibility هر سوال را بررسی کن ───
-  // هر سوال یک فیلد conditions دارد:
-  //   { group_operator: "AND"|"OR", conditions: [{ source_question_id, operator, value }] }
-  // اگر شرط برقرار باشد، سوال نمایش داده می‌شود
+export function calculateFlow(questions, rules, answers, variables = {}, hiddenFields = {}) {
+  // ─── ۱. شرط visibility هر سوال ───
   const visibleByCondition = questions.filter((q) =>
-    evaluateQuestionConditions(q.conditions, answers, hiddenFields)
+    evaluateQuestionConditions(q.conditions, answers, variables, hiddenFields)
   );
 
-  // ─── ۲. Ruleهای قدیمی (سازگاری) ───
+  // ─── ۲. ارزیابی Ruleها ───
   const activeRules = (rules || [])
-    .filter((r) => r.enabled && evaluateRule(r, answers, hiddenFields))
+    .filter((r) => r.enabled && evaluateRule(r, answers, variables, hiddenFields))
     .sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0));
 
-  // جمع‌آوری actionهای Ruleهای قدیمی
+  // ─── ۳. جمع‌آوری actionها ───
   const showTargets = new Set();
   const hideTargets = new Set();
+  const goToTargets = new Map(); // sourceQuestionId → targetId
   let endForm = false;
   let endTarget = null;
+  const variableChanges = []; // { variableKey, amount }
 
   for (const rule of activeRules) {
     const action = rule.action;
     if (!action || !action.type) continue;
+
     switch (action.type) {
       case "SHOW_QUESTION":
-        if (action.target_id) showTargets.add(action.target_id);
+        if (action.targetId) showTargets.add(action.targetId);
         break;
       case "HIDE_QUESTION":
-        if (action.target_id) hideTargets.add(action.target_id);
+        if (action.targetId) hideTargets.add(action.targetId);
+        break;
+      case "GO_TO_QUESTION":
+        if (action.targetId && rule.sourceQuestionId) {
+          goToTargets.set(rule.sourceQuestionId, action.targetId);
+        }
         break;
       case "END_FORM":
         endForm = true;
-        endTarget = action.target_id || null;
+        endTarget = action.endId || null;
+        break;
+      case "ADD_TO_VARIABLE":
+        if (action.variableKey) {
+          variableChanges.push({
+            variableKey: action.variableKey,
+            amount: Number(action.amount) || 0,
+          });
+        }
         break;
     }
   }
 
-  // ─── ۳. اگه END_FORM فعال شد ───
+  // ─── ۴. اگه END_FORM فعال شد ───
   if (endForm) {
     return {
       visibleQuestions: [],
@@ -67,122 +74,158 @@ export function calculateFlow(questions, rules, answers, hiddenFields = {}) {
       triggeredRules: activeRules,
       ended: true,
       endTarget,
+      variableChanges,
     };
   }
 
-  // ─── ۴. شروع با سوالاتی که شرط visibility رو برآورده می‌کنن ───
+  // ─── ۵. شروع با سوالات visible ───
   let visible = [...visibleByCondition];
 
-  // ─── ۵. SHOW/HIDE Ruleهای قدیمی ───
-  const visibleIds = new Set(visible.map((q) => q.id));
-
-  // SHOW: اضافه کن
+  // ─── ۶. GO_TO ها رو اعمال کن ───
   const questionMap = new Map(questions.map((q) => [q.id, q]));
+  let path = [];
+  let i = 0;
+  let steps = 0;
+
+  while (i < visible.length && steps < MAX_FLOW_STEPS) {
+    steps++;
+    const q = visible[i];
+    path.push(q);
+
+    const goToId = goToTargets.get(q.id);
+    if (goToId && questionMap.has(goToId)) {
+      const targetIdx = visible.findIndex((dq) => dq.id === goToId);
+      if (targetIdx > i) {
+        i = targetIdx;
+        continue;
+      }
+    }
+    i++;
+  }
+
+  // ─── ۷. SHOW/HIDE ───
+  const pathIds = new Set(path.map((q) => q.id));
+
   for (const targetId of showTargets) {
-    if (!visibleIds.has(targetId) && questionMap.has(targetId)) {
+    if (!pathIds.has(targetId) && questionMap.has(targetId)) {
       const q = questionMap.get(targetId);
       let inserted = false;
-      for (let j = 0; j < visible.length; j++) {
-        if ((q.position ?? 0) < (visible[j].position ?? 0)) {
-          visible.splice(j, 0, q);
-          visibleIds.add(targetId);
+      for (let j = 0; j < path.length; j++) {
+        if ((q.position ?? 0) < (path[j].position ?? 0)) {
+          path.splice(j, 0, q);
+          pathIds.add(targetId);
           inserted = true;
           break;
         }
       }
       if (!inserted) {
-        visible.push(q);
-        visibleIds.add(targetId);
+        path.push(q);
+        pathIds.add(targetId);
       }
     }
   }
 
-  // HIDE: حذف کن
-  const finalVisible = visible.filter((q) => !hideTargets.has(q.id));
-  const finalIds = new Set(finalVisible.map((q) => q.id));
+  const finalVisible = path.filter((q) => !hideTargets.has(q.id));
+  const visibleIds = new Set(finalVisible.map((q) => q.id));
 
   return {
     visibleQuestions: finalVisible,
-    visibleIds: finalIds,
+    visibleIds,
     triggeredRules: activeRules,
     ended: false,
     endTarget: null,
+    variableChanges,
   };
 }
 
 /**
- * محاسبه مرحله بعدی با در نظر گرفتن jump_actions سوال فعلی
- * این تابع در runtime توسط form viewer فراخوانی می‌شود
- *
- * @param {Object} currentQuestion - سوال فعلی
- * @param {*} answer - پاسخ کاربر به سوال فعلی
- * @param {Array} questions - همه سوالات
- * @param {Array} visibleQuestions - سوالات قابل مشاهده فعلی
- * @param {Array} jumpQueue - صف پرش‌های معلق (برای checkbox)
- * @returns {{ type: "next"|"jump"|"end"|"redirect", targetId?: string, url?: string }}
+ * ارزیابی مرحله بعدی با در نظر گرفتن jump_actions
+ * برای checkbox: صف چندمسیره
  */
 export function evaluateNextStep(currentQuestion, answer, questions, visibleQuestions, jumpQueue = []) {
   const jumpActions = currentQuestion.jump_actions || [];
 
-  // ─── اگه jump_actions خالیه → مرحله بعدی عادی ───
   if (!jumpActions.length) {
-    return checkJumpQueue(jumpQueue, visibleQuestions);
+    return checkJumpQueue(jumpQueue);
   }
 
-  // ─── checkbox: برای هر گزینه انتخاب‌شده، پرش صف بساز ───
+  // ─── choice / yes_no ───
   if (currentQuestion.type === "choice" || currentQuestion.type === "yes_no") {
-    // پیدا کردن ایندکس گزینه انتخاب‌شده
     let selectedIndices = [];
 
     if (currentQuestion.type === "yes_no") {
       if (answer === "بله" || answer === "true" || answer === true) {
-        selectedIndices = [0]; // بله = ایندکس ۰
+        selectedIndices = [0];
       } else if (answer === "خیر" || answer === "false" || answer === false) {
-        selectedIndices = [1]; // خیر = ایندکس ۱
+        selectedIndices = [1];
       }
     } else if (currentQuestion.type === "choice") {
-      // choice: answer is the option text
       const optIdx = currentQuestion.options?.findIndex((o) => o === answer);
       if (optIdx >= 0) selectedIndices = [optIdx];
     }
 
-    // پیدا کردن jump action متناسب با گزینه انتخاب‌شده
     for (const idx of selectedIndices) {
       const ja = jumpActions.find((j) => j.option_index === idx);
-      if (ja) {
-        return resolveJumpAction(ja, jumpQueue);
+      if (ja) return resolveJumpAction(ja, jumpQueue);
+    }
+
+    return checkJumpQueue(jumpQueue);
+  }
+
+  // ─── checkbox: چند انتخاب → صف چند مقصد ───
+  if (currentQuestion.type === "checkbox" && Array.isArray(answer)) {
+    // بر اساس ترتیب چیدمان گزینه‌ها (نه ترتیب انتخاب کاربر)
+    const destinations = [];
+    for (let idx = 0; idx < (currentQuestion.options?.length || 0); idx++) {
+      if (answer.includes(currentQuestion.options[idx])) {
+        const ja = jumpActions.find((j) => j.option_index === idx);
+        if (ja && ja.action_type === "jump_to_question" && ja.target_id) {
+          destinations.push(ja.target_id);
+        }
+        if (ja && ja.action_type === "end_form") {
+          destinations.push("__END_FORM__");
+        }
       }
     }
 
-    // اگه هیچ jump actionای مطابقت نداشت → مرحله بعدی عادی
-    return checkJumpQueue(jumpQueue, visibleQuestions);
+    // Deduplicate
+    const uniqueDestinations = [...new Set(destinations)];
+
+    // اگه END_FORM وجود داشت
+    if (uniqueDestinations.includes("__END_FORM__")) {
+      return { type: "end" };
+    }
+
+    // اولین مقصد مستقیم اجرا بشه، بقیه صف
+    if (uniqueDestinations.length > 0) {
+      const first = uniqueDestinations.shift();
+      // بقیه رو به صف اضافه کن
+      for (const d of uniqueDestinations) {
+        jumpQueue.push(d);
+      }
+      return { type: "jump", targetId: first };
+    }
+
+    return checkJumpQueue(jumpQueue);
   }
 
-  // ─── متن / عدد: اولین jump action منطبق ───
+  // ─── متن / عدد: jump فیلد کلی ───
   for (const ja of jumpActions) {
     if (ja.option_index === -1) {
-      // jump فیلد کلی (برای متن/عدد/ایمیل)
       return resolveJumpAction(ja, jumpQueue);
     }
   }
 
-  return checkJumpQueue(jumpQueue, visibleQuestions);
+  return checkJumpQueue(jumpQueue);
 }
 
-/**
- * اجرای jump action
- */
 function resolveJumpAction(ja, jumpQueue) {
-  if (ja.action_type === "end_form") {
-    return { type: "end" };
-  }
+  if (ja.action_type === "end_form") return { type: "end" };
   if (ja.action_type === "redirect_url" && ja.target_url) {
     return { type: "redirect", url: ja.target_url };
   }
   if (ja.action_type === "jump_to_question" && ja.target_id) {
-    // اگه صف پرش وجود داره، اول اونو خالی کن
     if (jumpQueue.length > 0) {
-      // هدف فعلی رو به انتهای صف اضافه کن
       jumpQueue.push(ja.target_id);
       const nextTarget = jumpQueue.shift();
       return { type: "jump", targetId: nextTarget };
@@ -192,10 +235,7 @@ function resolveJumpAction(ja, jumpQueue) {
   return { type: "next" };
 }
 
-/**
- * بررسی صف پرش
- */
-function checkJumpQueue(jumpQueue, visibleQuestions) {
+function checkJumpQueue(jumpQueue) {
   if (jumpQueue.length > 0) {
     const nextTarget = jumpQueue.shift();
     return { type: "jump", targetId: nextTarget };
@@ -210,7 +250,7 @@ export function findNextStep(currentStep, questions, visibleIds) {
   for (let i = currentStep + 1; i < questions.length; i++) {
     if (visibleIds.has(questions[i].id)) return i;
   }
-  return questions.length; // تمام شد
+  return questions.length;
 }
 
 /**
@@ -220,5 +260,5 @@ export function findPrevStep(currentStep, questions, visibleIds) {
   for (let i = currentStep - 1; i >= 0; i--) {
     if (visibleIds.has(questions[i].id)) return i;
   }
-  return -1; // برگشت به خوش‌آمد
+  return -1;
 }
