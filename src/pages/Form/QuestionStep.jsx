@@ -309,7 +309,15 @@ export default function QuestionStep({
     setTouched(false);
   }, [question.id]);
 
-  // اعتبارسنجی آنی هنگام تایپ (بعد از اولین تاچ)
+  // ولیدیشن لحظه‌ای — هر بار مقدار تغییر کنه
+  useEffect(() => {
+    if (touched && value !== undefined && value !== null && String(value).trim() !== "") {
+      const err = validateAnswer(question, value);
+      setError(err);
+    }
+  }, [value, question, touched]);
+
+  // اعتبارسنجی هنگام تایپ
   const handleChange = useCallback((val) => {
     onChange(val);
     setTouched(true);

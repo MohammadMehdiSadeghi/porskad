@@ -625,7 +625,6 @@ export default function FormBuilder() {
         description: q.description ?? "",
         placeholder: q.placeholder ?? "",
         validation: q.validation ?? null,
-        validation: q.validation ?? null,
         required: !!q.required,
         options: q.type === "choice" ? q.options.map((o) => o.trim()) : q.type === "yes_no" ? ["بله", "خیر"] : [],
         position: i,
