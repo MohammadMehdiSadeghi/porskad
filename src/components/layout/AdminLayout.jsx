@@ -7,6 +7,7 @@ import Badge from "../ui/Badge";
 const NAV_ITEMS = [
   { to: "/admin", label: "داشبورد", icon: "📊", end: true },
   { to: "/admin/forms", label: "فرم‌ها", icon: "🗂️", end: false },
+  { to: "/admin/embed", label: "اشتراک‌گذاری", icon: "🔗", end: false },
   { to: "/admin/managers", label: "مدیران", icon: "👥", end: false, adminOnly: true },
   { to: "/admin/profile", label: "پروفایل", icon: "👤", end: false },
 ];

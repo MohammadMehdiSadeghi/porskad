@@ -15,6 +15,7 @@ import FormsList from "./pages/Admin/Forms/FormsList";
 import FormBuilder from "./pages/Admin/Forms/FormBuilder";
 import Responses from "./pages/Admin/Forms/Responses";
 import ShareForm from "./pages/Admin/Forms/ShareForm";
+import EmbedHub from "./pages/Admin/EmbedHub";
 import Managers from "./pages/Admin/Managers";
 import Profile from "./pages/Admin/Profile";
 import AuthGuard from "./components/guards/AuthGuard";
@@ -101,6 +102,7 @@ export default function App() {
               <Route path="forms/:id/responses" element={<Responses />} />
               <Route path="forms/:id/share" element={<ShareForm />} />
               <Route path="managers" element={<AuthGuard adminOnly={true}><Managers /></AuthGuard>} />
+              <Route path="embed" element={<EmbedHub />} />
               <Route path="profile" element={<Profile />} />
             </Route>
 
