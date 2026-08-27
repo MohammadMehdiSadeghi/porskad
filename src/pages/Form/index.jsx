@@ -11,8 +11,10 @@ import { supabase } from "../../lib/supabaseClient";
 import { normalizeAnswerValue, validateAnswer } from "../../lib/validators";
 import { calculateFlow, evaluateNextStep } from "../../lib/logic/flowEngine";
 import { faNum, faDuration, parseUserAgent } from "../../lib/utils";
+import { QUESTION_TYPES } from "../../lib/questionTypes";
 import QuestionStep from "./QuestionStep";
 import RegistrationForm from "../../components/form/RegistrationForm";
+import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import SEO from "../../components/ui/SEO";
 
 const draftKey = (slug) => `porskad_draft_${slug}`;
@@ -75,6 +77,8 @@ export default function FormFill() {
   const [submitError, setSubmitError] = useState(null);
   const [requiredError, setRequiredError] = useState(null);
   const [honeypot, setHoneypot] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmUnfilled, setConfirmUnfilled] = useState([]);
   const stepEnteredAt = useRef(Date.now());
   const jumpQueueRef = useRef([]); // صف پرش‌ها (برای checkbox)
   const [variables, setVariables] = useState({}); // متغیرهای سفارشی
@@ -321,27 +325,28 @@ export default function FormFill() {
     setStep((s) => findPrevVisibleStep(s));
   }, [step, accrueTime, findPrevVisibleStep]);
 
-  const submit = useCallback(async () => {
+  const openConfirm = useCallback(() => {
     if (submitting) return;
     if (honeypot.trim() !== "") return;
 
-    // اعتبارسنجی تمام سوالات اجباری (فقط سوالات قابل مشاهده)
+    const unfilled = [];
     for (const q of visibleQuestions) {
       if (q.required) {
         const v = answers[q.id];
         const isEmpty = v === null || v === undefined || (typeof v === "string" && v.trim() === "");
         if (isEmpty) {
-          // برگرد به سوال اجباری خالی
-          const idx = questions.indexOf(q);
-          accrueTime();
-          setDir(-1);
-          setStep(idx);
-          setSubmitError(`سوال «${q.title}» اجباریه و جواب ندادی!`);
-          return;
+          unfilled.push({ id: q.id, title: q.title, typeLabel: QUESTION_TYPES[q.type]?.label || q.type });
         }
       }
     }
+    setConfirmUnfilled(unfilled);
+    setShowConfirm(true);
+  }, [submitting, honeypot, visibleQuestions, answers]);
 
+  const doSubmit = useCallback(async () => {
+    setShowConfirm(false);
+    if (submitting) return;
+    if (honeypot.trim() !== "") return;
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -564,7 +569,7 @@ export default function FormFill() {
                       ) : (
                         <Button
                           variant="magenta"
-                          onClick={submit}
+                          onClick={openConfirm}
                           disabled={submitting}
                           rotate="rotate-[1deg]"
                         >
@@ -617,6 +622,16 @@ export default function FormFill() {
           </StickerCard>
         </div>
       </main>
+
+      {/* باکس تایید قبل از ارسال */}
+      <ConfirmDialog
+        open={showConfirm}
+        onConfirm={doSubmit}
+        onCancel={() => setShowConfirm(false)}
+        unfilledFields={confirmUnfilled}
+        totalRequired={visibleQuestions.filter((q) => q.required).length}
+        filledCount={visibleQuestions.filter((q) => q.required && answers[q.id] != null && String(answers[q.id]).trim() !== "").length}
+      />
     </div>
   );
 }

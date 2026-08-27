@@ -4,7 +4,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "../../lib/supabaseClient";
 import { normalizeAnswerValue, validateAnswer } from "../../lib/validators";
 import { calculateFlow, evaluateNextStep } from "../../lib/logic/flowEngine";
+import { QUESTION_TYPES } from "../../lib/questionTypes";
 import { faNum, faDuration, parseUserAgent } from "../../lib/utils";
+import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import "../../index.css";
 
 // ─── پیام‌های postMessage به سایت میزبان ───
@@ -201,6 +203,8 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmUnfilled, setConfirmUnfilled] = useState([]);
 
   function setAnswer(qId, val, q) {
     setAnswers((p) => ({ ...p, [qId]: val }));
@@ -217,9 +221,10 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
     setFieldErrors((p) => ({ ...p, [qId]: err }));
   }
 
-  async function handleSubmit(e) {
+  function handleShowConfirm(e) {
     e.preventDefault();
     if (submitting) return;
+    // ولیدیشن فیلدها
     const errors = {};
     let firstErr = null;
     for (const q of questions) {
@@ -230,6 +235,24 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
     setTouched(Object.fromEntries(questions.map((q) => [q.id, true])));
     if (firstErr) { setError(`فیلد «${firstErr.title}» خطا دارد.`); return; }
 
+    // جمع‌آوری فیلدهای خالی اجباری
+    const unfilled = [];
+    for (const q of questions) {
+      if (q.required) {
+        const v = answers[q.id];
+        const isEmpty = v === null || v === undefined || (typeof v === "string" && v.trim() === "");
+        if (isEmpty) {
+          unfilled.push({ id: q.id, title: q.title, typeLabel: QUESTION_TYPES[q.type]?.label || q.type });
+        }
+      }
+    }
+    setConfirmUnfilled(unfilled);
+    setShowConfirm(true);
+  }
+
+  async function doSubmit() {
+    setShowConfirm(false);
+    if (submitting) return;
     setSubmitting(true);
     setError(null);
     try {
@@ -288,7 +311,7 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
       <main className="flex-1 flex items-start justify-center px-4 py-6">
         <div className="w-full max-w-xl -rotate-[0.3deg]">
           <div className="bg-white border-2 border-navy rounded-[2rem] p-6 sm:p-8 shadow-[6px_6px_0_0_rgba(33,41,90,0.15)]">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            <form onSubmit={handleShowConfirm} className="flex flex-col gap-5">
               <div className="text-center mb-1">
                 <h1 className="text-2xl font-black text-navy mb-1">{schema.title}</h1>
                 {schema.description && <p className="text-sm text-ink-subtle">{schema.description}</p>}
@@ -394,6 +417,16 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
           </div>
         </div>
       </main>
+
+      {/* باکس تایید قبل از ارسال */}
+      <ConfirmDialog
+        open={showConfirm}
+        onConfirm={doSubmit}
+        onCancel={() => setShowConfirm(false)}
+        unfilledFields={confirmUnfilled}
+        totalRequired={questions.filter((q) => q.required).length}
+        filledCount={questions.filter((q) => q.required && answers[q.id] != null && String(answers[q.id]).trim() !== "").length}
+      />
     </div>
   );
 }
@@ -414,6 +447,8 @@ export default function EmbedForm() {
   const [requiredError, setRequiredError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
   const [touchedFields, setTouchedFields] = useState({});
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmUnfilled, setConfirmUnfilled] = useState([]);
   const stepEnteredAt = useRef(Date.now());
 
   useAutoResize();
@@ -558,23 +593,24 @@ export default function EmbedForm() {
     setStep((s) => findPrevVisibleStep(s));
   }, [step, accrueTime, findPrevVisibleStep]);
 
-  const submit = useCallback(async () => {
-    if (submitting) return;
+  const openConfirm = useCallback(() => {
+    const unfilled = [];
     for (const q of visibleQuestions) {
       if (q.required) {
         const v = answers[q.id];
         const isEmpty = v === null || v === undefined || (typeof v === "string" && v.trim() === "");
         if (isEmpty) {
-          const idx = questions.indexOf(q);
-          accrueTime();
-          setDir(-1);
-          setStep(idx);
-          setSubmitError(`سوال «${q.title}» اجباریه!`);
-          return;
+          unfilled.push({ id: q.id, title: q.title, typeLabel: QUESTION_TYPES[q.type]?.label || q.type });
         }
       }
     }
+    setConfirmUnfilled(unfilled);
+    setShowConfirm(true);
+  }, [visibleQuestions, answers]);
 
+  const doSubmit = useCallback(async () => {
+    setShowConfirm(false);
+    if (submitting) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -733,7 +769,7 @@ export default function EmbedForm() {
                     {step < total - 1 ? (
                       <button onClick={goNext} className="bg-navy text-white px-6 py-2.5 rounded-pill-md font-bold hover:bg-navy/90 transition-colors shadow-[2px_2px_0_0_rgba(0,0,0,0.2)]">بعدی ←</button>
                     ) : (
-                      <button onClick={submit} disabled={submitting}
+                      <button onClick={openConfirm} disabled={submitting}
                         className="bg-teal text-white px-6 py-2.5 rounded-pill-md font-bold hover:bg-teal-text transition-colors disabled:opacity-50 shadow-[2px_2px_0_0_rgba(0,0,0,0.2)]">
                         {submitting ? "در حال ثبت..." : "ثبت ✨"}
                       </button>
@@ -766,6 +802,16 @@ export default function EmbedForm() {
           </div>
         </div>
       </main>
+
+      {/* باکس تایید قبل از ارسال */}
+      <ConfirmDialog
+        open={showConfirm}
+        onConfirm={doSubmit}
+        onCancel={() => setShowConfirm(false)}
+        unfilledFields={confirmUnfilled}
+        totalRequired={visibleQuestions.filter((q) => q.required).length}
+        filledCount={visibleQuestions.filter((q) => q.required && answers[q.id] != null && String(answers[q.id]).trim() !== "").length}
+      />
     </div>
   );
 }
