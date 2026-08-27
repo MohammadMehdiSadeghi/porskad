@@ -52,7 +52,7 @@ export default function Login() {
           >
             <div className="flex flex-col items-center gap-3 text-center">
               <Badge color="navy" rotate="rotate-[2deg]">
-                پنل مدیریت پرسکاد
+                پنل مدیریت پرس کاد
               </Badge>
               <h1 className="text-2xl font-black text-navy">ورود ادمین</h1>
               <p className="text-sm font-semibold text-ink-subtle">
