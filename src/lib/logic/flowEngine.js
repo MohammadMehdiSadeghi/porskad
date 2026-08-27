@@ -18,17 +18,9 @@ import { MAX_FLOW_STEPS } from "./types";
  */
 export function calculateFlow(questions, rules, answers, variables = {}, hiddenFields = {}) {
   // ─── ۱. شرط visibility هر سوال ───
-  const visibleByCondition = questions.filter((q) => {
-    const visible = evaluateQuestionConditions(q.conditions, answers, variables, hiddenFields);
-    // Debug: نمایش وضعیت شرط در کنسول
-    if (q.conditions) {
-      console.log(`[FlowEngine] سوال «${q.title?.slice(0, 20)}»: ${visible ? '✅ نمایش' : '🚫 مخفی'}`, {
-        conditions: q.conditions,
-        answers: Object.fromEntries(Object.entries(answers).filter(([k]) => k === (q.conditions?.conditions?.[0]?.questionId)) ),
-      });
-    }
-    return visible;
-  });
+  const visibleByCondition = questions.filter((q) =>
+    evaluateQuestionConditions(q.conditions, answers, variables, hiddenFields)
+  );
 
   // ─── ۲. ارزیابی Ruleها ───
   const activeRules = (rules || [])

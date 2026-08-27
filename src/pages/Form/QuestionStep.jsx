@@ -404,6 +404,39 @@ export default function QuestionStep({
 
       {question.type === "rating" && <RatingStars value={value} onChange={(val) => handleChange(val)} />}
 
+      {question.type === "checkbox" && (
+        <div className="flex flex-col gap-3">
+          {(question.options || []).map((opt, i) => {
+            const selected = Array.isArray(value) && value.includes(opt);
+            return (
+              <button key={i} type="button"
+                onClick={() => {
+                  const current = Array.isArray(value) ? [...value] : [];
+                  const next = selected ? current.filter((v) => v !== opt) : [...current, opt];
+                  handleChange(next);
+                }}
+                className={clsx(
+                  "group flex items-center gap-3.5 text-right w-full",
+                  "border-2 rounded-pill-md px-4 py-3.5 transition-all duration-150 cursor-pointer",
+                  "hover:-translate-y-0.5",
+                  selected
+                    ? "border-teal bg-teal/10 rotate-[-0.5deg] shadow-[4px_4px_0_0_rgba(88,189,175,0.4)]"
+                    : "border-ink/20 bg-white hover:border-teal",
+                )}>
+                <span className={clsx(
+                  "w-9 h-9 shrink-0 flex items-center justify-center rounded-md",
+                  "border-2 font-black text-base transition-colors",
+                  selected
+                    ? "border-teal-text bg-teal text-white"
+                    : "border-ink/25 text-navy group-hover:border-teal",
+                )}>{selected ? "✓" : ""}</span>
+                <span className="font-bold text-ink">{opt}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {error && (
         <div className="self-start rotate-[-1deg] bg-white border-2 border-magenta rounded-pill-md px-3.5 py-2 text-sm font-bold text-magenta-text flex items-center gap-2">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

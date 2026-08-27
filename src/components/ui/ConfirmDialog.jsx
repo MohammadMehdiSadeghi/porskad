@@ -3,8 +3,6 @@ import { faNum } from "../../lib/utils";
 
 /**
  * باکس تایید قبل از ارسال فرم
- * - لیست فیلدهای خالی اجباری
- * - دکمه تایید و بازگشت
  */
 export default function ConfirmDialog({
   open,
@@ -14,25 +12,22 @@ export default function ConfirmDialog({
   totalRequired = 0,
   filledCount = 0,
 }) {
-  if (!open) return null;
-
   const allFilled = unfilledFields.length === 0;
 
   return (
     <AnimatePresence>
       {open && (
         <motion.div
+          key="confirm-overlay"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
           dir="rtl"
+          style={{ isolation: "isolate" }}
         >
           {/* پس‌زمینه تیره */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
             className="absolute inset-0 bg-navy/40 backdrop-blur-sm"
             onClick={onCancel}
           />
@@ -44,6 +39,7 @@ export default function ConfirmDialog({
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
             className="relative bg-white border-2 border-navy rounded-[2rem] p-6 sm:p-8 max-w-lg w-full shadow-[6px_6px_0_0_rgba(33,41,90,0.15)]"
+            style={{ position: "relative", zIndex: 1 }}
           >
             {/* هدر */}
             <div className="text-center mb-5">
@@ -75,11 +71,6 @@ export default function ConfirmDialog({
                         {faNum(i + 1)}
                       </span>
                       <span className="font-semibold">{f.title}</span>
-                      {f.type && (
-                        <span className="text-[0.6rem] font-bold text-ink-subtle bg-bg-neutral rounded-pill-sm px-1.5 py-0.5">
-                          {f.typeLabel}
-                        </span>
-                      )}
                     </li>
                   ))}
                 </ul>

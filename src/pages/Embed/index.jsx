@@ -224,21 +224,23 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
   function handleShowConfirm(e) {
     e.preventDefault();
     if (submitting) return;
+    setError(null);
+
     // ولیدیشن فیلدها
     const errors = {};
-    let firstErr = null;
     for (const q of questions) {
       const err = validateAnswer(q, answers[q.id]);
-      if (err) { errors[q.id] = err; if (!firstErr) firstErr = q; }
+      if (err) { errors[q.id] = err; }
     }
     setFieldErrors(errors);
     setTouched(Object.fromEntries(questions.map((q) => [q.id, true])));
-    if (firstErr) { setError(`فیلد «${firstErr.title}» خطا دارد.`); return; }
 
-    // جمع‌آوری فیلدهای خالی اجباری
+    // جمع‌آوری فیلدهای خالی اجباری + دارای خطا
     const unfilled = [];
     for (const q of questions) {
-      if (q.required) {
+      if (errors[q.id]) {
+        unfilled.push({ id: q.id, title: `${q.title} (${errors[q.id]})`, typeLabel: QUESTION_TYPES[q.type]?.label || q.type });
+      } else if (q.required) {
         const v = answers[q.id];
         const isEmpty = v === null || v === undefined || (typeof v === "string" && v.trim() === "");
         if (isEmpty) {
@@ -389,6 +391,31 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
                             className={`star-btn text-4xl cursor-pointer ${Number(val) >= n ? "" : "opacity-30 grayscale"}`}
                             onClick={() => { setAnswer(q.id, String(n), q); handleBlur(q.id, String(n), q); }}>⭐</button>
                         ))}
+                      </div>
+                    )}
+
+                    {q.type === "checkbox" && (
+                      <div className="flex flex-col gap-2">
+                        {(q.options || []).map((opt, i) => {
+                          const selected = Array.isArray(val) && val.includes(opt);
+                          return (
+                            <button key={i} type="button"
+                              onClick={() => {
+                                const current = Array.isArray(val) ? [...val] : [];
+                                const next = selected ? current.filter((v) => v !== opt) : [...current, opt];
+                                setAnswer(q.id, next, q);
+                                handleBlur(q.id, next, q);
+                              }}
+                              className={`flex items-center gap-3 text-right w-full border-2 rounded-pill-md px-4 py-3 transition-all cursor-pointer ${
+                                selected ? "border-teal bg-teal/10" : "border-ink/20 bg-white hover:border-teal"
+                              }`}>
+                              <span className={`w-7 h-7 shrink-0 flex items-center justify-center rounded-md border-2 text-sm ${
+                                selected ? "border-teal bg-teal text-white" : "border-ink/25"
+                              }`}>{selected ? "✓" : ""}</span>
+                              <span className="font-semibold text-ink">{opt}</span>
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
 
@@ -598,7 +625,7 @@ export default function EmbedForm() {
     for (const q of visibleQuestions) {
       if (q.required) {
         const v = answers[q.id];
-        const isEmpty = v === null || v === undefined || (typeof v === "string" && v.trim() === "");
+        const isEmpty = v === null || v === undefined || (typeof v === "string" && v.trim() === "") || (Array.isArray(v) && v.length === 0);
         if (isEmpty) {
           unfilled.push({ id: q.id, title: q.title, typeLabel: QUESTION_TYPES[q.type]?.label || q.type });
         }
@@ -748,6 +775,29 @@ export default function EmbedForm() {
                   )}
                   {currentQuestion.type === "rating" && (
                     <RatingStars value={answers[currentQuestion.id]} onChange={setAnswer} />
+                  )}
+                  {currentQuestion.type === "checkbox" && (
+                    <div className="flex flex-col gap-2">
+                      {(currentQuestion.options || []).map((opt, i) => {
+                        const selected = Array.isArray(answers[currentQuestion.id]) && answers[currentQuestion.id].includes(opt);
+                        return (
+                          <button key={i} type="button"
+                            onClick={() => {
+                              const current = Array.isArray(answers[currentQuestion.id]) ? [...answers[currentQuestion.id]] : [];
+                              const next = selected ? current.filter((v) => v !== opt) : [...current, opt];
+                              setAnswer(next);
+                            }}
+                            className={`flex items-center gap-3 text-right w-full border-2 rounded-pill-md px-4 py-3 transition-all cursor-pointer ${
+                              selected ? "border-teal bg-teal/10" : "border-ink/20 bg-white hover:border-teal"
+                            }`}>
+                            <span className={`w-7 h-7 shrink-0 flex items-center justify-center rounded-md border-2 text-sm ${
+                              selected ? "border-teal bg-teal text-white" : "border-ink/25"
+                            }`}>{selected ? "✓" : ""}</span>
+                            <span className="font-semibold text-ink">{opt}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   )}
 
                   {touchedFields[currentQuestion.id] && fieldErrors[currentQuestion.id] && (

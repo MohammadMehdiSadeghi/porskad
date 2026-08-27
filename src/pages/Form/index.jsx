@@ -333,7 +333,7 @@ export default function FormFill() {
     for (const q of visibleQuestions) {
       if (q.required) {
         const v = answers[q.id];
-        const isEmpty = v === null || v === undefined || (typeof v === "string" && v.trim() === "");
+        const isEmpty = v === null || v === undefined || (typeof v === "string" && v.trim() === "") || (Array.isArray(v) && v.length === 0);
         if (isEmpty) {
           unfilled.push({ id: q.id, title: q.title, typeLabel: QUESTION_TYPES[q.type]?.label || q.type });
         }
