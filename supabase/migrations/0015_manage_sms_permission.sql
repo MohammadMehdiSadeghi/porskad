@@ -61,7 +61,7 @@ as $$
     v_id uuid;
   begin
     -- غیرفعال کردن تنظیمات قبلی
-    update public.sms_settings set is_active = false;
+    update public.sms_settings set is_active = false where is_active = true;
 
     -- ذخیره تنظیمات جدید
     insert into public.sms_settings (api_token, line_number, sender_name, is_active, created_by)
