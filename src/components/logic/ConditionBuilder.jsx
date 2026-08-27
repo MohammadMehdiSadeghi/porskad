@@ -46,6 +46,7 @@ export default function ConditionBuilder({
 
   // ─── اعمال شرط به والد ───
   const applyCondition = useCallback(() => {
+    console.log('[ConditionBuilder] اعمال شرط:', { draft, source: draft.source, questionId: draft.questionId, operator: draft.operator, value: draft.value });
     onChange({ ...draft });
     setDirty(false);
   }, [draft, onChange]);
