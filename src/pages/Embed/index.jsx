@@ -175,6 +175,211 @@ function BrandingBadge({ formId }) {
   );
 }
 
+// ─── فرم ثبت‌نامی تک‌صفحه‌ای embed ───
+function EmbedRegistrationForm({ schema, questions, formId }) {
+  const [answers, setAnswers] = useState({});
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState(null);
+
+  function setAnswer(qId, val, q) {
+    setAnswers((p) => ({ ...p, [qId]: val }));
+    setError(null);
+    if (touched[qId]) {
+      const err = validateAnswer(q, val);
+      setFieldErrors((p) => ({ ...p, [qId]: err }));
+    }
+  }
+
+  function handleBlur(qId, val, q) {
+    setTouched((p) => ({ ...p, [qId]: true }));
+    const err = validateAnswer(q, val);
+    setFieldErrors((p) => ({ ...p, [qId]: err }));
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (submitting) return;
+    const errors = {};
+    let firstErr = null;
+    for (const q of questions) {
+      const err = validateAnswer(q, answers[q.id]);
+      if (err) { errors[q.id] = err; if (!firstErr) firstErr = q; }
+    }
+    setFieldErrors(errors);
+    setTouched(Object.fromEntries(questions.map((q) => [q.id, true])));
+    if (firstErr) { setError(`فیلد «${firstErr.title}» خطا دارد.`); return; }
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      const ua = parseUserAgent();
+      const nowIso = new Date().toISOString();
+      const meta = {
+        device: ua.device, browser: ua.browser, os: ua.os,
+        userAgent: navigator.userAgent, referrerUrl: document.referrer || null,
+        startedAt: nowIso, completedAt: nowIso,
+      };
+      const answersObj = {};
+      for (const q of questions) {
+        const v = answers[q.id];
+        if (v !== undefined && v !== null && String(v).trim() !== "") {
+          answersObj[q.id] = normalizeAnswerValue(q, v);
+        }
+      }
+      const { data, error: rpcError } = await supabase.rpc("submit_public_response", {
+        p_form_public_id: formId, p_answers: answersObj, p_meta: meta,
+      });
+      if (rpcError) throw rpcError;
+      postToParent("pcode:submitted", { formId, responseId: data?.responseId });
+      setSubmitted(true);
+    } catch (err) {
+      console.error("Submit error:", err);
+      setError("ثبت ناموفق بود؛ دوباره تلاش کن.");
+      postToParent("pcode:error", { formId, error: err.message });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen dot-pattern bg-bg-mint flex items-center justify-center p-4" dir="rtl">
+        <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35 }}
+          className="bg-white border-2 border-navy rounded-[2rem] p-8 sm:p-10 text-center max-w-lg shadow-[6px_6px_0_0_rgba(33,41,90,0.15)]">
+          <span className="text-5xl mb-3 block">🎉</span>
+          <h1 className="text-2xl font-black text-navy mb-2">{schema.exit_title || "ثبت‌نام با موفقیت انجام شد!"}</h1>
+          <p className="text-ink-soft leading-7">{schema.exit_message || "ممنون از ثبت‌نام شما."}</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen dot-pattern bg-bg-mint flex flex-col" dir="rtl">
+      <div className="w-full max-w-xl mx-auto px-4 py-3 text-center">
+        <span className="inline-flex items-baseline gap-1 text-lg font-black select-none">
+          <span className="text-navy">پرس</span>
+          <span className="text-teal-text">کاد</span>
+        </span>
+        <span className="block text-xs font-bold text-ink/30 mt-0.5">{schema.title}</span>
+      </div>
+
+      <main className="flex-1 flex items-start justify-center px-4 py-6">
+        <div className="w-full max-w-xl -rotate-[0.3deg]">
+          <div className="bg-white border-2 border-navy rounded-[2rem] p-6 sm:p-8 shadow-[6px_6px_0_0_rgba(33,41,90,0.15)]">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+              <div className="text-center mb-1">
+                <h1 className="text-2xl font-black text-navy mb-1">{schema.title}</h1>
+                {schema.description && <p className="text-sm text-ink-subtle">{schema.description}</p>}
+                <span className="text-xs font-bold text-ink/40 bg-bg-neutral rounded-pill-sm px-2 py-0.5 mt-2 inline-block">{faNum(questions.length)} فیلد</span>
+              </div>
+
+              {questions.map((q, i) => {
+                const val = answers[q.id] ?? "";
+                const fieldErr = touched[q.id] ? fieldErrors[q.id] : null;
+                return (
+                  <div key={q.id} className="flex flex-col gap-2">
+                    <label className="flex items-center gap-2">
+                      <span className="text-sm font-extrabold text-navy">{q.title}</span>
+                      {q.required && <span className="text-magenta-text text-xs">*</span>}
+                    </label>
+                    {q.description && <span className="text-xs font-medium text-ink-subtle">{q.description}</span>}
+
+                    {(q.type === "short_text" || q.type === "email" || q.type === "phone_ir" || q.type === "telegram_id") && (
+                      <input type={q.type === "email" ? "email" : "text"} inputMode={q.type === "phone_ir" ? "tel" : "text"}
+                        dir={q.type === "email" || q.type === "phone_ir" ? "ltr" : "rtl"}
+                        value={val}
+                        onChange={(e) => setAnswer(q.id, e.target.value, q)}
+                        onBlur={(e) => handleBlur(q.id, e.target.value, q)}
+                        placeholder={(q.placeholder && q.placeholder.trim()) || (q.type === "email" ? "name@example.com" : q.type === "phone_ir" ? "09123456789" : q.type === "telegram_id" ? "@username" : "پاسخ خود را بنویسید...")}
+                        className={`w-full border-2 border-ink/20 rounded-pill-md px-4 py-3 text-base font-semibold text-ink placeholder:text-ink/40 focus:outline-none focus:ring-4 focus:ring-teal/15 focus:border-teal transition-all ${fieldErr ? "border-magenta" : ""}`}
+                      />
+                    )}
+
+                    {q.type === "long_text" && (
+                      <textarea dir="rtl" rows={3} value={val}
+                        onChange={(e) => setAnswer(q.id, e.target.value, q)}
+                        onBlur={(e) => handleBlur(q.id, e.target.value, q)}
+                        placeholder={q.placeholder?.trim() || "بنویس..."}
+                        className={`w-full border-2 border-ink/20 rounded-pill-md px-4 py-3 text-base font-semibold text-ink placeholder:text-ink/40 focus:outline-none focus:ring-4 focus:ring-teal/15 focus:border-teal transition-all resize-y min-h-[6rem] leading-8 ${fieldErr ? "border-magenta" : ""}`}
+                      />
+                    )}
+
+                    {q.type === "number" && (
+                      <input type="text" inputMode="numeric" dir="rtl" value={val}
+                        onChange={(e) => setAnswer(q.id, e.target.value, q)}
+                        onBlur={(e) => handleBlur(q.id, e.target.value, q)}
+                        placeholder={q.placeholder?.trim() || "مثلاً 42"}
+                        className={`w-full border-2 border-ink/20 rounded-pill-md px-4 py-3 text-base font-semibold text-ink placeholder:text-ink/40 focus:outline-none focus:ring-4 focus:ring-teal/15 focus:border-teal transition-all ${fieldErr ? "border-magenta" : ""}`}
+                      />
+                    )}
+
+                    {q.type === "choice" && (
+                      <div className="relative">
+                        <select value={val}
+                          onChange={(e) => { setAnswer(q.id, e.target.value, q); handleBlur(q.id, e.target.value, q); }}
+                          className={`w-full border-2 border-ink/20 rounded-pill-md px-4 py-3 text-base font-semibold text-ink focus:outline-none focus:ring-4 focus:ring-teal/15 focus:border-teal transition-all appearance-none cursor-pointer ${fieldErr ? "border-magenta" : ""}`}>
+                          <option value="">— انتخاب کنید —</option>
+                          {(q.options || []).map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
+                        </select>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle pointer-events-none">▾</span>
+                      </div>
+                    )}
+
+                    {q.type === "yes_no" && (
+                      <div className="grid grid-cols-2 gap-3">
+                        {["بله", "خیر"].map((opt) => (
+                          <button key={opt} type="button"
+                            onClick={() => { setAnswer(q.id, opt, q); handleBlur(q.id, opt, q); }}
+                            className={`flex items-center justify-center gap-2 py-3 rounded-pill-md border-2 text-lg font-black transition-all cursor-pointer ${
+                              val === opt ? (opt === "بله" ? "border-teal bg-teal/10 text-teal-text" : "border-magenta bg-magenta/10 text-magenta-text") : "border-ink/20 bg-white text-ink hover:border-ink/40"
+                            }`}>{opt}</button>
+                        ))}
+                      </div>
+                    )}
+
+                    {q.type === "rating" && (
+                      <div className="flex justify-center gap-2" dir="ltr">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <button key={n} type="button"
+                            className={`star-btn text-4xl cursor-pointer ${Number(val) >= n ? "" : "opacity-30 grayscale"}`}
+                            onClick={() => { setAnswer(q.id, String(n), q); handleBlur(q.id, String(n), q); }}>⭐</button>
+                        ))}
+                      </div>
+                    )}
+
+                    {fieldErr && (
+                      <div className="flex items-center gap-2 bg-magenta/10 border-2 border-magenta rounded-pill-md px-3 py-2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-magenta-text shrink-0">
+                          <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                        </svg>
+                        <span className="text-sm font-bold text-magenta-text">{fieldErr}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {error && (
+                <div className="bg-magenta/10 border-2 border-magenta rounded-pill-md px-4 py-2 text-sm font-bold text-magenta-text">{error}</div>
+              )}
+
+              <button type="submit" disabled={submitting}
+                className="bg-teal text-white px-8 py-3 rounded-pill-md font-extrabold hover:bg-teal-text transition-colors disabled:opacity-50 shadow-[3px_3px_0_0_rgba(0,0,0,0.2)]">
+                {submitting ? "در حال ثبت..." : "ارسال ✨"}
+              </button>
+            </form>
+            {schema.showBranding && <BrandingBadge formId={formId} />}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
 // ─── صفحه اصلی Embed ───
 export default function EmbedForm() {
   const { formId } = useParams();
@@ -189,6 +394,8 @@ export default function EmbedForm() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [requiredError, setRequiredError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [touchedFields, setTouchedFields] = useState({});
   const stepEnteredAt = useRef(Date.now());
 
   useAutoResize();
@@ -249,6 +456,10 @@ export default function EmbedForm() {
     if (!currentQuestion) return;
     setAnswers((a) => ({ ...a, [currentQuestion.id]: val }));
     setRequiredError(null);
+    // اعتبارسنجی آنی
+    setTouchedFields((t) => ({ ...t, [currentQuestion.id]: true }));
+    const err = validateAnswer(currentQuestion, val);
+    setFieldErrors((e) => ({ ...e, [currentQuestion.id]: err }));
   }, [currentQuestion]);
 
   useEffect(() => { stepEnteredAt.current = Date.now(); }, [step]);
@@ -392,16 +603,23 @@ export default function EmbedForm() {
     return visibleQuestions.findIndex((q) => q.id === currentQuestion.id) + 1;
   }, [step, currentQuestion, visibleQuestions]);
 
-  if (loading) return <div className="min-h-screen bg-bg-mint flex items-center justify-center"><Spinner label="فرم داره لود می‌شه..." /></div>;
-  if (error) return <div className="min-h-screen bg-bg-mint flex items-center justify-center p-4">
+  const isRegistration = schema?.form_type === "registration";
+
+  if (loading) return <div className="min-h-screen dot-pattern bg-bg-mint flex items-center justify-center"><Spinner label="فرم داره لود می‌شه..." /></div>;
+  if (error) return <div className="min-h-screen dot-pattern bg-bg-mint flex items-center justify-center p-4">
     <div className="bg-white border-2 border-navy rounded-pill-md p-8 text-center max-w-md">
       <p className="text-lg font-black text-navy">{error}</p>
     </div>
   </div>;
   if (!schema) return null;
 
+  // ─── فرم ثبت‌نامی: تک‌صفحه‌ای ───
+  if (isRegistration) {
+    return <EmbedRegistrationForm schema={schema} questions={questions} formId={formId} />;
+  }
+
   return (
-    <div className="min-h-screen bg-bg-mint font-sans" dir="rtl">
+    <div className="min-h-screen dot-pattern bg-bg-mint font-sans" dir="rtl">
       {/* هدر باریک */}
       <div className="w-full max-w-xl mx-auto px-4 py-3 text-center">
         <span className="inline-flex items-baseline gap-1 text-lg font-black select-none">
@@ -472,7 +690,17 @@ export default function EmbedForm() {
                     <RatingStars value={answers[currentQuestion.id]} onChange={setAnswer} />
                   )}
 
-                  {requiredError && (
+                  {touchedFields[currentQuestion.id] && fieldErrors[currentQuestion.id] && (
+                    <div className="flex items-center gap-2 bg-magenta/10 border-2 border-magenta rounded-pill-md px-3 py-2">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-magenta-text shrink-0">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="15" y1="9" x2="9" y2="15"/>
+                        <line x1="9" y1="9" x2="15" y2="15"/>
+                      </svg>
+                      <span className="text-sm font-bold text-magenta-text">{fieldErrors[currentQuestion.id]}</span>
+                    </div>
+                  )}
+                  {requiredError && !fieldErrors[currentQuestion.id] && (
                     <div className="bg-magenta/10 border-2 border-magenta rounded-pill-md px-4 py-2 text-sm font-bold text-magenta-text">{requiredError}</div>
                   )}
 

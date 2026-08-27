@@ -11,9 +11,11 @@ export function toEnDigits(str = "") {
 // قابل قبول: 09xxxxxxxxx ، +989xxxxxxxxx ، 989xxxxxxxxx ، 9xxxxxxxxx
 // خروجی نرمال‌شده: 09xxxxxxxxx
 export function normalizeIranPhone(raw) {
-  let s = toEnDigits(String(raw || "")).replace(/[\s\-()]/g, "");
+  let s = toEnDigits(String(raw || "")).replace(/[^\d+]/g, "");
+  // حذف پیشوند‌های متداول
   if (s.startsWith("+98")) s = "0" + s.slice(3);
-  else if (s.startsWith("98") && s.length === 12) s = "0" + s.slice(2);
+  else if (s.startsWith("0098")) s = "0" + s.slice(4);
+  else if (s.startsWith("98") && s.length >= 12) s = "0" + s.slice(2);
   else if (s.startsWith("9") && s.length === 10) s = "0" + s;
   return s;
 }
@@ -33,7 +35,7 @@ export function isValidEmail(raw) {
 export function parseNumber(raw) {
   if (raw === null || raw === undefined) return null;
   if (typeof raw === "number") return Number.isFinite(raw) ? raw : null;
-  const s = toEnDigits(String(raw)).trim().replace(/[٬,،\.]/g, "");
+  const s = toEnDigits(String(raw)).trim().replace(/[٬,،]/g, "");
   if (s === "") return null;
   const n = Number(s);
   return Number.isFinite(n) ? n : null;
@@ -56,10 +58,21 @@ export function validateAnswer(question, value) {
   // اعتبارسنجی سفارشی (min, max, minLength, maxLength, pattern)
   const v = question.validation;
   if (v) {
-    if (v.min !== undefined && v.max !== undefined) {
+    if (v.min !== undefined || v.max !== undefined) {
       const n = parseNumber(value);
-      if (n !== null && (n < v.min || n > v.max)) {
-        return `عدد باید بین ${v.min} تا ${v.max} باشد.`;
+      if (n === null && question.type === "number") {
+        return "فقط عدد وارد کن.";
+      }
+      if (n !== null) {
+        if (v.min !== undefined && v.max !== undefined && (n < v.min || n > v.max)) {
+          return `عدد باید بین ${v.min} تا ${v.max} باشد.`;
+        }
+        if (v.min !== undefined && v.max === undefined && n < v.min) {
+          return `عدد باید حداقل ${v.min} باشد.`;
+        }
+        if (v.max !== undefined && v.min === undefined && n > v.max) {
+          return `عدد باید حداکثر ${v.max} باشد.`;
+        }
       }
     }
     if (v.minLength !== undefined) {

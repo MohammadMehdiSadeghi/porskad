@@ -296,6 +296,7 @@ export default function QuestionStep({
   onAdvance,
 }) {
   const [error, setError] = useState(null);
+  const [touched, setTouched] = useState(false);
   const valueRef = useRef(value);
 
   // همیشه مقدار لحظه‌ای جواب رو نگه میداره
@@ -305,9 +306,19 @@ export default function QuestionStep({
 
   useEffect(() => {
     setError(null);
+    setTouched(false);
   }, [question.id]);
 
+  // اعتبارسنجی آنی هنگام تایپ (بعد از اولین تاچ)
+  const handleChange = useCallback((val) => {
+    onChange(val);
+    setTouched(true);
+    const err = validateAnswer(question, val);
+    setError(err);
+  }, [question, onChange]);
+
   const handleNext = useCallback(() => {
+    setTouched(true);
     const err = validateAnswer(question, valueRef.current);
     setError(err);
     if (!err) onAdvance();
@@ -364,7 +375,7 @@ export default function QuestionStep({
           type={question.type}
           value={value}
           error={error}
-          onChange={onChange}
+          onChange={handleChange}
           onEnter={handleNext}
           placeholder={question.placeholder}
         />
@@ -374,16 +385,16 @@ export default function QuestionStep({
         <ChoiceOptions
           options={question.options}
           value={value}
-          onChange={onChange}
+          onChange={(val) => { handleChange(val); setTimeout(handleNext, 300); }}
           onEnter={handleNext}
         />
       )}
 
       {question.type === "yes_no" && (
-        <YesNoOptions value={value} onChange={onChange} onEnter={handleNext} />
+        <YesNoOptions value={value} onChange={(val) => { handleChange(val); setTimeout(handleNext, 300); }} onEnter={handleNext} />
       )}
 
-      {question.type === "rating" && <RatingStars value={value} onChange={onChange} />}
+      {question.type === "rating" && <RatingStars value={value} onChange={(val) => handleChange(val)} />}
 
       {error && (
         <div className="self-start rotate-[-1deg] bg-white border-2 border-magenta rounded-pill-md px-3.5 py-2 text-sm font-bold text-magenta-text flex items-center gap-2">

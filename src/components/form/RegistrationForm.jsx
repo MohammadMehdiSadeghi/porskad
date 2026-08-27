@@ -24,6 +24,8 @@ const selectCls =
 
 export default function RegistrationForm({ form, questions, slug }) {
   const [answers, setAnswers] = useState({});
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [touched, setTouched] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(null);
@@ -37,21 +39,46 @@ export default function RegistrationForm({ form, questions, slug }) {
     [questions]
   );
 
-  function setAnswer(questionId, val) {
-    setAnswers((prev) => ({ ...prev, [questionId]: val }));
-    setError(null);
+  // ─── اعتبارسنجی یک فیلد ───
+  function validateField(q, value) {
+    return validateAnswer(q, value);
   }
 
-  // ─── اعتبارسنجی ───
+  function setAnswer(questionId, val, q) {
+    setAnswers((prev) => ({ ...prev, [questionId]: val }));
+    setError(null);
+    // اعتبارسنجی آنی
+    if (touched[questionId]) {
+      const err = validateField(q, val);
+      setFieldErrors((prev) => ({ ...prev, [questionId]: err }));
+    }
+  }
+
+  function handleBlur(questionId, val, q) {
+    setTouched((prev) => ({ ...prev, [questionId]: true }));
+    const err = validateField(q, val);
+    setFieldErrors((prev) => ({ ...prev, [questionId]: err }));
+  }
+
+  // ─── اعتبارسنجی کل فرم ───
   function validate() {
+    const errors = {};
+    let firstErrorId = null;
     for (const q of sortedQuestions) {
-      if (q.required) {
-        const v = answers[q.id];
-        const isEmpty = v === null || v === undefined || (typeof v === "string" && v.trim() === "");
-        if (isEmpty) {
-          return { valid: false, error: `سوال «${q.title}» اجباری است.` };
-        }
+      const v = answers[q.id];
+      const err = validateField(q, v);
+      if (err) {
+        errors[q.id] = err;
+        if (!firstErrorId) firstErrorId = q.id;
       }
+    }
+    setFieldErrors(errors);
+    setTouched(
+      Object.fromEntries(sortedQuestions.map((q) => [q.id, true]))
+    );
+    if (firstErrorId) {
+      const q = sortedQuestions.find((qq) => qq.id === firstErrorId);
+      return { valid: false, error: `سوال «${q?.title}» خطا دارد.`, firstErrorId };
     }
     return { valid: true };
   }
@@ -65,9 +92,12 @@ export default function RegistrationForm({ form, questions, slug }) {
     const validation = validate();
     if (!validation.valid) {
       setError(validation.error);
-      // اسکرول به سوال خطا
-      const errorEl = formRef.current?.querySelector("[data-error]");
-      errorEl?.scrollIntoView({ behavior: "smooth", block: "center" });
+      // اسکرول به اولین فیلد خطا
+      if (validation.firstErrorId) {
+        const idx = sortedQuestions.findIndex((q) => q.id === validation.firstErrorId);
+        const errorEl = formRef.current?.querySelectorAll("[data-error]")[0];
+        errorEl?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
       return;
     }
 
@@ -127,10 +157,10 @@ export default function RegistrationForm({ form, questions, slug }) {
   // ─── رندر فیلد سوال ───
   function renderQuestion(q, index) {
     const val = answers[q.id] ?? "";
-    const hasError = error && q.required && (!val || (typeof val === "string" && val.trim() === ""));
+    const fieldErr = touched[q.id] ? fieldErrors[q.id] : null;
 
     return (
-      <div key={q.id} data-error={hasError ? "" : undefined} className="flex flex-col gap-2">
+      <div key={q.id} data-error={fieldErr ? "" : undefined} className="flex flex-col gap-2">
         <label className="flex items-center gap-2">
           <span className="text-sm font-extrabold text-navy">
             {q.title}
@@ -148,12 +178,14 @@ export default function RegistrationForm({ form, questions, slug }) {
         {(q.type === "short_text" || q.type === "email" || q.type === "phone_ir" || q.type === "telegram_id") && (
           <input
             type={q.type === "email" ? "email" : "text"}
-            dir={q.type === "email" ? "ltr" : "rtl"}
+            inputMode={q.type === "phone_ir" ? "tel" : "text"}
+            dir={q.type === "email" || q.type === "phone_ir" ? "ltr" : "rtl"}
             value={val}
-            onChange={(e) => setAnswer(q.id, e.target.value)}
+            onChange={(e) => setAnswer(q.id, e.target.value, q)}
+            onBlur={(e) => handleBlur(q.id, e.target.value, q)}
             placeholder={getPlaceholder(q)}
-            style={q.type === "email" ? undefined : rtlStyle}
-            className={`${inputCls} ${hasError ? "!border-magenta" : ""}`}
+            style={q.type === "email" || q.type === "phone_ir" ? undefined : rtlStyle}
+            className={`${inputCls} ${fieldErr ? "!border-magenta" : ""}`}
           />
         )}
 
@@ -163,10 +195,11 @@ export default function RegistrationForm({ form, questions, slug }) {
             dir="rtl"
             rows={3}
             value={val}
-            onChange={(e) => setAnswer(q.id, e.target.value)}
+            onChange={(e) => setAnswer(q.id, e.target.value, q)}
+            onBlur={(e) => handleBlur(q.id, e.target.value, q)}
             placeholder={getPlaceholder(q)}
             style={rtlStyle}
-            className={`${inputCls} resize-y ${hasError ? "!border-magenta" : ""}`}
+            className={`${inputCls} resize-y ${fieldErr ? "!border-magenta" : ""}`}
           />
         )}
 
@@ -177,10 +210,11 @@ export default function RegistrationForm({ form, questions, slug }) {
             inputMode="numeric"
             dir="rtl"
             value={val}
-            onChange={(e) => setAnswer(q.id, e.target.value)}
+            onChange={(e) => setAnswer(q.id, e.target.value, q)}
+            onBlur={(e) => handleBlur(q.id, e.target.value, q)}
             placeholder={getPlaceholder(q)}
             style={rtlStyle}
-            className={`${inputCls} ${hasError ? "!border-magenta" : ""}`}
+            className={`${inputCls} ${fieldErr ? "!border-magenta" : ""}`}
           />
         )}
 
@@ -189,8 +223,11 @@ export default function RegistrationForm({ form, questions, slug }) {
           <div className="relative">
             <select
               value={val}
-              onChange={(e) => setAnswer(q.id, e.target.value)}
-              className={`${selectCls} ${hasError ? "!border-magenta" : ""}`}
+              onChange={(e) => {
+                setAnswer(q.id, e.target.value, q);
+                handleBlur(q.id, e.target.value, q);
+              }}
+              className={`${selectCls} ${fieldErr ? "!border-magenta" : ""}`}
             >
               <option value="">— انتخاب کنید —</option>
               {(q.options || []).map((opt, i) => (
@@ -218,7 +255,10 @@ export default function RegistrationForm({ form, questions, slug }) {
                   name={`q_${q.id}`}
                   value={opt}
                   checked={val === opt}
-                  onChange={(e) => setAnswer(q.id, e.target.value)}
+                  onChange={(e) => {
+                    setAnswer(q.id, e.target.value, q);
+                    handleBlur(q.id, e.target.value, q);
+                  }}
                   className="accent-teal"
                 />
                 {opt}
@@ -234,7 +274,10 @@ export default function RegistrationForm({ form, questions, slug }) {
               <button
                 key={star}
                 type="button"
-                onClick={() => setAnswer(q.id, String(star))}
+                onClick={() => {
+                  setAnswer(q.id, String(star), q);
+                  handleBlur(q.id, String(star), q);
+                }}
                 className={`text-2xl transition-transform hover:scale-110 ${
                   Number(val) >= star ? "text-orange" : "text-ink/20"
                 }`}
@@ -245,8 +288,14 @@ export default function RegistrationForm({ form, questions, slug }) {
           </div>
         )}
 
-        {hasError && (
-          <span className="text-xs font-bold text-magenta-text">این فیلد اجباری است</span>
+        {fieldErr && (
+          <motion.span
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-xs font-bold text-magenta-text"
+          >
+            {fieldErr}
+          </motion.span>
         )}
       </div>
     );
