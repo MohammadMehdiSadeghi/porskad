@@ -51,6 +51,35 @@ export function validateAnswer(question, value) {
   }
   if (isEmpty) return null; // اختیاری و خالی → مشکلی نیست
 
+  // اعتبارسنجی سفارشی (min, max, minLength, maxLength, pattern)
+  const v = question.validation;
+  if (v) {
+    if (v.min !== undefined && v.max !== undefined) {
+      const n = parseNumber(value);
+      if (n !== null && (n < v.min || n > v.max)) {
+        return `عدد باید بین ${v.min} تا ${v.max} باشد.`;
+      }
+    }
+    if (v.minLength !== undefined) {
+      if (String(value).trim().length < v.minLength) {
+        return `حداقل ${v.minLength} کاراکتر وارد کنید.`;
+      }
+    }
+    if (v.maxLength !== undefined) {
+      if (String(value).trim().length > v.maxLength) {
+        return `حداکثر ${v.maxLength} کاراکتر مجاز است.`;
+      }
+    }
+    if (v.pattern) {
+      try {
+        const re = new RegExp(v.pattern);
+        if (!re.test(String(value).trim())) {
+          return `فرمت وارد شده مجاز نیست.`;
+        }
+      } catch { /* regex نامعتبر */ }
+    }
+  }
+
   switch (question.type) {
     case "phone_ir":
       return isValidIranPhone(value) ? null : "شماره موبایل معتبر نیست؛ مثل: 09123456789";

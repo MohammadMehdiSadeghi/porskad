@@ -154,7 +154,7 @@ export default function Managers() {
           </p>
         </div>
         <Button variant="teal" size="md" onClick={() => setShowCreateModal(true)} rotate="-rotate-[1deg]">
-          مدیر جدید ➕
+          مدیر جدید
         </Button>
       </div>
 
@@ -228,7 +228,7 @@ export default function Managers() {
                       onClick={() => openEdit(m)}
                       title={m.is_owner ? "فقط نام صاحب اصلی قابل تغییر است" : "ویرایش"}
                     >
-                      ویرایش ✏️
+                      ویرایش
                     </Button>
                     {!m.is_owner && (
                       <>
@@ -246,7 +246,7 @@ export default function Managers() {
                           className="!text-magenta-text"
                           onClick={() => setDeleteTarget(m)}
                         >
-                          حذف 🗑️
+                          حذف
                         </Button>
                       </>
                     )}

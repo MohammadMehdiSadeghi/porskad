@@ -92,7 +92,7 @@ function RuleEditor({ rule, questions, onChange, onDelete, index }) {
               onClick={onDelete}
               className="text-xs font-bold text-magenta-text hover:underline shrink-0"
             >
-              🗑 حذف
+              حذف
             </button>
           </div>
 

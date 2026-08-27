@@ -224,7 +224,7 @@ export default function FormsList() {
           </p>
         </div>
         <Button variant="indigo" onClick={() => setShowTypeModal(true)} disabled={busy} rotate="-rotate-[1deg]">
-          فرم جدید ➕
+          فرم جدید
         </Button>
       </div>
 
@@ -294,7 +294,7 @@ export default function FormsList() {
                     </div>
 
                     <div className="flex flex-wrap gap-2 mt-1">
-                      <Button as={Link} to={`/admin/forms/${f.id}`} variant="ghost" size="sm">ویرایش ✏️</Button>
+                      <Button as={Link} to={`/admin/forms/${f.id}`} variant="ghost" size="sm">ویرایش</Button>
                       <Button as={Link} to={`/admin/forms/${f.id}/responses`} variant="ghost" size="sm">پاسخ‌ها</Button>
                       <Button as={Link} to={`/admin/forms/${f.id}/share`} variant="ghost" size="sm">اشتراک</Button>
                       {f.published && (
@@ -310,7 +310,7 @@ export default function FormsList() {
                       )}
                       <Button variant="ghost" size="sm" onClick={() => duplicate(f)} disabled={busy}>کپی 📄</Button>
                       {hasPermission("delete_form") && (
-                        <Button variant="ghost" size="sm" className="!text-magenta-text" onClick={() => setDeleting(f)}>حذف 🗑️</Button>
+                        <Button variant="ghost" size="sm" className="!text-magenta-text" onClick={() => setDeleting(f)}>حذف</Button>
                       )}
                     </div>
 

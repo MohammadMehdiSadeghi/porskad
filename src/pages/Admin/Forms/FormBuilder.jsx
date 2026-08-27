@@ -155,7 +155,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                 className="w-8 h-8 rounded-pill-md border-2 border-magenta/40 bg-white font-black text-magenta-text hover:bg-magenta/10 transition-colors"
                 title="حذف سوال"
               >
-                🗑
+                ✕
               </button>
             </div>
           </div>
@@ -185,11 +185,72 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
             </Field>
           )}
 
+          {/* ─── اعتبارسنجی سفارشی ─── */}
+          {(q.type === "number" || q.type === "short_text" || q.type === "long_text") && (
+            <div className="flex flex-col gap-2 border-2 border-dashed border-teal/30 rounded-pill-md bg-bg-mint/30 p-3">
+              <span className="text-xs font-extrabold text-teal-text">🎯 قوانین اعتبارسنجی</span>
+              {q.type === "number" && (
+                <div className="flex gap-2">
+                  <Field label="حداقل" hint="مقدار حداقل">
+                    <input
+                      type="number"
+                      value={q.validation?.min ?? ""}
+                      onChange={(e) => onChange({ validation: { ...q.validation, min: e.target.value ? Number(e.target.value) : undefined } })}
+                      placeholder="مثلاً ۱۳"
+                      className={`${inputCls} !py-1.5 !text-xs`}
+                    />
+                  </Field>
+                  <Field label="حداکثر" hint="مقدار حداکثر">
+                    <input
+                      type="number"
+                      value={q.validation?.max ?? ""}
+                      onChange={(e) => onChange({ validation: { ...q.validation, max: e.target.value ? Number(e.target.value) : undefined } })}
+                      placeholder="مثلاً ۱۸"
+                      className={`${inputCls} !py-1.5 !text-xs`}
+                    />
+                  </Field>
+                </div>
+              )}
+              {(q.type === "short_text" || q.type === "long_text") && (
+                <div className="flex gap-2">
+                  <Field label="حداقل کاراکتر">
+                    <input
+                      type="number"
+                      value={q.validation?.minLength ?? ""}
+                      onChange={(e) => onChange({ validation: { ...q.validation, minLength: e.target.value ? Number(e.target.value) : undefined } })}
+                      placeholder="مثلاً ۲"
+                      className={`${inputCls} !py-1.5 !text-xs`}
+                    />
+                  </Field>
+                  <Field label="حداکثر کاراکتر">
+                    <input
+                      type="number"
+                      value={q.validation?.maxLength ?? ""}
+                      onChange={(e) => onChange({ validation: { ...q.validation, maxLength: e.target.value ? Number(e.target.value) : undefined } })}
+                      placeholder="مثلاً ۱۰۰"
+                      className={`${inputCls} !py-1.5 !text-xs`}
+                    />
+                  </Field>
+                </div>
+              )}
+              <Field label="الگو (Regex)
+" hint="اختیاری — مثلاً: ^[a-zA-Z]+$">
+                <input
+                  value={q.validation?.pattern ?? ""}
+                  onChange={(e) => onChange({ validation: { ...q.validation, pattern: e.target.value || undefined } })}
+                  placeholder="^\d+$"
+                  dir="ltr"
+                  className={`${inputCls} !py-1.5 !text-xs text-left`}
+                />
+              </Field>
+            </div>
+          )}
+
           {/* ─── گزینه‌ها (چندگزینه‌ای) ─── */}
           {meta.hasOptions && (
             <div className="flex flex-col gap-2 border-2 border-dashed border-orange/50 rounded-pill-md bg-[#FEF7EC]/60 p-3">
               <span className="text-xs font-extrabold text-orange">
-                گزینه‌ها ({faNum(q.options.length)} — بین ۲ تا ۶)
+                گزینه‌ها ({faNum(q.options.length)} — حداقل ۲)
               </span>
               {q.options.map((opt, i) => (
                 <div key={i} className="flex items-center gap-2">
@@ -213,7 +274,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
               ))}
               <button
                 onClick={() => onChange({ options: [...q.options, `گزینه ${faNum(q.options.length + 1)}`] })}
-                disabled={q.options.length >= 6}
+                disabled={q.options.length >= 15}
                 className="self-start text-xs font-extrabold text-orange hover:text-orange-alt disabled:opacity-40 transition-opacity"
               >
                 + افزودن گزینه
@@ -459,6 +520,7 @@ export default function FormBuilder() {
         ...q,
         localId: q.id,
         placeholder: q.placeholder ?? "",
+        validation: q.validation ?? null,
         // مهاجرت: اگه conditions وجود نداشت از condition قدیمی بساز
         conditions: q.conditions ?? (q.condition ? { group_operator: "AND", conditions: [q.condition] } : null),
         jump_actions: q.jump_actions ?? [],
@@ -561,6 +623,8 @@ export default function FormBuilder() {
         title: q.title.trim(),
         description: q.description ?? "",
         placeholder: q.placeholder ?? "",
+        validation: q.validation ?? null,
+        validation: q.validation ?? null,
         required: !!q.required,
         options: q.type === "choice" ? q.options.map((o) => o.trim()) : q.type === "yes_no" ? ["بله", "خیر"] : [],
         position: i,
@@ -590,6 +654,7 @@ export default function FormBuilder() {
           ...q,
           localId: q.id,
           placeholder: q.placeholder ?? "",
+        validation: q.validation ?? null,
           conditions: q.conditions ?? (q.condition ? { group_operator: "AND", conditions: [q.condition] } : null),
           jump_actions: q.jump_actions ?? [],
         })));
@@ -668,7 +733,7 @@ export default function FormBuilder() {
         <StickerCard theme="navy" radius="rounded-tl-[1.75rem] rounded-br-[1.75rem] rounded-tr-none rounded-bl-none">
           <div className="p-5 sm:p-6 flex flex-col gap-4">
             <h2 className="text-lg font-black text-navy flex items-center gap-2">
-              ⚙️ تنظیمات فرم
+              تنظیمات فرم
               <label className="mr-auto flex items-center gap-2 text-sm font-extrabold cursor-pointer select-none">
                 <input
                   type="checkbox"
@@ -775,7 +840,7 @@ export default function FormBuilder() {
         <div className="rotate-[0.4deg]">
           <StickerCard theme="orange" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
             <div className="p-4 sm:p-5 flex flex-col gap-3">
-              <span className="text-sm font-black text-orange">➕ افزودن سوال جدید — نوعش را انتخاب کن:</span>
+              <span className="text-sm font-black text-orange">افزودن سوال جدید — نوعش را انتخاب کن:</span>
               <div className="flex flex-wrap gap-2">
                 {QUESTION_TYPE_ORDER.map((key) => {
                   const t = QUESTION_TYPES[key];

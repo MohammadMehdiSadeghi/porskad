@@ -130,7 +130,7 @@ export default function Profile() {
         <StickerCard theme="navy" radius="rounded-tl-[1.75rem] rounded-br-[1.75rem] rounded-tr-none rounded-bl-none">
           <div className="p-5 sm:p-6 flex flex-col gap-4">
             <h2 className="text-lg font-black text-navy flex items-center gap-2">
-              👤 اطلاعات حساب
+              اطلاعات حساب
             </h2>
 
             {/* آواتار + ایمیل */}
@@ -183,7 +183,7 @@ export default function Profile() {
         <StickerCard theme="white" radius="rounded-tl-[1.75rem] rounded-br-[1.75rem] rounded-tr-none rounded-bl-none">
           <div className="p-5 sm:p-6 flex flex-col gap-4">
             <h2 className="text-lg font-black text-navy flex items-center gap-2">
-              ✏️ ویرایش نام نمایشی
+              ویرایش نام نمایشی
             </h2>
 
             <label className="flex flex-col gap-1.5">

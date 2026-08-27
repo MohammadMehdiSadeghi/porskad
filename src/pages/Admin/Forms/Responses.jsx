@@ -690,7 +690,7 @@ export default function Responses() {
                 size="sm"
                 onClick={() => deleteResponse(detail)}
               >
-                🗑 حذف این پاسخ
+                حذف این پاسخ
               </Button>
               <Button variant="ghost" size="sm" onClick={() => setDetail(null)}>
                 بستن

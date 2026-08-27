@@ -107,14 +107,14 @@
       // دکمه toggle
       var fab = document.createElement("button");
       fab.style.cssText = "position:fixed;bottom:20px;right:20px;z-index:100000;width:56px;height:56px;border-radius:50%;background:#21295A;color:#fff;font-size:24px;border:none;cursor:pointer;box-shadow:0 4px 15px rgba(33,41,90,0.4);display:flex;align-items:center;justify-content:center;font-family:sans-serif;";
-      fab.innerHTML = '<span style="font-size:10px;font-weight:900;line-height:1.2;text-align:center;">پرس<br/><span style="color:#58BDAF;">کاد</span></span>';
+      fab.innerHTML = '<span style="font-size:11px;font-weight:900;line-height:1.3;text-align:center;font-family:Vazirmatn,sans-serif;">پرس<br/><span style="color:#58BDAF;">کاد</span></span>';
       document.body.appendChild(fab);
 
       var isOpen = false;
       fab.addEventListener("click", function () {
         isOpen = !isOpen;
         iframe.style.display = isOpen ? "block" : "none";
-        fab.innerHTML = isOpen ? '✕' : '<span style="font-size:10px;font-weight:900;line-height:1.2;text-align:center;">پرس<br/><span style="color:#58BDAF;">کاد</span></span>';
+        fab.innerHTML = isOpen ? '✕' : '<span style="font-size:11px;font-weight:900;line-height:1.3;text-align:center;font-family:Vazirmatn,sans-serif;">پرس<br/><span style="color:#58BDAF;">کاد</span></span>';
         postEvent(formId, isOpen ? "opened" : "closed");
       });
 
@@ -179,10 +179,21 @@
     }
   }
 
+  // بارگذاری فونت IranSans
+  function loadFont() {
+    if (document.getElementById("porscad-font")) return;
+    var link = document.createElement("link");
+    link.id = "porscad-font";
+    link.rel = "stylesheet";
+    link.href = "https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33/Vazirmatn-font-face.css";
+    document.head.appendChild(link);
+  }
+
   // اجرا بعد از لود صفحه
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
+    document.addEventListener("DOMContentLoaded", function() { loadFont(); init(); });
   } else {
+    loadFont();
     init();
   }
 })();
