@@ -7,10 +7,11 @@ import Badge from "../../../components/ui/Badge";
 import Spinner from "../../../components/ui/Spinner";
 import { useToast } from "../../../components/ui/Toast";
 import { QUESTION_TYPES, QUESTION_TYPE_ORDER, makeQuestion } from "../../../lib/questionTypes";
+import { QUESTION_TYPE_ICONS } from "../../../lib/questionIcons";
 import ConditionBuilder from "../../../components/logic/ConditionBuilder";
 import { makeCondition, makeConditionGroup, makeJumpAction, GROUP_OPERATORS } from "../../../lib/logic/types";
 import { faNum, slugify, copyToClipboard } from "../../../lib/utils";
-import { Link2, BarChart3, Share2, Puzzle, Settings, FileText } from "lucide-react";
+import { Link2, BarChart3, Share2, Puzzle, Settings, FileText, AlignLeft } from "lucide-react";
 import FormPreview from "../../../components/form/FormPreview";
 import SEO from "../../../components/ui/SEO";
 
@@ -122,7 +123,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
               {faNum(index + 1)}
             </span>
             <Badge color={meta.color}>
-              {meta.icon} {meta.label}
+              {(() => { const Icon = QUESTION_TYPE_ICONS[q.type]; return Icon ? <Icon size={12} /> : null; })()} {meta.label}
             </Badge>
             <label className="flex items-center gap-1.5 text-xs font-bold text-ink-subtle mr-auto cursor-pointer select-none">
               <input
@@ -786,7 +787,7 @@ export default function FormBuilder() {
                           : "border-ink/15 bg-white hover:border-teal/40"
                       }`}
                     >
-                      <span className="text-2xl">{t.icon}</span>
+                      <span className="text-navy">{t.key === "step_by_step" ? <FileText size={24} /> : <AlignLeft size={24} />}</span>
                       <div className="text-right">
                         <span className={`text-sm font-black block ${form.form_type === t.key ? "text-teal-text" : "text-navy"}`}>
                           {t.label}
@@ -852,7 +853,7 @@ export default function FormBuilder() {
                       className="flex items-center gap-1.5 bg-white border-2 border-orange/60 rounded-pill-md px-3 py-2
                         text-xs font-extrabold text-ink hover:-translate-y-0.5 hover:border-orange hover:rotate-[-1deg] transition-all cursor-pointer"
                     >
-                      <span className="text-base">{t.icon}</span>
+                      {(() => { const Icon = QUESTION_TYPE_ICONS[key]; return Icon ? <Icon size={14} className="text-orange" /> : null; })()}
                       {t.label}
                     </button>
                   );

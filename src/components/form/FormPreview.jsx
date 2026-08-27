@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { faNum } from "../../lib/utils";
 import { QUESTION_TYPES } from "../../lib/questionTypes";
+import { QUESTION_TYPE_ICONS } from "../../lib/questionIcons";
 
 const PLACEHOLDER_DEFAULTS = {
   short_text: "جوابت رو این‌جا بنویس...",
@@ -91,7 +92,7 @@ function MiniQuestion({ q, index, total }) {
         <span className="w-4 h-4 flex items-center justify-center bg-navy text-white rounded-full text-[0.4rem] font-black">
           {faNum(index + 1)}
         </span>
-        <span className="text-[0.5rem] font-bold text-ink/40">{meta.icon} {meta.label}</span>
+        <span className="text-[0.5rem] font-bold text-ink/40 flex items-center gap-1">{(() => { const Icon = QUESTION_TYPE_ICONS[q.type]; return Icon ? <Icon size={10} /> : null; })()} {meta.label}</span>
         {q.required && <span className="text-[0.45rem] text-magenta-text font-bold">*</span>}
       </div>
       <h3 className="text-[0.65rem] font-black text-navy leading-4">{q.title || "سوال بدون عنوان"}</h3>

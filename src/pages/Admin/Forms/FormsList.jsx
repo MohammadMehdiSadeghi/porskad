@@ -10,7 +10,7 @@ import Modal from "../../../components/ui/Modal";
 import { useToast } from "../../../components/ui/Toast";
 import { useAuth } from "../../../context/AuthContext";
 import { copyToClipboard, randomSlug } from "../../../lib/utils";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, AlignLeft, ClipboardList } from "lucide-react";
 import SEO from "../../../components/ui/SEO";
 
 // ─── تمپلیت فرم ثبت‌نامی ───
@@ -20,7 +20,7 @@ const FORM_TYPES = [
   {
     key: "step_by_step",
     title: "مرحله به مرحله",
-    icon: "step",
+    icon: "step_by_step",
     description: "هر سوال در یک صفحه جداگانه نمایش داده می‌شود. مناسب نظرسنجی‌ها و آزمون‌ها.",
     color: "teal",
     theme: "teal",
@@ -28,7 +28,7 @@ const FORM_TYPES = [
   {
     key: "registration",
     title: "فرم ثبت‌نامی",
-    icon: "reg",
+    icon: "registration",
     description: "همه فیلدها در یک صفحه نمایش داده می‌شوند. مناسب فرم‌های ثبت‌نام و عضویت.",
     color: "orange",
     theme: "orange",
@@ -342,7 +342,7 @@ export default function FormsList() {
               disabled={busy}
               className="text-right p-5 rounded-pill-md border-2 border-ink/15 bg-white hover:border-teal hover:shadow-md transition-all group disabled:opacity-50"
             >
-              <span className="text-4xl block mb-3 group-hover:scale-110 transition-transform">{ft.icon}</span>
+              <span className="block mb-3 group-hover:scale-110 transition-transform text-navy">{ft.key === "step_by_step" ? <ClipboardList size={36} /> : <AlignLeft size={36} />}</span>
               <h3 className="text-lg font-black text-navy mb-1">{ft.title}</h3>
               <p className="text-xs font-medium text-ink-subtle leading-5">{ft.description}</p>
             </button>
