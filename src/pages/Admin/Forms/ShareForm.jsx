@@ -209,7 +209,7 @@ export default function ShareForm() {
               onClick={() => setActiveTab(key)}
               className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-colors whitespace-nowrap ${
                 activeTab === key
-                  ? "bg-white text-indigo-600 shadow-sm"
+                  ? "bg-white text-teal-text shadow-sm"
                   : "text-ink/50 hover:text-ink"
               }`}
             >
@@ -235,24 +235,53 @@ export default function ShareForm() {
         </StickerCard>
       </div>
 
-      {/* پیش‌نمایش */}
+      {/* پیش‌نمایش بر اساس حالت */}
       <div className="rotate-[-0.2deg]">
         <StickerCard theme="white" radius="rounded-tl-[1.5rem] rounded-br-[1.5rem] rounded-tr-none rounded-bl-none">
           <div className="p-5 sm:p-6 flex flex-col gap-4">
-            <h2 className="text-lg font-black text-navy">پیش‌نمایش زنده</h2>
-            <div className="border-2 border-dashed border-ink/15 rounded-xl overflow-hidden" style={{ minHeight: "400px" }}>
-              {form.published ? (
-                <iframe
-                  src={embedUrl}
-                  className="w-full"
-                  style={{ height: "500px", border: "none" }}
-                  title="پیش‌نمایش Embed"
-                />
-              ) : (
+            <h2 className="text-lg font-black text-navy">پیش‌نمایش زنده — {active.label}</h2>
+            <div className="border-2 border-dashed border-ink/15 rounded-xl overflow-hidden bg-bg-mint/30" style={{ minHeight: "400px" }}>
+              {!form.published ? (
                 <div className="flex items-center justify-center h-[400px] text-ink/40 text-sm">
                   فرم هنوز منتشر نشده — ابتدا منتشر کنید
                 </div>
-              )}
+              ) : activeTab === "inline" ? (
+                <iframe src={embedUrl} className="w-full" style={{ height: "500px", border: "none" }} title="پیش‌نمایش Inline" />
+              ) : activeTab === "iframe" ? (
+                <iframe src={embedUrl} className="w-full" style={{ height: "500px", border: "none" }} title="پیش‌نمایش Iframe" />
+              ) : activeTab === "popup" ? (
+                <div className="flex flex-col items-center justify-center h-[400px] gap-4">
+                  <p className="text-sm text-ink/50">روی دکمه کلیک کنید تا فرم در پنجره شناور باز شود</p>
+                  <button
+                    onClick={() => window.open(embedUrl, "_blank", "width=600,height=700,top=100,left=100")}
+                    className="bg-teal text-white px-6 py-3 rounded-pill-md font-extrabold hover:bg-teal-text transition-colors shadow-[3px_3px_0_0_rgba(0,0,0,0.2)]"
+                  >باز کردن فرم</button>
+                </div>
+              ) : activeTab === "popover" ? (
+                <div className="relative h-[400px]">
+                  <div className="absolute inset-0 flex items-center justify-center text-ink/30 text-sm">محتوای سایت شما</div>
+                  <div className="absolute bottom-4 right-4 z-10">
+                    <button className="w-14 h-14 rounded-full bg-navy text-white flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
+                      <span className="text-xs font-black">پرس<br/>کاد</span>
+                    </button>
+                  </div>
+                  <div className="absolute bottom-20 right-4 w-80 bg-white border-2 border-navy rounded-[1.5rem] shadow-xl overflow-hidden" style={{ height: "300px" }}>
+                    <iframe src={embedUrl} className="w-full h-full" style={{ border: "none" }} title="پیش‌نمایش Popover" />
+                  </div>
+                </div>
+              ) : activeTab === "fullpage" ? (
+                <div className="relative h-[400px] bg-white">
+                  <div className="absolute top-2 right-2 z-10 bg-navy text-white px-3 py-1 rounded-pill-sm text-xs font-bold">تمام صفحه</div>
+                  <iframe src={embedUrl} className="w-full h-full" style={{ border: "none" }} title="پیش‌نمایش Fullpage" />
+                </div>
+              ) : activeTab === "link" ? (
+                <div className="flex flex-col items-center justify-center h-[400px] gap-4">
+                  <p className="text-sm text-ink/50">لینک مستقیم فرم:</p>
+                  <a href={directLink} target="_blank" rel="noopener noreferrer"
+                    className="bg-teal text-white px-6 py-3 rounded-pill-md font-extrabold hover:bg-teal-text transition-colors shadow-[3px_3px_0_0_rgba(0,0,0,0.2)]"
+                  >مشاهده فرم ↗</a>
+                </div>
+              ) : null}
             </div>
           </div>
         </StickerCard>

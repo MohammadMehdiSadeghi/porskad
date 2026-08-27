@@ -84,7 +84,7 @@
         // داخل کانتینر یک دکمه بساز
         var btn = document.createElement("button");
         btn.textContent = "باز کردن فرم";
-        btn.style.cssText = "background:#4f46e5;color:#fff;padding:10px 24px;border-radius:10px;font-weight:bold;cursor:pointer;border:none;";
+        btn.style.cssText = "background:#58BDAF;color:#fff;padding:10px 24px;border-radius:16px;font-weight:bold;cursor:pointer;border:none;font-family:sans-serif;box-shadow:3px 3px 0 0 rgba(0,0,0,0.2);";
         btn.addEventListener("click", openPopup);
         container.appendChild(btn);
       }
@@ -106,15 +106,15 @@
 
       // دکمه toggle
       var fab = document.createElement("button");
-      fab.style.cssText = "position:fixed;bottom:20px;right:20px;z-index:100000;width:56px;height:56px;border-radius:50%;background:#4f46e5;color:#fff;font-size:24px;border:none;cursor:pointer;box-shadow:0 4px 15px rgba(79,70,229,0.4);display:flex;align-items:center;justify-content:center;";
-      fab.innerHTML = "💬";
+      fab.style.cssText = "position:fixed;bottom:20px;right:20px;z-index:100000;width:56px;height:56px;border-radius:50%;background:#21295A;color:#fff;font-size:24px;border:none;cursor:pointer;box-shadow:0 4px 15px rgba(33,41,90,0.4);display:flex;align-items:center;justify-content:center;font-family:sans-serif;";
+      fab.innerHTML = '<span style="font-size:10px;font-weight:900;line-height:1.2;text-align:center;">پرس<br/><span style="color:#58BDAF;">کاد</span></span>';
       document.body.appendChild(fab);
 
       var isOpen = false;
       fab.addEventListener("click", function () {
         isOpen = !isOpen;
         iframe.style.display = isOpen ? "block" : "none";
-        fab.innerHTML = isOpen ? "✕" : "💬";
+        fab.innerHTML = isOpen ? '✕' : '<span style="font-size:10px;font-weight:900;line-height:1.2;text-align:center;">پرس<br/><span style="color:#58BDAF;">کاد</span></span>';
         postEvent(formId, isOpen ? "opened" : "closed");
       });
 
