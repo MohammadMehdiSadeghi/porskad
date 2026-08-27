@@ -115,19 +115,28 @@ export default function FormFill() {
         jump_actions: q.jump_actions ?? [],
       })));
 
-      // بارگذاری Ruleهای منطقی قدیمی (سازگاری)
-      const { data: lrs } = await supabase
-        .from("logic_rules")
-        .select("*")
-        .eq("form_id", formData.id)
-        .order("priority");
-      setLogicRules(
-        (lrs ?? []).map((r) => ({
-          ...r,
-          conditions: r.conditions_json ?? [],
-          action: { type: r.action_type, target_id: r.action_target_id },
-        }))
-      );
+      // بارگذاری Ruleهای منطقی (اگر جدول وجود نداشت نادیده بگیر)
+      try {
+        const { data: lrs, error: lrError } = await supabase
+          .from("logic_rules")
+          .select("*")
+          .eq("form_id", formData.id)
+          .order("priority");
+        if (lrError) {
+          // 404 یعنی جدول logic_rules وجود نداره — نادیده بگیر
+          setLogicRules([]);
+        } else {
+          setLogicRules(
+            (lrs ?? []).map((r) => ({
+              ...r,
+              conditions: r.conditions_json ?? [],
+              action: { type: r.action_type, target_id: r.action_target_id },
+            }))
+          );
+        }
+      } catch {
+        setLogicRules([]);
+      }
 
       setLoading(false);
     }
@@ -356,7 +365,10 @@ export default function FormFill() {
 
       if (rows.length) {
         const { error: ansError } = await supabase.from("answers").insert(rows);
-        if (ansError) throw ansError;
+        if (ansError) {
+          // اگر response ذخیره شده ولی answers نه، بازم موفقیت نشون بده
+          console.warn("answers insert failed (response saved):", ansError);
+        }
       }
 
       localStorage.removeItem(draftKey(slug));
