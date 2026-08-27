@@ -649,6 +649,9 @@ export default function FormBuilder() {
           <Button as={Link} to={`/admin/forms/${id}/responses`} variant="white" size="sm">
             📊 پاسخ‌ها
           </Button>
+          <Button as={Link} to={`/admin/forms/${id}/share`} variant="white" size="sm">
+            🔗 اشتراک‌گذاری
+          </Button>
           <Button variant="teal" onClick={save} disabled={saving || !dirty}>
             {saving ? "در حال ذخیره..." : "💾 ذخیره"}
           </Button>
