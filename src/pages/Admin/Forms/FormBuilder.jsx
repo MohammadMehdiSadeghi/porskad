@@ -551,6 +551,7 @@ export default function FormBuilder() {
         exit_title: form.exit_title,
         exit_message: form.exit_message,
         published: form.published,
+        form_type: form.form_type || "step_by_step",
       };
       const pQuestions = questions.map((q, i) => ({
         id: q.id ?? null,
@@ -697,6 +698,37 @@ export default function FormBuilder() {
                 className={`${inputCls} resize-y`}
               />
             </Field>
+
+            {/* انتخاب نوع فرم */}
+            <div className="border-t-2 border-dashed border-navy/15 pt-4">
+              <Field label="📋 نوع فرم">
+                <div className="flex gap-3">
+                  {[
+                    { key: "step_by_step", label: "مرحله به مرحله", icon: "📄", desc: "هر سوال یک صفحه جداگانه" },
+                    { key: "registration", label: "ثبت‌نامی", icon: "📝", desc: "همه فیلدها یکجا در یک صفحه" },
+                  ].map((t) => (
+                    <button
+                      key={t.key}
+                      type="button"
+                      onClick={() => setFormField({ form_type: t.key })}
+                      className={`flex-1 flex items-center gap-3 p-3 rounded-xl border-2 transition-all cursor-pointer ${
+                        form.form_type === t.key
+                          ? "border-teal bg-teal/10 shadow-sm"
+                          : "border-ink/15 bg-white hover:border-teal/40"
+                      }`}
+                    >
+                      <span className="text-2xl">{t.icon}</span>
+                      <div className="text-right">
+                        <span className={`text-sm font-black block ${form.form_type === t.key ? "text-teal-text" : "text-navy"}`}>
+                          {t.label}
+                        </span>
+                        <span className="text-[0.65rem] text-ink/50">{t.desc}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </Field>
+            </div>
 
             <div className="border-t-2 border-dashed border-navy/15 pt-4 grid sm:grid-cols-2 gap-4">
               <Field label="👋 عنوان پیام ورود">
