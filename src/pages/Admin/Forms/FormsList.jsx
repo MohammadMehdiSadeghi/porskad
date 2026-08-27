@@ -20,7 +20,7 @@ const FORM_TYPES = [
   {
     key: "step_by_step",
     title: "مرحله به مرحله",
-    icon: "📋",
+    icon: "step",
     description: "هر سوال در یک صفحه جداگانه نمایش داده می‌شود. مناسب نظرسنجی‌ها و آزمون‌ها.",
     color: "teal",
     theme: "teal",
@@ -28,7 +28,7 @@ const FORM_TYPES = [
   {
     key: "registration",
     title: "فرم ثبت‌نامی",
-    icon: "📝",
+    icon: "reg",
     description: "همه فیلدها در یک صفحه نمایش داده می‌شوند. مناسب فرم‌های ثبت‌نام و عضویت.",
     color: "orange",
     theme: "orange",
@@ -116,7 +116,7 @@ export default function FormsList() {
 
     setBusy(false);
     setShowTypeModal(false);
-    push(isRegistration ? "فرم ثبت‌نامی ساخته شد! 📝" : "فرم جدید ساخته شد! 📋");
+    push(isRegistration ? "فرم ثبت‌نامی ساخته شد!" : "فرم جدید ساخته شد!");
     navigate(`/admin/forms/${data.id}`);
   }
 
@@ -130,7 +130,7 @@ export default function FormsList() {
       push("تغییر وضعیت ناموفق بود", "error");
       return;
     }
-    push(form.published ? "فرم از انتشار خارج شد" : "فرم منتشر شد! 🎉");
+    push(form.published ? "فرم از انتشار خارج شد" : "فرم منتشر شد!");
     setForms((fs) => fs.map((f) => (f.id === form.id ? { ...f, published: !f.published } : f)));
   }
 

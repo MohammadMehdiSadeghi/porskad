@@ -58,7 +58,7 @@ export default function Dashboard() {
         { event: "INSERT", schema: "public", table: "responses" },
         (payload) => {
           const form = forms.find((f) => f.id === payload.new.form_id);
-          push(`پاسخ جدید برای «${form?.title ?? "فرم"}» ثبت شد! 🎉`, "info");
+          push(`پاسخ جدید برای «${form?.title ?? "فرم"}» ثبت شد!`, "info");
           loadAll();
         },
       )

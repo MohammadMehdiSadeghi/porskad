@@ -188,7 +188,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
           {/* ─── اعتبارسنجی سفارشی ─── */}
           {(q.type === "number" || q.type === "short_text" || q.type === "long_text") && (
             <div className="flex flex-col gap-2 border-2 border-dashed border-teal/30 rounded-pill-md bg-bg-mint/30 p-3">
-              <span className="text-xs font-extrabold text-teal-text">🎯 قوانین اعتبارسنجی</span>
+              <span className="text-xs font-extrabold text-teal-text"> قوانین اعتبارسنجی</span>
               {q.type === "number" && (
                 <div className="flex gap-2">
                   <Field label="حداقل" hint="مقدار حداقل">
@@ -286,11 +286,11 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
           {index > 0 && (
             <div className="flex flex-col gap-2 border-2 border-dashed border-navy/20 rounded-pill-md bg-bg-lavender/40 p-3">
               <div className="flex items-center gap-2">
-                <span className="text-sm">🔀</span>
+                <span className="text-sm"></span>
                 <span className="text-xs font-extrabold text-navy">شرط نمایش</span>
                 {conditions ? (
                   <span className="text-[0.6rem] font-bold text-teal bg-teal/10 border border-teal/30 rounded-pill-sm px-2 py-0.5">
-                    ✅ فعال
+                    فعال
                   </span>
                 ) : (
                   <span className="text-[0.6rem] font-bold text-ink-subtle bg-ink/5 border border-ink/10 rounded-pill-sm px-2 py-0.5">
@@ -371,7 +371,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
           {isChoice && index < total - 1 && (
             <div className="flex flex-col gap-2 border-2 border-dashed border-magenta/20 rounded-pill-md bg-magenta/5 p-3">
               <div className="flex items-center gap-2">
-                <span className="text-sm">⏭</span>
+                <span className="text-sm"></span>
                 <span className="text-xs font-extrabold text-navy">اکشن پرش (Jump)</span>
                 {jumpActions.length > 0 && (
                   <span className="text-[0.6rem] font-bold text-magenta-text bg-magenta/10 border border-magenta/30 rounded-pill-sm px-2 py-0.5">
@@ -457,7 +457,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                           border border-dashed border-magenta/30 rounded-pill-sm px-2 py-1 hover:border-magenta
                           disabled:opacity-30 disabled:cursor-not-allowed"
                       >
-                        {opt.slice(0, 15)} {hasAction ? "✅" : "→"}
+                        {opt.slice(0, 15)} {hasAction ? "✓" : "→"}
                       </button>
                     );
                   })}
@@ -475,7 +475,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                           border border-dashed border-magenta/30 rounded-pill-sm px-2 py-1 hover:border-magenta
                           disabled:opacity-30 disabled:cursor-not-allowed"
                       >
-                        {opt} {hasAction ? "✅" : "→"}
+                        {opt} {hasAction ? "✓" : "→"}
                       </button>
                     );
                   })}
@@ -662,7 +662,7 @@ export default function FormBuilder() {
 
       setForm((f) => ({ ...f, slug: cleanSlug }));
       setDirty(false);
-      push("همه‌چیز ذخیره شد ✅");
+      push("همه‌چیز ذخیره شد");
     } catch (err) {
       console.error(err);
       push("ذخیره ناموفق بود: " + (err.message ?? ""), "error");
@@ -741,7 +741,7 @@ export default function FormBuilder() {
                   onChange={(e) => setFormField({ published: e.target.checked })}
                   className="accent-teal w-5 h-5"
                 />
-                {form.published ? "منتشرشده ✅" : "پیش‌نویس"}
+                {form.published ? "منتشرشده" : "پیش‌نویس"}
               </label>
             </h2>
 
@@ -774,7 +774,7 @@ export default function FormBuilder() {
                 <div className="flex gap-3">
                   {[
                     { key: "step_by_step", label: "مرحله به مرحله", icon: "📄", desc: "هر سوال یک صفحه جداگانه" },
-                    { key: "registration", label: "ثبت‌نامی", icon: "📝", desc: "همه فیلدها یکجا در یک صفحه" },
+                    { key: "registration", label: "ثبت‌نامی", icon: "reg", desc: "همه فیلدها یکجا در یک صفحه" },
                   ].map((t) => (
                     <button
                       key={t.key}
@@ -800,10 +800,10 @@ export default function FormBuilder() {
             </div>
 
             <div className="border-t-2 border-dashed border-navy/15 pt-4 grid sm:grid-cols-2 gap-4">
-              <Field label="👋 عنوان پیام ورود">
+              <Field label="عنوان پیام ورود">
                 <input value={form.welcome_title} onChange={(e) => setFormField({ welcome_title: e.target.value })} className={inputCls} />
               </Field>
-              <Field label="🎉 عنوان پیام خروج">
+              <Field label="عنوان پیام خروج">
                 <input value={form.exit_title} onChange={(e) => setFormField({ exit_title: e.target.value })} className={inputCls} />
               </Field>
               <Field label="متن پیام ورود">

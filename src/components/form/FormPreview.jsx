@@ -119,7 +119,7 @@ function RegistrationPreview({ form, questions }) {
       {/* همه فیلدها */}
       {questions.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 text-ink/30">
-          <span className="text-xl mb-1">📝</span>
+          <span className="text-xl mb-1"> </span>
           <span className="text-[0.55rem] font-bold">هنوز فیلدی اضافه نشده</span>
         </div>
       ) : (
@@ -148,7 +148,7 @@ function StepByStepPreview({ form, questions }) {
       {/* صفحه خوش‌آمد */}
       {step === -1 && (
         <div className="flex flex-col items-center text-center gap-2 py-4">
-          <span className="text-2xl">👋</span>
+          <span className="text-2xl"> </span>
           <h2 className="text-sm font-black text-navy">{form?.welcome_title || "سلام!"}</h2>
           <p className="text-[0.65rem] text-ink/50 leading-5 max-w-[200px]">
             {form?.welcome_message || "ممنون که وقت گذاشتی."}
@@ -185,7 +185,7 @@ function StepByStepPreview({ form, questions }) {
       {/* صفحه خروج */}
       {step >= total && total > 0 && (
         <div className="flex flex-col items-center text-center gap-2 py-4">
-          <span className="text-3xl">🎉</span>
+          <span className="text-3xl"> </span>
           <h2 className="text-sm font-black text-navy">{form?.exit_title || "تمام شد!"}</h2>
           <p className="text-[0.65rem] text-ink/50 leading-5 max-w-[200px]">
             {form?.exit_message || "ممنون از پاسخ شما."}
@@ -199,7 +199,7 @@ function StepByStepPreview({ form, questions }) {
       {/* خالی */}
       {total === 0 && step === -1 && (
         <div className="flex flex-col items-center justify-center py-8 text-ink/30">
-          <span className="text-2xl mb-2">📝</span>
+          <span className="text-2xl mb-2"> </span>
           <span className="text-[0.65rem] font-bold">هنوز سوالی اضافه نشده</span>
         </div>
       )}

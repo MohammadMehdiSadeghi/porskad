@@ -285,7 +285,7 @@ export default function RegistrationForm({ form, questions, slug }) {
                   animate={{ rotate: [0, -8, 8, -4, 4, 0] }}
                   transition={{ duration: 0.7, delay: 0.2 }}
                 >
-                  ✅
+                  
                 </motion.span>
                 <h1 className="text-2xl font-black text-navy leading-snug">
                   {form.exit_title || "ثبت‌نام با موفقیت انجام شد!"}

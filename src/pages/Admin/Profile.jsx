@@ -49,7 +49,7 @@ export default function Profile() {
     setSavingProfile(true);
     try {
       await updateProfile({ full_name: fullName.trim() });
-      push("پروفایل به‌روزرسانی شد ✅");
+      push("پروفایل به‌روزرسانی شد");
     } catch (err) {
       push("خطا: " + err.message, "error");
     } finally {
@@ -90,7 +90,7 @@ export default function Profile() {
       }
 
       await changePassword(newPassword);
-      push("رمز عبور تغییر کرد ✅");
+      push("رمز عبور تغییر کرد");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");

@@ -5,7 +5,7 @@ const ToastContext = createContext(null);
 let toastId = 0;
 
 const TOAST_STYLES = {
-  success: { icon: "✅", border: "border-teal-text", title: "text-teal-text" },
+  success: { icon: "✓", border: "border-teal-text", title: "text-teal-text" },
   error: { icon: "⚠️", border: "border-magenta-text", title: "text-magenta-text" },
   info: { icon: "💬", border: "border-navy", title: "text-navy" },
 };

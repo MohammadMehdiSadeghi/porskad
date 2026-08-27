@@ -283,7 +283,7 @@ export default function Responses() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "responses", filter: `form_id=eq.${id}` },
         () => {
-          push("پاسخ جدیدی ثبت شد! 🎉", "info");
+          push("پاسخ جدیدی ثبت شد!", "info");
           load();
         }
       )

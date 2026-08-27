@@ -64,7 +64,7 @@ function RuleEditor({ rule, questions, onChange, onDelete, index }) {
           {rule.name || `Rule ${index + 1}`}
         </span>
         <span className="text-[0.65rem] font-bold text-ink-subtle shrink-0">
-          {rule.enabled ? "✅ فعال" : "⏸ غیرفعال"}
+          {rule.enabled ? "فعال" : "غیرفعال"}
         </span>
         <span className="text-xs">{expanded ? "▲" : "▼"}</span>
       </button>
@@ -230,7 +230,7 @@ export default function LogicEditor({ rules = [], questions = [], onChange }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-extrabold text-navy">🔀 قوانین منطقی (Logic Rules)</span>
+        <span className="text-sm font-extrabold text-navy"> قوانین منطقی (Logic Rules)</span>
         <span className="text-[0.65rem] font-bold text-ink-subtle bg-bg-lavender rounded-pill-sm px-2 py-0.5">
           {faNum(rules.length)} Rule
         </span>

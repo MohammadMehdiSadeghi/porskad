@@ -75,7 +75,7 @@ export default function Managers() {
         fullName: newName.trim() || newEmail.split("@")[0],
         permissionIds: newPermissions,
       });
-      push("مدیر جدید با موفقیت ایجاد شد! ✅");
+      push("مدیر جدید با موفقیت ایجاد شد!");
       setShowCreateModal(false);
       setNewEmail("");
       setNewPassword("");
@@ -393,7 +393,7 @@ export default function Managers() {
                         permissions: editPermissions,
                       });
                     }
-                    push("تغییرات ذخیره شد ✅");
+                    push("تغییرات ذخیره شد!");
                     setShowEditModal(false);
                     load();
                   } catch (err) {
