@@ -173,7 +173,8 @@ export default function RegistrationForm({ form, questions, slug }) {
         {/* number */}
         {q.type === "number" && (
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
             dir="rtl"
             value={val}
             onChange={(e) => setAnswer(q.id, e.target.value)}

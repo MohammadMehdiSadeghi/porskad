@@ -31,7 +31,9 @@ export function isValidEmail(raw) {
 
 // ─── عدد ───
 export function parseNumber(raw) {
-  const s = toEnDigits(String(raw ?? "")).trim().replace(/[٬,]/g, "");
+  if (raw === null || raw === undefined) return null;
+  if (typeof raw === "number") return Number.isFinite(raw) ? raw : null;
+  const s = toEnDigits(String(raw)).trim().replace(/[٬,،\.]/g, "");
   if (s === "") return null;
   const n = Number(s);
   return Number.isFinite(n) ? n : null;
