@@ -510,8 +510,8 @@ export default function Responses() {
       {/* Tabs */}
       <div className="flex gap-1 bg-bg-neutral rounded-lg p-1 w-fit">
         {[
-          { key: "list", label: `📋 پاسخ‌ها (${filtered.length})` },
-          { key: "analysis", label: "📊 تحلیل سوال‌ها" },
+          { key: "list", label: `پاسخ‌ها (${filtered.length})` },
+          { key: "analysis", label: "تحلیل سوال‌ها" },
         ].map((t) => (
           <button
             key={t.key}

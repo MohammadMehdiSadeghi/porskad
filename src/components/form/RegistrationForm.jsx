@@ -17,7 +17,7 @@ import SEO from "../ui/SEO";
 
 const rtlStyle = { direction: "rtl", textAlign: "right", unicodeBidi: "plaintext" };
 const inputCls =
-  "w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink focus:outline-none transition-all";
+  "w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink placeholder:text-ink/40 placeholder:font-medium focus:outline-none transition-all";
 
 const selectCls =
   "w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink focus:outline-none transition-all appearance-none cursor-pointer";

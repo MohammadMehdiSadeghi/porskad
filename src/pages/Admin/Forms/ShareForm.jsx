@@ -16,8 +16,11 @@ import {
   SearchX,
   ExternalLink,
   Globe,
-  MessageSquare,
-  Layout,
+  Monitor,
+  Maximize,
+  PanelRightOpen,
+  PanelBottomOpen,
+  Layers,
 } from "lucide-react";
 import SEO from "../../../components/ui/SEO";
 
@@ -30,7 +33,6 @@ function CopyButton({ text }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // fallback
       const ta = document.createElement("textarea");
       ta.value = text;
       document.body.appendChild(ta);
@@ -115,21 +117,27 @@ export default function ShareForm() {
   const codes = {
     inline: {
       label: "جاسازی در صفحه (Inline)",
-      icon: Layout,
+      icon: Monitor,
       description: "فرم مستقیم داخل محتوای صفحه نمایش داده می‌شود",
       code: `<div data-pcode-form="${publicId}"></div>\n<script src="${baseUrl}/loader.js" async></script>`,
     },
     popup: {
       label: "پنجره شناور (Popup)",
-      icon: MessageSquare,
+      icon: Maximize,
       description: "فرم با کلیک روی دکمه باز می‌شود",
       code: `<button data-pcode-popup="${publicId}">باز کردن فرم</button>\n<script src="${baseUrl}/loader.js" async></script>`,
     },
     popover: {
       label: "پنل کوچک (Popover)",
-      icon: MessageSquare,
+      icon: PanelBottomOpen,
       description: "فرم از گوشه صفحه باز می‌شود",
       code: `<script>\n  window.PorsCode = window.PorsCode || {};\n  window.PorsCode.popover = {\n    formId: "${publicId}",\n    position: "bottom-right"\n  };\n</script>\n<script src="${baseUrl}/loader.js" async></script>`,
+    },
+    fullpage: {
+      label: "تمام صفحه (Fullpage)",
+      icon: Maximize,
+      description: "فرم تمام صفحه را پر می‌کند",
+      code: `<div id="${publicId}" style="min-height:480px;width:100vw;height:100dvh;position:fixed;top:0;left:0;z-index:99999;">\n  <div style="position:absolute;top:50%;left:50%;width:35px;height:35px;border:4px solid rgba(0,0,0,0.1);border-top:4px solid #555;border-radius:50%;animation:spin 1s linear infinite;"></div>\n  <script>\n    var s=document.createElement('script');\n    s.src='${embedUrl}';\n    s.onload=function(){document.getElementById('porsline-loading-${publicId}').style.display='none';};\n    document.getElementById('${publicId}').appendChild(s);\n  </script>\n</div>`,
     },
     iframe: {
       label: "Iframe مستقیم",

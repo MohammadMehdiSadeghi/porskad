@@ -90,7 +90,7 @@ export default function Dashboard() {
           </p>
         </div>
         <Button as={Link} to="/admin/forms" variant="teal" rotate="-rotate-[1deg]">
-          مدیریت فرم‌ها 🗂️
+          مدیریت فرم‌ها
         </Button>
       </div>
 

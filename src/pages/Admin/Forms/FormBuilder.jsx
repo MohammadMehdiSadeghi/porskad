@@ -10,6 +10,7 @@ import { QUESTION_TYPES, QUESTION_TYPE_ORDER, makeQuestion } from "../../../lib/
 import ConditionBuilder from "../../../components/logic/ConditionBuilder";
 import { makeCondition, makeConditionGroup, makeJumpAction, GROUP_OPERATORS } from "../../../lib/logic/types";
 import { faNum, slugify, copyToClipboard } from "../../../lib/utils";
+import { Link2, BarChart3, Share2, Puzzle, Settings, FileText } from "lucide-react";
 import FormPreview from "../../../components/form/FormPreview";
 import SEO from "../../../components/ui/SEO";
 
@@ -612,7 +613,7 @@ export default function FormBuilder() {
       <div className="max-w-md mx-auto mt-10">
         <StickerCard theme="magenta">
           <div className="p-8 text-center flex flex-col items-center gap-4">
-            <span className="text-5xl">🤷</span>
+            <span className="text-5xl">-</span>
             <h2 className="text-xl font-black text-navy">این فرم پیدا نشد!</h2>
             <Button as={Link} to="/admin/forms" variant="navy">برگشت به لیست فرم‌ها</Button>
           </div>
@@ -644,20 +645,20 @@ export default function FormBuilder() {
               <Button variant="white" size="sm" onClick={async () => {
                 const ok = await copyToClipboard(publicUrl);
                 push(ok ? "لینک کپی شد!" : publicUrl, ok ? "success" : "info");
-              }}>🔗 کپی لینک</Button>
+              }}><Link2 size={14} /> کپی لینک</Button>
               <Button as="a" href={`/f/${form.slug}`} target="_blank" variant="white" size="sm">
-                👁 پیش‌نمایش
+                پیش‌نمایش
               </Button>
             </>
           )}
           <Button as={Link} to={`/admin/forms/${id}/responses`} variant="white" size="sm">
-            📊 پاسخ‌ها
+            <BarChart3 size={14} /> پاسخ‌ها
           </Button>
           <Button as={Link} to={`/admin/forms/${id}/share`} variant="white" size="sm">
-            🔗 اشتراک‌گذاری
+            <Share2 size={14} /> اشتراک‌گذاری
           </Button>
           <Button variant="teal" onClick={save} disabled={saving || !dirty}>
-            {saving ? "در حال ذخیره..." : "💾 ذخیره"}
+            {saving ? "در حال ذخیره..." : "ذخیره"}
           </Button>
         </div>
       </div>
@@ -704,7 +705,7 @@ export default function FormBuilder() {
 
             {/* انتخاب نوع فرم */}
             <div className="border-t-2 border-dashed border-navy/15 pt-4">
-              <Field label="📋 نوع فرم">
+              <Field label={<><Settings size={14} /> نوع فرم</>}>
                 <div className="flex gap-3">
                   {[
                     { key: "step_by_step", label: "مرحله به مرحله", icon: "📄", desc: "هر سوال یک صفحه جداگانه" },
@@ -754,7 +755,7 @@ export default function FormBuilder() {
       {/* سوال‌ها */}
       <div className="flex flex-col gap-5">
         <h2 className="text-lg font-black text-navy">
-          🧩 سوال‌ها ({faNum(questions.length)})
+          سوال‌ها ({faNum(questions.length)})
         </h2>
 
         {questions.map((q, i) => (
@@ -799,7 +800,7 @@ export default function FormBuilder() {
         {/* نوار ذخیره پایین */}
         <div className="sticky bottom-4 flex justify-end">
           <Button variant="teal" size="lg" onClick={save} disabled={saving || !dirty} rotate="-rotate-[1deg]">
-            {saving ? "در حال ذخیره..." : "💾 ذخیره‌ی همه‌ی تغییرات"}
+            {saving ? "در حال ذخیره..." : "ذخیره‌ی همه‌ی تغییرات"}
           </Button>
         </div>
       </div>

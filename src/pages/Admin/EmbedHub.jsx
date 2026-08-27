@@ -232,7 +232,7 @@ function FormEmbedCard({ form, baseUrl, index }) {
                 </a>
               )}
               <Button variant="ghost" size="sm" onClick={() => setExpanded(!expanded)}>
-                {expanded ? "بستن ✕" : "کد Embed 🔗"}
+                {expanded ? "بستن ✕" : "کد Embed"}
               </Button>
             </div>
           </div>
@@ -360,7 +360,7 @@ export default function EmbedHub() {
       {/* هدر */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-black text-navy">
-          🔗 اشتراک‌گذاری فرم
+          اشتراک‌گذاری فرم
         </h1>
         <p className="text-sm font-semibold text-ink-subtle mt-1">
           روی فرم کلیک کن، حالت Embed رو انتخاب کن و کدش رو کپی کن

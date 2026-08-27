@@ -204,7 +204,7 @@ export default function Profile() {
                 onClick={handleSaveProfile}
                 disabled={savingProfile || fullName === (profile?.full_name ?? "")}
               >
-                {savingProfile ? "در حال ذخیره..." : "💾 ذخیره نام"}
+                {savingProfile ? "در حال ذخیره..." : "ذخیره نام"}
               </Button>
             </div>
           </div>

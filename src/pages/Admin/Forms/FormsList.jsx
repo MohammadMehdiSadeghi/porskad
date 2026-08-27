@@ -295,11 +295,11 @@ export default function FormsList() {
 
                     <div className="flex flex-wrap gap-2 mt-1">
                       <Button as={Link} to={`/admin/forms/${f.id}`} variant="ghost" size="sm">ویرایش ✏️</Button>
-                      <Button as={Link} to={`/admin/forms/${f.id}/responses`} variant="ghost" size="sm">پاسخ‌ها 👁️</Button>
-                      <Button as={Link} to={`/admin/forms/${f.id}/share`} variant="ghost" size="sm">اشتراک 🔗</Button>
+                      <Button as={Link} to={`/admin/forms/${f.id}/responses`} variant="ghost" size="sm">پاسخ‌ها</Button>
+                      <Button as={Link} to={`/admin/forms/${f.id}/share`} variant="ghost" size="sm">اشتراک</Button>
                       {f.published && (
                         <>
-                          <Button variant="ghost" size="sm" onClick={() => share(f)}>کپی لینک 📋</Button>
+                          <Button variant="ghost" size="sm" onClick={() => share(f)}>کپی لینک</Button>
                           <Button as="a" href={`/f/${f.slug}`} target="_blank" variant="ghost" size="sm">مشاهده ↗</Button>
                         </>
                       )}

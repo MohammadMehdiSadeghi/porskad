@@ -390,7 +390,7 @@ export default function EmbedForm() {
     } finally {
       setSubmitting(false);
     }
-  }, [submitting, form, visibleQuestions, questions, answers, times, startedAt, formId, total]);
+  }, [submitting, schema, visibleQuestions, questions, answers, times, startedAt, formId, total]);
 
   // END_FORM
   useEffect(() => {
