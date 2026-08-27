@@ -171,7 +171,7 @@ export default function Managers() {
           }
         />
       ) : (
-        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5 lg:gap-7">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5 lg:gap-7">
           {managers.map((m, i) => (
             <div key={m.id} className={i % 2 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"}>
               <StickerCard
