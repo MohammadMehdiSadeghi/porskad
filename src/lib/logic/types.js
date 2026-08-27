@@ -146,7 +146,7 @@ export function makeCondition() {
 // ─── ساخت گروه شرط‌ها ───
 export function makeConditionGroup() {
   return {
-    operator: "AND",            // AND یا OR بین شرط‌های داخل این گروه
+    group_operator: "AND",      // AND یا OR بین شرط‌های داخل این گروه
     conditions: [makeCondition()],
   };
 }
