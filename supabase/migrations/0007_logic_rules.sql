@@ -44,7 +44,11 @@ begin
     conditions_json, action_type, action_target_id
   )
   select
-    (r->>'id')::uuid,
+    case
+      when (r->>'id') ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+      then (r->>'id')::uuid
+      else gen_random_uuid()
+    end,
     p_form_id,
     coalesce(r->>'name', ''),
     coalesce((r->>'enabled')::boolean, true),

@@ -41,6 +41,15 @@ function RuleEditor({ rule, questions, onChange, onDelete, index }) {
     onChange({ ...rule, action: { ...rule.action, ...patch } });
   }
 
+  // فقط سوالات قبل از هدف Action به عنوان سوال مرجع شرط
+  const sourceQuestions = (() => {
+    const targetId = rule.action?.target_id;
+    if (!targetId) return questions;
+    const targetIdx = questions.findIndex((q) => q.id === targetId);
+    if (targetIdx < 0) return questions;
+    return questions.slice(0, targetIdx);
+  })();
+
   return (
     <div className="border-2 border-navy/15 rounded-pill-md bg-white overflow-hidden">
       {/* هدر Rule */}
@@ -112,7 +121,7 @@ function RuleEditor({ rule, questions, onChange, onDelete, index }) {
                 <div className="flex-1">
                   <ConditionBuilder
                     condition={cond}
-                    questions={questions}
+                    questions={sourceQuestions}
                     index={i}
                     removable={(rule.conditions || []).length > 1}
                     onChange={(patch) => updateCondition(i, patch)}

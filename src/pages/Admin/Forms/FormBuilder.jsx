@@ -8,8 +8,7 @@ import Spinner from "../../../components/ui/Spinner";
 import { useToast } from "../../../components/ui/Toast";
 import { QUESTION_TYPES, QUESTION_TYPE_ORDER, makeQuestion } from "../../../lib/questionTypes";
 import ConditionBuilder from "../../../components/logic/ConditionBuilder";
-import LogicEditor from "../../../components/logic/LogicEditor";
-import LogicDebug from "../../../components/logic/LogicDebug";
+import { makeCondition, makeConditionGroup, makeJumpAction, JUMP_ACTION_TYPES, JUMP_ACTION_TYPE_ORDER, GROUP_OPERATORS } from "../../../lib/logic/types";
 import { faNum, slugify, copyToClipboard } from "../../../lib/utils";
 import SEO from "../../../components/ui/SEO";
 
@@ -30,11 +29,73 @@ function Field({ label, children, hint }) {
 function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDelete }) {
   const meta = QUESTION_TYPES[q.type];
   const rots = index % 2 ? "rotate-[0.4deg]" : "-rotate-[0.4deg]";
+  const isChoice = q.type === "choice" || q.type === "yes_no";
+
   function setOpt(i, val) {
     const opts = [...q.options];
     opts[i] = val;
     onChange({ options: opts });
   }
+
+  // ─── مدیریت شرط‌های visibility ───
+  const conditions = q.conditions; // { group_operator, conditions }
+
+  function toggleConditionGroup() {
+    if (conditions) {
+      onChange({ conditions: null });
+    } else {
+      onChange({ conditions: makeConditionGroup() });
+    }
+  }
+
+  function updateConditionGroup(patch) {
+    onChange({ conditions: { ...conditions, ...patch } });
+  }
+
+  function addConditionToGroup() {
+    const newConds = [...(conditions.conditions || []), makeCondition()];
+    updateConditionGroup({ conditions: newConds });
+  }
+
+  function updateGroupCondition(condIndex, patch) {
+    const newConds = [...(conditions.conditions || [])];
+    newConds[condIndex] = { ...newConds[condIndex], ...patch };
+    updateConditionGroup({ conditions: newConds });
+  }
+
+  function removeGroupCondition(condIndex) {
+    const newConds = (conditions.conditions || []).filter((_, i) => i !== condIndex);
+    if (newConds.length === 0) {
+      onChange({ conditions: null });
+    } else {
+      updateConditionGroup({ conditions: newConds });
+    }
+  }
+
+  // ─── مدیریت Jump Actions ───
+  const jumpActions = q.jump_actions || [];
+
+  function addJumpAction(optionIndex = -1) {
+    const newJa = makeJumpAction();
+    newJa.option_index = optionIndex;
+    onChange({ jump_actions: [...jumpActions, newJa] });
+  }
+
+  function updateJumpAction(jaIndex, patch) {
+    const newJa = [...jumpActions];
+    newJa[jaIndex] = { ...newJa[jaIndex], ...patch };
+    onChange({ jump_actions: newJa });
+  }
+
+  function removeJumpAction(jaIndex) {
+    onChange({ jump_actions: jumpActions.filter((_, i) => i !== jaIndex) });
+  }
+
+  // سوالات موجود برای انتخاب (فقط سوالات بعدی — نمی‌توان به قبل پرش کرد)
+  const targetQuestions = allQuestions.slice(index + 1);
+
+  // ─── فیلتر سوالات مرجع شرط (فقط سوالات قبلی) ───
+  const sourceQuestions = allQuestions.filter((_, j) => j < index);
 
   return (
     <div className={rots}>
@@ -81,7 +142,6 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
               >
                 🗑
               </button>
-
             </div>
           </div>
 
@@ -98,7 +158,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
             className={`${inputCls} !text-sm`}
           />
 
-          {/* گزینه‌ها فقط برای چندگزینه‌ای */}
+          {/* ─── گزینه‌ها (چندگزینه‌ای) ─── */}
           {meta.hasOptions && (
             <div className="flex flex-col gap-2 border-2 border-dashed border-orange/50 rounded-pill-md bg-[#FEF7EC]/60 p-3">
               <span className="text-xs font-extrabold text-orange">
@@ -134,13 +194,13 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
             </div>
           )}
 
-          {/* ─── پنل شرطی (Conditional Logic Panel) ─── */}
+          {/* ─── شرط نمایش (Visibility Condition) ─── */}
           {index > 0 && (
             <div className="flex flex-col gap-2 border-2 border-dashed border-navy/20 rounded-pill-md bg-bg-lavender/40 p-3">
               <div className="flex items-center gap-2">
                 <span className="text-sm">🔀</span>
                 <span className="text-xs font-extrabold text-navy">شرط نمایش</span>
-                {q.condition ? (
+                {conditions ? (
                   <span className="text-[0.6rem] font-bold text-teal bg-teal/10 border border-teal/30 rounded-pill-sm px-2 py-0.5">
                     ✅ فعال
                   </span>
@@ -149,9 +209,9 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                     بدون شرط
                   </span>
                 )}
-                {q.condition && (
+                {conditions && (
                   <button
-                    onClick={() => onChange({ condition: null })}
+                    onClick={toggleConditionGroup}
                     className="text-[0.65rem] font-bold text-magenta-text hover:underline mr-auto"
                   >
                     ✕ حذف شرط
@@ -159,32 +219,177 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                 )}
               </div>
 
-              {q.condition ? (
-                <ConditionBuilder
-                  condition={q.condition}
-                  questions={allQuestions.filter((_, j) => j < index)}
-                  index={0}
-                  removable={false}
-                  onChange={(patch) => onChange({ condition: { ...q.condition, ...patch } })}
-                  onDelete={() => {}}
-                />
+              {conditions ? (
+                <div className="flex flex-col gap-2">
+                  {/* سوییچ AND/OR */}
+                  {conditions.conditions?.length > 1 && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-[0.6rem] font-bold text-ink-subtle">ترکیب:</span>
+                      <select
+                        value={conditions.group_operator}
+                        onChange={(e) => updateConditionGroup({ group_operator: e.target.value })}
+                        className={`${inputCls} !py-1 !text-[0.65rem] !w-auto`}
+                      >
+                        <option value="AND">{GROUP_OPERATORS.AND.label}</option>
+                        <option value="OR">{GROUP_OPERATORS.OR.label}</option>
+                      </select>
+                    </div>
+                  )}
+
+                  {/* لیست شرط‌ها */}
+                  {(conditions.conditions || []).map((cond, i) => (
+                    <div key={cond.id || i} className="flex items-start gap-2">
+                      {i > 0 && (
+                        <span className="text-[0.6rem] font-black text-navy mt-3 shrink-0 px-1.5 py-0.5 bg-bg-lavender rounded-pill-sm">
+                          {conditions.group_operator}
+                        </span>
+                      )}
+                      <div className="flex-1">
+                        <ConditionBuilder
+                          condition={cond}
+                          questions={sourceQuestions}
+                          index={i}
+                          removable={(conditions.conditions || []).length > 1}
+                          onChange={(patch) => updateGroupCondition(i, patch)}
+                          onDelete={() => removeGroupCondition(i)}
+                        />
+                      </div>
+                    </div>
+                  ))}
+
+                  <button
+                    onClick={addConditionToGroup}
+                    className="self-start text-[0.65rem] font-extrabold text-teal hover:text-teal-text transition-colors"
+                  >
+                    + افزودن شرط
+                  </button>
+                </div>
               ) : (
                 <button
-                  onClick={() =>
-                    onChange({
-                      condition: {
-                        source_question_id: allQuestions[index - 1]?.id ?? null,
-                        operator: "equals",
-                        value: "",
-                      },
-                    })
-                  }
+                  onClick={toggleConditionGroup}
                   className="self-start text-[0.7rem] font-extrabold text-teal hover:text-teal-text transition-colors
                     border-2 border-dashed border-teal/40 rounded-pill-md px-3 py-2 hover:border-teal"
                 >
                   + افزودن شرط نمایش
                 </button>
               )}
+            </div>
+          )}
+
+          {/* ─── اکشن پرش (Jump Actions) — فقط چندگزینه‌ای / بله-خیر ─── */}
+          {isChoice && index < total - 1 && (
+            <div className="flex flex-col gap-2 border-2 border-dashed border-magenta/20 rounded-pill-md bg-magenta/5 p-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm">⏭</span>
+                <span className="text-xs font-extrabold text-navy">اکشن پرش (Jump)</span>
+                {jumpActions.length > 0 && (
+                  <span className="text-[0.6rem] font-bold text-magenta-text bg-magenta/10 border border-magenta/30 rounded-pill-sm px-2 py-0.5">
+                    {faNum(jumpActions.length)} اکشن
+                  </span>
+                )}
+              </div>
+
+              <span className="text-[0.6rem] font-medium text-ink-subtle leading-5">
+                اگر گزینه خاصی انتخاب شد، به سوال مشخصی پرش کن یا فرم تمام شود.
+              </span>
+
+              {/* لیست اکشن‌ها */}
+              {jumpActions.map((ja, i) => {
+                const jaLabel = ja.option_index >= 0 && q.options?.[ja.option_index]
+                  ? `گزینه «${q.options[ja.option_index]}»`
+                  : " generally";
+                return (
+                  <div key={ja.id || i} className="flex flex-col gap-1.5 bg-white rounded-pill-md border border-ink/10 p-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[0.6rem] font-extrabold text-magenta-text shrink-0">
+                        {jaLabel}:
+                      </span>
+                      <select
+                        value={ja.action_type}
+                        onChange={(e) => updateJumpAction(i, { action_type: e.target.value, target_id: null, target_url: null })}
+                        className={`${inputCls} !py-1 !text-[0.65rem] !w-auto flex-1`}
+                      >
+                        {JUMP_ACTION_TYPE_ORDER.map((t) => (
+                          <option key={t} value={t}>
+                            {JUMP_ACTION_TYPES[t].icon} {JUMP_ACTION_TYPES[t].label}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => removeJumpAction(i)}
+                        className="text-[0.65rem] font-bold text-magenta-text hover:underline shrink-0"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {/* انتخاب هدف */}
+                    {ja.action_type === "jump_to_question" && (
+                      <select
+                        value={ja.target_id ?? ""}
+                        onChange={(e) => updateJumpAction(i, { target_id: e.target.value || null })}
+                        className={`${inputCls} !py-1.5 !text-xs`}
+                      >
+                        <option value="">— انتخاب سوال مقصد —</option>
+                        {targetQuestions.map((tq, ti) => (
+                          <option key={tq.id} value={tq.id}>
+                            {allQuestions.indexOf(tq) + 1}. {tq.title?.slice(0, 40) || "—"}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+
+                    {ja.action_type === "redirect_url" && (
+                      <input
+                        value={ja.target_url ?? ""}
+                        onChange={(e) => updateJumpAction(i, { target_url: e.target.value })}
+                        placeholder="https://..."
+                        dir="ltr"
+                        className={`${inputCls} !py-1.5 !text-xs`}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* دکمه افزودن اکشن — به ازای هر گزینه یک اکشن */}
+              {q.type === "choice" ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {q.options.map((opt, optIdx) => {
+                    const hasAction = jumpActions.some((ja) => ja.option_index === optIdx);
+                    return (
+                      <button
+                        key={optIdx}
+                        onClick={() => addJumpAction(optIdx)}
+                        disabled={hasAction}
+                        className="text-[0.6rem] font-extrabold text-magenta-text hover:text-magenta transition-colors
+                          border border-dashed border-magenta/30 rounded-pill-sm px-2 py-1 hover:border-magenta
+                          disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        {opt.slice(0, 15)} {hasAction ? "✅" : "→"}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : q.type === "yes_no" ? (
+                <div className="flex gap-2">
+                  {["بله", "خیر"].map((opt, optIdx) => {
+                    const hasAction = jumpActions.some((ja) => ja.option_index === optIdx);
+                    return (
+                      <button
+                        key={optIdx}
+                        onClick={() => addJumpAction(optIdx)}
+                        disabled={hasAction}
+                        className="text-[0.6rem] font-extrabold text-magenta-text hover:text-magenta transition-colors
+                          border border-dashed border-magenta/30 rounded-pill-sm px-2 py-1 hover:border-magenta
+                          disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        {opt} {hasAction ? "✅" : "→"}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
             </div>
           )}
         </div>
@@ -205,7 +410,6 @@ export default function FormBuilder() {
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [slugError, setSlugError] = useState(null);
-  const [logicRules, setLogicRules] = useState([]);
 
   useEffect(() => {
     async function load() {
@@ -221,21 +425,13 @@ export default function FormBuilder() {
         .eq("form_id", id)
         .order("position");
       setForm(f);
-      setQuestions((qs ?? []).map((q) => ({ ...q, localId: q.id })));
-
-      // بارگذاری Ruleهای منطقی
-      const { data: lrs } = await supabase
-        .from("logic_rules")
-        .select("*")
-        .eq("form_id", id)
-        .order("priority");
-      setLogicRules(
-        (lrs ?? []).map((r) => ({
-          ...r,
-          conditions: r.conditions_json ?? [],
-          action: { type: r.action_type, target_id: r.action_target_id },
-        }))
-      );
+      setQuestions((qs ?? []).map((q) => ({
+        ...q,
+        localId: q.id,
+        // مهاجرت: اگه conditions وجود نداشت از condition قدیمی بساز
+        conditions: q.conditions ?? (q.condition ? { group_operator: "AND", conditions: [q.condition] } : null),
+        jump_actions: q.jump_actions ?? [],
+      })));
 
       setLoading(false);
     }
@@ -285,11 +481,6 @@ export default function FormBuilder() {
     setDirty(true);
   }, []);
 
-  const updateLogicRules = useCallback((newRules) => {
-    setLogicRules(newRules);
-    setDirty(true);
-  }, []);
-
   const publicUrl = useMemo(
     () => (form?.slug ? `${window.location.origin}/f/${form.slug}` : ""),
     [form?.slug],
@@ -322,7 +513,6 @@ export default function FormBuilder() {
     setSaving(true);
     setSlugError(null);
     try {
-      // ذخیره‌ی اتمیک فرم و سوالات در یک تراکنش سمت سرور
       const pForm = {
         title: form.title.trim(),
         description: form.description ?? "",
@@ -339,9 +529,10 @@ export default function FormBuilder() {
         title: q.title.trim(),
         description: q.description ?? "",
         required: !!q.required,
-        options: q.type === "choice" ? q.options.map((o) => o.trim()) : [],
+        options: q.type === "choice" ? q.options.map((o) => o.trim()) : q.type === "yes_no" ? ["بله", "خیر"] : [],
         position: i,
-        condition: q.condition ?? null,
+        conditions: q.conditions ?? null,
+        jump_actions: q.jump_actions ?? [],
       }));
 
       const { data: freshQs, error } = await supabase.rpc("save_form", {
@@ -362,26 +553,13 @@ export default function FormBuilder() {
       }
 
       if (Array.isArray(freshQs)) {
-        setQuestions(freshQs.map((q) => ({ ...q, localId: q.id })));
+        setQuestions(freshQs.map((q) => ({
+          ...q,
+          localId: q.id,
+          conditions: q.conditions ?? (q.condition ? { group_operator: "AND", conditions: [q.condition] } : null),
+          jump_actions: q.jump_actions ?? [],
+        })));
       }
-
-      // ذخیره Ruleهای منطقی
-      const pRules = logicRules.map((r) => ({
-        id: r.id,
-        name: r.name || '',
-        enabled: !!r.enabled,
-        priority: r.priority ?? 0,
-        source_question_id: r.source_question_id ?? null,
-        group_operator: r.group_operator || 'AND',
-        conditions_json: r.conditions || [],
-        action_type: r.action?.type || 'SHOW_QUESTION',
-        action_target_id: r.action?.target_id ?? null,
-      }));
-      const { error: lrError } = await supabase.rpc('save_logic_rules', {
-        p_form_id: id,
-        p_rules: pRules,
-      });
-      if (lrError) throw lrError;
 
       setForm((f) => ({ ...f, slug: cleanSlug }));
       setDirty(false);
@@ -548,24 +726,6 @@ export default function FormBuilder() {
             </div>
           </StickerCard>
         </div>
-
-        {/* ─── قوانین منطقی ─── */}
-        <div className="rotate-[-0.3deg]">
-          <StickerCard theme="teal" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
-            <div className="p-4 sm:p-5">
-              <LogicEditor
-                rules={logicRules}
-                questions={questions}
-                onChange={updateLogicRules}
-              />
-            </div>
-          </StickerCard>
-        </div>
-
-        {/* پیش‌نمایش مسیر فرم */}
-        {logicRules.length > 0 && (
-          <LogicDebug questions={questions} rules={logicRules} />
-        )}
 
         {/* نوار ذخیره پایین */}
         <div className="sticky bottom-4 flex justify-end">

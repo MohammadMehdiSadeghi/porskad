@@ -9,7 +9,7 @@ import Spinner from "../../components/ui/Spinner";
 import Logo from "../../components/ui/Logo";
 import { supabase } from "../../lib/supabaseClient";
 import { normalizeAnswerValue, validateAnswer } from "../../lib/validators";
-import { calculateFlow } from "../../lib/logic/flowEngine";
+import { calculateFlow, evaluateNextStep } from "../../lib/logic/flowEngine";
 import { faNum, faDuration, parseUserAgent } from "../../lib/utils";
 import QuestionStep from "./QuestionStep";
 import SEO from "../../components/ui/SEO";
@@ -57,6 +57,19 @@ export default function FormFill() {
   const [requiredError, setRequiredError] = useState(null);
   const [honeypot, setHoneypot] = useState("");
   const stepEnteredAt = useRef(Date.now());
+  const jumpQueueRef = useRef([]); // صف پرش‌ها (برای checkbox)
+
+  // ─── اطلاعات مخفی (Hidden Fields) از URL ───
+  const hiddenFields = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hf = {};
+    for (const [key, val] of params.entries()) {
+      if (key.startsWith("hf_")) {
+        hf[key.slice(3)] = val; // hf_name=foo → { name: "foo" }
+      }
+    }
+    return hf;
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -91,9 +104,14 @@ export default function FormFill() {
       }
 
       setForm(formData);
-      setQuestions(qData ?? []);
+      // نرمال‌سازی conditions و jump_actions
+      setQuestions((qData ?? []).map((q) => ({
+        ...q,
+        conditions: q.conditions ?? null,
+        jump_actions: q.jump_actions ?? [],
+      })));
 
-      // بارگذاری Ruleهای منطقی
+      // بارگذاری Ruleهای منطقی قدیمی (سازگاری)
       const { data: lrs } = await supabase
         .from("logic_rules")
         .select("*")
@@ -147,8 +165,8 @@ export default function FormFill() {
 
   // ─── محاسبه مسیر با Flow Engine ───
   const flow = useMemo(
-    () => calculateFlow(questions, logicRules, answers),
-    [questions, logicRules, answers]
+    () => calculateFlow(questions, logicRules, answers, hiddenFields),
+    [questions, logicRules, answers, hiddenFields]
   );
   const visibleQuestions = flow.visibleQuestions;
   const visibleIds = flow.visibleIds;
@@ -210,7 +228,6 @@ export default function FormFill() {
     if (step === -1) {
       setStartedAt((prev) => prev ?? Date.now());
       setDir(1);
-      // اگه سوال اول شرط داره و برآورده نیست، رد شو
       const first = findNextVisibleStep(-1);
       setStep(first);
       setRequiredError(null);
@@ -224,8 +241,35 @@ export default function FormFill() {
     setRequiredError(null);
     accrueTime();
     setDir(1);
+
+    // ─── بررسی jump actions سوال فعلی ───
+    if (currentQuestion) {
+      const answer = answers[currentQuestion.id];
+      const jumpResult = evaluateNextStep(
+        currentQuestion, answer, questions, visibleQuestions, jumpQueueRef.current
+      );
+
+      if (jumpResult.type === "end") {
+        setStep(total);
+        return;
+      }
+      if (jumpResult.type === "redirect" && jumpResult.url) {
+        window.open(jumpResult.url, "_blank");
+        setStep(total);
+        return;
+      }
+      if (jumpResult.type === "jump" && jumpResult.targetId) {
+        const targetIdx = questions.findIndex((q) => q.id === jumpResult.targetId);
+        if (targetIdx >= 0) {
+          setStep(targetIdx);
+          return;
+        }
+      }
+    }
+
+    // پیش‌فرض: مرحله بعدی قابل مشاهده
     setStep((s) => findNextVisibleStep(s));
-  }, [step, accrueTime, validateCurrent, findNextVisibleStep]);
+  }, [step, accrueTime, validateCurrent, findNextVisibleStep, currentQuestion, answers, questions, visibleQuestions, total]);
 
   const goBack = useCallback(() => {
     if (step <= -1) return;
@@ -318,7 +362,7 @@ export default function FormFill() {
     }
   }, [formEnded]);
 
-  const progressValue = step < 0 ? 0 : Math.min(step, visibleTotal);
+  const progressValue = step < 0 ? 0 : currentVisibleIndex;
   const approxMinutes = useMemo(() => Math.max(1, Math.round(visibleTotal * 0.4)), [visibleTotal]);
 
   if (loading) {
