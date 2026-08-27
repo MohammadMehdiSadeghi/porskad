@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "../../lib/supabaseClient";
 import { normalizeAnswerValue, validateAnswer } from "../../lib/validators";
-import { calculateFlow } from "../../lib/logic/flowEngine";
+import { calculateFlow, evaluateNextStep } from "../../lib/logic/flowEngine";
 import { faNum, faDuration, parseUserAgent } from "../../lib/utils";
 import "../../index.css";
 
@@ -273,6 +273,8 @@ export default function EmbedForm() {
     return { valid: true };
   }, [currentQuestion, answers]);
 
+  const jumpQueueRef = useRef([]);
+
   const goNext = useCallback(() => {
     if (step === -1) {
       setStartedAt((prev) => prev ?? Date.now());
@@ -291,8 +293,34 @@ export default function EmbedForm() {
     setRequiredError(null);
     accrueTime();
     setDir(1);
+
+    // ─── بررسی jump actions سوال فعلی ───
+    if (currentQuestion) {
+      const answer = answers[currentQuestion.id];
+      const jumpResult = evaluateNextStep(
+        currentQuestion, answer, questions, visibleQuestions, jumpQueueRef.current
+      );
+
+      if (jumpResult.type === "end") {
+        setStep(total);
+        return;
+      }
+      if (jumpResult.type === "redirect" && jumpResult.url) {
+        window.open(jumpResult.url, "_blank");
+        setStep(total);
+        return;
+      }
+      if (jumpResult.type === "jump" && jumpResult.targetId) {
+        const targetIdx = questions.findIndex((q) => q.id === jumpResult.targetId);
+        if (targetIdx >= 0) {
+          setStep(targetIdx);
+          return;
+        }
+      }
+    }
+
     setStep((s) => findNextVisibleStep(s));
-  }, [step, accrueTime, validateCurrent, findNextVisibleStep, formId]);
+  }, [step, accrueTime, validateCurrent, findNextVisibleStep, currentQuestion, answers, questions, visibleQuestions, total, formId]);
 
   const goBack = useCallback(() => {
     if (step <= -1) return;

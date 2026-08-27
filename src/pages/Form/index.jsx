@@ -32,7 +32,6 @@ function NotAvailable({ message }) {
             </span>
             <h1 className="text-2xl font-black text-navy">این فرم در دسترس نیست</h1>
             <p className="text-sm font-semibold text-ink-subtle leading-8">{message}</p>
-            <Button as="a" href="/" variant="navy" size="sm">برگشت به خانه</Button>
           </div>
         </StickerCard>
       </div>

@@ -10,6 +10,7 @@ import { QUESTION_TYPES, QUESTION_TYPE_ORDER, makeQuestion } from "../../../lib/
 import ConditionBuilder from "../../../components/logic/ConditionBuilder";
 import { makeCondition, makeConditionGroup, makeJumpAction, GROUP_OPERATORS } from "../../../lib/logic/types";
 import { faNum, slugify, copyToClipboard } from "../../../lib/utils";
+import FormPreview from "../../../components/form/FormPreview";
 import SEO from "../../../components/ui/SEO";
 
 const inputCls =
@@ -621,7 +622,9 @@ export default function FormBuilder() {
   }
 
   return (
-    <div className="flex flex-col gap-7 max-w-4xl">
+    <div className="flex flex-col lg:flex-row gap-7 max-w-7xl mx-auto">
+      {/* ─── ستون اصلی: ویرایشگر ─── */}
+      <div className="flex flex-col gap-7 flex-1 min-w-0">
       <SEO
         title={`ویرایش فرم: ${form.title}`}
         description={form.description || `فرم‌ساز — ${form.title}`}
@@ -798,6 +801,14 @@ export default function FormBuilder() {
           <Button variant="teal" size="lg" onClick={save} disabled={saving || !dirty} rotate="-rotate-[1deg]">
             {saving ? "در حال ذخیره..." : "💾 ذخیره‌ی همه‌ی تغییرات"}
           </Button>
+        </div>
+      </div>
+      </div>
+
+      {/* ─── ستون پیش‌نمایش (فقط دسکتاپ) ─── */}
+      <div className="hidden lg:block w-[320px] shrink-0 sticky top-20 self-start">
+        <div className="rounded-2xl border-2 border-navy/20 bg-white overflow-hidden shadow-lg">
+          <FormPreview form={form} questions={questions} />
         </div>
       </div>
     </div>
