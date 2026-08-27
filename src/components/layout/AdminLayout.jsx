@@ -30,9 +30,9 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-lavender flex flex-col sm:flex-row">
-      {/* سایدبار */}
-      <aside className="bg-navy text-white sm:w-60 shrink-0 sm:min-h-screen flex flex-col">
+    <div className="h-screen bg-bg-lavender flex flex-col sm:flex-row overflow-hidden">
+      {/* سایدبار — ثابت در سمت راست */}
+      <aside className="bg-navy text-white sm:w-60 shrink-0 sm:h-screen flex flex-col overflow-y-auto">
         <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
           <span className="inline-flex items-baseline gap-1 text-xl font-black rotate-[-2deg] select-none">
             <span>پرس</span>
@@ -74,8 +74,8 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* محتوا */}
-      <main className="flex-1 min-w-0 p-4 sm:p-7">
+      {/* محتوا — قابل اسکرول */}
+      <main className="flex-1 min-w-0 p-4 sm:p-7 overflow-y-auto">
         <Outlet />
       </main>
     </div>
