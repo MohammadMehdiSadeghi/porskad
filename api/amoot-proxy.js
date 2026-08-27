@@ -85,24 +85,22 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: "Endpoint not allowed" });
     }
 
-    // ساخت URL
-    const url = new URL(`${AMOOT_BASE}/${endpoint}`);
-    if (params) {
-      for (const [key, val] of Object.entries(params)) {
-        if (val !== undefined && val !== null && val !== "") {
-          url.searchParams.set(key, String(val));
-        }
+    // ساخت body به فرمت x-www-form-urlencoded (همون فرمت آموت)
+    const formBody = new URLSearchParams();
+    for (const [key, val] of Object.entries(params)) {
+      if (val !== undefined && val !== null) {
+        formBody.set(key, String(val));
       }
     }
 
-    // فراخوانی API آموت
-    // آموت توکن رو هم توی query و هم توی Authorization header می‌خواد
-    const amootRes = await fetch(url.toString(), {
-      method: "GET",
+    // فراخوانی API آموت با POST + form-urlencoded
+    const amootRes = await fetch(`${AMOOT_BASE}/${endpoint}`, {
+      method: "POST",
       headers: {
-        Accept: "application/json",
-        Authorization: amootToken,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": amootToken,
       },
+      body: formBody.toString(),
     });
 
     const responseText = await amootRes.text();
@@ -112,7 +110,6 @@ export default async function handler(req, res) {
     try {
       data = JSON.parse(responseText);
     } catch {
-      // اگه JSON نبود، متن خام رو برگردون
       data = { Status: amootRes.status, RawResponse: responseText };
     }
 
