@@ -35,14 +35,34 @@ export function AuthProvider({ children }) {
   const fetchProfile = useCallback(async (uid) => {
     if (!supabase || !uid) return null;
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, email, full_name, avatar_url, is_active, is_owner, created_by")
-        .eq("id", uid)
-        .maybeSingle();
+      // سعی کن با is_owner select کنی، اگه ستون وجود نداشت بدون اون برگردان
+      let data = null;
+      let error = null;
+      try {
+        const res = await supabase
+          .from("profiles")
+          .select("id, email, full_name, avatar_url, is_active, is_owner, created_by")
+          .eq("id", uid)
+          .maybeSingle();
+        data = res.data;
+        error = res.error;
+      } catch {
+        // ستون is_owner وجود نداره
+        const res = await supabase
+          .from("profiles")
+          .select("id, email, full_name, avatar_url, is_active, created_by")
+          .eq("id", uid)
+          .maybeSingle();
+        data = res.data;
+        error = res.error;
+      }
       if (error) {
         console.error("Error fetching profile:", error);
         return null;
+      }
+      // اگه is_owner نبود، false پیش‌فرض
+      if (data && !('is_owner' in data)) {
+        data.is_owner = false;
       }
       return data;
     } catch (err) {
@@ -203,13 +223,17 @@ export function AuthProvider({ children }) {
 
   async function updateManager(managerId, { fullName, isActive, permissions } = {}) {
     // بررسی سمت کلاینت: owner فقط نامش قابل تغییر است
-    const { data: targetProfile } = await supabase
-      .from("profiles")
-      .select("is_owner")
-      .eq("id", managerId)
-      .single();
+    let isOwnerTarget = false;
+    try {
+      const { data: tp } = await supabase
+        .from("profiles")
+        .select("is_owner")
+        .eq("id", managerId)
+        .single();
+      isOwnerTarget = tp?.is_owner === true;
+    } catch { /* ستون is_owner ممکنه وجود نداشته باشه */ }
 
-    if (targetProfile?.is_owner) {
+    if (isOwnerTarget) {
       // owner فقط نامش قابل تغییر است، مجوز و وضعیتش غیرقابل تغییر
       if (fullName !== undefined) {
         const { error } = await supabase
@@ -274,14 +298,28 @@ export function AuthProvider({ children }) {
 
   async function listManagers() {
     try {
-      const [{ data, error }, { data: userRoles }] = await Promise.all([
-        supabase
+      // سعی کن با is_owner select کنی، اگه نشد بدون اون
+      let profilesData = null;
+      let profilesError = null;
+      try {
+        const res = await supabase
           .from("profiles")
           .select("id, email, full_name, is_active, is_owner, created_at, created_by")
-          .order("created_at", { ascending: true }),
-        supabase.from("user_roles").select("user_id, role_id, active"),
-      ]);
-      if (error) throw error;
+          .order("created_at", { ascending: true });
+        profilesData = res.data;
+        profilesError = res.error;
+      } catch {
+        const res = await supabase
+          .from("profiles")
+          .select("id, email, full_name, is_active, created_at, created_by")
+          .order("created_at", { ascending: true });
+        profilesData = res.data;
+        profilesError = res.error;
+      }
+      if (profilesError) throw profilesError;
+      const data = profilesData;
+
+      const { data: userRoles } = await supabase.from("user_roles").select("user_id, role_id, active");
 
       let overrides = [];
       if (data?.length) {
@@ -308,6 +346,7 @@ export function AuthProvider({ children }) {
             : [...DEFAULT_MANAGER_PERMISSIONS];
         return {
           ...p,
+          is_owner: p.is_owner ?? false,
           role: roleId,
           roleActive: roleData?.active ?? true,
           permissions: effectivePermissions,
