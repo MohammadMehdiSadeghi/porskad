@@ -96,12 +96,25 @@ export default async function handler(req, res) {
     }
 
     // فراخوانی API آموت
+    // آموت توکن رو هم توی query و هم توی Authorization header می‌خواد
     const amootRes = await fetch(url.toString(), {
       method: "GET",
-      headers: { Accept: "application/json" },
+      headers: {
+        Accept: "application/json",
+        Authorization: amootToken,
+      },
     });
 
-    const data = await amootRes.json();
+    const responseText = await amootRes.text();
+
+    // سعی کن JSON پارس کنی
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      // اگه JSON نبود، متن خام رو برگردون
+      data = { Status: amootRes.status, RawResponse: responseText };
+    }
 
     return res.status(200).json(data);
   } catch (err) {

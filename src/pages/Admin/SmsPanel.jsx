@@ -102,7 +102,9 @@ export default function SmsPanel() {
       if (data.Status === 0 || data.Status === "0") {
         setAccountInfo(data);
       } else {
-        push("خطا در دریافت اطلاعات حساب: " + (data.Message || "نامشخص"), "error");
+        // نمایش خطای دقیق
+        const errMsg = data.explanation || data.Message || data.message || JSON.stringify(data);
+        push("خطا در دریافت اطلاعات حساب: " + errMsg, "error");
       }
     } catch (err) {
       push("خطا در اتصال به سرور: " + err.message, "error");
@@ -189,7 +191,7 @@ export default function SmsPanel() {
         push("پیامک با موفقیت ارسال شد! ✅");
 
         // ذخیره در outbox
-        const results = Array.isArray(data.Data) ? data.Data : [data.Data];
+        const results = Array.isArray(data.Data) ? data.Data : (data.Data ? [data.Data] : []);
         for (const r of results) {
           if (r?.Mobile) {
             await supabase.rpc("log_sms_outbox", {
@@ -206,8 +208,9 @@ export default function SmsPanel() {
         setSmsNumbers("");
         loadStats();
       } else {
+        const errMsg = data.explanation || data.Message || data.message || JSON.stringify(data);
         setSendResult({ success: false, data });
-        push("خطا در ارسال: " + (data.explanation || data.Message || "نامشخص"), "error");
+        push("خطا در ارسال: " + errMsg, "error");
       }
     } catch (err) {
       setSendResult({ success: false, error: err.message });
