@@ -169,7 +169,7 @@ function BrandingBadge({ formId }) {
     <div className="text-center py-3 border-t border-ink/10 mt-4">
       <span className="inline-flex items-baseline gap-1 text-xs text-ink/30">
         ساخته‌شده با
-        <span className="font-extrabold text-navy">پرس<span className="text-teal">کاد</span></span>
+        <span className="font-extrabold text-navy">پرس <span className="text-teal">کاد</span></span>
       </span>
     </div>
   );

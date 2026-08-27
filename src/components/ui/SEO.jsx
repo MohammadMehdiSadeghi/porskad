@@ -1,8 +1,8 @@
 import { Helmet } from "react-helmet-async";
 
-const SITE_NAME = "پرسکاد";
+const SITE_NAME = "پرس کاد";
 const SITE_URL = "https://porskad.vercel.app";
-const DEFAULT_DESCRIPTION = "پرسکاد — سیستم اختصاصی فرم و نظرسنجی مؤسسه رکاد";
+const DEFAULT_DESCRIPTION = "پرس کاد — سیستم اختصاصی فرم و نظرسنجی مؤسسه رکاد";
 
 export default function SEO({
   title,
