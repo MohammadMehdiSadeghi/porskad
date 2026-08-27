@@ -8,24 +8,153 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import StickerCard from "../../components/ui/StickerCard";
 import Modal from "../../components/ui/Modal";
-import { Plus, Edit, Trash2, Check, X, Shield, Crown, Users } from "lucide-react";
+import { Plus, Edit, Trash2, Crown, Users, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings } from "lucide-react";
 import SEO from "../../components/ui/SEO";
-import { faNum } from "../../lib/utils";
 
-const PERMISSION_LABELS = {
-  create_form: "ایجاد فرم",
-  edit_form: "ویرایش فرم",
-  delete_form: "حذف فرم",
-  publish_form: "انتشار فرم",
-  view_responses: "مشاهده پاسخ‌ها",
-  view_analytics: "مشاهده تحلیل‌ها",
-  export_excel: "خروجی اکسل",
-  manage_managers: "مدیریت مدیران",
-  manage_sms: "پنل پیامک",
+// ─── دسته‌بندی مجوزها ───
+const PERMISSION_CATEGORIES = [
+  {
+    id: "forms",
+    label: "فرم‌ها",
+    icon: FileText,
+    color: "teal",
+    permissions: [
+      { id: "create_form", label: "ایجاد فرم", desc: "ساخت فرم جدید" },
+      { id: "edit_form", label: "ویرایش فرم", desc: "تغییر تنظیمات و سوال‌ها" },
+      { id: "delete_form", label: "حذف فرم", desc: "حذف فرم و پاسخ‌ها" },
+      { id: "publish_form", label: "انتشار فرم", desc: "فعال/غیرفعال کردن انتشار" },
+    ],
+  },
+  {
+    id: "data",
+    label: "داده‌ها و تحلیل",
+    icon: BarChart3,
+    color: "navy",
+    permissions: [
+      { id: "view_responses", label: "مشاهده پاسخ‌ها", desc: "دیدن پاسخ‌های فرم‌ها" },
+      { id: "view_analytics", label: "مشاهده تحلیل‌ها", desc: "دیدن نمودارها و آمار" },
+      { id: "export_excel", label: "خروجی اکسل", desc: "دانلود پاسخ‌ها به‌صورت فایل" },
+    ],
+  },
+  {
+    id: "management",
+    label: "مدیریت و ابزارها",
+    icon: Settings,
+    color: "orange",
+    permissions: [
+      { id: "manage_managers", label: "مدیریت مدیران", desc: "ایجاد/ویرایش/حذف مدیران" },
+      { id: "manage_sms", label: "پنل پیامک", desc: "ارسال و مدیریت پیامک" },
+    ],
+  },
+];
+
+// همه permission‌ها به تخت (برای محاسبه تعداد)
+const ALL_PERM_IDS = PERMISSION_CATEGORIES.flatMap((c) => c.permissions.map((p) => p.id));
+
+// رنگ هر دسته
+const CATEGORY_COLORS = {
+  teal: { bg: "bg-ecosystem-light", border: "border-teal", text: "text-teal-text", icon: "text-teal" },
+  navy: { bg: "bg-male-light", border: "border-navy", text: "text-navy", icon: "text-navy" },
+  orange: { bg: "bg-college-light", border: "border-orange", text: "text-orange", icon: "text-orange" },
 };
 
 const inputCls =
-  "w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink focus:outline-none transition-all";
+  "w-full bg-white border-2 border-ink/15 focus:border-teal focus:ring-2 focus:ring-teal/20 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy focus:outline-none transition-all";
+
+// ─── کامپوننت دسته مجوزها (قابل باز شدن) ───
+function PermissionCategory({ category, selected, onToggle, disabled = false }) {
+  const [open, setOpen] = useState(false);
+  const colors = CATEGORY_COLORS[category.color] || CATEGORY_COLORS.teal;
+  const activeCount = category.permissions.filter((p) => selected.includes(p.id)).length;
+  const totalCount = category.permissions.length;
+  const allActive = activeCount === totalCount;
+  const noneActive = activeCount === 0;
+
+  return (
+    <div className={`border-2 rounded-pill-md overflow-hidden transition-all ${
+      allActive ? colors.border + " " + colors.bg :
+      noneActive ? "border-ink/10 bg-white" :
+      "border-ink/20 bg-bg-lavender/40"
+    }`}>
+      {/* هدر دسته */}
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center gap-3 px-4 py-3 text-right hover:bg-white/50 transition-colors"
+        disabled={disabled}
+      >
+        <category.icon size={18} className={colors.icon} />
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-black text-navy">{category.label}</span>
+            <Badge color={allActive ? "green" : noneActive ? "gray" : "blue"}>
+              {activeCount}/{totalCount}
+            </Badge>
+          </div>
+        </div>
+        {open ? <ChevronUp size={16} className="text-ink-subtle" /> : <ChevronDown size={16} className="text-ink-subtle" />}
+      </button>
+
+      {/* لیست مجوزها */}
+      {open && (
+        <div className="px-4 pb-3 border-t border-ink/10">
+          <div className="flex flex-col gap-1 pt-2">
+            {category.permissions.map((perm) => {
+              const isActive = selected.includes(perm.id);
+              return (
+                <label
+                  key={perm.id}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-pill-sm cursor-pointer transition-all ${
+                    isActive ? colors.bg : "hover:bg-bg-lavender/60"
+                  } ${disabled ? "opacity-60 pointer-events-none" : ""}`}
+                >
+                  {/* Toggle switch */}
+                  <button
+                    type="button"
+                    onClick={() => onToggle(perm.id)}
+                    className={`relative w-10 h-5 rounded-full transition-colors flex-shrink-0 ${
+                      isActive ? "bg-teal" : "bg-ink/20"
+                    }`}
+                    disabled={disabled}
+                  >
+                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${
+                      isActive ? "right-0.5" : "right-[22px]"
+                    }`} />
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-bold text-navy block">{perm.label}</span>
+                    <span className="text-[0.7rem] font-medium text-ink-subtle block">{perm.desc}</span>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── کامپوننت نمایش خلاصه مجوزها روی کارت مدیر ───
+function PermissionSummary({ permissions }) {
+  const total = ALL_PERM_IDS.length;
+  const active = ALL_PERM_IDS.filter((p) => permissions.includes(p)).length;
+  const percent = Math.round((active / total) * 100);
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex-1 h-1.5 bg-ink/10 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-teal rounded-full transition-all"
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+      <span className="text-[0.65rem] font-bold text-ink-subtle whitespace-nowrap">
+        {active}/{total}
+      </span>
+    </div>
+  );
+}
 
 export default function Managers() {
   const { push } = useToast();
@@ -41,7 +170,7 @@ export default function Managers() {
   const [newPassword, setNewPassword] = useState("");
   const [newName, setNewName] = useState("");
   const [newPermissions, setNewPermissions] = useState(
-    ALL_PERMISSIONS.filter((p) => p !== "manage_managers" && p !== "manage_sms")
+    ALL_PERM_IDS.filter((p) => p !== "manage_managers" && p !== "manage_sms")
   );
   const [editName, setEditName] = useState("");
   const [editPermissions, setEditPermissions] = useState([]);
@@ -54,13 +183,19 @@ export default function Managers() {
       const data = await listManagers();
       setManagers(data);
     } catch (err) {
-      push("خطا در بارگذاری لیست مدیران: " + err.message, "error");
+      push("خطا در بارگذاری: " + err.message, "error");
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => { load(); }, []);
+
+  function togglePermission(list, setList, permId) {
+    setList((prev) =>
+      prev.includes(permId) ? prev.filter((x) => x !== permId) : [...prev, permId]
+    );
+  }
 
   async function handleCreate() {
     if (!newEmail || !newPassword) {
@@ -76,12 +211,12 @@ export default function Managers() {
         fullName: newName.trim() || newEmail.split("@")[0],
         permissionIds: newPermissions,
       });
-      push("مدیر جدید با موفقیت ایجاد شد!");
+      push("مدیر جدید ایجاد شد! ✅");
       setShowCreateModal(false);
       setNewEmail("");
       setNewPassword("");
       setNewName("");
-      setNewPermissions(ALL_PERMISSIONS.filter((p) => p !== "manage_managers" && p !== "manage_sms"));
+      setNewPermissions(ALL_PERM_IDS.filter((p) => p !== "manage_managers" && p !== "manage_sms"));
       load();
     } catch (err) {
       setCreateError(err.message || "ایجاد مدیر ناموفق بود.");
@@ -94,9 +229,7 @@ export default function Managers() {
     setSelectedManager(manager);
     setEditName(manager.full_name || manager.email.split("@")[0]);
     setEditPermissions(
-      manager.permissions?.length
-        ? [...manager.permissions]
-        : [...ALL_PERMISSIONS].filter((p) => p !== "manage_managers")
+      manager.permissions?.length ? [...manager.permissions] : [...ALL_PERM_IDS].filter((p) => p !== "manage_managers")
     );
     setShowEditModal(true);
   }
@@ -104,11 +237,11 @@ export default function Managers() {
   async function handleDeactivate(managerId) {
     const manager = managers.find((m) => m.id === managerId);
     const activating = manager ? !manager.is_active : false;
-    if (!confirm(activating ? "آیا از فعال‌سازی این مدیر مطمئنید؟" : "آیا از غیرفعال‌سازی این مدیر مطمئنید؟")) return;
+    if (!confirm(activating ? "فعال‌سازی این مدیر؟" : "غیرفعال‌سازی این مدیر؟")) return;
     try {
       if (activating) {
         await activateManager(managerId);
-        push("مدیر فعال شد");
+        push("مدیر فعال شد ✅");
       } else {
         await deactivateManager(managerId);
         push("مدیر غیرفعال شد");
@@ -121,7 +254,7 @@ export default function Managers() {
 
   async function handleDelete() {
     if (!deleteTarget) return;
-    if (!confirm(`آیا از حذف کامل مدیر "${deleteTarget.full_name || deleteTarget.email}" مطمئنید؟`)) {
+    if (!confirm(`حذف کامل مدیر «${deleteTarget.full_name || deleteTarget.email}»؟`)) {
       setDeleteTarget(null);
       return;
     }
@@ -135,27 +268,22 @@ export default function Managers() {
     }
   }
 
-  if (loading) return <Spinner label="لیست مدیران در حال بارگذاری..." />;
+  if (loading) return <Spinner label="لیست مدیران..." />;
 
   return (
-    <div className="flex flex-col gap-6">
-      <SEO
-        title="مدیریت مدیران"
-        description="مدیریت مدیران و مجوزهای پنل ادمین — پرسکاد"
-        url="/admin/managers"
-        noIndex
-      />
+    <div className="flex flex-col gap-8">
+      <SEO title="مدیریت مدیران" description="مدیریت مدیران و مجوزها — پرسکاد" url="/admin/managers" noIndex />
 
       {/* هدر */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-navy">مدیریت مدیران</h1>
           <p className="text-sm font-semibold text-ink-subtle mt-1">
-            {managers.filter((m) => m.is_active).length} مدیر فعال — برای ویرایش روی هر مدیر بزنید
+            {managers.filter((m) => m.is_active).length} مدیر فعال — {ALL_PERM_IDS.length} مجوز تعریف شده
           </p>
         </div>
         <Button variant="teal" size="md" onClick={() => setShowCreateModal(true)} rotate="-rotate-[1deg]">
-          مدیر جدید
+          <Plus size={16} className="ml-1" /> مدیر جدید
         </Button>
       </div>
 
@@ -165,30 +293,21 @@ export default function Managers() {
           icon={<Users size={48} />}
           title="هنوز مدیری وجود ندارد"
           subtitle="اولین مدیر خود را ایجاد کنید."
-          action={
-            <Button variant="teal" onClick={() => setShowCreateModal(true)}>
-              مدیر جدید
-            </Button>
-          }
+          action={<Button variant="teal" onClick={() => setShowCreateModal(true)}>مدیر جدید</Button>}
         />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5 lg:gap-7">
           {managers.map((m, i) => (
             <div key={m.id} className={i % 2 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"}>
-              <StickerCard
-                theme={m.is_owner ? "orange" : "white"}
-                radius="rounded-tl-[1.5rem] rounded-br-[1.5rem] rounded-tr-none rounded-bl-none"
-              >
+              <StickerCard theme={m.is_owner ? "orange" : "white"}>
                 <div className="p-5 flex flex-col gap-3">
-                  {/* هدر: آواتار + اسم + وضعیت */}
+                  {/* هدر */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2.5">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-base rotate-[3deg] ${
-                        m.is_owner
-                          ? "bg-orange/20 text-orange"
-                          : m.is_active
-                            ? "bg-bg-mint text-teal-text"
-                            : "bg-bg-neutral text-ink-subtle"
+                        m.is_owner ? "bg-orange/20 text-orange" :
+                        m.is_active ? "bg-bg-mint text-teal-text" :
+                        "bg-bg-neutral text-ink-subtle"
                       }`}>
                         {m.full_name?.[0]?.toUpperCase() ?? m.email?.[0]?.toUpperCase() ?? "U"}
                       </div>
@@ -199,55 +318,51 @@ export default function Managers() {
                           </span>
                           {m.is_owner && (
                             <span className="inline-flex items-center gap-0.5 text-[0.6rem] font-bold text-amber-700 bg-amber-100 border border-amber-200 rounded-full px-1.5 py-0.5">
-                              <Crown size={10} />
-                              صاحب
+                              <Crown size={10} /> صاحب
                             </span>
                           )}
                         </div>
-                        <span className="text-xs font-medium text-ink-subtle" dir="ltr">
-                          {m.email}
-                        </span>
+                        <span className="text-xs font-medium text-ink-subtle" dir="ltr">{m.email}</span>
                       </div>
                     </div>
-                    {m.is_active ? (
-                      <Badge color="green">فعال</Badge>
-                    ) : (
-                      <Badge color="gray">غیرفعال</Badge>
-                    )}
+                    {m.is_active ? <Badge color="green">فعال</Badge> : <Badge color="gray">غیرفعال</Badge>}
                   </div>
 
-                  {/* تاریخ عضویت */}
-                  <div className="flex items-center gap-2 text-xs font-semibold text-ink-subtle">
-                    <span>📅 {new Date(m.created_at).toLocaleDateString("fa-IR")}</span>
+                  {/* خلاصه مجوزها */}
+                  {!m.is_owner && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[0.65rem] font-bold text-ink-subtle flex items-center gap-1">
+                          <Shield size={10} /> مجوزها
+                        </span>
+                        <span className="text-[0.65rem] font-bold text-teal-text">
+                          {ALL_PERM_IDS.filter((p) => m.permissions?.includes(p)).length} از {ALL_PERM_IDS.length}
+                        </span>
+                      </div>
+                      <PermissionSummary permissions={m.permissions || []} />
+                    </div>
+                  )}
+
+                  {/* تاریخ */}
+                  <div className="text-xs font-semibold text-ink-subtle">
+                    📅 {new Date(m.created_at).toLocaleDateString("fa-IR")}
                   </div>
 
-                  {/* دکمه‌های عملیات */}
+                  {/* دکمه‌ها */}
                   <div className="flex flex-wrap gap-2 mt-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openEdit(m)}
-                      title={m.is_owner ? "فقط نام صاحب اصلی قابل تغییر است" : "ویرایش"}
-                    >
-                      ویرایش
+                    <Button variant="ghost" size="sm" onClick={() => openEdit(m)}
+                      title={m.is_owner ? "فقط نام صاحب اصلی قابل تغییر است" : "ویرایش"}>
+                      ویرایش ✏️
                     </Button>
                     {!m.is_owner && (
                       <>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="!text-amber-600"
-                          onClick={() => handleDeactivate(m.id)}
-                        >
+                        <Button variant="ghost" size="sm" className="!text-amber-600"
+                          onClick={() => handleDeactivate(m.id)}>
                           {m.is_active ? "غیرفعال 🛑" : "فعال 🟢"}
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="!text-magenta-text"
-                          onClick={() => setDeleteTarget(m)}
-                        >
-                          حذف
+                        <Button variant="ghost" size="sm" className="!text-magenta-text"
+                          onClick={() => setDeleteTarget(m)}>
+                          حذف 🗑️
                         </Button>
                       </>
                     )}
@@ -259,175 +374,130 @@ export default function Managers() {
         </div>
       )}
 
-      {/* ─── Create Modal ─── */}
-      <Modal
-        open={showCreateModal}
-        onClose={() => { setShowCreateModal(false); setCreateError(null); }}
-        title="ایجاد مدیر جدید"
-      >
+      {/* ─── مودال ایجاد مدیر ─── */}
+      <Modal open={showCreateModal} onClose={() => { setShowCreateModal(false); setCreateError(null); }} title="ایجاد مدیر جدید">
         <div className="flex flex-col gap-4">
           <div>
             <label className="block text-sm font-extrabold text-navy mb-1.5">ایمیل</label>
-            <input
-              type="email"
-              dir="ltr"
-              value={newEmail}
-              onChange={(e) => setNewEmail(e.target.value)}
-              className={inputCls}
-              placeholder="manager@porskad.ir"
-            />
+            <input type="email" dir="ltr" value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
+              className={inputCls} placeholder="manager@porskad.ir" />
           </div>
           <div>
             <label className="block text-sm font-extrabold text-navy mb-1.5">رمز عبور</label>
-            <input
-              type="password"
-              dir="ltr"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className={inputCls}
-              placeholder="••••••••"
-            />
+            <input type="password" dir="ltr" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+              className={inputCls} placeholder="••••••••" />
           </div>
           <div>
             <label className="block text-sm font-extrabold text-navy mb-1.5">نام نمایشی</label>
-            <input
-              type="text"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              className={inputCls}
-              placeholder="نام و نام خانوادگی"
-            />
+            <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)}
+              className={inputCls} placeholder="نام و نام خانوادگی" />
           </div>
+
+          {/* مجوزها — دسته‌بندی شده */}
           <div>
-            <label className="block text-sm font-extrabold text-navy mb-2">مجوزها</label>
-            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border-2 border-dashed border-navy/15 rounded-pill-md p-3 bg-bg-lavender/40">
-              {ALL_PERMISSIONS.filter((p) => p !== "manage_managers").map((p) => (
-                <label key={p} className="flex items-center gap-2 text-sm font-semibold text-ink cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={newPermissions.includes(p)}
-                    onChange={(e) =>
-                      setNewPermissions((prev) =>
-                        e.target.checked ? [...prev, p] : prev.filter((x) => x !== p)
-                      )
-                    }
-                    className="accent-teal w-4 h-4"
-                  />
-                  {PERMISSION_LABELS[p]}
-                </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-extrabold text-navy">مجوزها</label>
+              <span className="text-xs font-bold text-teal-text">
+                {newPermissions.length} از {ALL_PERM_IDS.length} فعال
+              </span>
+            </div>
+            <div className="flex flex-col gap-2 max-h-64 overflow-y-auto pr-1">
+              {PERMISSION_CATEGORIES.map((cat) => (
+                <PermissionCategory
+                  key={cat.id}
+                  category={cat}
+                  selected={newPermissions}
+                  onToggle={(id) => togglePermission(newPermissions, setNewPermissions, id)}
+                />
               ))}
             </div>
           </div>
+
           {createError && (
             <div className="text-sm font-bold text-magenta-text bg-magenta/10 border-2 border-magenta rounded-pill-md px-3 py-2">
               {createError}
             </div>
           )}
+
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="teal" size="sm" onClick={handleCreate} disabled={busy}>
               {busy ? "در حال ایجاد..." : "ایجاد مدیر"}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setShowCreateModal(false)}>
-              انصراف
-            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setShowCreateModal(false)}>انصراف</Button>
           </div>
         </div>
       </Modal>
 
-      {/* ─── Edit Modal ─── */}
-      <Modal
-        open={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        title={selectedManager?.is_owner ? "ویرایش صاحب اصلی" : "ویرایش مدیر"}
-      >
+      {/* ─── مودال ویرایش مدیر ─── */}
+      <Modal open={showEditModal} onClose={() => setShowEditModal(false)}
+        title={selectedManager?.is_owner ? "ویرایش صاحب اصلی" : "ویرایش مدیر"}>
         <div className="flex flex-col gap-4">
           {selectedManager?.is_owner && (
-            <div className="flex items-center gap-2 bg-orange/10 border-2 border-orange/30 rounded-pill-md px-3 py-2 text-sm font-bold text-orange">
-              <Crown size={16} />
-              صاحب اصلی سایت — فقط نام قابل تغییر است
+            <div className="flex items-center gap-2 bg-college-light border-2 border-orange/30 rounded-pill-md px-3 py-2 text-sm font-bold text-orange">
+              <Crown size={16} /> صاحب اصلی سایت — فقط نام قابل تغییر است
             </div>
           )}
+
           <div>
             <label className="block text-sm font-extrabold text-navy mb-1.5">نام نمایشی</label>
-            <input
-              type="text"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              className={inputCls}
-            />
+            <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className={inputCls} />
           </div>
+
           {!selectedManager?.is_owner && (
             <div>
-              <label className="block text-sm font-extrabold text-navy mb-2">مجوزها</label>
-              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border-2 border-dashed border-navy/15 rounded-pill-md p-3 bg-bg-lavender/40">
-                {ALL_PERMISSIONS.filter((p) => p !== "manage_managers").map((p) => (
-                  <label key={p} className="flex items-center gap-2 text-sm font-semibold text-ink cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={editPermissions.includes(p)}
-                      onChange={(e) =>
-                        setEditPermissions((prev) =>
-                          e.target.checked ? [...prev, p] : prev.filter((x) => x !== p)
-                        )
-                      }
-                      className="accent-teal w-4 h-4"
-                    />
-                    {PERMISSION_LABELS[p]}
-                  </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-extrabold text-navy">مجوزها</label>
+                <span className="text-xs font-bold text-teal-text">
+                  {editPermissions.length} از {ALL_PERM_IDS.length} فعال
+                </span>
+              </div>
+              <div className="flex flex-col gap-2 max-h-64 overflow-y-auto pr-1">
+                {PERMISSION_CATEGORIES.map((cat) => (
+                  <PermissionCategory
+                    key={cat.id}
+                    category={cat}
+                    selected={editPermissions}
+                    onToggle={(id) => togglePermission(editPermissions, setEditPermissions, id)}
+                  />
                 ))}
               </div>
             </div>
           )}
+
           <div className="flex gap-3 justify-end pt-2">
-            <Button
-              variant="teal"
-              size="sm"
-              onClick={async () => {
-                if (selectedManager) {
-                  try {
-                    if (selectedManager.is_owner) {
-                      await updateManager(selectedManager.id, { fullName: editName });
-                    } else {
-                      await updateManager(selectedManager.id, {
-                        fullName: editName,
-                        isActive: selectedManager.is_active,
-                        permissions: editPermissions,
-                      });
-                    }
-                    push("تغییرات ذخیره شد!");
-                    setShowEditModal(false);
-                    load();
-                  } catch (err) {
-                    push("خطا در ذخیره: " + (err.message || "ناموفق بود"), "error");
-                  }
+            <Button variant="teal" size="sm" onClick={async () => {
+              if (!selectedManager) return;
+              try {
+                if (selectedManager.is_owner) {
+                  await updateManager(selectedManager.id, { fullName: editName });
+                } else {
+                  await updateManager(selectedManager.id, {
+                    fullName: editName,
+                    isActive: selectedManager.is_active,
+                    permissions: editPermissions,
+                  });
                 }
-              }}
-            >
-              ذخیره
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setShowEditModal(false)}>
-              انصراف
-            </Button>
+                push("تغییرات ذخیره شد! ✅");
+                setShowEditModal(false);
+                load();
+              } catch (err) {
+                push("خطا: " + (err.message || "ناموفق"), "error");
+              }
+            }}>ذخیره</Button>
+            <Button variant="ghost" size="sm" onClick={() => setShowEditModal(false)}>انصراف</Button>
           </div>
         </div>
       </Modal>
 
-      {/* ─── Delete Confirm ─── */}
+      {/* ─── تایید حذف ─── */}
       <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="حذف مدیر؟">
-        <p className="text-sm text-ink/70 leading-7 mb-5">
-          مدیر «
-          <span className="font-bold text-magenta-text">
-            {deleteTarget?.full_name || deleteTarget?.email}
-          </span>
-          » به‌طور کامل حذف خواهد شد.
+        <p className="text-sm font-semibold text-ink-soft leading-7 mb-5">
+          مدیر «<span className="font-black text-magenta-text">{deleteTarget?.full_name || deleteTarget?.email}</span>»
+          به‌طور کامل حذف خواهد شد.
         </p>
         <div className="flex gap-3 justify-end">
-          <Button variant="red" size="sm" onClick={handleDelete}>
-            بله، حذف شود
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(null)}>
-            انصراف
-          </Button>
+          <Button variant="red" size="sm" onClick={handleDelete}>بله، حذف شود</Button>
+          <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(null)}>انصراف</Button>
         </div>
       </Modal>
     </div>
