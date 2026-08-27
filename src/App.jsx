@@ -6,6 +6,7 @@ import SetupNotice from "./components/ui/SetupNotice";
 import { isSupabaseConfigured } from "./lib/supabaseClient";
 
 import FormFill from "./pages/Form";
+import EmbedForm from "./pages/Embed";
 import NotFound from "./pages/NotFound";
 import AdminLayout from "./components/layout/AdminLayout";
 import Login from "./pages/Admin/Login";
@@ -13,6 +14,7 @@ import Dashboard from "./pages/Admin/Dashboard";
 import FormsList from "./pages/Admin/Forms/FormsList";
 import FormBuilder from "./pages/Admin/Forms/FormBuilder";
 import Responses from "./pages/Admin/Forms/Responses";
+import ShareForm from "./pages/Admin/Forms/ShareForm";
 import Managers from "./pages/Admin/Managers";
 import Profile from "./pages/Admin/Profile";
 import AuthGuard from "./components/guards/AuthGuard";
@@ -77,8 +79,11 @@ export default function App() {
       <AuthProvider>
         <ToastProvider>
           <Routes>
-            {/* عمومی — فقط فرم پر کردن */}
+            {/* عمومی — فرم پر کردن */}
             <Route path="/f/:slug" element={<FormFill />} />
+
+            {/* Embed — جاسازی فرم در سایت‌های دیگر */}
+            <Route path="/embed/:formId" element={<EmbedForm />} />
 
             {/* ادمین */}
             <Route path="/admin/login" element={<Login />} />
@@ -94,6 +99,7 @@ export default function App() {
               <Route path="forms" element={<FormsList />} />
               <Route path="forms/:id" element={<FormBuilder />} />
               <Route path="forms/:id/responses" element={<Responses />} />
+              <Route path="forms/:id/share" element={<ShareForm />} />
               <Route path="managers" element={<AuthGuard adminOnly={true}><Managers /></AuthGuard>} />
               <Route path="profile" element={<Profile />} />
             </Route>
