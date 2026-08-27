@@ -18,6 +18,8 @@ on conflict (role_id, permission_id) do nothing;
 -- جدول sms_settings — تنظیمات وب‌سرویس پیامکی آموت
 -- ════════════════════════════════════════════════════════════════
 
+drop table if exists public.sms_settings cascade;
+
 create table if not exists public.sms_settings (
   id          uuid primary key default gen_random_uuid(),
   api_token   text not null default '',
@@ -36,18 +38,22 @@ create table if not exists public.sms_settings (
 alter table public.sms_settings enable row level security;
 
 -- فقط ادمین‌ها بتونن بخوانند
+drop policy if exists "admin read sms_settings" on public.sms_settings;
 create policy "admin read sms_settings"
   on public.sms_settings for select
   to authenticated
   using (public.is_admin(auth.uid()));
 
 -- فقط ادمین‌ها بتونن تغییر بدهند
+drop policy if exists "admin manage sms_settings" on public.sms_settings;
 create policy "admin manage sms_settings"
   on public.sms_settings for all
   to authenticated
   using (public.is_admin(auth.uid()));
 
 -- تابع: ذخیره تنظیمات SMS
+drop function if exists public.save_sms_settings(text, text, text);
+
 create or replace function public.save_sms_settings(
   p_api_token   text,
   p_line_number text default 'public',
@@ -75,6 +81,8 @@ $$;
 grant execute on function public.save_sms_settings(text, text, text) to authenticated;
 
 -- تابع: دریافت تنظیمات فعال SMS
+drop function if exists public.get_active_sms_settings();
+
 create or replace function public.get_active_sms_settings()
 returns table (
   id          uuid,
