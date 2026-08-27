@@ -650,7 +650,6 @@ export default function FormBuilder() {
         jump_actions: q.jump_actions ?? [],
       }));
 
-      console.log('[FormBuilder] ذخیره شرط‌ها:', pQuestions.map(q => ({ title: q.title, conditions: q.conditions })));
       const { data: freshQs, error } = await supabase.rpc("save_form", {
         p_form_id: id,
         p_form: pForm,
