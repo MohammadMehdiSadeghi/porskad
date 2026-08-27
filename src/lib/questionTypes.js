@@ -3,7 +3,7 @@
 export const QUESTION_TYPES = {
   short_text: {
     label: "متن کوتاه",
-    icon: "✏️",
+    icon: "Aa",
     color: "teal",
     hint: "جواب یک‌خطی کوتاه",
     defaultPlaceholder: "جوابت رو این‌جا بنویس...",
@@ -13,7 +13,7 @@ export const QUESTION_TYPES = {
   },
   long_text: {
     label: "متن بلند",
-    icon: "📝",
+    icon: "¶",
     color: "navy",
     hint: "پاراگراف و توضیح کامل",
     defaultPlaceholder: "بنویس...",
@@ -23,7 +23,7 @@ export const QUESTION_TYPES = {
   },
   phone_ir: {
     label: "شماره موبایل ایران",
-    icon: "📱",
+    icon: "tel",
     color: "magenta",
     hint: "با اعتبارسنجی 09xxxxxxxxx",
     defaultPlaceholder: "09123456789",
@@ -33,7 +33,7 @@ export const QUESTION_TYPES = {
   },
   choice: {
     label: "چهارگزینه‌ای (تک‌انتخابی)",
-    icon: "🎯",
+    icon: "○",
     color: "orange",
     hint: "۲ تا ۶ گزینه، انتخاب یکی",
     hasOptions: true,
@@ -44,7 +44,7 @@ export const QUESTION_TYPES = {
   },
   checkbox: {
     label: "چندگزینه‌ای (چک‌باکس)",
-    icon: "☑️",
+    icon: "☐",
     color: "navy",
     hint: "چند انتخاب هم‌زمان",
     hasOptions: true,
@@ -56,7 +56,7 @@ export const QUESTION_TYPES = {
   },
   email: {
     label: "ایمیل",
-    icon: "✉️",
+    icon: "@",
     color: "teal",
     hint: "با اعتبارسنجی فرمت ایمیل",
     defaultPlaceholder: "name@example.com",
@@ -66,7 +66,7 @@ export const QUESTION_TYPES = {
   },
   number: {
     label: "عدد",
-    icon: "🔢",
+    icon: "#",
     color: "navy",
     hint: "فقط عدد",
     defaultPlaceholder: "مثلاً 42",
@@ -76,7 +76,7 @@ export const QUESTION_TYPES = {
   },
   rating: {
     label: "ستاره امتیاز",
-    icon: "⭐",
+    icon: "★",
     color: "orange",
     hint: "امتیاز ۱ تا ۵ ستاره",
     hasOptions: false,
@@ -85,7 +85,7 @@ export const QUESTION_TYPES = {
   },
   yes_no: {
     label: "بله / خیر",
-    icon: "🤔",
+    icon: "Y/N",
     color: "magenta",
     hint: "دو گزینه ساده",
     hasOptions: false,
@@ -94,7 +94,7 @@ export const QUESTION_TYPES = {
   },
   telegram_id: {
     label: "آیدی تلگرام",
-    icon: "✈️",
+    icon: "tg",
     color: "teal",
     hint: "آیدی تلگرام با @",
     defaultPlaceholder: "@username",
