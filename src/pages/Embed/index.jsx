@@ -246,7 +246,7 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
 
   if (submitted) {
     return (
-      <div className="min-h-screen dot-pattern bg-bg-mint flex items-center justify-center p-4" dir="rtl">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-transparent" dir="rtl">
         <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35 }}
           className="bg-white border-2 border-navy rounded-[2rem] p-8 sm:p-10 text-center max-w-lg shadow-[6px_6px_0_0_rgba(33,41,90,0.15)]">
           <span className="text-5xl mb-3 block">🎉</span>
@@ -258,7 +258,7 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
   }
 
   return (
-    <div className="min-h-screen dot-pattern bg-bg-mint flex flex-col" dir="rtl">
+    <div className="min-h-screen flex flex-col bg-transparent" dir="rtl">
       <div className="w-full max-w-xl mx-auto px-4 py-3 text-center">
         <span className="inline-flex items-baseline gap-1 text-lg font-black select-none">
           <span className="text-navy">پرس</span>
@@ -605,8 +605,8 @@ export default function EmbedForm() {
 
   const isRegistration = schema?.form_type === "registration";
 
-  if (loading) return <div className="min-h-screen dot-pattern bg-bg-mint flex items-center justify-center"><Spinner label="فرم داره لود می‌شه..." /></div>;
-  if (error) return <div className="min-h-screen dot-pattern bg-bg-mint flex items-center justify-center p-4">
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-transparent"><Spinner label="فرم داره لود می‌شه..." /></div>;
+  if (error) return <div className="min-h-screen flex items-center justify-center p-4 bg-transparent">
     <div className="bg-white border-2 border-navy rounded-pill-md p-8 text-center max-w-md">
       <p className="text-lg font-black text-navy">{error}</p>
     </div>
@@ -619,7 +619,7 @@ export default function EmbedForm() {
   }
 
   return (
-    <div className="min-h-screen dot-pattern bg-bg-mint font-sans" dir="rtl">
+    <div className="min-h-screen font-sans bg-transparent" dir="rtl">
       {/* هدر باریک */}
       <div className="w-full max-w-xl mx-auto px-4 py-3 text-center">
         <span className="inline-flex items-baseline gap-1 text-lg font-black select-none">

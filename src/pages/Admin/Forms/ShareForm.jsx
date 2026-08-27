@@ -119,7 +119,12 @@ export default function ShareForm() {
       label: "جاسازی در صفحه (Inline)",
       icon: Monitor,
       description: "فرم مستقیم داخل محتوای صفحه نمایش داده می‌شود",
-      code: `<div data-pcode-form="${publicId}"></div>\n<script src="${baseUrl}/loader.js" async></script>`,
+      code: `<div data-pcode-form="${publicId}" style="min-height:600px;"></div>\n<script src="${baseUrl}/loader.js" async></script>\n<!--
+  تنظیمات دلخواه:
+  - min-height: حداقل ارتفاع (پیش‌فرض: 600px)
+  - اگر اسکرول نمی‌خواهید: overflow:hidden اضافه کنید
+-->
+`,
     },
     popup: {
       label: "پنجره شناور (Popup)",
@@ -137,13 +142,45 @@ export default function ShareForm() {
       label: "تمام صفحه (Fullpage)",
       icon: Maximize,
       description: "فرم تمام صفحه را پر می‌کند",
-      code: `<div id="pc-${publicId}" style="min-height:480px;width:100vw;height:100dvh;position:fixed;top:0;left:0;z-index:99999;background:#fff;">\n  <div id="pc-load-${publicId}" style="position:absolute;top:50%;left:50%;width:35px;height:35px;border:4px solid rgba(0,0,0,0.1);border-top:4px solid #555;border-radius:50%;animation:porscad-spin 1s linear infinite;"></div>\n  <style>@keyframes porscad-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>\n  <script>\n    var s=document.createElement('iframe');\n    s.src='${embedUrl}';\n    s.style.cssText='width:100%;height:100%;border:none;position:absolute;top:0;left:0;';\n    s.onload=function(){var l=document.getElementById('pc-load-${publicId}');if(l)l.style.display='none';};\n    document.getElementById('pc-${publicId}').appendChild(s);\n  </script>\n</div>`,
+      code: `<div id="pc-${publicId}" style="min-height:480px;width:100vw;height:100dvh;position:fixed;top:0;left:0;z-index:99999;background:transparent;">\n  <iframe\n    src="${embedUrl}"\n    style="width:100%;height:100%;border:none;background:transparent;"\n    allow="camera; microphone; autoplay"\n  ></iframe>\n</div>\n<!--
+  تنظیمات دلخواه:
+  - اگر اسکرول می‌خواهید: height را به مقدار دلخواه تغییر دهید (مثلاً 800px)
+  - اگر اسکرول نمی‌خواهید: overflow:hidden اضافه کنید
+  - مثال با اسکرول:
+    <div style="height:800px;overflow:auto;">
+      <iframe src="${embedUrl}" style="width:100%;height:100%;border:none;"></iframe>
+    </div>
+  - مثال بدون اسکرول:
+    <div style="height:800px;overflow:hidden;">
+      <iframe src="${embedUrl}" style="width:100%;height:100%;border:none;"></iframe>
+    </div>
+-->
+`,
     },
     iframe: {
       label: "Iframe مستقیم",
       icon: Code,
       description: "بدون اسکریپت اضافی، مناسب CMSها",
-      code: `<iframe\n  src="${embedUrl}"\n  width="100%"\n  height="600"\n  frameborder="0"\n  allow="camera; microphone; autoplay"\n></iframe>`,
+      code: `<!--
+  تنظیمات ارتفاع:
+  - height: ارتفاع iframe را تنظیم کنید (پیش‌فرض: 600px)
+  - overflow:visible → اسکرول فعال (پیش‌فرض مرورگر)
+  - overflow:hidden → بدون اسکرول
+  - مثال بدون اسکرول:
+    <iframe src="${embedUrl}" width="100%" height="800"
+      style="border:none;overflow:hidden;" frameborder="0"></iframe>
+  - مثال با اسکرول:
+    <iframe src="${embedUrl}" width="100%" height="600"
+      style="border:none;overflow:auto;" frameborder="0"></iframe>
+-->
+<iframe
+  src="${embedUrl}"
+  width="100%"
+  height="600"
+  frameborder="0"
+  allow="camera; microphone; autoplay"
+  style="border:none;background:transparent;"
+></iframe>`,
     },
     link: {
       label: "لینک مستقیم",
