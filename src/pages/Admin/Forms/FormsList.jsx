@@ -13,14 +13,7 @@ import { copyToClipboard, randomSlug } from "../../../lib/utils";
 import SEO from "../../../components/ui/SEO";
 
 // ─── تمپلیت فرم ثبت‌نامی ───
-const REGISTRATION_TEMPLATE = [
-  { type: "short_text", title: "نام و نام خانوادگی", description: "", required: true, options: [] },
-  { type: "phone_ir", title: "شماره تماس ولی یا سرپرست", description: "", required: true, options: [] },
-  { type: "number", title: "سن (۳۰ تا ۱۸ سال)", description: "", required: true, options: [] },
-  { type: "short_text", title: "مدرسه و پایه تحصیلی", description: "", required: true, options: [] },
-  { type: "choice", title: "هوهای که بیشتر از همه بهش علاقه داری", description: "", required: true, options: ["فناوری، گیم و هوش مصنوعی 🤖", "هنر، موسیقی و رسانه 🎨", "ورزش و سلامت ⚽", "کارآفرینی و کسب‌وکار 💼", "علوم و تحقیقات 🔬"] },
-  { type: "choice", title: "چطور شرکت می‌کنی؟", description: "", required: true, options: ["به‌صورت انفرادی (تیم‌سازی با بچه‌ها در روز اول)", "با یک تیم از قبل مشخص‌شده"] },
-];
+// فرم ثبت‌نامی بدون فیلدهای پیش‌فرض — ادمین خودش فیلدها رو اضافه می‌کنه
 
 const FORM_TYPES = [
   {
@@ -118,21 +111,6 @@ export default function FormsList() {
       setBusy(false);
       push("ساخت فرم ناموفق بود: " + error.message, "error");
       return;
-    }
-
-    // اگه ثبت‌نامی بود، سوالات پیش‌فرض رو اضافه کن
-    if (isRegistration) {
-      const questions = REGISTRATION_TEMPLATE.map((q, i) => ({
-        form_id: data.id,
-        type: q.type,
-        title: q.title,
-        description: q.description,
-        required: q.required,
-        options: q.options,
-        position: i,
-      }));
-      const { error: qError } = await supabase.from("questions").insert(questions);
-      if (qError) push("خطا در ساخت سوالات پیش‌فرض: " + qError.message, "error");
     }
 
     setBusy(false);
