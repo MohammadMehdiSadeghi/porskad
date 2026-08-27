@@ -76,9 +76,18 @@ export default async function handler(req, res) {
       "AccountStatus",
       "SendSimple",
       "SendQuickOTP",
+      "SendOTP",
+      "SendWithPattern",
+      "SendWithPatternOWN",
+      "SendWithBackupLine",
       "GetDelivery",
       "GetDeliveries",
       "GetDeliveriesByCampaignID",
+      "GetMessage",
+      "GetMessages",
+      "Statistics",
+      "CalculateMessagePrice",
+      "CalculatePatternMessagePrice",
     ];
 
     if (!allowedEndpoints.includes(endpoint)) {
