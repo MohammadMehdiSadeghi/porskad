@@ -20,22 +20,37 @@ import {
   Zap,
 } from "lucide-react";
 
-const AMOOT_BASE = "https://portal.amootsms.com/rest";
-
 const inputCls =
   "w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink focus:outline-none transition-all";
 
-// ─── تابع کمکی فراخوانی API آموت ───
+// ─── تابع کمکی فراخوانی API آموت از طریق Edge Function ───
 async function amootFetch(endpoint, token, params = {}) {
-  const url = new URL(`${AMOOT_BASE}/${endpoint}`);
-  url.searchParams.set("Token", token);
-  for (const [key, val] of Object.entries(params)) {
-    if (val !== undefined && val !== null && val !== "") {
-      url.searchParams.set(key, String(val));
+  // گرفتن session برای احراز هویت
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error("لاگین نیستید");
+
+  // فراخوانی Edge Function
+  const res = await fetch(
+    `${supabase.supabaseUrl}/functions/v1/amoot-proxy`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+        apikey: supabase.supabaseKey,
+      },
+      body: JSON.stringify({
+        endpoint,
+        params: { Token: token, ...params },
+      }),
     }
+  );
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.error || `HTTP ${res.status}`);
   }
-  const res = await fetch(url.toString());
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
   return res.json();
 }
 
