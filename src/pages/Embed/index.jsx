@@ -32,6 +32,24 @@ function useAutoResize() {
   }, []);
 }
 
+// نرمالایزیشن گروه شرط‌ها: تبدیل operator → group_operator + نرمالایز شرط‌های فردی
+function normalizeConditionGroup(cg) {
+  if (!cg) return null;
+  const groupOp = cg.group_operator || cg.operator || "AND";
+  const conds = (cg.conditions || []).map((c) => {
+    if (c.source) return c;
+    return {
+      ...c,
+      source: "answer",
+      questionId: c.source_question_id || c.questionId || null,
+      variableKey: null,
+      optionId: null,
+      rowId: null,
+    };
+  });
+  return { group_operator: groupOp, conditions: conds };
+}
+
 // ─── اسپینر ───
 function Spinner({ label }) {
   return (
@@ -424,7 +442,13 @@ export default function EmbedForm() {
     load();
   }, [formId]);
 
-  const questions = useMemo(() => schema?.questions ?? [], [schema]);
+  const questions = useMemo(() =>
+    (schema?.questions ?? []).map((q) => ({
+      ...q,
+      conditions: normalizeConditionGroup(q.conditions ?? null),
+    })),
+    [schema]
+  );
   const logicRules = useMemo(() => {
     return (schema?.logicRules ?? []).map((r) => ({
       ...r,

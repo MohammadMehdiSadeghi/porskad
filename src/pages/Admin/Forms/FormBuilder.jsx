@@ -28,6 +28,24 @@ function Field({ label, children, hint }) {
   );
 }
 
+// نرمالایزیشن گروه شرط‌ها: تبدیل operator → group_operator + نرمالایز شرط‌های فردی
+function normalizeConditionGroup(cg) {
+  if (!cg) return null;
+  const groupOp = cg.group_operator || cg.operator || "AND";
+  const conds = (cg.conditions || []).map((c) => {
+    if (c.source) return c;
+    return {
+      ...c,
+      source: "answer",
+      questionId: c.source_question_id || c.questionId || null,
+      variableKey: null,
+      optionId: null,
+      rowId: null,
+    };
+  });
+  return { group_operator: groupOp, conditions: conds };
+}
+
 // ─── کارت ویرایش یک سوال ───
 function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDelete }) {
   const meta = QUESTION_TYPES[q.type];
@@ -523,7 +541,7 @@ export default function FormBuilder() {
         placeholder: q.placeholder ?? "",
         validation: q.validation ?? null,
         // مهاجرت: اگه conditions وجود نداشت از condition قدیمی بساز
-        conditions: q.conditions ?? (q.condition ? { group_operator: "AND", conditions: [q.condition] } : null),
+        conditions: normalizeConditionGroup(q.conditions ?? (q.condition ? { group_operator: "AND", conditions: [q.condition] } : null)),
         jump_actions: q.jump_actions ?? [],
       })));
 
@@ -655,7 +673,7 @@ export default function FormBuilder() {
           localId: q.id,
           placeholder: q.placeholder ?? "",
         validation: q.validation ?? null,
-          conditions: q.conditions ?? (q.condition ? { group_operator: "AND", conditions: [q.condition] } : null),
+          conditions: normalizeConditionGroup(q.conditions ?? (q.condition ? { group_operator: "AND", conditions: [q.condition] } : null)),
           jump_actions: q.jump_actions ?? [],
         })));
       }

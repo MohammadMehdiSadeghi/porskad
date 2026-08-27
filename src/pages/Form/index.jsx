@@ -17,6 +17,24 @@ import SEO from "../../components/ui/SEO";
 
 const draftKey = (slug) => `porskad_draft_${slug}`;
 
+// نرمالایزیشن گروه شرط‌ها: تبدیل operator → group_operator + نرمالایز شرط‌های فردی
+function normalizeConditionGroup(cg) {
+  if (!cg) return null;
+  const groupOp = cg.group_operator || cg.operator || "AND";
+  const conds = (cg.conditions || []).map((c) => {
+    if (c.source) return c;
+    return {
+      ...c,
+      source: "answer",
+      questionId: c.source_question_id || c.questionId || null,
+      variableKey: null,
+      optionId: null,
+      rowId: null,
+    };
+  });
+  return { group_operator: groupOp, conditions: conds };
+}
+
 // ─── صفحه‌ی «فرم در دسترس نیست» ───
 function NotAvailable({ message }) {
   return (
@@ -110,7 +128,7 @@ export default function FormFill() {
       // نرمال‌سازی conditions و jump_actions
       setQuestions((qData ?? []).map((q) => ({
         ...q,
-        conditions: q.conditions ?? null,
+        conditions: normalizeConditionGroup(q.conditions ?? null),
         jump_actions: q.jump_actions ?? [],
       })));
 
