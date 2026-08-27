@@ -1,15 +1,20 @@
 import clsx from "./clsx";
 
 const COLORS = {
-  teal: "border-teal-text text-teal-text bg-[#F2FAF9]",
-  navy: "border-navy text-navy bg-[#F4F5FB]",
-  indigo: "border-navy text-navy bg-[#F4F5FB]",
-  magenta: "border-magenta-text text-magenta-text bg-[#FEFAFB]",
-  orange: "border-orange text-orange bg-[#FEF7EC]",
-  amber: "border-orange text-orange bg-[#FEF7EC]",
-  gray: "border-[#bdbdbd] text-[#777] bg-bg-neutral",
-  green: "border-[#2e9e6b] text-[#20794f] bg-[#effaf4]",
-  red: "border-magenta-text text-magenta-text bg-[#FEFAFB]",
+  teal: "border-teal-text text-teal-text bg-ecosystem-light",
+  navy: "border-navy text-navy bg-male-light",
+  indigo: "border-navy text-navy bg-male-light",
+  magenta: "border-magenta-text text-magenta-text bg-female-light",
+  orange: "border-orange text-orange bg-college-light",
+  amber: "border-orange text-orange bg-college-light",
+  gray: "border-ink-light text-ink-subtle bg-bg-neutral",
+  green: "border-accent-green text-accent-green bg-ecosystem-light",
+  red: "border-accent-red text-accent-red bg-female-light",
+  ecosystem: "border-ecosystem-normal text-ecosystem-dark bg-ecosystem-light",
+  male: "border-male-normal text-male-normal bg-male-light",
+  female: "border-female-normal text-female-dark bg-female-light",
+  college: "border-college-normal text-college-dark bg-college-light",
+  club: "border-club-normal text-club-dark bg-club-light",
 };
 
 export default function Badge({ color = "teal", rotate = "", className = "", children }) {

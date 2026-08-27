@@ -17,6 +17,71 @@ export default {
                 ...md.fontFamily,
             },
             colors: {
+                // ── Brand Aliases (Design System) ──
+                primary: "#59BBAF",
+                "primary-alt": "#59bbaf",
+                "primary-hover": "#50A89E",
+                girl: "#E0195B",
+                third: "#F8A41D",
+                sec: "#202A5A",
+
+                // ── Ecosystem Theme ──
+                ecosystem: {
+                    light: "#EEF8F7",
+                    normal: "#59BBAF",
+                    dark: "#438C83",
+                    darker: "#1F413D",
+                },
+
+                // ── Male Theme ──
+                male: {
+                    light: "#E9EAEF",
+                    normal: "#202A5A",
+                    dark: "#182044",
+                    darker: "#0B0F1F",
+                },
+
+                // ── Female Theme ──
+                female: {
+                    light: "#FCE8EF",
+                    normal: "#E0195B",
+                    dark: "#A81344",
+                    darker: "#4E0920",
+                },
+
+                // ── College Theme ──
+                college: {
+                    light: "#FEF6E8",
+                    normal: "#F8A41D",
+                    dark: "#BA7B16",
+                    darker: "#57390A",
+                },
+
+                // ── Club Theme ──
+                club: {
+                    light: "#F0EAF4",
+                    normal: "#652D90",
+                    dark: "#4C226C",
+                    darker: "#231032",
+                },
+
+                // ── Text & Title (Neutral) ──
+                ink: {
+                    DEFAULT: "#292827",
+                    light: "#EAEAE9",
+                    dark: "#1F1E1D",
+                    darker: "#0E0E0E",
+                    faq: "#3d3b3a",
+                    subtle: "#777777",
+                    soft: "#333230",
+                },
+
+                // ── Accents ──
+                "accent-green": "#009966",
+                "accent-red": "#C60036",
+                "accent-purple": "#8A38F5",
+
+                // ── Legacy aliases (backward compat) ──
                 navy: "#21295a",
                 "navy-alt": "#202a5a",
                 "navy-hover": "#15244a",
@@ -32,18 +97,27 @@ export default {
                 "orange-alt": "#f9a21d",
                 purple: "#4F215A",
                 violet: "#5b3e9e",
-                ink: "#292827",
-                "ink-faq": "#3d3b3a",
-                "ink-subtle": "#777777",
-                "ink-soft": "#333230",
-                "progress-bg": "#ededec",
+
+                // ── Background Surfaces ──
                 "bg-mint": "#f2faf9",
                 "bg-blush": "#fefafb",
                 "bg-lavender": "#f4f5fb",
                 "bg-neutral": "#f6f6f6",
+
+                // ── Theme colors from md ──
                 ...md.colors,
             },
             borderRadius: {
+                // ── Design System Radius Tokens ──
+                xs: "5px",
+                sm: "8px",
+                md: "12px",
+                lg: "17px",
+                xl: "24px",
+                "2xl": "34px",
+                pill: "40px",
+
+                // ── Legacy aliases (backward compat) ──
                 "pill-sm": "0.1875rem",
                 "pill-md": "0.5rem",
                 "pill-lg": "0.625rem",
@@ -52,9 +126,24 @@ export default {
                 "card-sm": "0.8375rem",
                 "card-lg": "2.5625rem",
                 navbar: "1.375rem",
+                "squircle-sm": "0.75rem",
+                "squircle-md": "0.875rem",
+                "squircle-lg": "2.75rem",
+                "squircle-xl": "2.5rem",
                 ...md.borderRadius,
             },
             fontSize: {
+                // ── Design System Typography Scale ──
+                xs: ["10px", "15px"],
+                sm: ["13px", "19.5px"],
+                base: ["16px", "24px"],
+                md: ["20px", "30px"],
+                lg: ["25px", "37.5px"],
+                xl: ["39px", "58.5px"],
+                "2xl": ["49px", "73.5px"],
+                "3xl": ["61px", "91.5px"],
+
+                // ── Legacy aliases (backward compat) ──
                 "2xs": "0.81875rem",
                 xs2: "0.89375rem",
                 base2: "0.9375rem",
@@ -70,11 +159,11 @@ export default {
                 ...md.fontSize,
             },
             spacing: {
-                "section": "4rem",
+                section: "4rem",
                 "section-sm": "3rem",
-                "section-lg": "6rem",
-                "section-xl": "8rem",
-                "gutter": "3rem",
+                "section-lg": "5rem",
+                "section-xl": "6rem",
+                gutter: "3rem",
                 "gutter-md": "4rem",
                 "gutter-lg": "6rem",
                 "gutter-xl": "7.5rem",
@@ -86,9 +175,17 @@ export default {
                 container: "75rem",
             },
             boxShadow: {
+                // ── Design System Hard Shadows (Brand Signature) ──
+                ecosystem: "2.75px 2.75px 0 #59BBAF",
+                male: "2.75px 2.75px 0 #202A5A",
+                female: "2.75px 2.75px 0 #E0195B",
+                college: "2.75px 2.75px 0 #F8A41D",
+                club: "2.75px 2.75px 0 #652D90",
+                neutral: "2.75px 2.75px 0 #292827",
+
+                // ── Legacy ──
                 soft: "0 1.25rem 3.75rem -1.25rem rgba(33,41,90,0.25)",
-                navbar:
-                    "0 0.0625rem 0.1875rem rgba(0,0,0,0.04), 0 0.5rem 1.25rem rgba(33,41,90,0.05), 0 1.25rem 2.5rem -0.25rem rgba(33,41,90,0.06)",
+                navbar: "0 0.0625rem 0.1875rem rgba(0,0,0,0.04), 0 0.5rem 1.25rem rgba(33,41,90,0.05), 0 1.25rem 2.5rem -0.25rem rgba(33,41,90,0.06)",
                 "card-offset": "6px 8px 0 0",
                 "card-offset-sm": "4px 4px 0 0",
             },

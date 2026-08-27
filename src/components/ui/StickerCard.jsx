@@ -10,22 +10,47 @@ export const STICKER_THEMES = {
   teal: {
     back: "bg-teal-alt",
     border: "border-teal",
-    bg: "bg-[#F2FAF9]",
+    bg: "bg-ecosystem-light",
   },
   navy: {
     back: "bg-navy-alt",
     border: "border-navy",
-    bg: "bg-[#F4F5FB]",
+    bg: "bg-male-light",
   },
   magenta: {
     back: "bg-magenta",
     border: "border-magenta",
-    bg: "bg-[#FEFAFB]",
+    bg: "bg-female-light",
   },
   orange: {
     back: "bg-orange-alt",
     border: "border-orange",
-    bg: "bg-[#FEF7EC]",
+    bg: "bg-college-light",
+  },
+  ecosystem: {
+    back: "bg-ecosystem-dark",
+    border: "border-ecosystem-normal",
+    bg: "bg-ecosystem-light",
+  },
+  male: {
+    back: "bg-male-dark",
+    border: "border-male-normal",
+    bg: "bg-male-light",
+  },
+  female: {
+    back: "bg-female-dark",
+    border: "border-female-normal",
+    bg: "bg-female-light",
+  },
+  college: {
+    back: "bg-college-dark",
+    border: "border-college-normal",
+    bg: "bg-college-light",
+  },
+  club: {
+    back: "bg-club-dark",
+    border: "border-club-normal",
+    bg: "bg-club-light",
   },
 };
 

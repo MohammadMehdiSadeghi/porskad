@@ -2,14 +2,64 @@
   "theme": {
     "extend": {
       "colors": {
-        "primary": "#21295a",
-        "primary-alt": "#202a5a",
-        "primary-hover": "#15244a",
+        "primary": "#59BBAF",
+        "primary-alt": "#59bbaf",
+        "primary-hover": "#50A89E",
         "secondary": "#58bdaf",
         "secondary-alt": "#59bbaf",
         "secondary-dark": "#347e75",
         "secondary-alt-dark": "#2e7068",
         "secondary-wordmark": "#4bb5a8",
+        "girl": "#E0195B",
+        "third": "#F8A41D",
+        "sec": "#202A5A",
+        "ecosystem": {
+          "light": "#EEF8F7",
+          "normal": "#59BBAF",
+          "dark": "#438C83",
+          "darker": "#1F413D"
+        },
+        "male": {
+          "light": "#E9EAEF",
+          "normal": "#202A5A",
+          "dark": "#182044",
+          "darker": "#0B0F1F"
+        },
+        "female": {
+          "light": "#FCE8EF",
+          "normal": "#E0195B",
+          "dark": "#A81344",
+          "darker": "#4E0920"
+        },
+        "college": {
+          "light": "#FEF6E8",
+          "normal": "#F8A41D",
+          "dark": "#BA7B16",
+          "darker": "#57390A"
+        },
+        "club": {
+          "light": "#F0EAF4",
+          "normal": "#652D90",
+          "dark": "#4C226C",
+          "darker": "#231032"
+        },
+        "ink": {
+          "DEFAULT": "#292827",
+          "light": "#EAEAE9",
+          "dark": "#1F1E1D",
+          "darker": "#0E0E0E",
+          "faq": "#3d3b3a",
+          "subtle": "#777777",
+          "soft": "#333230"
+        },
+        "accent-green": "#009966",
+        "accent-red": "#C60036",
+        "accent-purple": "#8A38F5",
+        "bg-mint": "#f2faf9",
+        "bg-blush": "#fefafb",
+        "bg-lavender": "#f4f5fb",
+        "bg-neutral": "#f6f6f6",
+        "white": "#ffffff",
         "teal-light": "#e4f4f2",
         "accent": "#e0195b",
         "accent-hover": "#c0154d",
@@ -19,17 +69,7 @@
         "tertiary-brand": "#f8a41d",
         "purple": "#4f215a",
         "violet": "#5b3e9e",
-        "ink": "#292827",
-        "ink-faq": "#3d3b3a",
-        "ink-light": "#202a5a",
-        "ink-subtle": "#777777",
-        "ink-soft": "#333230",
         "progress-bg": "#ededec",
-        "bg-mint": "#f2faf9",
-        "bg-blush": "#fefafb",
-        "bg-lavender": "#f4f5fb",
-        "bg-neutral": "#f6f6f6",
-        "white": "#ffffff",
         "overlay-white-15": "rgba(255,255,255,0.15)",
         "overlay-white-58": "rgba(255,255,255,0.58)",
         "overlay-white-69": "rgba(255,255,255,0.69)",
@@ -86,6 +126,14 @@
         "gutter-lg": "6rem",
         "gutter-xl": "7.5rem",
         "content-max": "75rem"
+      },
+      "boxShadow": {
+        "ecosystem": "2.75px 2.75px 0 #59BBAF",
+        "male": "2.75px 2.75px 0 #202A5A",
+        "female": "2.75px 2.75px 0 #E0195B",
+        "college": "2.75px 2.75px 0 #F8A41D",
+        "club": "2.75px 2.75px 0 #652D90",
+        "neutral": "2.75px 2.75px 0 #292827"
       }
     }
   }
