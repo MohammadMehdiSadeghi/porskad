@@ -95,6 +95,13 @@ export default function ConditionBuilder({
             placeholder="حداکثر"
             className={`${inputCls} !py-1.5 !text-xs flex-1`}
           />
+          <button
+            type="button"
+            onClick={() => onChange({ ...condition, value: `${parts[0] ?? ""}|${parts[1] ?? ""}` })}
+            className="shrink-0 text-[0.6rem] font-extrabold text-teal bg-teal/10 border border-teal/30 rounded-pill-sm px-2 py-1.5 hover:bg-teal/20 transition-colors"
+          >
+            اعمال ✓
+          </button>
         </div>
       );
     }

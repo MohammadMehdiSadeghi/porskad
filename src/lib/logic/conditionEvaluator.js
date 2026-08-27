@@ -3,6 +3,8 @@
 // پشتیبانی از answer/variable/score + عملگرهای checkbox
 // ════════════════════════════════════════════════════════════════
 
+import { toEnDigits } from "../validators";
+
 /**
  * دریافت مقدار منبع شرط
  * @param {Object} condition - شرط
@@ -94,15 +96,16 @@ function evaluateSingleValue(src, op, target) {
     case "not_contains":         return !src.includes(tgt);
     case "starts_with":          return src.startsWith(tgt);
     case "ends_with":            return src.endsWith(tgt);
-    case "greater_than":         return Number(src) > Number(tgt);
-    case "greater_than_or_equal":return Number(src) >= Number(tgt);
-    case "less_than":            return Number(src) < Number(tgt);
-    case "less_than_or_equal":   return Number(src) <= Number(tgt);
+    case "greater_than":         return Number(toEnDigits(src)) > Number(toEnDigits(tgt));
+    case "greater_than_or_equal":return Number(toEnDigits(src)) >= Number(toEnDigits(tgt));
+    case "less_than":            return Number(toEnDigits(src)) < Number(toEnDigits(tgt));
+    case "less_than_or_equal":   return Number(toEnDigits(src)) <= Number(toEnDigits(tgt));
     case "between": {
-      const parts = String(tgt).split("|");
-      const min = Number(parts[0] ?? 0);
-      const max = Number(parts[1] ?? 0);
-      const val = Number(src);
+      const rawParts = String(tgt).split("|");
+      const min = Number(toEnDigits(rawParts[0] ?? ""));
+      const max = Number(toEnDigits(rawParts[1] ?? ""));
+      const val = Number(toEnDigits(src));
+      if (isNaN(val) || isNaN(min) || isNaN(max)) return false;
       return val >= min && val <= max;
     }
     case "is_selected":          return src === tgt;
