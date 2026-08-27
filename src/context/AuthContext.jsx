@@ -12,6 +12,7 @@ const ALL_PERMISSIONS = [
   "view_analytics",
   "export_excel",
   "manage_managers",
+  "manage_sms",
 ];
 
 const DEFAULT_MANAGER_PERMISSIONS = [

@@ -21,6 +21,7 @@ const PERMISSION_LABELS = {
   view_analytics: "مشاهده تحلیل‌ها",
   export_excel: "خروجی اکسل",
   manage_managers: "مدیریت مدیران",
+  manage_sms: "پنل پیامک",
 };
 
 const inputCls =
@@ -40,7 +41,7 @@ export default function Managers() {
   const [newPassword, setNewPassword] = useState("");
   const [newName, setNewName] = useState("");
   const [newPermissions, setNewPermissions] = useState(
-    ALL_PERMISSIONS.filter((p) => p !== "manage_managers")
+    ALL_PERMISSIONS.filter((p) => p !== "manage_managers" && p !== "manage_sms")
   );
   const [editName, setEditName] = useState("");
   const [editPermissions, setEditPermissions] = useState([]);
@@ -80,7 +81,7 @@ export default function Managers() {
       setNewEmail("");
       setNewPassword("");
       setNewName("");
-      setNewPermissions(ALL_PERMISSIONS.filter((p) => p !== "manage_managers"));
+      setNewPermissions(ALL_PERMISSIONS.filter((p) => p !== "manage_managers" && p !== "manage_sms"));
       load();
     } catch (err) {
       setCreateError(err.message || "ایجاد مدیر ناموفق بود.");

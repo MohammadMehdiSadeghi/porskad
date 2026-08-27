@@ -2,18 +2,19 @@ import { NavLink, Navigate, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Spinner from "../ui/Spinner";
 import Button from "../ui/Button";
-import { LayoutDashboard, FileText, Share2, Users, User, LogOut } from "lucide-react";
+import { LayoutDashboard, FileText, Share2, MessageSquare, Users, User, LogOut } from "lucide-react";
 
 const NAV_ITEMS = [
   { to: "/admin", label: "داشبورد", icon: LayoutDashboard, end: true },
   { to: "/admin/forms", label: "فرم‌ها", icon: FileText, end: false },
   { to: "/admin/embed", label: "اشتراک‌گذاری", icon: Share2, end: false },
+  { to: "/admin/sms", label: "پنل پیامک", icon: MessageSquare, end: false, permission: "manage_sms" },
   { to: "/admin/managers", label: "مدیران", icon: Users, end: false, adminOnly: true },
   { to: "/admin/profile", label: "پروفایل", icon: User, end: false },
 ];
 
 export default function AdminLayout() {
-  const { user, loading, role, logout } = useAuth();
+  const { user, loading, role, logout, hasPermission } = useAuth();
   const navigate = useNavigate();
 
   if (loading) {
@@ -44,7 +45,11 @@ export default function AdminLayout() {
         </div>
 
         <nav className="flex sm:flex-col gap-1 px-3 py-3 overflow-x-auto">
-          {NAV_ITEMS.filter((item) => !item.adminOnly || role === "admin").map((item) => (
+          {NAV_ITEMS.filter((item) => {
+            if (item.adminOnly && role !== "admin") return false;
+            if (item.permission && !hasPermission(item.permission)) return false;
+            return true;
+          }).map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
