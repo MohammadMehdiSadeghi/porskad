@@ -7,7 +7,11 @@ alter table public.forms
   add column if not exists form_type text not null default 'step_by_step'
   check (form_type in ('step_by_step', 'registration'));
 
--- به‌روزرسانی save_form برای پشتیبانی از form_type
+-- حذف همه نسخه‌های تابع save_form
+DROP FUNCTION IF EXISTS public.save_form(uuid, jsonb, jsonb);
+DROP FUNCTION IF EXISTS public.save_form(uuid, jsonb);
+DROP FUNCTION IF EXISTS public.save_form;
+
 create or replace function public.save_form(
   p_form_id   uuid,
   p_form      jsonb,
