@@ -77,31 +77,26 @@ export default function ConditionBuilder({
 
     // between
     if (condition.operator === "between") {
-      const parts = (condition.value || "").split("|");
+      const parts = (condition.value || "|").split("|");
+      const minVal = parts[0] ?? "";
+      const maxVal = parts[1] ?? "";
       return (
         <div className="flex items-center gap-2">
           <input
             type="number"
-            value={parts[0] ?? ""}
-            onChange={(e) => onChange({ ...condition, value: `${e.target.value}|${parts[1] ?? ""}` })}
+            value={minVal}
+            onChange={(e) => onChange({ ...condition, value: `${e.target.value}|${maxVal}` })}
             placeholder="حداقل"
             className={`${inputCls} !py-1.5 !text-xs flex-1`}
           />
           <span className="text-xs font-bold text-ink-subtle">تا</span>
           <input
             type="number"
-            value={parts[1] ?? ""}
-            onChange={(e) => onChange({ ...condition, value: `${parts[0] ?? ""}|${e.target.value}` })}
+            value={maxVal}
+            onChange={(e) => onChange({ ...condition, value: `${minVal}|${e.target.value}` })}
             placeholder="حداکثر"
             className={`${inputCls} !py-1.5 !text-xs flex-1`}
           />
-          <button
-            type="button"
-            onClick={() => onChange({ ...condition, value: `${parts[0] ?? ""}|${parts[1] ?? ""}` })}
-            className="shrink-0 text-[0.6rem] font-extrabold text-teal bg-teal/10 border border-teal/30 rounded-pill-sm px-2 py-1.5 hover:bg-teal/20 transition-colors"
-          >
-            اعمال ✓
-          </button>
         </div>
       );
     }
@@ -211,16 +206,20 @@ export default function ConditionBuilder({
 
         {/* انتخاب عملگر */}
         <div className="flex flex-col gap-1">
-          <span className="text-[0.6rem] font-bold text-ink-subtle">عملگر:</span>
-          <select
-            value={condition.operator}
-            onChange={(e) => onChange({ ...condition, operator: e.target.value })}
-            className={`${inputCls} !py-1.5 !text-xs`}
-          >
-            {availableOperators.map((op) => (
-              <option key={op} value={op}>{OPERATORS[op]?.label || op}</option>
-            ))}
-          </select>
+          <span className="text-[0.6rem] font-bold text-ink-subtle">عملگر:</span>            <select
+              value={condition.operator}
+              onChange={(e) => {
+                const newOp = e.target.value;
+                // پاک کردن مقدار هنگام تغییر عملگر (جلوگیری از mismatch)
+                const resetValue = newOp === "between" ? "|" : "";
+                onChange({ ...condition, operator: newOp, value: resetValue });
+              }}
+              className={`${inputCls} !py-1.5 !text-xs`}
+            >
+              {availableOperators.map((op) => (
+                <option key={op} value={op}>{OPERATORS[op]?.label || op}</option>
+              ))}
+            </select>
         </div>
 
         {/* مقدار مقایسه */}
@@ -233,7 +232,7 @@ export default function ConditionBuilder({
           <>اگر «{sourceQ.title?.slice(0, 30)}» {opMeta.label}
             {needsValue && condition.value
               ? (condition.operator === "between"
-                ? ` بین «${condition.value.split("|")[0]}» و «${condition.value.split("|")[1]}»`
+                ? (() => { const [mn, mx] = (condition.value || "|").split("|"); return ` بین «${mn || '?'}» و «${mx || '?'}»`; })()
                 : ` «${condition.value}»`)
               : ""}
           </>

@@ -102,11 +102,26 @@ function evaluateSingleValue(src, op, target) {
     case "less_than_or_equal":   return Number(toEnDigits(src)) <= Number(toEnDigits(tgt));
     case "between": {
       const rawParts = String(tgt).split("|");
-      const min = Number(toEnDigits(rawParts[0] ?? ""));
-      const max = Number(toEnDigits(rawParts[1] ?? ""));
+      const minStr = (rawParts[0] ?? "").trim();
+      const maxStr = (rawParts[1] ?? "").trim();
+      // اگه یکی از طرفین خالی باشه، فقط طرف دیگه رو چک کن
+      const hasMin = minStr !== "";
+      const hasMax = maxStr !== "";
+      if (!hasMin && !hasMax) return false;
       const val = Number(toEnDigits(src));
-      if (isNaN(val) || isNaN(min) || isNaN(max)) return false;
-      return val >= min && val <= max;
+      if (isNaN(val)) return false;
+      if (hasMin && hasMax) {
+        const min = Number(toEnDigits(minStr));
+        const max = Number(toEnDigits(maxStr));
+        if (isNaN(min) || isNaN(max)) return false;
+        return val >= min && val <= max;
+      }
+      if (hasMin) {
+        const min = Number(toEnDigits(minStr));
+        return !isNaN(min) && val >= min;
+      }
+      const max = Number(toEnDigits(maxStr));
+      return !isNaN(max) && val <= max;
     }
     case "is_selected":          return src === tgt;
     case "is_not_selected":      return src !== tgt;
