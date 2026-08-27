@@ -28,6 +28,13 @@
     }
 }
 
+/* ─── placeholder راست‌چین برای فیلدهای فارسی ─── */
+input[dir="rtl"]::placeholder,
+textarea[dir="rtl"]::placeholder {
+    text-align: right !important;
+    direction: rtl !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
     * {
         animation-duration: 0.001ms !important;

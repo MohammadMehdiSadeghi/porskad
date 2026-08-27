@@ -78,6 +78,7 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
     return (
       <textarea
         ref={inputRef}
+        dir="rtl"
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
         rows={5}
@@ -146,7 +147,7 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
                 ? "email"
                 : "text"
         }
-        dir={isLtr ? "ltr" : undefined}
+        dir={isLtr ? "ltr" : "rtl"}
         value={value ?? ""}
         autoFocus={autoFocus}
         onChange={(e) => onChange(e.target.value)}

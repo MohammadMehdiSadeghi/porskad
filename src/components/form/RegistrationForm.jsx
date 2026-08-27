@@ -15,6 +15,7 @@ import { faNum, parseUserAgent } from "../../lib/utils";
 import { supabase } from "../../lib/supabaseClient";
 import SEO from "../ui/SEO";
 
+const rtlStyle = { direction: "rtl", textAlign: "right", unicodeBidi: "plaintext" };
 const inputCls =
   "w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink focus:outline-none transition-all";
 
@@ -147,10 +148,11 @@ export default function RegistrationForm({ form, questions, slug }) {
         {(q.type === "short_text" || q.type === "email" || q.type === "phone_ir" || q.type === "telegram_id") && (
           <input
             type={q.type === "email" ? "email" : "text"}
-            dir={q.type === "email" ? "ltr" : "auto"}
+            dir={q.type === "email" ? "ltr" : "rtl"}
             value={val}
             onChange={(e) => setAnswer(q.id, e.target.value)}
             placeholder={getPlaceholder(q)}
+            style={q.type === "email" ? undefined : rtlStyle}
             className={`${inputCls} ${hasError ? "!border-magenta" : ""}`}
           />
         )}
@@ -158,10 +160,12 @@ export default function RegistrationForm({ form, questions, slug }) {
         {/* long_text */}
         {q.type === "long_text" && (
           <textarea
+            dir="rtl"
             rows={3}
             value={val}
             onChange={(e) => setAnswer(q.id, e.target.value)}
             placeholder={getPlaceholder(q)}
+            style={rtlStyle}
             className={`${inputCls} resize-y ${hasError ? "!border-magenta" : ""}`}
           />
         )}
@@ -170,9 +174,11 @@ export default function RegistrationForm({ form, questions, slug }) {
         {q.type === "number" && (
           <input
             type="number"
+            dir="rtl"
             value={val}
             onChange={(e) => setAnswer(q.id, e.target.value)}
             placeholder={getPlaceholder(q)}
+            style={rtlStyle}
             className={`${inputCls} ${hasError ? "!border-magenta" : ""}`}
           />
         )}
