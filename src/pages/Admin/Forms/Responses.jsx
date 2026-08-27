@@ -29,6 +29,9 @@ import {
   CheckCircle2,
   AlertCircle,
   MessagesSquare,
+  SearchX,
+  Inbox,
+  Puzzle,
 } from "lucide-react";
 import SEO from "../../../components/ui/SEO";
 import {
@@ -403,7 +406,7 @@ export default function Responses() {
   if (!form) {
     return (
       <EmptyState
-        icon="🤷"
+        icon={<SearchX size={48} />}
         title="فرم پیدا نشد!"
         action={<Button as={Link} to="/admin/forms" variant="indigo">برگشت به فرم‌ها</Button>}
       />
@@ -528,7 +531,7 @@ export default function Responses() {
       {tab === "list" && (
         filtered.length === 0 ? (
           <EmptyState
-            icon="📭"
+            icon={<Inbox size={48} />}
             title="هنوز پاسخی ثبت نشده!"
             subtitle="لینک فرم را بفرست؛ هر پاسخ جدید اینجا ظاهر می‌شود."
             action={form.published ? (
@@ -605,7 +608,7 @@ export default function Responses() {
       {tab === "analysis" && (
         <div className="grid lg:grid-cols-2 gap-4">
           {questions.length === 0 ? (
-            <EmptyState icon="🧩" title="این فرم هنوز سوالی ندارد!" />
+            <EmptyState        icon={<Puzzle size={48} />} title="این فرم هنوز سوالی ندارد!" />
           ) : (
             questions.map((q) => (
               <QuestionAnalysis

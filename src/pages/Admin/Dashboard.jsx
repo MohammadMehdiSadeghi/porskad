@@ -8,6 +8,7 @@ import Badge from "../../components/ui/Badge";
 import Spinner from "../../components/ui/Spinner";
 import EmptyState from "../../components/ui/EmptyState";
 import { useToast } from "../../components/ui/Toast";
+import { Inbox } from "lucide-react";
 import { faNum, faRelative, faDuration, DEVICE_FA } from "../../lib/utils";
 import SEO from "../../components/ui/SEO";
 
@@ -111,7 +112,7 @@ export default function Dashboard() {
         <h2 className="text-xl font-black text-navy mb-4">آخرین پاسخ‌ها</h2>
         {recent.length === 0 ? (
           <EmptyState
-            icon="📭"
+            icon={<Inbox size={48} />}
             title="هنوز هیچ پاسخی نرسیده!"
             subtitle="اولین فرمت را بساز، لینکش را بفرست و منتظر بمان؛ این‌جا زنده پر می‌شود."
             action={<Button as={Link} to="/admin/forms" variant="teal">ساخت اولین فرم</Button>}

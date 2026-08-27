@@ -18,6 +18,7 @@ import {
   Copy,
   Check,
   Eye,
+  FileText,
 } from "lucide-react";
 
 // ─── توضیحات هر حالت Embed ───
@@ -369,7 +370,7 @@ export default function EmbedHub() {
       {/* لیست فرم‌ها — گرید شبیه صفحه فرم‌ها */}
       {forms.length === 0 ? (
         <EmptyState
-          icon="📝"
+          icon={<FileText size={48} />}
           title="هنوز فرمی نداری!"
           subtitle="اول یه فرم بساز، بعد بیا اینجا کدش رو بردار."
           action={

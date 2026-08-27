@@ -2,14 +2,14 @@ import { NavLink, Navigate, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Spinner from "../ui/Spinner";
 import Button from "../ui/Button";
-import Badge from "../ui/Badge";
+import { LayoutDashboard, FileText, Share2, Users, User, LogOut } from "lucide-react";
 
 const NAV_ITEMS = [
-  { to: "/admin", label: "داشبورد", icon: "📊", end: true },
-  { to: "/admin/forms", label: "فرم‌ها", icon: "🗂️", end: false },
-  { to: "/admin/embed", label: "اشتراک‌گذاری", icon: "🔗", end: false },
-  { to: "/admin/managers", label: "مدیران", icon: "👥", end: false, adminOnly: true },
-  { to: "/admin/profile", label: "پروفایل", icon: "👤", end: false },
+  { to: "/admin", label: "داشبورد", icon: LayoutDashboard, end: true },
+  { to: "/admin/forms", label: "فرم‌ها", icon: FileText, end: false },
+  { to: "/admin/embed", label: "اشتراک‌گذاری", icon: Share2, end: false },
+  { to: "/admin/managers", label: "مدیران", icon: Users, end: false, adminOnly: true },
+  { to: "/admin/profile", label: "پروفایل", icon: User, end: false },
 ];
 
 export default function AdminLayout() {
@@ -58,7 +58,7 @@ export default function AdminLayout() {
                  }`
               }
             >
-              <span>{item.icon}</span>
+              <item.icon size={18} />
               {item.label}
             </NavLink>
           ))}
@@ -69,7 +69,7 @@ export default function AdminLayout() {
             {user.email}
           </span>
           <Button variant="ghost" size="sm" className="!text-white/80 hover:!text-white !border-white/20" onClick={handleLogout}>
-            خروج ⏻
+            <LogOut size={14} className="ml-1" /> خروج
           </Button>
         </div>
       </aside>

@@ -8,7 +8,7 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import StickerCard from "../../components/ui/StickerCard";
 import Modal from "../../components/ui/Modal";
-import { Plus, Edit, Trash2, Check, X, Shield, Crown } from "lucide-react";
+import { Plus, Edit, Trash2, Check, X, Shield, Crown, Users } from "lucide-react";
 import SEO from "../../components/ui/SEO";
 import { faNum } from "../../lib/utils";
 
@@ -161,7 +161,7 @@ export default function Managers() {
       {/* لیست مدیران */}
       {managers.length === 0 ? (
         <EmptyState
-          icon="👥"
+          icon={<Users size={48} />}
           title="هنوز مدیری وجود ندارد"
           subtitle="اولین مدیر خود را ایجاد کنید."
           action={

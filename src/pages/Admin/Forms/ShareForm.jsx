@@ -13,6 +13,7 @@ import {
   Check,
   Code,
   Link2,
+  SearchX,
   ExternalLink,
   Globe,
   MessageSquare,
@@ -99,7 +100,7 @@ export default function ShareForm() {
   if (!form) {
     return (
       <EmptyState
-        icon="🤷"
+        icon={<SearchX size={48} />}
         title="فرم پیدا نشد!"
         action={<Button as={Link} to="/admin/forms" variant="indigo">برگشت</Button>}
       />

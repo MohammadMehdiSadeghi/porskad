@@ -10,6 +10,7 @@ import Modal from "../../../components/ui/Modal";
 import { useToast } from "../../../components/ui/Toast";
 import { useAuth } from "../../../context/AuthContext";
 import { copyToClipboard, randomSlug } from "../../../lib/utils";
+import { FileText, Plus } from "lucide-react";
 import SEO from "../../../components/ui/SEO";
 
 // ─── تمپلیت فرم ثبت‌نامی ───
@@ -260,7 +261,7 @@ export default function FormsList() {
       {/* Forms Grid */}
       {filtered.length === 0 ? (
         <EmptyState
-          icon="🗂️"
+          icon={<FileText size={48} />}
           title={search ? "فرمی یافت نشد" : "هنوز فرمی نساخته‌ای!"}
           subtitle={search ? "عبارت جستجو را تغییر دهید." : "با دکمه‌ی «فرم جدید» شروع کن."}
           action={!search && <Button variant="indigo" onClick={() => setShowTypeModal(true)}>+ فرم جدید</Button>}
