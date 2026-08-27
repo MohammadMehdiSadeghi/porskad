@@ -171,6 +171,18 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
             className={`${inputCls} !text-sm`}
           />
 
+          {/* placeholder سفارشی — فقط برای فیلدهای متنی */}
+          {!isChoice && (
+            <Field label="متن راهنما (Placeholder)" hint="متنی که داخل فیلد نمایش داده می‌شود">
+              <input
+                value={q.placeholder ?? ""}
+                onChange={(e) => onChange({ placeholder: e.target.value })}
+                placeholder={meta.defaultPlaceholder || "متن راهنما..."}
+                className={`${inputCls} !text-sm`}
+              />
+            </Field>
+          )}
+
           {/* ─── گزینه‌ها (چندگزینه‌ای) ─── */}
           {meta.hasOptions && (
             <div className="flex flex-col gap-2 border-2 border-dashed border-orange/50 rounded-pill-md bg-[#FEF7EC]/60 p-3">
@@ -444,6 +456,7 @@ export default function FormBuilder() {
       setQuestions((qs ?? []).map((q) => ({
         ...q,
         localId: q.id,
+        placeholder: q.placeholder ?? "",
         // مهاجرت: اگه conditions وجود نداشت از condition قدیمی بساز
         conditions: q.conditions ?? (q.condition ? { group_operator: "AND", conditions: [q.condition] } : null),
         jump_actions: q.jump_actions ?? [],
@@ -544,6 +557,7 @@ export default function FormBuilder() {
         type: q.type,
         title: q.title.trim(),
         description: q.description ?? "",
+        placeholder: q.placeholder ?? "",
         required: !!q.required,
         options: q.type === "choice" ? q.options.map((o) => o.trim()) : q.type === "yes_no" ? ["بله", "خیر"] : [],
         position: i,
@@ -572,6 +586,7 @@ export default function FormBuilder() {
         setQuestions(freshQs.map((q) => ({
           ...q,
           localId: q.id,
+          placeholder: q.placeholder ?? "",
           conditions: q.conditions ?? (q.condition ? { group_operator: "AND", conditions: [q.condition] } : null),
           jump_actions: q.jump_actions ?? [],
         })));

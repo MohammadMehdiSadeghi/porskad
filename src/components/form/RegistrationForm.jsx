@@ -172,7 +172,7 @@ export default function RegistrationForm({ form, questions, slug }) {
             type="number"
             value={val}
             onChange={(e) => setAnswer(q.id, e.target.value)}
-            placeholder="عدد را وارد کنید..."
+            placeholder={getPlaceholder(q)}
             className={`${inputCls} ${hasError ? "!border-magenta" : ""}`}
           />
         )}
@@ -245,14 +245,17 @@ export default function RegistrationForm({ form, questions, slug }) {
     );
   }
 
+  const defaultPlaceholders = {
+    short_text: "پاسخ خود را بنویسید...",
+    long_text: "بنویس...",
+    email: "example@email.com",
+    phone_ir: "09xxxxxxxxx",
+    number: "عدد را وارد کنید...",
+    telegram_id: "@username",
+  };
+
   function getPlaceholder(q) {
-    switch (q.type) {
-      case "short_text": return q.title.includes("نام") ? "مثال: سارا حسینی" : "پاسخ خود را بنویسید...";
-      case "email": return "example@email.com";
-      case "phone_ir": return "09xxxxxxxxx";
-      case "telegram_id": return "@username";
-      default: return "پاسخ خود را بنویسید...";
-    }
+    return (q.placeholder && q.placeholder.trim()) || defaultPlaceholders[q.type] || "پاسخ خود را بنویسید...";
   }
 
   // ─── صفحه موفقیت ───

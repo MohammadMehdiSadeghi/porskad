@@ -54,7 +54,7 @@ function getStepTheme(index) {
 }
 
 // ورودی متنی مشترک
-function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, onEnter, ...rest }) {
+function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, onEnter, placeholder: customPlaceholder, ...rest }) {
   const shared = clsx(
     "w-full bg-white border-2 rounded-pill-md px-4 py-3.5",
     "font-semibold text-ink placeholder:text-ink-subtle/60 placeholder:font-medium",
@@ -63,6 +63,16 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
       ? "border-magenta focus:ring-magenta/20"
       : "border-ink/25 focus:border-teal focus:ring-teal/20",
   );
+
+  const defaultPlaceholders = {
+    short_text: "جوابت رو این‌جا بنویس...",
+    long_text: "بنویس...",
+    email: "name@example.com",
+    phone_ir: "09123456789",
+    number: "مثلاً 42",
+    telegram_id: "@username",
+  };
+  const ph = (customPlaceholder && customPlaceholder.trim()) || defaultPlaceholders[type] || "";
 
   if (type === "long_text") {
     return (
@@ -73,7 +83,7 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
         rows={5}
         autoFocus={autoFocus}
         className={clsx(shared, "resize-y min-h-[8rem] leading-8")}
-        placeholder="بنویس..."
+        placeholder={ph}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey && onEnter) {
             e.preventDefault();
@@ -105,7 +115,7 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
             }
           }}
           className={clsx(shared, "text-left pr-11")}
-          placeholder="@username"
+          placeholder={ph}
           {...rest}
         />
       </div>
@@ -113,12 +123,6 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
   }
 
   const isLtr = type === "email" || type === "phone_ir";
-  const placeholders = {
-    short_text: "جوابت رو این‌جا بنویس...",
-    email: "name@example.com",
-    phone_ir: "09123456789",
-    number: "مثلاً 42",
-  };
 
   return (
     <div className="relative">
@@ -153,7 +157,7 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
           }
         }}
         className={clsx(shared, isLtr && "text-left", type === "phone_ir" && "pr-11")}
-        placeholder={placeholders[type] ?? ""}
+        placeholder={ph}
         {...rest}
       />
     </div>
@@ -361,6 +365,7 @@ export default function QuestionStep({
           error={error}
           onChange={onChange}
           onEnter={handleNext}
+          placeholder={question.placeholder}
         />
       )}
 
