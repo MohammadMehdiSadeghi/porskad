@@ -137,7 +137,7 @@ export default function ShareForm() {
       label: "تمام صفحه (Fullpage)",
       icon: Maximize,
       description: "فرم تمام صفحه را پر می‌کند",
-      code: `<div id="${publicId}" style="min-height:480px;width:100vw;height:100dvh;position:fixed;top:0;left:0;z-index:99999;">\n  <div style="position:absolute;top:50%;left:50%;width:35px;height:35px;border:4px solid rgba(0,0,0,0.1);border-top:4px solid #555;border-radius:50%;animation:spin 1s linear infinite;"></div>\n  <script>\n    var s=document.createElement('script');\n    s.src='${embedUrl}';\n    s.onload=function(){document.getElementById('porsline-loading-${publicId}').style.display='none';};\n    document.getElementById('${publicId}').appendChild(s);\n  </script>\n</div>`,
+      code: `<div id="pc-${publicId}" style="min-height:480px;width:100vw;height:100dvh;position:fixed;top:0;left:0;z-index:99999;background:#fff;">\n  <div id="pc-load-${publicId}" style="position:absolute;top:50%;left:50%;width:35px;height:35px;border:4px solid rgba(0,0,0,0.1);border-top:4px solid #555;border-radius:50%;animation:porscad-spin 1s linear infinite;"></div>\n  <style>@keyframes porscad-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>\n  <script>\n    var s=document.createElement('iframe');\n    s.src='${embedUrl}';\n    s.style.cssText='width:100%;height:100%;border:none;position:absolute;top:0;left:0;';\n    s.onload=function(){var l=document.getElementById('pc-load-${publicId}');if(l)l.style.display='none';};\n    document.getElementById('pc-${publicId}').appendChild(s);\n  </script>\n</div>`,
     },
     iframe: {
       label: "Iframe مستقیم",
