@@ -376,7 +376,7 @@ export default function Managers() {
 
       {/* ─── مودال ایجاد مدیر ─── */}
       <Modal open={showCreateModal} onClose={() => { setShowCreateModal(false); setCreateError(null); }} title="ایجاد مدیر جدید">
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 max-h-[80vh] overflow-y-auto pr-1">
           <div>
             <label className="block text-sm font-extrabold text-navy mb-1.5">ایمیل</label>
             <input type="email" dir="ltr" value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
@@ -401,7 +401,7 @@ export default function Managers() {
                 {newPermissions.length} از {ALL_PERM_IDS.length} فعال
               </span>
             </div>
-            <div className="flex flex-col gap-2 max-h-64 overflow-y-auto pr-1">
+            <div className="flex flex-col gap-2">
               {PERMISSION_CATEGORIES.map((cat) => (
                 <PermissionCategory
                   key={cat.id}
@@ -431,7 +431,7 @@ export default function Managers() {
       {/* ─── مودال ویرایش مدیر ─── */}
       <Modal open={showEditModal} onClose={() => setShowEditModal(false)}
         title={selectedManager?.is_owner ? "ویرایش صاحب اصلی" : "ویرایش مدیر"}>
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 max-h-[80vh] overflow-y-auto pr-1">
           {selectedManager?.is_owner && (
             <div className="flex items-center gap-2 bg-college-light border-2 border-orange/30 rounded-pill-md px-3 py-2 text-sm font-bold text-orange">
               <Crown size={16} /> صاحب اصلی سایت — فقط نام قابل تغییر است
@@ -451,7 +451,7 @@ export default function Managers() {
                   {editPermissions.length} از {ALL_PERM_IDS.length} فعال
                 </span>
               </div>
-              <div className="flex flex-col gap-2 max-h-64 overflow-y-auto pr-1">
+              <div className="flex flex-col gap-2">
                 {PERMISSION_CATEGORIES.map((cat) => (
                   <PermissionCategory
                     key={cat.id}
