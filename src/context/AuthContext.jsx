@@ -214,7 +214,7 @@ export function AuthProvider({ children }) {
     if (Array.isArray(permissionIds) && userId) {
       const { error: permError } = await supabase.rpc("set_user_permissions", {
         p_user_id: userId,
-        p_permissions: permissionIds,
+        p_permission_ids: permissionIds,
       });
       if (permError) throw permError;
     }
@@ -261,7 +261,7 @@ export function AuthProvider({ children }) {
     if (Array.isArray(permissions)) {
       const { error } = await supabase.rpc("set_user_permissions", {
         p_user_id: managerId,
-        p_permissions: permissions,
+        p_permission_ids: permissions,
       });
       if (error) throw error;
     }
