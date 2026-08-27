@@ -12,6 +12,7 @@ import { normalizeAnswerValue, validateAnswer } from "../../lib/validators";
 import { calculateFlow, evaluateNextStep } from "../../lib/logic/flowEngine";
 import { faNum, faDuration, parseUserAgent } from "../../lib/utils";
 import QuestionStep from "./QuestionStep";
+import RegistrationForm from "../../components/form/RegistrationForm";
 import SEO from "../../components/ui/SEO";
 
 const draftKey = (slug) => `porskad_draft_${slug}`;
@@ -46,6 +47,7 @@ export default function FormFill() {
   const [loading, setLoading] = useState(true);
   const [unavailable, setUnavailable] = useState(null);
   const [logicRules, setLogicRules] = useState([]);
+  const [formType, setFormType] = useState("step_by_step");
 
   const [step, setStep] = useState(-1);
   const [dir, setDir] = useState(1);
@@ -105,6 +107,7 @@ export default function FormFill() {
       }
 
       setForm(formData);
+      setFormType(formData.form_type || "step_by_step");
       // نرمال‌سازی conditions و jump_actions
       setQuestions((qData ?? []).map((q) => ({
         ...q,
@@ -390,6 +393,18 @@ export default function FormFill() {
   if (unavailable) return <NotAvailable message={unavailable} />;
   if (!form) return null;
 
+  // ─── فرم ثبت‌نامی: تک‌صفحه‌ای ───
+  if (formType === "registration") {
+    return (
+      <RegistrationForm
+        form={form}
+        questions={questions}
+        slug={slug}
+      />
+    );
+  }
+
+  // ─── فرم مرحله به مرحله ───
   return (
     <div className="min-h-dvh dot-pattern bg-bg-mint flex flex-col overflow-x-hidden">
       <SEO
