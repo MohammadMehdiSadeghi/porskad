@@ -250,16 +250,28 @@ export default function SuperAdmin() {
   // ─── Activity Log ───
   async function loadActivity() {
     try {
-      const { data } = await supabase.from("activity_log").select("*").order("created_at", { ascending: false }).limit(100);
-      setActivityLog(data || []);
+      // ابتدا سعی کن مستقیم بخونی
+      const { data, error } = await supabase.from("activity_log").select("*").order("created_at", { ascending: false }).limit(100);
+      if (error) {
+        // اگه RLS جلوگیری کرد، از RPC استفاده کن
+        const { data: rpcData } = await supabase.rpc("export_table_data", { p_table_name: "activity_log" });
+        setActivityLog(Array.isArray(rpcData) ? rpcData.slice(0, 100) : []);
+      } else {
+        setActivityLog(data || []);
+      }
     } catch { setActivityLog([]); }
   }
 
   // ─── Error Log ───
   async function loadErrors() {
     try {
-      const { data } = await supabase.from("error_log").select("*").order("created_at", { ascending: false }).limit(100);
-      setErrorLog(data || []);
+      const { data, error } = await supabase.from("error_log").select("*").order("created_at", { ascending: false }).limit(100);
+      if (error) {
+        const { data: rpcData } = await supabase.rpc("export_table_data", { p_table_name: "error_log" });
+        setErrorLog(Array.isArray(rpcData) ? rpcData.slice(0, 100) : []);
+      } else {
+        setErrorLog(data || []);
+      }
     } catch { setErrorLog([]); }
   }
 
@@ -647,6 +659,16 @@ export default function SuperAdmin() {
       {/* ═══════════ Logs ═══════════ */}
       {tab === "logs" && (
         <div className="flex flex-col gap-4">
+          <div className="flex gap-2">
+            <button onClick={() => { loadActivity(); loadErrors(); }} className="px-3 py-1.5 bg-ibm-blue text-white text-[0.6rem] font-semibold rounded hover:bg-ibm-blue-hover transition-colors">Refresh All</button>
+            <button onClick={async () => {
+              try {
+                await supabase.rpc("log_activity", { p_action: "test_log", p_target_type: "system", p_details: { test: true } });
+                showToast("Test log created");
+                loadActivity();
+              } catch (err) { showToast("Error: " + err.message, "error"); }
+            }} className="px-3 py-1.5 border border-cool-gray-30 text-[0.6rem] font-semibold rounded hover:bg-cool-gray-10 transition-colors">+ Test Log</button>
+          </div>
           {/* Activity */}
           <div className="bg-white border border-cool-gray-20 rounded-lg">
             <div className="px-3 py-2 border-b border-cool-gray-20 flex items-center justify-between">
