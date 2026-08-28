@@ -131,5 +131,8 @@ export function makeQuestion(type, position = 0) {
     position,
     conditions: null,
     jump_actions: [],
+    correct_answer: null,
+    points: undefined,
+    validation: null,
   };
 }

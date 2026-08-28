@@ -16,6 +16,8 @@ import { QUESTION_TYPES } from "../../lib/questionTypes";
 import { supabase } from "../../lib/supabaseClient";
 import ConfirmDialog from "../ui/ConfirmDialog";
 import SEO from "../ui/SEO";
+import { calculateScore, hasScoring } from "../../lib/scoring";
+import ScoreResult from "../ui/ScoreResult";
 
 const inputCls =
   "w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink placeholder:text-ink/40 placeholder:font-medium focus:outline-none transition-all";
@@ -38,6 +40,7 @@ export default function RegistrationForm({ form, questions, slug }) {
   const [startedAt] = useState(Date.now());
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmUnfilled, setConfirmUnfilled] = useState([]);
+  const [scoreResult, setScoreResult] = useState(null);
   const formRef = useRef(null);
 
   const sortedQuestions = useMemo(
@@ -130,6 +133,12 @@ export default function RegistrationForm({ form, questions, slug }) {
       if (rows.length) {
         const { error: ansError } = await supabase.from("answers").insert(rows);
         if (ansError) throw ansError;
+      }
+
+      // محاسبه نمره
+      if (hasScoring(sortedQuestions)) {
+        const score = calculateScore(sortedQuestions, answers);
+        setScoreResult(score);
       }
 
       setSubmitted(true);
@@ -283,6 +292,14 @@ export default function RegistrationForm({ form, questions, slug }) {
                 <motion.span className="text-6xl" animate={{ rotate: [0, -8, 8, -4, 4, 0] }} transition={{ duration: 0.7, delay: 0.2 }}>🎉</motion.span>
                 <h1 className="text-2xl font-black text-navy leading-snug">{form.exit_title || "ثبت‌نام با موفقیت انجام شد!"}</h1>
                 <p className="font-semibold text-ink-soft leading-7 max-w-md">{form.exit_message || "ممنون از ثبت‌نام شما."}</p>
+                {scoreResult && (
+                  <ScoreResult
+                    score={scoreResult.score}
+                    total={scoreResult.total}
+                    details={scoreResult.details}
+                    questions={sortedQuestions}
+                  />
+                )}
               </div>
             </StickerCard>
           </motion.div>

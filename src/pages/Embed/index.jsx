@@ -7,6 +7,8 @@ import { calculateFlow, evaluateNextStep } from "../../lib/logic/flowEngine";
 import { QUESTION_TYPES } from "../../lib/questionTypes";
 import { faNum, faDuration, parseUserAgent } from "../../lib/utils";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
+import { calculateScore, hasScoring } from "../../lib/scoring";
+import ScoreResult from "../../components/ui/ScoreResult";
 import "../../index.css";
 
 // ─── پیام‌های postMessage به سایت میزبان ───
@@ -205,6 +207,7 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
   const [error, setError] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmUnfilled, setConfirmUnfilled] = useState([]);
+  const [scoreResult, setScoreResult] = useState(null);
 
   function setAnswer(qId, val, q) {
     setAnswers((p) => ({ ...p, [qId]: val }));
@@ -276,6 +279,13 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
         p_form_public_id: formId, p_answers: answersObj, p_meta: meta,
       });
       if (rpcError) throw rpcError;
+
+      // محاسبه نمره
+      if (hasScoring(questions)) {
+        const score = calculateScore(questions, answers);
+        setScoreResult(score);
+      }
+
       postToParent("pcode:submitted", { formId, responseId: data?.responseId });
       setSubmitted(true);
     } catch (err) {
@@ -295,6 +305,14 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
           <span className="text-5xl mb-3 block">🎉</span>
           <h1 className="text-2xl font-black text-navy mb-2">{schema.exit_title || "ثبت‌نام با موفقیت انجام شد!"}</h1>
           <p className="text-ink-soft leading-7">{schema.exit_message || "ممنون از ثبت‌نام شما."}</p>
+          {scoreResult && (
+            <ScoreResult
+              score={scoreResult.score}
+              total={scoreResult.total}
+              details={scoreResult.details}
+              questions={questions}
+            />
+          )}
         </motion.div>
       </div>
     );
@@ -476,6 +494,7 @@ export default function EmbedForm() {
   const [touchedFields, setTouchedFields] = useState({});
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmUnfilled, setConfirmUnfilled] = useState([]);
+  const [scoreResult, setScoreResult] = useState(null);
   const stepEnteredAt = useRef(Date.now());
 
   useAutoResize();
@@ -665,6 +684,12 @@ export default function EmbedForm() {
 
       if (rpcError) throw rpcError;
 
+      // محاسبه نمره
+      if (hasScoring(questions)) {
+        const score = calculateScore(visibleQuestions, answers);
+        setScoreResult(score);
+      }
+
       postToParent("pcode:submitted", { formId, responseId: data?.responseId });
       setDir(1);
       setStep(total);
@@ -843,6 +868,14 @@ export default function EmbedForm() {
                   <span className="text-5xl">🎉</span>
                   <h1 className="text-2xl font-black text-navy">{schema.exit_title}</h1>
                   <p className="text-ink-soft leading-7">{schema.exit_message}</p>
+                  {scoreResult && (
+                    <ScoreResult
+                      score={scoreResult.score}
+                      total={scoreResult.total}
+                      details={scoreResult.details}
+                      questions={questions}
+                    />
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

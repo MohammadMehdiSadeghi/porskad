@@ -16,6 +16,8 @@ import QuestionStep from "./QuestionStep";
 import RegistrationForm from "../../components/form/RegistrationForm";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import SEO from "../../components/ui/SEO";
+import { calculateScore, hasScoring } from "../../lib/scoring";
+import ScoreResult from "../../components/ui/ScoreResult";
 
 const draftKey = (slug) => `porskad_draft_${slug}`;
 
@@ -82,6 +84,7 @@ export default function FormFill() {
   const stepEnteredAt = useRef(Date.now());
   const jumpQueueRef = useRef([]); // صف پرش‌ها (برای checkbox)
   const [variables, setVariables] = useState({}); // متغیرهای سفارشی
+  const [scoreResult, setScoreResult] = useState(null); // نتیجه نمره‌دهی
 
   // ─── اطلاعات مخفی (Hidden Fields) از URL ───
   const hiddenFields = useMemo(() => {
@@ -394,6 +397,13 @@ export default function FormFill() {
       }
 
       localStorage.removeItem(draftKey(slug));
+
+      // محاسبه نمره اگه سوال نمره‌دار وجود داره
+      if (hasScoring(questions)) {
+        const score = calculateScore(visibleQuestions, answers);
+        setScoreResult(score);
+      }
+
       setDir(1);
       setStep(total);
     } catch (err) {
@@ -610,6 +620,17 @@ export default function FormFill() {
                     <p className="font-semibold text-ink-soft leading-8 max-w-md">
                       {form.exit_message}
                     </p>
+
+                    {/* نمایش نتیجه نمره‌دهی */}
+                    {scoreResult && (
+                      <ScoreResult
+                        score={scoreResult.score}
+                        total={scoreResult.total}
+                        details={scoreResult.details}
+                        questions={questions}
+                      />
+                    )}
+
                     {startedAt && (
                       <span className="text-xs font-medium text-ink-subtle">
                         این پاسخ در {faDuration(Math.round((Date.now() - startedAt) / 1000))} ثبت شد

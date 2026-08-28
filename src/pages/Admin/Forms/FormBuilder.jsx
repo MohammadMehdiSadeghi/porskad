@@ -301,6 +301,83 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
             </div>
           )}
 
+          {/* ─── گزینه صحیح (Correct Answer) ─── */}
+          {isChoice && (
+            <div className="flex flex-col gap-2 border-2 border-dashed border-teal/40 rounded-pill-md bg-teal/5 p-3">
+              <span className="text-xs font-extrabold text-teal-text">
+                🎯 گزینه صحیح (برای نمره‌دهی)
+              </span>
+              <span className="text-[0.6rem] font-medium text-ink-subtle">
+                اگه گزینه صحیح مشخص کنید، بعد از ارسال فرم به کاربر نمره نمایش داده می‌شود.
+              </span>
+
+              {/* choice / yes_no → تک انتخابی */}
+              {q.type !== "checkbox" ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {(q.type === "yes_no" ? ["بله", "خیر"] : q.options).map((opt, i) => {
+                    const isSelected = q.correct_answer === opt;
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => onChange({ correct_answer: isSelected ? null : opt })}
+                        className={`text-[0.65rem] font-bold px-3 py-1.5 rounded-pill-md border-2 transition-all cursor-pointer ${
+                          isSelected
+                            ? "border-teal bg-teal text-white"
+                            : "border-ink/15 bg-white text-ink hover:border-teal/40"
+                        }`}
+                      >
+                        {isSelected ? "✓ " : ""}{opt}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* checkbox → چند انتخابی */
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[0.6rem] font-medium text-ink-subtle">چند گزینه صحیح انتخاب کنید:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {q.options.map((opt, i) => {
+                      const correctArr = Array.isArray(q.correct_answer) ? q.correct_answer : [];
+                      const isSelected = correctArr.includes(opt);
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => {
+                            const next = isSelected
+                              ? correctArr.filter((v) => v !== opt)
+                              : [...correctArr, opt];
+                            onChange({ correct_answer: next.length > 0 ? next : null });
+                          }}
+                          className={`text-[0.65rem] font-bold px-3 py-1.5 rounded-pill-md border-2 transition-all cursor-pointer ${
+                            isSelected
+                              ? "border-teal bg-teal text-white"
+                              : "border-ink/15 bg-white text-ink hover:border-teal/40"
+                          }`}
+                        >
+                          {isSelected ? "✓ " : ""}{opt}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* امتیاز هر سوال */}
+              <Field label="امتیاز این سوال" hint="تعداد نمره برای پاسخ صحیح">
+                <input
+                  type="number"
+                  min="0"
+                  value={q.points ?? ""}
+                  onChange={(e) => onChange({ points: e.target.value ? Number(e.target.value) : undefined })}
+                  placeholder="مثلاً ۱۰"
+                  className={`${inputCls} !py-1.5 !text-xs w-32`}
+                />
+              </Field>
+            </div>
+          )}
+
           {/* ─── شرط نمایش (Visibility Condition) ─── */}
           {index > 0 && (
             <div className="flex flex-col gap-2 border-2 border-dashed border-navy/20 rounded-pill-md bg-bg-lavender/40 p-3">
@@ -540,6 +617,8 @@ export default function FormBuilder() {
         localId: q.id,
         placeholder: q.placeholder ?? "",
         validation: q.validation ?? null,
+        correct_answer: q.correct_answer ?? null,
+        points: q.points ?? undefined,
         // مهاجرت: اگه conditions وجود نداشت از condition قدیمی بساز
         conditions: normalizeConditionGroup(q.conditions ?? (q.condition ? { group_operator: "AND", conditions: [q.condition] } : null)),
         jump_actions: q.jump_actions ?? [],
@@ -648,6 +727,8 @@ export default function FormBuilder() {
         position: i,
         conditions: q.conditions ?? null,
         jump_actions: q.jump_actions ?? [],
+        correct_answer: q.correct_answer ?? null,
+        points: q.points ?? null,
       }));
 
       const { data: freshQs, error } = await supabase.rpc("save_form", {
