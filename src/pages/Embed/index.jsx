@@ -141,9 +141,6 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
   return (
     <div className="flex flex-col gap-2">
       {options.map((opt, i) => (
-  return (
-    <div className="flex flex-col gap-2">
-      {options.map((opt, i) => (
         <button
           key={i}
           type="button"
