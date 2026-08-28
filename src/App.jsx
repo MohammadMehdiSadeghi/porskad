@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { Outlet, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./components/ui/Toast";
+import { NotificationProvider } from "./context/NotificationContext";
 import SetupNotice from "./components/ui/SetupNotice";
 import { isSupabaseConfigured } from "./lib/supabaseClient";
 
@@ -81,6 +82,7 @@ export default function App() {
     <ErrorBoundary>
       <AuthProvider>
         <ToastProvider>
+        <NotificationProvider>
           <Routes>
             {/* عمومی — فرم پر کردن */}
             <Route path="/f/:slug" element={<FormFill />} />
@@ -115,6 +117,7 @@ export default function App() {
             <Route path="/index.html" element={<Navigate to="/" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+        </NotificationProvider>
         </ToastProvider>
       </AuthProvider>
     </ErrorBoundary>

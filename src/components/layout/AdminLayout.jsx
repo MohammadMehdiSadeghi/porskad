@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import Spinner from "../ui/Spinner";
 import Button from "../ui/Button";
 import { LayoutDashboard, FileText, Share2, MessageSquare, Users, User, LogOut } from "lucide-react";
+import NotificationBell from "../ui/NotificationBell";
 
 const NAV_ITEMS = [
   { to: "/admin", label: "داشبورد", icon: LayoutDashboard, end: true },
@@ -39,9 +40,12 @@ export default function AdminLayout() {
             <span>پرس</span>
             <span className="text-teal">کاد</span>
           </span>
-          <span className="text-[0.65rem] font-bold bg-teal/25 text-teal rounded-pill-sm px-1.5 py-0.5">
-            پنل ادمین
-          </span>
+          <div className="flex items-center gap-1.5">
+            <NotificationBell />
+            <span className="text-[0.65rem] font-bold bg-teal/25 text-teal rounded-pill-sm px-1.5 py-0.5">
+              پنل ادمین
+            </span>
+          </div>
         </div>
 
         <nav className="flex sm:flex-col gap-1 px-3 py-3 overflow-x-auto">
