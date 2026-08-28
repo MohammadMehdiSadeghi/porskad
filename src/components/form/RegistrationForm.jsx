@@ -44,7 +44,7 @@ function DropdownChoice({ options = [], value, onChange }) {
         </svg>
       </button>
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border-2 border-ink/15 rounded-pill-md [corner-shape:squircle] shadow-lg overflow-hidden">
+        <div className="absolute z-[100] w-full mt-1 bg-white border-2 border-ecosystem-normal/30 rounded-pill-md [corner-shape:squircle] shadow-[0_8px_32px_rgba(0,0,0,0.18)] overflow-hidden">
           {options.map((opt, i) => {
             const selected = value === opt;
             return (
