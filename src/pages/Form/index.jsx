@@ -209,7 +209,7 @@ export default function FormFill() {
       {step >= 0 && step < total && <div className="w-full max-w-lg mx-auto px-3 pb-1"><ProgressBar value={progressValue} max={visibleTotal} showLabel /></div>}
 
       <main className="flex-1 flex items-start sm:items-center justify-center px-3 sm:px-4 py-3 sm:py-5 overflow-x-hidden">
-        <div className={`w-full max-w-lg ${step === -1 ? "-rotate-[0.5deg]" : "rotate-[0.3deg]"}`}>
+        <div className={`w-full max-w-2xl ${step === -1 ? "-rotate-[0.5deg]" : "rotate-[0.3deg]"}`}>
           <StickerCard theme="white" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
             <input type="text" name="website" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[9999rem] w-px h-px opacity-0" />
             <div className="p-4 sm:p-5 lg:p-6 min-h-[18rem] sm:min-h-[20rem] flex flex-col">

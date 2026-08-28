@@ -19,6 +19,7 @@ import EmbedHub from "./pages/Admin/EmbedHub";
 import SmsPanel from "./pages/Admin/SmsPanel";
 import Managers from "./pages/Admin/Managers";
 import Profile from "./pages/Admin/Profile";
+import SuperAdmin from "./pages/Admin/SuperAdmin";
 import AuthGuard from "./components/guards/AuthGuard";
 
 // Error Boundary
@@ -103,6 +104,7 @@ export default function App() {
               <Route path="forms/:id/responses" element={<Responses />} />
               <Route path="forms/:id/share" element={<ShareForm />} />
               <Route path="managers" element={<AuthGuard adminOnly={true}><Managers /></AuthGuard>} />
+              <Route path="superadmin" element={<AuthGuard adminOnly={true}><SuperAdmin /></AuthGuard>} />
               <Route path="embed" element={<EmbedHub />} />
               <Route path="sms" element={<SmsPanel />} />
               <Route path="profile" element={<Profile />} />

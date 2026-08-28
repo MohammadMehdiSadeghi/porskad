@@ -158,7 +158,7 @@ function PermissionSummary({ permissions }) {
 
 export default function Managers() {
   const { push } = useToast();
-  const { listManagers, createManager, updateManager, deactivateManager, activateManager, deleteManager } = useAuth();
+  const { listManagers, createManager, updateManager, deactivateManager, activateManager, deleteManager, isOwner, user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [managers, setManagers] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -180,7 +180,7 @@ export default function Managers() {
   async function load() {
     setLoading(true);
     try {
-      const data = await listManagers();
+      const data = await listManagers({ includeHidden: isOwner() });
       setManagers(data);
     } catch (err) {
       push("خطا در بارگذاری: " + err.message, "error");
@@ -249,6 +249,31 @@ export default function Managers() {
       load();
     } catch (err) {
       push("خطا: " + err.message, "error");
+    }
+  }
+
+  async function handleToggleHidden(manager) {
+    const isCurrentlyHidden = manager.hidden_from?.includes(user?.id);
+    let newHiddenFrom;
+    if (isCurrentlyHidden) {
+      // حذف از لیست مخفی
+      newHiddenFrom = (manager.hidden_from || []).filter((id) => id !== user.id);
+    } else {
+      // اضافه کردن به لیست مخفی
+      newHiddenFrom = [...(manager.hidden_from || []), user.id];
+    }
+    // اگه لیست خالی شد، null بفرست
+    const hiddenFromValue = newHiddenFrom.length > 0 ? newHiddenFrom : null;
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ hidden_from: hiddenFromValue })
+        .eq("id", manager.id);
+      if (error) throw error;
+      push(isCurrentlyHidden ? "مدیر نمایش داده شد ✅" : "مدیر از لیست مخفی شد ✅");
+      load();
+    } catch (err) {
+      push("خطا: " + (err.message || "ناموفق"), "error");
     }
   }
 
@@ -325,7 +350,10 @@ export default function Managers() {
                         <span className="text-xs font-medium text-ink-subtle" dir="ltr">{m.email}</span>
                       </div>
                     </div>
-                    {m.is_active ? <Badge color="green">فعال</Badge> : <Badge color="gray">غیرفعال</Badge>}
+                    <div className="flex items-center gap-1.5">
+                      {isOwner() && m.hidden_from?.includes(user?.id) && <Badge color="purple">مخفی</Badge>}
+                      {m.is_active ? <Badge color="green">فعال</Badge> : <Badge color="gray">غیرفعال</Badge>}
+                    </div>
                   </div>
 
                   {/* خلاصه مجوزها */}
@@ -360,6 +388,13 @@ export default function Managers() {
                           onClick={() => handleDeactivate(m.id)}>
                           {m.is_active ? "غیرفعال 🛑" : "فعال 🟢"}
                         </Button>
+                        {/* دکمه مخفی کردن — فقط برای صاحب اصلی */}
+                        {isOwner() && (
+                          <Button variant="ghost" size="sm" className="!text-purple-600"
+                            onClick={() => handleToggleHidden(m)}>
+                          {m.hidden_from?.includes(user?.id) ? "نمایش 👁️" : "مخفی 👁️‍🗨️"}
+                          </Button>
+                        )}
                         <Button variant="ghost" size="sm" className="!text-magenta-text"
                           onClick={() => setDeleteTarget(m)}>
                           حذف 🗑️

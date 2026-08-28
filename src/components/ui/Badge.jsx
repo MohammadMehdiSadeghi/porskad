@@ -15,6 +15,7 @@ const COLORS = {
   female: "border-female-normal text-female-dark bg-female-light",
   college: "border-college-normal text-college-dark bg-college-light",
   club: "border-club-normal text-club-dark bg-club-light",
+  purple: "border-purple-600 text-purple-700 bg-purple-50",
 };
 
 export default function Badge({ color = "teal", rotate = "", className = "", children }) {

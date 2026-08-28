@@ -297,7 +297,7 @@ export function AuthProvider({ children }) {
     if (error) throw error;
   }
 
-  async function listManagers() {
+  async function listManagers({ includeHidden = false } = {}) {
     try {
       // سعی کن با is_owner select کنی، اگه نشد بدون اون
       let profilesData = null;
@@ -305,7 +305,7 @@ export function AuthProvider({ children }) {
       try {
         const res = await supabase
           .from("profiles")
-          .select("id, email, full_name, is_active, is_owner, created_at, created_by")
+          .select("id, email, full_name, is_active, is_owner, created_at, created_by, hidden_from")
           .order("created_at", { ascending: true });
         profilesData = res.data;
         profilesError = res.error;
@@ -318,7 +318,17 @@ export function AuthProvider({ children }) {
         profilesError = res.error;
       }
       if (profilesError) throw profilesError;
-      const data = profilesData;
+      let data = profilesData;
+      // فیلتر کردن مدیران مخفی‌شده (فقط برای غیر owner)
+      if (!includeHidden && profile?.is_owner !== true && data) {
+        data = data.filter((m) => {
+          const hf = m.hidden_from;
+          if (!hf) return true;
+          // hidden_from یک آرایه از user_idهایی هست که این مدیر ازشون مخفیه
+          if (Array.isArray(hf)) return !hf.includes(user?.id);
+          return true;
+        });
+      }
 
       const { data: userRoles } = await supabase.from("user_roles").select("user_id, role_id, active");
 
