@@ -11,6 +11,7 @@ import Modal from "../../components/ui/Modal";
 import { Plus, Edit, Trash2, Crown, Users, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings, Eye, EyeOff } from "lucide-react";
 import SEO from "../../components/ui/SEO";
 import { supabase } from "../../lib/supabaseClient";
+import { logActivity } from "../../lib/activityLogger";
 
 // ─── دسته‌بندی مجوزها ───
 const PERMISSION_CATEGORIES = [
@@ -211,12 +212,13 @@ export default function Managers() {
     setBusy(true);
     setCreateError(null);
     try {
-      await createManager({
+      const mgrId = await createManager({
         email: newEmail.trim(),
         password: newPassword,
         fullName: newName.trim() || newEmail.split("@")[0],
         permissionIds: newPermissions,
       });
+      logActivity("create_manager", "user", mgrId, { email: newEmail.trim(), name: newName.trim() });
       push("مدیر جدید ایجاد شد! ✅");
       setShowCreateModal(false);
       setNewEmail("");
@@ -248,9 +250,11 @@ export default function Managers() {
     try {
       if (activating) {
         await activateManager(managerId);
+        logActivity("activate_manager", "user", managerId, { name: manager?.full_name });
         push("مدیر فعال شد ✅");
       } else {
         await deactivateManager(managerId);
+        logActivity("deactivate_manager", "user", managerId, { name: manager?.full_name });
         push("مدیر غیرفعال شد");
       }
       load();
@@ -267,6 +271,7 @@ export default function Managers() {
     }
     try {
       await deleteManager(deleteTarget.id);
+      logActivity("delete_manager", "user", deleteTarget.id, { email: deleteTarget.email, name: deleteTarget.full_name });
       push("مدیر حذف شد");
       setDeleteTarget(null);
       load();
@@ -567,6 +572,7 @@ export default function Managers() {
                     if (hfErr) throw hfErr;
                   }
                 }
+                logActivity("edit_manager", "user", selectedManager.id, { name: editName, permissions: editPermissions });
                 push("تغییرات ذخیره شد! ✅");
                 setShowEditModal(false);
                 load();

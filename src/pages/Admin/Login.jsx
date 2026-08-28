@@ -5,6 +5,7 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import { useAuth } from "../../context/AuthContext";
 import SEO from "../../components/ui/SEO";
+import { logActivity } from "../../lib/activityLogger";
 
 export default function Login() {
   const { login, user } = useAuth();
@@ -24,6 +25,7 @@ export default function Login() {
     setError(null);
     try {
       await login(email.trim(), password);
+      logActivity("login", "user", null, { email: email.trim() });
       navigate("/admin", { replace: true });
     } catch (err) {
       setError(

@@ -13,6 +13,7 @@ import { makeCondition, makeConditionGroup, makeJumpAction, GROUP_OPERATORS } fr
 import { faNum, slugify, copyToClipboard } from "../../../lib/utils";
 import { Link2, BarChart3, Share2, Puzzle, Settings, FileText, AlignLeft } from "lucide-react";
 import FormPreview from "../../../components/form/FormPreview";
+import { logActivity } from "../../../lib/activityLogger";
 import SEO from "../../../components/ui/SEO";
 
 const inputCls =
@@ -773,6 +774,8 @@ export default function FormBuilder() {
         p_form: pForm,
         p_questions: pQuestions,
       });
+
+      logActivity("edit_form", "form", id, { title: form.title, slug: cleanSlug, questions: pQuestions.length });
 
       if (error) {
         if (
