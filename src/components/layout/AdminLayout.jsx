@@ -40,12 +40,9 @@ export default function AdminLayout() {
             <span>پرس</span>
             <span className="text-teal">کاد</span>
           </span>
-          <div className="flex items-center gap-1.5">
-            <NotificationBell />
-            <span className="text-[0.65rem] font-bold bg-teal/25 text-teal rounded-pill-sm px-1.5 py-0.5">
-              پنل ادمین
-            </span>
-          </div>
+          <span className="text-[0.65rem] font-bold bg-teal/25 text-teal rounded-pill-sm px-1.5 py-0.5">
+            پنل ادمین
+          </span>
         </div>
 
         <nav className="flex sm:flex-col gap-1 px-3 py-3 overflow-x-auto">
@@ -73,7 +70,10 @@ export default function AdminLayout() {
           ))}
         </nav>
 
-        <div className="sm:mt-auto px-3 py-3 border-t border-white/10 flex sm:flex-col items-center gap-2">
+        <div className="sm:mt-auto px-3 py-3 border-t border-white/10 flex sm:flex-col items-center gap-3">
+          <div className="flex items-center justify-center">
+            <NotificationBell />
+          </div>
           <span className="text-[0.7rem] font-medium text-white/50 truncate sm:w-full text-center" dir="ltr">
             {user.email}
           </span>
