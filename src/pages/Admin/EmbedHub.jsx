@@ -359,10 +359,10 @@ export default function EmbedHub() {
 
       {/* هدر */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-black text-navy">
+        <h1 className="text-xl sm:text-3xl font-black text-navy">
           اشتراک‌گذاری فرم
         </h1>
-        <p className="text-sm font-semibold text-ink-subtle mt-1">
+        <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-1">
           روی فرم کلیک کن، حالت Embed رو انتخاب کن و کدش رو کپی کن
         </p>
       </div>

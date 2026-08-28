@@ -79,6 +79,15 @@ html {
     animation: pulse-dot 1.6s ease-in-out infinite;
 }
 
+/* ─── اسکرول‌بار مخفی برای ناو موبایل ─── */
+.scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+
 /* ─── شمارنده‌ی ستاره‌ی امتیاز ─── */
 .star-btn {
     transition: transform 150ms ease, filter 150ms ease;

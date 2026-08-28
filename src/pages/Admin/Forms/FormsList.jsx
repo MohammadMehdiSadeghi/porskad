@@ -195,9 +195,7 @@ export default function FormsList() {
       />
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-navy">فرم‌ها</h1>
-          <p className="text-sm font-semibold text-ink-subtle mt-1">
+        <div>           <h1 className="text-xl sm:text-3xl font-black text-navy">فرم‌ها</h1>           <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-1">
             {forms.length} فرم — برای ویرایش روی هر فرم بزنید
           </p>
         </div>

@@ -288,9 +288,7 @@ export default function Managers() {
 
       {/* هدر */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-navy">مدیریت مدیران</h1>
-          <p className="text-sm font-semibold text-ink-subtle mt-0.5">
+        <div>           <h1 className="text-xl sm:text-3xl font-black text-navy">مدیریت مدیران</h1>           <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-0.5">
             {managers.filter((m) => m.is_active).length} فعال — {ALL_PERM_IDS.length} مجوز
           </p>
         </div>

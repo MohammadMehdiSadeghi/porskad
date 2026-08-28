@@ -35,17 +35,19 @@ export default function AdminLayout() {
     <div className="h-screen bg-bg-lavender flex flex-col sm:flex-row overflow-hidden">
       {/* سایدبار — ثابت در سمت راست */}
       <aside className="bg-navy text-white sm:w-56 shrink-0 sm:h-screen flex flex-col overflow-y-auto">
-        <div className="flex items-center justify-between px-3 py-3 border-b border-white/10">
-          <span className="inline-flex items-baseline gap-0.5 text-lg font-black rotate-[-2deg] select-none">
+        {/* هدر */}
+        <div className="flex items-center justify-between px-3 py-2.5 border-b border-white/10">
+          <span className="inline-flex items-baseline gap-0.5 text-base sm:text-lg font-black rotate-[-2deg] select-none">
             <span>پرس</span>
             <span className="text-teal">کاد</span>
           </span>
-          <span className="text-[0.7rem] font-bold bg-teal/25 text-teal rounded-pill-sm px-1.5 py-0.5">
+          <span className="text-[0.6rem] sm:text-[0.7rem] font-bold bg-teal/25 text-teal rounded-pill-sm px-1.5 py-0.5">
             پنل ادمین
           </span>
         </div>
 
-        <nav className="flex sm:flex-col gap-1 px-2 py-2 overflow-x-auto">
+        {/* نав موبایل: افقی اسکرولی — نав دسکتاپ: عمودی */}
+        <nav className="flex sm:flex-col gap-1 px-1.5 sm:px-2 py-1.5 sm:py-2 overflow-x-auto scrollbar-none">
           {NAV_ITEMS.filter((item) => {
             if (item.adminOnly && role !== "admin") return false;
             if (item.permission && !hasPermission(item.permission)) return false;
@@ -56,29 +58,30 @@ export default function AdminLayout() {
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
-                `flex items-center gap-2.5 whitespace-nowrap rounded-pill-sm px-3.5 py-2.5
-                 text-sm font-bold transition-colors ${
+                `flex items-center gap-1.5 sm:gap-2.5 whitespace-nowrap shrink-0 rounded-pill-sm px-2.5 sm:px-3.5 py-2 sm:py-2.5
+                 text-[0.75rem] sm:text-sm font-bold transition-colors ${
                    isActive
                      ? "bg-teal text-white shadow-[2px_2px_0_0_rgba(0,0,0,0.25)]"
                      : "text-white/70 hover:text-white hover:bg-white/10"
                  }`
               }
             >
-              <item.icon size={17} />
-              {item.label}
+              <item.icon size={15} className="shrink-0" />
+              <span className="shrink-0">{item.label}</span>
             </NavLink>
           ))}
         </nav>
 
+        {/* فوتر سایدبار */}
         <div className="sm:mt-auto px-2 py-2 border-t border-white/10 flex sm:flex-col items-center gap-2">
           <div className="flex items-center justify-center">
             <NotificationBell />
           </div>
-          <span className="text-[0.7rem] font-medium text-white/50 truncate sm:w-full text-center" dir="ltr">
+          <span className="text-[0.6rem] sm:text-[0.7rem] font-medium text-white/50 truncate sm:w-full text-center" dir="ltr">
             {user.email}
           </span>
-          <Button variant="ghost" size="sm" className="!text-white/80 hover:!text-white !border-white/20 text-sm" onClick={handleLogout}>
-            <LogOut size={14} className="ml-1" /> خروج
+          <Button variant="ghost" size="sm" className="!text-white/80 hover:!text-white !border-white/20 text-[0.75rem] sm:text-sm" onClick={handleLogout}>
+            <LogOut size={13} className="ml-1" /> خروج
           </Button>
         </div>
       </aside>
