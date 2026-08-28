@@ -293,7 +293,6 @@ export default function SmsPanel() {
       });
       if (error) throw error;
       push("تنظیمات پیامک ذخیره شد ✅");
-      setSettingsOpen(false);
       loadSettings();
     } catch (err) {
       push("خطا: " + err.message, "error");
