@@ -52,7 +52,68 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
   );
 }
 
-function ChoiceOptions({ options = [], value, onChange, onEnter }) {
+function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "buttons" }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // بستن دراپ‌داون با کلیک بیرون
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setIsOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // حالت دراپ‌داون
+  if (displayMode === "dropdown") {
+    return (
+      <div className="relative" ref={dropdownRef}>
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className={clsx(
+            "w-full flex items-center justify-between border-2 rounded-pill-md [corner-shape:squircle] px-3 py-2.5 sm:py-3 transition-all duration-200 cursor-pointer",
+            value ? "border-ecosystem-normal bg-ecosystem-light" : "border-ink/15 bg-white hover:border-ecosystem-normal/50",
+          )}
+        >
+          <span className={clsx("font-bold text-xs sm:text-sm", value ? "text-ecosystem-dark" : "text-ink-subtle")}>
+            {value || "یک گزینه انتخاب کنید..."}
+          </span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={clsx("text-ink-subtle transition-transform duration-200", isOpen && "rotate-180")}>
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </button>
+        {isOpen && (
+          <div className="absolute z-50 w-full mt-1 bg-white border-2 border-ink/15 rounded-pill-md [corner-shape:squircle] shadow-lg overflow-hidden">
+            {options.map((opt, i) => {
+              const selected = value === opt;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => { onChange(opt); setIsOpen(false); setTimeout(onEnter, 250); }}
+                  className={clsx(
+                    "w-full flex items-center gap-2.5 text-right px-3 py-2.5 transition-all duration-150 cursor-pointer",
+                    i > 0 && "border-t border-ink/10",
+                    selected ? "bg-ecosystem-light text-ecosystem-dark" : "text-ink hover:bg-ecosystem-light/50",
+                  )}
+                >
+                  <span className={clsx("w-6 h-6 shrink-0 flex items-center justify-center rounded-full border-2 font-black text-[0.6rem] transition-colors",
+                    selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15",
+                  )}>{faNum(i + 1)}</span>
+                  <span className="font-bold text-xs sm:text-sm flex-1">{opt}</span>
+                  {selected && <CheckIcon className="text-ecosystem-normal shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // حالت دکمه‌ای (پیش‌فرض)
   return (
     <div className="flex flex-col gap-2">
       {options.map((opt, i) => {
@@ -171,7 +232,7 @@ export default function QuestionStep({ question, index, total, value, timeSpent,
         {(question.type === "short_text" || question.type === "long_text" || question.type === "email" || question.type === "number" || question.type === "phone_ir" || question.type === "telegram_id") && (
           <TextInput type={question.type} value={value} error={error} onChange={handleChange} onEnter={handleNext} placeholder={question.placeholder} />
         )}
-        {question.type === "choice" && <ChoiceOptions options={question.options} value={value} onChange={(val) => { handleChange(val); setTimeout(handleNext, 250); }} onEnter={handleNext} />}
+        {question.type === "choice" && <ChoiceOptions options={question.options} value={value} onChange={(val) => { handleChange(val); setTimeout(handleNext, 250); }} onEnter={handleNext} displayMode={question.display_mode || "buttons"} />}
         {question.type === "yes_no" && <YesNoOptions value={value} onChange={(val) => { handleChange(val); setTimeout(handleNext, 250); }} onEnter={handleNext} />}
         {question.type === "rating" && <RatingStars value={value} onChange={(val) => handleChange(val)} />}
         {question.type === "checkbox" && (

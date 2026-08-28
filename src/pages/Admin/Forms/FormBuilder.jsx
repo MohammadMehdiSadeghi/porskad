@@ -301,6 +301,42 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
             </div>
           )}
 
+          {/* ─── حالت نمایش گزینه‌ها (فقط choice) ─── */}
+          {meta.hasDisplayMode && (
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-extrabold text-navy">حالت نمایش</span>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => onChange({ display_mode: "buttons" })}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-pill-md border-2 text-xs font-bold transition-all ${
+                    (q.display_mode || "buttons") === "buttons"
+                      ? "border-teal bg-teal/10 text-teal-text"
+                      : "border-ink/15 bg-white text-ink-subtle hover:border-teal/40"
+                  }`}
+                >
+                  <span className="text-sm">☐</span> دکمه‌ای
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onChange({ display_mode: "dropdown" })}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-pill-md border-2 text-xs font-bold transition-all ${
+                    q.display_mode === "dropdown"
+                      ? "border-teal bg-teal/10 text-teal-text"
+                      : "border-ink/15 bg-white text-ink-subtle hover:border-teal/40"
+                  }`}
+                >
+                  <span className="text-sm">▾</span> کشویی (دراپ‌داون)
+                </button>
+              </div>
+              <span className="text-[0.6rem] font-medium text-ink-subtle">
+                {(q.display_mode || "buttons") === "buttons" 
+                  ? "گزینه‌ها به‌صورت دکمه‌های جداگانه نمایش داده می‌شوند"
+                  : "گزینه‌ها در یک لیست کشویی نمایش داده می‌شوند"}
+              </span>
+            </div>
+          )}
+
           {/* ─── گزینه صحیح (Correct Answer) ─── */}
           {isChoice && (
             <div className="flex flex-col gap-2 border-2 border-dashed border-teal/40 rounded-pill-md bg-teal/5 p-3">

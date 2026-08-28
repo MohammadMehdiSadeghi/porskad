@@ -38,6 +38,8 @@ export const QUESTION_TYPES = {
     hint: "۲ تا ۶ گزینه، انتخاب یکی",
     hasOptions: true,
     isMultiChoice: false,
+    hasDisplayMode: true,
+    defaultDisplayMode: "buttons",
     defaultOptions: ["گزینه ۱", "گزینه ۲", "گزینه ۳", "گزینه ۴"],
     conditionOperators: ["is_selected", "is_not_selected", "is_empty", "is_not_empty"],
     valueFieldType: "option_select",
@@ -133,6 +135,7 @@ export function makeQuestion(type, position = 0) {
     jump_actions: [],
     correct_answer: null,
     points: undefined,
+    display_mode: meta.hasDisplayMode ? (meta.defaultDisplayMode || "buttons") : undefined,
     validation: null,
   };
 }

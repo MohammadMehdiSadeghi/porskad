@@ -387,14 +387,15 @@ export default function SuperAdmin() {
     );
   }
 
-  // فقط اکانت superadmin@gmail.com اجازه دسترسی دارد
-  if (!user?.email || user.email !== "superadmin@gmail.com") {
+  // فقط اکانت superadmin (هر دو نسخه ایمیل) اجازه دسترسی دارد
+  const isSuperAdmin = user?.email === "superadmin@gmail.com" || user?.email === "superadmin@gmailc.com";
+  if (!isSuperAdmin) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]" style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif" }}>
         <div className="text-center p-8 rounded-lg border border-cool-gray-20 bg-white max-w-sm">
           <div className="text-3xl mb-3">🚫</div>
           <h2 className="text-lg font-bold text-cool-gray-80 mb-2">دسترسی غیرمجاز</h2>
-          <p className="text-sm text-cool-gray-60">فقط اکانت superadmin@gmail.com اجازه دسترسی به این بخش را دارد.</p>
+          <p className="text-sm text-cool-gray-60">فقط اکانت superadmin اجازه دسترسی به این بخش را دارد.</p>
         </div>
       </div>
     );

