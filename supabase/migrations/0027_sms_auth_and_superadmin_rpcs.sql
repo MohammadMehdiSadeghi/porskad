@@ -7,9 +7,28 @@ alter table public.sms_settings
   add column if not exists amoot_user_id  text not null default '',
   add column if not exists amoot_password text not null default '';
 
--- ─── 2. آپدیت save_sms_settings ───
+-- ════════════════════════════════════════════════════════════════
+-- حذف همه توابع قدیمی قبل از بازسازی (برای جلوگیری از conflict)
+-- ════════════════════════════════════════════════════════════════
 drop function if exists public.save_sms_settings(text, text, text);
+drop function if exists public.save_sms_settings(text, text, text, text, text);
+drop function if exists public.get_active_sms_settings();
+drop function if exists public.get_db_stats();
+drop function if exists public.exec_sql(text);
+drop function if exists public.export_table_data(text);
+drop function if exists public.purge_responses(uuid);
+drop function if exists public.purge_responses();
+drop function if exists public.log_activity(text, text, text, jsonb);
+drop function if exists public.log_activity(text, text, text);
+drop function if exists public.log_activity(text, text);
+drop function if exists public.log_activity(text);
+drop function if exists public.impersonate_user(uuid);
 
+-- ════════════════════════════════════════════════════════════════
+-- 2. بازسازی توابع
+-- ════════════════════════════════════════════════════════════════
+
+-- ─── save_sms_settings ───
 create or replace function public.save_sms_settings(
   p_api_token      text,
   p_line_number    text default 'public',
@@ -23,10 +42,7 @@ security definer set search_path = public
 as $$
   declare v_id uuid;
   begin
-    -- غیرفعال کردن تنظیمات قبلی
     update public.sms_settings set is_active = false where is_active = true;
-
-    -- ذخیره تنظیمات جدید
     insert into public.sms_settings (
       api_token, line_number, sender_name, is_active, created_by,
       amoot_user_id, amoot_password
@@ -36,16 +52,13 @@ as $$
       p_amoot_user_id, p_amoot_password
     )
     returning id into v_id;
-
     return v_id;
   end;
 $$;
 
 grant execute on function public.save_sms_settings(text, text, text, text, text) to authenticated;
 
--- ─── 3. آپدیت get_active_sms_settings ───
-drop function if exists public.get_active_sms_settings();
-
+-- ─── get_active_sms_settings ───
 create or replace function public.get_active_sms_settings()
 returns table (
   id              uuid,
@@ -71,11 +84,7 @@ $$;
 
 grant execute on function public.get_active_sms_settings() to authenticated;
 
--- ════════════════════════════════════════════════════════════════
--- SuperAdmin RPCs — فقط owner
--- ════════════════════════════════════════════════════════════════
-
--- ─── 4. get_db_stats ───
+-- ─── get_db_stats ───
 create or replace function public.get_db_stats()
 returns jsonb
 language plpgsql
@@ -92,7 +101,6 @@ declare
   v_t text;
   v_count bigint;
 begin
-  -- فقط owner یا admin
   if not public.is_owner(auth.uid()) and not public.is_admin(auth.uid()) then
     raise exception 'Access denied';
   end if;
@@ -109,7 +117,7 @@ $$;
 
 grant execute on function public.get_db_stats() to authenticated;
 
--- ─── 5. exec_sql (read-only, owner only) ───
+-- ─── exec_sql (read-only, owner only) ───
 create or replace function public.exec_sql(query text)
 returns jsonb
 language plpgsql
@@ -118,12 +126,10 @@ as $$
 declare
   v_result jsonb;
 begin
-  -- فقط owner
   if not public.is_owner(auth.uid()) then
     raise exception 'فقط صاحب اصلی سایت می‌تواند SQL اجرا کند.';
   end if;
 
-  -- جلوگیری از نوشتن
   if query ~* '^\s*(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|GRANT|REVOKE)' then
     raise exception 'فقط دستورات SELECT مجاز هستند.';
   end if;
@@ -140,7 +146,7 @@ $$;
 
 grant execute on function public.exec_sql(text) to authenticated;
 
--- ─── 6. export_table_data (owner only) ───
+-- ─── export_table_data (owner only) ───
 create or replace function public.export_table_data(p_table_name text)
 returns jsonb
 language plpgsql
@@ -172,8 +178,7 @@ $$;
 
 grant execute on function public.export_table_data(text) to authenticated;
 
--- ─── 7. purge_responses (owner only) ───
-drop function if exists public.purge_responses(uuid);
+-- ─── purge_responses (owner only) ───
 create or replace function public.purge_responses(p_form_id uuid default null)
 returns integer
 language plpgsql
@@ -204,7 +209,7 @@ $$;
 
 grant execute on function public.purge_responses(uuid) to authenticated;
 
--- ─── 8. log_activity ───
+-- ─── log_activity ───
 create or replace function public.log_activity(
   p_action      text,
   p_target_type text default null,
@@ -226,7 +231,7 @@ $$;
 
 grant execute on function public.log_activity(text, text, text, jsonb) to authenticated;
 
--- ─── 9. impersonate_user (owner only — returns info, no session switch) ───
+-- ─── impersonate_user (owner only) ───
 create or replace function public.impersonate_user(p_target_user_id uuid)
 returns jsonb
 language plpgsql
@@ -257,8 +262,9 @@ $$;
 
 grant execute on function public.impersonate_user(uuid) to authenticated;
 
--- ─── 10. activity_log و error_log — disable RLS برای admin ───
--- اگه جداول activity_log/error_log وجود نداشت، بساز
+-- ════════════════════════════════════════════════════════════════
+-- 3. جداول activity_log و error_log
+-- ════════════════════════════════════════════════════════════════
 create table if not exists public.activity_log (
   id          uuid primary key default gen_random_uuid(),
   user_id     uuid references public.profiles(id) on delete set null,
