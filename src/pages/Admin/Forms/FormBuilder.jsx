@@ -765,6 +765,7 @@ export default function FormBuilder() {
         jump_actions: q.jump_actions ?? [],
         correct_answer: q.correct_answer ?? null,
         points: q.points ?? null,
+        display_mode: q.display_mode ?? null,
       }));
 
       const { data: freshQs, error } = await supabase.rpc("save_form", {
