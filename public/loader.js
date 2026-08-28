@@ -34,6 +34,10 @@
     iframe.style.border = "none";
     iframe.style.minHeight = "400px";
 
+    // ─── ذخیره reference‌ها برای close از بیرون ───
+    if (!window.__pcodeInstances) window.__pcodeInstances = {};
+    window.__pcodeInstances[formId] = { iframe: iframe, mode: mode };
+
     if (mode === "inline") {
       iframe.style.height = "600px";
       container.appendChild(iframe);
@@ -62,6 +66,7 @@
       overlay.style.zIndex = "99998";
       overlay.style.backdropFilter = "blur(4px)";
       document.body.appendChild(overlay);
+      window.__pcodeInstances[formId].overlay = overlay;
 
       function openPopup() {
         iframe.style.display = "block";
@@ -74,6 +79,7 @@
         postEvent(formId, "closed");
       }
 
+      window.__pcodeInstances[formId].close = closePopup;
       overlay.addEventListener("click", closePopup);
 
       // کلیک روی دکمه trigger
@@ -114,12 +120,17 @@
       document.body.appendChild(fab);
 
       var isOpen = false;
-      fab.addEventListener("click", function () {
+      function togglePopover() {
         isOpen = !isOpen;
         iframe.style.display = isOpen ? "block" : "none";
         fab.innerHTML = isOpen ? '✕' : '<span style="font-size:11px;font-weight:900;line-height:1.3;text-align:center;font-family:Vazirmatn,sans-serif;">پرس<br/><span style="color:#58BDAF;">کاد</span></span>';
         postEvent(formId, isOpen ? "opened" : "closed");
-      });
+      }
+      function closePopover() {
+        if (isOpen) togglePopover();
+      }
+      window.__pcodeInstances[formId].close = closePopover;
+      fab.addEventListener("click", togglePopover);
 
       return iframe;
     }
@@ -147,20 +158,21 @@
     if (d.type === "pcode:submitted") postEvent(d.formId, "submitted", d);
     if (d.type === "pcode:view") postEvent(d.formId, "viewed");
 
-    // بستن فرم — popup بسته میشه، popover toggle میشه
+    // بستن فرم — از iframe ارسال شده
     if (d.type === "pcode:closed") {
       postEvent(d.formId, "closed");
-      var closedIframe = document.querySelector('iframe[data-form-id="' + d.formId + '"]');
-      if (closedIframe) {
-        // حالت popup: مخفی کردن iframe + overlay
-        closedIframe.style.display = "none";
-        var overlay = document.querySelector('[data-pcode-overlay="' + d.formId + '"]');
-        if (overlay) overlay.style.display = "none";
-        // حالت popover: toggle دکمه FAB
-        var fab = document.querySelector('[data-pcode-fab="' + d.formId + '"]');
-        if (fab) {
-          fab.innerHTML = '<span style="font-size:11px;font-weight:900;line-height:1.3;text-align:center;font-family:Vazirmatn,sans-serif;">پرس<br/><span style="color:#58BDAF;">کاد</span></span>';
-        }
+      // روش مستقیم: استفاده از reference ذخیره شده
+      var inst = window.__pcodeInstances && window.__pcodeInstances[d.formId];
+      if (inst && typeof inst.close === "function") {
+        inst.close();
+      } else {
+        // روش fallback: پیدا کردن عناصر با selector
+        var closedIframe = document.querySelector('iframe[data-form-id="' + d.formId + '"]');
+        if (closedIframe) closedIframe.style.display = "none";
+        var overlay2 = document.querySelector('[data-pcode-overlay="' + d.formId + '"]');
+        if (overlay2) overlay2.style.display = "none";
+        var fab2 = document.querySelector('[data-pcode-fab="' + d.formId + '"]');
+        if (fab2) fab2.innerHTML = '<span style="font-size:11px;font-weight:900;line-height:1.3;text-align:center;font-family:Vazirmatn,sans-serif;">پرس<br/><span style="color:#58BDAF;">کاد</span></span>';
       }
     }
   });

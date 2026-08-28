@@ -40,16 +40,14 @@ function useAutoResize() {
 
 // ─── دکمه بستن embed ───
 function handleClose() {
+  var fid = window.__pcodeFormId;
   // اگه در iframe هستیم → پیام به والد بفرست (loader.js منتظر pcode:closed هست)
   if (window.parent && window.parent !== window) {
-    try { window.parent.postMessage({ type: "pcode:closed", formId: window.__pcodeFormId }, "*"); } catch { /* ignore */ }
+    try { window.parent.postMessage({ type: "pcode:closed", formId: fid }, "*"); } catch { /* ignore */ }
   }
   // اگه standalone باز شده (تب جدید / مستقیم)
-  if (window.history && window.history.length > 1) {
-    window.history.back();
-  } else {
-    window.close();
-  }
+  try { window.close(); } catch { /* ignore */ }
+  try { window.history.back(); } catch { /* ignore */ }
 }
 
 function CloseButton() {
