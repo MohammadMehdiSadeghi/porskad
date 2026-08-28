@@ -432,24 +432,9 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
                       )}
 
                       {q.type === "choice" && (
-                        <div className="flex flex-col gap-2">
-                          {(q.options || []).map((opt, i) => {
-                            const selected = val === opt;
-                            return (
-                              <button key={i} type="button"
-                                onClick={() => { setAnswer(q.id, opt, q); handleBlur(q.id, opt, q); }}
-                                className={`relative flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3 py-2 sm:py-2.5 transition-all duration-200 cursor-pointer hover:-translate-y-px ${
-                                  selected ? "border-ecosystem-normal bg-ecosystem-light rotate-[-0.5deg]" : "border-ink/10 bg-white hover:border-ecosystem-normal/50"
-                                }`}>
-                                {selected && <div aria-hidden="true" className="absolute top-[2px] left-[2px] w-full h-full bg-ecosystem-dark/15 rounded-pill-md [corner-shape:squircle] pointer-events-none" />}
-                                <span className={`relative z-10 w-7 h-7 shrink-0 flex items-center justify-center rounded-full border-2 text-xs font-bold transition-colors duration-200 ${
-                                  selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal"
-                                }`}>{faNum(i + 1)}</span>
-                                <span className={`relative z-10 font-bold text-xs sm:text-sm ${selected ? "text-ecosystem-dark" : "text-ink"}`}>{opt}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
+                        <ChoiceOptions options={q.options} value={val}
+                          onChange={(opt) => { setAnswer(q.id, opt, q); handleBlur(q.id, opt, q); }}
+                          onEnter={() => {}} displayMode={q.display_mode || "buttons"} />
                       )}
 
                       {q.type === "yes_no" && (

@@ -20,6 +20,52 @@ function isFieldEmpty(v) {
   return v === null || v === undefined || (typeof v === "string" && v.trim() === "") || (Array.isArray(v) && v.length === 0);
 }
 
+function DropdownChoice({ options = [], value, onChange }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef(null);
+
+  useState(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setIsOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  });
+
+  return (
+    <div className="relative" ref={ref}>
+      <button type="button" onClick={() => setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between border-2 rounded-pill-md [corner-shape:squircle] px-3 py-2.5 transition-all duration-200 cursor-pointer ${
+          value ? "border-ecosystem-normal bg-ecosystem-light" : "border-ink/15 bg-white hover:border-ecosystem-normal/50"
+        }`}>
+        <span className={`font-bold text-xs sm:text-sm ${value ? "text-ecosystem-dark" : "text-ink-subtle"}`}>
+          {value || "یک گزینه انتخاب کنید..."}
+        </span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-ink-subtle transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
+          <path d="m6 9 6 6 6-6"/>
+        </svg>
+      </button>
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-1 bg-white border-2 border-ink/15 rounded-pill-md [corner-shape:squircle] shadow-lg overflow-hidden">
+          {options.map((opt, i) => {
+            const selected = value === opt;
+            return (
+              <button key={i} type="button"
+                onClick={() => { onChange(opt); setIsOpen(false); }}
+                className={`w-full flex items-center gap-2.5 text-right px-3 py-2.5 transition-all duration-150 cursor-pointer ${
+                  i > 0 ? "border-t border-ink/10" : ""
+                } ${selected ? "bg-ecosystem-light text-ecosystem-dark" : "text-ink hover:bg-ecosystem-light/50"}`}>
+                <span className={`w-6 h-6 shrink-0 flex items-center justify-center rounded-full border-2 text-[0.6rem] font-bold transition-colors ${
+                  selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15"
+                }`}>{faNum(i + 1)}</span>
+                <span className="font-bold text-xs sm:text-sm flex-1">{opt}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function RegistrationForm({ form, questions, slug }) {
   const [answers, setAnswers] = useState({});
   const [fieldErrors, setFieldErrors] = useState({});
@@ -112,7 +158,9 @@ export default function RegistrationForm({ form, questions, slug }) {
         {q.type === "long_text" && <textarea dir="rtl" rows={2} value={val} onChange={(e) => setAnswer(q.id, e.target.value, q)} onBlur={(e) => handleBlur(q.id, e.target.value, q)} placeholder={q.placeholder?.trim() || "بنویس..."} className={`${inputCls} resize-y leading-6 ${fieldErr ? "!border-female-normal" : ""}`} />}
         {q.type === "number" && <input type="text" inputMode="numeric" dir="rtl" value={val} onChange={(e) => setAnswer(q.id, e.target.value, q)} onBlur={(e) => handleBlur(q.id, e.target.value, q)} placeholder={q.placeholder?.trim() || "عدد را وارد کنید..."} className={`${inputCls} ${fieldErr ? "!border-female-normal" : ""}`} />}
 
-        {q.type === "choice" && (
+        {q.type === "choice" && (q.display_mode === "dropdown" ? (
+          <DropdownChoice options={q.options} value={val} onChange={(opt) => { setAnswer(q.id, opt, q); handleBlur(q.id, opt, q); }} />
+        ) : (
           <div className="flex flex-col gap-2">
             {(q.options || []).map((opt, i) => {
               const selected = val === opt;
@@ -126,7 +174,7 @@ export default function RegistrationForm({ form, questions, slug }) {
               );
             })}
           </div>
-        )}
+        ))}
 
         {q.type === "checkbox" && (
           <div className="flex flex-col gap-2">
