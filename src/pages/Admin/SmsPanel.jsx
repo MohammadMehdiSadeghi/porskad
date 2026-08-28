@@ -177,7 +177,7 @@ export default function SmsPanel() {
     }
   }, []);
 
-  const loadAccountStatus = useCallback(async () => {
+  const loadAccountStatus = useCallback(async ({ silent = false } = {}) => {
     setFetchingStatus(true);
     try {
       const raw = await amootFetch("AccountStatus");
@@ -189,12 +189,11 @@ export default function SmsPanel() {
       } else {
         const errMsg =
           raw?.explanation || raw?.Message || `Status: ${info.status}`;
-        push("خطا در اتصال: " + errMsg, "error");
+        if (!silent) push("خطا در اتصال: " + errMsg, "error");
       }
     } catch (err) {
-      // اگه تنظیمات SMS ذخیره نشده، ارور نشون نده (طبیعیه)
-      if (!err.message?.includes("SMS settings not configured") &&
-          !err.message?.includes("SMS credentials incomplete")) {
+      // در حالت silent ارور نشون نده (مثلاً هنگام mount اولیه)
+      if (!silent) {
         push("خطا در اتصال: " + err.message, "error");
       }
     } finally {
@@ -258,9 +257,11 @@ export default function SmsPanel() {
   }, []);
 
   useEffect(() => {
-    Promise.allSettled([loadStats(), loadAccountStatus(), loadSettings()]).then(
-      () => setLoading(false)
-    );
+    Promise.allSettled([
+      loadStats(),
+      loadAccountStatus({ silent: true }),
+      loadSettings(),
+    ]).then(() => setLoading(false));
   }, [loadStats, loadAccountStatus, loadSettings]);
 
   useEffect(() => {
@@ -268,7 +269,7 @@ export default function SmsPanel() {
     if (tab === "inbox") loadInbox();
     if (tab === "dashboard") {
       loadStats();
-      loadAccountStatus();
+      loadAccountStatus({ silent: true });
     }
   }, [tab, loadHistory, loadInbox, loadStats, loadAccountStatus]);
 
