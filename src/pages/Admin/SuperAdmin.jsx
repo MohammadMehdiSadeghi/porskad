@@ -10,6 +10,8 @@ import { faNum } from "../../lib/utils";
 import SEO from "../../components/ui/SEO";
 import Modal from "../../components/ui/Modal";
 import Spinner from "../../components/ui/Spinner";
+import StickerCard from "../../components/ui/StickerCard";
+import Badge from "../../components/ui/Badge";
 import "./superadmin-ibm.css";
 
 // ─── تب‌ها ───
@@ -29,7 +31,7 @@ const TABS = [
 // God-Mode SuperAdmin
 // ══════════════════════════════════════════════════════════════
 export default function SuperAdmin() {
-  const { user, profile } = useAuth();
+  const { user, profile, isOwner } = useAuth();
   const [tab, setTab] = useState("dashboard");
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -343,7 +345,7 @@ export default function SuperAdmin() {
   }
 
   // فقط اکانت superadmin (هر دو نسخه ایمیل) اجازه دسترسی دارد
-  const isSuperAdmin = user?.email === "superadmin@gmail.com" || user?.email === "superadmin@gmailc.com";
+  const isSuperAdmin = isOwner();
   if (!isSuperAdmin) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">

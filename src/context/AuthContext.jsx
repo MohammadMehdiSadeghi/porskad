@@ -36,36 +36,31 @@ export function AuthProvider({ children }) {
   const fetchProfile = useCallback(async (uid) => {
     if (!supabase || !uid) return null;
     try {
-      // سعی کن با is_owner select کنی، اگه ستون وجود نداشت بدون اون برگردان
-      let data = null;
-      let error = null;
-      try {
-        const res = await supabase
-          .from("profiles")
-          .select("id, email, full_name, avatar_url, is_active, is_owner, created_by")
-          .eq("id", uid)
-          .maybeSingle();
-        data = res.data;
-        error = res.error;
-      } catch {
-        // ستون is_owner وجود نداره
-        const res = await supabase
-          .from("profiles")
-          .select("id, email, full_name, avatar_url, is_active, created_by")
-          .eq("id", uid)
-          .maybeSingle();
-        data = res.data;
-        error = res.error;
+      // اول با is_owner سعی کن
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, email, full_name, avatar_url, is_active, is_owner, created_by")
+        .eq("id", uid)
+        .maybeSingle();
+
+      if (!error && data) {
+        if (!('is_owner' in data)) data.is_owner = false;
+        return data;
       }
-      if (error) {
-        console.error("Error fetching profile:", error);
+
+      // اگه خطا بود (مثلاً ستون is_owner وجود نداشت)، بدون اون برگردان
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("profiles")
+        .select("id, email, full_name, avatar_url, is_active, created_by")
+        .eq("id", uid)
+        .maybeSingle();
+
+      if (fallbackError) {
+        console.error("Error fetching profile:", fallbackError);
         return null;
       }
-      // اگه is_owner نبود، false پیش‌فرض
-      if (data && !('is_owner' in data)) {
-        data.is_owner = false;
-      }
-      return data;
+      if (fallbackData) fallbackData.is_owner = false;
+      return fallbackData;
     } catch (err) {
       console.error("fetchProfile error:", err);
       return null;

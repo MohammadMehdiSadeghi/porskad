@@ -20,7 +20,6 @@ export {
   makeRule,
   makeAction,
   makeJumpAction,
-  makeQuestion,
   isChoiceType,
   isNumericType,
   buildDependencyGraph,

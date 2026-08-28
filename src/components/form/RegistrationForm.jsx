@@ -11,6 +11,7 @@ import { supabase } from "../../lib/supabaseClient";
 import ConfirmDialog from "../ui/ConfirmDialog";
 import SEO from "../ui/SEO";
 import { calculateScore, hasScoring } from "../../lib/scoring";
+import { evaluateQuestionConditions } from "../../lib/logic/conditionEvaluator";
 import ScoreResult from "../ui/ScoreResult";
 
 const inputCls = "w-full bg-white border-2 border-ink/10 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3 py-2 sm:py-2.5 font-semibold text-ink text-xs sm:text-sm placeholder:text-ink/40 placeholder:font-medium focus:outline-none transition-all duration-200";
@@ -50,6 +51,7 @@ export default function RegistrationForm({ form, questions, slug }) {
   const formRef = useRef(null);
 
   const sortedQuestions = useMemo(() => [...questions].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)), [questions]);
+  const visibleQuestions = useMemo(() => sortedQuestions.filter((q) => evaluateQuestionConditions(q.conditions, answers, {}, {})), [sortedQuestions, answers]);
 
   function setAnswer(questionId, val, q) {
     setAnswers((prev) => ({ ...prev, [questionId]: val }));
@@ -68,14 +70,14 @@ export default function RegistrationForm({ form, questions, slug }) {
     e.preventDefault();
     if (submitting) return;
     const errors = {};
-    for (const q of sortedQuestions) {
+    for (const q of visibleQuestions) {
       const err = validateAnswer(q, answers[q.id]);
       if (err) errors[q.id] = err;
     }
     setFieldErrors(errors);
-    setTouched(Object.fromEntries(sortedQuestions.map((q) => [q.id, true])));
+    setTouched(Object.fromEntries(visibleQuestions.map((q) => [q.id, true])));
     const unfilled = [];
-    for (const q of sortedQuestions) {
+    for (const q of visibleQuestions) {
       if (errors[q.id]) unfilled.push({ id: q.id, title: `${q.title} (${errors[q.id]})` });
       else if (q.required && isFieldEmpty(answers[q.id])) unfilled.push({ id: q.id, title: q.title });
     }
@@ -96,11 +98,11 @@ export default function RegistrationForm({ form, questions, slug }) {
         device: ua.device, browser: ua.browser, os: ua.os, user_agent: navigator.userAgent, referer: document.referrer || null,
       }).select("id").single();
       if (respError) throw respError;
-      const rows = sortedQuestions.filter((q) => !isFieldEmpty(answers[q.id])).map((q) => ({
+      const rows = visibleQuestions.filter((q) => !isFieldEmpty(answers[q.id])).map((q) => ({
         response_id: responseRow.id, question_id: q.id, value: normalizeAnswerValue(q, answers[q.id]), time_spent_seconds: 0,
       }));
       if (rows.length) { const { error: ansError } = await supabase.from("answers").insert(rows); if (ansError) throw ansError; }
-      if (hasScoring(sortedQuestions)) setScoreResult(calculateScore(sortedQuestions, answers));
+      if (hasScoring(visibleQuestions)) setScoreResult(calculateScore(visibleQuestions, answers));
       setSubmitted(true);
     } catch (err) { console.error(err); setError("ثبت ناموفق بود؛ دوباره تلاش کنید."); }
     finally { setSubmitting(false); }
@@ -198,7 +200,7 @@ export default function RegistrationForm({ form, questions, slug }) {
                 <motion.span className="text-4xl sm:text-5xl" animate={{ rotate: [0, -6, 6, -3, 3, 0] }}>🎉</motion.span>
                 <h1 className="text-lg sm:text-xl font-black text-male-normal leading-snug">{form.exit_title || "ثبت‌نام با موفقیت انجام شد!"}</h1>
                 <p className="font-semibold text-ink-soft leading-6 text-xs sm:text-sm max-w-md">{form.exit_message || "ممنون از ثبت‌نام شما."}</p>
-                {scoreResult && <ScoreResult score={scoreResult.score} total={scoreResult.total} details={scoreResult.details} questions={sortedQuestions} />}
+                {scoreResult && <ScoreResult score={scoreResult.score} total={scoreResult.total} details={scoreResult.details} questions={visibleQuestions} />}
               </div>
             </StickerCard>
           </motion.div>
@@ -224,9 +226,9 @@ export default function RegistrationForm({ form, questions, slug }) {
                 <div className="text-center mb-0.5">
                   <h1 className="text-base sm:text-lg lg:text-xl font-black text-male-normal leading-snug mb-1">{form.title}</h1>
                   {form.description && <p className="text-[0.6rem] sm:text-xs font-semibold text-ink-subtle leading-6">{form.description}</p>}
-                  <Badge color="navy" rotate="rotate-[1.5deg]" className="mt-2">{faNum(sortedQuestions.length)} فیلد</Badge>
+                  <Badge color="navy" rotate="rotate-[1.5deg]" className="mt-2">{faNum(visibleQuestions.length)} فیلد</Badge>
                 </div>
-                {sortedQuestions.map((q, i) => <div key={q.id} className={i % 2 ? "rotate-[0.2deg]" : "-rotate-[0.2deg]"}>{renderQuestion(q)}</div>)}
+                {visibleQuestions.map((q, i) => <div key={q.id} className={i % 2 ? "rotate-[0.2deg]" : "-rotate-[0.2deg]"}>{renderQuestion(q)}</div>)}
                 {error && <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 bg-female-light border-2 border-female-normal rounded-pill-md px-3 py-2"><span className="text-female-normal text-sm">⚠️</span><span className="text-[0.6rem] sm:text-xs font-bold text-female-normal">{error}</span></motion.div>}
                 <Button type="submit" variant="teal" size="md" rotate="-rotate-[1deg]" disabled={submitting} className="w-full text-xs sm:text-sm">{submitting ? "در حال ثبت..." : "ارسال و ثبت‌نام ✨"}</Button>
               </form>
@@ -234,7 +236,7 @@ export default function RegistrationForm({ form, questions, slug }) {
           </StickerCard>
         </div>
       </main>
-      <ConfirmDialog open={showConfirm} onConfirm={doSubmit} onCancel={() => setShowConfirm(false)} unfilledFields={confirmUnfilled} totalRequired={sortedQuestions.filter((q) => q.required).length} filledCount={sortedQuestions.filter((q) => q.required && !isFieldEmpty(answers[q.id])).length} />
+      <ConfirmDialog open={showConfirm} onConfirm={doSubmit} onCancel={() => setShowConfirm(false)} unfilledFields={confirmUnfilled} totalRequired={visibleQuestions.filter((q) => q.required).length} filledCount={visibleQuestions.filter((q) => q.required && !isFieldEmpty(answers[q.id])).length} />
     </div>
   );
 }

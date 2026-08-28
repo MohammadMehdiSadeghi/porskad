@@ -186,21 +186,6 @@ export function makeJumpAction() {
   };
 }
 
-// ─── ساخت سوال جدید ───
-export function makeQuestion(type, position = 0) {
-  return {
-    localId: `new_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-    id: null,
-    type,
-    title: "",
-    description: "",
-    required: true,
-    options: [],
-    position,
-    conditions: null,
-    jump_actions: [],
-  };
-}
 
 // ════════════════════════════════════════════════════════════════
 // توابع کمکی
