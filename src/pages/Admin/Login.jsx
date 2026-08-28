@@ -56,8 +56,8 @@ export default function Login() {
               <Badge color="navy" rotate="rotate-[2deg]">
                 پنل مدیریت پرس کاد
               </Badge>
-              <h1 className="text-2xl font-black text-navy">ورود ادمین</h1>
-              <p className="text-sm font-semibold text-ink-subtle">
+              <h1 className="text-xl sm:text-2xl font-black text-navy">ورود ادمین</h1>
+              <p className="text-sm sm:text-base font-semibold text-ink-subtle">
                 فقط مدیران مجاز به ورود به این بخش هستند.
               </p>
             </div>
@@ -98,19 +98,20 @@ export default function Login() {
               </div>
             )}
 
-            <div className="flex items-center justify-between gap-3 mt-1">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mt-1">
               <Button
                 type="submit"
                 variant="teal"
                 size="lg"
                 disabled={busy}
                 rotate="-rotate-[1deg]"
+                className="w-full sm:w-auto justify-center"
               >
                 {busy ? "در حال ورود..." : "ورود 🚪"}
               </Button>
               <Link
                 to="/"
-                className="text-sm font-bold text-ink-subtle hover:text-navy transition-colors"
+                className="text-sm font-bold text-ink-subtle hover:text-navy transition-colors text-center"
               >
                 برگشت به سایت ↩
               </Link>
