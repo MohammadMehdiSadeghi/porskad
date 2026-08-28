@@ -39,10 +39,23 @@ function useAutoResize() {
 }
 
 // ─── دکمه بستن embed ───
+function handleClose() {
+  // اگه در iframe هستیم → پیام به والد بفرست
+  if (window.parent && window.parent !== window) {
+    try { window.parent.postMessage({ type: "pcode:close" }, "*"); } catch { /* ignore */ }
+  }
+  // اگه standalone باز شده (تب جدید / مستقیم)
+  if (window.history && window.history.length > 1) {
+    window.history.back();
+  } else {
+    window.close();
+  }
+}
+
 function CloseButton() {
   return (
     <button
-      onClick={() => postToParent("pcode:close")}
+      onClick={handleClose}
       className="fixed top-2 left-2 z-50 w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-white/80 backdrop-blur border-2 border-ink/15 hover:border-female-normal hover:bg-female-light text-ink/50 hover:text-female-normal transition-all duration-200 cursor-pointer"
       aria-label="بستن"
       title="بستن فرم"
