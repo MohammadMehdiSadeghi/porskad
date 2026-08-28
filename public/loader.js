@@ -68,24 +68,24 @@
       document.body.appendChild(overlay);
       window.__pcodeInstances[formId].overlay = overlay;
 
+      function lockBody() {
+        document.documentElement.style.overflow = "hidden";
+        document.documentElement.style.touchAction = "none";
+      }
+      function unlockBody() {
+        document.documentElement.style.overflow = "";
+        document.documentElement.style.touchAction = "";
+      }
       function openPopup() {
         iframe.style.display = "block";
         overlay.style.display = "block";
-        document.body.style.overflow = "hidden";
-        document.body.style.position = "fixed";
-        document.body.style.top = "-" + window.scrollY + "px";
-        document.body.style.width = "100%";
+        lockBody();
         postEvent(formId, "opened");
       }
       function closePopup() {
         iframe.style.display = "none";
         overlay.style.display = "none";
-        var savedTop = document.body.style.top;
-        document.body.style.overflow = "";
-        document.body.style.position = "";
-        document.body.style.top = "";
-        document.body.style.width = "";
-        if (savedTop) window.scrollTo(0, parseInt(savedTop || "0") * -1);
+        unlockBody();
         postEvent(formId, "closed");
       }
 
@@ -135,17 +135,11 @@
         iframe.style.display = isOpen ? "block" : "none";
         fab.innerHTML = isOpen ? '✕' : '<span style="font-size:11px;font-weight:900;line-height:1.3;text-align:center;font-family:Vazirmatn,sans-serif;">پرس<br/><span style="color:#58BDAF;">کاد</span></span>';
         if (isOpen) {
-          document.body.style.overflow = "hidden";
-          document.body.style.position = "fixed";
-          document.body.style.top = "-" + window.scrollY + "px";
-          document.body.style.width = "100%";
+          document.documentElement.style.overflow = "hidden";
+          document.documentElement.style.touchAction = "none";
         } else {
-          var savedTop = document.body.style.top;
-          document.body.style.overflow = "";
-          document.body.style.position = "";
-          document.body.style.top = "";
-          document.body.style.width = "";
-          if (savedTop) window.scrollTo(0, parseInt(savedTop || "0") * -1);
+          document.documentElement.style.overflow = "";
+          document.documentElement.style.touchAction = "";
         }
         postEvent(formId, isOpen ? "opened" : "closed");
       }
