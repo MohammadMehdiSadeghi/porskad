@@ -10,7 +10,6 @@ import StatCard from "../../components/ui/StatCard";
 import StickerCard from "../../components/ui/StickerCard";
 import EmptyState from "../../components/ui/EmptyState";
 import SEO from "../../components/ui/SEO";
-import Modal from "../../components/ui/Modal";
 import {
   MessageSquare,
   Send,
@@ -153,7 +152,6 @@ export default function SmsPanel() {
   const [inboxLoading, setInboxLoading] = useState(false);
 
   // ─── Settings ───
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [smsSettings, setSmsSettings] = useState(null);
   const [settingsForm, setSettingsForm] = useState({
     api_token: "",
@@ -425,6 +423,7 @@ export default function SmsPanel() {
     { id: "send", label: "ارسال پیامک", icon: Send },
     { id: "history", label: "تاریخچه", icon: History },
     { id: "inbox", label: "دریافتی", icon: Inbox },
+    { id: "settings", label: "تنظیمات آموت", icon: Settings },
   ];
 
   return (
@@ -447,13 +446,6 @@ export default function SmsPanel() {
             ارسال و مدیریت پیامک
           </p>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setSettingsOpen(true)}
-        >
-          <Settings size={14} className="ml-1" /> تنظیمات آموت
-        </Button>
       </div>
 
       {/* تب‌ها */}
@@ -858,134 +850,51 @@ export default function SmsPanel() {
         </div>
       )}
 
-      {/* ═══════ مودال تنظیمات آموت ═══════ */}
-      {settingsOpen && (
-        <Modal onClose={() => setSettingsOpen(false)}>
-          <div className="flex flex-col gap-4">
-            <h2 className="text-lg font-black text-navy">
-              تنظیمات پنل پیامک آموت
-            </h2>
-            <p className="text-xs font-semibold text-ink-subtle">
-              اطلاعات زیر از حساب آموت SMS خوانده می‌شود. رمز عبور فقط در سرور
-              (Edge Function) استفاده می‌شود و در مرورگر ذخیره نمی‌شود.
-            </p>
-
-            <div className="flex flex-col gap-3">
-              <div>
-                <label className="block text-xs font-bold text-navy mb-1">
-                  شناسه کاربر آموت (user_id) *
-                </label>
-                <input
-                  type="text"
-                  value={settingsForm.amoot_user_id}
-                  onChange={(e) =>
-                    setSettingsForm((p) => ({
-                      ...p,
-                      amoot_user_id: e.target.value,
-                    }))
-                  }
-                  className={inputCls}
-                  placeholder="مثال: 12345"
-                  dir="ltr"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-navy mb-1">
-                  رمز عبور آموت (password) *
-                </label>
-                <input
-                  type="password"
-                  value={settingsForm.amoot_password}
-                  onChange={(e) =>
-                    setSettingsForm((p) => ({
-                      ...p,
-                      amoot_password: e.target.value,
-                    }))
-                  }
-                  className={inputCls}
-                  placeholder="رمز عبور"
-                  dir="ltr"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-navy mb-1">
-                  API Key (اختیاری)
-                </label>
-                <input
-                  type="password"
-                  value={settingsForm.api_token}
-                  onChange={(e) =>
-                    setSettingsForm((p) => ({
-                      ...p,
-                      api_token: e.target.value,
-                    }))
-                  }
-                  className={inputCls}
-                  placeholder="API Key (اگه دارید)"
-                  dir="ltr"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+      {/* ═══════ تب تنظیمات آموت ═══════ */}
+      {tab === "settings" && (
+        <div className="flex flex-col gap-4 max-w-2xl">
+          <div className="rotate-[0.3deg]">
+            <StickerCard theme="white">
+              <div className="p-5 flex flex-col gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-navy mb-1">
-                    شماره خط
-                  </label>
-                  <input
-                    type="text"
-                    value={settingsForm.line_number}
-                    onChange={(e) =>
-                      setSettingsForm((p) => ({
-                        ...p,
-                        line_number: e.target.value,
-                      }))
-                    }
-                    className={inputCls}
-                    placeholder="public"
-                    dir="ltr"
-                  />
+                  <h2 className="text-lg font-black text-navy mb-1">تنظیمات آموت SMS</h2>
+                  <p className="text-xs font-semibold text-ink-subtle">اطلاعات حساب آموت رو وارد کنید. رمز عبور فقط در سرور استفاده می‌شود.</p>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-navy mb-1">
-                    نام فرستنده
-                  </label>
-                  <input
-                    type="text"
-                    value={settingsForm.sender_name}
-                    onChange={(e) =>
-                      setSettingsForm((p) => ({
-                        ...p,
-                        sender_name: e.target.value,
-                      }))
-                    }
-                    className={inputCls}
-                    placeholder="پرسکاد"
-                  />
+
+                <div className="flex flex-col gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-navy mb-1">شناسه کاربر (user_id) *</label>
+                    <input type="text" value={settingsForm.amoot_user_id} onChange={(e) => setSettingsForm((p) => ({...p, amoot_user_id: e.target.value}))} className={inputCls} placeholder="مثال: 12345" dir="ltr" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-navy mb-1">رمز عبور (password) *</label>
+                    <input type="password" value={settingsForm.amoot_password} onChange={(e) => setSettingsForm((p) => ({...p, amoot_password: e.target.value}))} className={inputCls} placeholder="رمز عبور" dir="ltr" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-navy mb-1">API Key (اختیاری)</label>
+                    <input type="password" value={settingsForm.api_token} onChange={(e) => setSettingsForm((p) => ({...p, api_token: e.target.value}))} className={inputCls} placeholder="API Key" dir="ltr" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-navy mb-1">شماره خط</label>
+                      <input type="text" value={settingsForm.line_number} onChange={(e) => setSettingsForm((p) => ({...p, line_number: e.target.value}))} className={inputCls} placeholder="public" dir="ltr" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-navy mb-1">نام فرستنده</label>
+                      <input type="text" value={settingsForm.sender_name} onChange={(e) => setSettingsForm((p) => ({...p, sender_name: e.target.value}))} className={inputCls} placeholder="پرسکاد" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 justify-end mt-1">
+                  <Button variant="teal" size="sm" onClick={handleSaveSettings} disabled={savingSettings}>
+                    {savingSettings ? "در حال ذخیره..." : "ذخیره تنظیمات"}
+                  </Button>
                 </div>
               </div>
-            </div>
-
-            <div className="flex gap-2 justify-end mt-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSettingsOpen(false)}
-              >
-                انصراف
-              </Button>
-              <Button
-                variant="teal"
-                size="sm"
-                onClick={handleSaveSettings}
-                disabled={savingSettings}
-              >
-                {savingSettings ? "در حال ذخیره..." : "ذخیره تنظیمات"}
-              </Button>
-            </div>
+            </StickerCard>
           </div>
-        </Modal>
+        </div>
       )}
     </div>
   );
