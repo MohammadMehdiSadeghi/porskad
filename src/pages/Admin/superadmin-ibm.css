@@ -1,0 +1,528 @@
+/* ═══════════════════════════════════════════════════════════
+   IBM Carbon Design System — SuperAdmin
+   ═══════════════════════════════════════════════════════════ */
+
+.sa-root {
+  font-family: 'IBM Plex Sans', 'IBM Plex Sans Arabic', sans-serif;
+  background: #f4f4f4;
+  min-height: 100vh;
+  padding: 1.5rem;
+  color: #161616;
+  max-width: 96rem;
+  margin: 0 auto;
+}
+
+/* ─── Header ─── */
+.sa-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.sa-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sa-logo {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #161616;
+  color: #fff;
+}
+
+.sa-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sa-badge-online {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #24a148;
+}
+
+.sa-badge-online::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #24a148;
+}
+
+.sa-avatar {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: #393939;
+}
+
+/* ─── Tabs (Carbon-style) ─── */
+.sa-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+}
+
+.sa-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #525252;
+  cursor: pointer;
+  font-family: 'IBM Plex Sans', sans-serif;
+  transition: all 0.15s;
+}
+
+.sa-tab:hover {
+  color: #161616;
+  background: #e8e8e8;
+}
+
+.sa-tab.active {
+  color: #0f62fe;
+  border-bottom-color: #0f62fe;
+}
+
+/* ─── Search bar ─── */
+.sa-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.sa-search input {
+  flex: 1;
+  min-width: 150px;
+  max-width: 24rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #c6c6c6;
+  background: #fff;
+  font-size: 0.85rem;
+  color: #161616;
+  font-family: 'IBM Plex Sans', sans-serif;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.sa-search input:focus {
+  border-color: #0f62fe;
+  box-shadow: 0 0 0 1px #0f62fe;
+}
+
+.sa-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ─── Carbon Buttons ─── */
+.sa-btn {
+  padding: 0.4rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'IBM Plex Sans', sans-serif;
+  border: none;
+  transition: all 0.15s;
+}
+
+.sa-btn-primary {
+  background: #0f62fe;
+  color: #fff;
+}
+
+.sa-btn-primary:hover {
+  background: #0043ce;
+}
+
+.sa-btn-secondary {
+  background: transparent;
+  color: #161616;
+  border: 1px solid #c6c6c6;
+}
+
+.sa-btn-secondary:hover {
+  background: #e8e8e8;
+}
+
+.sa-btn-danger {
+  background: #da1e28;
+  color: #fff;
+}
+
+.sa-btn-danger:hover {
+  background: #a2191f;
+}
+
+.sa-btn-ghost {
+  background: transparent;
+  color: #0f62fe;
+  padding: 0.25rem 0.5rem;
+}
+
+.sa-btn-ghost:hover {
+  background: #e8e8e8;
+}
+
+.sa-btn-sm {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+}
+
+/* ─── Carbon Cards ─── */
+.sa-card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 1rem;
+}
+
+.sa-card-header {
+  padding: 1rem 1rem 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sa-card-body {
+  padding: 0 1rem 1rem;
+}
+
+/* ─── Stat tiles (Carbon-style) ─── */
+.sa-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1px;
+  background: #e0e0e0;
+  margin-bottom: 1.5rem;
+}
+
+.sa-stat {
+  background: #fff;
+  padding: 1rem;
+  text-align: center;
+}
+
+.sa-stat-label {
+  font-size: 0.75rem;
+  color: #525252;
+  margin-bottom: 0.25rem;
+}
+
+.sa-stat-value {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #161616;
+}
+
+.sa-stat-sub {
+  font-size: 0.7rem;
+  color: #6f6f6f;
+}
+
+/* ─── Quick access tiles ─── */
+.sa-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+  gap: 1px;
+  background: #e0e0e0;
+  margin-bottom: 1.5rem;
+}
+
+.sa-tile {
+  background: #fff;
+  padding: 0.75rem;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s;
+  border: none;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.sa-tile:hover {
+  background: #e8e8e8;
+}
+
+.sa-tile-name {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #525252;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.sa-tile-count {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #161616;
+  margin-top: 0.15rem;
+}
+
+/* ─── Carbon Table ─── */
+.sa-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+}
+
+.sa-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.sa-table th {
+  text-align: right;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #525252;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #f4f4f4;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.sa-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #e0e0e0;
+  color: #161616;
+}
+
+.sa-table tr:hover td {
+  background: #e8e8e8;
+}
+
+.sa-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ─── Tags (Carbon-style badges) ─── */
+.sa-tag {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid;
+}
+
+.sa-tag-green {
+  color: #198038;
+  border-color: #198038;
+  background: #defbe6;
+}
+
+.sa-tag-red {
+  color: #a2191f;
+  border-color: #a2191f;
+  background: #fff1f1;
+}
+
+.sa-tag-blue {
+  color: #0043ce;
+  border-color: #0043ce;
+  background: #d0e2ff;
+}
+
+.sa-tag-gray {
+  color: #6f6f6f;
+  border-color: #c6c6c6;
+  background: #f4f4f4;
+}
+
+.sa-tag-orange {
+  color: #eb6200;
+  border-color: #eb6200;
+  background: #fff2e0;
+}
+
+/* ─── Section titles ─── */
+.sa-section-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #161616;
+  margin-bottom: 0.75rem;
+}
+
+/* ─── Error log ─── */
+.sa-error-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.8rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.sa-error-item:last-child {
+  border-bottom: none;
+}
+
+.sa-error-item:hover {
+  background: #f4f4f4;
+}
+
+/* ─── Admin card ─── */
+.sa-admin-card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.sa-admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.sa-admin-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sa-admin-avatar {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.sa-admin-avatar.owner {
+  background: #eb6200;
+}
+
+.sa-admin-avatar.normal {
+  background: #161616;
+}
+
+.sa-admin-email {
+  font-size: 0.7rem;
+  color: #6f6f6f;
+}
+
+/* ─── Permission toggles ─── */
+.sa-perms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.sa-perm {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.sa-perm.active {
+  color: #0f62fe;
+  border-color: #0f62fe;
+  background: #d0e2ff;
+}
+
+.sa-perm.inactive {
+  color: #6f6f6f;
+  border-color: #c6c6c6;
+  background: #f4f4f4;
+}
+
+.sa-perm.inactive:hover {
+  background: #e8e8e8;
+}
+
+/* ─── SQL editor ─── */
+.sa-sql textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #c6c6c6;
+  background: #fff;
+  font-size: 0.8rem;
+  font-family: 'IBM Plex Mono', monospace;
+  color: #161616;
+  outline: none;
+  resize: vertical;
+}
+
+.sa-sql textarea:focus {
+  border-color: #0f62fe;
+  box-shadow: 0 0 0 1px #0f62fe;
+}
+
+/* ─── Toast ─── */
+.sa-toast {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 9999;
+  padding: 0.6rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fff;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.sa-toast.success {
+  background: #24a148;
+}
+
+.sa-toast.error {
+  background: #da1e28;
+}
+
+/* ─── Empty state ─── */
+.sa-empty {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  padding: 3rem;
+  text-align: center;
+  color: #6f6f6f;
+  font-size: 0.85rem;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 640px) {
+  .sa-root { padding: 0.75rem; }
+  .sa-stats { grid-template-columns: repeat(2, 1fr); }
+  .sa-tiles { grid-template-columns: repeat(2, 1fr); }
+  .sa-table { font-size: 0.7rem; }
+  .sa-table th, .sa-table td { padding: 0.4rem 0.5rem; }
+}
