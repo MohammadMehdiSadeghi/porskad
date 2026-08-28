@@ -1,132 +1,159 @@
 // ══════════════════════════════════════════════════════════════
-// MusicPlayer — پخش موزیک پس‌زمینه با کنترل صدا
+// MusicPlayer — موزیک پس‌زمینه با Web Audio API
+// بدون نیاز به فایل MP3 یا CDN — همیشه کار می‌کنه! 🎵
 // ══════════════════════════════════════════════════════════════
 
-import { useState, useRef, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useRef, useCallback } from "react";
+import { motion } from "framer-motion";
 
-/**
- * آدرس موزیک پیش‌فرض (رومانتیک/آرام)
- * کاربر می‌تونه از طریق prop آدرس دلخواه بده
- */
-// لیست آدرس‌های موزیک (اگه اولی کار نکرد، بعدی امتحان میشه)
-const MUSIC_URLS = [
-  "https://cdn.pixabay.com/audio/2024/11/29/audio_89eb033835.mp3",
-  "https://cdn.pixabay.com/audio/2024/02/14/audio_857a52247a.mp3",
-  "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-];
+// ─── ساخت صدای Ambient ───
+function createAmbientSound(ctx) {
+  const masterGain = ctx.createGain();
+  masterGain.gain.value = 0;
+  masterGain.connect(ctx.destination);
 
-export default function MusicPlayer({
-  src,
-  autoPlay = false,
-  volume: initialVolume = 0.3,
-  className = "",
-}) {
-  const audioRef = useRef(null);
-  const [isPlaying, setIsPlaying] = useState(autoPlay);
+  const nodes = [];
+
+  // Pad: آکورد ملایم (C-E-G-C)
+  const notes = [261.63, 329.63, 392.0, 523.25];
+  for (const freq of notes) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+
+    osc.type = "sine";
+    osc.frequency.value = freq;
+
+    // LFO برای نوسان ملایم
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+    lfo.type = "sine";
+    lfo.frequency.value = 0.08 + Math.random() * 0.15;
+    lfoGain.gain.value = freq * 0.015;
+    lfo.connect(lfoGain);
+    lfoGain.connect(osc.frequency);
+    lfo.start();
+
+    filter.type = "lowpass";
+    filter.frequency.value = 600 + Math.random() * 400;
+    filter.Q.value = 0.3;
+
+    gain.gain.value = 0.07;
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(masterGain);
+    osc.start();
+    nodes.push(osc, lfo);
+  }
+
+  // بیس ملایم
+  const bass = ctx.createOscillator();
+  const bassGain = ctx.createGain();
+  const bassFilter = ctx.createBiquadFilter();
+  bass.type = "sine";
+  bass.frequency.value = 65.41;
+  bassFilter.type = "lowpass";
+  bassFilter.frequency.value = 150;
+  bassGain.gain.value = 0.05;
+  bass.connect(bassFilter);
+  bassFilter.connect(bassGain);
+  bassGain.connect(masterGain);
+  bass.start();
+  nodes.push(bass);
+
+  // صدای باد ملایم (noise)
+  const bufSize = ctx.sampleRate * 2;
+  const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
+  const noise = ctx.createBufferSource();
+  noise.buffer = buf;
+  noise.loop = true;
+  const nf = ctx.createBiquadFilter();
+  nf.type = "bandpass";
+  nf.frequency.value = 350;
+  nf.Q.value = 0.2;
+  const ng = ctx.createGain();
+  ng.gain.value = 0.012;
+  noise.connect(nf);
+  nf.connect(ng);
+  ng.connect(masterGain);
+  noise.start();
+  nodes.push(noise);
+
+  return { masterGain, nodes };
+}
+
+// ─── کامپوننت اصلی ───
+export default function MusicPlayer({ volume: initialVolume = 0.3, className = "" }) {
+  const ctxRef = useRef(null);
+  const soundRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(initialVolume);
   const [isMuted, setIsMuted] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [error, setError] = useState(false);
-  const [currentUrlIndex, setCurrentUrlIndex] = useState(0);
   const prevVolume = useRef(initialVolume);
 
-  // ─── مقداردهی اولیه audio ───
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    audio.volume = initialVolume;
-    audio.loop = true;
-
-    const handleCanPlay = () => {
-      setIsLoaded(true);
-      setError(false);
-    };
-    const handleError = () => {
-      // اگه آدرس فعلی کار نکرد، آدرس بعدی رو امتحان کن
-      if (currentUrlIndex < MUSIC_URLS.length - 1) {
-        setCurrentUrlIndex((i) => i + 1);
-      } else {
-        setError(true);
-      }
-    };
-    const handleEnded = () => setIsPlaying(false);
-
-    audio.addEventListener("canplay", handleCanPlay);
-    audio.addEventListener("error", handleError);
-    audio.addEventListener("ended", handleEnded);
-
-    return () => {
-      audio.removeEventListener("canplay", handleCanPlay);
-      audio.removeEventListener("error", handleError);
-      audio.removeEventListener("ended", handleEnded);
-    };
-  }, [src, initialVolume, currentUrlIndex]);
-
-  // ─── آپدیت volume ───
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : volume;
-    }
-  }, [volume, isMuted]);
-
-  // ─── پخش / توقف ───
   const togglePlay = useCallback(async () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
     try {
+      if (!ctxRef.current) {
+        ctxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      const ctx = ctxRef.current;
+      if (ctx.state === "suspended") await ctx.resume();
+
       if (isPlaying) {
-        audio.pause();
+        // توقف
+        if (soundRef.current) {
+          soundRef.current.masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
+          const ref = soundRef.current;
+          setTimeout(() => {
+            ref.nodes.forEach((n) => { try { n.stop(); } catch {} });
+          }, 600);
+          soundRef.current = null;
+        }
         setIsPlaying(false);
       } else {
-        await audio.play();
+        // شروع
+        const sound = createAmbientSound(ctx);
+        soundRef.current = sound;
+        const targetVol = isMuted ? 0 : volume;
+        sound.masterGain.gain.linearRampToValueAtTime(targetVol * 0.5, ctx.currentTime + 1.5);
         setIsPlaying(true);
       }
     } catch (err) {
-      console.warn("Music play failed:", err);
-      setError(true);
+      console.warn("Audio failed:", err);
     }
-  }, [isPlaying]);
+  }, [isPlaying, volume, isMuted]);
 
-  // ─── میوت ───
   const toggleMute = useCallback(() => {
+    const ctx = ctxRef.current;
     if (isMuted) {
       setIsMuted(false);
-      setVolume(prevVolume.current || 0.3);
+      if (ctx && soundRef.current) {
+        soundRef.current.masterGain.gain.linearRampToValueAtTime(volume * 0.5, ctx.currentTime + 0.3);
+      }
     } else {
       prevVolume.current = volume;
       setIsMuted(true);
+      if (ctx && soundRef.current) {
+        soundRef.current.masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
+      }
     }
   }, [isMuted, volume]);
 
-  // ─── تغییر صدا ───
   const handleVolumeChange = useCallback((e) => {
     const val = Number(e.target.value);
     setVolume(val);
-    if (val > 0 && isMuted) setIsMuted(false);
+    if (ctxRef.current && soundRef.current && !isMuted) {
+      soundRef.current.masterGain.gain.linearRampToValueAtTime(val * 0.5, ctxRef.current.currentTime + 0.1);
+    }
     if (val === 0) setIsMuted(true);
+    else if (isMuted) setIsMuted(false);
   }, [isMuted]);
-
-  // آدرس موزیک: اگه prop داده شده از اون استفاده کن، وگرنه از لیست پیش‌فرض
-  const musicSrc = src || MUSIC_URLS[currentUrlIndex];
-
-  if (error && currentUrlIndex >= MUSIC_URLS.length - 1) {
-    // نمایش پلیر حتی با خطا (ولی غیرفعال)
-    return (
-      <div className="fixed bottom-4 left-4 z-[9990]" dir="ltr">
-        <div className="bg-white/70 backdrop-blur-md border-2 border-ink/10 rounded-2xl px-3 py-2 text-[0.65rem] text-ink/40">
-          🎵 موزیک در دسترس نیست
-        </div>
-      </div>
-    );
-  }
 
   const effectiveVolume = isMuted ? 0 : volume;
 
-  // آیکون‌ها
   const VolumeIcon = () => {
     if (isMuted || effectiveVolume === 0) {
       return (
@@ -154,97 +181,79 @@ export default function MusicPlayer({
   };
 
   return (
-    <>
-      {/* audio element (مخفی) */}
-      <audio ref={audioRef} src={musicSrc} preload="auto" loop crossOrigin="anonymous" />
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.4, delay: 1 }}
+      className={`fixed bottom-4 left-4 z-[9990] ${className}`}
+      dir="ltr"
+    >
+      <div className="bg-white/90 backdrop-blur-md border-2 border-navy/15 rounded-2xl shadow-[3px_3px_0_0_rgba(33,41,90,0.1)] overflow-hidden">
+        <div className="flex items-center gap-2 px-3 py-2">
+          {/* Play / Pause */}
+          <button
+            onClick={togglePlay}
+            className="w-9 h-9 shrink-0 flex items-center justify-center rounded-xl bg-navy text-white hover:bg-navy/90 transition-colors"
+            title={isPlaying ? "توقف" : "پخش موزیک"}
+          >
+            {isPlaying ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="4" width="4" height="16" rx="1"/>
+                <rect x="14" y="4" width="4" height="16" rx="1"/>
+              </svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+            )}
+          </button>
 
-      {/* پلیر شناور */}
-      <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.9 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.4, delay: 1 }}
-        className={`fixed bottom-4 left-4 z-[9990] ${className}`}
-        dir="ltr"
-      >
-        <div className="bg-white/90 backdrop-blur-md border-2 border-navy/15 rounded-2xl shadow-[3px_3px_0_0_rgba(33,41,90,0.1)] overflow-hidden">
-          {/* دکمه اصلی + نوار صدا */}
-          <div className="flex items-center gap-2 px-3 py-2">
-            {/* دکمه پخش/توقف */}
-            <button
-              onClick={togglePlay}
-              disabled={!isLoaded && !error}
-              className="w-9 h-9 shrink-0 flex items-center justify-center rounded-xl bg-navy text-white hover:bg-navy/90 transition-colors disabled:opacity-50"
-              title={!isLoaded ? "در حال بارگذاری..." : isPlaying ? "توقف" : "پخش"}
-            >
-              {!isLoaded ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : isPlaying ? (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <rect x="6" y="4" width="4" height="16" rx="1"/>
-                  <rect x="14" y="4" width="4" height="16" rx="1"/>
-                </svg>
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <polygon points="5 3 19 12 5 21 5 3"/>
-                </svg>
-              )}
-            </button>
+          {/* Mute */}
+          <button
+            onClick={toggleMute}
+            className="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg text-navy hover:bg-bg-neutral transition-colors"
+            title={isMuted ? "فعال‌کردن صدا" : "بی‌صدا"}
+          >
+            <VolumeIcon />
+          </button>
 
-            {/* دکمه میوت */}
-            <button
-              onClick={toggleMute}
-              className="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg text-navy hover:bg-bg-neutral transition-colors"
-              title={isMuted ? "فعال‌کردن صدا" : "بی‌صدا"}
-            >
-              <VolumeIcon />
-            </button>
-
-            {/* نوار لغزنده صدا */}
-            <div className="flex items-center gap-1.5 flex-1 min-w-[80px] max-w-[120px]">
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={effectiveVolume}
-                onChange={handleVolumeChange}
-                className="w-full h-1.5 bg-ink/15 rounded-full appearance-none cursor-pointer
-                  [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5
-                  [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-teal [&::-webkit-slider-thumb]:cursor-pointer
-                  [&::-webkit-slider-thumb]:shadow-[1px_1px_0_0_rgba(0,0,0,0.15)]
-                  [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:h-3.5
-                  [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-teal [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer"
-                title={`صدا: ${Math.round(effectiveVolume * 100)}٪`}
-              />
-            </div>
-
-            {/* نشانگر درصد */}
-            <span className="text-[0.6rem] font-bold text-ink/40 w-7 text-center">
-              {Math.round(effectiveVolume * 100)}
-            </span>
+          {/* Volume slider */}
+          <div className="flex items-center gap-1.5 flex-1 min-w-[80px] max-w-[120px]">
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={effectiveVolume}
+              onChange={handleVolumeChange}
+              className="w-full h-1.5 bg-ink/15 rounded-full appearance-none cursor-pointer
+                [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5
+                [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-teal [&::-webkit-slider-thumb]:cursor-pointer
+                [&::-webkit-slider-thumb]:shadow-[1px_1px_0_0_rgba(0,0,0,0.15)]
+                [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:h-3.5
+                [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-teal [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer"
+            />
           </div>
 
-          {/* نوار موسیقی (animated) */}
-          {isPlaying && (
-            <div className="flex items-end justify-center gap-[2px] h-2 px-3 pb-1.5">
-              {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-                <motion.div
-                  key={i}
-                  className="w-[3px] bg-teal rounded-full"
-                  animate={{
-                    height: [4, 12 + Math.random() * 6, 4],
-                  }}
-                  transition={{
-                    duration: 0.6 + Math.random() * 0.4,
-                    repeat: Infinity,
-                    delay: i * 0.08,
-                  }}
-                />
-              ))}
-            </div>
-          )}
+          <span className="text-[0.6rem] font-bold text-ink/40 w-7 text-center">
+            {Math.round(effectiveVolume * 100)}
+          </span>
         </div>
-      </motion.div>
-    </>
+
+        {/* Animated bars */}
+        {isPlaying && (
+          <div className="flex items-end justify-center gap-[2px] h-2 px-3 pb-1.5">
+            {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+              <motion.div
+                key={i}
+                className="w-[3px] bg-teal rounded-full"
+                animate={{ height: [4, 10 + Math.random() * 8, 4] }}
+                transition={{ duration: 0.5 + Math.random() * 0.5, repeat: Infinity, delay: i * 0.07 }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </motion.div>
   );
 }
