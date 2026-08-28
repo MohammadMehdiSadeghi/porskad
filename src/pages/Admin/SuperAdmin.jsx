@@ -1,78 +1,67 @@
 // ══════════════════════════════════════════════════════════════
-// SuperAdmin — پنل مدیریت کامل با دسترسی مستقیم به دیتابیس و ورسل
+// SuperAdmin — حالت خدایی: دسترسی کامل به تمامی بخش‌ها
 // طراحی: IBM Carbon Design System
 // ══════════════════════════════════════════════════════════════
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabaseClient";
 import { faNum } from "../../lib/utils";
 import SEO from "../../components/ui/SEO";
+import Modal from "../../components/ui/Modal";
 
 // ─── توکن‌های IBM Carbon ───
 const IBM = {
   blue: "#0f62fe", blueHover: "#0353e9", blueDark: "#002d9c",
   coolGray10: "#f4f4f4", coolGray20: "#e0e0e0", coolGray30: "#c6c6c6",
   coolGray50: "#8d8d8d", coolGray60: "#6f6f6f", coolGray80: "#393939",
-  coolGray100: "#161616", coolGray110: "#000000",
-  red60: "#da1e28", red30: "#fff1f1",
-  green50: "#24a148", green30: "#defbe6",
-  yellow: "#f1c21b", yellow30: "#fdf6dd",
-  cyan10: "#e5f6ff", cyan: "#0072c3",
+  coolGray100: "#1616100", coolGray110: "#000000",
+  red60: "#da1e28", red30: "#fff1f1", green50: "#24a148", green30: "#defbe6",
+  yellow: "#f1c21b", yellow30: "#fdf6dd", cyan10: "#e5f6ff", cyan: "#0072c3",
   white: "#ffffff",
 };
 
-// ─── آیکون‌ها ───
-function I({ d, size = 16 }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={d}/></svg>; }
-const ICONS = {
-  dashboard: "M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z",
-  database: "M12 2C6.48 2 2 4.02 2 6.5v11C2 19.98 6.48 22 12 22s10-2.02 10-4.5v-11C22 4.02 17.52 2 12 2zM2 6.5C2 4.02 6.48 2 12 2s10 2.02 10 4.5M2 12c0 2.48 4.48 4.5 10 4.5s10-2.02 10-4.5",
-  vercel: "M12 2L2 22h20L12 2z",
-  users: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75",
-  terminal: "M4 17l6-6-6-6M12 19h8",
-  activity: "M22 12h-4l-3 9L9 3l-3 9H2",
-  shield: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
-  settings: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z",
-};
+// ─── آیکون ساده ───
+function I({ d, size = 16 }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={d}/></svg>;
+}
 
 // ─── تب‌ها ───
 const TABS = [
-  { id: "dashboard", label: "Dashboard", icon: "dashboard" },
-  { id: "database", label: "Database", icon: "database" },
-  { id: "vercel", label: "Vercel", icon: "vercel" },
-  { id: "users", label: "Users", icon: "users" },
-  { id: "admins", label: "Admins", icon: "shield" },
-  { id: "query", label: "SQL Query", icon: "terminal" },
-  { id: "activity", label: "Activity", icon: "activity" },
+  { id: "dashboard", label: "Dashboard", icon: "M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" },
+  { id: "database", label: "Database", icon: "M12 2C6.48 2 2 4.02 2 6.5v11C2 19.98 6.48 22 12 22s10-2.02 10-4.5v-11C22 4.02 17.52 2 12 2z" },
+  { id: "users", label: "Users", icon: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" },
+  { id: "admins", label: "Admins", icon: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" },
+  { id: "vercel", label: "Vercel", icon: "M12 2L2 22h20L12 2z" },
+  { id: "logs", label: "Logs", icon: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" },
+  { id: "query", label: "SQL", icon: "M4 17l6-6-6-6M12 19h8" },
 ];
 
 // ─── کارت آمار ───
-function Stat({ label, value, sub, color = IBM.blue, icon }) {
+function Stat({ label, value, sub, color = IBM.blue }) {
   return (
-    <div className="bg-white border border-cool-gray-20 rounded-lg p-4 flex flex-col gap-1.5 hover:border-cool-gray-30 transition-colors">
-      <div className="flex items-center justify-between">
-        <span className="text-[0.6rem] font-semibold text-cool-gray-50 uppercase tracking-wider">{label}</span>
-        {icon && <span style={{ color }}>{icon}</span>}
-      </div>
-      <span className="text-2xl font-bold" style={{ color }}>{value}</span>
-      {sub && <span className="text-[0.6rem] text-cool-gray-50">{sub}</span>}
+    <div className="bg-white border border-cool-gray-20 rounded-lg p-3 sm:p-4 flex flex-col gap-1">
+      <span className="text-[0.6rem] font-semibold text-cool-gray-50 uppercase tracking-wider">{label}</span>
+      <span className="text-xl sm:text-2xl font-bold" style={{ color }}>{value}</span>
+      {sub && <span className="text-[0.55rem] text-cool-gray-50">{sub}</span>}
     </div>
   );
 }
 
 // ─── جدول ───
-function Table({ columns, rows, empty = "No data" }) {
-  if (!rows.length) return <div className="text-sm text-cool-gray-50 py-12 text-center border border-cool-gray-20 rounded-lg bg-white">{empty}</div>;
+function Table({ columns, rows, onRowClick, empty = "No data" }) {
+  if (!rows?.length) return <div className="text-sm text-cool-gray-50 py-10 text-center border border-cool-gray-20 rounded-lg bg-white">{empty}</div>;
   return (
     <div className="overflow-x-auto border border-cool-gray-20 rounded-lg bg-white">
       <table className="w-full text-sm">
         <thead><tr className="bg-cool-gray-10 border-b border-cool-gray-20">
-          {columns.map((c) => <th key={c.key} className="text-right py-2.5 px-3 text-[0.6rem] font-semibold text-cool-gray-60 uppercase tracking-wider whitespace-nowrap">{c.label}</th>)}
+          {columns.map((c) => <th key={c.key} className="text-right py-2 px-3 text-[0.6rem] font-semibold text-cool-gray-60 uppercase tracking-wider whitespace-nowrap">{c.label}</th>)}
         </tr></thead>
         <tbody>
           {rows.map((r, i) => (
-            <tr key={r.id || i} className="border-b border-cool-gray-20 last:border-0 hover:bg-cool-gray-10 transition-colors">
-              {columns.map((c) => <td key={c.key} className="py-2.5 px-3 text-cool-gray-80">{c.render ? c.render(r) : String(r[c.key] ?? "—")}</td>)}
+            <tr key={r.id || i} onClick={() => onRowClick?.(r)}
+              className={`border-b border-cool-gray-20 last:border-0 transition-colors ${onRowClick ? "cursor-pointer hover:bg-cyan-10" : "hover:bg-cool-gray-10"}`}>
+              {columns.map((c) => <td key={c.key} className="py-2 px-3 text-cool-gray-80">{c.render ? c.render(r) : String(r[c.key] ?? "—")}</td>)}
             </tr>
           ))}
         </tbody>
@@ -83,201 +72,305 @@ function Table({ columns, rows, empty = "No data" }) {
 
 // ─── وضعیت ───
 function Status({ ok, label }) {
-  return (
-    <div className="flex items-center gap-2">
-      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: ok ? IBM.green50 : IBM.red60 }} />
-      <span className="text-xs text-cool-gray-80">{label}</span>
-    </div>
-  );
+  return <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: ok ? IBM.green50 : IBM.red60 }} /><span className="text-[0.65rem]">{label}</span></div>;
 }
 
 // ══════════════════════════════════════════════════════════════
-// SuperAdmin
+// God-Mode SuperAdmin
 // ══════════════════════════════════════════════════════════════
 export default function SuperAdmin() {
   const { user, profile } = useAuth();
   const [tab, setTab] = useState("dashboard");
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const refreshRef = useRef(null);
 
   // ─── داده‌ها ───
   const [dbStats, setDbStats] = useState({});
-  const [tables, setTables] = useState([]);
-  const [tableRows, setTableRows] = useState({});
+  const [tables] = useState(["forms", "questions", "responses", "answers", "profiles", "user_roles", "user_permissions", "logic_rules", "activity_log", "error_log"]);
   const [selectedTable, setSelectedTable] = useState(null);
   const [tableData, setTableData] = useState([]);
-  const [tableColumns, setTableColumns] = useState([]);
+  const [tableCols, setTableCols] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [admins, setAdmins] = useState([]);
+  const [activityLog, setActivityLog] = useState([]);
+  const [errorLog, setErrorLog] = useState([]);
+  const [vercelToken, setVercelToken] = useState(() => localStorage.getItem("sa_vxt") || "");
   const [vercelData, setVercelData] = useState({ deployments: [], projects: [] });
-  const [vercelToken, setVercelToken] = useState(() => localStorage.getItem("sa_vercel_token") || "");
   const [vercelLoading, setVercelLoading] = useState(false);
-  const [authUsers, setAuthUsers] = useState([]);
-  const [adminData, setAdminData] = useState([]);
+
+  // ─── مودال‌ها ───
+  const [editModal, setEditModal] = useState(null); // { table, row, isNew }
+  const [editForm, setEditForm] = useState({});
+  const [detailModal, setDetailModal] = useState(null); // user detail
+  const [impersonateModal, setImpersonateModal] = useState(null);
   const [sqlQuery, setSqlQuery] = useState("");
   const [sqlResult, setSqlResult] = useState(null);
   const [sqlError, setSqlError] = useState(null);
   const [sqlRunning, setSqlRunning] = useState(false);
-  const [activityLog, setActivityLog] = useState([]);
+  const [toast, setToast] = useState(null);
 
-  // ─── بارگذاری اولیه ───
-  useEffect(() => { loadAll(); }, []);
+  // ─── بارگذاری ───
+  useEffect(() => { loadAll(); return () => { if (refreshRef.current) clearInterval(refreshRef.current); }; }, []);
 
   async function loadAll() {
     setLoading(true);
     try {
-      await Promise.all([
-        loadDatabaseStats(),
-        loadUsers(),
-        loadAdmins(),
-        loadActivity(),
-      ]);
-    } catch (err) { console.error("SA load:", err); }
+      await Promise.all([loadDbStats(), loadUsers(), loadAdmins(), loadActivity(), loadErrors()]);
+    } catch (err) { console.error(err); }
     finally { setLoading(false); }
+    // Auto-refresh every 30s
+    refreshRef.current = setInterval(() => {
+      loadDbStats(); loadActivity(); loadErrors();
+    }, 30000);
   }
 
-  // ─── دیتابیس ───
-  async function loadDatabaseStats() {
-    const tableList = ["forms", "questions", "responses", "answers", "profiles", "user_roles", "user_permissions", "logic_rules"];
-    const stats = {};
-    const rows = {};
-    for (const t of tableList) {
-      try {
-        const { count } = await supabase.from(t).select("*", { count: "exact", head: true });
-        stats[t] = count ?? 0;
-        // Sample rows
-        const { data } = await supabase.from(t).select("*").limit(3);
-        rows[t] = data || [];
-      } catch { stats[t] = "N/A"; rows[t] = []; }
+  function showToast(msg, type = "success") {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  }
+
+  // ─── Database Stats ───
+  async function loadDbStats() {
+    try {
+      const { data } = await supabase.rpc("get_db_stats");
+      setDbStats(data || {});
+    } catch {
+      // Fallback: count each table
+      const stats = {};
+      for (const t of tables) {
+        try {
+          const { count } = await supabase.from(t).select("*", { count: "exact", head: true });
+          stats[t] = count ?? 0;
+        } catch { stats[t] = 0; }
+      }
+      setDbStats(stats);
     }
-    setDbStats(stats);
-    setTables(tableList);
-    setTableRows(rows);
   }
 
-  async function loadTableData(tableName) {
+  // ─── Table Browser ───
+  async function browseTable(tableName) {
     setSelectedTable(tableName);
     try {
-      const { data, error } = await supabase.from(tableName).select("*").limit(50);
+      const { data, error } = await supabase.from(tableName).select("*").limit(100);
       if (error) throw error;
       setTableData(data || []);
-      setTableColumns(data?.length ? Object.keys(data[0]) : []);
+      setTableCols(data?.length ? Object.keys(data[0]) : []);
     } catch (err) {
-      console.error(err);
-      setTableData([]);
-      setTableColumns([]);
+      setTableData([]); setTableCols([]);
+      showToast("Error loading table: " + err.message, "error");
     }
   }
 
-  // ─── ورسل ───
-  async function loadVercelDeployments() {
-    if (!vercelToken) return;
-    setVercelLoading(true);
-    try {
-      const res = await fetch("https://api.vercel.com/v6/deployments?limit=20&target=production", {
-        headers: { Authorization: `Bearer ${vercelToken}` },
-      });
-      if (!res.ok) throw new Error(`Vercel API ${res.status}`);
-      const data = await res.json();
-      setVercelData((prev) => ({ ...prev, deployments: data.deployments || [] }));
-
-      // Projects
-      const res2 = await fetch("https://api.vercel.com/v9/projects", {
-        headers: { Authorization: `Bearer ${vercelToken}` },
-      });
-      if (res2.ok) {
-        const pData = await res2.json();
-        setVercelData((prev) => ({ ...prev, projects: pData.projects || [] }));
-      }
-      localStorage.setItem("sa_vercel_token", vercelToken);
-    } catch (err) {
-      console.error("Vercel error:", err);
-    } finally { setVercelLoading(false); }
+  // ─── CRUD ───
+  function openCreate(table) {
+    setEditModal({ table, row: null, isNew: true });
+    setEditForm(getDefaultForm(table));
   }
 
-  // ─── کاربران ───
+  function openEdit(table, row) {
+    setEditModal({ table, row, isNew: false });
+    setEditForm({ ...row });
+  }
+
+  function getDefaultForm(table) {
+    const defaults = {
+      forms: { title: "", slug: "", description: "", published: false, form_type: "step_by_step" },
+      questions: { title: "", type: "short_text", description: "", required: true, options: [], position: 0 },
+      responses: { form_id: "", is_complete: true, device: "", browser: "" },
+      answers: { response_id: "", question_id: "", value: "" },
+      profiles: { full_name: "", email: "", is_active: true },
+      user_roles: { user_id: "", role_id: "manager", active: true },
+      user_permissions: { user_id: "", permission_id: "create_form" },
+      logic_rules: { name: "", enabled: true, priority: 0 },
+    };
+    return defaults[table] || {};
+  }
+
+  async function saveRecord() {
+    if (!editModal) return;
+    const { table, row, isNew } = editModal;
+    try {
+      if (isNew) {
+        const { error } = await supabase.from(table).insert(editForm);
+        if (error) throw error;
+        showToast(`Record created in ${table}`);
+      } else {
+        const { error } = await supabase.from(table).update(editForm).eq("id", row.id);
+        if (error) throw error;
+        showToast(`Record updated in ${table}`);
+      }
+      setEditModal(null);
+      if (selectedTable === table) browseTable(table);
+      loadDbStats();
+    } catch (err) {
+      showToast("Error: " + err.message, "error");
+    }
+  }
+
+  async function deleteRecord(table, id) {
+    if (!confirm(`Delete record from ${table}?`)) return;
+    try {
+      const { error } = await supabase.from(table).delete().eq("id", id);
+      if (error) throw error;
+      showToast("Record deleted");
+      if (selectedTable === table) browseTable(table);
+      loadDbStats();
+    } catch (err) {
+      showToast("Error: " + err.message, "error");
+    }
+  }
+
+  // ─── Users ───
   async function loadUsers() {
     try {
-      const { data: profiles } = await supabase.from("profiles").select("id, email, full_name, is_active, is_owner, created_at, hidden_from").order("created_at", { ascending: false });
+      const { data: profiles } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
       const { data: roles } = await supabase.from("user_roles").select("user_id, role_id, active");
-      const roleMap = {};
-      (roles || []).forEach((r) => { roleMap[r.user_id] = { role: r.role_id, active: r.active }; });
-      setAuthUsers((profiles || []).map((p) => ({ ...p, ...(roleMap[p.id] || { role: "unknown", active: true }) })));
+      const { data: perms } = await supabase.from("user_permissions").select("user_id, permission_id");
+      const roleMap = {}; const permMap = {};
+      (roles || []).forEach((r) => { roleMap[r.user_id] = { role: r.role_id, roleActive: r.active }; });
+      (perms || []).forEach((p) => { if (!permMap[p.user_id]) permMap[p.user_id] = []; permMap[p.user_id].push(p.permission_id); });
+      setUsers((profiles || []).map((p) => ({ ...p, ...(roleMap[p.id] || {}), permissions: permMap[p.id] || [] })));
     } catch (err) { console.error(err); }
   }
 
-  // ─── ادمین‌ها ───
+  // ─── Admins ───
   async function loadAdmins() {
     try {
       const { data: profiles } = await supabase.from("profiles").select("*").order("created_at");
       const { data: roles } = await supabase.from("user_roles").select("user_id, role_id, active");
       const { data: perms } = await supabase.from("user_permissions").select("user_id, permission_id");
       const roleMap = {}; const permMap = {};
-      (roles || []).forEach((r) => { roleMap[r.user_id] = { role: r.role_id, active: r.active }; });
+      (roles || []).forEach((r) => { roleMap[r.user_id] = { role: r.role_id, roleActive: r.active }; });
       (perms || []).forEach((p) => { if (!permMap[p.user_id]) permMap[p.user_id] = []; permMap[p.user_id].push(p.permission_id); });
-      setAdminData((profiles || []).map((p) => ({
-        ...p,
-        ...(roleMap[p.id] || { role: "unknown", active: true }),
-        permissions: permMap[p.id] || [],
-      })));
+      setAdmins((profiles || []).map((p) => ({ ...p, ...(roleMap[p.id] || {}), permissions: permMap[p.id] || [] })));
     } catch (err) { console.error(err); }
   }
 
-  // ─── فعالیت‌ها ───
+  // ─── Activity Log ───
   async function loadActivity() {
     try {
-      // آخرین پاسخ‌ها به‌عنوان فعالیت
-      const { data: resps } = await supabase.from("responses").select("id, form_id, is_complete, submitted_at, device, browser, os").order("submitted_at", { ascending: false }).limit(30);
-      const { data: forms } = await supabase.from("forms").select("id, title");
-      const formMap = {};
-      (forms || []).forEach((f) => { formMap[f.id] = f.title; });
-      setActivityLog((resps || []).map((r) => ({
-        ...r,
-        formTitle: formMap[r.form_id] || "Unknown",
-        type: "response",
-      })));
-    } catch (err) { console.error(err); }
+      const { data } = await supabase.from("activity_log").select("*").order("created_at", { ascending: false }).limit(100);
+      setActivityLog(data || []);
+    } catch { setActivityLog([]); }
   }
 
-  // ─── اجرای SQL ───
-  async function runSqlQuery() {
+  // ─── Error Log ───
+  async function loadErrors() {
+    try {
+      const { data } = await supabase.from("error_log").select("*").order("created_at", { ascending: false }).limit(100);
+      setErrorLog(data || []);
+    } catch { setErrorLog([]); }
+  }
+
+  // ─── Vercel ───
+  async function loadVercel() {
+    if (!vercelToken) return;
+    setVercelLoading(true);
+    try {
+      const [depRes, projRes] = await Promise.all([
+        fetch("https://api.vercel.com/v6/deployments?limit=20&target=production", { headers: { Authorization: `Bearer ${vercelToken}` } }),
+        fetch("https://api.vercel.com/v9/projects", { headers: { Authorization: `Bearer ${vercelToken}` } }),
+      ]);
+      if (depRes.ok) { const d = await depRes.json(); setVercelData((p) => ({ ...p, deployments: d.deployments || [] })); }
+      if (projRes.ok) { const p = await projRes.json(); setVercelData((prev) => ({ ...prev, projects: p.projects || [] })); }
+      localStorage.setItem("sa_vxt", vercelToken);
+      showToast("Vercel connected");
+    } catch (err) { showToast("Vercel error: " + err.message, "error"); }
+    finally { setVercelLoading(false); }
+  }
+
+  // ─── SQL ───
+  async function runSql() {
     if (!sqlQuery.trim()) return;
     setSqlRunning(true); setSqlError(null); setSqlResult(null);
     try {
-      // استفاده از RPC برای اجرای query امن
+      // Try RPC first
       const { data, error } = await supabase.rpc("exec_sql", { query: sqlQuery.trim() });
       if (error) throw error;
       setSqlResult(data);
     } catch (err) {
-      // اگه RPC وجود نداشت، سعی کن مستقیم
-      try {
-        const tableMatch = sqlQuery.match(/from\s+(\w+)/i);
-        if (tableMatch) {
-          const tableName = tableMatch[1];
-          const { data, error } = await supabase.from(tableName).select("*").limit(100);
-          if (error) throw error;
-          setSqlResult(data);
-        } else {
-          setSqlError(err.message || "Query failed");
-        }
-      } catch (e2) {
-        setSqlError(e2.message || "Query failed");
-      }
+      // Fallback: parse table name
+      const m = sqlQuery.match(/from\s+(\w+)/i);
+      if (m) {
+        const { data, error } = await supabase.from(m[1]).select("*").limit(100);
+        if (error) setSqlError(error.message);
+        else setSqlResult(data);
+      } else setSqlError(err.message);
     } finally { setSqlRunning(false); }
+  }
+
+  // ─── Impersonate ───
+  async function doImpersonate(targetUserId) {
+    try {
+      const { data, error } = await supabase.rpc("impersonate_user", { p_target_user_id: targetUserId });
+      if (error) throw error;
+      showToast(`Impersonating ${data.email}`);
+      setImpersonateModal(null);
+      // In a real app, you'd switch the auth session here
+    } catch (err) {
+      showToast("Impersonation failed: " + err.message, "error");
+    }
+  }
+
+  // ─── Admin Permission Editor ───
+  async function toggleAdminPermission(userId, permId, currentPerms) {
+    const newPerms = currentPerms.includes(permId)
+      ? currentPerms.filter((p) => p !== permId)
+      : [...currentPerms, permId];
+    try {
+      const { error } = await supabase.rpc("set_user_permissions", {
+        p_user_id: userId,
+        p_permission_ids: newPerms,
+      });
+      if (error) throw error;
+      showToast("Permissions updated");
+      loadAdmins();
+    } catch (err) {
+      showToast("Error: " + err.message, "error");
+    }
+  }
+
+  // ─── Purge ───
+  async function purgeResponses(formId = null) {
+    if (!confirm(formId ? "Delete all responses for this form?" : "DELETE ALL RESPONSES? This cannot be undone!")) return;
+    try {
+      const { data, error } = await supabase.rpc("purge_responses", { p_form_id: formId });
+      if (error) throw error;
+      showToast(`Purged ${data} records`);
+      loadDbStats();
+    } catch (err) {
+      showToast("Error: " + err.message, "error");
+    }
+  }
+
+  // ─── Export ───
+  async function exportTable(tableName) {
+    try {
+      const { data, error } = await supabase.rpc("export_table_data", { p_table_name: tableName });
+      if (error) throw error;
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `${tableName}_export.json`; a.click();
+      URL.revokeObjectURL(url);
+      showToast(`Exported ${tableName}`);
+    } catch (err) {
+      showToast("Export error: " + err.message, "error");
+    }
   }
 
   // ─── آمار ───
   const stats = useMemo(() => ({
-    totalForms: dbStats.forms || 0,
-    totalResponses: dbStats.responses || 0,
-    totalQuestions: dbStats.questions || 0,
-    totalAnswers: dbStats.answers || 0,
-    totalUsers: authUsers.length,
-    activeUsers: authUsers.filter((u) => u.is_active).length,
-    totalAdmins: adminData.length,
-    activeAdmins: adminData.filter((a) => a.is_active).length,
-  }), [dbStats, authUsers, adminData]);
+    forms: dbStats.forms || 0, responses: dbStats.responses || 0,
+    questions: dbStats.questions || 0, answers: dbStats.answers || 0,
+    users: users.length, activeUsers: users.filter((u) => u.is_active).length,
+    admins: admins.length, errors: errorLog.length,
+    activities: activityLog.length,
+  }), [dbStats, users, admins, errorLog, activityLog]);
 
   // ─── فیلتر ───
-  const filteredTableData = useMemo(() => {
+  const filteredData = useMemo(() => {
     if (!search || !tableData.length) return tableData;
     const q = search.toLowerCase();
     return tableData.filter((row) => Object.values(row).some((v) => String(v).toLowerCase().includes(q)));
@@ -288,7 +381,7 @@ export default function SuperAdmin() {
       <div className="flex items-center justify-center min-h-[60vh]" style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif" }}>
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-cool-gray-20 border-t-[#0f62fe] rounded-full animate-spin" />
-          <span className="text-sm text-cool-gray-60">Loading system...</span>
+          <span className="text-sm text-cool-gray-60">Loading god-mode...</span>
         </div>
       </div>
     );
@@ -296,187 +389,141 @@ export default function SuperAdmin() {
 
   return (
     <div className="flex flex-col" style={{ fontFamily: "'IBM Plex Sans', 'Inter', system-ui, sans-serif" }}>
-      <SEO title="Super Admin" noIndex />
+      <SEO title="Super Admin — God Mode" noIndex />
+
+      {/* ─── Toast ─── */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-[9999] px-4 py-2 rounded-lg text-sm font-semibold shadow-lg transition-all ${
+          toast.type === "error" ? "bg-red-60 text-white" : "bg-green-50 text-white"
+        }`}>{toast.msg}</div>
+      )}
 
       {/* ─── هدر ─── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b-2 border-cool-gray-20">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-3 border-b-2 border-cool-gray-20">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: IBM.blueDark }}>
-            <I d={ICONS.shield} size={20} />
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-red-60 text-white">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
           <div>
-            <h1 className="text-lg font-bold text-cool-gray-100">Super Admin</h1>
-            <p className="text-[0.6rem] text-cool-gray-50">Database · Vercel · Users · Monitoring</p>
+            <h1 className="text-base font-bold text-cool-gray-100">Super Admin <span className="text-red-60">God Mode</span></h1>
+            <p className="text-[0.55rem] text-cool-gray-50">Full access · CRUD · Impersonate · Monitor</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Status ok label="System Online" />
-          <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[0.6rem] font-bold" style={{ backgroundColor: IBM.blue }}>
-            {profile?.full_name?.[0]?.toUpperCase() || "SA"}
+        <div className="flex items-center gap-2">
+          <Status ok label="Online" />
+          <span className="text-[0.55rem] text-cool-gray-50">Auto-refresh: 30s</span>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[0.55rem] font-bold" style={{ backgroundColor: IBM.red60 }}>
+            {profile?.full_name?.[0]?.toUpperCase() || "G"}
           </div>
         </div>
       </div>
 
       {/* ─── تب‌ها ─── */}
-      <div className="flex gap-0 border-b-2 border-cool-gray-20 mb-4 overflow-x-auto">
+      <div className="flex gap-0 border-b-2 border-cool-gray-20 mb-3 overflow-x-auto">
         {TABS.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold whitespace-nowrap transition-all border-b-2 -mb-[2px] ${
+            className={`flex items-center gap-1 px-2.5 py-2 text-[0.65rem] font-semibold whitespace-nowrap transition-all border-b-2 -mb-[2px] ${
               tab === t.id ? "border-ibm-blue text-ibm-blue" : "border-transparent text-cool-gray-60 hover:text-cool-gray-100 hover:bg-cool-gray-10"
             }`}>
-            <I d={ICONS[t.icon]} size={14} />
-            {t.label}
+            <I d={t.icon} size={12} />{t.label}
           </button>
         ))}
       </div>
 
-      {/* ─── جستجو ─── */}
-      <div className="mb-4">
+      {/* ─── جستجو + اکشن‌ها ─── */}
+      <div className="flex flex-wrap items-center gap-2 mb-3">
         <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..."
-          className="w-full max-w-xs border border-cool-gray-30 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-ibm-blue transition-colors" />
+          className="flex-1 min-w-[150px] max-w-xs border border-cool-gray-30 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-ibm-blue" />
+        {selectedTable && (
+          <div className="flex gap-1">
+            <button onClick={() => openCreate(selectedTable)} className="px-2.5 py-1.5 bg-ibm-blue text-white text-[0.6rem] font-semibold rounded hover:bg-ibm-blue-hover transition-colors">+ Create</button>
+            <button onClick={() => exportTable(selectedTable)} className="px-2.5 py-1.5 border border-cool-gray-30 text-[0.6rem] font-semibold rounded hover:bg-cool-gray-10 transition-colors">Export</button>
+            {selectedTable === "responses" && <button onClick={() => purgeResponses()} className="px-2.5 py-1.5 bg-red-60 text-white text-[0.6rem] font-semibold rounded hover:bg-red-70 transition-colors">Purge All</button>}
+          </div>
+        )}
       </div>
 
       {/* ═══════════ Dashboard ═══════════ */}
       {tab === "dashboard" && (
-        <div className="flex flex-col gap-5">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <Stat label="Forms" value={faNum(stats.totalForms)} color={IBM.blue} />
-            <Stat label="Responses" value={faNum(stats.totalResponses)} color={IBM.green50} />
-            <Stat label="Users" value={faNum(stats.totalUsers)} sub={`${stats.activeUsers} active`} color={IBM.cyan} />
-            <Stat label="Admins" value={faNum(stats.totalAdmins)} sub={`${stats.activeAdmins} active`} color={IBM.blueDark} />
-          </div>
-          <div className="grid lg:grid-cols-3 gap-3">
-            <Stat label="Questions" value={faNum(stats.totalQuestions)} color={IBM.coolGray80} />
-            <Stat label="Answers" value={faNum(stats.totalAnswers)} color={IBM.coolGray60} />
-            <Stat label="Tables" value={faNum(tables.length)} sub="Monitored" color={IBM.coolGray50} />
-          </div>
-          {/* Recent activity */}
-          <div className="bg-white border border-cool-gray-20 rounded-lg">
-            <div className="px-4 py-3 border-b border-cool-gray-20 flex items-center justify-between">
-              <h3 className="text-xs font-bold text-cool-gray-100">Recent Activity</h3>
-              <button onClick={loadActivity} className="text-[0.6rem] text-ibm-blue hover:underline">Refresh</button>
-            </div>
-            <div className="p-3 flex flex-col gap-1 max-h-[300px] overflow-y-auto">
-              {activityLog.slice(0, 15).map((a, i) => (
-                <div key={a.id || i} className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-cool-gray-10 text-xs">
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: a.is_complete ? IBM.green50 : IBM.yellow }} />
-                  <span className="font-semibold text-cool-gray-80 flex-1 truncate">{a.formTitle}</span>
-                  <span className="text-cool-gray-50">{a.device || "—"}</span>
-                  <span className="text-cool-gray-50">{a.submitted_at ? new Date(a.submitted_at).toLocaleTimeString("fa-IR") : "—"}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ═══════════ Database ═══════════ */}
-      {tab === "database" && (
         <div className="flex flex-col gap-4">
-          {/* جدول‌ها */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
+            <Stat label="Forms" value={faNum(stats.forms)} color={IBM.blue} />
+            <Stat label="Responses" value={faNum(stats.responses)} color={IBM.green50} />
+            <Stat label="Users" value={faNum(stats.users)} sub={`${stats.activeUsers} active`} color={IBM.cyan} />
+            <Stat label="Errors" value={faNum(stats.errors)} color={stats.errors > 0 ? IBM.red60 : IBM.green50} />
+            <Stat label="Activities" value={faNum(stats.activities)} color={IBM.coolGray80} />
+          </div>
+          {/* Quick table access */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
             {tables.map((t) => (
-              <button key={t} onClick={() => loadTableData(t)}
-                className={`p-3 rounded-lg border text-center transition-all ${
-                  selectedTable === t ? "border-ibm-blue bg-cyan-10" : "border-cool-gray-20 bg-white hover:border-cool-gray-30"
-                }`}>
-                <div className="text-[0.6rem] text-cool-gray-50 uppercase tracking-wider mb-1">{t}</div>
-                <div className="text-lg font-bold text-cool-gray-100">{typeof dbStats[t] === "number" ? faNum(dbStats[t]) : "—"}</div>
-                <div className="text-[0.55rem] text-cool-gray-50">rows</div>
+              <button key={t} onClick={() => { setTab("database"); browseTable(t); }}
+                className="p-2.5 bg-white border border-cool-gray-20 rounded-lg text-center hover:border-ibm-blue transition-colors">
+                <div className="text-[0.55rem] text-cool-gray-50 uppercase">{t}</div>
+                <div className="text-sm font-bold">{typeof dbStats[t] === "number" ? faNum(dbStats[t]) : "—"}</div>
               </button>
             ))}
           </div>
-
-          {/* جدول انتخاب شده */}
-          {selectedTable && (
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-bold text-cool-gray-100">{selectedTable} <span className="text-cool-gray-50 font-normal">({filteredTableData.length} rows)</span></h3>
-                <button onClick={() => loadTableData(selectedTable)} className="text-[0.6rem] text-ibm-blue hover:underline">Refresh</button>
-              </div>
-              <Table
-                columns={tableColumns.map((c) => ({
-                  key: c, label: c,
-                  render: (r) => {
-                    const v = r[c];
-                    if (v === null || v === undefined) return <span className="text-cool-gray-30">null</span>;
-                    if (typeof v === "boolean") return <span className={v ? "text-green-60" : "text-red-60"}>{v ? "true" : "false"}</span>;
-                    if (typeof v === "object") return <span className="text-[0.6rem] font-mono text-cool-gray-60 max-w-[200px] truncate block">{JSON.stringify(v).slice(0, 60)}</span>;
-                    if (String(v).length > 50) return <span className="text-xs truncate block max-w-[200px]">{String(v).slice(0, 50)}...</span>;
-                    return String(v);
-                  },
-                }))}
-                rows={filteredTableData}
-                empty={`No data in ${selectedTable}`}
-              />
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ═══════════ Vercel ═══════════ */}
-      {tab === "vercel" && (
-        <div className="flex flex-col gap-4">
-          <div className="bg-white border border-cool-gray-20 rounded-lg p-4">
-            <h3 className="text-xs font-bold text-cool-gray-60 uppercase tracking-wider mb-3">Vercel API Token</h3>
-            <div className="flex gap-2">
-              <input type="password" value={vercelToken} onChange={(e) => setVercelToken(e.target.value)}
-                placeholder="vxt_xxxxxxxxxxxx"
-                className="flex-1 border border-cool-gray-30 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-ibm-blue" dir="ltr" />
-              <button onClick={loadVercelDeployments} disabled={vercelLoading || !vercelToken}
-                className="px-4 py-1.5 bg-ibm-blue text-white text-xs font-semibold rounded hover:bg-ibm-blue-hover disabled:opacity-50 transition-colors">
-                {vercelLoading ? "Loading..." : "Connect"}
-              </button>
-            </div>
-            <p className="text-[0.6rem] text-cool-gray-50 mt-2">Get token from: vercel.com/account/tokens</p>
-          </div>
-
-          {/* Projects */}
-          {vercelData.projects.length > 0 && (
+          {/* Recent errors */}
+          {errorLog.length > 0 && (
             <div className="bg-white border border-cool-gray-20 rounded-lg">
-              <div className="px-4 py-3 border-b border-cool-gray-20">
-                <h3 className="text-xs font-bold text-cool-gray-100">Projects</h3>
+              <div className="px-3 py-2 border-b border-cool-gray-20 flex items-center justify-between">
+                <h3 className="text-xs font-bold text-red-60">Recent Errors ({errorLog.length})</h3>
+                <button onClick={() => setTab("logs")} className="text-[0.55rem] text-ibm-blue hover:underline">View All</button>
               </div>
-              <div className="p-3 flex flex-col gap-2">
-                {vercelData.projects.map((p) => (
-                  <div key={p.id} className="flex items-center gap-3 py-2 px-3 rounded hover:bg-cool-gray-10">
-                    <div className="w-8 h-8 rounded bg-cool-gray-100 flex items-center justify-center">
-                      <I d={ICONS.vercel} size={16} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-sm font-semibold">{p.name}</div>
-                      <div className="text-[0.6rem] text-cool-gray-50">{p.framework || "—"}</div>
-                    </div>
-                    <Status ok={p.latestDeployments?.[0]?.state === "READY"} label={p.latestDeployments?.[0]?.state || "Unknown"} />
+              <div className="p-2 flex flex-col gap-1 max-h-[200px] overflow-y-auto">
+                {errorLog.slice(0, 5).map((e, i) => (
+                  <div key={e.id || i} className="flex items-center gap-2 py-1 px-2 rounded hover:bg-red-30 text-xs">
+                    <span className="text-red-60 font-mono text-[0.55rem]">{e.source}</span>
+                    <span className="flex-1 truncate text-cool-gray-80">{e.message}</span>
+                    <span className="text-cool-gray-50 text-[0.55rem]">{e.created_at ? new Date(e.created_at).toLocaleTimeString("fa-IR") : ""}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
+        </div>
+      )}
 
-          {/* Deployments */}
-          {vercelData.deployments.length > 0 && (
-            <div className="bg-white border border-cool-gray-20 rounded-lg">
-              <div className="px-4 py-3 border-b border-cool-gray-20">
-                <h3 className="text-xs font-bold text-cool-gray-100">Recent Deployments</h3>
+      {/* ═══════════ Database ═══════════ */}
+      {tab === "database" && (
+        <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            {tables.map((t) => (
+              <button key={t} onClick={() => browseTable(t)}
+                className={`p-2.5 rounded-lg border text-center transition-all ${selectedTable === t ? "border-ibm-blue bg-cyan-10" : "border-cool-gray-20 bg-white hover:border-cool-gray-30"}`}>
+                <div className="text-[0.55rem] text-cool-gray-50 uppercase tracking-wider">{t}</div>
+                <div className="text-base font-bold">{typeof dbStats[t] === "number" ? faNum(dbStats[t]) : "—"}</div>
+              </button>
+            ))}
+          </div>
+          {selectedTable && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs font-bold">{selectedTable} <span className="text-cool-gray-50 font-normal">({filteredData.length} rows)</span></h3>
+                <button onClick={() => browseTable(selectedTable)} className="text-[0.55rem] text-ibm-blue hover:underline">Refresh</button>
               </div>
               <Table
                 columns={[
-                  { key: "name", label: "Project", render: (r) => <span className="font-semibold">{r.name}</span> },
-                  { key: "state", label: "State", render: (r) => <Status ok={r.state === "READY"} label={r.state} /> },
-                  { key: "created", label: "Created", render: (r) => <span className="text-xs">{new Date(r.created).toLocaleString("fa-IR")}</span> },
-                  { key: "url", label: "URL", render: (r) => <a href={`https://${r.url}`} target="_blank" rel="noreferrer" className="text-[0.65rem] text-ibm-blue hover:underline" dir="ltr">{r.url}</a> },
-                  { key: "creator", label: "By", render: (r) => <span className="text-xs">{r.creator?.username || "—"}</span> },
+                  ...tableCols.map((c) => ({
+                    key: c, label: c,
+                    render: (r) => {
+                      const v = r[c];
+                      if (v === null || v === undefined) return <span className="text-cool-gray-30">null</span>;
+                      if (typeof v === "boolean") return <span className={v ? "text-green-60" : "text-red-60"}>{v ? "✓" : "✕"}</span>;
+                      if (typeof v === "object") return <span className="text-[0.55rem] font-mono max-w-[120px] truncate block">{JSON.stringify(v).slice(0, 40)}</span>;
+                      return <span className="text-xs">{String(v).slice(0, 60)}</span>;
+                    },
+                  })),
+                  { key: "_actions", label: "", render: (r) => (
+                    <div className="flex gap-1">
+                      <button onClick={(e) => { e.stopPropagation(); openEdit(selectedTable, r); }} className="text-[0.55rem] px-1.5 py-0.5 rounded bg-cool-gray-10 hover:bg-cool-gray-20">Edit</button>
+                      <button onClick={(e) => { e.stopPropagation(); deleteRecord(selectedTable, r.id); }} className="text-[0.55rem] px-1.5 py-0.5 rounded bg-red-60/10 text-red-60 hover:bg-red-60/20">Del</button>
+                    </div>
+                  )},
                 ]}
-                rows={vercelData.deployments}
+                rows={filteredData}
+                onRowClick={(r) => openEdit(selectedTable, r)}
               />
-            </div>
-          )}
-
-          {!vercelToken && (
-            <div className="bg-cyan-10 border border-cool-gray-20 rounded-lg p-8 text-center">
-              <I d={ICONS.vercel} size={32} />
-              <p className="text-sm text-cool-gray-60 mt-3">Enter your Vercel API token to monitor deployments</p>
             </div>
           )}
         </div>
@@ -484,129 +531,264 @@ export default function SuperAdmin() {
 
       {/* ═══════════ Users ═══════════ */}
       {tab === "users" && (
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-cool-gray-100">All Users ({authUsers.length})</h3>
-          </div>
+        <div className="flex flex-col gap-3">
+          <h3 className="text-xs font-bold">All Users ({users.length})</h3>
           <Table
             columns={[
               { key: "name", label: "Name", render: (r) => <span className="font-semibold">{r.full_name || "—"}</span> },
-              { key: "email", label: "Email", render: (r) => <span className="text-xs font-mono" dir="ltr">{r.email}</span> },
-              { key: "role", label: "Role", render: (r) => <span className={`text-xs px-1.5 py-0.5 rounded ${r.role === "admin" ? "bg-ibm-blue/10 text-ibm-blue" : "bg-cool-gray-10 text-cool-gray-60"}`}>{r.role}</span> },
-              { key: "is_owner", label: "Owner", render: (r) => r.is_owner ? <span className="text-[0.6rem] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-bold">OWNER</span> : <span className="text-cool-gray-30">—</span> },
-              { key: "is_active", label: "Status", render: (r) => <Status ok={r.is_active} label={r.is_active ? "Active" : "Inactive"} /> },
-              { key: "hidden_from", label: "Hidden From", render: (r) => r.hidden_from?.length ? <span className="text-xs">{r.hidden_from.length} users</span> : <span className="text-cool-gray-30">—</span> },
-              { key: "created_at", label: "Joined", render: (r) => <span className="text-xs">{r.created_at ? new Date(r.created_at).toLocaleDateString("fa-IR") : "—"}</span> },
+              { key: "email", label: "Email", render: (r) => <span className="text-[0.65rem] font-mono" dir="ltr">{r.email}</span> },
+              { key: "role", label: "Role", render: (r) => <span className={`text-[0.6rem] px-1.5 py-0.5 rounded ${r.role === "admin" ? "bg-ibm-blue/10 text-ibm-blue" : "bg-cool-gray-10 text-cool-gray-60"}`}>{r.role || "—"}</span> },
+              { key: "owner", label: "Owner", render: (r) => r.is_owner ? <span className="text-[0.55rem] px-1 py-0.5 rounded bg-amber-100 text-amber-700 font-bold">OWNER</span> : "—" },
+              { key: "active", label: "Active", render: (r) => <Status ok={r.is_active} label={r.is_active ? "Yes" : "No"} /> },
+              { key: "joined", label: "Joined", render: (r) => <span className="text-[0.6rem]">{r.created_at ? new Date(r.created_at).toLocaleDateString("fa-IR") : "—"}</span> },
+              { key: "actions", label: "", render: (r) => (
+                <div className="flex gap-1">
+                  <button onClick={(e) => { e.stopPropagation(); setDetailModal(r); }} className="text-[0.55rem] px-1.5 py-0.5 rounded bg-cool-gray-10 hover:bg-cool-gray-20">Detail</button>
+                  <button onClick={(e) => { e.stopPropagation(); setImpersonateModal(r); }} className="text-[0.55rem] px-1.5 py-0.5 rounded bg-ibm-blue/10 text-ibm-blue hover:bg-ibm-blue/20">Login As</button>
+                </div>
+              )},
             ]}
-            rows={authUsers.filter((u) => !search || u.email?.toLowerCase().includes(search.toLowerCase()) || u.full_name?.toLowerCase().includes(search.toLowerCase()))}
+            rows={users.filter((u) => !search || u.email?.toLowerCase().includes(search.toLowerCase()) || u.full_name?.toLowerCase().includes(search.toLowerCase()))}
+            onRowClick={(r) => setDetailModal(r)}
           />
         </div>
       )}
 
       {/* ═══════════ Admins ═══════════ */}
       {tab === "admins" && (
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-cool-gray-100">Admins & Managers ({adminData.length})</h3>
-          </div>
-          <Table
-            columns={[
-              { key: "name", label: "Name", render: (r) => (
+        <div className="flex flex-col gap-3">
+          <h3 className="text-xs font-bold">Admins & Managers ({admins.length})</h3>
+          {admins.map((a) => (
+            <div key={a.id} className="bg-white border border-cool-gray-20 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[0.5rem] font-bold text-white" style={{ backgroundColor: r.is_owner ? IBM.blueDark : IBM.blue }}>
-                    {r.full_name?.[0]?.toUpperCase() || "U"}
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-[0.55rem] font-bold text-white" style={{ backgroundColor: a.is_owner ? IBM.blueDark : IBM.blue }}>
+                    {a.full_name?.[0]?.toUpperCase() || "U"}
                   </div>
-                  <span className="font-semibold">{r.full_name || "—"}</span>
-                  {r.is_owner && <span className="text-[0.5rem] px-1 py-0.5 rounded bg-amber-100 text-amber-700 font-bold">OWNER</span>}
+                  <div>
+                    <span className="text-xs font-bold">{a.full_name || "—"}</span>
+                    {a.is_owner && <span className="text-[0.5rem] px-1 py-0.5 rounded bg-amber-100 text-amber-700 font-bold mr-1">OWNER</span>}
+                    <div className="text-[0.55rem] text-cool-gray-50" dir="ltr">{a.email}</div>
+                  </div>
                 </div>
-              )},
-              { key: "email", label: "Email", render: (r) => <span className="text-xs font-mono" dir="ltr">{r.email}</span> },
-              { key: "role", label: "Role", render: (r) => <span className="text-xs font-semibold">{r.role}</span> },
-              { key: "permissions", label: "Permissions", render: (r) => <span className="text-xs">{r.permissions?.length || 0} permissions</span> },
-              { key: "is_active", label: "Status", render: (r) => <Status ok={r.is_active} label={r.is_active ? "Active" : "Inactive"} /> },
-              { key: "created_at", label: "Joined", render: (r) => <span className="text-xs">{r.created_at ? new Date(r.created_at).toLocaleDateString("fa-IR") : "—"}</span> },
-            ]}
-            rows={adminData}
-          />
+                <Status ok={a.is_active} label={a.is_active ? "Active" : "Inactive"} />
+              </div>
+              {!a.is_owner && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {["create_form", "edit_form", "delete_form", "publish_form", "view_responses", "view_analytics", "export_excel", "manage_managers", "manage_sms"].map((perm) => {
+                    const has = a.permissions?.includes(perm);
+                    return (
+                      <button key={perm} onClick={() => toggleAdminPermission(a.id, perm, a.permissions || [])}
+                        className={`text-[0.55rem] px-1.5 py-0.5 rounded transition-colors ${has ? "bg-green-50 text-green-60 border border-green-50/30" : "bg-cool-gray-10 text-cool-gray-50 border border-cool-gray-20 hover:bg-cool-gray-20"}`}>
+                        {perm.replace(/_/g, " ")}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
 
-      {/* ═══════════ SQL Query ═══════════ */}
-      {tab === "query" && (
+      {/* ═══════════ Vercel ═══════════ */}
+      {tab === "vercel" && (
+        <div className="flex flex-col gap-3">
+          <div className="bg-white border border-cool-gray-20 rounded-lg p-3">
+            <div className="flex gap-2">
+              <input type="password" value={vercelToken} onChange={(e) => setVercelToken(e.target.value)} placeholder="Vercel API Token (vxt_...)"
+                className="flex-1 border border-cool-gray-30 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-ibm-blue" dir="ltr" />
+              <button onClick={loadVercel} disabled={vercelLoading || !vercelToken}
+                className="px-3 py-1.5 bg-ibm-blue text-white text-[0.6rem] font-semibold rounded hover:bg-ibm-blue-hover disabled:opacity-50 transition-colors">
+                {vercelLoading ? "..." : "Connect"}
+              </button>
+            </div>
+          </div>
+          {vercelData.projects.length > 0 && (
+            <div className="bg-white border border-cool-gray-20 rounded-lg p-3">
+              <h3 className="text-xs font-bold mb-2">Projects</h3>
+              {vercelData.projects.map((p) => (
+                <div key={p.id} className="flex items-center gap-2 py-1.5 border-b border-cool-gray-20 last:border-0">
+                  <span className="text-xs font-semibold flex-1">{p.name}</span>
+                  <Status ok={p.latestDeployments?.[0]?.state === "READY"} label={p.latestDeployments?.[0]?.state || "—"} />
+                </div>
+              ))}
+            </div>
+          )}
+          {vercelData.deployments.length > 0 && (
+            <Table
+              columns={[
+                { key: "name", label: "Project", render: (r) => <span className="font-semibold text-xs">{r.name}</span> },
+                { key: "state", label: "State", render: (r) => <Status ok={r.state === "READY"} label={r.state} /> },
+                { key: "created", label: "Time", render: (r) => <span className="text-[0.6rem]">{new Date(r.created).toLocaleString("fa-IR")}</span> },
+                { key: "url", label: "URL", render: (r) => <a href={`https://${r.url}`} target="_blank" rel="noreferrer" className="text-[0.6rem] text-ibm-blue hover:underline" dir="ltr">{r.url}</a> },
+              ]}
+              rows={vercelData.deployments}
+            />
+          )}
+          {!vercelToken && <div className="bg-cyan-10 border rounded-lg p-6 text-center text-xs text-cool-gray-60">Enter Vercel API token to monitor deployments</div>}
+        </div>
+      )}
+
+      {/* ═══════════ Logs ═══════════ */}
+      {tab === "logs" && (
         <div className="flex flex-col gap-4">
-          <div className="bg-white border border-cool-gray-20 rounded-lg p-4">
-            <h3 className="text-xs font-bold text-cool-gray-60 uppercase tracking-wider mb-3">SQL Query</h3>
-            <textarea value={sqlQuery} onChange={(e) => setSqlQuery(e.target.value)} rows={4}
-              placeholder="SELECT * FROM forms LIMIT 10;"
-              className="w-full border border-cool-gray-30 rounded px-3 py-2 text-xs font-mono focus:outline-none focus:border-ibm-blue resize-y" dir="ltr" />
+          {/* Activity */}
+          <div className="bg-white border border-cool-gray-20 rounded-lg">
+            <div className="px-3 py-2 border-b border-cool-gray-20 flex items-center justify-between">
+              <h3 className="text-xs font-bold">Activity Log ({activityLog.length})</h3>
+              <button onClick={loadActivity} className="text-[0.55rem] text-ibm-blue hover:underline">Refresh</button>
+            </div>
+            <Table
+              columns={[
+                { key: "action", label: "Action", render: (r) => <span className="text-[0.6rem] font-semibold px-1.5 py-0.5 rounded bg-cool-gray-10">{r.action}</span> },
+                { key: "target", label: "Target", render: (r) => <span className="text-xs">{r.target_type}/{r.target_id}</span> },
+                { key: "details", label: "Details", render: (r) => <span className="text-[0.55rem] font-mono max-w-[200px] truncate block">{r.details ? JSON.stringify(r.details).slice(0, 50) : "—"}</span> },
+                { key: "time", label: "Time", render: (r) => <span className="text-[0.6rem]">{r.created_at ? new Date(r.created_at).toLocaleString("fa-IR") : "—"}</span> },
+              ]}
+              rows={activityLog}
+            />
+          </div>
+          {/* Errors */}
+          <div className="bg-white border border-cool-gray-20 rounded-lg">
+            <div className="px-3 py-2 border-b border-cool-gray-20 flex items-center justify-between">
+              <h3 className="text-xs font-bold text-red-60">Error Log ({errorLog.length})</h3>
+              <button onClick={loadErrors} className="text-[0.55rem] text-ibm-blue hover:underline">Refresh</button>
+            </div>
+            <Table
+              columns={[
+                { key: "source", label: "Source", render: (r) => <span className="text-[0.6rem] font-mono">{r.source}</span> },
+                { key: "message", label: "Message", render: (r) => <span className="text-xs truncate block max-w-[300px]">{r.message}</span> },
+                { key: "url", label: "URL", render: (r) => <span className="text-[0.55rem] text-cool-gray-50 truncate block max-w-[150px]" dir="ltr">{r.url || "—"}</span> },
+                { key: "time", label: "Time", render: (r) => <span className="text-[0.6rem]">{r.created_at ? new Date(r.created_at).toLocaleString("fa-IR") : "—"}</span> },
+              ]}
+              rows={errorLog}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════ SQL ═══════════ */}
+      {tab === "query" && (
+        <div className="flex flex-col gap-3">
+          <div className="bg-white border border-cool-gray-20 rounded-lg p-3">
+            <textarea value={sqlQuery} onChange={(e) => setSqlQuery(e.target.value)} rows={3} placeholder="SELECT * FROM forms LIMIT 10;"
+              className="w-full border border-cool-gray-30 rounded px-2.5 py-2 text-xs font-mono focus:outline-none focus:border-ibm-blue resize-y" dir="ltr" />
             <div className="flex gap-2 mt-2">
-              <button onClick={runSqlQuery} disabled={sqlRunning || !sqlQuery.trim()}
-                className="px-4 py-1.5 bg-ibm-blue text-white text-xs font-semibold rounded hover:bg-ibm-blue-hover disabled:opacity-50 transition-colors">
+              <button onClick={runSql} disabled={sqlRunning || !sqlQuery.trim()}
+                className="px-3 py-1.5 bg-ibm-blue text-white text-[0.6rem] font-semibold rounded hover:bg-ibm-blue-hover disabled:opacity-50 transition-colors">
                 {sqlRunning ? "Running..." : "Execute"}
               </button>
               <button onClick={() => { setSqlQuery(""); setSqlResult(null); setSqlError(null); }}
-                className="px-4 py-1.5 border border-cool-gray-30 text-xs font-semibold rounded hover:bg-cool-gray-10 transition-colors">
-                Clear
-              </button>
+                className="px-3 py-1.5 border border-cool-gray-30 text-[0.6rem] font-semibold rounded hover:bg-cool-gray-10 transition-colors">Clear</button>
             </div>
-            <div className="flex gap-2 mt-2 flex-wrap">
-              {["forms", "questions", "responses", "answers", "profiles", "user_roles"].map((t) => (
+            <div className="flex gap-1 mt-2 flex-wrap">
+              {tables.map((t) => (
                 <button key={t} onClick={() => setSqlQuery(`SELECT * FROM ${t} LIMIT 20;`)}
-                  className="text-[0.6rem] px-2 py-0.5 rounded bg-cool-gray-10 text-cool-gray-60 hover:bg-cool-gray-20 transition-colors">
-                  {t}
-                </button>
+                  className="text-[0.55rem] px-1.5 py-0.5 rounded bg-cool-gray-10 text-cool-gray-60 hover:bg-cool-gray-20 transition-colors">{t}</button>
               ))}
             </div>
           </div>
-
-          {sqlError && (
-            <div className="bg-red-30 border border-red-60/20 rounded-lg p-3 text-xs text-red-60 font-mono">{sqlError}</div>
+          {sqlError && <div className="bg-red-30 border border-red-60/20 rounded-lg p-2 text-xs text-red-60 font-mono">{sqlError}</div>}
+          {sqlResult && Array.isArray(sqlResult) && sqlResult.length > 0 && (
+            <Table
+              columns={Object.keys(sqlResult[0]).map((k) => ({
+                key: k, label: k,
+                render: (r) => {
+                  const v = r[k];
+                  if (v === null) return <span className="text-cool-gray-30">null</span>;
+                  if (typeof v === "object") return <span className="text-[0.55rem] font-mono max-w-[120px] truncate block">{JSON.stringify(v).slice(0, 40)}</span>;
+                  return String(v).slice(0, 60);
+                },
+              }))}
+              rows={sqlResult}
+            />
           )}
-
-          {sqlResult && (
-            <div>
-              <h4 className="text-xs font-bold text-cool-gray-60 mb-2">{Array.isArray(sqlResult) ? `${sqlResult.length} rows` : "Result"}</h4>
-              {Array.isArray(sqlResult) && sqlResult.length > 0 ? (
-                <Table
-                  columns={Object.keys(sqlResult[0]).map((k) => ({
-                    key: k, label: k,
-                    render: (r) => {
-                      const v = r[k];
-                      if (v === null) return <span className="text-cool-gray-30">null</span>;
-                      if (typeof v === "object") return <span className="text-[0.6rem] font-mono max-w-[150px] truncate block">{JSON.stringify(v).slice(0, 40)}</span>;
-                      return String(v).slice(0, 60);
-                    },
-                  }))}
-                  rows={sqlResult}
-                />
-              ) : (
-                <pre className="bg-cool-gray-10 rounded p-3 text-xs font-mono overflow-auto">{JSON.stringify(sqlResult, null, 2)}</pre>
-              )}
-            </div>
+          {sqlResult && !Array.isArray(sqlResult) && (
+            <pre className="bg-cool-gray-10 rounded p-3 text-xs font-mono overflow-auto max-h-[400px]">{JSON.stringify(sqlResult, null, 2)}</pre>
           )}
         </div>
       )}
 
-      {/* ═══════════ Activity ═══════════ */}
-      {tab === "activity" && (
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-cool-gray-100">Activity Log ({activityLog.length})</h3>
-            <button onClick={loadActivity} className="text-[0.6rem] text-ibm-blue hover:underline">Refresh</button>
+      {/* ═══════════ مودال ویرایش ═══════════ */}
+      <Modal open={!!editModal} onClose={() => setEditModal(null)} title={`${editModal?.isNew ? "Create" : "Edit"} ${editModal?.table || ""}`}>
+        <div className="flex flex-col gap-3 max-h-[70vh] overflow-y-auto">
+          {Object.entries(editForm).map(([key, val]) => {
+            if (key === "id" || key === "created_at") return null;
+            return (
+              <div key={key}>
+                <label className="block text-[0.6rem] font-bold text-cool-gray-60 mb-1 uppercase">{key.replace(/_/g, " ")}</label>
+                {typeof val === "boolean" ? (
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={val} onChange={(e) => setEditForm({ ...editForm, [key]: e.target.checked })} className="w-4 h-4 accent-[#0f62fe]" />
+                    <span className="text-xs">{val ? "True" : "False"}</span>
+                  </label>
+                ) : typeof val === "object" ? (
+                  <textarea value={JSON.stringify(val, null, 2)} onChange={(e) => { try { setEditForm({ ...editForm, [key]: JSON.parse(e.target.value) }); } catch {} }}
+                    rows={3} className="w-full border border-cool-gray-30 rounded px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:border-ibm-blue resize-y" />
+                ) : (
+                  <input type="text" value={val ?? ""} onChange={(e) => setEditForm({ ...editForm, [key]: e.target.value })}
+                    className="w-full border border-cool-gray-30 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-ibm-blue" />
+                )}
+              </div>
+            );
+          })}
+          <div className="flex gap-2 justify-end pt-2 border-t border-cool-gray-20">
+            <button onClick={saveRecord} className="px-4 py-1.5 bg-ibm-blue text-white text-xs font-semibold rounded hover:bg-ibm-blue-hover transition-colors">Save</button>
+            <button onClick={() => setEditModal(null)} className="px-4 py-1.5 border border-cool-gray-30 text-xs font-semibold rounded hover:bg-cool-gray-10 transition-colors">Cancel</button>
           </div>
-          <Table
-            columns={[
-              { key: "form", label: "Form", render: (r) => <span className="font-semibold">{r.formTitle}</span> },
-              { key: "status", label: "Status", render: (r) => <Status ok={r.is_complete} label={r.is_complete ? "Complete" : "Partial"} /> },
-              { key: "device", label: "Device", render: (r) => <span className="text-xs">{r.device || "—"}</span> },
-              { key: "browser", label: "Browser", render: (r) => <span className="text-xs">{r.browser || "—"}</span> },
-              { key: "os", label: "OS", render: (r) => <span className="text-xs">{r.os || "—"}</span> },
-              { key: "time", label: "Time", render: (r) => <span className="text-xs">{r.submitted_at ? new Date(r.submitted_at).toLocaleString("fa-IR") : "—"}</span> },
-            ]}
-            rows={activityLog}
-          />
         </div>
-      )}
+      </Modal>
+
+      {/* ═══════════ مودال جزئیات کاربر ═══════════ */}
+      <Modal open={!!detailModal} onClose={() => setDetailModal(null)} title={`User: ${detailModal?.full_name || detailModal?.email || ""}`}>
+        {detailModal && (
+          <div className="flex flex-col gap-3 text-sm">
+            <div className="grid grid-cols-2 gap-2">
+              <div><span className="text-[0.6rem] text-cool-gray-50">ID</span><div className="text-xs font-mono break-all">{detailModal.id}</div></div>
+              <div><span className="text-[0.6rem] text-cool-gray-50">Email</span><div className="text-xs" dir="ltr">{detailModal.email}</div></div>
+              <div><span className="text-[0.6rem] text-cool-gray-50">Name</span><div className="text-xs">{detailModal.full_name || "—"}</div></div>
+              <div><span className="text-[0.6rem] text-cool-gray-50">Role</span><div className="text-xs">{detailModal.role || "—"}</div></div>
+              <div><span className="text-[0.6rem] text-cool-gray-50">Owner</span><div className="text-xs">{detailModal.is_owner ? "Yes" : "No"}</div></div>
+              <div><span className="text-[0.6rem] text-cool-gray-50">Active</span><div className="text-xs">{detailModal.is_active ? "Yes" : "No"}</div></div>
+              <div><span className="text-[0.6rem] text-cool-gray-50">Joined</span><div className="text-xs">{detailModal.created_at ? new Date(detailModal.created_at).toLocaleString("fa-IR") : "—"}</div></div>
+              <div><span className="text-[0.6rem] text-cool-gray-50">Hidden From</span><div className="text-xs">{detailModal.hidden_from?.length || 0} users</div></div>
+            </div>
+            {detailModal.permissions?.length > 0 && (
+              <div>
+                <span className="text-[0.6rem] text-cool-gray-50">Permissions</span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {detailModal.permissions.map((p) => <span key={p} className="text-[0.55rem] px-1.5 py-0.5 rounded bg-green-50 text-green-60">{p}</span>)}
+                </div>
+              </div>
+            )}
+            <div className="flex gap-2 pt-2 border-t border-cool-gray-20">
+              <button onClick={() => { setImpersonateModal(detailModal); setDetailModal(null); }}
+                className="px-3 py-1.5 bg-ibm-blue text-white text-[0.6rem] font-semibold rounded hover:bg-ibm-blue-hover transition-colors">Login As This User</button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* ═══════════ مودال Login As ═══════════ */}
+      <Modal open={!!impersonateModal} onClose={() => setImpersonateModal(null)} title="Login As User">
+        {impersonateModal && (
+          <div className="flex flex-col gap-3">
+            <p className="text-xs text-cool-gray-60">You will be logged in as:</p>
+            <div className="bg-cool-gray-10 rounded-lg p-3">
+              <div className="text-sm font-bold">{impersonateModal.full_name || "—"}</div>
+              <div className="text-xs text-cool-gray-50" dir="ltr">{impersonateModal.email}</div>
+            </div>
+            <p className="text-[0.6rem] text-red-60">⚠️ This action is logged in the activity log.</p>
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => doImpersonate(impersonateModal.id)}
+                className="px-4 py-1.5 bg-ibm-blue text-white text-xs font-semibold rounded hover:bg-ibm-blue-hover transition-colors">Confirm Login As</button>
+              <button onClick={() => setImpersonateModal(null)}
+                className="px-4 py-1.5 border border-cool-gray-30 text-xs font-semibold rounded hover:bg-cool-gray-10 transition-colors">Cancel</button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
