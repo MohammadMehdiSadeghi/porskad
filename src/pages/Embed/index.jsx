@@ -86,7 +86,7 @@ function TextInput({ type, value, onChange, autoFocus = true, onEnter, placehold
   const ph = (customPh && customPh.trim()) || defaultPh[type] || "";
   const isLtr = type === "email" || type === "phone_ir";
 
-  const shared = "w-full border-2 border-ink/15 rounded-pill-md [corner-shape:squircle] px-3.5 sm:px-4 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-ink placeholder:text-ink/40 focus:outline-none focus:ring-4 focus:ring-ecosystem-normal/15 focus:border-ecosystem-normal transition-all duration-200";
+  const shared = "w-full border-2 border-ink/10 rounded-pill-md [corner-shape:squircle] px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-ink placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-ecosystem-normal/15 focus:border-ecosystem-normal transition-all duration-200";
 
   if (type === "long_text") {
     return (
@@ -121,23 +121,23 @@ function TextInput({ type, value, onChange, autoFocus = true, onEnter, placehold
 // ─── گزینه‌ها — طراحی رکاد ───
 function ChoiceOptions({ options = [], value, onChange, onEnter }) {
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-2">
       {options.map((opt, i) => (
         <button
           key={i}
           type="button"
-          onClick={() => { onChange(opt); setTimeout(onEnter, 300); }}
-          className={`relative flex items-center gap-3 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-4 py-3 transition-all duration-200 cursor-pointer hover:-translate-y-0.5 ${
+          onClick={() => { onChange(opt); setTimeout(onEnter, 250); }}
+          className={`relative flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3 py-2 sm:py-2.5 transition-all duration-200 cursor-pointer hover:-translate-y-px ${
             value === opt
               ? "border-ecosystem-normal bg-ecosystem-light rotate-[-0.5deg]"
-              : "border-ink/15 bg-white hover:border-ecosystem-normal/60"
+              : "border-ink/10 bg-white hover:border-ecosystem-normal/50"
           }`}
         >
-          {value === opt && <div aria-hidden="true" className="absolute top-[0.125rem] left-[0.125rem] w-full h-full bg-ecosystem-dark/20 rounded-pill-md [corner-shape:squircle] pointer-events-none" />}
-          <span className={`relative z-10 w-8 h-8 shrink-0 flex items-center justify-center rounded-full border-2 text-sm font-bold transition-colors duration-200 ${
-            value === opt ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/20 text-male-normal"
+          {value === opt && <div aria-hidden="true" className="absolute top-[2px] left-[2px] w-full h-full bg-ecosystem-dark/15 rounded-pill-md [corner-shape:squircle] pointer-events-none" />}
+          <span className={`relative z-10 w-7 h-7 sm:w-8 sm:h-8 shrink-0 flex items-center justify-center rounded-full border-2 text-xs sm:text-sm font-bold transition-colors duration-200 ${
+            value === opt ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal"
           }`}>{faNum(i + 1)}</span>
-          <span className={`relative z-10 font-semibold text-sm sm:text-base ${value === opt ? "text-ecosystem-dark" : "text-ink"}`}>{opt}</span>
+          <span className={`relative z-10 font-bold text-xs sm:text-sm ${value === opt ? "text-ecosystem-dark" : "text-ink"}`}>{opt}</span>
         </button>
       ))}
     </div>
@@ -147,18 +147,18 @@ function ChoiceOptions({ options = [], value, onChange, onEnter }) {
 // ─── بله/خیر — طراحی رکاد ───
 function YesNoOptions({ value, onChange, onEnter }) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 gap-2.5">
       {[{ label: "بله", theme: "ecosystem" }, { label: "خیر", theme: "female" }].map((o) => (
         <button
           key={o.label}
           type="button"
-          onClick={() => { onChange(o.label); setTimeout(onEnter, 300); }}
-          className={`flex items-center justify-center gap-2 py-4 sm:py-5 rounded-pill-md [corner-shape:squircle] border-2 text-base sm:text-lg font-black transition-all duration-200 cursor-pointer ${
+          onClick={() => { onChange(o.label); setTimeout(onEnter, 250); }}
+          className={`flex items-center justify-center gap-1.5 py-3 sm:py-4 rounded-pill-md [corner-shape:squircle] border-2 text-sm sm:text-base font-black transition-all duration-200 cursor-pointer ${
             value === o.label
               ? o.theme === "ecosystem"
                 ? "border-ecosystem-normal bg-ecosystem-light text-ecosystem-dark"
                 : "border-female-normal bg-female-light text-female-dark"
-              : "border-ink/15 bg-white text-ink hover:border-ink/30"
+              : "border-ink/10 bg-white text-ink hover:border-ink/25"
           }`}
         >{o.label}</button>
       ))}
@@ -171,12 +171,12 @@ function RatingStars({ value, onChange }) {
   const [hover, setHover] = useState(null);
   const current = hover ?? Number(value ?? 0);
   return (
-    <div className="flex justify-center gap-2 sm:gap-3" dir="ltr">
+    <div className="flex justify-center gap-1.5 sm:gap-2" dir="ltr">
       {[1, 2, 3, 4, 5].map((n) => (
         <button
           key={n}
           type="button"
-          className={`star-btn text-4xl sm:text-5xl cursor-pointer ${n <= current ? "" : "opacity-30 grayscale"}`}
+          className={`star-btn text-3xl sm:text-4xl cursor-pointer ${n <= current ? "" : "opacity-30 grayscale"}`}
           onMouseEnter={() => setHover(n)}
           onMouseLeave={() => setHover(null)}
           onClick={() => onChange(n)}
@@ -190,7 +190,7 @@ function RatingStars({ value, onChange }) {
 function BrandingBadge({ formId }) {
   return (
     <div className="text-center py-3 border-t border-ink/10 mt-4">
-      <span className="inline-flex items-baseline gap-1 text-[0.65rem] sm:text-xs text-ink/30">
+      <span className="inline-flex items-baseline gap-0.5 text-[0.5rem] sm:text-[0.55rem] text-ink/30">
         ساخته‌شده با
         <span className="font-extrabold text-male-normal">پرس <span className="text-ecosystem-dark">کاد</span></span>
       </span>
@@ -303,7 +303,7 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
         <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35 }}
           className="relative max-w-lg w-full">
           <div aria-hidden="true" className="absolute top-[0.1875rem] left-[0.1875rem] w-full h-full bg-male-normal rounded-tl-[2rem] rounded-br-[2rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
-          <div className="relative z-10 bg-white border-[0.1875rem] border-male-normal rounded-tl-[2rem] rounded-br-[2rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-6 sm:p-8 text-center">
+          <div className="relative z-10 bg-white border-2 border-male-normal rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-5 sm:p-6 text-center">
             <span className="text-4xl sm:text-5xl mb-3 block">🎉</span>
             <h1 className="text-xl sm:text-2xl font-black text-male-normal mb-2">{schema.exit_title || "ثبت‌نام با موفقیت انجام شد!"}</h1>
             <p className="text-sm sm:text-base text-ink-soft leading-7">{schema.exit_message || "ممنون از ثبت‌نام شما."}</p>
@@ -319,23 +319,22 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
   return (
     <div className="min-h-screen flex flex-col bg-transparent" dir="rtl">
       <div className="w-full max-w-xl mx-auto px-4 py-3 text-center">
-        <span className="inline-flex items-baseline gap-1 text-base sm:text-lg font-black select-none">
+        <span className="inline-flex items-baseline gap-0.5 text-sm sm:text-base font-black select-none">
           <span className="text-male-normal">پرس</span>
           <span className="text-ecosystem-dark">کاد</span>
         </span>
-        <span className="block text-[0.65rem] sm:text-xs font-bold text-ink/30 mt-0.5">{schema.title}</span>
+        <span className="block text-[0.5rem] sm:text-[0.55rem] font-bold text-ink/30 mt-0.5">{schema.title}</span>
       </div>
 
       <main className="flex-1 flex items-start justify-center px-4 py-4 sm:py-6">
         <div className="w-full max-w-xl -rotate-[0.3deg]">
           <div className="relative">
-            <div aria-hidden="true" className="absolute top-[0.1875rem] left-[0.1875rem] w-full h-full bg-male-normal rounded-tl-[2rem] rounded-br-[2rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
-            <div className="relative z-10 bg-white border-[0.1875rem] border-male-normal rounded-tl-[2rem] rounded-br-[2rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-5 sm:p-7 lg:p-8">
-              <form onSubmit={handleShowConfirm} className="flex flex-col gap-4 sm:gap-5">
-                <div className="text-center mb-1">
-                  <h1 className="text-xl sm:text-2xl font-black text-male-normal mb-1">{schema.title}</h1>
-                  {schema.description && <p className="text-xs sm:text-sm text-ink-subtle">{schema.description}</p>}
-                  <span className="text-[0.65rem] sm:text-xs font-bold text-ink/40 bg-bg-neutral rounded-pill-sm px-2 py-0.5 mt-2 inline-block">{faNum(questions.length)} فیلد</span>
+            <div aria-hidden="true" className="absolute top-2 left-2 w-full h-full bg-male-normal rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />              <div className="relative z-10 bg-white border-2 border-male-normal rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-4 sm:p-5 lg:p-6">
+              <form onSubmit={handleShowConfirm} className="flex flex-col gap-3 sm:gap-4">
+                <div className="text-center mb-0.5">
+                  <h1 className="text-base sm:text-lg font-black text-male-normal mb-0.5">{schema.title}</h1>
+                  {schema.description && <p className="text-[0.6rem] sm:text-xs text-ink-subtle">{schema.description}</p>}
+                  <span className="text-[0.5rem] sm:text-[0.55rem] font-bold text-ink/40 bg-bg-neutral rounded-pill-sm px-1.5 py-0.5 mt-1.5 inline-block">{faNum(questions.length)} فیلد</span>
                 </div>
 
                 {questions.map((q, i) => {
@@ -343,9 +342,9 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
                   const fieldErr = touched[q.id] ? fieldErrors[q.id] : null;
                   return (
                     <div key={q.id} className="flex flex-col gap-2">
-                      <label className="flex items-center gap-2">
-                        <span className="text-sm font-extrabold text-male-normal">{q.title}</span>
-                        {q.required && <span className="text-female-normal text-xs">*</span>}
+                      <label className="flex items-center gap-1.5">
+                        <span className="text-xs sm:text-sm font-extrabold text-male-normal">{q.title}</span>
+                        {q.required && <span className="text-female-normal text-[0.55rem]">*</span>}
                       </label>
                       {q.description && <span className="text-xs font-medium text-ink-subtle">{q.description}</span>}
 
@@ -356,7 +355,7 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
                           onChange={(e) => setAnswer(q.id, e.target.value, q)}
                           onBlur={(e) => handleBlur(q.id, e.target.value, q)}
                           placeholder={(q.placeholder && q.placeholder.trim()) || (q.type === "email" ? "name@example.com" : q.type === "phone_ir" ? "09123456789" : q.type === "telegram_id" ? "@username" : "پاسخ خود را بنویسید...")}
-                          className={`w-full border-2 border-ink/15 rounded-pill-md [corner-shape:squircle] px-3.5 sm:px-4 py-3 text-sm sm:text-base font-semibold text-ink placeholder:text-ink/40 focus:outline-none focus:ring-4 focus:ring-ecosystem-normal/15 focus:border-ecosystem-normal transition-all duration-200 ${fieldErr ? "border-female-normal" : ""}`}
+                          className={`${inputCls} ${fieldErr ? "!border-female-normal" : ""}`}
                         />
                       )}
 
@@ -365,7 +364,7 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
                           onChange={(e) => setAnswer(q.id, e.target.value, q)}
                           onBlur={(e) => handleBlur(q.id, e.target.value, q)}
                           placeholder={q.placeholder?.trim() || "بنویس..."}
-                          className={`w-full border-2 border-ink/15 rounded-pill-md [corner-shape:squircle] px-3.5 sm:px-4 py-3 text-sm sm:text-base font-semibold text-ink placeholder:text-ink/40 focus:outline-none focus:ring-4 focus:ring-ecosystem-normal/15 focus:border-ecosystem-normal transition-all duration-200 resize-y min-h-[6rem] leading-8 ${fieldErr ? "border-female-normal" : ""}`}
+                          className={`${inputCls} resize-y min-h-[4rem] leading-6 ${fieldErr ? "!border-female-normal" : ""}`}
                         />
                       )}
 
@@ -374,25 +373,25 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
                           onChange={(e) => setAnswer(q.id, e.target.value, q)}
                           onBlur={(e) => handleBlur(q.id, e.target.value, q)}
                           placeholder={q.placeholder?.trim() || "مثلاً 42"}
-                          className={`w-full border-2 border-ink/15 rounded-pill-md [corner-shape:squircle] px-3.5 sm:px-4 py-3 text-sm sm:text-base font-semibold text-ink placeholder:text-ink/40 focus:outline-none focus:ring-4 focus:ring-ecosystem-normal/15 focus:border-ecosystem-normal transition-all duration-200 ${fieldErr ? "border-female-normal" : ""}`}
+                          className={`${inputCls} ${fieldErr ? "!border-female-normal" : ""}`}
                         />
                       )}
 
                       {q.type === "choice" && (
-                        <div className="flex flex-col gap-2.5">
+                        <div className="flex flex-col gap-2">
                           {(q.options || []).map((opt, i) => {
                             const selected = val === opt;
                             return (
                               <button key={i} type="button"
                                 onClick={() => { setAnswer(q.id, opt, q); handleBlur(q.id, opt, q); }}
-                                className={`relative flex items-center gap-3 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-4 py-3 transition-all duration-200 cursor-pointer hover:-translate-y-0.5 ${
-                                  selected ? "border-ecosystem-normal bg-ecosystem-light rotate-[-0.5deg]" : "border-ink/15 bg-white hover:border-ecosystem-normal/60"
+                                className={`relative flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3 py-2 sm:py-2.5 transition-all duration-200 cursor-pointer hover:-translate-y-px ${
+                                  selected ? "border-ecosystem-normal bg-ecosystem-light rotate-[-0.5deg]" : "border-ink/10 bg-white hover:border-ecosystem-normal/50"
                                 }`}>
-                                {selected && <div aria-hidden="true" className="absolute top-[0.125rem] left-[0.125rem] w-full h-full bg-ecosystem-dark/20 rounded-pill-md [corner-shape:squircle] pointer-events-none" />}
-                                <span className={`relative z-10 w-8 h-8 shrink-0 flex items-center justify-center rounded-full border-2 text-sm font-bold transition-colors duration-200 ${
-                                  selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/20 text-male-normal"
+                                {selected && <div aria-hidden="true" className="absolute top-[2px] left-[2px] w-full h-full bg-ecosystem-dark/15 rounded-pill-md [corner-shape:squircle] pointer-events-none" />}
+                                <span className={`relative z-10 w-7 h-7 shrink-0 flex items-center justify-center rounded-full border-2 text-xs font-bold transition-colors duration-200 ${
+                                  selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal"
                                 }`}>{faNum(i + 1)}</span>
-                                <span className={`relative z-10 font-semibold text-sm sm:text-base ${selected ? "text-ecosystem-dark" : "text-ink"}`}>{opt}</span>
+                                <span className={`relative z-10 font-bold text-xs sm:text-sm ${selected ? "text-ecosystem-dark" : "text-ink"}`}>{opt}</span>
                               </button>
                             );
                           })}
@@ -404,9 +403,9 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
                           {["بله", "خیر"].map((opt) => (
                             <button key={opt} type="button"
                               onClick={() => { setAnswer(q.id, opt, q); handleBlur(q.id, opt, q); }}
-                              className={`flex items-center justify-center gap-2 py-3 sm:py-3.5 rounded-pill-md [corner-shape:squircle] border-2 text-sm sm:text-base font-bold transition-all duration-200 cursor-pointer ${
-                                val === opt ? (opt === "بله" ? "border-ecosystem-normal bg-ecosystem-light text-ecosystem-dark" : "border-female-normal bg-female-light text-female-dark") : "border-ink/15 bg-white text-ink hover:border-ink/30"
-                              }`}>{opt}</button>
+                            className={`flex items-center justify-center gap-1.5 py-2 sm:py-2.5 rounded-pill-md [corner-shape:squircle] border-2 text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer ${
+                              val === opt ? (opt === "بله" ? "border-ecosystem-normal bg-ecosystem-light text-ecosystem-dark" : "border-female-normal bg-female-light text-female-dark") : "border-ink/10 bg-white text-ink hover:border-ink/25"
+                            }`}>{opt}</button>
                           ))}
                         </div>
                       )}
@@ -415,7 +414,7 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
                         <div className="flex justify-center gap-2" dir="ltr">
                           {[1, 2, 3, 4, 5].map((n) => (
                             <button key={n} type="button"
-                              className={`star-btn text-3xl sm:text-4xl cursor-pointer ${Number(val) >= n ? "" : "opacity-30 grayscale"}`}
+                              className={`star-btn text-2xl sm:text-3xl cursor-pointer ${Number(val) >= n ? "" : "opacity-30 grayscale"}`}
                               onClick={() => { setAnswer(q.id, String(n), q); handleBlur(q.id, String(n), q); }}>⭐</button>
                           ))}
                         </div>
@@ -436,9 +435,9 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
                                 className={`flex items-center gap-3 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-4 py-3 transition-all duration-200 cursor-pointer ${
                                   selected ? "border-ecosystem-normal bg-ecosystem-light" : "border-ink/15 bg-white hover:border-ecosystem-normal/60"
                                 }`}>
-                                <span className={`w-7 h-7 shrink-0 flex items-center justify-center rounded-md border-2 text-sm font-bold transition-colors duration-200 ${
-                                  selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/20"
-                                }`}>{selected ? "✓" : ""}</span>
+                        <span className={`w-6 h-6 shrink-0 flex items-center justify-center rounded-md border-2 text-[0.6rem] font-bold transition-colors duration-200 ${
+                          selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15"
+                        }`}>{selected ? "✓" : ""}</span>
                                 <span className={`font-semibold text-sm sm:text-base ${selected ? "text-ecosystem-dark" : "text-ink"}`}>{opt}</span>
                               </button>
                             );
@@ -447,11 +446,11 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
                       )}
 
                       {fieldErr && (
-                        <div className="flex items-center gap-2 bg-female-light border-2 border-female-normal rounded-pill-md [corner-shape:squircle] px-3 py-2">
+                        <div className="flex items-center gap-1.5 bg-female-light border border-female-normal rounded-pill-md px-2.5 py-1">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-female-normal shrink-0">
                             <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
                           </svg>
-                          <span className="text-xs sm:text-sm font-bold text-female-normal">{fieldErr}</span>
+                          <span className="text-[0.6rem] sm:text-[0.65rem] font-bold text-female-normal">{fieldErr}</span>
                         </div>
                       )}
                     </div>
@@ -459,13 +458,13 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
                 })}
 
                 {error && (
-                  <div className="bg-female-light border-2 border-female-normal rounded-pill-md [corner-shape:squircle] px-4 py-2 text-xs sm:text-sm font-bold text-female-normal">{error}</div>
+                  <div className="bg-female-light border border-female-normal rounded-pill-md px-3 py-1.5 text-[0.6rem] sm:text-[0.65rem] font-bold text-female-normal">{error}</div>
                 )}
 
                 <div className="relative">
                   <div aria-hidden="true" className="absolute top-[0.125rem] left-[0.125rem] w-full h-full bg-ecosystem-dark rounded-pill-md [corner-shape:squircle]" />
                   <button type="submit" disabled={submitting}
-                    className="relative z-10 w-full bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-6 sm:px-8 py-3 rounded-pill-md [corner-shape:squircle] font-extrabold hover:bg-ecosystem-dark transition-colors duration-200 disabled:opacity-50 text-sm sm:text-base">
+                    className="relative z-10 w-full bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-5 sm:px-6 py-2 sm:py-2.5 rounded-pill-md [corner-shape:squircle] font-extrabold hover:bg-ecosystem-dark transition-colors duration-200 disabled:opacity-50 text-xs sm:text-sm">
                     {submitting ? "در حال ثبت..." : "ارسال ✨"}
                   </button>
                 </div>
@@ -730,11 +729,10 @@ export default function EmbedForm() {
   const isRegistration = schema?.form_type === "registration";
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-transparent"><Spinner label="فرم داره لود می‌شه..." /></div>;
-  if (error) return <div className="min-h-screen flex items-center justify-center p-4 bg-transparent">
-    <div className="relative max-w-md w-full">
-      <div aria-hidden="true" className="absolute top-[0.1875rem] left-[0.1875rem] w-full h-full bg-male-normal rounded-tl-[1.5rem] rounded-br-[1.5rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
-      <div className="relative z-10 bg-white border-[0.1875rem] border-male-normal rounded-tl-[1.5rem] rounded-br-[1.5rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-6 sm:p-8 text-center">
-        <p className="text-base sm:text-lg font-black text-male-normal">{error}</p>
+  if (error) return <div className="min-h-screen flex items-center justify-center p-4 bg-transparent">      <div className="relative max-w-sm w-full">
+      <div aria-hidden="true" className="absolute top-2 left-2 w-full h-full bg-male-normal rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
+      <div className="relative z-10 bg-white border-2 border-male-normal rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-4 sm:p-5 text-center">
+        <p className="text-sm sm:text-base font-black text-male-normal">{error}</p>
       </div>
     </div>
   </div>;
@@ -749,11 +747,11 @@ export default function EmbedForm() {
     <div className="min-h-screen font-sans bg-transparent" dir="rtl">
       {/* هدر باریک */}
       <div className="w-full max-w-xl mx-auto px-4 py-3 text-center">
-        <span className="inline-flex items-baseline gap-1 text-base sm:text-lg font-black select-none">
+        <span className="inline-flex items-baseline gap-0.5 text-sm sm:text-base font-black select-none">
           <span className="text-male-normal">پرس</span>
           <span className="text-ecosystem-dark">کاد</span>
         </span>
-        <span className="block text-[0.65rem] sm:text-xs font-bold text-ink/30 mt-0.5">{schema.title}</span>
+        <span className="block text-[0.5rem] sm:text-[0.55rem] font-bold text-ink/30 mt-0.5">{schema.title}</span>
       </div>
 
       {/* نوار پیشرفت */}
@@ -766,8 +764,7 @@ export default function EmbedForm() {
       <main className="flex-1 flex items-start justify-center px-4 py-4 sm:py-6">
         <div className="w-full max-w-xl -rotate-[0.6deg]">
           <div className="relative">
-            <div aria-hidden="true" className="absolute top-[0.1875rem] left-[0.1875rem] w-full h-full bg-male-normal rounded-tl-[2rem] rounded-br-[2rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
-            <div className="relative z-10 bg-white border-[0.1875rem] border-male-normal rounded-tl-[2rem] rounded-br-[2rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-5 sm:p-7 lg:p-8">
+            <div aria-hidden="true" className="absolute top-2 left-2 w-full h-full bg-male-normal rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />              <div className="relative z-10 bg-white border-2 border-male-normal rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-4 sm:p-5 lg:p-6">
               <AnimatePresence mode="wait" custom={dir}>
                 {/* صفحه خوش‌آمد */}
                 {step === -1 && (
@@ -779,13 +776,13 @@ export default function EmbedForm() {
                     transition={{ duration: 0.25 }}
                     className="flex flex-col items-center text-center gap-3 sm:gap-4 py-6 sm:py-8"
                   >
-                    <h1 className="text-xl sm:text-2xl font-black text-male-normal">{schema.welcome_title}</h1>
-                    <p className="text-sm sm:text-base text-ink-soft leading-7 sm:leading-8">{schema.welcome_message}</p>
-                    {visibleTotal > 0 && <span className="text-[0.65rem] sm:text-xs text-ink/30 font-bold">{faNum(visibleTotal)} سوال</span>}
+                    <h1 className="text-base sm:text-lg font-black text-male-normal">{schema.welcome_title}</h1>
+                    <p className="text-xs sm:text-sm text-ink-soft leading-6">{schema.welcome_message}</p>
+                    {visibleTotal > 0 && <span className="text-[0.5rem] sm:text-[0.55rem] text-ink/30 font-bold">{faNum(visibleTotal)} سوال</span>}
                     <div className="relative mt-3 sm:mt-4">
                       <div aria-hidden="true" className="absolute top-[0.125rem] left-[0.125rem] w-full h-full bg-ecosystem-dark rounded-pill-md [corner-shape:squircle]" />
                       <button onClick={goNext} disabled={visibleTotal === 0}
-                        className="relative z-10 bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-6 sm:px-8 py-3 rounded-pill-md [corner-shape:squircle] font-extrabold hover:bg-ecosystem-dark transition-colors duration-200 disabled:opacity-50 text-sm sm:text-base">
+                        className="relative z-10 bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-5 sm:px-6 py-2 sm:py-2.5 rounded-pill-md [corner-shape:squircle] font-extrabold hover:bg-ecosystem-dark transition-colors duration-200 disabled:opacity-50 text-xs sm:text-sm">
                         شروع کنید 🚀
                       </button>
                     </div>
@@ -803,11 +800,11 @@ export default function EmbedForm() {
                     className="flex flex-col gap-3 sm:gap-4"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs sm:text-sm font-black text-male-normal">سوال {faNum(currentVisibleIndex)} از {faNum(visibleTotal)}</span>
-                      {currentQuestion.required && <span className="text-[0.65rem] sm:text-xs font-bold text-female-normal">اجباری *</span>}
+                      <span className="text-[0.65rem] sm:text-xs font-black text-male-normal">سوال {faNum(currentVisibleIndex)} از {faNum(visibleTotal)}</span>
+                      {currentQuestion.required && <span className="text-[0.5rem] sm:text-[0.55rem] font-bold text-female-normal">اجباری *</span>}
                     </div>
-                    <h2 className="text-base sm:text-lg font-black text-male-normal">{currentQuestion.title}</h2>
-                    {currentQuestion.description && <p className="text-xs sm:text-sm text-ink-subtle -mt-2">{currentQuestion.description}</p>}
+                    <h2 className="text-sm sm:text-base font-black text-male-normal">{currentQuestion.title}</h2>
+                    {currentQuestion.description && <p className="text-[0.6rem] sm:text-xs text-ink-subtle -mt-1.5">{currentQuestion.description}</p>}
 
                     {(currentQuestion.type === "short_text" || currentQuestion.type === "long_text" || currentQuestion.type === "email" || currentQuestion.type === "number" || currentQuestion.type === "phone_ir" || currentQuestion.type === "telegram_id") && (
                       <TextInput type={currentQuestion.type} value={answers[currentQuestion.id]} onChange={setAnswer} onEnter={goNext} placeholder={currentQuestion.placeholder} />
@@ -832,13 +829,13 @@ export default function EmbedForm() {
                                 const next = selected ? current.filter((v) => v !== opt) : [...current, opt];
                                 setAnswer(next);
                               }}
-                              className={`flex items-center gap-3 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-4 py-3 transition-all duration-200 cursor-pointer ${
-                                selected ? "border-ecosystem-normal bg-ecosystem-light" : "border-ink/15 bg-white hover:border-ecosystem-normal/60"
+                              className={`flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3 py-2 transition-all duration-200 cursor-pointer ${
+                                selected ? "border-ecosystem-normal bg-ecosystem-light" : "border-ink/10 bg-white hover:border-ecosystem-normal/50"
                               }`}>
-                              <span className={`w-7 h-7 shrink-0 flex items-center justify-center rounded-md border-2 text-sm font-bold transition-colors duration-200 ${
-                                selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/20"
+                              <span className={`w-6 h-6 shrink-0 flex items-center justify-center rounded-md border-2 text-[0.6rem] font-bold transition-colors duration-200 ${
+                                selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15"
                               }`}>{selected ? "✓" : ""}</span>
-                              <span className={`font-semibold text-sm sm:text-base ${selected ? "text-ecosystem-dark" : "text-ink"}`}>{opt}</span>
+                              <span className={`font-bold text-xs sm:text-sm ${selected ? "text-ecosystem-dark" : "text-ink"}`}>{opt}</span>
                             </button>
                           );
                         })}
@@ -859,25 +856,24 @@ export default function EmbedForm() {
                       <div className="bg-female-light border-2 border-female-normal rounded-pill-md [corner-shape:squircle] px-4 py-2 text-xs sm:text-sm font-bold text-female-normal">{requiredError}</div>
                     )}
 
-                    <div className="flex items-center justify-between mt-1 sm:mt-2">
-                      <button onClick={goBack} className="text-xs sm:text-sm font-bold text-ink-subtle hover:text-ink transition-colors duration-200">برگشت</button>
+                    <div className="flex items-center justify-between mt-1 sm:mt-2">                        <button onClick={goBack} className="text-[0.6rem] sm:text-xs font-bold text-ink-subtle hover:text-ink transition-colors duration-200">برگشت</button>
                       {step < total - 1 ? (
                         <div className="relative">
                           <div aria-hidden="true" className="absolute top-[0.125rem] left-[0.125rem] w-full h-full bg-male-dark rounded-pill-md [corner-shape:squircle]" />
-                          <button onClick={goNext} className="relative z-10 bg-male-normal border-2 border-male-dark text-white px-5 sm:px-6 py-2.5 rounded-pill-md [corner-shape:squircle] font-bold hover:bg-male-dark transition-colors duration-200 text-xs sm:text-sm">بعدی ←</button>
+                          <button onClick={goNext} className="relative z-10 bg-male-normal border-2 border-male-dark text-white px-4 sm:px-5 py-2 rounded-pill-md [corner-shape:squircle] font-bold hover:bg-male-dark transition-colors duration-200 text-[0.6rem] sm:text-xs">بعدی ←</button>
                         </div>
                       ) : (
                         <div className="relative">
                           <div aria-hidden="true" className="absolute top-[0.125rem] left-[0.125rem] w-full h-full bg-ecosystem-dark rounded-pill-md [corner-shape:squircle]" />
                           <button onClick={openConfirm} disabled={submitting}
-                            className="relative z-10 bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-5 sm:px-6 py-2.5 rounded-pill-md [corner-shape:squircle] font-bold hover:bg-ecosystem-dark transition-colors duration-200 disabled:opacity-50 text-xs sm:text-sm">
+                            className="relative z-10 bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-4 sm:px-5 py-1.5 sm:py-2 rounded-pill-md [corner-shape:squircle] font-bold hover:bg-ecosystem-dark transition-colors duration-200 disabled:opacity-50 text-[0.6rem] sm:text-xs">
                             {submitting ? "در حال ثبت..." : "ثبت ✨"}
                           </button>
                         </div>
                       )}
                     </div>
                     {submitError && (
-                      <div className="bg-female-light border-2 border-female-normal rounded-pill-md [corner-shape:squircle] px-4 py-2 text-xs sm:text-sm font-bold text-female-normal self-end">{submitError}</div>
+                      <div className="bg-female-light border border-female-normal rounded-pill-md px-3 py-1.5 text-[0.6rem] sm:text-[0.65rem] font-bold text-female-normal self-end">{submitError}</div>
                     )}
                   </motion.div>
                 )}
@@ -891,9 +887,9 @@ export default function EmbedForm() {
                     transition={{ duration: 0.3 }}
                     className="flex flex-col items-center text-center gap-3 sm:gap-4 py-6 sm:py-8"
                   >
-                    <span className="text-4xl sm:text-5xl">🎉</span>
-                    <h1 className="text-xl sm:text-2xl font-black text-male-normal">{schema.exit_title}</h1>
-                    <p className="text-sm sm:text-base text-ink-soft leading-7">{schema.exit_message}</p>
+                  <span className="text-3xl sm:text-4xl">🎉</span>
+                  <h1 className="text-base sm:text-lg font-black text-male-normal">{schema.exit_title}</h1>
+                  <p className="text-xs sm:text-sm text-ink-soft leading-6">{schema.exit_message}</p>
                     {scoreResult && (
                       <ScoreResult
                         score={scoreResult.score}
