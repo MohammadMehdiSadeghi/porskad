@@ -229,6 +229,7 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmUnfilled, setConfirmUnfilled] = useState([]);
   const [scoreResult, setScoreResult] = useState(null);
+  const [startedAt] = useState(() => Date.now());
 
   function setAnswer(qId, val, q) {
     setAnswers((p) => ({ ...p, [qId]: val }));
@@ -285,7 +286,7 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
       const meta = {
         device: ua.device, browser: ua.browser, os: ua.os,
         userAgent: navigator.userAgent, referrerUrl: document.referrer || null,
-        startedAt: nowIso, completedAt: nowIso,
+        startedAt: new Date(startedAt).toISOString(), completedAt: nowIso,
       };
       const answersObj = {};
       for (const q of questions) {
