@@ -11,6 +11,8 @@ import { calculateScore, hasScoring } from "../../lib/scoring";
 import ScoreResult from "../../components/ui/ScoreResult";
 import "../../index.css";
 
+const inputCls = "w-full bg-white border-2 border-ink/10 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3 py-2 sm:py-2.5 font-semibold text-ink text-xs sm:text-sm placeholder:text-ink/40 placeholder:font-medium focus:outline-none transition-all duration-200";
+
 // ─── پیام‌های postMessage به سایت میزبان ───
 function postToParent(type, data = {}) {
   try {
