@@ -238,7 +238,7 @@ export default function SmsPanel() {
       {/* هدر */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-3xl font-extrabold text-navy flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-black text-navy flex items-center gap-2">
             <MessageSquare size={22} className="text-teal" />
             پنل پیامک
           </h1>

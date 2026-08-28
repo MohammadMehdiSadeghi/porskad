@@ -23,7 +23,7 @@ export default function Badge({ color = "teal", rotate = "", className = "", chi
     <span
       className={clsx(
         "inline-block bg-white border rounded-xl [corner-shape:squircle]",
-        "px-2 py-0.5 text-xs font-bold whitespace-nowrap shadow-sm",
+        "px-2.5 py-0.5 text-[0.8125rem] font-bold whitespace-nowrap shadow-sm",
         COLORS[color] ?? COLORS.teal,
         rotate,
         className,

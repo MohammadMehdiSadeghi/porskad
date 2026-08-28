@@ -119,7 +119,7 @@ export default function Profile() {
         noIndex
       />
       <div>
-        <h1 className="text-3xl font-extrabold text-navy">پروفایل من</h1>
+        <h1 className="text-2xl sm:text-3xl font-black text-navy">پروفایل من</h1>
         <p className="text-sm text-ink/50 mt-0.5">
           اطلاعات حساب کاربری و تنظیمات امنیتی
         </p>

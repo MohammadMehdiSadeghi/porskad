@@ -196,8 +196,8 @@ export default function FormsList() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-3xl font-extrabold text-navy">فرم‌ها</h1>
-          <p className="text-sm font-semibold text-ink-subtle mt-0.5">
+          <h1 className="text-2xl sm:text-3xl font-black text-navy">فرم‌ها</h1>
+          <p className="text-sm font-semibold text-ink-subtle mt-1">
             {forms.length} فرم — برای ویرایش روی هر فرم بزنید
           </p>
         </div>
@@ -213,7 +213,7 @@ export default function FormsList() {
           placeholder="جستجوی فرم..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-0 bg-white border-2 border-ink/15 rounded-pill-md px-3 py-2 text-xs font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
+          className="flex-1 min-w-[200px] bg-white border-2 border-ink/15 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
         />
         <div className="flex items-center gap-0.5 bg-white border-2 border-ink/15 rounded-pill-md p-0.5">
           {[
@@ -224,7 +224,7 @@ export default function FormsList() {
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`px-2.5 py-1.5 text-xs font-bold rounded-pill-sm transition-colors ${
+              className={`px-3 py-1.5 text-sm font-bold rounded-pill-sm transition-colors ${
                 filter === f.key
                   ? "bg-teal text-white"
                   : "text-ink-subtle hover:text-ink"
@@ -254,7 +254,7 @@ export default function FormsList() {
                 <StickerCard theme="white">
                   <div className="p-3.5 flex flex-col gap-2.5">
                     <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-extrabold text-navy leading-5 line-clamp-1 text-lg">{f.title}</h3>
+                      <h3 className="font-black text-navy leading-6 line-clamp-1">{f.title}</h3>
                       <div className="flex items-center gap-1 shrink-0">
                         {isReg && <Badge color="orange">ثبت‌نامی</Badge>}
                         {f.published ? (
