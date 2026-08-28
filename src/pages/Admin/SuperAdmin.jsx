@@ -62,6 +62,15 @@ export default function SuperAdmin() {
   const [sqlRunning, setSqlRunning] = useState(false);
   const [toast, setToast] = useState(null);
 
+  // ─── مدیریت کاربران (سوپرادمین) ───
+  const [resetPasswordModal, setResetPasswordModal] = useState(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [resetEmailModal, setResetEmailModal] = useState(null);
+  const [newEmail, setNewEmail] = useState("");
+  const [editNameModal, setEditNameModal] = useState(null);
+  const [editFullName, setEditFullName] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false);
+
   // ─── بارگذاری ───
   useEffect(() => { loadAll(); return () => { if (refreshRef.current) clearInterval(refreshRef.current); }; }, []);
 
@@ -262,6 +271,58 @@ export default function SuperAdmin() {
         else setSqlResult(data);
       } else setSqlError(err.message);
     } finally { setSqlRunning(false); }
+  }
+
+  // ─── ریست رمز عبور ───
+  async function doResetPassword() {
+    if (!resetPasswordModal || !newPassword.trim()) return;
+    try {
+      const { data, error } = await supabase.rpc("reset_user_password", {
+        p_target_user_id: resetPasswordModal.id,
+        p_new_password: newPassword.trim(),
+      });
+      if (error) throw error;
+      showToast("رمز عبور با موفقیت تغییر کرد ✅");
+      setResetPasswordModal(null);
+      setNewPassword("");
+    } catch (err) {
+      showToast("خطا: " + err.message, "error");
+    }
+  }
+
+  // ─── تغییر ایمیل ───
+  async function doUpdateEmail() {
+    if (!resetEmailModal || !newEmail.trim()) return;
+    try {
+      const { data, error } = await supabase.rpc("update_user_email", {
+        p_target_user_id: resetEmailModal.id,
+        p_new_email: newEmail.trim(),
+      });
+      if (error) throw error;
+      showToast("ایمیل با موفقیت تغییر کرد ✅");
+      setResetEmailModal(null);
+      setNewEmail("");
+      loadUsers();
+      loadAdmins();
+    } catch (err) {
+      showToast("خطا: " + err.message, "error");
+    }
+  }
+
+  // ─── تغییر نام ───
+  async function doUpdateName() {
+    if (!editNameModal || !editFullName.trim()) return;
+    try {
+      const { error } = await supabase.from("profiles").update({ full_name: editFullName.trim() }).eq("id", editNameModal.id);
+      if (error) throw error;
+      showToast("نام با موفقیت تغییر کرد ✅");
+      setEditNameModal(null);
+      setEditFullName("");
+      loadUsers();
+      loadAdmins();
+    } catch (err) {
+      showToast("خطا: " + err.message, "error");
+    }
   }
 
   // ─── Impersonate ───
@@ -765,13 +826,84 @@ export default function SuperAdmin() {
       </Modal>
 
       {/* ═══════════ مودال جزئیات کاربر + ویرایش دسترسی ═══════════ */}
-      <Modal open={!!detailModal} onClose={() => setDetailModal(null)} title={`User: ${detailModal?.full_name || detailModal?.email || ''}`}>
+      <Modal open={!!detailModal} onClose={() => setDetailModal(null)} title={`${detailModal?.is_owner ? '👑 Owner' : 'User'}: ${detailModal?.full_name || detailModal?.email || ''}`}>
         {detailModal && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '80vh', overflowY: 'auto', fontSize: '0.85rem' }}>
+            {/* ─── اطلاعات پایه ─── */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
               {[['ID', detailModal.id], ['Email', detailModal.email], ['Name', detailModal.full_name || '—'], ['Role', detailModal.role || '—'], ['Owner', detailModal.is_owner ? 'Yes' : 'No'], ['Status', detailModal.is_active ? 'Active' : 'Inactive'], ['Joined', detailModal.created_at ? new Date(detailModal.created_at).toLocaleString() : '—'], ['Hidden from', `${detailModal.hidden_from?.length || 0} users`]].map(([label, value]) => (
                 <div key={label}><span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6f6f6f' }}>{label}</span><div style={{ fontSize: '0.8rem', fontWeight: 600 }}>{value}</div></div>
               ))}
+            </div>
+
+            {/* ─── ویرایش نام (برای همه شامل owner) ─── */}
+            <div style={{ border: '1px solid #e0e0e0', padding: '0.75rem' }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#525252', textTransform: 'uppercase' }}>Edit Name</span>
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <input type="text" value={detailModal.full_name || ''} onChange={(e) => setDetailModal({ ...detailModal, full_name: e.target.value })}
+                  style={{ flex: 1, padding: '0.5rem 0.75rem', border: '1px solid #c6c6c6', fontSize: '0.8rem', fontFamily: "'IBM Plex Sans', sans-serif", outline: 'none' }} />
+                <button className="sa-btn sa-btn-primary" onClick={async () => {
+                  try {
+                    const { error } = await supabase.from("profiles").update({ full_name: detailModal.full_name }).eq("id", detailModal.id);
+                    if (error) throw error;
+                    showToast("Name updated ✅");
+                    loadUsers(); loadAdmins();
+                  } catch (err) { showToast("Error: " + err.message, "error"); }
+                }}>Save</button>
+              </div>
+            </div>
+
+            {/* ─── تغییر رمز عبور (برای همه شامل owner) ─── */}
+            <div style={{ border: '1px solid #da1e28', padding: '0.75rem', background: '#fff1f1' }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#da1e28', textTransform: 'uppercase' }}>🔑 Reset Password</span>
+              <p style={{ fontSize: '0.7rem', color: '#6f6f6f', margin: '0.25rem 0 0.5rem' }}>Set a new password for this user. They will need to login with the new password.</p>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ flex: 1, position: 'relative' }}>
+                  <input type={passwordVisible ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New password (min 6 chars)"
+                    style={{ width: '100%', padding: '0.5rem 2rem 0.5rem 0.75rem', border: '1px solid #c6c6c6', fontSize: '0.8rem', fontFamily: "'IBM Plex Sans', sans-serif", outline: 'none' }} dir="ltr" />
+                  <button onClick={() => setPasswordVisible(!passwordVisible)} style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                    {passwordVisible ? <EyeOff size={14} color="#6f6f6f" /> : <Eye size={14} color="#6f6f6f" />}
+                  </button>
+                </div>
+                <button className="sa-btn sa-btn-danger" onClick={async () => {
+                  if (!newPassword.trim() || newPassword.trim().length < 6) { showToast("Password must be at least 6 chars", "error"); return; }
+                  if (!confirm(`Reset password for ${detailModal.email}?`)) return;
+                  try {
+                    const { data, error } = await supabase.rpc("reset_user_password", {
+                      p_target_user_id: detailModal.id,
+                      p_new_password: newPassword.trim(),
+                    });
+                    if (error) throw error;
+                    showToast("Password reset ✅");
+                    setNewPassword("");
+                  } catch (err) { showToast("Error: " + err.message, "error"); }
+                }}>Reset</button>
+              </div>
+            </div>
+
+            {/* ─── تغییر ایمیل (برای همه شامل owner) ─── */}
+            <div style={{ border: '1px solid #e0e0e0', padding: '0.75rem' }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#525252', textTransform: 'uppercase' }}>📧 Change Email</span>
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <input type="email" dir="ltr" value={newEmail || detailModal.email || ''} onChange={(e) => setNewEmail(e.target.value)}
+                  style={{ flex: 1, padding: '0.5rem 0.75rem', border: '1px solid #c6c6c6', fontSize: '0.8rem', fontFamily: "'IBM Plex Sans', monospace", outline: 'none' }} />
+                <button className="sa-btn sa-btn-primary" onClick={async () => {
+                  const emailToSet = newEmail.trim();
+                  if (!emailToSet || !emailToSet.includes('@')) { showToast("Invalid email", "error"); return; }
+                  if (!confirm(`Change email to ${emailToSet}?`)) return;
+                  try {
+                    const { data, error } = await supabase.rpc("update_user_email", {
+                      p_target_user_id: detailModal.id,
+                      p_new_email: emailToSet,
+                    });
+                    if (error) throw error;
+                    showToast("Email updated ✅");
+                    setDetailModal({ ...detailModal, email: emailToSet });
+                    setNewEmail("");
+                    loadUsers(); loadAdmins();
+                  } catch (err) { showToast("Error: " + err.message, "error"); }
+                }}>Update</button>
+              </div>
             </div>
 
             {/* ─── ویرایش نقش ─── */}
@@ -798,6 +930,7 @@ export default function SuperAdmin() {
               </div>
             )}
 
+            {/* ─── فعال/غیرفعال ─── */}
             {!detailModal.is_owner && (
               <div style={{ border: '1px solid #e0e0e0', padding: '0.75rem' }}>
                 <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#525252', textTransform: 'uppercase' }}>Status</span>
