@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import clsx from "../../components/ui/clsx";
 import { faNum, faDuration } from "../../lib/utils";
 import { validateAnswer } from "../../lib/validators";
@@ -54,22 +55,66 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
 
 function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "buttons" }) {
   const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
+  const btnRef = useRef(null);
+  const [menuStyle, setMenuStyle] = useState({});
 
   // بستن دراپ‌داون با کلیک بیرون
   useEffect(() => {
+    if (!isOpen) return;
     const handler = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setIsOpen(false);
+      if (btnRef.current && !btnRef.current.contains(e.target)) setIsOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  }, [isOpen]);
 
-  // حالت دراپ‌داون
+  // محاسبه موقعیت منو
+  useEffect(() => {
+    if (isOpen && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setMenuStyle({
+        position: "fixed",
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+        zIndex: 99999,
+      });
+    }
+  }, [isOpen]);
+
+  // حالت دراپ‌داون — رندر در body با portal
   if (displayMode === "dropdown") {
+    const menu = isOpen ? createPortal(
+      <div style={menuStyle} className="bg-white border-2 border-ecosystem-normal/30 rounded-pill-md [corner-shape:squircle] shadow-[0_8px_32px_rgba(0,0,0,0.22)] overflow-hidden max-h-[240px] overflow-y-auto">
+        {options.map((opt, i) => {
+          const selected = value === opt;
+          return (
+            <button
+              key={i}
+              type="button"
+              onClick={() => { onChange(opt); setIsOpen(false); setTimeout(onEnter, 250); }}
+              className={clsx(
+                "w-full flex items-center gap-2.5 text-right px-3 py-2.5 transition-all duration-150 cursor-pointer",
+                i > 0 && "border-t border-ink/10",
+                selected ? "bg-ecosystem-light text-ecosystem-dark" : "text-ink hover:bg-ecosystem-light/50",
+              )}
+            >
+              <span className={clsx("w-6 h-6 shrink-0 flex items-center justify-center rounded-full border-2 font-black text-[0.6rem] transition-colors",
+                selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15",
+              )}>{faNum(i + 1)}</span>
+              <span className="font-bold text-xs sm:text-sm flex-1">{opt}</span>
+              {selected && <CheckIcon className="text-ecosystem-normal shrink-0" />}
+            </button>
+          );
+        })}
+      </div>,
+      document.body
+    ) : null;
+
     return (
-      <div className="relative" ref={dropdownRef}>
+      <div className="relative">
         <button
+          ref={btnRef}
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={clsx(
@@ -84,31 +129,7 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
             <path d="m6 9 6 6 6-6"/>
           </svg>
         </button>
-        {isOpen && (
-          <div className="absolute z-[100] w-full mt-1 bg-white border-2 border-ecosystem-normal/30 rounded-pill-md [corner-shape:squircle] shadow-[0_8px_32px_rgba(0,0,0,0.18)] overflow-hidden">
-            {options.map((opt, i) => {
-              const selected = value === opt;
-              return (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => { onChange(opt); setIsOpen(false); setTimeout(onEnter, 250); }}
-                  className={clsx(
-                    "w-full flex items-center gap-2.5 text-right px-3 py-2.5 transition-all duration-150 cursor-pointer",
-                    i > 0 && "border-t border-ink/10",
-                    selected ? "bg-ecosystem-light text-ecosystem-dark" : "text-ink hover:bg-ecosystem-light/50",
-                  )}
-                >
-                  <span className={clsx("w-6 h-6 shrink-0 flex items-center justify-center rounded-full border-2 font-black text-[0.6rem] transition-colors",
-                    selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15",
-                  )}>{faNum(i + 1)}</span>
-                  <span className="font-bold text-xs sm:text-sm flex-1">{opt}</span>
-                  {selected && <CheckIcon className="text-ecosystem-normal shrink-0" />}
-                </button>
-              );
-            })}
-          </div>
-        )}
+        {menu}
       </div>
     );
   }
