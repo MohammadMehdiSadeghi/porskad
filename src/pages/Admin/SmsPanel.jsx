@@ -105,9 +105,14 @@ async function amootFetch(endpoint, params = {}) {
   });
 
   if (error) {
-    // خطاهای Edge Function
-    const msg = error.message || "خطا در فراخوانی سرویس پیامک";
-    throw new Error(msg);
+    // اگه Edge Function خطا برگردونده، data ممکنه حاوی پاسخ باشه
+    const detail = data?.error || data?.details || error.message;
+    throw new Error(detail || "خطا در فراخوانی سرویس پیامک");
+  }
+
+  // اگه data خودش حاوی error باشه (Edge Function 200 برگردونده ولی error داخلی داشته)
+  if (data?.error) {
+    throw new Error(data.error + (data.details ? `: ${data.details}` : ""));
   }
 
   return data;
@@ -176,6 +181,7 @@ export default function SmsPanel() {
     setFetchingStatus(true);
     try {
       const raw = await amootFetch("AccountStatus");
+      if (!raw) return;
       const info = normalizeAccountInfo(raw);
 
       if (info.status === 0 || info.status === "0") {
@@ -183,10 +189,14 @@ export default function SmsPanel() {
       } else {
         const errMsg =
           raw?.explanation || raw?.Message || `Status: ${info.status}`;
-        push("خطا: " + errMsg, "error");
+        push("خطا در اتصال: " + errMsg, "error");
       }
     } catch (err) {
-      push("خطا در اتصال: " + err.message, "error");
+      // اگه تنظیمات SMS ذخیره نشده، ارور نشون نده (طبیعیه)
+      if (!err.message?.includes("SMS settings not configured") &&
+          !err.message?.includes("SMS credentials incomplete")) {
+        push("خطا در اتصال: " + err.message, "error");
+      }
     } finally {
       setFetchingStatus(false);
     }
@@ -248,8 +258,8 @@ export default function SmsPanel() {
   }, []);
 
   useEffect(() => {
-    Promise.all([loadStats(), loadAccountStatus(), loadSettings()]).then(() =>
-      setLoading(false)
+    Promise.allSettled([loadStats(), loadAccountStatus(), loadSettings()]).then(
+      () => setLoading(false)
     );
   }, [loadStats, loadAccountStatus, loadSettings]);
 
