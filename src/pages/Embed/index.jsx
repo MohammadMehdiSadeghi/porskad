@@ -40,9 +40,9 @@ function useAutoResize() {
 
 // ─── دکمه بستن embed ───
 function handleClose() {
-  // اگه در iframe هستیم → پیام به والد بفرست
+  // اگه در iframe هستیم → پیام به والد بفرست (loader.js منتظر pcode:closed هست)
   if (window.parent && window.parent !== window) {
-    try { window.parent.postMessage({ type: "pcode:close" }, "*"); } catch { /* ignore */ }
+    try { window.parent.postMessage({ type: "pcode:closed", formId: window.__pcodeFormId }, "*"); } catch { /* ignore */ }
   }
   // اگه standalone باز شده (تب جدید / مستقیم)
   if (window.history && window.history.length > 1) {
@@ -546,6 +546,9 @@ export default function EmbedForm() {
   const [confirmUnfilled, setConfirmUnfilled] = useState([]);
   const [scoreResult, setScoreResult] = useState(null);
   const stepEnteredAt = useRef(Date.now());
+
+  // ست کردن formId روی window برای handleMessage در loader.js
+  useEffect(() => { window.__pcodeFormId = formId; }, [formId]);
 
   useAutoResize();
 

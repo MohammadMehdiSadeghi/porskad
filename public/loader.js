@@ -26,12 +26,14 @@
     var iframe = document.createElement("iframe");
     iframe.src = BASE + "/embed/" + formId;
     iframe.setAttribute("data-form-id", formId);
+    iframe.setAttribute("data-pcode-iframe", formId);
     iframe.setAttribute("frameborder", "0");
     iframe.setAttribute("allow", "camera; microphone; autoplay");
     iframe.setAttribute("sandbox", "allow-scripts allow-forms allow-same-origin allow-popups");
     iframe.style.width = "100%";
     iframe.style.border = "none";
     iframe.style.minHeight = "400px";
+    iframe.style.overscrollBehavior = "contain";
 
     if (mode === "inline") {
       iframe.style.height = "600px";
@@ -53,6 +55,7 @@
 
       // overlay
       var overlay = document.createElement("div");
+      overlay.setAttribute("data-pcode-overlay", formId);
       overlay.style.display = "none";
       overlay.style.position = "fixed";
       overlay.style.inset = "0";
@@ -106,6 +109,7 @@
 
       // دکمه toggle
       var fab = document.createElement("button");
+      fab.setAttribute("data-pcode-fab", formId);
       fab.style.cssText = "position:fixed;bottom:20px;right:20px;z-index:100000;width:56px;height:56px;border-radius:50%;background:#21295A;color:#fff;font-size:24px;border:none;cursor:pointer;box-shadow:0 4px 15px rgba(33,41,90,0.4);display:flex;align-items:center;justify-content:center;font-family:sans-serif;";
       fab.innerHTML = '<span style="font-size:11px;font-weight:900;line-height:1.3;text-align:center;font-family:Vazirmatn,sans-serif;">پرس<br/><span style="color:#58BDAF;">کاد</span></span>';
       document.body.appendChild(fab);
@@ -142,8 +146,24 @@
 
     if (d.type === "pcode:started") postEvent(d.formId, "started");
     if (d.type === "pcode:submitted") postEvent(d.formId, "submitted", d);
-    if (d.type === "pcode:closed") postEvent(d.formId, "closed");
     if (d.type === "pcode:view") postEvent(d.formId, "viewed");
+
+    // بستن فرم — popup بسته میشه، popover toggle میشه
+    if (d.type === "pcode:closed") {
+      postEvent(d.formId, "closed");
+      var closedIframe = document.querySelector('iframe[data-form-id="' + d.formId + '"]');
+      if (closedIframe) {
+        // حالت popup: مخفی کردن iframe + overlay
+        closedIframe.style.display = "none";
+        var overlay = document.querySelector('[data-pcode-overlay="' + d.formId + '"]');
+        if (overlay) overlay.style.display = "none";
+        // حالت popover: toggle دکمه FAB
+        var fab = document.querySelector('[data-pcode-fab="' + d.formId + '"]');
+        if (fab) {
+          fab.innerHTML = '<span style="font-size:11px;font-weight:900;line-height:1.3;text-align:center;font-family:Vazirmatn,sans-serif;">پرس<br/><span style="color:#58BDAF;">کاد</span></span>';
+        }
+      }
+    }
   });
 
   // ─── API عمومی ───
