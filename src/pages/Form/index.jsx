@@ -21,7 +21,6 @@ import ScoreResult from "../../components/ui/ScoreResult";
 
 const draftKey = (slug) => `porskad_draft_${slug}`;
 
-// نرمالایزیشن گروه شرط‌ها: تبدیل operator → group_operator + نرمالایز شرط‌های فردی
 function normalizeConditionGroup(cg) {
   if (!cg) return null;
   const groupOp = cg.group_operator || cg.operator || "AND";
@@ -39,21 +38,21 @@ function normalizeConditionGroup(cg) {
   return { group_operator: groupOp, conditions: conds };
 }
 
-// ─── صفحه‌ی «فرم در دسترس نیست» ───
+// ─── صفحه «فرم در دسترس نیست» — طراحی رکاد ───
 function NotAvailable({ message }) {
   return (
-    <div className="min-h-screen dot-pattern bg-bg-lavender flex items-center justify-center p-4">
+    <div className="min-h-dvh dot-pattern bg-male-light flex items-center justify-center p-4">
       <div className="w-full max-w-md -rotate-[1deg]">
         <StickerCard theme="magenta">
-          <div className="p-8 flex flex-col items-center text-center gap-4">
-            <span className="text-5xl rotate-[3deg]">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-magenta-text">
+          <div className="p-6 sm:p-8 flex flex-col items-center text-center gap-4">
+            <span className="text-4xl sm:text-5xl rotate-[3deg]">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-female-normal">
                 <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
             </span>
-            <h1 className="text-2xl font-black text-navy">این فرم در دسترس نیست</h1>
-            <p className="text-sm font-semibold text-ink-subtle leading-8">{message}</p>
+            <h1 className="text-xl sm:text-2xl font-black text-male-normal">این فرم در دسترس نیست</h1>
+            <p className="text-xs sm:text-sm font-semibold text-ink-subtle leading-8">{message}</p>
           </div>
         </StickerCard>
       </div>
@@ -82,17 +81,16 @@ export default function FormFill() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmUnfilled, setConfirmUnfilled] = useState([]);
   const stepEnteredAt = useRef(Date.now());
-  const jumpQueueRef = useRef([]); // صف پرش‌ها (برای checkbox)
-  const [variables, setVariables] = useState({}); // متغیرهای سفارشی
-  const [scoreResult, setScoreResult] = useState(null); // نتیجه نمره‌دهی
+  const jumpQueueRef = useRef([]);
+  const [variables, setVariables] = useState({});
+  const [scoreResult, setScoreResult] = useState(null);
 
-  // ─── اطلاعات مخفی (Hidden Fields) از URL ───
   const hiddenFields = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
     const hf = {};
     for (const [key, val] of params.entries()) {
       if (key.startsWith("hf_")) {
-        hf[key.slice(3)] = val; // hf_name=foo → { name: "foo" }
+        hf[key.slice(3)] = val;
       }
     }
     return hf;
@@ -110,9 +108,7 @@ export default function FormFill() {
 
       if (cancelled) return;
       if (formError || !formData) {
-        setUnavailable(
-          "این فرم حذف شده، منتشرنشده یا لینک اشتباه است."
-        );
+        setUnavailable("این فرم حذف شده، منتشرنشده یا لینک اشتباه است.");
         setLoading(false);
         return;
       }
@@ -132,14 +128,12 @@ export default function FormFill() {
 
       setForm(formData);
       setFormType(formData.form_type || "step_by_step");
-      // نرمال‌سازی conditions و jump_actions
       setQuestions((qData ?? []).map((q) => ({
         ...q,
         conditions: normalizeConditionGroup(q.conditions ?? null),
         jump_actions: q.jump_actions ?? [],
       })));
 
-      // بارگذاری Ruleهای منطقی (اگر جدول وجود نداشت نادیده بگیر)
       try {
         const { data: lrs, error: lrError } = await supabase
           .from("logic_rules")
@@ -147,7 +141,6 @@ export default function FormFill() {
           .eq("form_id", formData.id)
           .order("priority");
         if (lrError) {
-          // 404 یعنی جدول logic_rules وجود نداره — نادیده بگیر
           setLogicRules([]);
         } else {
           setLogicRules(
@@ -200,7 +193,6 @@ export default function FormFill() {
     stepEnteredAt.current = Date.now();
   }, [step]);
 
-  // ─── محاسبه مسیر با Flow Engine ───
   const flow = useMemo(
     () => calculateFlow(questions, logicRules, answers, variables, hiddenFields),
     [questions, logicRules, answers, variables, hiddenFields]
@@ -210,7 +202,6 @@ export default function FormFill() {
   const visibleTotal = visibleQuestions.length;
   const formEnded = flow.ended;
 
-  // ─── اعمال تغییرات متغیرها ───
   useEffect(() => {
     if (flow.variableChanges?.length > 0) {
       setVariables((prev) => {
@@ -240,33 +231,25 @@ export default function FormFill() {
     [currentQuestion]
   );
 
-
-
-
-
-  // شمارهی نمایشی سوال فعلی (بر اساس سوالات قابل مشاهده)
   const currentVisibleIndex = useMemo(() => {
     if (step < 0 || !currentQuestion) return 0;
     return visibleQuestions.findIndex((q) => q.id === currentQuestion.id) + 1;
   }, [step, currentQuestion, visibleQuestions]);
 
-  // پیدا کردن مرحلهی بعدی قابل نمایش
   const findNextVisibleStep = useCallback((fromStep) => {
     for (let i = fromStep + 1; i < total; i++) {
       if (visibleIds.has(questions[i]?.id)) return i;
     }
-    return total; // همه سوالات تمام شد → صفحه خروج
+    return total;
   }, [questions, total, visibleIds]);
 
-  // پیدا کردن مرحلهی قبلی قابل نمایش
   const findPrevVisibleStep = useCallback((fromStep) => {
     for (let i = fromStep - 1; i >= 0; i--) {
       if (visibleIds.has(questions[i]?.id)) return i;
     }
-    return -1; // برگشت به صفحه خوش‌آمد
+    return -1;
   }, [questions, visibleIds]);
 
-  // اعتبارسنجی سوال فعلی
   const validateCurrent = useCallback(() => {
     if (!currentQuestion) return { valid: true };
     const err = validateAnswer(currentQuestion, answers[currentQuestion.id]);
@@ -292,7 +275,6 @@ export default function FormFill() {
     accrueTime();
     setDir(1);
 
-    // ─── بررسی jump actions سوال فعلی ───
     if (currentQuestion) {
       const answer = answers[currentQuestion.id];
       const jumpResult = evaluateNextStep(
@@ -317,7 +299,6 @@ export default function FormFill() {
       }
     }
 
-    // پیش‌فرض: مرحله بعدی قابل مشاهده
     setStep((s) => findNextVisibleStep(s));
   }, [step, accrueTime, validateCurrent, findNextVisibleStep, currentQuestion, answers, questions, visibleQuestions, total]);
 
@@ -391,14 +372,12 @@ export default function FormFill() {
       if (rows.length) {
         const { error: ansError } = await supabase.from("answers").insert(rows);
         if (ansError) {
-          // اگر response ذخیره شده ولی answers نه، بازم موفقیت نشون بده
           console.warn("answers insert failed (response saved):", ansError);
         }
       }
 
       localStorage.removeItem(draftKey(slug));
 
-      // محاسبه نمره اگه سوال نمره‌دار وجود داره
       if (hasScoring(questions)) {
         const score = calculateScore(visibleQuestions, answers);
         setScoreResult(score);
@@ -414,7 +393,6 @@ export default function FormFill() {
     }
   }, [submitting, honeypot, form, visibleQuestions, questions, answers, times, startedAt, slug, total]);
 
-  // اگه END_FORM فعال شد، مستقیم به صفحه خروج برو
   useEffect(() => {
     if (formEnded && step >= 0 && step < total) {
       accrueTime();
@@ -428,7 +406,7 @@ export default function FormFill() {
 
   if (loading) {
     return (
-      <div className="min-h-screen dot-pattern bg-bg-mint">
+      <div className="min-h-dvh dot-pattern bg-ecosystem-light">
         <Spinner label="فرم داره لود می‌شه..." />
       </div>
     );
@@ -437,7 +415,7 @@ export default function FormFill() {
   if (unavailable) return <NotAvailable message={unavailable} />;
   if (!form) return null;
 
-  // ─── فرم ثبت‌نامی: تک‌صفحه‌ای ───
+  // ─── فرم ثبت‌نامی ───
   if (formType === "registration") {
     return (
       <RegistrationForm
@@ -448,18 +426,19 @@ export default function FormFill() {
     );
   }
 
-  // ─── فرم مرحله به مرحله ───
+  // ─── فرم مرحله به مرحله — طراحی رکاد ───
   return (
-    <div className="min-h-dvh dot-pattern bg-bg-mint flex flex-col overflow-x-hidden">
+    <div className="min-h-dvh dot-pattern bg-ecosystem-light flex flex-col overflow-x-hidden">
       <SEO
         title={form.title}
         description={form.description || `فرم ${form.title} — پرسکاد`}
         url={`/f/${slug}`}
       />
+
       {/* هدر باریک */}
-      <div className="w-full max-w-[75rem] mx-auto flex items-center justify-between px-4 py-3">
+      <div className="w-full max-w-[75rem] mx-auto flex items-center justify-between px-4 sm:px-6 py-3">
         <Logo linked={false} size="sm" />
-        <span className="text-xs font-bold text-ink-subtle truncate max-w-[50vw]">
+        <span className="text-[0.65rem] sm:text-xs font-bold text-ink-subtle truncate max-w-[50vw]">
           {form.title}
         </span>
       </div>
@@ -472,9 +451,9 @@ export default function FormFill() {
       )}
 
       <main className="flex-1 flex items-start sm:items-center justify-center px-4 sm:px-6 py-4 sm:py-6 overflow-x-hidden">
-        <div className={`w-full max-w-xl ${step === -1 ? "-rotate-[0.6deg]" : "rotate-[0.4deg]"}`}>  
+        <div className={`w-full max-w-xl ${step === -1 ? "-rotate-[0.6deg]" : "rotate-[0.4deg]"}`}>
           <StickerCard theme="white" radius="rounded-tl-[2rem] rounded-br-[2rem] rounded-tr-none rounded-bl-none">
-            {/* تله‌ی ربات‌ها */}
+            {/* تله ربات */}
             <input
               type="text"
               name="website"
@@ -486,9 +465,9 @@ export default function FormFill() {
               className="absolute -left-[9999rem] w-px h-px opacity-0"
             />
 
-            <div className="p-6 sm:p-9 min-h-[22rem] flex flex-col">
+            <div className="p-5 sm:p-7 lg:p-9 min-h-[20rem] sm:min-h-[22rem] flex flex-col">
               <AnimatePresence mode="wait" custom={dir}>
-                {/* ─── صفحه‌ی خوش‌آمد ─── */}
+                {/* ─── صفحه خوش‌آمد ─── */}
                 {step === -1 && (
                   <motion.div
                     key="welcome"
@@ -497,34 +476,35 @@ export default function FormFill() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: dir * -48 }}
                     transition={{ duration: 0.28, ease: "easeOut" }}
-                    className="flex-1 flex flex-col items-center text-center justify-center gap-4"
+                    className="flex-1 flex flex-col items-center text-center justify-center gap-3 sm:gap-4"
                   >
                     {visibleTotal > 0 && (
                       <Badge color="navy" rotate="rotate-[2deg]">
                         {faNum(visibleTotal)} سوال · حدود {faNum(approxMinutes)} دقیقه
                       </Badge>
                     )}
-                    <span className="text-5xl rotate-[4deg]">
-                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-teal-text">
+                    <span className="text-4xl sm:text-5xl rotate-[4deg]">
+                      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ecosystem-dark">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>
                         <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
                         <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                       </svg>
                     </span>
-                    <h1 className="text-3xl font-black text-navy leading-snug">
+                    <h1 className="text-2xl sm:text-3xl font-black text-male-normal leading-snug">
                       {form.welcome_title}
                     </h1>
-                    <p className="font-semibold text-ink-soft leading-8 max-w-md">
+                    <p className="font-semibold text-ink-soft leading-7 sm:leading-8 text-sm sm:text-base max-w-md">
                       {form.welcome_message}
                     </p>
-                    <div className="mt-3">
+                    <div className="mt-2 sm:mt-3">
                       <Button
                         variant="teal"
                         size="lg"
                         rotate="-rotate-[1.5deg]"
                         disabled={visibleTotal === 0}
                         onClick={goNext}
+                        className="text-sm sm:text-base"
                       >
                         {visibleTotal === 0 ? "این فرم هنوز سوالی ندارد" : "بزن بریم! 🚀"}
                       </Button>
@@ -556,24 +536,24 @@ export default function FormFill() {
                       <motion.div
                         initial={{ opacity: 0, y: -8, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        className="flex items-center gap-3 bg-magenta/10 border-2 border-magenta rounded-pill-md px-4 py-3 mt-4"
+                        className="flex items-center gap-3 bg-female-light border-2 border-female-normal rounded-pill-md [corner-shape:squircle] px-3 sm:px-4 py-2.5 sm:py-3 mt-3 sm:mt-4"
                       >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-magenta-text shrink-0">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-female-normal shrink-0">
                           <circle cx="12" cy="12" r="10"/>
                           <line x1="12" y1="8" x2="12" y2="12"/>
                           <line x1="12" y1="16" x2="12.01" y2="16"/>
                         </svg>
-                        <span className="text-sm font-bold text-magenta-text">
+                        <span className="text-xs sm:text-sm font-bold text-female-normal">
                           {requiredError}
                         </span>
                       </motion.div>
                     )}
-                    <div className="mt-4 flex items-center justify-between">
-                      <Button variant="ghost" size="sm" onClick={goBack}>
+                    <div className="mt-3 sm:mt-4 flex items-center justify-between gap-3">
+                      <Button variant="ghost" size="sm" onClick={goBack} className="text-xs sm:text-sm">
                         ↩ برگشت
                       </Button>
                       {step < total - 1 ? (
-                        <Button variant="navy" onClick={goNext}>
+                        <Button variant="navy" onClick={goNext} className="text-xs sm:text-sm">
                           سوال بعدی ←
                         </Button>
                       ) : (
@@ -582,46 +562,46 @@ export default function FormFill() {
                           onClick={openConfirm}
                           disabled={submitting}
                           rotate="rotate-[1deg]"
+                          className="text-xs sm:text-sm"
                         >
                           {submitting ? "در حال ثبت..." : "ثبت نهایی ✨"}
                         </Button>
                       )}
                     </div>
                     {submitError && (
-                      <div className="mt-3 self-end rotate-[-1deg] bg-white border-2 border-magenta rounded-pill-md px-3.5 py-2 text-sm font-bold text-magenta-text">
+                      <div className="mt-3 self-end rotate-[-1deg] bg-white border-2 border-female-normal rounded-pill-md [corner-shape:squircle] px-3 sm:px-3.5 py-2 text-xs sm:text-sm font-bold text-female-normal">
                         {submitError}
                       </div>
                     )}
                   </motion.div>
                 )}
 
-                {/* ─── صفحه‌ی خروج ─── */}
+                {/* ─── صفحه خروج ─── */}
                 {step >= total && (
                   <motion.div
                     key="done"
                     initial={{ opacity: 0, scale: 0.92 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.35, ease: "easeOut" }}
-                    className="flex-1 flex flex-col items-center text-center justify-center gap-4"
+                    className="flex-1 flex flex-col items-center text-center justify-center gap-3 sm:gap-4"
                   >
                     <motion.span
-                      className="text-6xl"
+                      className="text-5xl sm:text-6xl"
                       animate={{ rotate: [0, -8, 8, -4, 4, 0] }}
                       transition={{ duration: 0.7, delay: 0.15 }}
                     >
-                      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-teal-text">
+                      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ecosystem-normal">
                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                         <polyline points="22 4 12 14.01 9 11.01"/>
                       </svg>
                     </motion.span>
-                    <h1 className="text-3xl font-black text-navy leading-snug">
+                    <h1 className="text-2xl sm:text-3xl font-black text-male-normal leading-snug">
                       {form.exit_title}
                     </h1>
-                    <p className="font-semibold text-ink-soft leading-8 max-w-md">
+                    <p className="font-semibold text-ink-soft leading-7 sm:leading-8 text-sm sm:text-base max-w-md">
                       {form.exit_message}
                     </p>
 
-                    {/* نمایش نتیجه نمره‌دهی */}
                     {scoreResult && (
                       <ScoreResult
                         score={scoreResult.score}
@@ -632,7 +612,7 @@ export default function FormFill() {
                     )}
 
                     {startedAt && (
-                      <span className="text-xs font-medium text-ink-subtle">
+                      <span className="text-[0.65rem] sm:text-xs font-medium text-ink-subtle">
                         این پاسخ در {faDuration(Math.round((Date.now() - startedAt) / 1000))} ثبت شد
                       </span>
                     )}
@@ -644,7 +624,7 @@ export default function FormFill() {
         </div>
       </main>
 
-      {/* باکس تایید قبل از ارسال */}
+      {/* باکس تایید */}
       <ConfirmDialog
         open={showConfirm}
         onConfirm={doSubmit}
@@ -653,7 +633,6 @@ export default function FormFill() {
         totalRequired={visibleQuestions.filter((q) => q.required).length}
         filledCount={visibleQuestions.filter((q) => q.required && answers[q.id] != null && String(answers[q.id]).trim() !== "").length}
       />
-
     </div>
   );
 }
