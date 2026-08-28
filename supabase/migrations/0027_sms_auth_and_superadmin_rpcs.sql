@@ -173,6 +173,7 @@ $$;
 grant execute on function public.export_table_data(text) to authenticated;
 
 -- ─── 7. purge_responses (owner only) ───
+drop function if exists public.purge_responses(uuid);
 create or replace function public.purge_responses(p_form_id uuid default null)
 returns integer
 language plpgsql
