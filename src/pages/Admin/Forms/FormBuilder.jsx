@@ -644,7 +644,7 @@ export default function FormBuilder() {
         placeholder: q.placeholder ?? "",
         validation: q.validation ?? null,
         required: !!q.required,
-        options: q.type === "choice" ? q.options.map((o) => o.trim()) : q.type === "yes_no" ? ["بله", "خیر"] : [],
+        options: (q.type === "choice" || q.type === "checkbox") ? q.options.map((o) => o.trim()) : q.type === "yes_no" ? ["بله", "خیر"] : [],
         position: i,
         conditions: q.conditions ?? null,
         jump_actions: q.jump_actions ?? [],
@@ -668,14 +668,17 @@ export default function FormBuilder() {
       }
 
       if (Array.isArray(freshQs)) {
-        setQuestions(freshQs.map((q) => ({
-          ...q,
-          localId: q.id,
-          placeholder: q.placeholder ?? "",
-        validation: q.validation ?? null,
-          conditions: normalizeConditionGroup(q.conditions ?? (q.condition ? { group_operator: "AND", conditions: [q.condition] } : null)),
-          jump_actions: q.jump_actions ?? [],
-        })));
+        setQuestions((prev) => prev.map((pq) => {
+          const saved = freshQs.find((fq) => fq.id === pq.id || fq.id === pq.localId);
+          if (saved) {
+            return {
+              ...pq,
+              id: saved.id,
+              localId: saved.id,
+            };
+          }
+          return pq;
+        }));
       }
 
       setForm((f) => ({ ...f, slug: cleanSlug }));
