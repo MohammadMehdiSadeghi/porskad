@@ -9,15 +9,12 @@
         direction: rtl;
         font-size: 19px;
         overflow-x: hidden;
-        overscroll-behavior: contain;
     }
     body {
         @apply font-sans text-ink bg-white antialiased;
         direction: rtl;
         overflow-x: hidden;
-        overscroll-behavior: contain;
         line-height: 1.6;
-        -webkit-overflow-scrolling: touch;
     }
     a:focus-visible,
     button:focus-visible {
@@ -89,6 +86,12 @@ html {
 }
 .scrollbar-none::-webkit-scrollbar {
     display: none;
+}
+
+/* ─── embed: جلوگیری از اسکرول بکگراند ─── */
+.pcode-embed {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* ─── شمارنده‌ی ستاره‌ی امتیاز ─── */

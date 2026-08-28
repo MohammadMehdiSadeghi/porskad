@@ -33,7 +33,6 @@
     iframe.style.width = "100%";
     iframe.style.border = "none";
     iframe.style.minHeight = "400px";
-    iframe.style.overscrollBehavior = "contain";
 
     if (mode === "inline") {
       iframe.style.height = "600px";
