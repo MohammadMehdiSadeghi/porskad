@@ -8,8 +8,9 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import StickerCard from "../../components/ui/StickerCard";
 import Modal from "../../components/ui/Modal";
-import { Plus, Edit, Trash2, Crown, Users, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings } from "lucide-react";
+import { Plus, Edit, Trash2, Crown, Users, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings, Eye, EyeOff } from "lucide-react";
 import SEO from "../../components/ui/SEO";
+import { supabase } from "../../lib/supabaseClient";
 
 // ─── دسته‌بندی مجوزها ───
 const PERMISSION_CATEGORIES = [
@@ -44,6 +45,7 @@ const PERMISSION_CATEGORIES = [
     permissions: [
       { id: "manage_managers", label: "مدیریت مدیران", desc: "ایجاد/ویرایش/حذف مدیران" },
       { id: "manage_sms", label: "پنل پیامک", desc: "ارسال و مدیریت پیامک" },
+      { id: "view_admins", label: "نمایش مدیران", desc: "دیدن سایر ادمین‌ها در لیست" },
     ],
   },
 ];
@@ -176,15 +178,15 @@ export default function Managers() {
   const [editPermissions, setEditPermissions] = useState([]);
   const [createError, setCreateError] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [visibilityTarget, setVisibilityTarget] = useState(null);
-  const [hiddenFromList, setHiddenFromList] = useState([]);
+  const [editHiddenFrom, setEditHiddenFrom] = useState([]);
 
   async function load() {
     setLoading(true);
     try {
       const data = await listManagers({ includeHidden: isOwner() });
       // فیلتر کردن سوپرادمین از لیست (اکانت مخفی)
-      const filtered = data.filter((m) => !m.is_owner || m.email !== "superadmin@gmailc.com");
+      // مخفی کردن اکانت سوپرادمین از لیست مدیران
+      const filtered = data.filter((m) => !(m.is_owner && m.email === "superadmin@gmail.com"));
       setManagers(filtered);
     } catch (err) {
       push("خطا در بارگذاری: " + err.message, "error");
@@ -235,6 +237,7 @@ export default function Managers() {
     setEditPermissions(
       manager.permissions?.length ? [...manager.permissions] : [...ALL_PERM_IDS].filter((p) => p !== "manage_managers")
     );
+    setEditHiddenFrom(manager.hidden_from || []);
     setShowEditModal(true);
   }
 
@@ -254,36 +257,6 @@ export default function Managers() {
     } catch (err) {
       push("خطا: " + err.message, "error");
     }
-  }
-
-  function openVisibility(manager) {
-    setVisibilityTarget(manager);
-    setHiddenFromList(manager.hidden_from || []);
-  }
-
-  async function saveVisibility() {
-    if (!visibilityTarget) return;
-    const hiddenFromValue = hiddenFromList.length > 0 ? hiddenFromList : null;
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ hidden_from: hiddenFromValue })
-        .eq("id", visibilityTarget.id);
-      if (error) throw error;
-      push("تنظیمات نمایش ذخیره شد ✅");
-      setVisibilityTarget(null);
-      load();
-    } catch (err) {
-      push("خطا: " + (err.message || "ناموفق"), "error");
-    }
-  }
-
-  function toggleHiddenFrom(targetUserId) {
-    setHiddenFromList((prev) =>
-      prev.includes(targetUserId)
-        ? prev.filter((id) => id !== targetUserId)
-        : [...prev, targetUserId]
-    );
   }
 
   async function handleDelete() {
@@ -397,13 +370,6 @@ export default function Managers() {
                           onClick={() => handleDeactivate(m.id)}>
                           {m.is_active ? "غیرفعال 🛑" : "فعال 🟢"}
                         </Button>
-                        {/* دکمه کنترل نمایش — فقط برای صاحب اصلی */}
-                        {isOwner() && (
-                          <Button variant="ghost" size="sm" className="!text-purple-600"
-                            onClick={() => openVisibility(m)}>
-                          👁️ نمایش
-                          </Button>
-                        )}
                         <Button variant="ghost" size="sm" className="!text-magenta-text"
                           onClick={() => setDeleteTarget(m)}>
                           حذف 🗑️
@@ -508,6 +474,76 @@ export default function Managers() {
             </div>
           )}
 
+          {/* ─── کنترل نمایش مدیران (فقط owner) ─── */}
+          {isOwner() && !selectedManager?.is_owner && (
+            <div className="border-2 border-purple/30 bg-purple/5 rounded-pill-md p-3">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-extrabold text-navy flex items-center gap-1.5">
+                  <Eye size={14} className="text-purple-600" /> نمایش مدیران
+                </label>
+              </div>
+              <p className="text-[0.65rem] text-ink-subtle mb-2">
+                مشخص کنید این مدیر کدام ادمین‌ها رو در لیست مدیران خود ببیند.
+                اگر ادمینی انتخاب شود، این مدیر آن ادمین را نخواهد دید.
+              </p>
+
+              {/* دکمه‌های نمایش همه / عدم نمایش همه */}
+              <div className="flex gap-2 mb-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const otherAdmins = managers.filter((m) => !m.is_owner && m.id !== selectedManager?.id).map((m) => m.id);
+                    setEditHiddenFrom(otherAdmins);
+                  }}
+                  className="flex items-center gap-1 text-[0.65rem] font-bold text-female-text bg-female-light border border-female/30 rounded-pill-sm px-2.5 py-1 hover:bg-female/10 transition-colors"
+                >
+                  <EyeOff size={11} /> عدم نمایش همه ادمین‌ها
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditHiddenFrom([])}
+                  className="flex items-center gap-1 text-[0.65rem] font-bold text-teal bg-ecosystem-light border border-teal/30 rounded-pill-sm px-2.5 py-1 hover:bg-teal/10 transition-colors"
+                >
+                  <Eye size={11} /> نمایش همه ادمین‌ها
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-1 max-h-32 overflow-y-auto">
+                {managers
+                  .filter((m) => !m.is_owner && m.id !== selectedManager?.id)
+                  .map((m) => {
+                    const isHidden = editHiddenFrom.includes(m.id);
+                    return (
+                      <label
+                        key={m.id}
+                        className={`flex items-center gap-2 px-2 py-1.5 rounded-pill-sm cursor-pointer transition-all border ${
+                          isHidden ? "border-female-normal bg-female-light" : "border-ink/10 bg-white hover:border-teal/30"
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditHiddenFrom((prev) =>
+                              prev.includes(m.id) ? prev.filter((id) => id !== m.id) : [...prev, m.id]
+                            );
+                          }}
+                          className={`relative w-8 h-4 rounded-full transition-colors flex-shrink-0 ${
+                            isHidden ? "bg-female-normal" : "bg-ink/20"
+                          }`}
+                        >
+                          <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all ${
+                            isHidden ? "right-0.5" : "right-[16px]"
+                          }`} />
+                        </button>
+                        <span className="text-xs font-bold text-navy">{m.full_name || m.email}</span>
+                        {isHidden && <span className="mr-auto text-[0.6rem] font-bold text-female-text">مخفی</span>}
+                      </label>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="teal" size="sm" onClick={async () => {
               if (!selectedManager) return;
@@ -515,11 +551,21 @@ export default function Managers() {
                 if (selectedManager.is_owner) {
                   await updateManager(selectedManager.id, { fullName: editName });
                 } else {
+                  // ذخیره مجوزها
                   await updateManager(selectedManager.id, {
                     fullName: editName,
                     isActive: selectedManager.is_active,
                     permissions: editPermissions,
                   });
+                  // ذخیره hidden_from (فقط owner)
+                  if (isOwner()) {
+                    const hiddenFromValue = editHiddenFrom.length > 0 ? editHiddenFrom : null;
+                    const { error: hfErr } = await supabase
+                      .from("profiles")
+                      .update({ hidden_from: hiddenFromValue })
+                      .eq("id", selectedManager.id);
+                    if (hfErr) throw hfErr;
+                  }
                 }
                 push("تغییرات ذخیره شد! ✅");
                 setShowEditModal(false);
@@ -545,62 +591,6 @@ export default function Managers() {
         </div>
       </Modal>
 
-      {/* ─── مودال کنترل نمایش مدیران ─── */}
-      <Modal
-        open={!!visibilityTarget}
-        onClose={() => setVisibilityTarget(null)}
-        title={`کنترل نمایش «${visibilityTarget?.full_name || visibilityTarget?.email || ''}»`}
-      >
-        <div className="flex flex-col gap-4">
-          <p className="text-sm font-semibold text-ink-soft leading-7">
-            مشخص کنید کدام مدیران این شخص را در لیست مدیران خود ببینند.
-            اگر یک مدیر اینجا انتخاب شود، آن مدیر «<span className="font-black text-magenta-text">{visibilityTarget?.full_name}</span>» را نخواهد دید.
-          </p>
-
-          <div className="flex flex-col gap-2">
-            {managers
-              .filter((m) => !m.is_owner && m.id !== visibilityTarget?.id)
-              .map((m) => {
-                const isHidden = hiddenFromList.includes(m.id);
-                return (
-                  <label
-                    key={m.id}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-pill-md cursor-pointer transition-all border-2 ${
-                      isHidden ? "border-female-normal bg-female-light" : "border-ink/10 bg-white hover:border-teal/30"
-                    }`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => toggleHiddenFrom(m.id)}
-                      className={`relative w-10 h-5 rounded-full transition-colors flex-shrink-0 ${
-                        isHidden ? "bg-female-normal" : "bg-ink/20"
-                      }`}
-                    >
-                      <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${
-                        isHidden ? "right-0.5" : "right-[22px]"
-                      }`} />
-                    </button>
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-[0.6rem] font-bold bg-bg-lavender text-navy">
-                        {m.full_name?.[0]?.toUpperCase() || "U"}
-                      </div>
-                      <div>
-                        <span className="text-sm font-bold text-navy block">{m.full_name || "—"}</span>
-                        <span className="text-[0.65rem] font-medium text-ink-subtle" dir="ltr">{m.email}</span>
-                      </div>
-                    </div>
-                    {isHidden && <span className="mr-auto text-[0.6rem] font-bold text-female-text">مخفی</span>}
-                  </label>
-                );
-              })}
-          </div>
-
-          <div className="flex gap-3 justify-end pt-2">
-            <Button variant="teal" size="sm" onClick={saveVisibility}>ذخیره</Button>
-            <Button variant="ghost" size="sm" onClick={() => setVisibilityTarget(null)}>انصراف</Button>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 }
