@@ -9,12 +9,15 @@
         direction: rtl;
         font-size: 19px;
         overflow-x: hidden;
+        overscroll-behavior: contain;
     }
     body {
         @apply font-sans text-ink bg-white antialiased;
         direction: rtl;
         overflow-x: hidden;
+        overscroll-behavior: contain;
         line-height: 1.6;
+        -webkit-overflow-scrolling: touch;
     }
     a:focus-visible,
     button:focus-visible {
