@@ -47,7 +47,15 @@ function MiniLongTextInput({ q }) {
   );
 }
 
-function MiniChoiceOptions({ options }) {
+function MiniChoiceOptions({ options, displayMode }) {
+  if (displayMode === "dropdown") {
+    return (
+      <div className="w-full border border-ink/15 bg-white rounded-lg px-2 py-1.5 flex items-center justify-between">
+        <span className="text-[0.55rem] font-semibold text-ink/40">یک گزینه انتخاب کنید...</span>
+        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-ink/30"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-1">
       {(options || []).map((opt, i) => (
@@ -99,10 +107,10 @@ function MiniQuestion({ q, index, total }) {
       {q.description && <p className="text-[0.5rem] text-ink/40 -mt-0.5">{q.description}</p>}
       {(q.type === "short_text" || q.type === "email" || q.type === "phone_ir" || q.type === "number" || q.type === "telegram_id") && <MiniTextInput q={q} />}
       {q.type === "long_text" && <MiniLongTextInput q={q} />}
-      {q.type === "choice" && <MiniChoiceOptions options={q.options} />}
+      {q.type === "choice" && <MiniChoiceOptions options={q.options} displayMode={q.display_mode} />}
       {q.type === "yes_no" && <MiniYesNo />}
       {q.type === "rating" && <MiniRating />}
-      {q.type === "checkbox" && <MiniChoiceOptions options={q.options} />}
+      {q.type === "checkbox" && <MiniChoiceOptions options={q.options} displayMode={q.display_mode} />}
     </div>
   );
 }
