@@ -9,7 +9,6 @@ import { faNum, faDuration, parseUserAgent } from "../../lib/utils";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import { calculateScore, hasScoring } from "../../lib/scoring";
 import ScoreResult from "../../components/ui/ScoreResult";
-import MusicPlayer from "../../components/ui/MusicPlayer";
 import "../../index.css";
 
 // ─── پیام‌های postMessage به سایت میزبان ───
@@ -474,8 +473,6 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
         filledCount={questions.filter((q) => q.required && answers[q.id] != null && String(answers[q.id]).trim() !== "").length}
       />
 
-      {/* موزیک پس‌زمینه */}
-      <MusicPlayer autoPlay={false} volume={0.25} />
     </div>
   );
 }
@@ -900,8 +897,6 @@ export default function EmbedForm() {
         filledCount={visibleQuestions.filter((q) => q.required && answers[q.id] != null && String(answers[q.id]).trim() !== "").length}
       />
 
-      {/* موزیک پس‌زمینه */}
-      <MusicPlayer autoPlay={false} volume={0.25} />
     </div>
   );
 }

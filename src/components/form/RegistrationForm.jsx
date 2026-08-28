@@ -18,7 +18,6 @@ import ConfirmDialog from "../ui/ConfirmDialog";
 import SEO from "../ui/SEO";
 import { calculateScore, hasScoring } from "../../lib/scoring";
 import ScoreResult from "../ui/ScoreResult";
-import MusicPlayer from "../ui/MusicPlayer";
 
 const inputCls =
   "w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink placeholder:text-ink/40 placeholder:font-medium focus:outline-none transition-all";
@@ -364,8 +363,6 @@ export default function RegistrationForm({ form, questions, slug }) {
         filledCount={sortedQuestions.filter((q) => q.required && !isFieldEmpty(answers[q.id])).length}
       />
 
-      {/* موزیک پس‌زمینه */}
-      <MusicPlayer autoPlay={false} volume={0.25} />
     </div>
   );
 }
