@@ -224,7 +224,7 @@ export default function SmsPanel() {
       if (data) {
         setSmsSettings(data);
         setSettingsForm({
-          amoot_token: data.amoot_token || data.api_token || "",
+          amoot_token: data.api_token || data.amoot_token || "",
           line_number: data.line_number || "public",
           sender_name: data.sender_name || "پرسکاد",
         });
@@ -261,7 +261,7 @@ export default function SmsPanel() {
     setSavingSettings(true);
     try {
       const { error } = await supabase.rpc("save_sms_settings", {
-        p_amoot_token: settingsForm.amoot_token.trim(),
+        p_api_token: settingsForm.amoot_token.trim(),
         p_line_number: settingsForm.line_number.trim() || "public",
         p_sender_name: settingsForm.sender_name.trim() || "پرسکاد",
       });
@@ -316,9 +316,9 @@ export default function SmsPanel() {
       const data = await amootFetch("SendSimple", {
         SendDateTime: "0",
         SMSMessageText: smsText,
-        LineNumber: "public",
         Mobiles: numbers,
       });
+      // LineNumber خودکار از sms_settings توسط Edge Function پر می‌شه
 
       // ─── تشخیص موفقیت ───
       const status = data?.Status ?? data?.status;
@@ -345,7 +345,7 @@ export default function SmsPanel() {
           try {
             await supabase.rpc("log_sms_outbox", {
               p_mobile: r.Mobile,
-              p_line_number: "public",
+              p_line_number: smsSettings?.line_number || "public",
               p_text: smsText,
               p_message_id: r.MessageID ? String(r.MessageID) : null,
               p_status: "sent",

@@ -5,7 +5,8 @@ const AMOOT_BASE = "https://portal.amootsms.com/rest";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req) => {
@@ -22,7 +23,8 @@ serve(async (req) => {
   try {
     // ─── 1. احراز هویت کاربر ───
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return jsonResp({ error: "Authorization header missing" }, 401);
+    if (!authHeader)
+      return jsonResp({ error: "Authorization header missing" }, 401);
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -30,60 +32,104 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return jsonResp({ error: "Unauthorized" }, 401);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user)
+      return jsonResp({ error: "Unauthorized" }, 401);
 
     // ─── 2. بررسی permission ───
     const { data: permData } = await supabase.rpc("has_permission", {
       p_user_id: user.id,
       p_permission_id: "manage_sms",
     });
-    if (!permData) return jsonResp({ error: "Permission denied: manage_sms required" }, 403);
+    if (!permData)
+      return jsonResp(
+        { error: "Permission denied: manage_sms required" },
+        403
+      );
 
-    // ─── 3. دریافت Token آموت از sms_settings ───
+    // ─── 3. دریافت Token و LineNumber از sms_settings ───
     const { data: smsSettings } = await supabase
       .rpc("get_active_sms_settings")
       .maybeSingle();
 
     if (!smsSettings) {
-      return jsonResp({
-        error: "SMS settings not configured",
-        details: "لطفاً ابتدا تنظیمات آموت را ذخیره کنید.",
-      }, 400);
+      return jsonResp(
+        {
+          error: "SMS settings not configured",
+          details: "لطفاً ابتدا تنظیمات آموت را ذخیره کنید.",
+        },
+        400
+      );
     }
 
     const amootToken = smsSettings.amoot_token || smsSettings.api_token || "";
+    const defaultLineNumber = smsSettings.line_number || "public";
+
     if (!amootToken) {
-      return jsonResp({
-        error: "Amoot token not set",
-        details: "توکن آموت در تنظیمات وارد نشده.",
-      }, 400);
+      return jsonResp(
+        {
+          error: "Amoot token not set",
+          details: "توکن آموت در تنظیمات وارد نشده.",
+        },
+        400
+      );
     }
 
     // ─── 4. دریافت body ───
-    const { endpoint, params } = await req.json();
-    if (!endpoint) return jsonResp({ error: "Missing 'endpoint'" }, 400);
+    const { endpoint, params = {} } = await req.json();
+    if (!endpoint)
+      return jsonResp({ error: "Missing 'endpoint'" }, 400);
 
     // ─── 5. endpointهای مجاز ───
-    const allowed = ["AccountStatus", "SendSimple", "SendQuickOTP", "GetDelivery", "GetDeliveries", "GetDeliveriesByCampaignID"];
-    if (!allowed.includes(endpoint)) return jsonResp({ error: "Endpoint not allowed" }, 403);
+    const allowed = [
+      "AccountStatus",
+      "SendSimple",
+      "SendQuickOTP",
+      "SendOTP",
+      "SendWithPattern",
+      "SendWithPatternOWN",
+      "SendWithBackupLine",
+      "GetDelivery",
+      "GetDeliveries",
+      "GetDeliveriesByCampaignID",
+      "GetMessage",
+      "GetMessages",
+      "Statistics",
+      "CalculateMessagePrice",
+    ];
+    if (!allowed.includes(endpoint))
+      return jsonResp({ error: "Endpoint not allowed" }, 403);
 
-    // ─── 6. ساخت URL با Token ───
-    const url = new URL(`${AMOOT_BASE}/${endpoint}`);
-    url.searchParams.set("Token", amootToken);
+    // ─── 6. توکن و خط پیش‌فرض رو اضافه کن ───
+    params.Token = amootToken;
 
-    if (params) {
-      for (const [key, val] of Object.entries(params)) {
-        if (val !== undefined && val !== null && val !== "") {
-          url.searchParams.set(key, String(val));
-        }
+    // اگه LineNumber نداده شده، از تنظیمات پیش‌فرض استفاده کن
+    if (!params.LineNumber || params.LineNumber === "public") {
+      params.LineNumber = defaultLineNumber;
+    }
+
+    // ─── 7. ساخت body به فرمت x-www-form-urlencoded ───
+    const formBody = new URLSearchParams();
+    for (const [key, val] of Object.entries(params)) {
+      if (val !== undefined && val !== null && val !== "") {
+        formBody.set(key, String(val));
       }
     }
 
-    // ─── 7. فراخوانی آموت ───
-    const amootRes = await fetch(url.toString(), {
-      method: "GET",
-      headers: { Accept: "application/json" },
+    console.log(
+      `[amoot-proxy] ${endpoint} → ${AMOOT_BASE}/${endpoint} (POST)`
+    );
+
+    // ─── 8. فراخوانی آموت با POST + form-urlencoded ───
+    const amootRes = await fetch(`${AMOOT_BASE}/${endpoint}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: formBody.toString(),
     });
 
     const responseText = await amootRes.text();
@@ -91,12 +137,22 @@ serve(async (req) => {
     try {
       data = JSON.parse(responseText);
     } catch {
-      return jsonResp({ error: "Invalid response from Amoot", raw: responseText.slice(0, 500) }, 502);
+      return jsonResp(
+        {
+          error: "Invalid response from Amoot",
+          raw: responseText.slice(0, 500),
+        },
+        502
+      );
     }
 
-    if (!amootRes.ok) {
-      console.error(`Amoot API error: HTTP ${amootRes.status}`, data);
-      return jsonResp({ error: `Amoot HTTP ${amootRes.status}`, amoot_response: data }, 502);
+    // ─── لاگ خطاها ───
+    if (data.Status && data.Status !== 0 && data.Status !== "0") {
+      console.warn(
+        `[amoot-proxy] ${endpoint} error:`,
+        data.Status,
+        data.explanation || ""
+      );
     }
 
     return jsonResp(data);
