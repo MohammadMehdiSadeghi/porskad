@@ -108,7 +108,7 @@ export default function Dashboard() {
 
       {/* آخرین پاسخ‌ها */}
       <div>
-        <h2 className="text-xl font-black text-navy mb-4">آخرین پاسخ‌ها</h2>
+        <h2 className="text-lg sm:text-xl font-black text-navy mb-3 sm:mb-4">آخرین پاسخ‌ها</h2>
         {recent.length === 0 ? (
           <EmptyState
             icon={<Inbox size={48} />}
@@ -119,7 +119,8 @@ export default function Dashboard() {
         ) : (
           <div className="rotate-[0.3deg]">
             <StickerCard theme="white" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
-              <div className="overflow-x-auto">
+              {/* دسکتاپ: جدول افقی */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-navy border-b-2 border-ink/10">
@@ -134,26 +135,29 @@ export default function Dashboard() {
                     {recent.map((r, i) => (
                       <tr key={r.id} className={`${i % 2 ? "bg-bg-lavender/60" : ""} border-b border-ink/5 last:border-0`}>
                         <td className="px-4 py-3 font-bold text-ink">{formTitleById[r.form_id] ?? "—"}</td>
-                        <td className="px-4 py-3 font-semibold text-ink-subtle">
-                          {faRelative(r.submitted_at ?? r.created_at)}
-                        </td>
-                        <td className="px-4 py-3">
-                          {r.is_complete ? (
-                            <Badge color="green">✓ کامل</Badge>
-                          ) : (
-                            <Badge color="gray">ناقص</Badge>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 font-semibold text-ink-subtle">
-                          {r.duration_seconds ? faDuration(r.duration_seconds) : "—"}
-                        </td>
-                        <td className="px-4 py-3 font-semibold text-ink-subtle">
-                          {DEVICE_FA[r.device] ?? r.device ?? "—"}
-                        </td>
+                        <td className="px-4 py-3 font-semibold text-ink-subtle">{faRelative(r.submitted_at ?? r.created_at)}</td>
+                        <td className="px-4 py-3">{r.is_complete ? <Badge color="green">✓ کامل</Badge> : <Badge color="gray">ناقص</Badge>}</td>
+                        <td className="px-4 py-3 font-semibold text-ink-subtle">{r.duration_seconds ? faDuration(r.duration_seconds) : "—"}</td>
+                        <td className="px-4 py-3 font-semibold text-ink-subtle">{DEVICE_FA[r.device] ?? r.device ?? "—"}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
+              {/* موبایل: کارت‌های عمودی */}
+              <div className="md:hidden flex flex-col divide-y divide-ink/5 max-h-[28rem] overflow-y-auto">
+                {recent.map((r, i) => (
+                  <div key={r.id} className="flex items-center gap-3 px-4 py-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-ink text-sm truncate">{formTitleById[r.form_id] ?? "—"}</div>
+                      <div className="text-xs font-semibold text-ink-subtle mt-0.5">{faRelative(r.submitted_at ?? r.created_at)}</div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {r.is_complete ? <Badge color="green">✓</Badge> : <Badge color="gray">ناقص</Badge>}
+                      <span className="text-xs font-semibold text-ink-subtle">{r.duration_seconds ? faDuration(r.duration_seconds) : "—"}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </StickerCard>
           </div>

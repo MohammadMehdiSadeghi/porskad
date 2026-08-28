@@ -213,7 +213,7 @@ function FormEmbedCard({ form, baseUrl, index }) {
   return (
     <div className={index % 2 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"}>
       <StickerCard theme="white">
-        <div className="p-5 flex flex-col gap-3">
+        <div className="p-3.5 sm:p-5 flex flex-col gap-2.5 sm:gap-3">
           {/* هدر */}
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
@@ -250,23 +250,23 @@ function FormEmbedCard({ form, baseUrl, index }) {
 
           {/* حالت‌های Embed — فقط وقتی expand شد */}
           {expanded && (
-            <div className="flex flex-col gap-3 mt-1">
-              {/* ۵ کارت حالت */}
-              <div className="grid grid-cols-5 gap-2">
+            <div className="flex flex-col gap-2.5 sm:gap-3 mt-1">
+              {/* ۵ کارت حالت — ریسپانسیو */}
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
                 {EMBED_MODES.map((mode) => (
                   <button
                     key={mode.key}
                     onClick={() => setSelectedMode(mode.key)}
                     className={`
-                      flex flex-col items-center gap-1.5 p-2.5 rounded-xl border-2 transition-all cursor-pointer
+                      flex flex-col items-center gap-1 sm:gap-1.5 p-2 sm:p-2.5 rounded-xl border-2 transition-all cursor-pointer
                       ${selectedMode === mode.key
                         ? `${mode.borderClass} ${mode.bgClass} shadow-sm`
                         : "border-ink/10 bg-white hover:border-ink/20"
                       }
                     `}
                   >
-                    <mode.icon size={16} className={selectedMode === mode.key ? mode.textClass : "text-ink/40"} />
-                    <span className={`text-[0.65rem] font-bold ${selectedMode === mode.key ? mode.textClass : "text-ink/50"}`}>
+                    <mode.icon size={14} className={selectedMode === mode.key ? mode.textClass : "text-ink/40"} />
+                    <span className={`text-[0.6rem] sm:text-[0.65rem] font-bold leading-tight ${selectedMode === mode.key ? mode.textClass : "text-ink/50"}`}>
                       {mode.label}
                     </span>
                   </button>
@@ -278,20 +278,20 @@ function FormEmbedCard({ form, baseUrl, index }) {
                 const active = EMBED_MODES.find((m) => m.key === selectedMode);
                 if (!active) return null;
                 return (
-                  <div className={`rounded-xl border ${active.borderClass} ${active.bgClass} px-3 py-2.5 flex items-start gap-2`}>
-                    <active.icon size={14} className={`${active.textClass} shrink-0 mt-0.5`} />
-                    <p className="text-[0.7rem] text-ink/60 leading-5">{active.description}</p>
+                  <div className={`rounded-xl border ${active.borderClass} ${active.bgClass} px-2.5 sm:px-3 py-2 flex items-start gap-1.5 sm:gap-2`}>
+                    <active.icon size={13} className={`${active.textClass} shrink-0 mt-0.5`} />
+                    <p className="text-[0.6rem] sm:text-[0.7rem] text-ink/60 leading-4 sm:leading-5">{active.description}</p>
                   </div>
                 );
               })()}
 
               {/* کد */}
-              <div className="bg-gray-900 text-gray-100 rounded-xl px-4 py-3 text-xs font-mono" dir="ltr">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-500 text-[0.65rem]">{EMBED_MODES.find((m) => m.key === selectedMode)?.label}</span>
+              <div className="bg-gray-900 text-gray-100 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-[0.65rem] sm:text-xs font-mono" dir="ltr">
+                <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                  <span className="text-gray-500 text-[0.6rem] sm:text-[0.65rem]">{EMBED_MODES.find((m) => m.key === selectedMode)?.label}</span>
                   <CopyButton text={codes[selectedMode]} />
                 </div>
-                <pre className="whitespace-pre-wrap break-all">{codes[selectedMode]}</pre>
+                <pre className="whitespace-pre-wrap break-all leading-4 sm:leading-5 max-h-[12rem] overflow-y-auto">{codes[selectedMode]}</pre>
               </div>
             </div>
           )}
@@ -380,7 +380,7 @@ export default function EmbedHub() {
           }
         />
       ) : (
-        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5 lg:gap-7">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 lg:gap-7">
           {forms.map((f, i) => (
             <FormEmbedCard key={f.id} form={f} baseUrl={baseUrl} index={i} />
           ))}
