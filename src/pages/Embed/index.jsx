@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "../../lib/supabaseClient";
@@ -123,79 +122,25 @@ function TextInput({ type, value, onChange, autoFocus = true, onEnter, placehold
 
 // ─── گزینه‌ها — طراحی رکاد ───
 function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "buttons" }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const btnRef = useRef(null);
-  const [menuStyle, setMenuStyle] = useState({});
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handler = (e) => {
-      if (btnRef.current && !btnRef.current.contains(e.target)) setIsOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (isOpen && btnRef.current) {
-      const rect = btnRef.current.getBoundingClientRect();
-      setMenuStyle({
-        position: "fixed",
-        top: rect.bottom + 4,
-        left: rect.left,
-        width: rect.width,
-        zIndex: 99999,
-      });
-    }
-  }, [isOpen]);
-
   if (displayMode === "dropdown") {
-    const menu = isOpen ? createPortal(
-      <div style={menuStyle} className="bg-white border-2 border-ecosystem-normal/30 rounded-pill-md [corner-shape:squircle] shadow-[0_8px_32px_rgba(0,0,0,0.22)] overflow-hidden max-h-[240px] overflow-y-auto">
-        {options.map((opt, i) => {
-          const selected = value === opt;
-          return (
-            <button
-              key={i}
-              type="button"
-              onClick={() => { onChange(opt); setIsOpen(false); setTimeout(onEnter, 250); }}
-              className={`w-full flex items-center gap-2.5 text-right px-3 py-2.5 transition-all duration-150 cursor-pointer ${
-                i > 0 ? "border-t border-ink/10" : ""
-              } ${selected ? "bg-ecosystem-light text-ecosystem-dark" : "text-ink hover:bg-ecosystem-light/50"}`}
-            >
-              <span className={`w-6 h-6 shrink-0 flex items-center justify-center rounded-full border-2 text-[0.6rem] font-bold transition-colors ${
-                selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15"
-              }`}>{faNum(i + 1)}</span>
-              <span className="font-bold text-xs sm:text-sm flex-1">{opt}</span>
-            </button>
-          );
-        })}
-      </div>,
-      document.body
-    ) : null;
-
     return (
-      <div className="relative">
-        <button
-          ref={btnRef}
-          type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          className={`w-full flex items-center justify-between border-2 rounded-pill-md [corner-shape:squircle] px-3 py-2.5 transition-all duration-200 cursor-pointer ${
-            value ? "border-ecosystem-normal bg-ecosystem-light" : "border-ink/15 bg-white hover:border-ecosystem-normal/50"
-          }`}
-        >
-          <span className={`font-bold text-xs sm:text-sm ${value ? "text-ecosystem-dark" : "text-ink-subtle"}`}>
-            {value || "یک گزینه انتخاب کنید..."}
-          </span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-ink-subtle transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
-            <path d="m6 9 6 6 6-6"/>
-          </svg>
-        </button>
-        {menu}
-      </div>
+      <select
+        value={value || ""}
+        onChange={(e) => { const v = e.target.value || null; onChange(v); if (v) setTimeout(onEnter, 250); }}
+        className="w-full bg-white border-2 border-ink/15 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3 py-2.5 font-semibold text-ink text-xs sm:text-sm focus:outline-none transition-all duration-200 appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23666%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[position:left_12px_center] bg-no-repeat pl-8"
+      >
+        <option value="">یک گزینه انتخاب کنید...</option>
+        {options.map((opt, i) => (
+          <option key={i} value={opt}>{opt}</option>
+        ))}
+      </select>
     );
   }
 
+  // حالت دکمه‌ای (پیش‌فرض)
+  return (
+    <div className="flex flex-col gap-2">
+      {options.map((opt, i) => (
   return (
     <div className="flex flex-col gap-2">
       {options.map((opt, i) => (
