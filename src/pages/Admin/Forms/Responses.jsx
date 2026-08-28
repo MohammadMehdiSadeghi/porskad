@@ -30,6 +30,7 @@ import {
   MessagesSquare,
   SearchX,
   Inbox,
+  Trash2,
   Puzzle,
   Award,
   Target,
@@ -437,6 +438,7 @@ export default function Responses() {
   const [detail, setDetail] = useState(null);
   const [onlyComplete, setOnlyComplete] = useState(false);
   const [search, setSearch] = useState("");
+  const [questionFilters, setQuestionFilters] = useState({}); // { questionId: value }
 
   const PAGE_SIZE = 500;
   const ANSWER_CHUNK = 100;
@@ -525,8 +527,21 @@ export default function Responses() {
         });
       });
     }
+    // فیلتر بر اساس سوالات
+    const activeFilters = Object.entries(questionFilters).filter(([, v]) => v);
+    if (activeFilters.length) {
+      result = result.filter((r) => {
+        const rAns = answersByResponse[r.id] ?? [];
+        return activeFilters.every(([qId, filterVal]) => {
+          const a = rAns.find((x) => x.question_id === qId);
+          if (!a || a.value === null || a.value === undefined) return false;
+          if (Array.isArray(a.value)) return a.value.includes(filterVal);
+          return String(a.value) === String(filterVal);
+        });
+      });
+    }
     return result;
-  }, [responses, onlyComplete, search, answersByResponse, questionById]);
+  }, [responses, onlyComplete, search, answersByResponse, questionById, questionFilters]);
 
   // ─── آمار کلی ───
   const stats = useMemo(() => {
@@ -735,7 +750,39 @@ export default function Responses() {
           <input type="checkbox" checked={onlyComplete} onChange={(e) => setOnlyComplete(e.target.checked)} className="accent-teal w-4 h-4" />
           فقط کامل‌ها
         </label>
+        {Object.keys(questionFilters).some((k) => questionFilters[k]) && (
+          <button onClick={() => setQuestionFilters({})} className="text-xs font-bold text-magenta-text bg-magenta/10 border border-magenta/20 rounded-lg px-3 py-2 hover:bg-magenta/20 transition-colors">
+            پاک کردن فیلترها ✕
+          </button>
+        )}
       </div>
+
+      {/* فیلترهای سوالات */}
+      {questions.filter((q) => (q.type === "choice" || q.type === "yes_no" || q.type === "checkbox") && q.options?.length).length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {questions
+            .filter((q) => (q.type === "choice" || q.type === "yes_no" || q.type === "checkbox") && q.options?.length)
+            .map((q) => {
+              const opts = q.type === "yes_no" ? ["بله", "خیر"] : q.options;
+              const activeVal = questionFilters[q.id] || "";
+              return (
+                <select
+                  key={q.id}
+                  value={activeVal}
+                  onChange={(e) => setQuestionFilters((p) => ({ ...p, [q.id]: e.target.value }))}
+                  className={`text-xs font-semibold rounded-lg border px-2.5 py-1.5 cursor-pointer transition-colors ${
+                    activeVal ? "border-teal bg-teal/10 text-teal-text" : "border-ink/15 bg-white text-ink/60 hover:border-ink/30"
+                  }`}
+                >
+                  <option value="">{q.title.slice(0, 20)}...</option>
+                  {opts.map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              );
+            })}
+        </div>
+      )}
 
       {/* تب‌ها */}
       <div className="flex gap-1 bg-bg-neutral rounded-lg p-1 w-fit">
@@ -781,7 +828,7 @@ export default function Responses() {
                       <th className="text-right font-semibold text-ink/70 px-4 py-3">دستگاه</th>
                       {scored && <th className="text-right font-semibold text-ink/70 px-4 py-3">نمره</th>}
                       <th className="text-right font-semibold text-ink/70 px-4 py-3">پاسخ نمونه</th>
-                      <th className="text-left font-semibold text-ink/70 px-4 py-3"></th>
+                      <th className="text-left font-semibold text-ink/70 px-4 py-3">عملیات</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -835,9 +882,18 @@ export default function Responses() {
                             {firstText ? String(firstText.value).slice(0, 40) : "—"}
                           </td>
                           <td className="px-4 py-3">
-                            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setDetail(r); }}>
-                              <Eye size={14} />
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setDetail(r); }}>
+                                <Eye size={14} />
+                              </Button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); deleteResponse(r); }}
+                                className="p-1.5 rounded-lg text-ink/30 hover:text-magenta-text hover:bg-magenta/10 transition-colors"
+                                title="حذف پاسخ"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
