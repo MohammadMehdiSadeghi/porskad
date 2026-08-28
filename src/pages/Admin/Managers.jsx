@@ -176,6 +176,8 @@ export default function Managers() {
   const [editPermissions, setEditPermissions] = useState([]);
   const [createError, setCreateError] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [visibilityTarget, setVisibilityTarget] = useState(null);
+  const [hiddenFromList, setHiddenFromList] = useState([]);
 
   async function load() {
     setLoading(true);
@@ -252,29 +254,34 @@ export default function Managers() {
     }
   }
 
-  async function handleToggleHidden(manager) {
-    const isCurrentlyHidden = manager.hidden_from?.includes(user?.id);
-    let newHiddenFrom;
-    if (isCurrentlyHidden) {
-      // حذف از لیست مخفی
-      newHiddenFrom = (manager.hidden_from || []).filter((id) => id !== user.id);
-    } else {
-      // اضافه کردن به لیست مخفی
-      newHiddenFrom = [...(manager.hidden_from || []), user.id];
-    }
-    // اگه لیست خالی شد، null بفرست
-    const hiddenFromValue = newHiddenFrom.length > 0 ? newHiddenFrom : null;
+  function openVisibility(manager) {
+    setVisibilityTarget(manager);
+    setHiddenFromList(manager.hidden_from || []);
+  }
+
+  async function saveVisibility() {
+    if (!visibilityTarget) return;
+    const hiddenFromValue = hiddenFromList.length > 0 ? hiddenFromList : null;
     try {
       const { error } = await supabase
         .from("profiles")
         .update({ hidden_from: hiddenFromValue })
-        .eq("id", manager.id);
+        .eq("id", visibilityTarget.id);
       if (error) throw error;
-      push(isCurrentlyHidden ? "مدیر نمایش داده شد ✅" : "مدیر از لیست مخفی شد ✅");
+      push("تنظیمات نمایش ذخیره شد ✅");
+      setVisibilityTarget(null);
       load();
     } catch (err) {
       push("خطا: " + (err.message || "ناموفق"), "error");
     }
+  }
+
+  function toggleHiddenFrom(targetUserId) {
+    setHiddenFromList((prev) =>
+      prev.includes(targetUserId)
+        ? prev.filter((id) => id !== targetUserId)
+        : [...prev, targetUserId]
+    );
   }
 
   async function handleDelete() {
@@ -388,11 +395,11 @@ export default function Managers() {
                           onClick={() => handleDeactivate(m.id)}>
                           {m.is_active ? "غیرفعال 🛑" : "فعال 🟢"}
                         </Button>
-                        {/* دکمه مخفی کردن — فقط برای صاحب اصلی */}
+                        {/* دکمه کنترل نمایش — فقط برای صاحب اصلی */}
                         {isOwner() && (
                           <Button variant="ghost" size="sm" className="!text-purple-600"
-                            onClick={() => handleToggleHidden(m)}>
-                          {m.hidden_from?.includes(user?.id) ? "نمایش 👁️" : "مخفی 👁️‍🗨️"}
+                            onClick={() => openVisibility(m)}>
+                          👁️ نمایش
                           </Button>
                         )}
                         <Button variant="ghost" size="sm" className="!text-magenta-text"
@@ -533,6 +540,63 @@ export default function Managers() {
         <div className="flex gap-3 justify-end">
           <Button variant="red" size="sm" onClick={handleDelete}>بله، حذف شود</Button>
           <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(null)}>انصراف</Button>
+        </div>
+      </Modal>
+
+      {/* ─── مودال کنترل نمایش مدیران ─── */}
+      <Modal
+        open={!!visibilityTarget}
+        onClose={() => setVisibilityTarget(null)}
+        title={`کنترل نمایش «${visibilityTarget?.full_name || visibilityTarget?.email || ''}»`}
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-sm font-semibold text-ink-soft leading-7">
+            مشخص کنید کدام مدیران این شخص را در لیست مدیران خود ببینند.
+            اگر یک مدیر اینجا انتخاب شود، آن مدیر «<span className="font-black text-magenta-text">{visibilityTarget?.full_name}</span>» را نخواهد دید.
+          </p>
+
+          <div className="flex flex-col gap-2">
+            {managers
+              .filter((m) => !m.is_owner && m.id !== visibilityTarget?.id)
+              .map((m) => {
+                const isHidden = hiddenFromList.includes(m.id);
+                return (
+                  <label
+                    key={m.id}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-pill-md cursor-pointer transition-all border-2 ${
+                      isHidden ? "border-female-normal bg-female-light" : "border-ink/10 bg-white hover:border-teal/30"
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => toggleHiddenFrom(m.id)}
+                      className={`relative w-10 h-5 rounded-full transition-colors flex-shrink-0 ${
+                        isHidden ? "bg-female-normal" : "bg-ink/20"
+                      }`}
+                    >
+                      <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${
+                        isHidden ? "right-0.5" : "right-[22px]"
+                      }`} />
+                    </button>
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-[0.6rem] font-bold bg-bg-lavender text-navy">
+                        {m.full_name?.[0]?.toUpperCase() || "U"}
+                      </div>
+                      <div>
+                        <span className="text-sm font-bold text-navy block">{m.full_name || "—"}</span>
+                        <span className="text-[0.65rem] font-medium text-ink-subtle" dir="ltr">{m.email}</span>
+                      </div>
+                    </div>
+                    {isHidden && <span className="mr-auto text-[0.6rem] font-bold text-female-text">مخفی</span>}
+                  </label>
+                );
+              })}
+          </div>
+
+          <div className="flex gap-3 justify-end pt-2">
+            <Button variant="teal" size="sm" onClick={saveVisibility}>ذخیره</Button>
+            <Button variant="ghost" size="sm" onClick={() => setVisibilityTarget(null)}>انصراف</Button>
+          </div>
         </div>
       </Modal>
     </div>
