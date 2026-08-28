@@ -89,7 +89,7 @@ function PermissionCategory({ category, selected, onToggle, disabled = false }) 
         <category.icon size={18} className={colors.icon} />
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-black text-navy">{category.label}</span>
+            <span className="text-base font-black text-navy">{category.label}</span>
             <Badge color={allActive ? "green" : noneActive ? "gray" : "blue"}>
               {activeCount}/{totalCount}
             </Badge>
@@ -126,7 +126,7 @@ function PermissionCategory({ category, selected, onToggle, disabled = false }) 
                   </button>
                   <div className="flex-1 min-w-0">
                     <span className="text-sm font-bold text-navy block">{perm.label}</span>
-                    <span className="text-[0.7rem] font-medium text-ink-subtle block">{perm.desc}</span>
+                    <span className="text-xs font-medium text-ink-subtle block">{perm.desc}</span>
                   </div>
                 </label>
               );
@@ -152,7 +152,7 @@ function PermissionSummary({ permissions }) {
           style={{ width: `${percent}%` }}
         />
       </div>
-      <span className="text-[0.65rem] font-bold text-ink-subtle whitespace-nowrap">
+      <span className="text-xs font-bold text-ink-subtle whitespace-nowrap">
         {active}/{total}
       </span>
     </div>
@@ -289,8 +289,8 @@ export default function Managers() {
       {/* هدر */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-navy">مدیریت مدیران</h1>
-          <p className="text-xs font-semibold text-ink-subtle mt-0.5">
+          <h1 className="text-2xl lg:text-3xl font-extrabold text-navy">مدیریت مدیران</h1>
+          <p className="text-sm font-semibold text-ink-subtle mt-0.5">
             {managers.filter((m) => m.is_active).length} فعال — {ALL_PERM_IDS.length} مجوز
           </p>
         </div>
@@ -325,7 +325,7 @@ export default function Managers() {
                       </div>
                       <div className="flex flex-col gap-0.5">
                         <div className="flex items-center gap-1">
-                          <span className="font-extrabold text-navy leading-4 line-clamp-1 text-xs">
+                          <span className="font-extrabold text-navy leading-5 line-clamp-1 text-sm">
                             {m.full_name || "—"}
                           </span>
                           {m.is_owner && (

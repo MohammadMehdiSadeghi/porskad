@@ -10,7 +10,7 @@ export default function EmptyState({ icon = "🗂️", title = "این‌جا خ
             {isComponent ? icon : icon}
           </div>
           <h3 className="text-base font-extrabold text-navy">{title}</h3>
-          {subtitle && <p className="text-xs font-semibold text-ink-subtle leading-6">{subtitle}</p>}
+          {subtitle && <p className="text-sm font-semibold text-ink-subtle leading-6">{subtitle}</p>}
           {action && <div className="mt-2">{action}</div>}
         </div>
       </StickerCard>

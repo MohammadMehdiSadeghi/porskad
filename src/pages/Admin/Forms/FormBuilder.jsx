@@ -843,7 +843,7 @@ export default function FormBuilder() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Button as={Link} to="/admin/forms" variant="ghost" size="sm">↩ فرم‌ها</Button>
-          <h1 className="text-lg sm:text-xl font-extrabold text-navy">فرم‌ساز</h1>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-navy">فرم‌ساز</h1>
           {dirty && <Badge color="orange" rotate="rotate-[2deg]">• تغییرات</Badge>}
         </div>
         <div className="flex items-center gap-2">
@@ -874,7 +874,7 @@ export default function FormBuilder() {
       <div className="-rotate-[0.4deg]">
         <StickerCard theme="navy" radius="rounded-tl-[1.75rem] rounded-br-[1.75rem] rounded-tr-none rounded-bl-none">
           <div className="p-5 sm:p-6 flex flex-col gap-4">
-            <h2 className="text-sm font-extrabold text-navy flex items-center gap-2">
+            <h2 className="text-base font-extrabold text-navy flex items-center gap-2">
               تنظیمات فرم
               <label className="mr-auto flex items-center gap-2 text-sm font-extrabold cursor-pointer select-none">
                 <input
@@ -961,7 +961,7 @@ export default function FormBuilder() {
 
       {/* سوال‌ها */}
       <div className="flex flex-col gap-4">
-        <h2 className="text-sm font-extrabold text-navy">
+        <h2 className="text-base font-extrabold text-navy">
           سوال‌ها ({faNum(questions.length)})
         </h2>
 
@@ -982,7 +982,7 @@ export default function FormBuilder() {
         <div className="rotate-[0.4deg]">
           <StickerCard theme="orange" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
             <div className="p-4 sm:p-5 flex flex-col gap-3">
-              <span className="text-sm font-black text-orange">افزودن سوال جدید — نوعش را انتخاب کن:</span>
+              <span className="text-base font-black text-orange">افزودن سوال جدید — نوعش را انتخاب کن:</span>
               <div className="flex flex-wrap gap-2">
                 {QUESTION_TYPE_ORDER.map((key) => {
                   const t = QUESTION_TYPES[key];

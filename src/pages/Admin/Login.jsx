@@ -56,14 +56,14 @@ export default function Login() {
               <Badge color="navy" rotate="rotate-[2deg]">
                 پنل مدیریت پرس کاد
               </Badge>
-              <h1 className="text-xl font-extrabold text-navy">ورود ادمین</h1>
-              <p className="text-xs font-semibold text-ink-subtle">
+              <h1 className="text-2xl font-extrabold text-navy">ورود ادمین</h1>
+              <p className="text-sm font-semibold text-ink-subtle">
                 فقط مدیران مجاز به ورود به این بخش هستند.
               </p>
             </div>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-extrabold text-navy">ایمیل</span>
+              <span className="text-sm font-extrabold text-navy">ایمیل</span>
               <input
                 type="email"
                 dir="ltr"
@@ -78,7 +78,7 @@ export default function Login() {
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-extrabold text-navy">رمز عبور</span>
+              <span className="text-sm font-extrabold text-navy">رمز عبور</span>
               <input
                 type="password"
                 dir="ltr"
