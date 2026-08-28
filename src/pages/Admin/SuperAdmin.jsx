@@ -754,10 +754,11 @@ export default function SuperAdmin() {
         </div>
       </Modal>
 
-      {/* ═══════════ مودال جزئیات کاربر ═══════════ */}
+      {/* ═══════════ مودال جزئیات کاربر + ویرایش دسترسی ═══════════ */}
       <Modal open={!!detailModal} onClose={() => setDetailModal(null)} title={`User: ${detailModal?.full_name || detailModal?.email || ""}`}>
         {detailModal && (
-          <div className="flex flex-col gap-3 text-sm">
+          <div className="flex flex-col gap-3 text-sm max-h-[80vh] overflow-y-auto">
+            {/* اطلاعات پایه */}
             <div className="grid grid-cols-2 gap-2">
               <div><span className="text-[0.6rem] text-cool-gray-50">ID</span><div className="text-xs font-mono break-all">{detailModal.id}</div></div>
               <div><span className="text-[0.6rem] text-cool-gray-50">Email</span><div className="text-xs" dir="ltr">{detailModal.email}</div></div>
@@ -768,14 +769,118 @@ export default function SuperAdmin() {
               <div><span className="text-[0.6rem] text-cool-gray-50">Joined</span><div className="text-xs">{detailModal.created_at ? new Date(detailModal.created_at).toLocaleString("fa-IR") : "—"}</div></div>
               <div><span className="text-[0.6rem] text-cool-gray-50">Hidden From</span><div className="text-xs">{detailModal.hidden_from?.length || 0} users</div></div>
             </div>
-            {detailModal.permissions?.length > 0 && (
-              <div>
-                <span className="text-[0.6rem] text-cool-gray-50">Permissions</span>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {detailModal.permissions.map((p) => <span key={p} className="text-[0.55rem] px-1.5 py-0.5 rounded bg-green-50 text-green-60">{p}</span>)}
+
+            {/* ─── ویرایش نقش ─── */}
+            {!detailModal.is_owner && (
+              <div className="border border-cool-gray-20 rounded-lg p-2">
+                <span className="text-[0.6rem] font-bold text-cool-gray-60 uppercase">Role</span>
+                <div className="flex gap-1 mt-1">
+                  {["manager", "admin"].map((r) => (
+                    <button key={r}
+                      onClick={async () => {
+                        try {
+                          const { error } = await supabase.from("user_roles").upsert({ user_id: detailModal.id, role_id: r, active: true }, { onConflict: "user_id" });
+                          if (error) throw error;
+                          showToast(`Role changed to ${r}`);
+                          setDetailModal({ ...detailModal, role: r });
+                          loadUsers();
+                        } catch (err) { showToast("Error: " + err.message, "error"); }
+                      }}
+                      className={`text-[0.6rem] px-2 py-1 rounded transition-colors ${detailModal.role === r ? "bg-ibm-blue text-white" : "bg-cool-gray-10 text-cool-gray-60 hover:bg-cool-gray-20"}`}>
+                      {r}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
+
+            {/* ─── تغییر وضعیت فعال/غیرفعال ─── */}
+            {!detailModal.is_owner && (
+              <div className="border border-cool-gray-20 rounded-lg p-2">
+                <span className="text-[0.6rem] font-bold text-cool-gray-60 uppercase">Status</span>
+                <div className="flex gap-1 mt-1">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const { error } = await supabase.from("profiles").update({ is_active: !detailModal.is_active }).eq("id", detailModal.id);
+                        if (error) throw error;
+                        showToast(detailModal.is_active ? "Deactivated" : "Activated");
+                        setDetailModal({ ...detailModal, is_active: !detailModal.is_active });
+                        loadUsers();
+                      } catch (err) { showToast("Error: " + err.message, "error"); }
+                    }}
+                    className={`text-[0.6rem] px-2 py-1 rounded transition-colors ${detailModal.is_active ? "bg-red-60 text-white hover:bg-red-70" : "bg-green-50 text-green-60 hover:bg-green-100"}`}>
+                    {detailModal.is_active ? "Deactivate" : "Activate"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ─── ویرایش مجوزها ─── */}
+            <div className="border border-cool-gray-20 rounded-lg p-2">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[0.6rem] font-bold text-cool-gray-60 uppercase">Permissions</span>
+                <span className="text-[0.55rem] text-cool-gray-50">{detailModal.permissions?.length || 0} active</span>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {["create_form", "edit_form", "delete_form", "publish_form", "view_responses", "view_analytics", "export_excel", "manage_managers", "manage_sms", "view_admins"].map((perm) => {
+                  const has = detailModal.permissions?.includes(perm);
+                  return (
+                    <button key={perm}
+                      onClick={async () => {
+                        const newPerms = has
+                          ? (detailModal.permissions || []).filter((p) => p !== perm)
+                          : [...(detailModal.permissions || []), perm];
+                        try {
+                          const { error } = await supabase.rpc("set_user_permissions", {
+                            p_user_id: detailModal.id,
+                            p_permission_ids: newPerms,
+                          });
+                          if (error) throw error;
+                          showToast(`Permission ${perm} ${has ? "removed" : "added"}`);
+                          setDetailModal({ ...detailModal, permissions: newPerms });
+                        } catch (err) { showToast("Error: " + err.message, "error"); }
+                      }}
+                      className={`text-[0.55rem] px-1.5 py-0.5 rounded transition-colors ${has ? "bg-green-50 text-green-60 border border-green-50/30" : "bg-cool-gray-10 text-cool-gray-50 border border-cool-gray-20 hover:bg-cool-gray-20"}`}>
+                      {perm.replace(/_/g, " ")}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* ─── نمایش/مخفی‌سازی از مدیران ─── */}
+            <div className="border border-cool-gray-20 rounded-lg p-2">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[0.6rem] font-bold text-cool-gray-60 uppercase">Visibility</span>
+                <span className="text-[0.55rem] text-cool-gray-50">hidden from {detailModal.hidden_from?.length || 0} users</span>
+              </div>
+              <p className="text-[0.55rem] text-cool-gray-50 mb-1.5">Admins this user is hidden from in managers list:</p>
+              <div className="flex flex-wrap gap-1">
+                {admins.filter((a) => !a.is_owner && a.id !== detailModal.id).map((a) => {
+                  const isHidden = detailModal.hidden_from?.includes(a.id);
+                  return (
+                    <button key={a.id}
+                      onClick={async () => {
+                        const newHF = isHidden
+                          ? (detailModal.hidden_from || []).filter((id) => id !== a.id)
+                          : [...(detailModal.hidden_from || []), a.id];
+                        const val = newHF.length > 0 ? newHF : null;
+                        try {
+                          const { error } = await supabase.from("profiles").update({ hidden_from: val }).eq("id", detailModal.id);
+                          if (error) throw error;
+                          showToast(`Visibility updated for ${a.full_name || a.email}`);
+                          setDetailModal({ ...detailModal, hidden_from: val });
+                        } catch (err) { showToast("Error: " + err.message, "error"); }
+                      }}
+                      className={`text-[0.55rem] px-1.5 py-0.5 rounded transition-colors ${isHidden ? "bg-red-60/10 text-red-60 border border-red-60/20" : "bg-cool-gray-10 text-cool-gray-60 border border-cool-gray-20 hover:bg-cool-gray-20"}`}>
+                      {a.full_name || a.email} {isHidden ? "(hidden)" : ""}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="flex gap-2 pt-2 border-t border-cool-gray-20">
               <button onClick={() => { setImpersonateModal(detailModal); setDetailModal(null); }}
                 className="px-3 py-1.5 bg-ibm-blue text-white text-[0.6rem] font-semibold rounded hover:bg-ibm-blue-hover transition-colors">Login As This User</button>
