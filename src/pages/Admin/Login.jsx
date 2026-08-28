@@ -56,7 +56,7 @@ export default function Login() {
               <Badge color="navy" rotate="rotate-[2deg]">
                 پنل مدیریت پرس کاد
               </Badge>
-              <h1 className="text-2xl font-extrabold text-navy">ورود ادمین</h1>
+              <h1 className="text-3xl font-extrabold text-navy">ورود ادمین</h1>
               <p className="text-sm font-semibold text-ink-subtle">
                 فقط مدیران مجاز به ورود به این بخش هستند.
               </p>

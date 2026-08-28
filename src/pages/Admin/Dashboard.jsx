@@ -82,7 +82,7 @@ export default function Dashboard() {
       />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-extrabold text-navy">داشبورد</h1>
+          <h1 className="text-3xl font-extrabold text-navy">داشبورد</h1>
           <p className="text-sm font-semibold text-ink-subtle mt-0.5">
             نمای کلی فرم‌ها و پاسخ‌ها
             <span className="live-dot inline-block w-1.5 h-1.5 rounded-full bg-teal mr-1.5 align-middle" />
@@ -108,7 +108,7 @@ export default function Dashboard() {
 
       {/* آخرین پاسخ‌ها */}
       <div>
-        <h2 className="text-lg font-extrabold text-navy mb-3">آخرین پاسخ‌ها</h2>
+        <h2 className="text-xl font-extrabold text-navy mb-3">آخرین پاسخ‌ها</h2>
         {recent.length === 0 ? (
           <EmptyState
             icon={<Inbox size={48} />}
@@ -120,7 +120,7 @@ export default function Dashboard() {
           <div className="rotate-[0.3deg]">
             <StickerCard theme="white" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm sm:text-base">
+                <table className="w-full text-sm lg:text-base">
                   <thead>
                     <tr className="text-navy border-b-2 border-ink/10">
                       <th className="text-right font-extrabold px-3 py-2">فرم</th>

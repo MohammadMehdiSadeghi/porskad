@@ -119,7 +119,7 @@ export default function Profile() {
         noIndex
       />
       <div>
-        <h1 className="text-2xl lg:text-3xl font-extrabold text-navy">پروفایل من</h1>
+        <h1 className="text-3xl font-extrabold text-navy">پروفایل من</h1>
         <p className="text-sm text-ink/50 mt-0.5">
           اطلاعات حساب کاربری و تنظیمات امنیتی
         </p>
@@ -129,7 +129,7 @@ export default function Profile() {
       <div className="-rotate-[0.3deg]">
         <StickerCard theme="navy" radius="rounded-tl-[1.75rem] rounded-br-[1.75rem] rounded-tr-none rounded-bl-none">
           <div className="p-5 sm:p-6 flex flex-col gap-4">
-            <h2 className="text-base font-extrabold text-navy flex items-center gap-2">
+            <h2 className="text-lg font-extrabold text-navy flex items-center gap-2">
               اطلاعات حساب
             </h2>
 
@@ -182,7 +182,7 @@ export default function Profile() {
       <div className="rotate-[0.3deg]">
         <StickerCard theme="white" radius="rounded-tl-[1.75rem] rounded-br-[1.75rem] rounded-tr-none rounded-bl-none">
           <div className="p-5 sm:p-6 flex flex-col gap-4">
-            <h2 className="text-base font-extrabold text-navy flex items-center gap-2">
+            <h2 className="text-lg font-extrabold text-navy flex items-center gap-2">
               ویرایش نام نمایشی
             </h2>
 

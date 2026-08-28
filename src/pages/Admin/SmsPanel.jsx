@@ -238,7 +238,7 @@ export default function SmsPanel() {
       {/* هدر */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-extrabold text-navy flex items-center gap-2">
+          <h1 className="text-3xl font-extrabold text-navy flex items-center gap-2">
             <MessageSquare size={22} className="text-teal" />
             پنل پیامک
           </h1>
@@ -281,7 +281,7 @@ export default function SmsPanel() {
 
           {/* وضعیت حساب */}
           <div>
-            <h2 className="text-lg font-extrabold text-navy mb-3">وضعیت حساب آموت</h2>
+            <h2 className="text-xl font-extrabold text-navy mb-3">وضعیت حساب آموت</h2>
             {fetchingStatus ? (
               <Spinner label="دریافت اطلاعات حساب..." />
             ) : accountInfo ? (
@@ -356,7 +356,7 @@ export default function SmsPanel() {
               <div className="p-4 flex flex-col gap-4">
                 {/* شماره موبایل‌ها */}
                 <div>
-                  <label className="block text-sm font-extrabold text-navy mb-1">
+                  <label className="block text-base font-extrabold text-navy mb-1">
                     شماره موبایل‌ها
                   </label>
                   <textarea
@@ -373,7 +373,7 @@ export default function SmsPanel() {
 
                 {/* متن پیامک */}
                 <div>
-                  <label className="block text-sm font-extrabold text-navy mb-1">
+                  <label className="block text-base font-extrabold text-navy mb-1">
                     متن پیامک
                   </label>
                   <textarea

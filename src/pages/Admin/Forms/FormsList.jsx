@@ -196,7 +196,7 @@ export default function FormsList() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-extrabold text-navy">فرم‌ها</h1>
+          <h1 className="text-3xl font-extrabold text-navy">فرم‌ها</h1>
           <p className="text-sm font-semibold text-ink-subtle mt-0.5">
             {forms.length} فرم — برای ویرایش روی هر فرم بزنید
           </p>
@@ -254,7 +254,7 @@ export default function FormsList() {
                 <StickerCard theme="white">
                   <div className="p-3.5 flex flex-col gap-2.5">
                     <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-extrabold text-navy leading-5 line-clamp-1 text-base">{f.title}</h3>
+                      <h3 className="font-extrabold text-navy leading-5 line-clamp-1 text-lg">{f.title}</h3>
                       <div className="flex items-center gap-1 shrink-0">
                         {isReg && <Badge color="orange">ثبت‌نامی</Badge>}
                         {f.published ? (

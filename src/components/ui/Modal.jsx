@@ -31,7 +31,7 @@ export default function Modal({ open, onClose, title, children, wide = false }) 
           <div className="max-h-[80vh] overflow-y-auto p-4 sm:p-5">
             {title && (
               <div className="flex items-center justify-between gap-3 mb-4">
-                <h3 className="text-base font-extrabold text-navy">{title}</h3>
+                <h3 className="text-lg font-extrabold text-navy">{title}</h3>
                 <button
                   onClick={onClose}
                   className="w-8 h-8 flex items-center justify-center rounded-pill-md border-2 border-ink bg-white text-ink font-extrabold hover:bg-bg-neutral transition-colors"
