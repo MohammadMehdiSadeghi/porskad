@@ -9,10 +9,15 @@ import { motion, AnimatePresence } from "framer-motion";
  * آدرس موزیک پیش‌فرض (رومانتیک/آرام)
  * کاربر می‌تونه از طریق prop آدرس دلخواه بده
  */
-const DEFAULT_MUSIC_URL = "https://cdn.pixabay.com/audio/2024/11/29/audio_89eb033835.mp3";
+// لیست آدرس‌های موزیک (اگه اولی کار نکرد، بعدی امتحان میشه)
+const MUSIC_URLS = [
+  "https://cdn.pixabay.com/audio/2024/11/29/audio_89eb033835.mp3",
+  "https://cdn.pixabay.com/audio/2024/02/14/audio_857a52247a.mp3",
+  "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+];
 
 export default function MusicPlayer({
-  src = DEFAULT_MUSIC_URL,
+  src,
   autoPlay = false,
   volume: initialVolume = 0.3,
   className = "",
@@ -24,6 +29,7 @@ export default function MusicPlayer({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const [currentUrlIndex, setCurrentUrlIndex] = useState(0);
   const prevVolume = useRef(initialVolume);
 
   // ─── مقداردهی اولیه audio ───
@@ -34,8 +40,18 @@ export default function MusicPlayer({
     audio.volume = initialVolume;
     audio.loop = true;
 
-    const handleCanPlay = () => setIsLoaded(true);
-    const handleError = () => setError(true);
+    const handleCanPlay = () => {
+      setIsLoaded(true);
+      setError(false);
+    };
+    const handleError = () => {
+      // اگه آدرس فعلی کار نکرد، آدرس بعدی رو امتحان کن
+      if (currentUrlIndex < MUSIC_URLS.length - 1) {
+        setCurrentUrlIndex((i) => i + 1);
+      } else {
+        setError(true);
+      }
+    };
     const handleEnded = () => setIsPlaying(false);
 
     audio.addEventListener("canplay", handleCanPlay);
@@ -47,7 +63,7 @@ export default function MusicPlayer({
       audio.removeEventListener("error", handleError);
       audio.removeEventListener("ended", handleEnded);
     };
-  }, [src, initialVolume]);
+  }, [src, initialVolume, currentUrlIndex]);
 
   // ─── آپدیت volume ───
   useEffect(() => {
@@ -94,7 +110,19 @@ export default function MusicPlayer({
     if (val === 0) setIsMuted(true);
   }, [isMuted]);
 
-  if (error) return null;
+  // آدرس موزیک: اگه prop داده شده از اون استفاده کن، وگرنه از لیست پیش‌فرض
+  const musicSrc = src || MUSIC_URLS[currentUrlIndex];
+
+  if (error && currentUrlIndex >= MUSIC_URLS.length - 1) {
+    // نمایش پلیر حتی با خطا (ولی غیرفعال)
+    return (
+      <div className="fixed bottom-4 left-4 z-[9990]" dir="ltr">
+        <div className="bg-white/70 backdrop-blur-md border-2 border-ink/10 rounded-2xl px-3 py-2 text-[0.65rem] text-ink/40">
+          🎵 موزیک در دسترس نیست
+        </div>
+      </div>
+    );
+  }
 
   const effectiveVolume = isMuted ? 0 : volume;
 
@@ -128,7 +156,7 @@ export default function MusicPlayer({
   return (
     <>
       {/* audio element (مخفی) */}
-      <audio ref={audioRef} src={src} preload="metadata" loop />
+      <audio ref={audioRef} src={musicSrc} preload="auto" loop crossOrigin="anonymous" />
 
       {/* پلیر شناور */}
       <motion.div
@@ -144,10 +172,13 @@ export default function MusicPlayer({
             {/* دکمه پخش/توقف */}
             <button
               onClick={togglePlay}
-              className="w-9 h-9 shrink-0 flex items-center justify-center rounded-xl bg-navy text-white hover:bg-navy/90 transition-colors"
-              title={isPlaying ? "توقف" : "پخش"}
+              disabled={!isLoaded && !error}
+              className="w-9 h-9 shrink-0 flex items-center justify-center rounded-xl bg-navy text-white hover:bg-navy/90 transition-colors disabled:opacity-50"
+              title={!isLoaded ? "در حال بارگذاری..." : isPlaying ? "توقف" : "پخش"}
             >
-              {isPlaying ? (
+              {!isLoaded ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : isPlaying ? (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                   <rect x="6" y="4" width="4" height="16" rx="1"/>
                   <rect x="14" y="4" width="4" height="16" rx="1"/>
