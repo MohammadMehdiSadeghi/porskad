@@ -14,8 +14,8 @@ import { calculateScore, hasScoring } from "../../lib/scoring";
 import { evaluateQuestionConditions } from "../../lib/logic/conditionEvaluator";
 import ScoreResult from "../ui/ScoreResult";
 
-const inputCls = "w-full bg-white border-2 border-ink/10 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3 py-2 sm:py-2.5 font-semibold text-ink text-xs sm:text-sm placeholder:text-ink/40 placeholder:font-medium focus:outline-none transition-all duration-200";
-const selectCls = "w-full bg-white border-2 border-ink/10 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3 py-2 sm:py-2.5 font-semibold text-ink text-xs sm:text-sm focus:outline-none transition-all duration-200 appearance-none cursor-pointer";
+const inputCls = "w-full bg-white border-2 border-ink/10 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 font-semibold text-ink text-sm sm:text-base placeholder:text-ink/40 placeholder:font-medium focus:outline-none transition-all duration-200";
+const selectCls = "w-full bg-white border-2 border-ink/10 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 font-semibold text-ink text-sm sm:text-base focus:outline-none transition-all duration-200 appearance-none cursor-pointer";
 
 function isFieldEmpty(v) {
   return v === null || v === undefined || (typeof v === "string" && v.trim() === "") || (Array.isArray(v) && v.length === 0);
@@ -26,7 +26,7 @@ function DropdownChoice({ options = [], value, onChange }) {
     <select
       value={value || ""}
       onChange={(e) => onChange(e.target.value || null)}
-      className="w-full bg-white border-2 border-ink/15 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3 py-2 sm:px-4 sm:py-3 font-bold text-xs sm:text-sm text-ink focus:outline-none transition-all duration-200 cursor-pointer text-right"
+      className="w-full bg-white border-2 border-ink/15 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:px-4 sm:py-3.5 font-bold text-sm sm:text-base text-ink focus:outline-none transition-all duration-200 cursor-pointer text-right"
     >
       <option value="">یک گزینه انتخاب کنید...</option>
       {options.map((opt, i) => (
@@ -115,10 +115,10 @@ export default function RegistrationForm({ form, questions, slug }) {
     return (
       <div key={q.id} className="flex flex-col gap-1.5">
         <label className="flex items-center gap-1.5">
-          <span className="text-xs sm:text-sm font-extrabold text-male-normal">{q.title}</span>
-          {q.required && <span className="text-female-normal text-[0.6rem]">*</span>}
+          <span className="text-sm sm:text-base font-extrabold text-male-normal">{q.title}</span>
+          {q.required && <span className="text-female-normal text-xs">*</span>}
         </label>
-        {q.description && <span className="text-[0.55rem] sm:text-[0.6rem] font-medium text-ink-subtle">{q.description}</span>}
+        {q.description && <span className="text-xs sm:text-sm font-medium text-ink-subtle">{q.description}</span>}
 
         {(q.type === "short_text" || q.type === "email" || q.type === "phone_ir" || q.type === "telegram_id") && (
           <input type={q.type === "email" ? "email" : "text"} inputMode={q.type === "phone_ir" ? "tel" : "text"} dir={q.type === "email" || q.type === "phone_ir" ? "ltr" : "rtl"} value={val}
@@ -139,8 +139,8 @@ export default function RegistrationForm({ form, questions, slug }) {
                 <button key={i} type="button" onClick={() => { setAnswer(q.id, opt, q); handleBlur(q.id, opt, q); }}
                   className={`relative flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3 py-2 sm:py-2.5 transition-all duration-200 cursor-pointer hover:-translate-y-px ${selected ? "border-ecosystem-normal bg-ecosystem-light rotate-[-0.5deg]" : "border-ink/10 bg-white hover:border-ecosystem-normal/50"}`}>
                   {selected && <div aria-hidden="true" className="absolute top-[2px] left-[2px] w-full h-full bg-ecosystem-dark/15 rounded-pill-md [corner-shape:squircle] pointer-events-none" />}
-                  <span className={`relative z-10 w-7 h-7 shrink-0 flex items-center justify-center rounded-full border-2 text-xs font-bold transition-colors duration-200 ${selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal"}`}>{faNum(i + 1)}</span>
-                  <span className={`relative z-10 font-bold text-xs sm:text-sm ${selected ? "text-ecosystem-dark" : "text-ink"}`}>{opt}</span>
+                  <span className={`relative z-10 w-8 h-8 shrink-0 flex items-center justify-center rounded-full border-2 text-sm font-bold transition-colors duration-200 ${selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal"}`}>{faNum(i + 1)}</span>
+                  <span className={`relative z-10 font-bold text-sm sm:text-base ${selected ? "text-ecosystem-dark" : "text-ink"}`}>{opt}</span>
                 </button>
               );
             })}
@@ -154,8 +154,8 @@ export default function RegistrationForm({ form, questions, slug }) {
               return (
                 <button key={i} type="button" onClick={() => { const cur = Array.isArray(val) ? [...val] : []; const next = selected ? cur.filter((v) => v !== opt) : [...cur, opt]; setAnswer(q.id, next, q); handleBlur(q.id, next, q); }}
                   className={`flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3 py-2 transition-all duration-200 cursor-pointer ${selected ? "border-ecosystem-normal bg-ecosystem-light" : "border-ink/10 bg-white hover:border-ecosystem-normal/50"}`}>
-                  <span className={`w-6 h-6 shrink-0 flex items-center justify-center rounded-md border-2 text-[0.6rem] font-bold transition-colors duration-200 ${selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15"}`}>{selected ? "✓" : ""}</span>
-                  <span className={`font-semibold text-xs sm:text-sm ${selected ? "text-ecosystem-dark" : "text-ink"}`}>{opt}</span>
+                  <span className={`w-7 h-7 shrink-0 flex items-center justify-center rounded-md border-2 text-xs font-bold transition-colors duration-200 ${selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15"}`}>{selected ? "✓" : ""}</span>
+                  <span className={`font-semibold text-sm sm:text-base ${selected ? "text-ecosystem-dark" : "text-ink"}`}>{opt}</span>
                 </button>
               );
             })}
@@ -166,7 +166,7 @@ export default function RegistrationForm({ form, questions, slug }) {
           <div className="grid grid-cols-2 gap-2">
             {["بله", "خیر"].map((opt) => (
               <button key={opt} type="button" onClick={() => { setAnswer(q.id, opt, q); handleBlur(q.id, opt, q); }}
-                className={`flex items-center justify-center gap-1.5 py-2 rounded-pill-md [corner-shape:squircle] border-2 cursor-pointer transition-all duration-200 font-bold text-xs sm:text-sm ${val === opt ? (opt === "بله" ? "border-ecosystem-normal bg-ecosystem-light text-ecosystem-dark" : "border-female-normal bg-female-light text-female-dark") : "border-ink/10 bg-white text-ink hover:border-ink/25"}`}>{opt}</button>
+                className={`flex items-center justify-center gap-1.5 py-2.5 rounded-pill-md [corner-shape:squircle] border-2 cursor-pointer transition-all duration-200 font-bold text-sm sm:text-base ${val === opt ? (opt === "بله" ? "border-ecosystem-normal bg-ecosystem-light text-ecosystem-dark" : "border-female-normal bg-female-light text-female-dark") : "border-ink/10 bg-white text-ink hover:border-ink/25"}`}>{opt}</button>
             ))}
           </div>
         )}
@@ -180,7 +180,7 @@ export default function RegistrationForm({ form, questions, slug }) {
         {fieldErr && (
           <motion.div initial={{ opacity: 0, y: -3 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-1.5 bg-female-light border border-female-normal rounded-pill-md px-2.5 py-1">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-female-normal shrink-0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-            <span className="text-[0.6rem] sm:text-[0.65rem] font-bold text-female-normal">{fieldErr}</span>
+            <span className="text-xs sm:text-sm font-bold text-female-normal">{fieldErr}</span>
           </motion.div>
         )}
       </div>
@@ -199,7 +199,7 @@ export default function RegistrationForm({ form, questions, slug }) {
               <div className="p-5 sm:p-7 flex flex-col items-center text-center gap-3">
                 <motion.span className="text-4xl sm:text-5xl" animate={{ rotate: [0, -6, 6, -3, 3, 0] }}>🎉</motion.span>
                 <h1 className="text-lg sm:text-xl font-black text-male-normal leading-snug">{form.exit_title || "ثبت‌نام با موفقیت انجام شد!"}</h1>
-                <p className="font-semibold text-ink-soft leading-6 text-xs sm:text-sm max-w-md">{form.exit_message || "ممنون از ثبت‌نام شما."}</p>
+                <p className="font-semibold text-ink-soft leading-7 text-sm sm:text-base max-w-md">{form.exit_message || "ممنون از ثبت‌نام شما."}</p>
                 {scoreResult && <ScoreResult score={scoreResult.score} total={scoreResult.total} details={scoreResult.details} questions={visibleQuestions} />}
               </div>
             </StickerCard>
@@ -214,7 +214,7 @@ export default function RegistrationForm({ form, questions, slug }) {
       <SEO title={form.title} description={form.description || `فرم ${form.title}`} url={`/f/${slug}`} />
       <div className="w-full max-w-[75rem] mx-auto flex items-center justify-between px-3 sm:px-4 py-2">
         <Logo linked={false} size="sm" />
-        <span className="text-[0.55rem] sm:text-[0.6rem] font-bold text-ink-subtle truncate max-w-[50vw]">{form.title}</span>
+        <span className="text-xs sm:text-sm font-bold text-ink-subtle truncate max-w-[50vw]">{form.title}</span>
       </div>
 
       <main className="flex-1 flex items-start justify-center px-3 sm:px-4 py-3 sm:py-5 lg:py-6">
@@ -225,12 +225,12 @@ export default function RegistrationForm({ form, questions, slug }) {
               <form ref={formRef} onSubmit={openConfirm} className="flex flex-col gap-4 sm:gap-5">
                 <div className="text-center mb-0.5">
                   <h1 className="text-base sm:text-lg lg:text-xl font-black text-male-normal leading-snug mb-1">{form.title}</h1>
-                  {form.description && <p className="text-[0.6rem] sm:text-xs font-semibold text-ink-subtle leading-6">{form.description}</p>}
+                  {form.description && <p className="text-xs sm:text-sm font-semibold text-ink-subtle leading-6">{form.description}</p>}
                   <Badge color="navy" rotate="rotate-[1.5deg]" className="mt-2">{faNum(visibleQuestions.length)} فیلد</Badge>
                 </div>
                 {visibleQuestions.map((q, i) => <div key={q.id} className={i % 2 ? "rotate-[0.2deg]" : "-rotate-[0.2deg]"}>{renderQuestion(q)}</div>)}
-                {error && <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 bg-female-light border-2 border-female-normal rounded-pill-md px-3 py-2"><span className="text-female-normal text-sm">⚠️</span><span className="text-[0.6rem] sm:text-xs font-bold text-female-normal">{error}</span></motion.div>}
-                <Button type="submit" variant="teal" size="md" rotate="-rotate-[1deg]" disabled={submitting} className="w-full text-xs sm:text-sm">{submitting ? "در حال ثبت..." : "ارسال و ثبت‌نام ✨"}</Button>
+                {error && <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 bg-female-light border-2 border-female-normal rounded-pill-md px-3 py-2.5"><span className="text-female-normal text-base">⚠️</span><span className="text-xs sm:text-sm font-bold text-female-normal">{error}</span></motion.div>}
+                <Button type="submit" variant="teal" size="md" rotate="-rotate-[1deg]" disabled={submitting} className="w-full text-sm sm:text-base">{submitting ? "در حال ثبت..." : "ارسال و ثبت‌نام ✨"}</Button>
               </form>
             </div>
           </StickerCard>

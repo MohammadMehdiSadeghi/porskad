@@ -31,14 +31,14 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
   const isLtr = type === "email" || type === "phone_ir";
 
   const shared = clsx(
-    "w-full bg-white border-2 rounded-pill-md [corner-shape:squircle] px-3 py-2 sm:py-2.5",
-    "font-semibold text-ink text-xs sm:text-sm placeholder:text-ink-subtle/60 placeholder:font-medium",
+    "w-full bg-white border-2 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3",
+    "font-semibold text-ink text-sm sm:text-base placeholder:text-ink-subtle/60 placeholder:font-medium",
     "focus:outline-none focus:ring-2 focus:ring-ecosystem-normal/15 transition-all duration-200",
     error ? "border-female-normal" : "border-ink/15 focus:border-ecosystem-normal",
   );
 
   if (type === "long_text") {
-    return <textarea ref={inputRef} dir="rtl" value={value ?? ""} onChange={(e) => onChange(e.target.value)} rows={3} autoFocus={autoFocus} className={clsx(shared, "resize-y min-h-[5rem] leading-7")} placeholder={ph} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && onEnter) { e.preventDefault(); onEnter(); } }} />;
+    return <textarea ref={inputRef} dir="rtl" value={value ?? ""} onChange={(e) => onChange(e.target.value)} rows={3} autoFocus={autoFocus} className={clsx(shared, "resize-y min-h-[6rem] leading-8")} placeholder={ph} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && onEnter) { e.preventDefault(); onEnter(); } }} />;
   }
   if (type === "telegram_id") {
     return (<div className="relative"><span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"><TelegramIcon className="text-ecosystem-dark" /></span><input ref={inputRef} type="text" dir="ltr" value={value ?? ""} autoFocus={autoFocus} onChange={(e) => onChange(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && onEnter) { e.preventDefault(); onEnter(); } }} className={clsx(shared, "text-left pr-9")} placeholder={ph} /></div>);
@@ -59,7 +59,7 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
       <select
         value={value || ""}
         onChange={(e) => { const v = e.target.value || null; onChange(v); if (v) setTimeout(onEnter, 250); }}
-        className="w-full bg-white border-2 border-ink/15 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3 py-2 sm:px-4 sm:py-3 font-bold text-xs sm:text-sm text-ink focus:outline-none transition-all duration-200 cursor-pointer text-right"
+        className="w-full bg-white border-2 border-ink/15 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:px-4 sm:py-3.5 font-bold text-sm sm:text-base text-ink focus:outline-none transition-all duration-200 cursor-pointer text-right"
       >
         <option value="">یک گزینه انتخاب کنید...</option>
         {options.map((opt, i) => (
@@ -76,14 +76,14 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
         const selected = value === opt;
         return (
           <button key={i} type="button" onClick={() => { onChange(opt); setTimeout(onEnter, 250); }}
-            className={clsx("relative group flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3 py-2 sm:py-2.5 transition-all duration-200 cursor-pointer hover:-translate-y-px",
+            className={clsx("relative group flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 transition-all duration-200 cursor-pointer hover:-translate-y-px",
               selected ? "border-ecosystem-normal bg-ecosystem-light rotate-[-0.5deg]" : "border-ink/10 bg-white hover:border-ecosystem-normal/50",
             )}>
             {selected && <div aria-hidden="true" className="absolute top-[2px] left-[2px] w-full h-full bg-ecosystem-dark/15 rounded-pill-md [corner-shape:squircle] pointer-events-none" />}
-            <span className={clsx("relative z-10 w-7 h-7 sm:w-8 sm:h-8 shrink-0 flex items-center justify-center rounded-full border-2 font-black text-xs sm:text-sm transition-colors duration-200",
+            <span className={clsx("relative z-10 w-8 h-8 sm:w-9 sm:h-9 shrink-0 flex items-center justify-center rounded-full border-2 font-black text-sm sm:text-base transition-colors duration-200",
               selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal group-hover:border-ecosystem-normal",
             )}>{faNum(i + 1)}</span>
-            <span className={clsx("relative z-10 font-bold text-xs sm:text-sm", selected ? "text-ecosystem-dark" : "text-ink")}>{opt}</span>
+            <span className={clsx("relative z-10 font-bold text-sm sm:text-base", selected ? "text-ecosystem-dark" : "text-ink")}>{opt}</span>
             {selected && <CheckIcon className="mr-auto text-ecosystem-normal shrink-0" />}
           </button>
         );
@@ -163,26 +163,26 @@ export default function QuestionStep({ question, index, total, value, timeSpent,
     <div className="relative">
       <div aria-hidden="true" className={clsx("absolute top-1.5 left-1.5 w-full h-full", theme.backBg, "rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]")} />
 
-      <div className={clsx("relative z-10 flex flex-col gap-3 sm:gap-3.5 rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] border-2 p-3 sm:p-4 lg:p-5 transition-colors duration-300", theme.bg, theme.border)}>
+      <div className={clsx("relative z-10 flex flex-col gap-3.5 sm:gap-4 rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] border-2 p-4 sm:p-5 lg:p-6 transition-colors duration-300", theme.bg, theme.border)}>
         {/* شماره + برچسب */}
         <div className="flex items-center justify-between gap-2">
-          <span className={clsx("text-[0.6rem] sm:text-[0.7rem] font-black flex items-center gap-1", theme.label)}>
+          <span className={clsx("text-xs sm:text-sm font-black flex items-center gap-1", theme.label)}>
             <FlagIcon className="opacity-50" /> سوال {faNum(index + 1)} از {faNum(total)}
           </span>
           <div className="flex items-center gap-1 mr-auto">
-            {question.conditions && <span className="text-[0.5rem] sm:text-[0.55rem] font-bold text-male-normal bg-male-light rounded-pill-sm px-1.5 py-px"> 🔀 شرطی</span>}
+            {question.conditions && <span className="text-[0.6rem] sm:text-xs font-bold text-male-normal bg-male-light rounded-pill-sm px-1.5 py-0.5"> 🔀 شرطی</span>}
             {question.required
-              ? <span className="text-[0.5rem] sm:text-[0.55rem] font-bold text-female-normal bg-female-light rounded-pill-sm px-1.5 py-px flex items-center gap-0.5"> اجباری</span>
-              : <span className="text-[0.5rem] sm:text-[0.55rem] font-bold text-ink-subtle bg-bg-neutral rounded-pill-sm px-1.5 py-px">اختیاری</span>
+              ? <span className="text-[0.6rem] sm:text-xs font-bold text-female-normal bg-female-light rounded-pill-sm px-1.5 py-0.5 flex items-center gap-0.5"> اجباری</span>
+              : <span className="text-[0.6rem] sm:text-xs font-bold text-ink-subtle bg-bg-neutral rounded-pill-sm px-1.5 py-0.5">اختیاری</span>
             }
           </div>
         </div>
 
         {/* عنوان */}
-        <h2 className="text-sm sm:text-base lg:text-lg font-black text-male-normal leading-snug">
+        <h2 className="text-base sm:text-lg lg:text-xl font-black text-male-normal leading-snug">
           {question.title}{question.required && <span className="text-female-normal mr-0.5">*</span>}
         </h2>
-        {question.description && <p className="text-[0.6rem] sm:text-[0.65rem] font-semibold text-ink-subtle leading-5 -mt-1.5">{question.description}</p>}
+        {question.description && <p className="text-xs sm:text-sm font-semibold text-ink-subtle leading-6 -mt-1.5">{question.description}</p>}
 
         {/* فیلد پاسخ */}
         {(question.type === "short_text" || question.type === "long_text" || question.type === "email" || question.type === "number" || question.type === "phone_ir" || question.type === "telegram_id") && (
@@ -197,13 +197,13 @@ export default function QuestionStep({ question, index, total, value, timeSpent,
               const selected = Array.isArray(value) && value.includes(opt);
               return (
                 <button key={i} type="button" onClick={() => { const cur = Array.isArray(value) ? [...value] : []; handleChange(selected ? cur.filter((v) => v !== opt) : [...cur, opt]); }}
-                  className={clsx("relative flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3 py-2 sm:py-2.5 transition-all duration-200 cursor-pointer hover:-translate-y-px",
+                  className={clsx("relative flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 transition-all duration-200 cursor-pointer hover:-translate-y-px",
                     selected ? "border-ecosystem-normal bg-ecosystem-light rotate-[-0.5deg]" : "border-ink/10 bg-white hover:border-ecosystem-normal/50",
                   )}>
-                  <span className={clsx("w-6 h-6 sm:w-7 sm:h-7 shrink-0 flex items-center justify-center rounded-md border-2 font-black text-[0.6rem] sm:text-xs transition-colors duration-200",
+                  <span className={clsx("w-7 h-7 sm:w-8 sm:h-8 shrink-0 flex items-center justify-center rounded-md border-2 font-black text-xs sm:text-sm transition-colors duration-200",
                     selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal group-hover:border-ecosystem-normal",
                   )}>{selected ? "✓" : ""}</span>
-                  <span className={clsx("font-bold text-xs sm:text-sm", selected ? "text-ecosystem-dark" : "text-ink")}>{opt}</span>
+                  <span className={clsx("font-bold text-sm sm:text-base", selected ? "text-ecosystem-dark" : "text-ink")}>{opt}</span>
                 </button>
               );
             })}
@@ -212,14 +212,14 @@ export default function QuestionStep({ question, index, total, value, timeSpent,
 
         {/* ارور */}
         {error && (
-          <div className="self-start rotate-[-0.5deg] bg-white border-2 border-female-normal rounded-pill-md [corner-shape:squircle] px-2.5 py-1 text-[0.6rem] sm:text-[0.65rem] font-bold text-female-normal flex items-center gap-1.5">
+          <div className="self-start rotate-[-0.5deg] bg-white border-2 border-female-normal rounded-pill-md [corner-shape:squircle] px-2.5 py-1.5 text-xs sm:text-sm font-bold text-female-normal flex items-center gap-1.5">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
             {error}
           </div>
         )}
 
         {timeSpent > 5 && (
-          <span className="text-[0.55rem] font-medium text-ink-subtle/60 self-start flex items-center gap-1">
+          <span className="text-xs font-medium text-ink-subtle/60 self-start flex items-center gap-1">
             <ClockIcon className="text-ink-subtle/40" /> {faDuration(timeSpent)} روی این سوال
           </span>
         )}

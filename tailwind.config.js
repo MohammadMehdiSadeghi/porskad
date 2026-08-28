@@ -134,14 +134,14 @@ export default {
             },
             fontSize: {
                 // ── Design System Typography Scale ──
-                xs: ["12px", "18px"],
-                sm: ["14px", "21px"],
-                base: ["16px", "24px"],
-                md: ["20px", "30px"],
-                lg: ["25px", "37.5px"],
-                xl: ["32px", "48px"],
-                "2xl": ["40px", "60px"],
-                "3xl": ["52px", "78px"],
+                xs: ["14px", "21px"],
+                sm: ["17px", "25px"],
+                base: ["20px", "30px"],
+                md: ["24px", "36px"],
+                lg: ["29px", "43px"],
+                xl: ["36px", "54px"],
+                "2xl": ["44px", "66px"],
+                "3xl": ["56px", "84px"],
 
                 // ── Legacy aliases (backward compat) ──
                 "2xs": "0.81875rem",

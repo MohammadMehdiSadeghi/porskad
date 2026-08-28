@@ -24,11 +24,11 @@ export default function ScoreResult({ score, total, details, questions }) {
         <div className={`relative z-10 ${c.bg} ${c.border} border-2 rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] px-5 sm:px-7 py-4 sm:py-5 min-w-[160px] flex flex-col items-center gap-1.5`}>
           <motion.span className="text-3xl sm:text-4xl" initial={{ rotate: -8 }} animate={{ rotate: [0, -8, 8, -4, 4, 0] }} transition={{ duration: 0.7, delay: 0.2 }}>{emoji}</motion.span>
           <span className={`text-2xl sm:text-3xl font-black ${c.text}`}>{faNum(score)} از {faNum(total)}</span>
-          <span className="text-[0.65rem] sm:text-xs font-bold text-ink-subtle">{faNum(pct)}٪</span>
+          <span className="text-xs sm:text-sm font-bold text-ink-subtle">{faNum(pct)}٪</span>
         </div>
       </div>
 
-      <p className="text-xs sm:text-sm font-bold text-male-normal text-center">{message}</p>
+      <p className="text-sm sm:text-base font-bold text-male-normal text-center">{message}</p>
 
       <div className="w-full max-w-[200px] h-2 bg-ink/10 rounded-full overflow-hidden">
         <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, delay: 0.4 }} className={`h-full ${c.bar} rounded-full`} />
@@ -36,16 +36,16 @@ export default function ScoreResult({ score, total, details, questions }) {
 
       {details.length > 0 && (
         <div className="w-full max-w-sm flex flex-col gap-1.5 mt-1">
-          <span className="text-[0.6rem] sm:text-[0.65rem] font-extrabold text-male-normal">جزئیات پاسخ‌ها:</span>
+          <span className="text-xs sm:text-sm font-extrabold text-male-normal">جزئیات پاسخ‌ها:</span>
           {details.map((d, i) => {
             const q = questions.find((q) => q.id === d.questionId);
             return (
-              <div key={i} className={`flex items-center gap-2 text-[0.65rem] sm:text-xs px-2.5 py-1.5 rounded-pill-md border ${d.correct ? "border-ecosystem-normal/40 bg-ecosystem-light/60" : "border-female-normal/40 bg-female-light/60"}`}>
-                <span className={`w-4 h-4 sm:w-5 sm:h-5 shrink-0 flex items-center justify-center rounded-full text-[0.5rem] sm:text-[0.55rem] font-black ${d.correct ? "bg-ecosystem-normal text-white" : "bg-female-normal text-white"}`}>
+              <div key={i} className={`flex items-center gap-2 text-xs sm:text-sm px-2.5 py-1.5 rounded-pill-md border ${d.correct ? "border-ecosystem-normal/40 bg-ecosystem-light/60" : "border-female-normal/40 bg-female-light/60"}`}>
+                <span className={`w-5 h-5 sm:w-6 sm:h-6 shrink-0 flex items-center justify-center rounded-full text-[0.6rem] sm:text-xs font-black ${d.correct ? "bg-ecosystem-normal text-white" : "bg-female-normal text-white"}`}>
                   {d.correct ? "✓" : "✕"}
                 </span>
                 <span className="font-semibold text-ink flex-1 truncate">{q?.title || `سوال ${faNum(i + 1)}`}</span>
-                <span className={`font-bold text-[0.55rem] sm:text-[0.6rem] ${d.correct ? "text-ecosystem-dark" : "text-female-normal"}`}>
+                <span className={`font-bold text-xs sm:text-sm ${d.correct ? "text-ecosystem-dark" : "text-female-normal"}`}>
                   {d.correct ? `+${faNum(d.points)}` : `۰ از ${faNum(d.points)}`}
                 </span>
               </div>
