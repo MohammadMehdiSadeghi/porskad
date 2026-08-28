@@ -32,21 +32,20 @@ const inputCls =
 // ═══════════════════════════════════════════════════════════════
 function normalizeIranPhone(raw) {
   if (!raw) return null;
-  // حذف فاصله، خط تیره، پرانتز
   let n = raw.replace(/[\s\-\(\)\.]/g, "");
 
-  // +98912 → 98912
-  if (n.startsWith("+98")) n = n.slice(1);
-  // 0098912 → 98912
-  else if (n.startsWith("0098")) n = n.slice(2);
-  // 98912 → keep
-  // 0912 → 98912
-  else if (n.startsWith("0") && n.length === 11) n = "98" + n;
-  // 912 → 98912 (10 digit without leading 0)
-  else if (n.length === 10 && n.startsWith("9")) n = "98" + n;
+  // +98912 → 912
+  if (n.startsWith("+98") && n.length === 13) n = n.slice(3);
+  // 0098912 → 912
+  else if (n.startsWith("0098") && n.length === 14) n = n.slice(4);
+  // 98912 → 912
+  else if (n.startsWith("98") && n.length === 12) n = n.slice(2);
+  // 0912 → 912
+  else if (n.startsWith("0") && n.length === 11) n = n.slice(1);
+  // 912 → keep
 
-  // بررسی فرمت نهایی: باید 98 + 10 رقم (9XXXXXXXXX) باشد
-  if (!/^98[1-9]\d{9}$/.test(n)) return null;
+  // آموت فرمت: 912XXXXXXXX (10 رقم، بدون صفر اول)
+  if (!/^[1-9]\d{9}$/.test(n)) return null;
   return n;
 }
 
@@ -54,37 +53,22 @@ function normalizeIranPhone(raw) {
 // ─── نرمال‌سازی پاسخ AccountStatus آموت ───
 // ═══════════════════════════════════════════════════════════════
 function normalizeAccountInfo(raw) {
-  // پاسخ ممکنه آرایه باشه یا آبجکت
-  // [ { Status: 0, ListAccount: [ { Credit: 50000, ListLineNumbers: [] } ] } ]
-  // یا { Status: 0, ListAccount: [...] }
-
   if (!raw) return { status: null, credit: 0, lineNumbers: [], raw };
 
-  // اگه آرایه باشه، اولین آیتم رو بگیر
-  let data = raw;
-  if (Array.isArray(raw)) {
-    data = raw[0] || {};
-  }
-
-  const status = data.Status ?? data.status ?? null;
-
-  // Credit ممکنه داخل ListAccount باشه یا مستقیم
-  let credit = 0;
-  let lineNumbers = [];
-
-  if (data.ListAccount && Array.isArray(data.ListAccount) && data.ListAccount.length > 0) {
-    const account = data.ListAccount[0];
-    credit = account.Credit ?? account.credit ?? 0;
-    lineNumbers = account.ListLineNumbers || account.LineNumbers || [];
-  } else if (data.RemaindCredit !== undefined) {
-    credit = data.RemaindCredit;
-  }
+  // طبق داکس آموت: { Status, AccountName, RemaindCredit, ListLineNumbers: [...] }
+  let data = Array.isArray(raw) ? (raw[0] || {}) : raw;
 
   return {
-    status,
-    credit,
-    lineNumbers,
-    accountName: data.AccountName || data.Account || "",
+    status: data.Status ?? data.status ?? null,
+    credit: data.RemaindCredit ?? 0,
+    lineNumbers: data.ListLineNumbers || [],
+    accountName: data.AccountName || "",
+    prices: {
+      basePersian: data.BaseSMS_PersianPrice,
+      baseEnglish: data.BaseSMS_EnglishPrice,
+      servicePersian: data.ServiceSMS_PersianPrice,
+      adsPersian: data.AdsSMS_PersianPrice,
+    },
     raw,
   };
 }
@@ -154,11 +138,9 @@ export default function SmsPanel() {
   // ─── Settings ───
   const [smsSettings, setSmsSettings] = useState(null);
   const [settingsForm, setSettingsForm] = useState({
-    api_token: "",
+    amoot_token: "",
     line_number: "public",
     sender_name: "پرسکاد",
-    amoot_user_id: "",
-    amoot_password: "",
   });
   const [savingSettings, setSavingSettings] = useState(false);
 
@@ -242,11 +224,9 @@ export default function SmsPanel() {
       if (data) {
         setSmsSettings(data);
         setSettingsForm({
-          api_token: data.api_token || "",
+          amoot_token: data.amoot_token || data.api_token || "",
           line_number: data.line_number || "public",
           sender_name: data.sender_name || "پرسکاد",
-          amoot_user_id: data.amoot_user_id || "",
-          amoot_password: data.amoot_password || "",
         });
       }
     } catch {
@@ -273,23 +253,17 @@ export default function SmsPanel() {
 
   // ─── Save SMS Settings ───
   async function handleSaveSettings() {
-    if (!settingsForm.amoot_user_id.trim()) {
-      push("شناسه کاربر آموت الزامی است.", "error");
-      return;
-    }
-    if (!settingsForm.amoot_password.trim()) {
-      push("رمز عبور آموت الزامی است.", "error");
+    if (!settingsForm.amoot_token.trim()) {
+      push("توکن آموت الزامی است.", "error");
       return;
     }
 
     setSavingSettings(true);
     try {
       const { error } = await supabase.rpc("save_sms_settings", {
-        p_api_token: settingsForm.api_token.trim(),
+        p_amoot_token: settingsForm.amoot_token.trim(),
         p_line_number: settingsForm.line_number.trim() || "public",
         p_sender_name: settingsForm.sender_name.trim() || "پرسکاد",
-        p_amoot_user_id: settingsForm.amoot_user_id.trim(),
-        p_amoot_password: settingsForm.amoot_password.trim(),
       });
       if (error) throw error;
       push("تنظیمات پیامک ذخیره شد ✅");
@@ -857,21 +831,13 @@ export default function SmsPanel() {
               <div className="p-5 flex flex-col gap-4">
                 <div>
                   <h2 className="text-lg font-black text-navy mb-1">تنظیمات آموت SMS</h2>
-                  <p className="text-xs font-semibold text-ink-subtle">اطلاعات حساب آموت رو وارد کنید. رمز عبور فقط در سرور استفاده می‌شود.</p>
+                  <p className="text-xs font-semibold text-ink-subtle">توکن وب‌سرویس آموت رو از پنل کاربری آموت کپی کنید.</p>
                 </div>
 
                 <div className="flex flex-col gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-navy mb-1">شناسه کاربر (user_id) *</label>
-                    <input type="text" value={settingsForm.amoot_user_id} onChange={(e) => setSettingsForm((p) => ({...p, amoot_user_id: e.target.value}))} className={inputCls} placeholder="مثال: 12345" dir="ltr" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-navy mb-1">رمز عبور (password) *</label>
-                    <input type="password" value={settingsForm.amoot_password} onChange={(e) => setSettingsForm((p) => ({...p, amoot_password: e.target.value}))} className={inputCls} placeholder="رمز عبور" dir="ltr" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-navy mb-1">API Key (اختیاری)</label>
-                    <input type="password" value={settingsForm.api_token} onChange={(e) => setSettingsForm((p) => ({...p, api_token: e.target.value}))} className={inputCls} placeholder="API Key" dir="ltr" />
+                    <label className="block text-xs font-bold text-navy mb-1">توکن آموت (Token) *</label>
+                    <input type="password" value={settingsForm.amoot_token} onChange={(e) => setSettingsForm((p) => ({...p, amoot_token: e.target.value}))} className={inputCls} placeholder="توکن را از پنل آموت کپی کنید" dir="ltr" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>

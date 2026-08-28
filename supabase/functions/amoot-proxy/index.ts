@@ -9,20 +9,20 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  const jsonResp = (data: unknown, status = 200) =>
+    new Response(JSON.stringify(data), {
+      status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+
   try {
     // ─── 1. احراز هویت کاربر ───
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: "Authorization header missing" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    if (!authHeader) return jsonResp({ error: "Authorization header missing" }, 401);
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -30,112 +30,48 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return jsonResp({ error: "Unauthorized" }, 401);
 
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized", details: authError?.message }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // ─── 2. بررسی permission manage_sms ───
+    // ─── 2. بررسی permission ───
     const { data: permData } = await supabase.rpc("has_permission", {
       p_user_id: user.id,
       p_permission_id: "manage_sms",
     });
+    if (!permData) return jsonResp({ error: "Permission denied: manage_sms required" }, 403);
 
-    if (!permData) {
-      return new Response(
-        JSON.stringify({ error: "Permission denied: manage_sms required" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // ─── 3. دریافت credentials آموت از sms_settings ───
-    const { data: smsSettings, error: settingsError } = await supabase
+    // ─── 3. دریافت Token آموت از sms_settings ───
+    const { data: smsSettings } = await supabase
       .rpc("get_active_sms_settings")
       .maybeSingle();
 
-    if (settingsError) {
-      console.error("SMS settings error:", settingsError);
-      return new Response(
-        JSON.stringify({
-          error: "Could not load SMS settings",
-          details: settingsError.message,
-        }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     if (!smsSettings) {
-      return new Response(
-        JSON.stringify({
-          error: "SMS settings not configured",
-          details: "No active SMS settings found. Please configure SMS settings first.",
-        }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResp({
+        error: "SMS settings not configured",
+        details: "لطفاً ابتدا تنظیمات آموت را ذخیره کنید.",
+      }, 400);
     }
 
-    const amootUserId = smsSettings.amoot_user_id || "";
-    const amootPassword = smsSettings.amoot_password || "";
-    const amootApikey = smsSettings.api_token || "";
-
-    if (!amootUserId || !amootPassword) {
-      return new Response(
-        JSON.stringify({
-          error: "SMS credentials incomplete",
-          details: "amoot_user_id and amoot_password must be set in SMS settings.",
-        }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    const amootToken = smsSettings.amoot_token || smsSettings.api_token || "";
+    if (!amootToken) {
+      return jsonResp({
+        error: "Amoot token not set",
+        details: "توکن آموت در تنظیمات وارد نشده.",
+      }, 400);
     }
 
-    // ─── 4. دریافت body درخواست ───
+    // ─── 4. دریافت body ───
     const { endpoint, params } = await req.json();
+    if (!endpoint) return jsonResp({ error: "Missing 'endpoint'" }, 400);
 
-    if (!endpoint) {
-      return new Response(
-        JSON.stringify({ error: "Missing 'endpoint' parameter" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    // ─── 5. endpointهای مجاز ───
+    const allowed = ["AccountStatus", "SendSimple", "SendQuickOTP", "GetDelivery", "GetDeliveries", "GetDeliveriesByCampaignID"];
+    if (!allowed.includes(endpoint)) return jsonResp({ error: "Endpoint not allowed" }, 403);
 
-    // ─── 5. لیست endpointهای مجاز ───
-    const allowedEndpoints = [
-      "AccountStatus",
-      "SendSimple",
-      "SendQuickOTP",
-      "GetDelivery",
-      "GetDeliveries",
-      "GetDeliveriesByCampaignID",
-    ];
-
-    if (!allowedEndpoints.includes(endpoint)) {
-      return new Response(
-        JSON.stringify({
-          error: "Endpoint not allowed",
-          details: `Allowed: ${allowedEndpoints.join(", ")}`,
-        }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // ─── 6. ساخت URL با Authentication ───
+    // ─── 6. ساخت URL با Token ───
     const url = new URL(`${AMOOT_BASE}/${endpoint}`);
+    url.searchParams.set("Token", amootToken);
 
-    // احراز هویت آموت (query parameters)
-    url.searchParams.set("user_id", amootUserId);
-    url.searchParams.set("password", amootPassword);
-    if (amootApikey) {
-      url.searchParams.set("apikey", amootApikey);
-    }
-
-    // پارامترهای درخواست کاربر
     if (params) {
       for (const [key, val] of Object.entries(params)) {
         if (val !== undefined && val !== null && val !== "") {
@@ -144,54 +80,28 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Amoot API request: ${endpoint} (user_id: ${amootUserId})`);
-
-    // ─── 7. فراخوانی API آموت ───
+    // ─── 7. فراخوانی آموت ───
     const amootRes = await fetch(url.toString(), {
       method: "GET",
-      headers: { "Accept": "application/json" },
+      headers: { Accept: "application/json" },
     });
 
     const responseText = await amootRes.text();
-
-    // سعی کن JSON parse کنی
     let data;
     try {
       data = JSON.parse(responseText);
     } catch {
-      // اگه JSON نبود، متن خام رو برگردون
-      return new Response(
-        JSON.stringify({
-          error: "Invalid response from Amoot API",
-          raw_response: responseText.slice(0, 500),
-          http_status: amootRes.status,
-        }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResp({ error: "Invalid response from Amoot", raw: responseText.slice(0, 500) }, 502);
     }
 
-    // ─── 8. لاگ خطاها ───
     if (!amootRes.ok) {
       console.error(`Amoot API error: HTTP ${amootRes.status}`, data);
-      return new Response(
-        JSON.stringify({
-          error: `Amoot API returned HTTP ${amootRes.status}`,
-          amoot_response: data,
-        }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResp({ error: `Amoot HTTP ${amootRes.status}`, amoot_response: data }, 502);
     }
 
-    // ─── 9. برگرداندن پاسخ ───
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResp(data);
   } catch (err) {
     console.error("amoot-proxy error:", err);
-    return new Response(
-      JSON.stringify({ error: err.message || "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonResp({ error: err.message || "Internal error" }, 500);
   }
 });
