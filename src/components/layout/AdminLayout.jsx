@@ -40,7 +40,7 @@ export default function AdminLayout() {
             <span>پرس</span>
             <span className="text-teal">کاد</span>
           </span>
-          <span className="text-[0.6rem] font-bold bg-teal/25 text-teal rounded-pill-sm px-1.5 py-0.5">
+          <span className="text-[0.7rem] font-bold bg-teal/25 text-teal rounded-pill-sm px-1.5 py-0.5">
             پنل ادمین
           </span>
         </div>
@@ -56,15 +56,15 @@ export default function AdminLayout() {
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
-                `flex items-center gap-2 whitespace-nowrap rounded-pill-sm px-3 py-2
-                 text-xs font-bold transition-colors ${
+                `flex items-center gap-2.5 whitespace-nowrap rounded-pill-sm px-3.5 py-2.5
+                 text-sm font-bold transition-colors ${
                    isActive
                      ? "bg-teal text-white shadow-[2px_2px_0_0_rgba(0,0,0,0.25)]"
                      : "text-white/70 hover:text-white hover:bg-white/10"
                  }`
               }
             >
-              <item.icon size={15} />
+              <item.icon size={17} />
               {item.label}
             </NavLink>
           ))}
@@ -74,11 +74,11 @@ export default function AdminLayout() {
           <div className="flex items-center justify-center">
             <NotificationBell />
           </div>
-          <span className="text-[0.6rem] font-medium text-white/50 truncate sm:w-full text-center" dir="ltr">
+          <span className="text-[0.7rem] font-medium text-white/50 truncate sm:w-full text-center" dir="ltr">
             {user.email}
           </span>
-          <Button variant="ghost" size="sm" className="!text-white/80 hover:!text-white !border-white/20 text-xs" onClick={handleLogout}>
-            <LogOut size={12} className="ml-1" /> خروج
+          <Button variant="ghost" size="sm" className="!text-white/80 hover:!text-white !border-white/20 text-sm" onClick={handleLogout}>
+            <LogOut size={14} className="ml-1" /> خروج
           </Button>
         </div>
       </aside>
