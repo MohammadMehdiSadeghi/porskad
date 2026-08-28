@@ -25,7 +25,7 @@ function DropdownChoice({ options = [], value, onChange }) {
     <select
       value={value || ""}
       onChange={(e) => onChange(e.target.value || null)}
-      className="w-full bg-white border-2 border-ink/15 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3 py-2.5 font-semibold text-ink text-xs sm:text-sm focus:outline-none transition-all duration-200 appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23666%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[position:left_12px_center] bg-no-repeat pl-8"
+      className="w-full bg-white border-2 border-ink/15 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-4 py-3 font-bold text-sm text-ink focus:outline-none transition-all duration-200 cursor-pointer text-right"
     >
       <option value="">یک گزینه انتخاب کنید...</option>
       {options.map((opt, i) => (
