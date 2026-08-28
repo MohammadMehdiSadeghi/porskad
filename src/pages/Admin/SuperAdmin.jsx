@@ -359,7 +359,7 @@ export default function SuperAdmin() {
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
       <SEO title="Super Admin — God Mode" noIndex />
 
       {/* ─── Toast ─── */}
@@ -376,13 +376,13 @@ export default function SuperAdmin() {
             <Shield size={18} />
           </div>
           <div>
-            <h1 className="text-base font-extrabold text-navy">سوپرادمین <span className="text-magenta-text">God Mode</span></h1>
-            <p className="text-[0.6rem] font-semibold text-ink-subtle">دسترسی کامل · مدیریت · مانیتورینگ</p>
+            <h1 className="text-xl sm:text-2xl font-extrabold text-navy">سوپرادمین <span className="text-magenta-text">God Mode</span></h1>
+            <p className="text-xs font-semibold text-ink-subtle">دسترسی کامل · مدیریت · مانیتورینگ</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1 text-[0.6rem] font-bold text-teal-text"><span className="w-1.5 h-1.5 rounded-full bg-teal animate-pulse" /> آنلاین</span>
-          <span className="text-[0.6rem] font-semibold text-ink-subtle">بروزرسانی خودکار: ۳۰ ثانیه</span>
+          <span className="flex items-center gap-1 text-xs font-bold text-teal-text"><span className="w-1.5 h-1.5 rounded-full bg-teal animate-pulse" /> آنلاین</span>
+          <span className="text-xs font-semibold text-ink-subtle">بروزرسانی خودکار: ۳۰ ثانیه</span>
           <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[0.6rem] font-extrabold bg-magenta">
             {profile?.full_name?.[0]?.toUpperCase() || "G"}
           </div>
@@ -393,7 +393,7 @@ export default function SuperAdmin() {
       <div className="flex gap-1 bg-white border-2 border-ink/10 rounded-pill-md p-1 overflow-x-auto">
         {TABS.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold whitespace-nowrap rounded-pill-sm transition-all ${
+            className={`flex items-center gap-1.5 px-3.5 py-2 text-sm font-bold whitespace-nowrap rounded-pill-sm transition-all ${
               tab === t.id ? "bg-teal text-white shadow-[2px_2px_0_0_rgba(0,0,0,0.15)]" : "text-ink-subtle hover:text-ink hover:bg-bg-lavender"
             }`}>
             <t.icon size={14} />{t.label}
@@ -404,7 +404,7 @@ export default function SuperAdmin() {
       {/* ─── جستجو + اکشن‌ها ─── */}
       <div className="flex flex-wrap items-center gap-2">
         <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="جستجو..."
-          className="flex-1 min-w-[150px] max-w-xs bg-white border-2 border-ink/15 rounded-pill-md px-3 py-2 text-xs font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none" />
+          className="flex-1 min-w-[150px] max-w-xs bg-white border-2 border-ink/15 rounded-pill-md px-3 py-2 text-sm font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none" />
         {selectedTable && (
           <div className="flex gap-1.5">
             <Button variant="teal" size="sm" onClick={() => openCreate(selectedTable)}>+ ایجاد</Button>
@@ -427,9 +427,9 @@ export default function SuperAdmin() {
             ].map((s, i) => (
               <StickerCard key={i} theme={s.color}>
                 <div className="p-3 text-center">
-                  <div className="text-[0.65rem] font-bold text-ink-subtle mb-0.5">{s.label}</div>
-                  <div className="text-lg font-extrabold text-navy">{faNum(s.value)}</div>
-                  {s.sub && <div className="text-[0.55rem] font-semibold text-ink-subtle">{s.sub}</div>}
+                  <div className="text-xs font-bold text-ink-subtle mb-0.5">{s.label}</div>
+                  <div className="text-xl sm:text-2xl font-extrabold text-navy">{faNum(s.value)}</div>
+                  {s.sub && <div className="text-[0.65rem] font-semibold text-ink-subtle">{s.sub}</div>}
                 </div>
               </StickerCard>
             ))}
@@ -440,8 +440,8 @@ export default function SuperAdmin() {
             {tables.map((t) => (
               <button key={t} onClick={() => { setTab("database"); browseTable(t); }}
                 className="p-2.5 bg-white border-2 border-ink/10 rounded-pill-md text-center hover:border-teal transition-colors">
-                <div className="text-[0.6rem] font-bold text-ink-subtle uppercase">{t}</div>
-                <div className="text-sm font-extrabold text-navy">{typeof dbStats[t] === "number" ? faNum(dbStats[t]) : "—"}</div>
+                <div className="text-xs font-bold text-ink-subtle uppercase">{t}</div>
+                <div className="text-base font-extrabold text-navy">{typeof dbStats[t] === "number" ? faNum(dbStats[t]) : "—"}</div>
               </button>
             ))}
           </div>
@@ -451,12 +451,12 @@ export default function SuperAdmin() {
             <StickerCard theme="magenta">
               <div className="p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xs font-extrabold text-magenta-text">خطاهای اخیر ({errorLog.length})</h3>
-                  <button onClick={() => setTab("logs")} className="text-[0.6rem] font-bold text-teal-text hover:underline">مشاهده همه</button>
+                  <h3 className="text-sm font-extrabold text-magenta-text">خطاهای اخیر ({errorLog.length})</h3>
+                  <button onClick={() => setTab("logs")} className="text-xs font-bold text-teal-text hover:underline">مشاهده همه</button>
                 </div>
                 <div className="flex flex-col gap-1 max-h-[200px] overflow-y-auto">
                   {errorLog.slice(0, 5).map((e, i) => (
-                    <div key={e.id || i} className="flex items-center gap-2 py-1.5 px-2 rounded-pill-sm hover:bg-female-light text-xs">
+                    <div key={e.id || i} className="flex items-center gap-2 py-1.5 px-2 rounded-pill-sm hover:bg-female-light text-sm">
                       <span className="text-magenta-text font-mono text-[0.6rem]">{e.source}</span>
                       <span className="flex-1 truncate text-navy font-semibold">{e.message}</span>
                       <span className="text-ink-subtle text-[0.55rem] font-semibold">{e.created_at ? new Date(e.created_at).toLocaleTimeString("fa-IR") : ""}</span>
@@ -478,8 +478,8 @@ export default function SuperAdmin() {
                 className={`p-2.5 rounded-pill-md border-2 text-center transition-all ${
                   selectedTable === t ? "border-teal bg-teal/10" : "border-ink/10 bg-white hover:border-ink/20"
                 }`}>
-                <div className="text-[0.6rem] font-bold text-ink-subtle uppercase">{t}</div>
-                <div className="text-sm font-extrabold text-navy">{typeof dbStats[t] === "number" ? faNum(dbStats[t]) : "—"}</div>
+                <div className="text-xs font-bold text-ink-subtle uppercase">{t}</div>
+                <div className="text-base font-extrabold text-navy">{typeof dbStats[t] === "number" ? faNum(dbStats[t]) : "—"}</div>
               </button>
             ))}
           </div>
