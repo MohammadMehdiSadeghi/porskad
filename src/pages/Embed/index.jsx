@@ -366,8 +366,9 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
       setSubmitted(true);
     } catch (err) {
       console.error("Submit error:", err);
-      setError("ثبت ناموفق بود؛ دوباره تلاش کن.");
-      postToParent("pcode:error", { formId, error: err.message });
+      const msg = err?.message || err?.error?.message || String(err);
+      setError("ثبت ناموفق بود: " + msg);
+      postToParent("pcode:error", { formId, error: msg });
     } finally {
       setSubmitting(false);
     }
