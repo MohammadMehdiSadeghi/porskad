@@ -1,6 +1,6 @@
 // ══════════════════════════════════════════════════════════════
 // SuperAdmin — حالت خدایی: دسترسی کامل به تمامی بخش‌ها
-// طراحی: IBM Carbon Design System
+// طراحی: بر اساس دیزاین سیستم پرسکاد
 // ══════════════════════════════════════════════════════════════
 
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
@@ -9,71 +9,23 @@ import { supabase } from "../../lib/supabaseClient";
 import { faNum } from "../../lib/utils";
 import SEO from "../../components/ui/SEO";
 import Modal from "../../components/ui/Modal";
-
-// ─── توکن‌های IBM Carbon ───
-const IBM = {
-  blue: "#0f62fe", blueHover: "#0353e9", blueDark: "#002d9c",
-  coolGray10: "#f4f4f4", coolGray20: "#e0e0e0", coolGray30: "#c6c6c6",
-  coolGray50: "#8d8d8d", coolGray60: "#6f6f6f", coolGray80: "#393939",
-  coolGray100: "#1616100", coolGray110: "#000000",
-  red60: "#da1e28", red30: "#fff1f1", green50: "#24a148", green30: "#defbe6",
-  yellow: "#f1c21b", yellow30: "#fdf6dd", cyan10: "#e5f6ff", cyan: "#0072c3",
-  white: "#ffffff",
-};
-
-// ─── آیکون ساده ───
-function I({ d, size = 16 }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={d}/></svg>;
-}
+import Spinner from "../../components/ui/Spinner";
+import Badge from "../../components/ui/Badge";
+import Button from "../../components/ui/Button";
+import StickerCard from "../../components/ui/StickerCard";
 
 // ─── تب‌ها ───
+import { LayoutDashboard, Database, Users, Shield, Cloud, FileText, Code } from "lucide-react";
+
 const TABS = [
-  { id: "dashboard", label: "Dashboard", icon: "M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" },
-  { id: "database", label: "Database", icon: "M12 2C6.48 2 2 4.02 2 6.5v11C2 19.98 6.48 22 12 22s10-2.02 10-4.5v-11C22 4.02 17.52 2 12 2z" },
-  { id: "users", label: "Users", icon: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" },
-  { id: "admins", label: "Admins", icon: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" },
-  { id: "vercel", label: "Vercel", icon: "M12 2L2 22h20L12 2z" },
-  { id: "logs", label: "Logs", icon: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" },
-  { id: "query", label: "SQL", icon: "M4 17l6-6-6-6M12 19h8" },
+  { id: "dashboard", label: "داشبورد", icon: LayoutDashboard },
+  { id: "database", label: "دیتابیس", icon: Database },
+  { id: "users", label: "کاربران", icon: Users },
+  { id: "admins", label: "ادمین‌ها", icon: Shield },
+  { id: "vercel", label: "Vercel", icon: Cloud },
+  { id: "logs", label: "لاگ‌ها", icon: FileText },
+  { id: "query", label: "SQL", icon: Code },
 ];
-
-// ─── کارت آمار ───
-function Stat({ label, value, sub, color = IBM.blue }) {
-  return (
-    <div className="bg-white border border-cool-gray-20 rounded-lg p-3 sm:p-4 flex flex-col gap-1">
-      <span className="text-[0.6rem] font-semibold text-cool-gray-50 uppercase tracking-wider">{label}</span>
-      <span className="text-xl sm:text-2xl font-bold" style={{ color }}>{value}</span>
-      {sub && <span className="text-[0.55rem] text-cool-gray-50">{sub}</span>}
-    </div>
-  );
-}
-
-// ─── جدول ───
-function Table({ columns, rows, onRowClick, empty = "No data" }) {
-  if (!rows?.length) return <div className="text-sm text-cool-gray-50 py-10 text-center border border-cool-gray-20 rounded-lg bg-white">{empty}</div>;
-  return (
-    <div className="overflow-x-auto border border-cool-gray-20 rounded-lg bg-white">
-      <table className="w-full text-sm">
-        <thead><tr className="bg-cool-gray-10 border-b border-cool-gray-20">
-          {columns.map((c) => <th key={c.key} className="text-right py-2 px-3 text-[0.6rem] font-semibold text-cool-gray-60 uppercase tracking-wider whitespace-nowrap">{c.label}</th>)}
-        </tr></thead>
-        <tbody>
-          {rows.map((r, i) => (
-            <tr key={r.id || i} onClick={() => onRowClick?.(r)}
-              className={`border-b border-cool-gray-20 last:border-0 transition-colors ${onRowClick ? "cursor-pointer hover:bg-cyan-10" : "hover:bg-cool-gray-10"}`}>
-              {columns.map((c) => <td key={c.key} className="py-2 px-3 text-cool-gray-80">{c.render ? c.render(r) : String(r[c.key] ?? "—")}</td>)}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-// ─── وضعیت ───
-function Status({ ok, label }) {
-  return <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: ok ? IBM.green50 : IBM.red60 }} /><span className="text-[0.65rem]">{label}</span></div>;
-}
 
 // ══════════════════════════════════════════════════════════════
 // God-Mode SuperAdmin
@@ -389,167 +341,186 @@ export default function SuperAdmin() {
   }, [tableData, search]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]" style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif" }}>
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-cool-gray-20 border-t-[#0f62fe] rounded-full animate-spin" />
-          <span className="text-sm text-cool-gray-60">Loading god-mode...</span>
-        </div>
-      </div>
-    );
+    return <Spinner label="بارگذاری سوپرادمین..." />;
   }
 
   // فقط اکانت superadmin (هر دو نسخه ایمیل) اجازه دسترسی دارد
   const isSuperAdmin = user?.email === "superadmin@gmail.com" || user?.email === "superadmin@gmailc.com";
   if (!isSuperAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]" style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif" }}>
-        <div className="text-center p-8 rounded-lg border border-cool-gray-20 bg-white max-w-sm">
-          <div className="text-3xl mb-3">🚫</div>
-          <h2 className="text-lg font-bold text-cool-gray-80 mb-2">دسترسی غیرمجاز</h2>
-          <p className="text-sm text-cool-gray-60">فقط اکانت superadmin اجازه دسترسی به این بخش را دارد.</p>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center p-8 rounded-xl border-2 border-ink/10 bg-white max-w-sm">
+          <div className="text-4xl mb-3">🚫</div>
+          <h2 className="text-lg font-extrabold text-navy mb-2">دسترسی غیرمجاز</h2>
+          <p className="text-sm font-semibold text-ink-subtle">فقط اکانت superadmin اجازه دسترسی به این بخش را دارد.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col" style={{ fontFamily: "'IBM Plex Sans', 'Inter', system-ui, sans-serif" }}>
+    <div className="flex flex-col gap-5">
       <SEO title="Super Admin — God Mode" noIndex />
 
       {/* ─── Toast ─── */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-[9999] px-4 py-2 rounded-lg text-sm font-semibold shadow-lg transition-all ${
-          toast.type === "error" ? "bg-red-60 text-white" : "bg-green-50 text-white"
+        <div className={`fixed top-4 right-4 z-[9999] px-4 py-2 rounded-pill-md text-xs font-bold shadow-lg transition-all ${
+          toast.type === "error" ? "bg-magenta text-white" : "bg-teal text-white"
         }`}>{toast.msg}</div>
       )}
 
       {/* ─── هدر ─── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-3 border-b-2 border-cool-gray-20">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-1 border-b-2 border-ink/10">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-red-60 text-white">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <div className="w-9 h-9 rounded-pill-md flex items-center justify-center bg-magenta text-white">
+            <Shield size={18} />
           </div>
           <div>
-            <h1 className="text-base font-bold text-cool-gray-100">Super Admin <span className="text-red-60">God Mode</span></h1>
-            <p className="text-[0.55rem] text-cool-gray-50">Full access · CRUD · Impersonate · Monitor</p>
+            <h1 className="text-base font-extrabold text-navy">سوپرادمین <span className="text-magenta-text">God Mode</span></h1>
+            <p className="text-[0.6rem] font-semibold text-ink-subtle">دسترسی کامل · مدیریت · مانیتورینگ</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Status ok label="Online" />
-          <span className="text-[0.55rem] text-cool-gray-50">Auto-refresh: 30s</span>
-          <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[0.55rem] font-bold" style={{ backgroundColor: IBM.red60 }}>
+          <span className="flex items-center gap-1 text-[0.6rem] font-bold text-teal-text"><span className="w-1.5 h-1.5 rounded-full bg-teal animate-pulse" /> آنلاین</span>
+          <span className="text-[0.6rem] font-semibold text-ink-subtle">بروزرسانی خودکار: ۳۰ ثانیه</span>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[0.6rem] font-extrabold bg-magenta">
             {profile?.full_name?.[0]?.toUpperCase() || "G"}
           </div>
         </div>
       </div>
 
       {/* ─── تب‌ها ─── */}
-      <div className="flex gap-0 border-b-2 border-cool-gray-20 mb-3 overflow-x-auto">
+      <div className="flex gap-1 bg-white border-2 border-ink/10 rounded-pill-md p-1 overflow-x-auto">
         {TABS.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`flex items-center gap-1 px-2.5 py-2 text-[0.65rem] font-semibold whitespace-nowrap transition-all border-b-2 -mb-[2px] ${
-              tab === t.id ? "border-ibm-blue text-ibm-blue" : "border-transparent text-cool-gray-60 hover:text-cool-gray-100 hover:bg-cool-gray-10"
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold whitespace-nowrap rounded-pill-sm transition-all ${
+              tab === t.id ? "bg-teal text-white shadow-[2px_2px_0_0_rgba(0,0,0,0.15)]" : "text-ink-subtle hover:text-ink hover:bg-bg-lavender"
             }`}>
-            <I d={t.icon} size={12} />{t.label}
+            <t.icon size={14} />{t.label}
           </button>
         ))}
       </div>
 
       {/* ─── جستجو + اکشن‌ها ─── */}
-      <div className="flex flex-wrap items-center gap-2 mb-3">
-        <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..."
-          className="flex-1 min-w-[150px] max-w-xs border border-cool-gray-30 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-ibm-blue" />
+      <div className="flex flex-wrap items-center gap-2">
+        <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="جستجو..."
+          className="flex-1 min-w-[150px] max-w-xs bg-white border-2 border-ink/15 rounded-pill-md px-3 py-2 text-xs font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none" />
         {selectedTable && (
-          <div className="flex gap-1">
-            <button onClick={() => openCreate(selectedTable)} className="px-2.5 py-1.5 bg-ibm-blue text-white text-[0.6rem] font-semibold rounded hover:bg-ibm-blue-hover transition-colors">+ Create</button>
-            <button onClick={() => exportTable(selectedTable)} className="px-2.5 py-1.5 border border-cool-gray-30 text-[0.6rem] font-semibold rounded hover:bg-cool-gray-10 transition-colors">Export</button>
-            {selectedTable === "responses" && <button onClick={() => purgeResponses()} className="px-2.5 py-1.5 bg-red-60 text-white text-[0.6rem] font-semibold rounded hover:bg-red-70 transition-colors">Purge All</button>}
+          <div className="flex gap-1.5">
+            <Button variant="teal" size="sm" onClick={() => openCreate(selectedTable)}>+ ایجاد</Button>
+            <Button variant="ghost" size="sm" onClick={() => exportTable(selectedTable)}>خروجی</Button>
+            {selectedTable === "responses" && <Button variant="red" size="sm" onClick={() => purgeResponses()}>حذف همه</Button>}
           </div>
         )}
       </div>
 
       {/* ═══════════ Dashboard ═══════════ */}
       {tab === "dashboard" && (
-        <div className="flex flex-col gap-4">
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
-            <Stat label="Forms" value={faNum(stats.forms)} color={IBM.blue} />
-            <Stat label="Responses" value={faNum(stats.responses)} color={IBM.green50} />
-            <Stat label="Users" value={faNum(stats.users)} sub={`${stats.activeUsers} active`} color={IBM.cyan} />
-            <Stat label="Errors" value={faNum(stats.errors)} color={stats.errors > 0 ? IBM.red60 : IBM.green50} />
-            <Stat label="Activities" value={faNum(stats.activities)} color={IBM.coolGray80} />
+        <div className="flex flex-col gap-5">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-2.5">
+            {[
+              { label: "فرم‌ها", value: stats.forms, color: "teal" },
+              { label: "پاسخ‌ها", value: stats.responses, color: "navy" },
+              { label: "کاربران", value: stats.users, color: "orange", sub: `${stats.activeUsers} فعال` },
+              { label: "خطاها", value: stats.errors, color: stats.errors > 0 ? "magenta" : "teal" },
+              { label: "لاگ‌ها", value: stats.activities, color: "navy" },
+            ].map((s, i) => (
+              <StickerCard key={i} theme={s.color}>
+                <div className="p-3 text-center">
+                  <div className="text-[0.65rem] font-bold text-ink-subtle mb-0.5">{s.label}</div>
+                  <div className="text-lg font-extrabold text-navy">{faNum(s.value)}</div>
+                  {s.sub && <div className="text-[0.55rem] font-semibold text-ink-subtle">{s.sub}</div>}
+                </div>
+              </StickerCard>
+            ))}
           </div>
+
           {/* Quick table access */}
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
             {tables.map((t) => (
               <button key={t} onClick={() => { setTab("database"); browseTable(t); }}
-                className="p-2.5 bg-white border border-cool-gray-20 rounded-lg text-center hover:border-ibm-blue transition-colors">
-                <div className="text-[0.55rem] text-cool-gray-50 uppercase">{t}</div>
-                <div className="text-sm font-bold">{typeof dbStats[t] === "number" ? faNum(dbStats[t]) : "—"}</div>
+                className="p-2.5 bg-white border-2 border-ink/10 rounded-pill-md text-center hover:border-teal transition-colors">
+                <div className="text-[0.6rem] font-bold text-ink-subtle uppercase">{t}</div>
+                <div className="text-sm font-extrabold text-navy">{typeof dbStats[t] === "number" ? faNum(dbStats[t]) : "—"}</div>
               </button>
             ))}
           </div>
+
           {/* Recent errors */}
           {errorLog.length > 0 && (
-            <div className="bg-white border border-cool-gray-20 rounded-lg">
-              <div className="px-3 py-2 border-b border-cool-gray-20 flex items-center justify-between">
-                <h3 className="text-xs font-bold text-red-60">Recent Errors ({errorLog.length})</h3>
-                <button onClick={() => setTab("logs")} className="text-[0.55rem] text-ibm-blue hover:underline">View All</button>
+            <StickerCard theme="magenta">
+              <div className="p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs font-extrabold text-magenta-text">خطاهای اخیر ({errorLog.length})</h3>
+                  <button onClick={() => setTab("logs")} className="text-[0.6rem] font-bold text-teal-text hover:underline">مشاهده همه</button>
+                </div>
+                <div className="flex flex-col gap-1 max-h-[200px] overflow-y-auto">
+                  {errorLog.slice(0, 5).map((e, i) => (
+                    <div key={e.id || i} className="flex items-center gap-2 py-1.5 px-2 rounded-pill-sm hover:bg-female-light text-xs">
+                      <span className="text-magenta-text font-mono text-[0.6rem]">{e.source}</span>
+                      <span className="flex-1 truncate text-navy font-semibold">{e.message}</span>
+                      <span className="text-ink-subtle text-[0.55rem] font-semibold">{e.created_at ? new Date(e.created_at).toLocaleTimeString("fa-IR") : ""}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="p-2 flex flex-col gap-1 max-h-[200px] overflow-y-auto">
-                {errorLog.slice(0, 5).map((e, i) => (
-                  <div key={e.id || i} className="flex items-center gap-2 py-1 px-2 rounded hover:bg-red-30 text-xs">
-                    <span className="text-red-60 font-mono text-[0.55rem]">{e.source}</span>
-                    <span className="flex-1 truncate text-cool-gray-80">{e.message}</span>
-                    <span className="text-cool-gray-50 text-[0.55rem]">{e.created_at ? new Date(e.created_at).toLocaleTimeString("fa-IR") : ""}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            </StickerCard>
           )}
         </div>
       )}
 
       {/* ═══════════ Database ═══════════ */}
       {tab === "database" && (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
             {tables.map((t) => (
               <button key={t} onClick={() => browseTable(t)}
-                className={`p-2.5 rounded-lg border text-center transition-all ${selectedTable === t ? "border-ibm-blue bg-cyan-10" : "border-cool-gray-20 bg-white hover:border-cool-gray-30"}`}>
-                <div className="text-[0.55rem] text-cool-gray-50 uppercase tracking-wider">{t}</div>
-                <div className="text-base font-bold">{typeof dbStats[t] === "number" ? faNum(dbStats[t]) : "—"}</div>
+                className={`p-2.5 rounded-pill-md border-2 text-center transition-all ${
+                  selectedTable === t ? "border-teal bg-teal/10" : "border-ink/10 bg-white hover:border-ink/20"
+                }`}>
+                <div className="text-[0.6rem] font-bold text-ink-subtle uppercase">{t}</div>
+                <div className="text-sm font-extrabold text-navy">{typeof dbStats[t] === "number" ? faNum(dbStats[t]) : "—"}</div>
               </button>
             ))}
           </div>
           {selectedTable && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs font-bold">{selectedTable} <span className="text-cool-gray-50 font-normal">({filteredData.length} rows)</span></h3>
-                <button onClick={() => browseTable(selectedTable)} className="text-[0.55rem] text-ibm-blue hover:underline">Refresh</button>
+                <h3 className="text-xs font-extrabold text-navy">{selectedTable} <span className="text-ink-subtle font-semibold">({filteredData.length} ردیف)</span></h3>
+                <button onClick={() => browseTable(selectedTable)} className="text-[0.6rem] font-bold text-teal-text hover:underline">بروزرسانی</button>
               </div>
-              <Table
-                columns={[
-                  ...tableCols.map((c) => ({
-                    key: c, label: c,
-                    render: (r) => {
-                      const v = r[c];
-                      if (v === null || v === undefined) return <span className="text-cool-gray-30">null</span>;
-                      if (typeof v === "boolean") return <span className={v ? "text-green-60" : "text-red-60"}>{v ? "✓" : "✕"}</span>;
-                      if (typeof v === "object") return <span className="text-[0.55rem] font-mono max-w-[120px] truncate block">{JSON.stringify(v).slice(0, 40)}</span>;
-                      return <span className="text-xs">{String(v).slice(0, 60)}</span>;
-                    },
-                  })),
-                  { key: "_actions", label: "", render: (r) => (
-                    <div className="flex gap-1">
-                      <button onClick={(e) => { e.stopPropagation(); openEdit(selectedTable, r); }} className="text-[0.55rem] px-1.5 py-0.5 rounded bg-cool-gray-10 hover:bg-cool-gray-20">Edit</button>
-                      <button onClick={(e) => { e.stopPropagation(); deleteRecord(selectedTable, r.id); }} className="text-[0.55rem] px-1.5 py-0.5 rounded bg-red-60/10 text-red-60 hover:bg-red-60/20">Del</button>
-                    </div>
-                  )},
-                ]}
-                rows={filteredData}
-                onRowClick={(r) => openEdit(selectedTable, r)}
-              />
+              <div className="overflow-x-auto border-2 border-ink/10 rounded-pill-md bg-white">
+                <table className="w-full text-xs">
+                  <thead><tr className="bg-bg-lavender border-b-2 border-ink/10">
+                    {tableCols.map((c) => <th key={c} className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase whitespace-nowrap">{c}</th>)}
+                    <th className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase"></th>
+                  </tr></thead>
+                  <tbody>
+                    {filteredData.map((r, i) => (
+                      <tr key={r.id || i} onClick={() => openEdit(selectedTable, r)}
+                        className={`border-b border-ink/5 last:border-0 transition-colors cursor-pointer hover:bg-bg-lavender/50 ${
+                          i % 2 ? "bg-bg-lavender/30" : ""
+                        }`}>
+                        {tableCols.map((c) => {
+                          const v = r[c];
+                          return <td key={c} className="py-2 px-3 text-ink font-semibold">
+                            {v === null || v === undefined ? <span className="text-ink/30">—</span> :
+                             typeof v === "boolean" ? <span className={v ? "text-teal-text" : "text-magenta-text"}>{v ? "✓" : "✕"}</span> :
+                             typeof v === "object" ? <span className="text-[0.55rem] font-mono max-w-[120px] truncate block">{JSON.stringify(v).slice(0, 40)}</span> :
+                             String(v).slice(0, 60)}
+                          </td>;
+                        })}
+                        <td className="py-2 px-3">
+                          <div className="flex gap-1">
+                            <button onClick={(e) => { e.stopPropagation(); openEdit(selectedTable, r); }} className="text-[0.6rem] font-bold px-1.5 py-0.5 rounded-pill-sm bg-bg-lavender hover:bg-teal/10 text-navy">ویرایش</button>
+                            <button onClick={(e) => { e.stopPropagation(); deleteRecord(selectedTable, r.id); }} className="text-[0.6rem] font-bold px-1.5 py-0.5 rounded-pill-sm bg-magenta/10 text-magenta-text hover:bg-magenta/20">حذف</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
@@ -557,259 +528,331 @@ export default function SuperAdmin() {
 
       {/* ═══════════ Users ═══════════ */}
       {tab === "users" && (
-        <div className="flex flex-col gap-3">
-          <h3 className="text-xs font-bold">All Users ({users.length})</h3>
-          <Table
-            columns={[
-              { key: "name", label: "Name", render: (r) => <span className="font-semibold">{r.full_name || "—"}</span> },
-              { key: "email", label: "Email", render: (r) => <span className="text-[0.65rem] font-mono" dir="ltr">{r.email}</span> },
-              { key: "role", label: "Role", render: (r) => <span className={`text-[0.6rem] px-1.5 py-0.5 rounded ${r.role === "admin" ? "bg-ibm-blue/10 text-ibm-blue" : "bg-cool-gray-10 text-cool-gray-60"}`}>{r.role || "—"}</span> },
-              { key: "owner", label: "Owner", render: (r) => r.is_owner ? <span className="text-[0.55rem] px-1 py-0.5 rounded bg-amber-100 text-amber-700 font-bold">OWNER</span> : "—" },
-              { key: "active", label: "Active", render: (r) => <Status ok={r.is_active} label={r.is_active ? "Yes" : "No"} /> },
-              { key: "joined", label: "Joined", render: (r) => <span className="text-[0.6rem]">{r.created_at ? new Date(r.created_at).toLocaleDateString("fa-IR") : "—"}</span> },
-              { key: "actions", label: "", render: (r) => (
-                <div className="flex gap-1">
-                  <button onClick={(e) => { e.stopPropagation(); setDetailModal(r); }} className="text-[0.55rem] px-1.5 py-0.5 rounded bg-cool-gray-10 hover:bg-cool-gray-20">Detail</button>
-                  <button onClick={(e) => { e.stopPropagation(); setImpersonateModal(r); }} className="text-[0.55rem] px-1.5 py-0.5 rounded bg-ibm-blue/10 text-ibm-blue hover:bg-ibm-blue/20">Login As</button>
-                </div>
-              )},
-            ]}
-            rows={users.filter((u) => !search || u.email?.toLowerCase().includes(search.toLowerCase()) || u.full_name?.toLowerCase().includes(search.toLowerCase()))}
-            onRowClick={(r) => setDetailModal(r)}
-          />
+        <div className="flex flex-col gap-4">
+          <h3 className="text-xs font-extrabold text-navy">همه کاربران ({users.length})</h3>
+          <div className="overflow-x-auto border-2 border-ink/10 rounded-pill-md bg-white">
+            <table className="w-full text-xs">
+              <thead><tr className="bg-bg-lavender border-b-2 border-ink/10">
+                <th className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">نام</th>
+                <th className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">ایمیل</th>
+                <th className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">نقش</th>
+                <th className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">مالک</th>
+                <th className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">وضعیت</th>
+                <th className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">تاریخ</th>
+                <th className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase"></th>
+              </tr></thead>
+              <tbody>
+                {users.filter((u) => !search || u.email?.toLowerCase().includes(search.toLowerCase()) || u.full_name?.toLowerCase().includes(search.toLowerCase())).map((r, i) => (
+                  <tr key={r.id} onClick={() => setDetailModal(r)} className={`border-b border-ink/5 last:border-0 transition-colors cursor-pointer hover:bg-bg-lavender/50 ${i % 2 ? "bg-bg-lavender/30" : ""}`}>
+                    <td className="py-2 px-3 font-extrabold text-navy">{r.full_name || "—"}</td>
+                    <td className="py-2 px-3 text-[0.65rem] font-mono text-ink" dir="ltr">{r.email}</td>
+                    <td className="py-2 px-3"><Badge color={r.role === "admin" ? "navy" : "teal"}>{r.role || "—"}</Badge></td>
+                    <td className="py-2 px-3">{r.is_owner ? <Badge color="orange">مالک</Badge> : "—"}</td>
+                    <td className="py-2 px-3"><Badge color={r.is_active ? "green" : "gray"}>{r.is_active ? "فعال" : "غیرفعال"}</Badge></td>
+                    <td className="py-2 px-3 text-[0.6rem] font-semibold text-ink-subtle">{r.created_at ? new Date(r.created_at).toLocaleDateString("fa-IR") : "—"}</td>
+                    <td className="py-2 px-3">
+                      <div className="flex gap-1">
+                        <button onClick={(e) => { e.stopPropagation(); setDetailModal(r); }} className="text-[0.6rem] font-bold px-1.5 py-0.5 rounded-pill-sm bg-bg-lavender hover:bg-teal/10 text-navy">جزئیات</button>
+                        <button onClick={(e) => { e.stopPropagation(); setImpersonateModal(r); }} className="text-[0.6rem] font-bold px-1.5 py-0.5 rounded-pill-sm bg-teal/10 text-teal-text hover:bg-teal/20">ورود</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {/* ═══════════ Admins ═══════════ */}
       {tab === "admins" && (
-        <div className="flex flex-col gap-3">
-          <h3 className="text-xs font-bold">Admins & Managers ({admins.length})</h3>
+        <div className="flex flex-col gap-4">
+          <h3 className="text-xs font-extrabold text-navy">ادمین‌ها و مدیران ({admins.length})</h3>
           {admins.map((a) => (
-            <div key={a.id} className="bg-white border border-cool-gray-20 rounded-lg p-3">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-[0.55rem] font-bold text-white" style={{ backgroundColor: a.is_owner ? IBM.blueDark : IBM.blue }}>
-                    {a.full_name?.[0]?.toUpperCase() || "U"}
+            <StickerCard key={a.id} theme={a.is_owner ? "orange" : "white"}>
+              <div className="p-3.5">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[0.6rem] font-extrabold text-white ${
+                      a.is_owner ? "bg-orange" : "bg-navy"
+                    }`}>
+                      {a.full_name?.[0]?.toUpperCase() || "U"}
+                    </div>
+                    <div>
+                      <span className="text-xs font-extrabold text-navy">{a.full_name || "—"}</span>
+                      {a.is_owner && <Badge color="orange" className="mr-1">مالک</Badge>}
+                      <div className="text-[0.55rem] font-semibold text-ink-subtle" dir="ltr">{a.email}</div>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-xs font-bold">{a.full_name || "—"}</span>
-                    {a.is_owner && <span className="text-[0.5rem] px-1 py-0.5 rounded bg-amber-100 text-amber-700 font-bold mr-1">OWNER</span>}
-                    <div className="text-[0.55rem] text-cool-gray-50" dir="ltr">{a.email}</div>
-                  </div>
+                  <Badge color={a.is_active ? "green" : "gray"}>{a.is_active ? "فعال" : "غیرفعال"}</Badge>
                 </div>
-                <Status ok={a.is_active} label={a.is_active ? "Active" : "Inactive"} />
+                {!a.is_owner && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {["create_form", "edit_form", "delete_form", "publish_form", "view_responses", "view_analytics", "export_excel", "manage_managers", "manage_sms"].map((perm) => {
+                      const has = a.permissions?.includes(perm);
+                      return (
+                        <button key={perm} onClick={() => toggleAdminPermission(a.id, perm, a.permissions || [])}
+                          className={`text-[0.55rem] font-bold px-1.5 py-0.5 rounded-pill-sm transition-colors ${
+                            has ? "bg-teal/15 text-teal-text border border-teal/30" : "bg-bg-lavender text-ink-subtle border border-ink/10 hover:bg-bg-lavender/80"
+                          }`}>
+                          {perm.replace(/_/g, " ")}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-              {!a.is_owner && (
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {["create_form", "edit_form", "delete_form", "publish_form", "view_responses", "view_analytics", "export_excel", "manage_managers", "manage_sms"].map((perm) => {
-                    const has = a.permissions?.includes(perm);
-                    return (
-                      <button key={perm} onClick={() => toggleAdminPermission(a.id, perm, a.permissions || [])}
-                        className={`text-[0.55rem] px-1.5 py-0.5 rounded transition-colors ${has ? "bg-green-50 text-green-60 border border-green-50/30" : "bg-cool-gray-10 text-cool-gray-50 border border-cool-gray-20 hover:bg-cool-gray-20"}`}>
-                        {perm.replace(/_/g, " ")}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            </StickerCard>
           ))}
         </div>
       )}
 
       {/* ═══════════ Vercel ═══════════ */}
       {tab === "vercel" && (
-        <div className="flex flex-col gap-3">
-          <div className="bg-white border border-cool-gray-20 rounded-lg p-3">
-            <div className="flex gap-2">
-              <input type="password" value={vercelToken} onChange={(e) => setVercelToken(e.target.value)} placeholder="Vercel API Token (vxt_...)"
-                className="flex-1 border border-cool-gray-30 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-ibm-blue" dir="ltr" />
-              <button onClick={loadVercel} disabled={vercelLoading || !vercelToken}
-                className="px-3 py-1.5 bg-ibm-blue text-white text-[0.6rem] font-semibold rounded hover:bg-ibm-blue-hover disabled:opacity-50 transition-colors">
-                {vercelLoading ? "..." : "Connect"}
-              </button>
+        <div className="flex flex-col gap-4">
+          <StickerCard theme="white">
+            <div className="p-3.5">
+              <div className="flex gap-2">
+                <input type="password" value={vercelToken} onChange={(e) => setVercelToken(e.target.value)} placeholder="Vercel API Token (vxt_.)"
+                  className="flex-1 bg-white border-2 border-ink/15 rounded-pill-md px-3 py-2 text-xs font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none" dir="ltr" />
+                <Button variant="teal" size="sm" onClick={loadVercel} disabled={vercelLoading || !vercelToken}>
+                  {vercelLoading ? "..." : "اتصال"}
+                </Button>
+              </div>
             </div>
-          </div>
+          </StickerCard>
           {vercelData.projects.length > 0 && (
-            <div className="bg-white border border-cool-gray-20 rounded-lg p-3">
-              <h3 className="text-xs font-bold mb-2">Projects</h3>
-              {vercelData.projects.map((p) => (
-                <div key={p.id} className="flex items-center gap-2 py-1.5 border-b border-cool-gray-20 last:border-0">
-                  <span className="text-xs font-semibold flex-1">{p.name}</span>
-                  <Status ok={p.latestDeployments?.[0]?.state === "READY"} label={p.latestDeployments?.[0]?.state || "—"} />
-                </div>
-              ))}
-            </div>
+            <StickerCard theme="navy">
+              <div className="p-3.5">
+                <h3 className="text-xs font-extrabold text-navy mb-2">پروژه‌ها</h3>
+                {vercelData.projects.map((p) => (
+                  <div key={p.id} className="flex items-center gap-2 py-1.5 border-b border-ink/10 last:border-0">
+                    <span className="text-xs font-bold text-white flex-1">{p.name}</span>
+                    <Badge color={p.latestDeployments?.[0]?.state === "READY" ? "green" : "gray"}>{p.latestDeployments?.[0]?.state || "—"}</Badge>
+                  </div>
+                ))}
+              </div>
+            </StickerCard>
           )}
           {vercelData.deployments.length > 0 && (
-            <Table
-              columns={[
-                { key: "name", label: "Project", render: (r) => <span className="font-semibold text-xs">{r.name}</span> },
-                { key: "state", label: "State", render: (r) => <Status ok={r.state === "READY"} label={r.state} /> },
-                { key: "created", label: "Time", render: (r) => <span className="text-[0.6rem]">{new Date(r.created).toLocaleString("fa-IR")}</span> },
-                { key: "url", label: "URL", render: (r) => <a href={`https://${r.url}`} target="_blank" rel="noreferrer" className="text-[0.6rem] text-ibm-blue hover:underline" dir="ltr">{r.url}</a> },
-              ]}
-              rows={vercelData.deployments}
-            />
+            <div className="overflow-x-auto border-2 border-ink/10 rounded-pill-md bg-white">
+              <table className="w-full text-xs">
+                <thead><tr className="bg-bg-lavender border-b-2 border-ink/10">
+                  <th className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">پروژه</th>
+                  <th className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">وضعیت</th>
+                  <th className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">زمان</th>
+                  <th className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">آدرس</th>
+                </tr></thead>
+                <tbody>
+                  {vercelData.deployments.map((r, i) => (
+                    <tr key={r.id || i} className={`border-b border-ink/5 last:border-0 ${i % 2 ? "bg-bg-lavender/30" : ""}`}>
+                      <td className="py-2 px-3 font-bold text-navy">{r.name}</td>
+                      <td className="py-2 px-3"><Badge color={r.state === "READY" ? "green" : "gray"}>{r.state}</Badge></td>
+                      <td className="py-2 px-3 text-[0.6rem] font-semibold text-ink-subtle">{new Date(r.created).toLocaleString("fa-IR")}</td>
+                      <td className="py-2 px-3"><a href={`https://${r.url}`} target="_blank" rel="noreferrer" className="text-[0.6rem] font-bold text-teal-text hover:underline" dir="ltr">{r.url}</a></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
-          {!vercelToken && <div className="bg-cyan-10 border rounded-lg p-6 text-center text-xs text-cool-gray-60">Enter Vercel API token to monitor deployments</div>}
+          {!vercelToken && <div className="bg-bg-lavender border-2 border-ink/10 rounded-pill-md p-6 text-center text-xs font-semibold text-ink-subtle">توکن Vercel API را وارد کنید تا دیپلوی‌ها مانیتور شوند</div>}
         </div>
       )}
 
       {/* ═══════════ Logs ═══════════ */}
       {tab === "logs" && (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-5">
           <div className="flex gap-2">
-            <button onClick={() => { loadActivity(); loadErrors(); }} className="px-3 py-1.5 bg-ibm-blue text-white text-[0.6rem] font-semibold rounded hover:bg-ibm-blue-hover transition-colors">Refresh All</button>
-            <button onClick={async () => {
+            <Button variant="teal" size="sm" onClick={() => { loadActivity(); loadErrors(); }}>بروزرسانی همه</Button>
+            <Button variant="ghost" size="sm" onClick={async () => {
               try {
                 await supabase.rpc("log_activity", { p_action: "test_log", p_target_type: "system", p_details: { test: true } });
-                showToast("Test log created");
+                showToast("لاگ تست ایجاد شد");
                 loadActivity();
               } catch (err) { showToast("Error: " + err.message, "error"); }
-            }} className="px-3 py-1.5 border border-cool-gray-30 text-[0.6rem] font-semibold rounded hover:bg-cool-gray-10 transition-colors">+ Test Log</button>
+            }}>+ لاگ تست</Button>
           </div>
+
           {/* Activity */}
-          <div className="bg-white border border-cool-gray-20 rounded-lg">
-            <div className="px-3 py-2 border-b border-cool-gray-20 flex items-center justify-between">
-              <h3 className="text-xs font-bold">Activity Log ({activityLog.length})</h3>
-              <button onClick={loadActivity} className="text-[0.55rem] text-ibm-blue hover:underline">Refresh</button>
+          <StickerCard theme="white">
+            <div className="p-3.5">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs font-extrabold text-navy">لاگ فعالیت ({activityLog.length})</h3>
+                <button onClick={loadActivity} className="text-[0.6rem] font-bold text-teal-text hover:underline">بروزرسانی</button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead><tr className="border-b-2 border-ink/10">
+                    <th className="text-right py-2 px-2 text-[0.6rem] font-extrabold text-navy">عملیات</th>
+                    <th className="text-right py-2 px-2 text-[0.6rem] font-extrabold text-navy">هدف</th>
+                    <th className="text-right py-2 px-2 text-[0.6rem] font-extrabold text-navy">جزئیات</th>
+                    <th className="text-right py-2 px-2 text-[0.6rem] font-extrabold text-navy">زمان</th>
+                  </tr></thead>
+                  <tbody>
+                    {activityLog.map((r, i) => (
+                      <tr key={r.id || i} className={`border-b border-ink/5 last:border-0 ${i % 2 ? "bg-bg-lavender/30" : ""}`}>
+                        <td className="py-2 px-2"><span className="text-[0.6rem] font-bold px-1.5 py-0.5 rounded-pill-sm bg-bg-lavender text-navy">{r.action}</span></td>
+                        <td className="py-2 px-2 font-semibold text-ink">{r.target_type}/{r.target_id}</td>
+                        <td className="py-2 px-2 text-[0.55rem] font-mono max-w-[200px] truncate text-ink-subtle">{r.details ? JSON.stringify(r.details).slice(0, 50) : "—"}</td>
+                        <td className="py-2 px-2 text-[0.6rem] font-semibold text-ink-subtle">{r.created_at ? new Date(r.created_at).toLocaleString("fa-IR") : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <Table
-              columns={[
-                { key: "action", label: "Action", render: (r) => <span className="text-[0.6rem] font-semibold px-1.5 py-0.5 rounded bg-cool-gray-10">{r.action}</span> },
-                { key: "target", label: "Target", render: (r) => <span className="text-xs">{r.target_type}/{r.target_id}</span> },
-                { key: "details", label: "Details", render: (r) => <span className="text-[0.55rem] font-mono max-w-[200px] truncate block">{r.details ? JSON.stringify(r.details).slice(0, 50) : "—"}</span> },
-                { key: "time", label: "Time", render: (r) => <span className="text-[0.6rem]">{r.created_at ? new Date(r.created_at).toLocaleString("fa-IR") : "—"}</span> },
-              ]}
-              rows={activityLog}
-            />
-          </div>
+          </StickerCard>
+
           {/* Errors */}
-          <div className="bg-white border border-cool-gray-20 rounded-lg">
-            <div className="px-3 py-2 border-b border-cool-gray-20 flex items-center justify-between">
-              <h3 className="text-xs font-bold text-red-60">Error Log ({errorLog.length})</h3>
-              <button onClick={loadErrors} className="text-[0.55rem] text-ibm-blue hover:underline">Refresh</button>
+          <StickerCard theme="magenta">
+            <div className="p-3.5">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs font-extrabold text-magenta-text">لاگ خطاها ({errorLog.length})</h3>
+                <button onClick={loadErrors} className="text-[0.6rem] font-bold text-teal-text hover:underline">بروزرسانی</button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead><tr className="border-b-2 border-ink/10">
+                    <th className="text-right py-2 px-2 text-[0.6rem] font-extrabold text-navy">منبع</th>
+                    <th className="text-right py-2 px-2 text-[0.6rem] font-extrabold text-navy">پیام</th>
+                    <th className="text-right py-2 px-2 text-[0.6rem] font-extrabold text-navy">آدرس</th>
+                    <th className="text-right py-2 px-2 text-[0.6rem] font-extrabold text-navy">زمان</th>
+                  </tr></thead>
+                  <tbody>
+                    {errorLog.map((r, i) => (
+                      <tr key={r.id || i} className={`border-b border-ink/5 last:border-0 ${i % 2 ? "bg-female-light/30" : ""}`}>
+                        <td className="py-2 px-2 text-[0.6rem] font-mono font-bold text-magenta-text">{r.source}</td>
+                        <td className="py-2 px-2 font-semibold text-navy truncate max-w-[300px]">{r.message}</td>
+                        <td className="py-2 px-2 text-[0.55rem] font-semibold text-ink-subtle truncate max-w-[150px]" dir="ltr">{r.url || "—"}</td>
+                        <td className="py-2 px-2 text-[0.6rem] font-semibold text-ink-subtle">{r.created_at ? new Date(r.created_at).toLocaleString("fa-IR") : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <Table
-              columns={[
-                { key: "source", label: "Source", render: (r) => <span className="text-[0.6rem] font-mono">{r.source}</span> },
-                { key: "message", label: "Message", render: (r) => <span className="text-xs truncate block max-w-[300px]">{r.message}</span> },
-                { key: "url", label: "URL", render: (r) => <span className="text-[0.55rem] text-cool-gray-50 truncate block max-w-[150px]" dir="ltr">{r.url || "—"}</span> },
-                { key: "time", label: "Time", render: (r) => <span className="text-[0.6rem]">{r.created_at ? new Date(r.created_at).toLocaleString("fa-IR") : "—"}</span> },
-              ]}
-              rows={errorLog}
-            />
-          </div>
+          </StickerCard>
         </div>
       )}
 
       {/* ═══════════ SQL ═══════════ */}
       {tab === "query" && (
-        <div className="flex flex-col gap-3">
-          <div className="bg-white border border-cool-gray-20 rounded-lg p-3">
-            <textarea value={sqlQuery} onChange={(e) => setSqlQuery(e.target.value)} rows={3} placeholder="SELECT * FROM forms LIMIT 10;"
-              className="w-full border border-cool-gray-30 rounded px-2.5 py-2 text-xs font-mono focus:outline-none focus:border-ibm-blue resize-y" dir="ltr" />
-            <div className="flex gap-2 mt-2">
-              <button onClick={runSql} disabled={sqlRunning || !sqlQuery.trim()}
-                className="px-3 py-1.5 bg-ibm-blue text-white text-[0.6rem] font-semibold rounded hover:bg-ibm-blue-hover disabled:opacity-50 transition-colors">
-                {sqlRunning ? "Running..." : "Execute"}
-              </button>
-              <button onClick={() => { setSqlQuery(""); setSqlResult(null); setSqlError(null); }}
-                className="px-3 py-1.5 border border-cool-gray-30 text-[0.6rem] font-semibold rounded hover:bg-cool-gray-10 transition-colors">Clear</button>
+        <div className="flex flex-col gap-4">
+          <StickerCard theme="white">
+            <div className="p-3.5">
+              <textarea value={sqlQuery} onChange={(e) => setSqlQuery(e.target.value)} rows={3} placeholder="SELECT * FROM forms LIMIT 10;"
+                className="w-full bg-white border-2 border-ink/15 rounded-pill-md px-3 py-2 text-xs font-mono text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none resize-y" dir="ltr" />
+              <div className="flex gap-2 mt-2">
+                <Button variant="teal" size="sm" onClick={runSql} disabled={sqlRunning || !sqlQuery.trim()}>
+                  {sqlRunning ? "در حال اجرا..." : "اجرا"}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => { setSqlQuery(""); setSqlResult(null); setSqlError(null); }}>پاک کردن</Button>
+              </div>
+              <div className="flex gap-1 mt-2 flex-wrap">
+                {tables.map((t) => (
+                  <button key={t} onClick={() => setSqlQuery(`SELECT * FROM ${t} LIMIT 20;`)}
+                    className="text-[0.55rem] font-bold px-1.5 py-0.5 rounded-pill-sm bg-bg-lavender text-navy hover:bg-teal/10 transition-colors">{t}</button>
+                ))}
+              </div>
             </div>
-            <div className="flex gap-1 mt-2 flex-wrap">
-              {tables.map((t) => (
-                <button key={t} onClick={() => setSqlQuery(`SELECT * FROM ${t} LIMIT 20;`)}
-                  className="text-[0.55rem] px-1.5 py-0.5 rounded bg-cool-gray-10 text-cool-gray-60 hover:bg-cool-gray-20 transition-colors">{t}</button>
-              ))}
-            </div>
-          </div>
-          {sqlError && <div className="bg-red-30 border border-red-60/20 rounded-lg p-2 text-xs text-red-60 font-mono">{sqlError}</div>}
+          </StickerCard>
+          {sqlError && <div className="bg-magenta/10 border-2 border-magenta/30 rounded-pill-md p-2 text-xs font-bold text-magenta-text font-mono">{sqlError}</div>}
           {sqlResult && Array.isArray(sqlResult) && sqlResult.length > 0 && (
-            <Table
-              columns={Object.keys(sqlResult[0]).map((k) => ({
-                key: k, label: k,
-                render: (r) => {
-                  const v = r[k];
-                  if (v === null) return <span className="text-cool-gray-30">null</span>;
-                  if (typeof v === "object") return <span className="text-[0.55rem] font-mono max-w-[120px] truncate block">{JSON.stringify(v).slice(0, 40)}</span>;
-                  return String(v).slice(0, 60);
-                },
-              }))}
-              rows={sqlResult}
-            />
+            <div className="overflow-x-auto border-2 border-ink/10 rounded-pill-md bg-white">
+              <table className="w-full text-xs">
+                <thead><tr className="bg-bg-lavender border-b-2 border-ink/10">
+                  {Object.keys(sqlResult[0]).map((k) => <th key={k} className="text-right py-2 px-2 text-[0.6rem] font-extrabold text-navy uppercase whitespace-nowrap">{k}</th>)}
+                </tr></thead>
+                <tbody>
+                  {sqlResult.map((r, i) => (
+                    <tr key={i} className={`border-b border-ink/5 last:border-0 ${i % 2 ? "bg-bg-lavender/30" : ""}`}>
+                      {Object.keys(sqlResult[0]).map((k) => {
+                        const v = r[k];
+                        return <td key={k} className="py-2 px-2 text-ink font-semibold">
+                          {v === null ? <span className="text-ink/30">—</span> :
+                           typeof v === "object" ? <span className="text-[0.55rem] font-mono max-w-[120px] truncate block">{JSON.stringify(v).slice(0, 40)}</span> :
+                           String(v).slice(0, 60)}
+                        </td>;
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
           {sqlResult && !Array.isArray(sqlResult) && (
-            <pre className="bg-cool-gray-10 rounded p-3 text-xs font-mono overflow-auto max-h-[400px]">{JSON.stringify(sqlResult, null, 2)}</pre>
+            <pre className="bg-bg-lavender border-2 border-ink/10 rounded-pill-md p-3 text-xs font-mono overflow-auto max-h-[400px] text-navy">{JSON.stringify(sqlResult, null, 2)}</pre>
           )}
         </div>
       )}
 
       {/* ═══════════ مودال ویرایش ═══════════ */}
-      <Modal open={!!editModal} onClose={() => setEditModal(null)} title={`${editModal?.isNew ? "Create" : "Edit"} ${editModal?.table || ""}`}>
+      <Modal open={!!editModal} onClose={() => setEditModal(null)} title={`${editModal?.isNew ? "ایجاد" : "ویرایش"} ${editModal?.table || ""}`}>
         <div className="flex flex-col gap-3 max-h-[70vh] overflow-y-auto">
           {Object.entries(editForm).map(([key, val]) => {
             if (key === "id" || key === "created_at") return null;
             return (
               <div key={key}>
-                <label className="block text-[0.6rem] font-bold text-cool-gray-60 mb-1 uppercase">{key.replace(/_/g, " ")}</label>
+                <label className="block text-[0.6rem] font-extrabold text-navy mb-1 uppercase">{key.replace(/_/g, " ")}</label>
                 {typeof val === "boolean" ? (
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={val} onChange={(e) => setEditForm({ ...editForm, [key]: e.target.checked })} className="w-4 h-4 accent-[#0f62fe]" />
-                    <span className="text-xs">{val ? "True" : "False"}</span>
+                    <input type="checkbox" checked={val} onChange={(e) => setEditForm({ ...editForm, [key]: e.target.checked })} className="w-4 h-4 accent-teal" />
+                    <span className="text-xs font-semibold text-ink">{val ? "فعال" : "غیرفعال"}</span>
                   </label>
                 ) : typeof val === "object" ? (
                   <textarea value={JSON.stringify(val, null, 2)} onChange={(e) => { try { setEditForm({ ...editForm, [key]: JSON.parse(e.target.value) }); } catch {} }}
-                    rows={3} className="w-full border border-cool-gray-30 rounded px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:border-ibm-blue resize-y" />
+                    rows={3} className="w-full bg-white border-2 border-ink/15 rounded-pill-md px-3 py-2 text-xs font-mono text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none resize-y" />
                 ) : (
                   <input type="text" value={val ?? ""} onChange={(e) => setEditForm({ ...editForm, [key]: e.target.value })}
-                    className="w-full border border-cool-gray-30 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-ibm-blue" />
+                    className="w-full bg-white border-2 border-ink/15 rounded-pill-md px-3 py-2 text-xs font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none" />
                 )}
               </div>
             );
           })}
-          <div className="flex gap-2 justify-end pt-2 border-t border-cool-gray-20">
-            <button onClick={saveRecord} className="px-4 py-1.5 bg-ibm-blue text-white text-xs font-semibold rounded hover:bg-ibm-blue-hover transition-colors">Save</button>
-            <button onClick={() => setEditModal(null)} className="px-4 py-1.5 border border-cool-gray-30 text-xs font-semibold rounded hover:bg-cool-gray-10 transition-colors">Cancel</button>
+          <div className="flex gap-2 justify-end pt-2 border-t border-ink/10">
+            <Button variant="teal" size="sm" onClick={saveRecord}>ذخیره</Button>
+            <Button variant="ghost" size="sm" onClick={() => setEditModal(null)}>انصراف</Button>
           </div>
         </div>
       </Modal>
 
       {/* ═══════════ مودال جزئیات کاربر + ویرایش دسترسی ═══════════ */}
-      <Modal open={!!detailModal} onClose={() => setDetailModal(null)} title={`User: ${detailModal?.full_name || detailModal?.email || ""}`}>
+      <Modal open={!!detailModal} onClose={() => setDetailModal(null)} title={`کاربر: ${detailModal?.full_name || detailModal?.email || ""}`}>
         {detailModal && (
           <div className="flex flex-col gap-3 text-sm max-h-[80vh] overflow-y-auto">
             {/* اطلاعات پایه */}
             <div className="grid grid-cols-2 gap-2">
-              <div><span className="text-[0.6rem] text-cool-gray-50">ID</span><div className="text-xs font-mono break-all">{detailModal.id}</div></div>
-              <div><span className="text-[0.6rem] text-cool-gray-50">Email</span><div className="text-xs" dir="ltr">{detailModal.email}</div></div>
-              <div><span className="text-[0.6rem] text-cool-gray-50">Name</span><div className="text-xs">{detailModal.full_name || "—"}</div></div>
-              <div><span className="text-[0.6rem] text-cool-gray-50">Role</span><div className="text-xs">{detailModal.role || "—"}</div></div>
-              <div><span className="text-[0.6rem] text-cool-gray-50">Owner</span><div className="text-xs">{detailModal.is_owner ? "Yes" : "No"}</div></div>
-              <div><span className="text-[0.6rem] text-cool-gray-50">Active</span><div className="text-xs">{detailModal.is_active ? "Yes" : "No"}</div></div>
-              <div><span className="text-[0.6rem] text-cool-gray-50">Joined</span><div className="text-xs">{detailModal.created_at ? new Date(detailModal.created_at).toLocaleString("fa-IR") : "—"}</div></div>
-              <div><span className="text-[0.6rem] text-cool-gray-50">Hidden From</span><div className="text-xs">{detailModal.hidden_from?.length || 0} users</div></div>
+              <div><span className="text-[0.6rem] font-bold text-ink-subtle">شناسه</span><div className="text-[0.6rem] font-mono break-all text-navy">{detailModal.id}</div></div>
+              <div><span className="text-[0.6rem] font-bold text-ink-subtle">ایمیل</span><div className="text-xs font-semibold text-navy" dir="ltr">{detailModal.email}</div></div>
+              <div><span className="text-[0.6rem] font-bold text-ink-subtle">نام</span><div className="text-xs font-bold text-navy">{detailModal.full_name || "—"}</div></div>
+              <div><span className="text-[0.6rem] font-bold text-ink-subtle">نقش</span><div className="text-xs font-semibold text-navy">{detailModal.role || "—"}</div></div>
+              <div><span className="text-[0.6rem] font-bold text-ink-subtle">مالک</span><div className="text-xs font-semibold text-navy">{detailModal.is_owner ? "بله" : "خیر"}</div></div>
+              <div><span className="text-[0.6rem] font-bold text-ink-subtle">وضعیت</span><div className="text-xs font-semibold text-navy">{detailModal.is_active ? "فعال" : "غیرفعال"}</div></div>
+              <div><span className="text-[0.6rem] font-bold text-ink-subtle">تاریخ عضویت</span><div className="text-xs font-semibold text-navy">{detailModal.created_at ? new Date(detailModal.created_at).toLocaleString("fa-IR") : "—"}</div></div>
+              <div><span className="text-[0.6rem] font-bold text-ink-subtle">مخفی از</span><div className="text-xs font-semibold text-navy">{detailModal.hidden_from?.length || 0} کاربر</div></div>
             </div>
 
             {/* ─── ویرایش نقش ─── */}
             {!detailModal.is_owner && (
-              <div className="border border-cool-gray-20 rounded-lg p-2">
-                <span className="text-[0.6rem] font-bold text-cool-gray-60 uppercase">Role</span>
-                <div className="flex gap-1 mt-1">
+              <div className="border-2 border-ink/10 rounded-pill-md p-2.5">
+                <span className="text-[0.6rem] font-extrabold text-navy uppercase">نقش</span>
+                <div className="flex gap-1 mt-1.5">
                   {["manager", "admin"].map((r) => (
                     <button key={r}
                       onClick={async () => {
                         try {
                           const { error } = await supabase.from("user_roles").upsert({ user_id: detailModal.id, role_id: r, active: true }, { onConflict: "user_id" });
                           if (error) throw error;
-                          showToast(`Role changed to ${r}`);
+                          showToast(`نقش به ${r} تغییر کرد`);
                           setDetailModal({ ...detailModal, role: r });
                           loadUsers();
                         } catch (err) { showToast("Error: " + err.message, "error"); }
                       }}
-                      className={`text-[0.6rem] px-2 py-1 rounded transition-colors ${detailModal.role === r ? "bg-ibm-blue text-white" : "bg-cool-gray-10 text-cool-gray-60 hover:bg-cool-gray-20"}`}>
-                      {r}
+                      className={`text-[0.6rem] font-bold px-2 py-1 rounded-pill-sm transition-colors ${
+                        detailModal.role === r ? "bg-teal text-white" : "bg-bg-lavender text-navy hover:bg-teal/10"
+                      }`}>
+                      {r === "admin" ? "ادمین" : "مدیر"}
                     </button>
                   ))}
                 </div>
@@ -818,31 +861,33 @@ export default function SuperAdmin() {
 
             {/* ─── تغییر وضعیت فعال/غیرفعال ─── */}
             {!detailModal.is_owner && (
-              <div className="border border-cool-gray-20 rounded-lg p-2">
-                <span className="text-[0.6rem] font-bold text-cool-gray-60 uppercase">Status</span>
-                <div className="flex gap-1 mt-1">
+              <div className="border-2 border-ink/10 rounded-pill-md p-2.5">
+                <span className="text-[0.6rem] font-extrabold text-navy uppercase">وضعیت</span>
+                <div className="flex gap-1 mt-1.5">
                   <button
                     onClick={async () => {
                       try {
                         const { error } = await supabase.from("profiles").update({ is_active: !detailModal.is_active }).eq("id", detailModal.id);
                         if (error) throw error;
-                        showToast(detailModal.is_active ? "Deactivated" : "Activated");
+                        showToast(detailModal.is_active ? "غیرفعال شد" : "فعال شد");
                         setDetailModal({ ...detailModal, is_active: !detailModal.is_active });
                         loadUsers();
                       } catch (err) { showToast("Error: " + err.message, "error"); }
                     }}
-                    className={`text-[0.6rem] px-2 py-1 rounded transition-colors ${detailModal.is_active ? "bg-red-60 text-white hover:bg-red-70" : "bg-green-50 text-green-60 hover:bg-green-100"}`}>
-                    {detailModal.is_active ? "Deactivate" : "Activate"}
+                    className={`text-[0.6rem] font-bold px-2 py-1 rounded-pill-sm transition-colors ${
+                      detailModal.is_active ? "bg-magenta text-white hover:bg-magenta-text" : "bg-teal text-white hover:bg-teal-text"
+                    }`}>
+                    {detailModal.is_active ? "غیرفعال کردن" : "فعال کردن"}
                   </button>
                 </div>
               </div>
             )}
 
             {/* ─── ویرایش مجوزها ─── */}
-            <div className="border border-cool-gray-20 rounded-lg p-2">
+            <div className="border-2 border-ink/10 rounded-pill-md p-2.5">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[0.6rem] font-bold text-cool-gray-60 uppercase">Permissions</span>
-                <span className="text-[0.55rem] text-cool-gray-50">{detailModal.permissions?.length || 0} active</span>
+                <span className="text-[0.6rem] font-extrabold text-navy uppercase">مجوزها</span>
+                <span className="text-[0.55rem] font-bold text-teal-text">{detailModal.permissions?.length || 0} فعال</span>
               </div>
               <div className="flex flex-wrap gap-1">
                 {["create_form", "edit_form", "delete_form", "publish_form", "view_responses", "view_analytics", "export_excel", "manage_managers", "manage_sms", "view_admins"].map((perm) => {
@@ -859,11 +904,13 @@ export default function SuperAdmin() {
                             p_permission_ids: newPerms,
                           });
                           if (error) throw error;
-                          showToast(`Permission ${perm} ${has ? "removed" : "added"}`);
+                          showToast(`مجوز ${perm} ${has ? "حذف" : "اضافه"} شد`);
                           setDetailModal({ ...detailModal, permissions: newPerms });
                         } catch (err) { showToast("Error: " + err.message, "error"); }
                       }}
-                      className={`text-[0.55rem] px-1.5 py-0.5 rounded transition-colors ${has ? "bg-green-50 text-green-60 border border-green-50/30" : "bg-cool-gray-10 text-cool-gray-50 border border-cool-gray-20 hover:bg-cool-gray-20"}`}>
+                      className={`text-[0.55rem] font-bold px-1.5 py-0.5 rounded-pill-sm transition-colors ${
+                        has ? "bg-teal/15 text-teal-text border border-teal/30" : "bg-bg-lavender text-ink-subtle border border-ink/10 hover:bg-bg-lavender/80"
+                      }`}>
                       {perm.replace(/_/g, " ")}
                     </button>
                   );
@@ -872,12 +919,12 @@ export default function SuperAdmin() {
             </div>
 
             {/* ─── نمایش/مخفی‌سازی از مدیران ─── */}
-            <div className="border border-cool-gray-20 rounded-lg p-2">
+            <div className="border-2 border-ink/10 rounded-pill-md p-2.5">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[0.6rem] font-bold text-cool-gray-60 uppercase">Visibility</span>
-                <span className="text-[0.55rem] text-cool-gray-50">hidden from {detailModal.hidden_from?.length || 0} users</span>
+                <span className="text-[0.6rem] font-extrabold text-navy uppercase">نمایش</span>
+                <span className="text-[0.55rem] font-bold text-ink-subtle">مخفی از {detailModal.hidden_from?.length || 0} کاربر</span>
               </div>
-              <p className="text-[0.55rem] text-cool-gray-50 mb-1.5">Admins this user is hidden from in managers list:</p>
+              <p className="text-[0.55rem] font-semibold text-ink-subtle mb-1.5">ادمین‌هایی که این کاربر از آن‌ها مخفی است:</p>
               <div className="flex flex-wrap gap-1">
                 {admins.filter((a) => !a.is_owner && a.id !== detailModal.id).map((a) => {
                   const isHidden = detailModal.hidden_from?.includes(a.id);
@@ -895,37 +942,38 @@ export default function SuperAdmin() {
                           setDetailModal({ ...detailModal, hidden_from: val });
                         } catch (err) { showToast("Error: " + err.message, "error"); }
                       }}
-                      className={`text-[0.55rem] px-1.5 py-0.5 rounded transition-colors ${isHidden ? "bg-red-60/10 text-red-60 border border-red-60/20" : "bg-cool-gray-10 text-cool-gray-60 border border-cool-gray-20 hover:bg-cool-gray-20"}`}>
-                      {a.full_name || a.email} {isHidden ? "(hidden)" : ""}
+                      className={`text-[0.55rem] font-bold px-1.5 py-0.5 rounded-pill-sm transition-colors ${
+                        isHidden ? "bg-magenta/10 text-magenta-text border border-magenta/20" : "bg-bg-lavender text-navy border border-ink/10 hover:bg-teal/10"
+                      }`}>
+                      {a.full_name || a.email} {isHidden ? "(مخفی)" : ""}
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            <div className="flex gap-2 pt-2 border-t border-cool-gray-20">
-              <button onClick={() => { setImpersonateModal(detailModal); setDetailModal(null); }}
-                className="px-3 py-1.5 bg-ibm-blue text-white text-[0.6rem] font-semibold rounded hover:bg-ibm-blue-hover transition-colors">Login As This User</button>
+            <div className="flex gap-2 pt-2 border-t border-ink/10">
+              <Button variant="teal" size="sm" onClick={() => { setImpersonateModal(detailModal); setDetailModal(null); }}>
+                ورود به عنوان این کاربر
+              </Button>
             </div>
           </div>
         )}
       </Modal>
 
       {/* ═══════════ مودال Login As ═══════════ */}
-      <Modal open={!!impersonateModal} onClose={() => setImpersonateModal(null)} title="Login As User">
+      <Modal open={!!impersonateModal} onClose={() => setImpersonateModal(null)} title="ورود به عنوان کاربر">
         {impersonateModal && (
           <div className="flex flex-col gap-3">
-            <p className="text-xs text-cool-gray-60">You will be logged in as:</p>
-            <div className="bg-cool-gray-10 rounded-lg p-3">
-              <div className="text-sm font-bold">{impersonateModal.full_name || "—"}</div>
-              <div className="text-xs text-cool-gray-50" dir="ltr">{impersonateModal.email}</div>
+            <p className="text-xs font-semibold text-ink-subtle">شما به عنوان این کاربر وارد خواهید شد:</p>
+            <div className="bg-bg-lavender rounded-pill-md p-3">
+              <div className="text-sm font-extrabold text-navy">{impersonateModal.full_name || "—"}</div>
+              <div className="text-xs font-semibold text-ink-subtle" dir="ltr">{impersonateModal.email}</div>
             </div>
-            <p className="text-[0.6rem] text-red-60">⚠️ This action is logged in the activity log.</p>
+            <p className="text-[0.6rem] font-bold text-magenta-text">⚠️ این عملیات در لاگ فعالیت ثبت می‌شود.</p>
             <div className="flex gap-2 justify-end">
-              <button onClick={() => doImpersonate(impersonateModal.id)}
-                className="px-4 py-1.5 bg-ibm-blue text-white text-xs font-semibold rounded hover:bg-ibm-blue-hover transition-colors">Confirm Login As</button>
-              <button onClick={() => setImpersonateModal(null)}
-                className="px-4 py-1.5 border border-cool-gray-30 text-xs font-semibold rounded hover:bg-cool-gray-10 transition-colors">Cancel</button>
+              <Button variant="teal" size="sm" onClick={() => doImpersonate(impersonateModal.id)}>تأیید ورود</Button>
+              <Button variant="ghost" size="sm" onClick={() => setImpersonateModal(null)}>انصراف</Button>
             </div>
           </div>
         )}
