@@ -88,12 +88,6 @@ html {
     display: none;
 }
 
-/* ─── embed: جلوگیری از اسکرول بکگراند ─── */
-.pcode-embed {
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-}
-
 /* ─── شمارنده‌ی ستاره‌ی امتیاز ─── */
 .star-btn {
     transition: transform 150ms ease, filter 150ms ease;

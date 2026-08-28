@@ -33,6 +33,7 @@
     iframe.style.width = "100%";
     iframe.style.border = "none";
     iframe.style.minHeight = "400px";
+    iframe.style.overscrollBehavior = "contain";
 
     // ─── ذخیره reference‌ها برای close از بیرون ───
     if (!window.__pcodeInstances) window.__pcodeInstances = {};

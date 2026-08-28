@@ -366,7 +366,7 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
   }
 
   return (
-    <div className="pcode-embed min-h-[100dvh] flex flex-col bg-transparent overflow-y-auto" dir="rtl">
+    <div className="min-h-[100dvh] flex flex-col bg-transparent overflow-y-auto" dir="rtl">
       <CloseButton />
       <div className="w-full max-w-xl mx-auto px-5 py-3 text-center">
         <span className="inline-flex items-baseline gap-0.5 text-base sm:text-lg font-black select-none">
@@ -766,8 +766,8 @@ export default function EmbedForm() {
 
   const isRegistration = schema?.form_type === "registration";
 
-  if (loading) return <div className="pcode-embed min-h-[100dvh] flex items-center justify-center bg-transparent"><CloseButton /><Spinner label="فرم داره لود می‌شه..." /></div>;
-  if (error) return <div className="pcode-embed min-h-[100dvh] flex items-center justify-center p-4 bg-transparent"><CloseButton />      <div className="relative max-w-sm w-full">
+  if (loading) return <div className="min-h-[100dvh] flex items-center justify-center bg-transparent"><CloseButton /><Spinner label="فرم داره لود می‌شه..." /></div>;
+  if (error) return <div className="min-h-[100dvh] flex items-center justify-center p-4 bg-transparent"><CloseButton />      <div className="relative max-w-sm w-full">
       <div aria-hidden="true" className="absolute top-2 left-2 w-full h-full bg-male-normal rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
       <div className="relative z-10 bg-white border-2 border-male-normal rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-4 sm:p-5 text-center">
         <p className="text-sm sm:text-base font-black text-male-normal">{error}</p>
@@ -782,7 +782,7 @@ export default function EmbedForm() {
 
   // ─── فرم مرحله‌ای embed — طراحی رکاد ───
   return (
-    <div className="pcode-embed min-h-[100dvh] font-sans bg-transparent" dir="rtl">
+    <div className="min-h-[100dvh] font-sans bg-transparent" dir="rtl">
       <CloseButton />
       {/* هدر باریک */}
       <div className="w-full max-w-xl mx-auto px-5 py-3 text-center">
