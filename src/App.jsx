@@ -104,7 +104,7 @@ export default function App() {
               <Route path="forms/:id/responses" element={<Responses />} />
               <Route path="forms/:id/share" element={<ShareForm />} />
               <Route path="managers" element={<AuthGuard adminOnly={true}><Managers /></AuthGuard>} />
-              <Route path="superadmin" element={<AuthGuard adminOnly={true}><SuperAdmin /></AuthGuard>} />
+              <Route path="superadmin" element={<AuthGuard ownerOnly={true}><SuperAdmin /></AuthGuard>} />
               <Route path="embed" element={<EmbedHub />} />
               <Route path="sms" element={<SmsPanel />} />
               <Route path="profile" element={<Profile />} />

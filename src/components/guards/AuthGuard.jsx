@@ -2,8 +2,8 @@ import { Navigate } from "react-router-dom";
 import Spinner from "../ui/Spinner";
 import { useAuth } from "../../context/AuthContext";
 
-export default function AuthGuard({ children, adminOnly = false }) {
-  const { user, loading, role } = useAuth();
+export default function AuthGuard({ children, adminOnly = false, ownerOnly = false }) {
+  const { user, loading, role, isOwner } = useAuth();
 
   if (loading) {
     return (
@@ -18,6 +18,10 @@ export default function AuthGuard({ children, adminOnly = false }) {
   }
 
   if (adminOnly && role !== "admin") {
+    return <Navigate to="/admin" replace />;
+  }
+
+  if (ownerOnly && !isOwner()) {
     return <Navigate to="/admin" replace />;
   }
 
