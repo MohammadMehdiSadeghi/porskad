@@ -18,6 +18,7 @@ import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import SEO from "../../components/ui/SEO";
 import { calculateScore, hasScoring } from "../../lib/scoring";
 import ScoreResult from "../../components/ui/ScoreResult";
+import MusicPlayer from "../../components/ui/MusicPlayer";
 
 const draftKey = (slug) => `porskad_draft_${slug}`;
 
@@ -653,6 +654,9 @@ export default function FormFill() {
         totalRequired={visibleQuestions.filter((q) => q.required).length}
         filledCount={visibleQuestions.filter((q) => q.required && answers[q.id] != null && String(answers[q.id]).trim() !== "").length}
       />
+
+      {/* موزیک پس‌زمینه */}
+      <MusicPlayer autoPlay={false} volume={0.25} />
     </div>
   );
 }
