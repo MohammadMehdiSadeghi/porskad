@@ -48,39 +48,17 @@ export default function FormsList() {
   const [busy, setBusy] = useState(false);
   const [showTypeModal, setShowTypeModal] = useState(false);
 
-  const PAGE_SIZE = 500;
-
   async function load() {
     setLoading(true);
     try {
-      const [{ data: formsData, error: formsError }, { data: respData }] =
+      const [{ data: formsData, error: formsError }, { data: countsData }] =
         await Promise.all([
           supabase.from("forms").select("*").order("created_at", { ascending: false }),
-          (async () => {
-            let all = [];
-            let from = 0;
-            for (;;) {
-              const { data, error } = await supabase
-                .from("responses")
-                .select("form_id, is_complete")
-                .range(from, from + PAGE_SIZE - 1);
-              if (error) throw error;
-              all = all.concat(data ?? []);
-              if (!data || data.length < PAGE_SIZE) break;
-              from += PAGE_SIZE;
-            }
-            return { data: all };
-          })(),
+          supabase.rpc("get_form_response_counts"),
         ]);
       if (formsError) throw formsError;
       setForms(formsData ?? []);
-      const c = {};
-      for (const r of respData?.data ?? []) {
-        c[r.form_id] = c[r.form_id] ?? { total: 0, complete: 0 };
-        c[r.form_id].total++;
-        if (r.is_complete) c[r.form_id].complete++;
-      }
-      setCounts(c);
+      setCounts(countsData || {});
     } catch (err) {
       console.error("load error:", err);
       push("خطا در بارگذاری فرم‌ها: " + (err.message || ""), "error");
