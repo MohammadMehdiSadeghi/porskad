@@ -144,20 +144,33 @@ export default function Dashboard() {
                   </tbody>
                 </table>
               </div>
-              {/* موبایل: کارت‌های عمودی */}
-              <div className="md:hidden flex flex-col divide-y divide-ink/5 max-h-[28rem] overflow-y-auto">
-                {recent.map((r, i) => (
-                  <div key={r.id} className="flex items-center gap-3 px-4 py-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="font-bold text-ink text-sm truncate">{formTitleById[r.form_id] ?? "—"}</div>
-                      <div className="text-xs font-semibold text-ink-subtle mt-0.5">{faRelative(r.submitted_at ?? r.created_at)}</div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {r.is_complete ? <Badge color="green">✓</Badge> : <Badge color="gray">ناقص</Badge>}
-                      <span className="text-xs font-semibold text-ink-subtle">{r.duration_seconds ? faDuration(r.duration_seconds) : "—"}</span>
-                    </div>
-                  </div>
-                ))}
+              {/* موبایل: ردیف‌های فشرده — اسکرول عمودی */}
+              <div className="md:hidden max-h-[24rem] overflow-y-auto">
+                <table className="w-full text-[0.7rem]">
+                  <thead className="sticky top-0 bg-white z-10">
+                    <tr className="text-navy border-b-2 border-ink/10">
+                      <th className="text-right font-black px-2.5 py-2">فرم</th>
+                      <th className="text-right font-black px-2.5 py-2">زمان</th>
+                      <th className="text-center font-black px-2 py-2">وضعیت</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recent.map((r, i) => (
+                      <tr key={r.id} className={`${i % 2 ? "bg-bg-lavender/40" : ""} border-b border-ink/5 last:border-0`}
+                        style={{ pageBreakInside: 'avoid' }}>
+                        <td className="px-2.5 py-2 font-bold text-ink max-w-[45%] truncate" title={formTitleById[r.form_id] ?? "—"}>
+                          {formTitleById[r.form_id] ?? "—"}
+                        </td>
+                        <td className="px-2.5 py-2 font-semibold text-ink-subtle whitespace-nowrap">
+                          {faRelative(r.submitted_at ?? r.created_at)}
+                        </td>
+                        <td className="px-2 py-2 text-center">
+                          {r.is_complete ? <Badge color="green">✓</Badge> : <Badge color="gray">ناقص</Badge>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </StickerCard>
           </div>
