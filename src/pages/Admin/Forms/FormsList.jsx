@@ -194,37 +194,37 @@ export default function FormsList() {
         noIndex
       />
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-navy">فرم‌ها</h1>
-          <p className="text-sm font-semibold text-ink-subtle mt-1">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-navy">فرم‌ها</h1>
+          <p className="text-xs font-semibold text-ink-subtle mt-0.5">
             {forms.length} فرم — برای ویرایش روی هر فرم بزنید
           </p>
         </div>
-        <Button variant="indigo" onClick={() => setShowTypeModal(true)} disabled={busy} rotate="-rotate-[1deg]">
-          فرم جدید
+        <Button variant="indigo" size="sm" onClick={() => setShowTypeModal(true)} disabled={busy} rotate="-rotate-[1deg]">
+          + فرم جدید
         </Button>
       </div>
 
       {/* Search & Filter */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <input
           type="text"
           placeholder="جستجوی فرم..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-[200px] bg-white border-2 border-ink/15 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
+          className="flex-1 min-w-0 bg-white border-2 border-ink/15 rounded-pill-md px-3 py-2 text-xs font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
         />
-        <div className="flex items-center gap-1 bg-white border-2 border-ink/15 rounded-pill-md p-1">
+        <div className="flex items-center gap-0.5 bg-white border-2 border-ink/15 rounded-pill-md p-0.5">
           {[
             { key: "all", label: "همه" },
-            { key: "published", label: "منتشرشده" },
+            { key: "published", label: "منتشر" },
             { key: "draft", label: "پیش‌نویس" },
           ].map((f) => (
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`px-3 py-1.5 text-sm font-bold rounded-pill-sm transition-colors ${
+              className={`px-2.5 py-1.5 text-xs font-bold rounded-pill-sm transition-colors ${
                 filter === f.key
                   ? "bg-teal text-white"
                   : "text-ink-subtle hover:text-ink"
@@ -242,20 +242,20 @@ export default function FormsList() {
           icon={<FileText size={48} />}
           title={search ? "فرمی یافت نشد" : "هنوز فرمی نساخته‌ای!"}
           subtitle={search ? "عبارت جستجو را تغییر دهید." : "با دکمه‌ی «فرم جدید» شروع کن."}
-          action={!search && <Button variant="indigo" onClick={() => setShowTypeModal(true)}>+ فرم جدید</Button>}
+          action={!search && <Button variant="indigo" size="sm" onClick={() => setShowTypeModal(true)}>+ فرم جدید</Button>}
         />
       ) : (
-        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5 lg:gap-7">
+        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 lg:gap-5">
           {filtered.map((f, i) => {
             const c = counts[f.id] ?? { total: 0, complete: 0 };
             const isReg = f.form_type === "registration";
             return (
               <div key={f.id} className={i % 2 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"}>
                 <StickerCard theme="white">
-                  <div className="p-5 flex flex-col gap-3">
+                  <div className="p-3.5 flex flex-col gap-2.5">
                     <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-black text-navy leading-6 line-clamp-1">{f.title}</h3>
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <h3 className="font-extrabold text-navy leading-5 line-clamp-1 text-sm">{f.title}</h3>
+                      <div className="flex items-center gap-1 shrink-0">
                         {isReg && <Badge color="orange">ثبت‌نامی</Badge>}
                         {f.published ? (
                           <Badge color="green">منتشر</Badge>
@@ -265,13 +265,13 @@ export default function FormsList() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 text-xs font-semibold text-ink-subtle">
-                      <span>📥 {c.total} پاسخ</span>
-                      <span>✓ {c.complete} کامل</span>
+                    <div className="flex items-center gap-2 text-[0.65rem] font-semibold text-ink-subtle">
+                      <span>📥 {c.total}</span>
+                      <span>✓ {c.complete}</span>
                       <span className="mr-auto">{new Date(f.created_at).toLocaleDateString("fa-IR")}</span>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 mt-1">
+                    <div className="flex flex-wrap gap-1.5 mt-1">
                       <Button as={Link} to={`/admin/forms/${f.id}`} variant="ghost" size="sm">ویرایش</Button>
                       <Button as={Link} to={`/admin/forms/${f.id}/responses`} variant="ghost" size="sm">پاسخ‌ها</Button>
                       <Button as={Link} to={`/admin/forms/${f.id}/share`} variant="ghost" size="sm">اشتراک</Button>

@@ -41,9 +41,9 @@ const VARIANTS = {
 };
 
 const SIZES = {
-  sm: "px-3 py-1.5 text-sm gap-1.5",
-  md: "px-5 py-2.5 text-base gap-2",
-  lg: "px-7 py-3.5 text-lg gap-2.5",
+  sm: "px-2.5 py-1.5 text-xs gap-1",
+  md: "px-4 py-2 text-sm gap-1.5",
+  lg: "px-5 py-2.5 text-sm gap-2",
 };
 
 export default function Button({

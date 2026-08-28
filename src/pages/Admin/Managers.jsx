@@ -283,19 +283,19 @@ export default function Managers() {
   if (loading) return <Spinner label="لیست مدیران..." />;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <SEO title="مدیریت مدیران" description="مدیریت مدیران و مجوزها — پرسکاد" url="/admin/managers" noIndex />
 
       {/* هدر */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-navy">مدیریت مدیران</h1>
-          <p className="text-sm font-semibold text-ink-subtle mt-1">
-            {managers.filter((m) => m.is_active).length} مدیر فعال — {ALL_PERM_IDS.length} مجوز تعریف شده
+          <h1 className="text-xl sm:text-2xl font-extrabold text-navy">مدیریت مدیران</h1>
+          <p className="text-xs font-semibold text-ink-subtle mt-0.5">
+            {managers.filter((m) => m.is_active).length} فعال — {ALL_PERM_IDS.length} مجوز
           </p>
         </div>
-        <Button variant="teal" size="md" onClick={() => setShowCreateModal(true)} rotate="-rotate-[1deg]">
-          <Plus size={16} className="ml-1" /> مدیر جدید
+        <Button variant="teal" size="sm" onClick={() => setShowCreateModal(true)} rotate="-rotate-[1deg]">
+          <Plus size={14} className="ml-1" /> مدیر جدید
         </Button>
       </div>
 
@@ -308,15 +308,15 @@ export default function Managers() {
           action={<Button variant="teal" onClick={() => setShowCreateModal(true)}>مدیر جدید</Button>}
         />
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5 lg:gap-7">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 lg:gap-5">
           {managers.map((m, i) => (
             <div key={m.id} className={i % 2 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"}>
               <StickerCard theme={m.is_owner ? "orange" : "white"}>
-                <div className="p-5 flex flex-col gap-3">
+                <div className="p-3.5 flex flex-col gap-2.5">
                   {/* هدر */}
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-base rotate-[3deg] ${
+                    <div className="flex items-center gap-2">
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center font-extrabold text-sm rotate-[3deg] ${
                         m.is_owner ? "bg-orange/20 text-orange" :
                         m.is_active ? "bg-bg-mint text-teal-text" :
                         "bg-bg-neutral text-ink-subtle"
@@ -324,8 +324,8 @@ export default function Managers() {
                         {m.full_name?.[0]?.toUpperCase() ?? m.email?.[0]?.toUpperCase() ?? "U"}
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-black text-navy leading-5 line-clamp-1">
+                        <div className="flex items-center gap-1">
+                          <span className="font-extrabold text-navy leading-4 line-clamp-1 text-xs">
                             {m.full_name || "—"}
                           </span>
                           {m.is_owner && (
@@ -333,8 +333,7 @@ export default function Managers() {
                               <Crown size={10} /> صاحب
                             </span>
                           )}
-                        </div>
-                        <span className="text-xs font-medium text-ink-subtle" dir="ltr">{m.email}</span>
+                        </div>                          <span className="text-[0.65rem] font-medium text-ink-subtle" dir="ltr">{m.email}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">

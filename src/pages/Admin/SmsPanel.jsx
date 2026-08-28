@@ -236,31 +236,31 @@ export default function SmsPanel() {
       />
 
       {/* هدر */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-navy flex items-center gap-2">
-            <MessageSquare size={28} className="text-teal" />
+          <h1 className="text-xl sm:text-2xl font-extrabold text-navy flex items-center gap-2">
+            <MessageSquare size={22} className="text-teal" />
             پنل پیامک
           </h1>
-          <p className="text-sm font-semibold text-ink-subtle mt-1">
-            ارسال و مدیریت پیامک از طریق وب‌سرویس آموت
+          <p className="text-xs font-semibold text-ink-subtle mt-0.5">
+            ارسال و مدیریت پیامک
           </p>
         </div>
       </div>
 
       {/* تب‌ها */}
-      <div className="flex gap-2 bg-white border-2 border-ink/10 rounded-pill-lg p-1.5 overflow-x-auto">
+      <div className="flex gap-1 bg-white border-2 border-ink/10 rounded-pill-md p-1 overflow-x-auto">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-pill-md text-sm font-bold transition-all whitespace-nowrap ${
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-pill-sm text-xs font-bold transition-all whitespace-nowrap ${
               tab === t.id
                 ? "bg-teal text-white shadow-[2px_2px_0_0_rgba(0,0,0,0.15)]"
                 : "text-ink-subtle hover:text-ink hover:bg-bg-lavender"
             }`}
           >
-            <t.icon size={16} />
+            <t.icon size={14} />
             {t.label}
           </button>
         ))}
@@ -271,7 +271,7 @@ export default function SmsPanel() {
         <div className="flex flex-col gap-8">
           {/* آمار */}
           {stats && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-7">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
               <StatCard theme="teal" label="ارسال امروز" value={faNum(stats.today_sent || 0)} caption="پیامک ارسال شده" />
               <StatCard theme="navy" label="ارسال ماه" value={faNum(stats.month_sent || 0)} caption="پیامک این ماه" />
               <StatCard theme="magenta" label="تحویل شده" value={faNum(stats.delivered || 0)} caption="تایید شده توسط گیرنده" />
@@ -281,16 +281,16 @@ export default function SmsPanel() {
 
           {/* وضعیت حساب */}
           <div>
-            <h2 className="text-xl font-black text-navy mb-4">وضعیت حساب آموت</h2>
+            <h2 className="text-base font-extrabold text-navy mb-3">وضعیت حساب آموت</h2>
             {fetchingStatus ? (
               <Spinner label="دریافت اطلاعات حساب..." />
             ) : accountInfo ? (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-7">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-5">
                 <div className="-rotate-[0.5deg]">
                   <StickerCard theme="teal">
-                    <div className="p-5">
-                      <div className="text-xs font-bold text-teal-text mb-1">موجودی حساب</div>
-                      <div className="text-2xl font-black text-teal-text">
+                    <div className="p-3.5">
+                      <div className="text-[0.65rem] font-bold text-teal-text mb-0.5">موجودی حساب</div>
+                      <div className="text-lg font-extrabold text-teal-text">
                         {formatRial(accountInfo.RemaindCredit)}
                       </div>
                     </div>
@@ -298,9 +298,9 @@ export default function SmsPanel() {
                 </div>
                 <div className="rotate-[0.5deg]">
                   <StickerCard theme="white">
-                    <div className="p-5">
-                      <div className="text-xs font-bold text-ink-subtle mb-1">نام حساب</div>
-                      <div className="text-lg font-black text-navy">
+                    <div className="p-3.5">
+                      <div className="text-[0.65rem] font-bold text-ink-subtle mb-0.5">نام حساب</div>
+                      <div className="text-sm font-extrabold text-navy">
                         {accountInfo.AccountName || "—"}
                       </div>
                     </div>
@@ -350,39 +350,39 @@ export default function SmsPanel() {
 
       {/* ═══════ تب ارسال پیامک ═══════ */}
       {tab === "send" && (
-        <div className="flex flex-col gap-6 max-w-2xl">
+        <div className="flex flex-col gap-4 max-w-2xl">
           <div className="-rotate-[0.5deg]">
             <StickerCard theme="white">
-              <div className="p-6 flex flex-col gap-5">
+              <div className="p-4 flex flex-col gap-4">
                 {/* شماره موبایل‌ها */}
                 <div>
-                  <label className="block text-sm font-extrabold text-navy mb-1.5">
+                  <label className="block text-xs font-extrabold text-navy mb-1">
                     شماره موبایل‌ها
                   </label>
                   <textarea
                     value={smsNumbers}
                     onChange={(e) => setSmsNumbers(e.target.value)}
-                    className={inputCls + " min-h-[80px] font-mono text-sm"}
+                    className={inputCls + " min-h-[70px] font-mono text-xs"}
                     placeholder={"09121234567\n09351234567\n09191234567"}
                     dir="ltr"
                   />
-                  <p className="text-xs font-semibold text-ink-subtle mt-1">
+                  <p className="text-[0.65rem] font-semibold text-ink-subtle mt-0.5">
                     {smsNumbers.split(/[,;\n]+/).map((n) => n.trim()).filter(Boolean).length} شماره وارد شده — با کاما یا خط جدید جدا کنید
                   </p>
                 </div>
 
                 {/* متن پیامک */}
                 <div>
-                  <label className="block text-sm font-extrabold text-navy mb-1.5">
+                  <label className="block text-xs font-extrabold text-navy mb-1">
                     متن پیامک
                   </label>
                   <textarea
                     value={smsText}
                     onChange={(e) => setSmsText(e.target.value)}
-                    className={inputCls + " min-h-[120px]"}
+                    className={inputCls + " min-h-[100px] text-xs"}
                     placeholder="متن پیامک خود را اینجا بنویسید..."
                   />
-                  <div className="flex items-center justify-between mt-1">
+                  <div className="flex items-center justify-between mt-0.5">
                     <span className="text-xs font-semibold text-ink-subtle">
                       {smsText.length} کاراکتر
                     </span>
@@ -445,7 +445,7 @@ export default function SmsPanel() {
 
       {/* ═══════ تب تاریخچه ═══════ */}
       {tab === "history" && (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
           {historyLoading ? (
             <Spinner label="بارگذاری تاریخچه..." />
           ) : history.length === 0 ? (
@@ -458,28 +458,28 @@ export default function SmsPanel() {
             <div className="rotate-[0.3deg]">
               <StickerCard theme="white">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-xs">
                     <thead>
                       <tr className="text-navy border-b-2 border-ink/10">
-                        <th className="text-right font-black px-4 py-3">شماره</th>
-                        <th className="text-right font-black px-4 py-3">متن</th>
-                        <th className="text-right font-black px-4 py-3">وضعیت</th>
-                        <th className="text-right font-black px-4 py-3">تاریخ</th>
+                        <th className="text-right font-extrabold px-3 py-2">شماره</th>
+                        <th className="text-right font-extrabold px-3 py-2">متن</th>
+                        <th className="text-right font-extrabold px-3 py-2">وضعیت</th>
+                        <th className="text-right font-extrabold px-3 py-2 hidden sm:table-cell">تاریخ</th>
                       </tr>
                     </thead>
                     <tbody>
                       {history.map((h, i) => (
-                        <tr key={h.id} className={i % 2 ? "bg-bg-lavender/60" : ""}>
-                          <td className="px-4 py-3 font-mono text-xs font-bold" dir="ltr">{h.mobile}</td>
-                          <td className="px-4 py-3 text-xs font-semibold line-clamp-1 max-w-[200px]">{h.text}</td>
-                          <td className="px-4 py-3">
+                        <tr key={h.id} className={`${i % 2 ? "bg-bg-lavender/60" : ""} border-b border-ink/5 last:border-0`}>
+                          <td className="px-3 py-2 font-mono font-bold" dir="ltr">{h.mobile}</td>
+                          <td className="px-3 py-2 font-semibold line-clamp-1 max-w-[150px]">{h.text}</td>
+                          <td className="px-3 py-2">
                             <Badge color={
                               h.status === "delivered" ? "green" :
                               h.status === "failed" ? "red" :
                               h.status === "sent" ? "blue" : "gray"
                             }>{h.status}</Badge>
                           </td>
-                          <td className="px-4 py-3 text-xs font-semibold text-ink-subtle">
+                          <td className="px-3 py-2 font-semibold text-ink-subtle hidden sm:table-cell">
                             {new Date(h.created_at).toLocaleDateString("fa-IR")}
                           </td>
                         </tr>

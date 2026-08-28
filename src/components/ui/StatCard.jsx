@@ -79,10 +79,10 @@ export default function StatCard({ theme = "teal", label, value, caption }) {
 
         {label && (
           <span
-            className={`relative z-20 inline-block -mt-1 mb-2 xs:mb-3 lg:-mt-2 lg:mb-6
+            className={`relative z-20 inline-block -mt-1 mb-1.5 xs:mb-2 lg:-mt-1.5 lg:mb-4
               bg-white border-[0.0625rem] rounded-xl [corner-shape:squircle]
-              px-1.5 py-0.5 lg:px-4 lg:py-1.5 whitespace-nowrap
-              text-[0.75rem] xs:text-[0.8125rem] lg:text-[0.9375rem] font-bold shadow-sm
+              px-1.5 py-0.5 lg:px-3 lg:py-1 whitespace-nowrap
+              text-[0.65rem] xs:text-[0.7rem] lg:text-[0.8rem] font-bold shadow-sm
               ${t.badgeRotate} ${t.badge}`}
           >
             {label}
@@ -90,15 +90,15 @@ export default function StatCard({ theme = "teal", label, value, caption }) {
         )}
 
         <div
-          className={`relative z-20 mb-1.5 xs:mb-2 lg:mb-4
-            text-[2.75rem] xs:text-[3rem] lg:text-[4.375rem] leading-none font-black ${t.text}`}
+          className={`relative z-20 mb-1 xs:mb-1.5 lg:mb-3
+            text-[2rem] xs:text-[2.25rem] lg:text-[3rem] leading-none font-extrabold ${t.text}`}
         >
           {value}
         </div>
 
         {caption && (
           <div className={`relative z-20 ${t.text} mt-auto`}>
-            <strong className="block text-[0.8125rem] xs:text-[0.875rem] lg:text-[1rem] font-black">
+            <strong className="block text-[0.65rem] xs:text-[0.7rem] lg:text-[0.8rem] font-bold">
               {caption}
             </strong>
           </div>

@@ -52,18 +52,18 @@ export default function Login() {
             onSubmit={handleSubmit}
             className="p-7 sm:p-9 flex flex-col gap-5"
           >
-            <div className="flex flex-col items-center gap-3 text-center">
+            <div className="flex flex-col items-center gap-2 text-center">
               <Badge color="navy" rotate="rotate-[2deg]">
                 پنل مدیریت پرس کاد
               </Badge>
-              <h1 className="text-2xl font-black text-navy">ورود ادمین</h1>
-              <p className="text-sm font-semibold text-ink-subtle">
+              <h1 className="text-xl font-extrabold text-navy">ورود ادمین</h1>
+              <p className="text-xs font-semibold text-ink-subtle">
                 فقط مدیران مجاز به ورود به این بخش هستند.
               </p>
             </div>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-extrabold text-navy">ایمیل</span>
+              <span className="text-xs font-extrabold text-navy">ایمیل</span>
               <input
                 type="email"
                 dir="ltr"
@@ -71,14 +71,14 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-white border-2 border-ink/25 focus:border-teal focus:ring-4 focus:ring-teal/20
-                  rounded-pill-md px-4 py-3 font-semibold text-ink text-left focus:outline-none transition-all"
+                  rounded-pill-md px-4 py-2.5 font-semibold text-ink text-left focus:outline-none transition-all"
                 placeholder="Example@gmail.com"
                 autoComplete="username"
               />
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-extrabold text-navy">رمز عبور</span>
+              <span className="text-xs font-extrabold text-navy">رمز عبور</span>
               <input
                 type="password"
                 dir="ltr"

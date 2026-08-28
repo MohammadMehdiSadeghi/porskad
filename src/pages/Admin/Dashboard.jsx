@@ -73,43 +73,42 @@ export default function Dashboard() {
 
   if (loading) return <Spinner label="داشبورد داره لود می‌شه..." />;
 
-  return (
-    <div className="flex flex-col gap-8">
+  return (      <div className="flex flex-col gap-6">
       <SEO
         title="داشبورد"
         description="نمای کلی فرم‌ها و پاسخ‌ها — پنل مدیریت پرسکاد"
         url="/admin"
         noIndex
       />
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-navy">داشبورد</h1>
-          <p className="text-sm font-semibold text-ink-subtle mt-1">
-            نمای کلی فرم‌ها و پاسخ‌ها — بروزرسانی زنده فعال است
-            <span className="live-dot inline-block w-2 h-2 rounded-full bg-teal mr-2 align-middle" />
+          <h1 className="text-xl sm:text-2xl font-extrabold text-navy">داشبورد</h1>
+          <p className="text-xs font-semibold text-ink-subtle mt-0.5">
+            نمای کلی فرم‌ها و پاسخ‌ها
+            <span className="live-dot inline-block w-1.5 h-1.5 rounded-full bg-teal mr-1.5 align-middle" />
           </p>
         </div>
-        <Button as={Link} to="/admin/forms" variant="teal" rotate="-rotate-[1deg]">
+        <Button as={Link} to="/admin/forms" variant="teal" size="sm" rotate="-rotate-[1deg]">
           مدیریت فرم‌ها
         </Button>
       </div>
 
       {/* آمار کلی */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-7">
-        <StatCard theme="teal" label="فرم‌ها" value={faNum(stats.forms)} caption="کل فرم‌های ساخته‌شده" />
-        <StatCard theme="orange" label="پاسخ‌ها" value={faNum(stats.responses)} caption="همه‌ی ثبت‌شدگان" />
-        <StatCard theme="navy" label="تکمیل‌شده" value={faNum(stats.complete)} caption="فرم کامل پر کرده‌اند" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
+        <StatCard theme="teal" label="فرم‌ها" value={faNum(stats.forms)} caption="کل فرم‌ها" />
+        <StatCard theme="orange" label="پاسخ‌ها" value={faNum(stats.responses)} caption="ثبت‌شدگان" />
+        <StatCard theme="navy" label="تکمیل" value={faNum(stats.complete)} caption="کامل پر شده" />
         <StatCard
           theme="magenta"
           label="میانگین زمان"
           value={stats.avgDuration ? faNum(stats.avgDuration) : "—"}
-          caption={stats.avgDuration ? "ثانیه برای هر فرم" : "هنوز داده‌ای نیست"}
+          caption={stats.avgDuration ? "ثانیه/فرم" : "داده‌ای نیست"}
         />
       </div>
 
       {/* آخرین پاسخ‌ها */}
       <div>
-        <h2 className="text-xl font-black text-navy mb-4">آخرین پاسخ‌ها</h2>
+        <h2 className="text-base font-extrabold text-navy mb-3">آخرین پاسخ‌ها</h2>
         {recent.length === 0 ? (
           <EmptyState
             icon={<Inbox size={48} />}
@@ -121,36 +120,37 @@ export default function Dashboard() {
           <div className="rotate-[0.3deg]">
             <StickerCard theme="white" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-xs sm:text-sm">
                   <thead>
                     <tr className="text-navy border-b-2 border-ink/10">
-                      <th className="text-right font-black px-4 py-3">فرم</th>
-                      <th className="text-right font-black px-4 py-3">زمان ثبت</th>
-                      <th className="text-right font-black px-4 py-3">وضعیت</th>
-                      <th className="text-right font-black px-4 py-3">مدت</th>
-                      <th className="text-right font-black px-4 py-3">دستگاه</th>
+                      <th className="text-right font-extrabold px-3 py-2">فرم</th>
+                      <th className="text-right font-extrabold px-3 py-2 hidden sm:table-cell">زمان</th>
+                      <th className="text-right font-extrabold px-3 py-2">وضعیت</th>
+                      <th className="text-right font-extrabold px-3 py-2 hidden md:table-cell">مدت</th>
+                      <th className="text-right font-extrabold px-3 py-2 hidden lg:table-cell">دستگاه</th>
                     </tr>
                   </thead>
                   <tbody>
                     {recent.map((r, i) => (
-                      <tr key={r.id} className={i % 2 ? "bg-bg-lavender/60" : ""}>
-                        <td className="px-4 py-3 font-bold text-ink">
-                          {formTitleById[r.form_id] ?? "—"}
+                      <tr key={r.id} className={`${i % 2 ? "bg-bg-lavender/60" : ""} border-b border-ink/5 last:border-0`}>
+                        <td className="px-3 py-2.5">
+                          <div className="font-bold text-ink text-xs line-clamp-1">{formTitleById[r.form_id] ?? "—"}</div>
+                          <div className="sm:hidden text-[0.65rem] text-ink-subtle mt-0.5">{faRelative(r.submitted_at ?? r.created_at)}</div>
                         </td>
-                        <td className="px-4 py-3 font-semibold text-ink-subtle">
+                        <td className="px-3 py-2.5 font-semibold text-ink-subtle hidden sm:table-cell">
                           {faRelative(r.submitted_at ?? r.created_at)}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-2.5">
                           {r.is_complete ? (
                             <Badge color="green">✓ کامل</Badge>
                           ) : (
                             <Badge color="gray">ناقص</Badge>
                           )}
                         </td>
-                        <td className="px-4 py-3 font-semibold text-ink-subtle">
+                        <td className="px-3 py-2.5 font-semibold text-ink-subtle hidden md:table-cell">
                           {r.duration_seconds ? faDuration(r.duration_seconds) : "—"}
                         </td>
-                        <td className="px-4 py-3 font-semibold text-ink-subtle">
+                        <td className="px-3 py-2.5 font-semibold text-ink-subtle hidden lg:table-cell">
                           {DEVICE_FA[r.device] ?? r.device ?? "—"}
                         </td>
                       </tr>

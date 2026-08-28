@@ -656,18 +656,18 @@ export default function Responses() {
   const scored = hasScoring(questions);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <SEO title={`پاسخ‌ها: ${form.title}`} description={`تحلیل پاسخ‌های فرم ${form.title}`} url={`/admin/forms/${id}/responses`} noIndex />
 
       {/* هدر */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
           <Button as={Link} to={`/admin/forms/${id}`} variant="ghost" size="sm">
             <ArrowLeft size={14} /> ویرایش فرم
           </Button>
           <div>
-            <h1 className="text-xl font-black text-navy">{form.title}</h1>
-            <p className="text-xs text-ink/40 mt-0.5">
+            <h1 className="text-base sm:text-lg font-extrabold text-navy">{form.title}</h1>
+            <p className="text-[0.65rem] text-ink/40 mt-0.5">
               {faNum(questions.length)} سوال • {faNum(stats.total)} پاسخ
             </p>
           </div>
@@ -686,7 +686,7 @@ export default function Responses() {
       </div>
 
       {/* کارت‌های خلاصه */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
         <SummaryCard icon={MessagesSquare} label="کل پاسخ‌ها" value={stats.total} color="indigo" />
         <SummaryCard icon={CheckCircle2} label="کامل‌شده" value={stats.complete} sub={`${stats.total ? Math.round((stats.complete / stats.total) * 100) : 0}٪`} color="emerald" />
         <SummaryCard icon={TrendingUp} label="امروز" value={stats.today} color="amber" />
@@ -818,17 +818,17 @@ export default function Responses() {
           <div className="rotate-[0.3deg]">
             <StickerCard theme="white" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-xs sm:text-sm">
                   <thead>
                     <tr className="text-navy border-b-2 border-ink/10">
-                      <th className="text-right font-semibold text-ink/70 px-4 py-3">#</th>
-                      <th className="text-right font-semibold text-ink/70 px-4 py-3">زمان ثبت</th>
-                      <th className="text-right font-semibold text-ink/70 px-4 py-3">وضعیت</th>
-                      <th className="text-right font-semibold text-ink/70 px-4 py-3">مدت</th>
-                      <th className="text-right font-semibold text-ink/70 px-4 py-3">دستگاه</th>
-                      {scored && <th className="text-right font-semibold text-ink/70 px-4 py-3">نمره</th>}
-                      <th className="text-right font-semibold text-ink/70 px-4 py-3">پاسخ نمونه</th>
-                      <th className="text-left font-semibold text-ink/70 px-4 py-3">عملیات</th>
+                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">#</th>
+                      <th className="text-right font-extrabold text-ink/70 px-3 py-2 hidden sm:table-cell">زمان</th>
+                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">وضعیت</th>
+                      <th className="text-right font-extrabold text-ink/70 px-3 py-2 hidden md:table-cell">مدت</th>
+                      <th className="text-right font-extrabold text-ink/70 px-3 py-2 hidden lg:table-cell">دستگاه</th>
+                      {scored && <th className="text-right font-extrabold text-ink/70 px-3 py-2">نمره</th>}
+                      <th className="text-right font-extrabold text-ink/70 px-3 py-2 hidden sm:table-cell">پاسخ</th>
+                      <th className="text-left font-extrabold text-ink/70 px-3 py-2">عملیات</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -849,21 +849,21 @@ export default function Responses() {
 
                       return (
                         <tr key={r.id} className="border-b border-ink/5 last:border-0 hover:bg-bg-neutral/50 cursor-pointer" onClick={() => setDetail(r)}>
-                          <td className="px-4 py-3 font-mono text-ink/40 text-xs">{i + 1}</td>
-                          <td className="px-4 py-3 font-medium text-navy">{faDateTime(r.submitted_at || r.created_at)}</td>
-                          <td className="px-4 py-3">
+                          <td className="px-3 py-2 font-mono text-ink/40 text-[0.65rem]">{i + 1}</td>
+                          <td className="px-3 py-2 font-medium text-navy text-xs hidden sm:table-cell">{faDateTime(r.submitted_at || r.created_at)}</td>
+                          <td className="px-3 py-2">
                             {r.is_complete ? (
-                              <span className="inline-flex items-center gap-1 text-xs font-semibold text-teal-text bg-bg-mint px-2 py-0.5 rounded-full">
-                                <CheckCircle2 size={12} /> کامل
+                              <span className="inline-flex items-center gap-0.5 text-[0.65rem] font-semibold text-teal-text bg-bg-mint px-1.5 py-0.5 rounded-full">
+                                <CheckCircle2 size={10} /> کامل
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink/50 bg-bg-neutral px-2 py-0.5 rounded-full">
-                                <AlertCircle size={12} /> ناقص
+                              <span className="inline-flex items-center gap-0.5 text-[0.65rem] font-semibold text-ink/50 bg-bg-neutral px-1.5 py-0.5 rounded-full">
+                                <AlertCircle size={10} /> ناقص
                               </span>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-ink/50">{r.duration_seconds ? faDuration(r.duration_seconds) : "—"}</td>
-                          <td className="px-4 py-3 text-ink/50">{DEVICE_FA[r.device] ?? r.device ?? "—"}</td>
+                          <td className="px-3 py-2 text-ink/50 text-xs hidden md:table-cell">{r.duration_seconds ? faDuration(r.duration_seconds) : "—"}</td>
+                          <td className="px-3 py-2 text-ink/50 text-xs hidden lg:table-cell">{DEVICE_FA[r.device] ?? r.device ?? "—"}</td>
                           {scored && (
                             <td className="px-4 py-3">
                               {personScore ? (
@@ -1013,15 +1013,15 @@ function SummaryCard({ icon: Icon, label, value, sub, color }) {
     violet: "bg-[#FEFAFB] text-magenta-text",
   };
   return (
-    <div className="bg-white rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none border-2 border-ink/10 p-4">
-      <div className="flex items-center gap-3">
-        <div className={`w-9 h-9 rounded-pill-md flex items-center justify-center ${colors[color]}`}>
-          <Icon size={16} />
+    <div className="bg-white rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none border-2 border-ink/10 p-3">
+      <div className="flex items-center gap-2.5">
+        <div className={`w-8 h-8 rounded-pill-sm flex items-center justify-center ${colors[color]}`}>
+          <Icon size={14} />
         </div>
         <div>
-          <p className="text-xs font-bold text-ink-subtle">{label}</p>
-          <p className="text-xl font-black text-navy">{value}</p>
-          {sub && <p className="text-xs font-semibold text-ink-subtle">{sub}</p>}
+          <p className="text-[0.65rem] font-bold text-ink-subtle">{label}</p>
+          <p className="text-lg font-extrabold text-navy">{value}</p>
+          {sub && <p className="text-[0.65rem] font-semibold text-ink-subtle">{sub}</p>}
         </div>
       </div>
     </div>

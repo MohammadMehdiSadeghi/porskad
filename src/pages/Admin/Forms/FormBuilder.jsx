@@ -821,7 +821,7 @@ export default function FormBuilder() {
         <StickerCard theme="magenta">
           <div className="p-8 text-center flex flex-col items-center gap-4">
             <span className="text-5xl">-</span>
-            <h2 className="text-xl font-black text-navy">این فرم پیدا نشد!</h2>
+            <h2 className="text-base font-extrabold text-navy">این فرم پیدا نشد!</h2>
             <Button as={Link} to="/admin/forms" variant="navy">برگشت به لیست فرم‌ها</Button>
           </div>
         </StickerCard>
@@ -830,9 +830,9 @@ export default function FormBuilder() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-7 max-w-7xl mx-auto">
+    <div className="flex flex-col lg:flex-row gap-5 max-w-7xl mx-auto">
       {/* ─── ستون اصلی: ویرایشگر ─── */}
-      <div className="flex flex-col gap-7 flex-1 min-w-0">
+      <div className="flex flex-col gap-5 flex-1 min-w-0">
       <SEO
         title={`ویرایش فرم: ${form.title}`}
         description={form.description || `فرم‌ساز — ${form.title}`}
@@ -840,11 +840,11 @@ export default function FormBuilder() {
         noIndex
       />
       {/* هدر */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
           <Button as={Link} to="/admin/forms" variant="ghost" size="sm">↩ فرم‌ها</Button>
-          <h1 className="text-2xl font-black text-navy">فرم‌ساز</h1>
-          {dirty && <Badge color="orange" rotate="rotate-[2deg]">• تغییرات ذخیره‌نشده</Badge>}
+          <h1 className="text-lg sm:text-xl font-extrabold text-navy">فرم‌ساز</h1>
+          {dirty && <Badge color="orange" rotate="rotate-[2deg]">• تغییرات</Badge>}
         </div>
         <div className="flex items-center gap-2">
           {form.published && (
@@ -874,7 +874,7 @@ export default function FormBuilder() {
       <div className="-rotate-[0.4deg]">
         <StickerCard theme="navy" radius="rounded-tl-[1.75rem] rounded-br-[1.75rem] rounded-tr-none rounded-bl-none">
           <div className="p-5 sm:p-6 flex flex-col gap-4">
-            <h2 className="text-lg font-black text-navy flex items-center gap-2">
+            <h2 className="text-sm font-extrabold text-navy flex items-center gap-2">
               تنظیمات فرم
               <label className="mr-auto flex items-center gap-2 text-sm font-extrabold cursor-pointer select-none">
                 <input
@@ -960,8 +960,8 @@ export default function FormBuilder() {
       </div>
 
       {/* سوال‌ها */}
-      <div className="flex flex-col gap-5">
-        <h2 className="text-lg font-black text-navy">
+      <div className="flex flex-col gap-4">
+        <h2 className="text-sm font-extrabold text-navy">
           سوال‌ها ({faNum(questions.length)})
         </h2>
 
