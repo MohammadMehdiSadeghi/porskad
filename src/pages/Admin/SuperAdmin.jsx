@@ -876,6 +876,7 @@ export default function SuperAdmin() {
               <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#da1e28', textTransform: 'uppercase' }}>🔑 Reset Password</span>
               <p style={{ fontSize: '0.7rem', color: '#6f6f6f', margin: '0.25rem 0 0.5rem' }}>Set a new password for this user. They will need to login with the new password.</p>
               <form onSubmit={(e) => { e.preventDefault(); }} style={{ display: 'flex', gap: '0.5rem' }}>
+                <input type="text" name="username" autoComplete="username" defaultValue={detailModal?.email || ''} style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }} tabIndex={-1} />
                 <div style={{ flex: 1, position: 'relative' }}>
                   <input type={passwordVisible ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New password (min 6 chars)" autoComplete="new-password"
                     style={{ width: '100%', padding: '0.5rem 2rem 0.5rem 0.75rem', border: '1px solid #c6c6c6', fontSize: '0.8rem', fontFamily: "'IBM Plex Sans', sans-serif", outline: 'none' }} dir="ltr" />
