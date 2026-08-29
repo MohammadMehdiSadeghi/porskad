@@ -14,7 +14,7 @@ import Badge from "../../components/ui/Badge";
 import "./superadmin-ibm.css";
 
 // ─── Tabs ───
-import { LayoutDashboard, Database, Users, Shield, Cloud, FileText, Code } from "lucide-react";
+import { LayoutDashboard, Database, Users, Shield, Cloud, FileText, Code, Eye, EyeOff } from "lucide-react";
 
 const TABS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
