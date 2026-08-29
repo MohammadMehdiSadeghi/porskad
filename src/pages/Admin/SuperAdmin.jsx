@@ -816,7 +816,7 @@ export default function SuperAdmin() {
 
       {/* ═══════════ Edit Modal ═══════════ */}
       <Modal open={!!editModal} onClose={() => setEditModal(null)} title={`${editModal?.isNew ? 'Create' : 'Edit'} ${editModal?.table || ''}`}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '70vh', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {Object.entries(editForm).map(([key, val]) => {
             if (key === 'id' || key === 'created_at') return null;
             const inputStyle = { width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #c6c6c6', fontSize: '0.8rem', fontFamily: "'IBM Plex Sans', sans-serif", outline: 'none' };
@@ -846,7 +846,7 @@ export default function SuperAdmin() {
       {/* ═══════════ User Detail + Permissions Modal ═══════════ */}
       <Modal open={!!detailModal} onClose={() => setDetailModal(null)} title={`${detailModal?.is_owner ? '👑 Owner' : 'User'}: ${detailModal?.full_name || detailModal?.email || ''}`}>
         {detailModal && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '80vh', overflowY: 'auto', fontSize: '0.85rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem' }}>
             {/* ─── اطلاعات پایه ─── */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
               {[['ID', detailModal.id], ['Email', detailModal.email], ['Name', detailModal.full_name || '—'], ['Role', detailModal.role || '—'], ['Owner', detailModal.is_owner ? 'Yes' : 'No'], ['Status', detailModal.is_active ? 'Active' : 'Inactive'], ['Joined', detailModal.created_at ? new Date(detailModal.created_at).toLocaleString() : '—'], ['Hidden from', `${detailModal.hidden_from?.length || 0} users`]].map(([label, value]) => (
