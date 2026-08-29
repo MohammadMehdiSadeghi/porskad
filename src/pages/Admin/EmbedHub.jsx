@@ -352,7 +352,7 @@ export default function EmbedHub() {
     <div className="flex flex-col gap-6">
       <SEO
         title="اشتراک‌گذاری و Embed"
-        description="جاسازی فرم‌ها در سایت‌های دیگر — پرسکاد"
+        description="جاسازی فرم‌ها در سایت‌های دیگر — پرس‌کاد"
         url="/admin/embed"
         noIndex
       />

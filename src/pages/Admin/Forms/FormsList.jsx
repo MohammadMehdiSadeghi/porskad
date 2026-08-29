@@ -207,7 +207,7 @@ export default function FormsList() {
     <div className="flex flex-col gap-6">
       <SEO
         title="مدیریت فرم‌ها"
-        description="ساخت، ویرایش و مدیریت فرم‌های نظرسنجی — پرسکاد"
+        description="ساخت، ویرایش و مدیریت فرم‌های نظرسنجی — پرس‌کاد"
         url="/admin/forms"
         noIndex
       />

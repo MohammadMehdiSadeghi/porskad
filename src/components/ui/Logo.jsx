@@ -20,7 +20,7 @@ export default function Logo({ to = "/", size = "md", linked = true, className =
     return (
       <span
         className={`inline-block rotate-[-2deg] ${className}`}
-        aria-label="پرسکاد"
+        aria-label="پرس‌کاد"
       >
         {logo}
       </span>
@@ -28,7 +28,7 @@ export default function Logo({ to = "/", size = "md", linked = true, className =
   }
 
   return (
-    <Link to={to} className={`inline-block rotate-[-2deg] hover:rotate-0 transition-transform duration-200 ${className}`} aria-label="پرسکاد — صفحه اصلی">
+    <Link to={to} className={`inline-block rotate-[-2deg] hover:rotate-0 transition-transform duration-200 ${className}`} aria-label="پرس‌کاد — صفحه اصلی">
       {logo}
     </Link>
   );

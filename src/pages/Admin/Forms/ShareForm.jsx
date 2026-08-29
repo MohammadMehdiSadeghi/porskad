@@ -196,7 +196,7 @@ export default function ShareForm() {
     <div className="flex flex-col gap-6">
       <SEO
         title={`اشتراک‌گذاری: ${form.title}`}
-        description={`کدهای Embed فرم ${form.title} — پرسکاد`}
+        description={`کدهای Embed فرم ${form.title} — پرس‌کاد`}
         url={`/admin/forms/${id}/share`}
         noIndex
       />

@@ -42,7 +42,7 @@ export default function Login() {
     <div className="min-h-screen dot-pattern bg-bg-mint flex items-center justify-center p-4">
       <SEO
         title="ورود ادمین"
-        description="ورود به پنل مدیریت پرسکاد — سیستم اختصاصی فرم و نظرسنجی مؤسسه رکاد"
+        description="ورود به پنل مدیریت پرس‌کاد — سیستم اختصاصی فرم و نظرسنجی مؤسسه رکاد"
         url="/admin/login"
         noIndex
       />

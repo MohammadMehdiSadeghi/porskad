@@ -114,7 +114,7 @@ export default function Profile() {
       )}
       <SEO
         title="پروفایل من"
-        description="اطلاعات حساب کاربری و تنظیمات امنیتی — پرسکاد"
+        description="اطلاعات حساب کاربری و تنظیمات امنیتی — پرس‌کاد"
         url="/admin/profile"
         noIndex
       />

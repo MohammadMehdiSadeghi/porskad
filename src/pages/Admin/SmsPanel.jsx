@@ -44,7 +44,7 @@ export default function SmsPanel() {
   const [settingsForm, setSettingsForm] = useState({
     amoot_token: "",
     line_number: "public",
-    sender_name: "پرسکاد",
+    sender_name: "پرس‌کاد",
   });
 
   const canSms = hasPermission("manage_sms");
@@ -87,7 +87,7 @@ export default function SmsPanel() {
     <div className="flex flex-col gap-8">
       <SEO
         title="پنل پیامک"
-        description="ارسال و مدیریت پیامک — پنل مدیریت پرسکاد"
+        description="ارسال و مدیریت پیامک — پنل مدیریت پرس‌کاد"
         url="/admin/sms"
         noIndex
       />
@@ -369,7 +369,7 @@ export default function SmsPanel() {
                           }))
                         }
                         className={inputCls}
-                        placeholder="پرسکاد"
+                        placeholder="پرس‌کاد"
                       />
                     </div>
                   </div>

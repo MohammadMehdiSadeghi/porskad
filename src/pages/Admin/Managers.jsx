@@ -284,7 +284,7 @@ export default function Managers() {
 
   return (
     <div className="flex flex-col gap-6">
-      <SEO title="مدیریت مدیران" description="مدیریت مدیران و مجوزها — پرسکاد" url="/admin/managers" noIndex />
+      <SEO title="مدیریت مدیران" description="مدیریت مدیران و مجوزها — پرس‌کاد" url="/admin/managers" noIndex />
 
       {/* هدر */}
       <div className="flex flex-wrap items-center justify-between gap-2">

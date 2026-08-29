@@ -12,7 +12,7 @@ export default function PublicFooter() {
           سیستم اختصاصی فرم و نظرسنجی مؤسسه رکاد — ساخته‌شده با React + Supabase.
         </p>
         <div className="text-xs font-medium text-white/50">
-          © ۱۴۰۵ پرسکاد — نسخه ۲.۰
+          © ۱۴۰۵ پرس‌کاد — نسخه ۲.۰
         </div>
       </div>
     </footer>

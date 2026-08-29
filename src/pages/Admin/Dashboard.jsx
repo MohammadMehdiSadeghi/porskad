@@ -76,7 +76,7 @@ export default function Dashboard() {
   return (      <div className="flex flex-col gap-6">
       <SEO
         title="داشبورد"
-        description="نمای کلی فرم‌ها و پاسخ‌ها — پنل مدیریت پرسکاد"
+        description="نمای کلی فرم‌ها و پاسخ‌ها — پنل مدیریت پرس‌کاد"
         url="/admin"
         noIndex
       />
