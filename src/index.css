@@ -10,6 +10,10 @@
         font-size: 19px;
         overflow-x: hidden;
     }
+    /* Desktop: reduce root font-size by 2px */
+    @media (min-width: 768px) {
+        html { font-size: 17px; }
+    }
     body {
         @apply font-sans text-ink bg-white antialiased;
         direction: rtl;
@@ -102,4 +106,15 @@ html {
 }
 .animate-spin {
     animation: spin 1s linear infinite;
+}
+
+/* ─── Desktop: reduce Tailwind text sizes by 2px ─── */
+@media (min-width: 768px) {
+    .text-xs { font-size: 11px; line-height: 17px; }
+    .text-sm { font-size: 14px; line-height: 22px; }
+    .text-base { font-size: 17px; line-height: 26px; }
+    .text-lg { font-size: 26px; line-height: 40px; }
+    .text-xl { font-size: 33px; line-height: 50px; }
+    .text-2xl { font-size: 41px; line-height: 62px; }
+    .text-3xl { font-size: 53px; line-height: 80px; }
 }
