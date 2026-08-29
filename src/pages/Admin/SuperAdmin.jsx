@@ -876,7 +876,7 @@ export default function SuperAdmin() {
                     showToast("Password reset ✅");
                     setNewPassword("");
                   } catch (err) { showToast("Error: " + err.message, "error"); }
-                }}>Reset</button>
+                }}>Save Password</button>
               </form>
             </div>
 

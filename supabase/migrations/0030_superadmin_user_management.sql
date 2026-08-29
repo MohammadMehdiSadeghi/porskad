@@ -2,6 +2,9 @@
 -- 0030: Super Admin — Full User Management
 -- ══════════════════════════════════════════════════════════════
 
+-- Enable pgcrypto for gen_salt/crypt
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- ─── Reset any user's password (owner only) ───
 DROP FUNCTION IF EXISTS public.reset_user_password(uuid, text);
 
