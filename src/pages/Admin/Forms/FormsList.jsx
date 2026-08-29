@@ -270,23 +270,23 @@ export default function FormsList() {
                     </div>
 
                     <div className="flex flex-wrap gap-1.5 mt-1">
-                      <Button as={Link} to={`/admin/forms/${f.id}`} variant="ghost" size="sm">ویرایش</Button>
-                      <Button as={Link} to={`/admin/forms/${f.id}/responses`} variant="ghost" size="sm">پاسخ‌ها</Button>
-                      <Button as={Link} to={`/admin/forms/${f.id}/share`} variant="ghost" size="sm">اشتراک</Button>
+                      <Button as={Link} to={`/admin/forms/${f.id}`} size="sm" className="!bg-teal/10 !text-teal-text hover:!bg-teal/20 rotate-[1deg]">ویرایش ✏️</Button>
+                      <Button as={Link} to={`/admin/forms/${f.id}/responses`} size="sm" className="!bg-navy/10 !text-navy hover:!bg-navy/20 -rotate-[1deg]">پاسخ‌ها 📊</Button>
+                      <Button as={Link} to={`/admin/forms/${f.id}/share`} size="sm" className="!bg-orange/10 !text-orange hover:!bg-orange/20 rotate-[1deg]">اشتراک 🔗</Button>
                       {f.published && (
                         <>
-                          <Button variant="ghost" size="sm" onClick={() => share(f)}>کپی لینک</Button>
-                          <Button as="a" href={`/f/${f.slug}`} target="_blank" variant="ghost" size="sm">مشاهده ↗</Button>
+                          <Button size="sm" onClick={() => share(f)} className="!bg-indigo/10 !text-indigo hover:!bg-indigo/20 -rotate-[1deg]">کپی لینک 📋</Button>
+                          <Button as="a" href={`/f/${f.slug}`} target="_blank" size="sm" className="!bg-teal/10 !text-teal-text hover:!bg-teal/20 rotate-[1deg]">مشاهده ↗</Button>
                         </>
                       )}
                       {hasPermission("publish_form") && (
-                        <Button variant="ghost" size="sm" onClick={() => togglePublish(f)}>
+                        <Button size="sm" onClick={() => togglePublish(f)} className={f.published ? "!bg-magenta/10 !text-magenta-text hover:!bg-magenta/20 -rotate-[1deg]" : "!bg-ecosystem-light !text-teal-text hover:!bg-teal/20 rotate-[1deg]"}>
                           {f.published ? "لغو انتشار" : "انتشار 🚀"}
                         </Button>
                       )}
-                      <Button variant="ghost" size="sm" onClick={() => duplicate(f)} disabled={busy}>کپی 📄</Button>
+                      <Button size="sm" onClick={() => duplicate(f)} disabled={busy} className="!bg-orange/10 !text-orange hover:!bg-orange/20 -rotate-[1deg]">کپی 📄</Button>
                       {hasPermission("delete_form") && (
-                        <Button variant="ghost" size="sm" className="!text-magenta-text" onClick={() => setDeleting(f)}>حذف</Button>
+                        <Button size="sm" className="!bg-magenta/10 !text-magenta-text hover:!bg-magenta/20 rotate-[1deg]" onClick={() => setDeleting(f)}>حذف 🗑️</Button>
                       )}
                     </div>
 
