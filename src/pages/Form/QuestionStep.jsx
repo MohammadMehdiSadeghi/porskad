@@ -124,9 +124,9 @@ function RatingStars({ value, onChange }) {
   const [hover, setHover] = useState(null);
   const current = hover ?? Number(value ?? 0);
   return (
-    <div className="flex flex-row-reverse justify-center items-center gap-2 sm:gap-3 px-2" dir="ltr">
+    <div className="flex flex-row-reverse justify-center items-center gap-0.5 sm:gap-1 w-full" dir="ltr">
       {[1, 2, 3, 4, 5].map((n) => (
-        <button key={n} type="button" className={clsx("star-btn text-2xl sm:text-3xl lg:text-4xl cursor-pointer transition-all duration-150 p-1", n <= current ? "grayscale-0" : "grayscale opacity-40")}
+        <button key={n} type="button" className={clsx("star-btn text-xl sm:text-2xl lg:text-3xl cursor-pointer transition-all duration-150 leading-none", n <= current ? "grayscale-0" : "grayscale opacity-40")}
           onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(null)} onClick={() => onChange(n)} aria-label={`${n} ستاره`}>⭐</button>
       ))}
     </div>
