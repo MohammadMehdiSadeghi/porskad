@@ -111,8 +111,8 @@ html {
 /* ─── Desktop: text sizes ─── */
 @media (min-width: 768px) {
     .text-xs { font-size: 9px; line-height: 15px; }
-    .text-sm { font-size: 10px; line-height: 18px; }
-    .text-base { font-size: 13px; line-height: 22px; }
+    .text-sm { font-size: 12px; line-height: 20px; }
+    .text-base { font-size: 15px; line-height: 24px; }
     .text-lg { font-size: 24px; line-height: 38px; }
     .text-xl { font-size: 31px; line-height: 48px; }
     .text-2xl { font-size: 39px; line-height: 60px; }
