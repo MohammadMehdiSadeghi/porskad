@@ -2,7 +2,7 @@ import { NavLink, Navigate, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Spinner from "../ui/Spinner";
 import Button from "../ui/Button";
-import { LayoutDashboard, FileText, Share2, MessageSquare, Users, User, LogOut } from "lucide-react";
+import { LayoutDashboard, FileText, Share2, MessageSquare, Bot, Users, User, LogOut } from "lucide-react";
 import NotificationBell from "../ui/NotificationBell";
 
 const NAV_ITEMS = [
@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { to: "/admin/forms", label: "فرم‌ها", icon: FileText, end: false },
   { to: "/admin/embed", label: "اشتراک‌گذاری", icon: Share2, end: false },
   { to: "/admin/sms", label: "پنل پیامک", icon: MessageSquare, end: false, permission: "manage_sms" },
+  { to: "/admin/telegram", label: "بات تلگرام", icon: Bot, end: false, permission: "manage_telegram" },
   { to: "/admin/managers", label: "مدیران", icon: Users, end: false, adminOnly: true },
   { to: "/admin/profile", label: "پروفایل", icon: User, end: false },
 ];

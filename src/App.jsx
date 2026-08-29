@@ -18,6 +18,7 @@ import Responses from "./pages/Admin/Forms/Responses";
 import ShareForm from "./pages/Admin/Forms/ShareForm";
 import EmbedHub from "./pages/Admin/EmbedHub";
 import SmsPanel from "./pages/Admin/SmsPanel";
+import TelegramBot from "./pages/Admin/TelegramBot";
 import Managers from "./pages/Admin/Managers";
 import Profile from "./pages/Admin/Profile";
 import SuperAdmin from "./pages/Admin/SuperAdmin";
@@ -109,6 +110,7 @@ export default function App() {
               <Route path="superadmin" element={<AuthGuard ownerOnly={true}><SuperAdmin /></AuthGuard>} />
               <Route path="embed" element={<EmbedHub />} />
               <Route path="sms" element={<SmsPanel />} />
+              <Route path="telegram" element={<TelegramBot />} />
               <Route path="profile" element={<Profile />} />
             </Route>
 

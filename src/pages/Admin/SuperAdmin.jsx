@@ -633,7 +633,7 @@ export default function SuperAdmin() {
               </div>
               {!a.is_owner && (
                 <div className="sa-perms">
-                  {["create_form", "edit_form", "delete_form", "publish_form", "view_responses", "view_analytics", "export_excel", "manage_managers", "manage_sms"].map((perm) => {
+                  {["create_form", "edit_form", "delete_form", "publish_form", "view_responses", "view_analytics", "export_excel", "manage_managers", "manage_sms", "manage_telegram"].map((perm) => {
                     const has = a.permissions?.includes(perm);
                     return (
                       <button key={perm} onClick={() => toggleAdminPermission(a.id, perm, a.permissions || [])} className={`sa-perm ${has ? 'active' : 'inactive'}`}>
@@ -975,7 +975,7 @@ export default function SuperAdmin() {
                 <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#0f62fe' }}>{detailModal.permissions?.length || 0} active</span>
               </div>
               <div className="sa-perms">
-                {["create_form", "edit_form", "delete_form", "publish_form", "view_responses", "view_analytics", "export_excel", "manage_managers", "manage_sms", "view_admins"].map((perm) => {
+                {["create_form", "edit_form", "delete_form", "publish_form", "view_responses", "view_analytics", "export_excel", "manage_managers", "manage_sms", "manage_telegram", "view_admins"].map((perm) => {
                   const has = detailModal.permissions?.includes(perm);
                   return (
                     <button key={perm}

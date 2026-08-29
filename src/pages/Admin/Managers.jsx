@@ -46,6 +46,7 @@ const PERMISSION_CATEGORIES = [
     permissions: [
       { id: "manage_managers", label: "مدیریت مدیران", desc: "ایجاد/ویرایش/حذف مدیران" },
       { id: "manage_sms", label: "پنل پیامک", desc: "ارسال و مدیریت پیامک" },
+      { id: "manage_telegram", label: "بات تلگرام", desc: "ارسال خودکار ورودی به تلگرام" },
       { id: "view_admins", label: "نمایش مدیران", desc: "دیدن سایر ادمین‌ها در لیست" },
     ],
   },
@@ -173,7 +174,7 @@ export default function Managers() {
   const [newPassword, setNewPassword] = useState("");
   const [newName, setNewName] = useState("");
   const [newPermissions, setNewPermissions] = useState(
-    ALL_PERM_IDS.filter((p) => p !== "manage_managers" && p !== "manage_sms")
+    ALL_PERM_IDS.filter((p) => p !== "manage_managers" && p !== "manage_sms" && p !== "manage_telegram")
   );
   const [editName, setEditName] = useState("");
   const [editPermissions, setEditPermissions] = useState([]);

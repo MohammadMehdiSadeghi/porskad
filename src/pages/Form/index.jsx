@@ -18,6 +18,7 @@ import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import SEO from "../../components/ui/SEO";
 import { calculateScore, hasScoring } from "../../lib/scoring";
 import ScoreResult from "../../components/ui/ScoreResult";
+import { sendToTelegram } from "../../lib/telegram";
 
 const draftKey = (slug) => `porskad_draft_${slug}`;
 
@@ -185,6 +186,7 @@ export default function FormFill() {
       const rows = visibleQuestions.filter((q) => { const v = answers[q.id]; return !(v === undefined || v === null || String(v ?? "").trim() === ""); }).map((q) => ({ response_id: responseRow.id, question_id: q.id, value: normalizeAnswerValue(q, answers[q.id]), time_spent_seconds: Math.round(times[q.id] ?? 0) }));
       if (rows.length) { const { error: ansError } = await supabase.from("answers").insert(rows); if (ansError) console.warn("answers insert failed:", ansError); }
       localStorage.removeItem(draftKey(slug));
+      sendToTelegram(form.id, responseRow.id);
       if (hasScoring(questions)) setScoreResult(calculateScore(visibleQuestions, answers));
       setDir(1); setStep(total);
     } catch (err) { console.error(err); setSubmitError("ثبت جواب ناموفق بود؛ دوباره تلاش کن."); }

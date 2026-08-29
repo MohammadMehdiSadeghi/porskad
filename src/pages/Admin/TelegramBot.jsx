@@ -1,0 +1,671 @@
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { supabase } from "../../lib/supabaseClient";
+import { faNum, faRelative } from "../../lib/utils";
+import Button from "../../components/ui/Button";
+import Badge from "../../components/ui/Badge";
+import StickerCard from "../../components/ui/StickerCard";
+import EmptyState from "../../components/ui/EmptyState";
+import Spinner from "../../components/ui/Spinner";
+import SEO from "../../components/ui/SEO";
+import {
+  Send,
+  Settings,
+  Link2,
+  History,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Trash2,
+  Plus,
+  Bot,
+} from "lucide-react";
+
+const inputCls =
+  "w-full bg-white border-2 border-ink/15 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none transition-all";
+
+export default function TelegramBot() {
+  const { hasPermission, isOwner } = useAuth();
+  const [tab, setTab] = useState("config");
+  const [loading, setLoading] = useState(true);
+
+  // ─── Config ───
+  const [configs, setConfigs] = useState([]);
+  const [configForm, setConfigForm] = useState({
+    bot_token: "",
+    chat_id: "",
+    chat_title: "",
+  });
+  const [editingConfig, setEditingConfig] = useState(null);
+
+  // ─── Form Links ───
+  const [forms, setForms] = useState([]);
+  const [links, setLinks] = useState([]);
+  const [selectedFormId, setSelectedFormId] = useState("");
+  const [selectedConfigId, setSelectedConfigId] = useState("");
+
+  // ─── Send Log ───
+  const [sendLog, setSendLog] = useState([]);
+  const [logLoading, setLogLoading] = useState(false);
+
+  // ─── Toast ───
+  const [toast, setToast] = useState(null);
+  function showToast(msg, type = "success") {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  }
+
+  const canManage = hasPermission("manage_telegram") || isOwner();
+
+  // ─── Load Data ───
+  const loadAll = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [configRes, formsRes, linksRes] = await Promise.all([
+        supabase.from("telegram_config").select("*").order("created_at", { ascending: false }),
+        supabase.from("forms").select("id, title, published").order("created_at", { ascending: false }),
+        supabase
+          .from("telegram_form_links")
+          .select("id, form_id, config_id, is_active, created_at"),
+      ]);
+      setConfigs(configRes.data || []);
+      setForms(formsRes.data || []);
+      setLinks(linksRes.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+    setLoading(false);
+  }, []);
+
+  const loadSendLog = useCallback(async () => {
+    setLogLoading(true);
+    try {
+      const { data } = await supabase
+        .from("telegram_send_log")
+        .select("id, form_id, response_id, chat_id, status, error_message, sent_at")
+        .order("sent_at", { ascending: false })
+        .limit(100);
+      setSendLog(data || []);
+    } catch (err) {
+      console.error(err);
+    }
+    setLogLoading(false);
+  }, []);
+
+  useEffect(() => {
+    loadAll();
+  }, [loadAll]);
+
+  useEffect(() => {
+    if (tab === "log") loadSendLog();
+  }, [tab, loadSendLog]);
+
+  // ─── Config CRUD ───
+  async function saveConfig(e) {
+    e.preventDefault();
+    if (!configForm.bot_token.trim() || !configForm.chat_id.trim()) {
+      showToast("توکن و شناسه چت الزامی هستند", "error");
+      return;
+    }
+    try {
+      if (editingConfig) {
+        const { error } = await supabase
+          .from("telegram_config")
+          .update({
+            bot_token: configForm.bot_token.trim(),
+            chat_id: configForm.chat_id.trim(),
+            chat_title: configForm.chat_title.trim(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", editingConfig.id);
+        if (error) throw error;
+        showToast("تنظیمات بروزرسانی شد ✅");
+      } else {
+        const { error } = await supabase.from("telegram_config").insert({
+          bot_token: configForm.bot_token.trim(),
+          chat_id: configForm.chat_id.trim(),
+          chat_title: configForm.chat_title.trim(),
+        });
+        if (error) throw error;
+        showToast("تنظیمات جدید ذخیره شد ✅");
+      }
+      setConfigForm({ bot_token: "", chat_id: "", chat_title: "" });
+      setEditingConfig(null);
+      loadAll();
+    } catch (err) {
+      showToast("خطا: " + err.message, "error");
+    }
+  }
+
+  function editConfig(cfg) {
+    setEditingConfig(cfg);
+    setConfigForm({
+      bot_token: cfg.bot_token,
+      chat_id: cfg.chat_id,
+      chat_title: cfg.chat_title || "",
+    });
+    setTab("config");
+  }
+
+  async function deleteConfig(id) {
+    if (!confirm("آیا از حذف این تنظیمات مطمئنید؟")) return;
+    try {
+      const { error } = await supabase.from("telegram_config").delete().eq("id", id);
+      if (error) throw error;
+      showToast("حذف شد");
+      loadAll();
+    } catch (err) {
+      showToast("خطا: " + err.message, "error");
+    }
+  }
+
+  async function toggleConfigActive(id, current) {
+    try {
+      const { error } = await supabase
+        .from("telegram_config")
+        .update({ is_active: !current, updated_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+      loadAll();
+    } catch (err) {
+      showToast("خطا: " + err.message, "error");
+    }
+  }
+
+  // ─── Link CRUD ───
+  async function addLink() {
+    if (!selectedFormId || !selectedConfigId) {
+      showToast("فرم و تنظیمات تلگرام را انتخاب کنید", "error");
+      return;
+    }
+    try {
+      const { error } = await supabase.from("telegram_form_links").insert({
+        form_id: selectedFormId,
+        config_id: selectedConfigId,
+      });
+      if (error) {
+        if (error.code === "23505") {
+          showToast("این فرم قبلاً لینک شده", "error");
+        } else throw error;
+      } else {
+        showToast("لینک اضافه شد ✅");
+      }
+      setSelectedFormId("");
+      setSelectedConfigId("");
+      loadAll();
+    } catch (err) {
+      showToast("خطا: " + err.message, "error");
+    }
+  }
+
+  async function toggleLinkActive(id, current) {
+    try {
+      const { error } = await supabase
+        .from("telegram_form_links")
+        .update({ is_active: !current })
+        .eq("id", id);
+      if (error) throw error;
+      loadAll();
+    } catch (err) {
+      showToast("خطا: " + err.message, "error");
+    }
+  }
+
+  async function deleteLink(id) {
+    if (!confirm("لینک حذف شود؟")) return;
+    try {
+      const { error } = await supabase.from("telegram_form_links").delete().eq("id", id);
+      if (error) throw error;
+      showToast("لینک حذف شد");
+      loadAll();
+    } catch (err) {
+      showToast("خطا: " + err.message, "error");
+    }
+  }
+
+  // ─── Helpers ───
+  const formTitleById = Object.fromEntries(forms.map((f) => [f.id, f.title]));
+  const configLabelById = Object.fromEntries(
+    configs.map((c) => [c.id, c.chat_title || c.chat_id])
+  );
+
+  if (!canManage) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <XCircle size={64} className="text-magenta/30" />
+        <h2 className="text-xl font-black text-navy">دسترسی غیرمجاز</h2>
+        <p className="text-sm font-semibold text-ink-subtle">
+          شما مجوز دسترسی به بات تلگرام را ندارید.
+        </p>
+      </div>
+    );
+  }
+
+  const TABS = [
+    { id: "config", label: "تنظیمات ربات", icon: Settings },
+    { id: "links", label: "لینک فرم‌ها", icon: Link2 },
+    { id: "log", label: "تاریخچه ارسال", icon: History },
+  ];
+
+  return (
+    <div className="flex flex-col gap-8">
+      <SEO
+        title="بات تلگرام"
+        description="تنظیمات بات تلگرام — پنل مدیریت پرس‌کاد"
+        url="/admin/telegram"
+        noIndex
+      />
+
+      {/* هدر */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-xl sm:text-3xl font-black text-navy flex items-center gap-2">
+            <Bot size={22} className="text-teal" />
+            بات تلگرام
+          </h1>
+          <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-0.5">
+            ارسال خودکار ورودی‌های فرم به تلگرام
+          </p>
+        </div>
+      </div>
+
+      {/* تب‌ها */}
+      <div className="flex gap-1 bg-white border-2 border-ink/10 rounded-pill-md p-1 overflow-x-auto">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-pill-sm text-sm font-bold transition-all whitespace-nowrap ${
+              tab === t.id
+                ? "bg-teal text-white shadow-[2px_2px_0_0_rgba(0,0,0,0.15)]"
+                : "text-ink-subtle hover:text-ink hover:bg-bg-lavender"
+            }`}
+          >
+            <t.icon size={14} />
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Toast */}
+      {toast && (
+        <div
+          className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-pill-md text-sm font-bold shadow-lg transition-all ${
+            toast.type === "error"
+              ? "bg-female-light border-2 border-female-normal text-female-dark"
+              : "bg-ecosystem-light border-2 border-teal text-teal-text"
+          }`}
+        >
+          {toast.msg}
+        </div>
+      )}
+
+      {/* ═══════ تب تنظیمات ربات ═══════ */}
+      {tab === "config" && (
+        <div className="flex flex-col gap-6">
+          {/* فرم افزودن/ویرایش */}
+          <div className="-rotate-[0.3deg]">
+            <StickerCard theme="white">
+              <form onSubmit={saveConfig} className="p-5 flex flex-col gap-4">
+                <div>
+                  <h2 className="text-lg font-black text-navy mb-1">
+                    {editingConfig ? "ویرایش تنظیمات" : "افزودن تنظیمات جدید"}
+                  </h2>
+                  <p className="text-xs font-semibold text-ink-subtle">
+                    توکن ربات تلگرام و شناسه چت گروه/کانال را وارد کنید.
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-navy mb-1">
+                      توکن ربات تلگرام *
+                    </label>
+                    <input
+                      type="text"
+                      value={configForm.bot_token}
+                      onChange={(e) =>
+                        setConfigForm((p) => ({ ...p, bot_token: e.target.value }))
+                      }
+                      className={inputCls}
+                      placeholder="123456:ABC-DEF..."
+                      dir="ltr"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-navy mb-1">
+                        شناسه چت (Chat ID) *
+                      </label>
+                      <input
+                        type="text"
+                        value={configForm.chat_id}
+                        onChange={(e) =>
+                          setConfigForm((p) => ({ ...p, chat_id: e.target.value }))
+                        }
+                        className={inputCls}
+                        placeholder="-100123456789"
+                        dir="ltr"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-navy mb-1">
+                        عنوان (اختیاری)
+                      </label>
+                      <input
+                        type="text"
+                        value={configForm.chat_title}
+                        onChange={(e) =>
+                          setConfigForm((p) => ({ ...p, chat_title: e.target.value }))
+                        }
+                        className={inputCls}
+                        placeholder="گروه مدیریت"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 justify-end mt-1">
+                  {editingConfig && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      type="button"
+                      onClick={() => {
+                        setEditingConfig(null);
+                        setConfigForm({ bot_token: "", chat_id: "", chat_title: "" });
+                      }}
+                    >
+                      انصراف
+                    </Button>
+                  )}
+                  <Button variant="teal" size="sm" type="submit" rotate="-rotate-[1deg]">
+                    {editingConfig ? "بروزرسانی" : "ذخیره"}
+                  </Button>
+                </div>
+              </form>
+            </StickerCard>
+          </div>
+
+          {/* لیست تنظیمات */}
+          {configs.length > 0 && (
+            <div>
+              <h2 className="text-lg font-extrabold text-navy mb-3">
+                تنظیمات ذخیره‌شده ({faNum(configs.length)})
+              </h2>
+              <div className="flex flex-col gap-3">
+                {configs.map((cfg) => (
+                  <StickerCard key={cfg.id} theme="white">
+                    <div className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-black text-sm text-navy truncate">
+                            {cfg.chat_title || "بدون عنوان"}
+                          </span>
+                          <Badge color={cfg.is_active ? "green" : "gray"}>
+                            {cfg.is_active ? "فعال" : "غیرفعال"}
+                          </Badge>
+                        </div>
+                        <div className="text-xs font-mono text-ink-subtle truncate" dir="ltr">
+                          Chat: {cfg.chat_id}
+                        </div>
+                        <div className="text-[0.65rem] font-mono text-ink-subtle/60 truncate" dir="ltr">
+                          Token: {cfg.bot_token.slice(0, 20)}...
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleConfigActive(cfg.id, cfg.is_active)}
+                        >
+                          {cfg.is_active ? "غیرفعال" : "فعال"}
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => editConfig(cfg)}>
+                          ویرایش
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="!text-female-normal"
+                          onClick={() => deleteConfig(cfg.id)}
+                        >
+                          <Trash2 size={14} />
+                        </Button>
+                      </div>
+                    </div>
+                  </StickerCard>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ═══════ تب لینک فرم‌ها ═══════ */}
+      {tab === "links" && (
+        <div className="flex flex-col gap-6">
+          {configs.length === 0 ? (
+            <EmptyState
+              icon={<AlertTriangle size={48} />}
+              title="ابتدا تنظیمات ربات را ذخیره کنید"
+              subtitle="برای لینک کردن فرم‌ها، ابتدا باید توکن ربات و شناسه چت را تنظیم کنید."
+              action={
+                <Button variant="teal" size="sm" onClick={() => setTab("config")}>
+                  رفتن به تنظیمات
+                </Button>
+              }
+            />
+          ) : (
+            <>
+              {/* فرم لینک جدید */}
+              <div className="-rotate-[0.3deg]">
+                <StickerCard theme="white">
+                  <div className="p-5 flex flex-col gap-3">
+                    <h2 className="text-lg font-black text-navy">افزودن لینک جدید</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-navy mb-1">
+                          فرم
+                        </label>
+                        <select
+                          value={selectedFormId}
+                          onChange={(e) => setSelectedFormId(e.target.value)}
+                          className={inputCls}
+                        >
+                          <option value="">انتخاب فرم...</option>
+                          {forms.map((f) => (
+                            <option key={f.id} value={f.id}>
+                              {f.title} {f.published ? "" : "(غيرمنتشر)"}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-navy mb-1">
+                          چت تلگرام
+                        </label>
+                        <select
+                          value={selectedConfigId}
+                          onChange={(e) => setSelectedConfigId(e.target.value)}
+                          className={inputCls}
+                        >
+                          <option value="">انتخاب چت...</option>
+                          {configs
+                            .filter((c) => c.is_active)
+                            .map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.chat_title || c.chat_id}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                      <div className="flex items-end">
+                        <Button
+                          variant="teal"
+                          size="sm"
+                          onClick={addLink}
+                          rotate="-rotate-[1deg]"
+                          className="w-full"
+                        >
+                          <Plus size={14} className="ml-1" />
+                          افزودن لینک
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </StickerCard>
+              </div>
+
+              {/* لیست لینک‌ها */}
+              {links.length > 0 ? (
+                <div>
+                  <h2 className="text-lg font-extrabold text-navy mb-3">
+                    لینک‌های فعال ({faNum(links.length)})
+                  </h2>
+                  <div className="rotate-[0.3deg]">
+                    <StickerCard theme="white">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="text-navy border-b-2 border-ink/10">
+                              <th className="text-right font-black px-4 py-3">فرم</th>
+                              <th className="text-right font-black px-4 py-3">چت تلگرام</th>
+                              <th className="text-center font-black px-4 py-3">وضعیت</th>
+                              <th className="text-center font-black px-4 py-3">عملیات</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {links.map((link, i) => (
+                              <tr
+                                key={link.id}
+                                className={`${
+                                  i % 2 ? "bg-bg-lavender/60" : ""
+                                } border-b border-ink/5 last:border-0`}
+                              >
+                                <td className="px-4 py-3 font-bold text-ink">
+                                  {formTitleById[link.form_id] || "—"}
+                                </td>
+                                <td className="px-4 py-3 font-semibold text-ink-subtle">
+                                  {configLabelById[link.config_id] || "—"}
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                  <Badge color={link.is_active ? "green" : "gray"}>
+                                    {link.is_active ? "فعال" : "غیرفعال"}
+                                  </Badge>
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                  <div className="flex items-center justify-center gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => toggleLinkActive(link.id, link.is_active)}
+                                    >
+                                      {link.is_active ? "غیرفعال" : "فعال"}
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="!text-female-normal"
+                                      onClick={() => deleteLink(link.id)}
+                                    >
+                                      <Trash2 size={13} />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </StickerCard>
+                  </div>
+                </div>
+              ) : (
+                <EmptyState
+                  icon={<Link2 size={48} />}
+                  title="هنوز لینکی وجود ندارد"
+                  subtitle="فرم‌های مورد نظر خود را به چت تلگرام لینک کنید تا ورودی‌ها به‌صورت خودکار ارسال شوند."
+                />
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ═══════ تب تاریخچه ارسال ═══════ */}
+      {tab === "log" && (
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-extrabold text-navy">
+              تاریخچه ارسال‌ها
+            </h2>
+            <Button variant="ghost" size="sm" onClick={loadSendLog}>
+              بروزرسانی
+            </Button>
+          </div>
+
+          {logLoading ? (
+            <Spinner label="بارگذاری تاریخچه..." />
+          ) : sendLog.length > 0 ? (
+            <div className="rotate-[0.3deg]">
+              <StickerCard theme="white">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-navy border-b-2 border-ink/10">
+                        <th className="text-right font-black px-4 py-3">فرم</th>
+                        <th className="text-right font-black px-4 py-3">چت</th>
+                        <th className="text-center font-black px-4 py-3">وضعیت</th>
+                        <th className="text-right font-black px-4 py-3">زمان</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sendLog.map((log, i) => (
+                        <tr
+                          key={log.id}
+                          className={`${
+                            i % 2 ? "bg-bg-lavender/60" : ""
+                          } border-b border-ink/5 last:border-0`}
+                        >
+                          <td className="px-4 py-3 font-bold text-ink">
+                            {formTitleById[log.form_id] || "—"}
+                          </td>
+                          <td className="px-4 py-3 font-semibold text-ink-subtle truncate max-w-[150px]">
+                            {log.chat_id}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            {log.status === "sent" ? (
+                              <Badge color="green">
+                                <CheckCircle size={11} className="ml-1 inline" />
+                                ارسال شد
+                              </Badge>
+                            ) : (
+                              <Badge color="red">
+                                <XCircle size={11} className="ml-1 inline" />
+                                خطا
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-xs font-semibold text-ink-subtle">
+                            {log.sent_at ? faRelative(log.sent_at) : "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </StickerCard>
+            </div>
+          ) : (
+            <EmptyState
+              icon={<Send size={48} />}
+              title="هنوز پیامی ارسال نشده"
+              subtitle="وقتی کسی فرم لینک‌شده را پر کند، تاریخچه ارسال‌ها اینجا نمایش داده می‌شود."
+            />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

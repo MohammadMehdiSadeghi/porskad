@@ -13,6 +13,7 @@ const ALL_PERMISSIONS = [
   "export_excel",
   "manage_managers",
   "manage_sms",
+  "manage_telegram",
 ];
 
 const DEFAULT_MANAGER_PERMISSIONS = [
