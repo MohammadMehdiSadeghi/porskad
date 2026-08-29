@@ -19,17 +19,17 @@ import SEO from "../../../components/ui/SEO";
 const FORM_TYPES = [
   {
     key: "step_by_step",
-    title: "Step by Step",
+    title: "مرحله به مرحله",
     icon: "step_by_step",
-    description: "Each question on a separate page. Great for surveys and quizzes.",
+    description: "هر سوال در یک صفحه جداگانه نمایش داده می‌شود. مناسب نظرسنجی‌ها و آزمون‌ها.",
     color: "teal",
     theme: "teal",
   },
   {
     key: "registration",
-    title: "Registration Form",
+    title: "فرم ثبت‌نامی",
     icon: "registration",
-    description: "All fields on a single page. Ideal for sign-up and membership forms.",
+    description: "همه فیلدها در یک صفحه نمایش داده می‌شوند. مناسب فرم‌های ثبت‌نام و عضویت.",
     color: "orange",
     theme: "orange",
   },
@@ -61,7 +61,7 @@ export default function FormsList() {
       setCounts(countsData || {});
     } catch (err) {
       console.error("load error:", err);
-      push("Error loading forms: " + (err.message || ""), "error");
+      push("خطا در بارگذاری فرم‌ها: " + (err.message || ""), "error");
     } finally {
       setLoading(false);
     }
@@ -71,7 +71,7 @@ export default function FormsList() {
 
   async function createForm(formType = "step_by_step") {
     if (!hasPermission("create_form")) {
-      push("You don't have permission to create forms.", "error");
+      push("شما مجوز ایجاد فرم ندارید.", "error");
       return;
     }
     setBusy(true);
@@ -79,7 +79,7 @@ export default function FormsList() {
     const isRegistration = formType === "registration";
     const base = {
       slug: `form-${randomSlug(6)}`,
-      title: isRegistration ? "Registration Form" : "New Form",
+      title: isRegistration ? "فرم ثبت‌نام" : "فرم جدید",
       published: false,
       manager_id: user?.id ?? null,
       form_type: formType,
@@ -94,13 +94,13 @@ export default function FormsList() {
 
     setBusy(false);
     setShowTypeModal(false);
-    push(isRegistration ? "Registration form created!" : "New form created!");
+    push(isRegistration ? "فرم ثبت‌نامی ساخته شد!" : "فرم جدید ساخته شد!");
     navigate(`/admin/forms/${data.id}`);
   }
 
   async function togglePublish(form) {
     if (!hasPermission("publish_form")) {
-      push("You don't have permission to publish forms.", "error");
+      push("شما مجوز انتشار فرم ندارید.", "error");
       return;
     }
     const { error } = await supabase.from("forms").update({ published: !form.published }).eq("id", form.id);
@@ -108,13 +108,13 @@ export default function FormsList() {
       push("تغییر وضعیت ناموفق بود", "error");
       return;
     }
-    push(form.published ? "Form unpublished" : "Form published!");
+    push(form.published ? "فرم از انتشار خارج شد" : "فرم منتشر شد!");
     setForms((fs) => fs.map((f) => (f.id === form.id ? { ...f, published: !f.published } : f)));
   }
 
   async function duplicate(form) {
     if (!hasPermission("create_form")) {
-      push("You don't have permission to create forms.", "error");
+      push("شما مجوز ایجاد فرم ندارید.", "error");
       return;
     }
     setBusy(true);
@@ -139,12 +139,12 @@ export default function FormsList() {
       }));
       if (rows.length) {
         const { error: qError } = await supabase.from("questions").insert(rows);
-        if (qError) push("Failed to copy questions", "error");
+        if (qError) push("کپی سوال‌ها ناموفق بود", "error");
       }
-      push("Duplicate created");
+      push("کپی ساخته شد");
       load();
     } else {
-      push("Duplicate failed", "error");
+      push("کپی ناموفق بود", "error");
     }
     setBusy(false);
   }
@@ -152,37 +152,37 @@ export default function FormsList() {
   async function share(form) {
     const url = `${window.location.origin}/f/${form.slug}`;
     const ok = await copyToClipboard(url);
-    push(ok ? "Form link copied!" : `Link: ${url}`, ok ? "success" : "info");
+    push(ok ? "لینک فرم کپی شد!" : `لینک: ${url}`, ok ? "success" : "info");
   }
 
   async function confirmDelete() {
     if (!deleting) return;
     if (!hasPermission("delete_form")) {
-      push("You don't have permission to delete forms.", "error");
+      push("شما مجوز حذف فرم ندارید.", "error");
       setDeleting(null);
       return;
     }
     const { error } = await supabase.from("forms").delete().eq("id", deleting.id);
     setDeleting(null);
     if (error) {
-      push("Delete failed", "error");
+      push("حذف ناموفق بود", "error");
       return;
     }
-    push("Form and all its responses deleted");
+    push("فرم و همه‌ی پاسخ‌هایش حذف شد");
     load();
   }
 
   async function archiveForm(form) {
     if (!hasPermission("delete_form")) {
-      push("You don't have permission to archive forms.", "error");
+      push("شما مجوز آرشیو فرم ندارید.", "error");
       return;
     }
     const { error } = await supabase.from("forms").update({ archived: !form.archived }).eq("id", form.id);
     if (error) {
-      push("Archive failed", "error");
+      push("آرشیو ناموفق بود", "error");
       return;
     }
-    push(form.archived ? "Form restored from archive" : "Form archived");
+    push(form.archived ? "فرم از آرشیو بازیابی شد" : "فرم آرشیو شد 📦");
     setForms((fs) => fs.map((f) => (f.id === form.id ? { ...f, archived: !f.archived } : f)));
   }
 
@@ -201,24 +201,24 @@ export default function FormsList() {
     return result;
   }, [forms, filter, search]);
 
-  if (loading) return <Spinner label="Loading forms..." />;
+  if (loading) return <Spinner label="فرم‌ها در حال بارگذاری..." />;
 
   return (
     <div className="flex flex-col gap-6">
       <SEO
-        title="Form Management"
-        description="Create, edit and manage survey forms — Porskad"
+        title="مدیریت فرم‌ها"
+        description="ساخت، ویرایش و مدیریت فرم‌های نظرسنجی — پرسکاد"
         url="/admin/forms"
         noIndex
       />
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>           <h1 className="text-xl sm:text-3xl font-black text-navy">فرم‌ها</h1>           <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-1">
-            {forms.length} forms — click any form to edit
+            {forms.length} فرم — برای ویرایش روی هر فرم بزنید
           </p>
         </div>
         <Button variant="indigo" size="sm" onClick={() => setShowTypeModal(true)} disabled={busy} rotate="-rotate-[1deg]">
-          + New Form
+          + فرم جدید
         </Button>
       </div>
 
@@ -226,17 +226,17 @@ export default function FormsList() {
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <input
           type="text"
-          placeholder="Search forms..."
+          placeholder="جستجوی فرم..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1 min-w-[200px] bg-white border-2 border-ink/15 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
         />
         <div className="flex items-center gap-0.5 bg-white border-2 border-ink/15 rounded-pill-md p-0.5">
           {[
-            { key: "all", label: "All" },
-            { key: "published", label: "Published" },
-            { key: "draft", label: "Draft" },
-            { key: "archived", label: "Archived" },
+            { key: "all", label: "همه" },
+            { key: "published", label: "منتشر" },
+            { key: "draft", label: "پیش‌نویس" },
+            { key: "archived", label: "آرشیو" },
           ].map((f) => (
             <button
               key={f.key}
@@ -257,8 +257,8 @@ export default function FormsList() {
       {filtered.length === 0 ? (
         <EmptyState
           icon={<FileText size={48} />}
-          title={search ? "No forms found" : "No forms yet!"}
-          subtitle={search ? "Try a different search term." : "Click '+ New Form' to get started."}
+          title={search ? "فرمی یافت نشد" : "هنوز فرمی نساخته‌ای!"}
+          subtitle={search ? "عبارت جستجو را تغییر دهید." : "با دکمه‌ی «فرم جدید» شروع کن."}
           action={!search && <Button variant="indigo" size="sm" onClick={() => setShowTypeModal(true)}>+ فرم جدید</Button>}
         />
       ) : (
@@ -273,12 +273,12 @@ export default function FormsList() {
                     <div className="flex items-start justify-between gap-3">
                       <h3 className="font-black text-navy text-lg leading-7 line-clamp-2">{f.title}</h3>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        {f.archived && <Badge color="gray">Archived</Badge>}
-                        {isReg && !f.archived && <Badge color="orange">Registration</Badge>}
+                        {f.archived && <Badge color="gray">آرشیو</Badge>}
+                        {isReg && !f.archived && <Badge color="orange">ثبت‌نامی</Badge>}
                         {!f.archived && (f.published ? (
-                          <Badge color="green">Published</Badge>
+                          <Badge color="green">منتشر</Badge>
                         ) : (
-                          <Badge color="gray">Draft</Badge>
+                          <Badge color="gray">پیش‌نویس</Badge>
                         ))}
                       </div>
                     </div>
@@ -290,26 +290,26 @@ export default function FormsList() {
                     </div>
 
                     <div className="flex flex-wrap gap-2 mt-1">
-                      <Button as={Link} to={`/admin/forms/${f.id}`} variant="glass" size="md" rotate="rotate-[1deg]">Edit</Button>
-                      <Button as={Link} to={`/admin/forms/${f.id}/responses`} variant="glass" size="md" rotate="-rotate-[1deg]">Responses</Button>
-                      <Button as={Link} to={`/admin/forms/${f.id}/share`} variant="glass" size="md" rotate="rotate-[1deg]">Share</Button>
+                      <Button as={Link} to={`/admin/forms/${f.id}`} variant="glass" size="md" rotate="rotate-[1deg]">ویرایش</Button>
+                      <Button as={Link} to={`/admin/forms/${f.id}/responses`} variant="glass" size="md" rotate="-rotate-[1deg]">پاسخ‌ها</Button>
+                      <Button as={Link} to={`/admin/forms/${f.id}/share`} variant="glass" size="md" rotate="rotate-[1deg]">اشتراک</Button>
                       {f.published && (
                         <>
-                          <Button variant="glass" size="md" onClick={() => share(f)} rotate="-rotate-[1deg]">Copy Link</Button>
-                          <Button as="a" href={`/f/${f.slug}`} target="_blank" variant="glass" size="md" rotate="rotate-[1deg]">Preview ↗</Button>
+                          <Button variant="glass" size="md" onClick={() => share(f)} rotate="-rotate-[1deg]">کپی لینک</Button>
+                          <Button as="a" href={`/f/${f.slug}`} target="_blank" variant="glass" size="md" rotate="rotate-[1deg]">مشاهده ↗</Button>
                         </>
                       )}
                       {hasPermission("publish_form") && (
                         <Button variant="glass" size="md" onClick={() => togglePublish(f)} rotate="-rotate-[1deg]">
-                          {f.published ? "Unpublish" : "Publish 🚀"}
+                          {f.published ? "لغو انتشار" : "انتشار 🚀"}
                         </Button>
                       )}
-                      <Button variant="glass" size="md" onClick={() => duplicate(f)} disabled={busy} rotate="rotate-[1deg]">Duplicate 📄</Button>
+                      <Button variant="glass" size="md" onClick={() => duplicate(f)} disabled={busy} rotate="rotate-[1deg]">کپی 📄</Button>
                       <Button variant="glass" size="md" onClick={() => archiveForm(f)} rotate="-rotate-[1deg]">
-                        {f.archived ? "Restore 📂" : "Archive 📦"}
+                        {f.archived ? "بازیابی 📂" : "آرشیو 📦"}
                       </Button>
                       {hasPermission("delete_form") && (
-                        <Button variant="glass" size="md" className="!text-magenta-text" onClick={() => setDeleting(f)} rotate="rotate-[1deg]">Delete</Button>
+                        <Button variant="glass" size="md" className="!text-magenta-text" onClick={() => setDeleting(f)} rotate="rotate-[1deg]">حذف</Button>
                       )}
                     </div>
 
@@ -328,7 +328,7 @@ export default function FormsList() {
       <Modal
         open={showTypeModal}
         onClose={() => setShowTypeModal(false)}
-        title="Choose Form Type"
+        title="انتخاب نوع فرم"
       >
         <p className="text-sm font-semibold text-ink-subtle mb-4 leading-7">
           نوع فرم خود را انتخاب کنید. هر دو قابل ویرایش و سفارشی‌سازی هستند.
@@ -349,19 +349,20 @@ export default function FormsList() {
         </div>
         {busy && (
           <div className="mt-4 text-center text-sm font-bold text-teal-text">
-            Creating form...
+            در حال ساخت فرم...
           </div>
         )}
       </Modal>
 
       {/* Delete Modal */}
-      <Modal open={!!deleting} onClose={() => setDeleting(null)}        title="Delete Form?">
+      <Modal open={!!deleting} onClose={() => setDeleting(null)} title="حذف فرم؟">
         <p className="text-sm font-semibold text-ink-soft leading-7 mb-5">
-          Form "<span className="font-black text-magenta-text">{deleting?.title}</span>" and all its questions and responses will be permanently deleted. Are you sure?
+          فرم «<span className="font-black text-magenta-text">{deleting?.title}</span>» و همه‌ی سوال‌ها و پاسخ‌هایش
+          برای همیشه حذف می‌شود. مطمئنید؟
         </p>
         <div className="flex gap-3 justify-end">
-          <Button variant="red" size="sm" onClick={confirmDelete}>Yes, Delete</Button>
-          <Button variant="ghost" size="sm" onClick={() => setDeleting(null)}>Cancel</Button>
+          <Button variant="red" size="sm" onClick={confirmDelete}>بله، حذف کن</Button>
+          <Button variant="ghost" size="sm" onClick={() => setDeleting(null)}>انصراف</Button>
         </div>
       </Modal>
     </div>
