@@ -81,9 +81,9 @@ export default function FormFill() {
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const { data: formData, error: formError } = await supabase.from("forms").select("*").eq("slug", slug).eq("published", true).maybeSingle();
+      const { data: formData, error: formError } = await supabase.from("forms").select("*").eq("slug", slug).eq("published", true).eq("archived", false).maybeSingle();
       if (cancelled) return;
-      if (formError || !formData) { setUnavailable("این فرم حذف شده، منتشرنشده یا لینک اشتباه است."); setLoading(false); return; }
+      if (formError || !formData) { setUnavailable("This form has been deleted, unpublished, archived, or the link is incorrect."); setLoading(false); return; }
       const { data: qData, error: qError } = await supabase.from("questions").select("*").eq("form_id", formData.id).order("position", { ascending: true });
       if (cancelled) return;
       if (qError) { setUnavailable("خطا در بارگذاری سوال‌ها."); setLoading(false); return; }
