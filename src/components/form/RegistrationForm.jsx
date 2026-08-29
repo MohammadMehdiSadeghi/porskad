@@ -76,12 +76,27 @@ export default function RegistrationForm({ form, questions, slug }) {
     }
     setFieldErrors(errors);
     setTouched(Object.fromEntries(visibleQuestions.map((q) => [q.id, true])));
+    const hasErrors = Object.keys(errors).length > 0;
+    if (hasErrors) {
+      const firstErrKey = Object.keys(errors)[0];
+      const firstErrQ = visibleQuestions.find((q) => q.id === firstErrKey);
+      setError(firstErrQ ? `${firstErrQ.title}: ${errors[firstErrKey]}` : "لطفاً خطاهای فرم را برطرف کنید.");
+      setShowConfirm(false);
+      return;
+    }
     const unfilled = [];
     for (const q of visibleQuestions) {
-      if (errors[q.id]) unfilled.push({ id: q.id, title: `${q.title} (${errors[q.id]})` });
-      else if (q.required && isFieldEmpty(answers[q.id])) unfilled.push({ id: q.id, title: q.title });
+      if (q.required && isFieldEmpty(answers[q.id])) unfilled.push({ id: q.id, title: q.title });
     }
-    setConfirmUnfilled(unfilled);
+    if (unfilled.length > 0) {
+      const first = unfilled[0];
+      setError(`${first.title}: فیلد اجباری خالی است.`);
+      setConfirmUnfilled(unfilled);
+      setShowConfirm(false);
+      return;
+    }
+    setError(null);
+    setConfirmUnfilled([]);
     setShowConfirm(true);
   }
 

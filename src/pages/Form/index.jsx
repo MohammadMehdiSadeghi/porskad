@@ -144,6 +144,7 @@ export default function FormFill() {
   const findNextVisibleStep = useCallback((fromStep) => { for (let i = fromStep + 1; i < total; i++) { if (visibleIds.has(questions[i]?.id)) return i; } return total; }, [questions, total, visibleIds]);
   const findPrevVisibleStep = useCallback((fromStep) => { for (let i = fromStep - 1; i >= 0; i--) { if (visibleIds.has(questions[i]?.id)) return i; } return -1; }, [questions, visibleIds]);
   const validateCurrent = useCallback(() => { if (!currentQuestion) return { valid: true }; const err = validateAnswer(currentQuestion, answers[currentQuestion.id]); if (err) return { valid: false, error: err }; return { valid: true }; }, [currentQuestion, answers]);
+  const currentValidationError = useMemo(() => { if (!currentQuestion) return null; return validateAnswer(currentQuestion, answers[currentQuestion.id]) || null; }, [currentQuestion, answers]);
 
   const goNext = useCallback(() => {
     if (step === -1) { setStartedAt((prev) => prev ?? Date.now()); setDir(1); setStep(findNextVisibleStep(-1)); setRequiredError(null); return; }
@@ -163,9 +164,10 @@ export default function FormFill() {
 
   const openConfirm = useCallback(() => {
     if (submitting || honeypot.trim() !== "") return;
-    const unfilled = [];
-    for (const q of visibleQuestions) { if (q.required) { const v = answers[q.id]; const isEmpty = v === null || v === undefined || (typeof v === "string" && v.trim() === "") || (Array.isArray(v) && v.length === 0); if (isEmpty) unfilled.push({ id: q.id, title: q.title, typeLabel: QUESTION_TYPES[q.type]?.label || q.type }); } }
-    setConfirmUnfilled(unfilled); setShowConfirm(true);
+    const errors = [];
+    for (const q of visibleQuestions) { const err = validateAnswer(q, answers[q.id]); if (err) errors.push({ id: q.id, title: `${q.title} — ${err}`, typeLabel: QUESTION_TYPES[q.type]?.label || q.type }); }
+    if (errors.length > 0) { setRequiredError(errors[0].title); setConfirmUnfilled(errors); setShowConfirm(false); return; }
+    setRequiredError(null); setConfirmUnfilled([]); setShowConfirm(true);
   }, [submitting, honeypot, visibleQuestions, answers]);
 
   const doSubmit = useCallback(async () => {
@@ -236,9 +238,9 @@ export default function FormFill() {
                     <div className="mt-2.5 sm:mt-3 flex items-center justify-between gap-2">
                       <Button variant="ghost" size="sm" onClick={goBack} className="text-xs sm:text-sm">↩ برگشت</Button>
                       {step < total - 1 ? (
-                        <Button variant="navy" onClick={goNext} className="text-xs sm:text-sm">سوال بعدی ←</Button>
+                        <Button variant="navy" onClick={goNext} disabled={!!currentValidationError} className={`text-xs sm:text-sm ${currentValidationError ? "opacity-50 cursor-not-allowed" : ""}`}>سوال بعدی ←</Button>
                       ) : (
-                        <Button variant="magenta" onClick={openConfirm} disabled={submitting} rotate="rotate-[0.5deg]" className="text-xs sm:text-sm">{submitting ? "در حال ثبت..." : "ثبت نهایی ✨"}</Button>
+                        <Button variant="magenta" onClick={openConfirm} disabled={submitting || !!currentValidationError} rotate="rotate-[0.5deg]" className={`text-xs sm:text-sm ${currentValidationError && !submitting ? "opacity-50 cursor-not-allowed" : ""}`}>{submitting ? "در حال ثبت..." : "ثبت نهایی ✨"}</Button>
                       )}
                     </div>
                     {submitError && <div className="mt-2 self-end rotate-[-0.5deg] bg-white border-2 border-female-normal rounded-pill-md px-2.5 py-1.5 text-xs sm:text-sm font-bold text-female-normal">{submitError}</div>}
