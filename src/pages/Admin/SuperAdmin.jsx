@@ -856,15 +856,15 @@ export default function SuperAdmin() {
             <div style={{ border: '1px solid #da1e28', padding: '0.75rem', background: '#fff1f1' }}>
               <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#da1e28', textTransform: 'uppercase' }}>🔑 Reset Password</span>
               <p style={{ fontSize: '0.7rem', color: '#6f6f6f', margin: '0.25rem 0 0.5rem' }}>Set a new password for this user. They will need to login with the new password.</p>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <form onSubmit={(e) => { e.preventDefault(); }} style={{ display: 'flex', gap: '0.5rem' }}>
                 <div style={{ flex: 1, position: 'relative' }}>
-                  <input type={passwordVisible ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New password (min 6 chars)"
+                  <input type={passwordVisible ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New password (min 6 chars)" autoComplete="new-password"
                     style={{ width: '100%', padding: '0.5rem 2rem 0.5rem 0.75rem', border: '1px solid #c6c6c6', fontSize: '0.8rem', fontFamily: "'IBM Plex Sans', sans-serif", outline: 'none' }} dir="ltr" />
-                  <button onClick={() => setPasswordVisible(!passwordVisible)} style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                  <button type="button" onClick={() => setPasswordVisible(!passwordVisible)} style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                     {passwordVisible ? <EyeOff size={14} color="#6f6f6f" /> : <Eye size={14} color="#6f6f6f" />}
                   </button>
                 </div>
-                <button className="sa-btn sa-btn-danger" onClick={async () => {
+                <button type="button" className="sa-btn sa-btn-danger" onClick={async () => {
                   if (!newPassword.trim() || newPassword.trim().length < 6) { showToast("Password must be at least 6 chars", "error"); return; }
                   if (!confirm(`Reset password for ${detailModal.email}?`)) return;
                   try {
@@ -877,7 +877,7 @@ export default function SuperAdmin() {
                     setNewPassword("");
                   } catch (err) { showToast("Error: " + err.message, "error"); }
                 }}>Reset</button>
-              </div>
+              </form>
             </div>
 
             {/* ─── Change Email (all users including owner) ─── */}
