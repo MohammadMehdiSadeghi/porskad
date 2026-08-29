@@ -272,15 +272,35 @@ export default function SuperAdmin() {
     } finally { setSqlRunning(false); }
   }
 
+  // ─── Admin Edge Function helper ───
+  async function adminAction(action, payload) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error("Not logged in");
+    const res = await fetch(
+      `${supabase.supabaseUrl}/functions/v1/admin-user-management`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: supabase.supabaseKey,
+        },
+        body: JSON.stringify({ action, ...payload }),
+      }
+    );
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || "Edge Function error");
+    return json;
+  }
+
   // ─── Reset Password ───
   async function doResetPassword() {
     if (!resetPasswordModal || !newPassword.trim()) return;
     try {
-      const { data, error } = await supabase.rpc("reset_user_password", {
-        p_target_user_id: resetPasswordModal.id,
-        p_new_password: newPassword.trim(),
+      await adminAction("reset_password", {
+        target_user_id: resetPasswordModal.id,
+        new_password: newPassword.trim(),
       });
-      if (error) throw error;
       showToast("Password updated successfully ✅");
       setResetPasswordModal(null);
       setNewPassword("");
@@ -293,18 +313,17 @@ export default function SuperAdmin() {
   async function doUpdateEmail() {
     if (!resetEmailModal || !newEmail.trim()) return;
     try {
-      const { data, error } = await supabase.rpc("update_user_email", {
-        p_target_user_id: resetEmailModal.id,
-        p_new_email: newEmail.trim(),
+      await adminAction("update_email", {
+        target_user_id: resetEmailModal.id,
+        new_email: newEmail.trim(),
       });
-      if (error) throw error;
       showToast("Email updated successfully ✅");
       setResetEmailModal(null);
       setNewEmail("");
       loadUsers();
       loadAdmins();
     } catch (err) {
-      showToast("خطا: " + err.message, "error");
+      showToast("Error: " + err.message, "error");
     }
   }
 
@@ -868,11 +887,10 @@ export default function SuperAdmin() {
                   if (!newPassword.trim() || newPassword.trim().length < 6) { showToast("Password must be at least 6 chars", "error"); return; }
                   if (!confirm(`Reset password for ${detailModal.email}?`)) return;
                   try {
-                    const { data, error } = await supabase.rpc("reset_user_password", {
-                      p_target_user_id: detailModal.id,
-                      p_new_password: newPassword.trim(),
+                    await adminAction("reset_password", {
+                      target_user_id: detailModal.id,
+                      new_password: newPassword.trim(),
                     });
-                    if (error) throw error;
                     showToast("Password reset ✅");
                     setNewPassword("");
                   } catch (err) { showToast("Error: " + err.message, "error"); }
@@ -891,11 +909,10 @@ export default function SuperAdmin() {
                   if (!emailToSet || !emailToSet.includes('@')) { showToast("Invalid email", "error"); return; }
                   if (!confirm(`Change email to ${emailToSet}?`)) return;
                   try {
-                    const { data, error } = await supabase.rpc("update_user_email", {
-                      p_target_user_id: detailModal.id,
-                      p_new_email: emailToSet,
+                    await adminAction("update_email", {
+                      target_user_id: detailModal.id,
+                      new_email: emailToSet,
                     });
-                    if (error) throw error;
                     showToast("Email updated ✅");
                     setDetailModal({ ...detailModal, email: emailToSet });
                     setNewEmail("");
