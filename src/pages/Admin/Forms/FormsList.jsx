@@ -250,10 +250,10 @@ export default function FormsList() {
             return (
               <div key={f.id} className={i % 2 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"}>
                 <StickerCard theme="white">
-                  <div className="p-3.5 flex flex-col gap-2.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-black text-navy leading-6 line-clamp-1">{f.title}</h3>
-                      <div className="flex items-center gap-1 shrink-0">
+                  <div className="p-5 sm:p-6 flex flex-col gap-3.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="font-black text-navy text-lg leading-7 line-clamp-2">{f.title}</h3>
+                      <div className="flex items-center gap-1.5 shrink-0">
                         {isReg && <Badge color="orange">ثبت‌نامی</Badge>}
                         {f.published ? (
                           <Badge color="green">منتشر</Badge>
@@ -263,30 +263,30 @@ export default function FormsList() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 text-xs font-semibold text-ink-subtle">
+                    <div className="flex items-center gap-3 text-sm font-semibold text-ink-subtle">
                       <span>📥 {c.total}</span>
                       <span>✓ {c.complete}</span>
                       <span className="mr-auto">{new Date(f.created_at).toLocaleDateString("fa-IR")}</span>
                     </div>
 
-                    <div className="flex flex-wrap gap-1.5 mt-1">
-                      <Button as={Link} to={`/admin/forms/${f.id}`} variant="glass" size="sm" rotate="rotate-[1deg]">ویرایش</Button>
-                      <Button as={Link} to={`/admin/forms/${f.id}/responses`} variant="glass" size="sm" rotate="-rotate-[1deg]">پاسخ‌ها</Button>
-                      <Button as={Link} to={`/admin/forms/${f.id}/share`} variant="glass" size="sm" rotate="rotate-[1deg]">اشتراک</Button>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      <Button as={Link} to={`/admin/forms/${f.id}`} variant="glass" size="md" rotate="rotate-[1deg]">ویرایش</Button>
+                      <Button as={Link} to={`/admin/forms/${f.id}/responses`} variant="glass" size="md" rotate="-rotate-[1deg]">پاسخ‌ها</Button>
+                      <Button as={Link} to={`/admin/forms/${f.id}/share`} variant="glass" size="md" rotate="rotate-[1deg]">اشتراک</Button>
                       {f.published && (
                         <>
-                          <Button variant="glass" size="sm" onClick={() => share(f)} rotate="-rotate-[1deg]">کپی لینک</Button>
-                          <Button as="a" href={`/f/${f.slug}`} target="_blank" variant="glass" size="sm" rotate="rotate-[1deg]">مشاهده ↗</Button>
+                          <Button variant="glass" size="md" onClick={() => share(f)} rotate="-rotate-[1deg]">کپی لینک</Button>
+                          <Button as="a" href={`/f/${f.slug}`} target="_blank" variant="glass" size="md" rotate="rotate-[1deg]">مشاهده ↗</Button>
                         </>
                       )}
                       {hasPermission("publish_form") && (
-                        <Button variant="glass" size="sm" onClick={() => togglePublish(f)} rotate="-rotate-[1deg]">
+                        <Button variant="glass" size="md" onClick={() => togglePublish(f)} rotate="-rotate-[1deg]">
                           {f.published ? "لغو انتشار" : "انتشار 🚀"}
                         </Button>
                       )}
-                      <Button variant="glass" size="sm" onClick={() => duplicate(f)} disabled={busy} rotate="rotate-[1deg]">کپی 📄</Button>
+                      <Button variant="glass" size="md" onClick={() => duplicate(f)} disabled={busy} rotate="rotate-[1deg]">کپی 📄</Button>
                       {hasPermission("delete_form") && (
-                        <Button variant="glass" size="sm" className="!text-magenta-text" onClick={() => setDeleting(f)} rotate="-rotate-[1deg]">حذف</Button>
+                        <Button variant="glass" size="md" className="!text-magenta-text" onClick={() => setDeleting(f)} rotate="-rotate-[1deg]">حذف</Button>
                       )}
                     </div>
 
