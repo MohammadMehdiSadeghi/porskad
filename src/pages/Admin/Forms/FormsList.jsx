@@ -271,7 +271,7 @@ export default function FormsList() {
                 <StickerCard theme="white">
                   <div className="p-5 sm:p-6 flex flex-col gap-3.5">
                     <div className="flex items-start justify-between gap-3">
-                      <h3 className="font-black text-navy text-lg leading-7 line-clamp-1">{f.title}</h3>
+                      <h3 className="font-black text-navy text-base leading-6 line-clamp-1">{f.title}</h3>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {f.archived && <Badge color="gray">آرشیو</Badge>}
                         {isReg && !f.archived && <Badge color="orange">ثبت‌نامی</Badge>}
