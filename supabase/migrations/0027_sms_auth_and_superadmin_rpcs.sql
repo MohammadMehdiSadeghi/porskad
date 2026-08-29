@@ -1,18 +1,11 @@
 -- ════════════════════════════════════════════════════════════════
--- 0027: SMS Authentication + SuperAdmin RPCs
+-- 0027: SuperAdmin RPCs + activity/error log tables
+-- (SMS-related parts removed — see cleanup_0031 for database cleanup)
 -- ════════════════════════════════════════════════════════════════
 
--- ─── 1. اضافه کردن فیلدهای احراز هویت آموت به sms_settings ───
-alter table public.sms_settings
-  add column if not exists amoot_user_id  text not null default '',
-  add column if not exists amoot_password text not null default '';
-
 -- ════════════════════════════════════════════════════════════════
--- حذف همه توابع قدیمی قبل از بازسازی (برای جلوگیری از conflict)
+-- حذف توابع قدیمی قبل از بازسازی
 -- ════════════════════════════════════════════════════════════════
-drop function if exists public.save_sms_settings(text, text, text);
-drop function if exists public.save_sms_settings(text, text, text, text, text);
-drop function if exists public.get_active_sms_settings();
 drop function if exists public.get_db_stats();
 drop function if exists public.exec_sql(text);
 drop function if exists public.export_table_data(text);
@@ -25,64 +18,8 @@ drop function if exists public.log_activity(text);
 drop function if exists public.impersonate_user(uuid);
 
 -- ════════════════════════════════════════════════════════════════
--- 2. بازسازی توابع
+-- SuperAdmin RPCs
 -- ════════════════════════════════════════════════════════════════
-
--- ─── save_sms_settings ───
-create or replace function public.save_sms_settings(
-  p_api_token      text,
-  p_line_number    text default 'public',
-  p_sender_name    text default 'پرسکاد',
-  p_amoot_user_id  text default '',
-  p_amoot_password text default ''
-)
-returns uuid
-language plpgsql
-security definer set search_path = public
-as $$
-  declare v_id uuid;
-  begin
-    update public.sms_settings set is_active = false where is_active = true;
-    insert into public.sms_settings (
-      api_token, line_number, sender_name, is_active, created_by,
-      amoot_user_id, amoot_password
-    )
-    values (
-      p_api_token, p_line_number, p_sender_name, true, auth.uid(),
-      p_amoot_user_id, p_amoot_password
-    )
-    returning id into v_id;
-    return v_id;
-  end;
-$$;
-
-grant execute on function public.save_sms_settings(text, text, text, text, text) to authenticated;
-
--- ─── get_active_sms_settings ───
-create or replace function public.get_active_sms_settings()
-returns table (
-  id              uuid,
-  api_token       text,
-  line_number     text,
-  sender_name     text,
-  is_active       boolean,
-  amoot_user_id   text,
-  amoot_password  text
-)
-language plpgsql
-security definer set search_path = public
-as $$
-begin
-  return query
-    select s.id, s.api_token, s.line_number, s.sender_name, s.is_active,
-           s.amoot_user_id, s.amoot_password
-    from public.sms_settings s
-    where s.is_active = true
-    limit 1;
-end;
-$$;
-
-grant execute on function public.get_active_sms_settings() to authenticated;
 
 -- ─── get_db_stats ───
 create or replace function public.get_db_stats()
@@ -95,8 +32,7 @@ declare
   v_tables text[] := array[
     'forms', 'questions', 'responses', 'answers',
     'profiles', 'user_roles', 'user_permissions',
-    'logic_rules', 'activity_log', 'error_log',
-    'sms_outbox', 'sms_inbox', 'sms_delivery_reports', 'sms_settings'
+    'logic_rules', 'activity_log', 'error_log'
   ];
   v_t text;
   v_count bigint;
@@ -157,8 +93,7 @@ declare
   v_allowed text[] := array[
     'forms', 'questions', 'responses', 'answers',
     'profiles', 'user_roles', 'user_permissions',
-    'logic_rules', 'activity_log', 'error_log',
-    'sms_outbox', 'sms_inbox', 'sms_delivery_reports', 'sms_settings'
+    'logic_rules', 'activity_log', 'error_log'
   ];
 begin
   if not public.is_owner(auth.uid()) and not public.is_admin(auth.uid()) then
@@ -263,7 +198,7 @@ $$;
 grant execute on function public.impersonate_user(uuid) to authenticated;
 
 -- ════════════════════════════════════════════════════════════════
--- 3. جداول activity_log و error_log
+-- جداول activity_log و error_log
 -- ════════════════════════════════════════════════════════════════
 create table if not exists public.activity_log (
   id          uuid primary key default gen_random_uuid(),
