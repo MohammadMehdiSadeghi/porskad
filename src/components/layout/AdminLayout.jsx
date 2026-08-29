@@ -16,7 +16,7 @@ const NAV_ITEMS = [
 ];
 
 export default function AdminLayout() {
-  const { user, loading, role, logout, hasPermission } = useAuth();
+  const { user, loading, role, logout, hasPermission, isOwner } = useAuth();
   const navigate = useNavigate();
 
   if (loading) {
@@ -50,8 +50,8 @@ export default function AdminLayout() {
         {/* نав موبایل: افقی اسکرولی — نав دسکتاپ: عمودی */}
         <nav className="flex sm:flex-col gap-1 px-1.5 sm:px-2 py-1.5 sm:py-2 overflow-x-auto scrollbar-none">
           {NAV_ITEMS.filter((item) => {
-            if (item.adminOnly && role !== "admin") return false;
-            if (item.permission && !hasPermission(item.permission)) return false;
+            if (item.adminOnly && role !== "admin" && !isOwner()) return false;
+            if (item.permission && !hasPermission(item.permission) && !isOwner()) return false;
             return true;
           }).map((item) => (
             <NavLink
