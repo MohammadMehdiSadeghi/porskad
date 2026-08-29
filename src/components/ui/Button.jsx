@@ -40,7 +40,7 @@ const VARIANTS = {
   },
   glass: {
     layer: "hidden",
-    btn: "bg-white/60 backdrop-blur-sm border-white/80 text-navy hover:bg-white/80",
+    btn: "bg-navy/5 backdrop-blur-sm border-ink/10 text-navy hover:bg-navy/10",
   },
 };
 
