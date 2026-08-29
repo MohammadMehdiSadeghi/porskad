@@ -108,17 +108,19 @@ export default function RegistrationForm({ form, questions, slug }) {
     try {
       const ua = parseUserAgent();
       const nowIso = new Date().toISOString();
-      const { data: responseRow, error: respError } = await supabase.from("responses").insert({
+      const responseId = crypto.randomUUID();
+      const { error: respError } = await supabase.from("responses").insert({
+        id: responseId,
         form_id: form.id, is_complete: true, started_at: new Date(startedAt).toISOString(),
         submitted_at: nowIso, duration_seconds: Math.round((Date.now() - startedAt) / 1000),
         device: ua.device, browser: ua.browser, os: ua.os, user_agent: navigator.userAgent, referer: document.referrer || null,
-      }).select("id").single();
+      });
       if (respError) throw respError;
       const rows = visibleQuestions.filter((q) => !isFieldEmpty(answers[q.id])).map((q) => ({
-        response_id: responseRow.id, question_id: q.id, value: normalizeAnswerValue(q, answers[q.id]), time_spent_seconds: 0,
+        response_id: responseId, question_id: q.id, value: normalizeAnswerValue(q, answers[q.id]), time_spent_seconds: 0,
       }));
       if (rows.length) { const { error: ansError } = await supabase.from("answers").insert(rows); if (ansError) throw ansError; }
-      sendToTelegram(form.id, responseRow.id);
+      sendToTelegram(form.id, responseId);
       if (hasScoring(visibleQuestions)) setScoreResult(calculateScore(visibleQuestions, answers));
       setSubmitted(true);
     } catch (err) { console.error(err); setError("ثبت ناموفق بود؛ دوباره تلاش کنید."); }

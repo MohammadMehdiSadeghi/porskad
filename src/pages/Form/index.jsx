@@ -177,16 +177,18 @@ export default function FormFill() {
     setSubmitting(true); setSubmitError(null);
     try {
       const ua = parseUserAgent(); const nowIso = new Date().toISOString();
-      const { data: responseRow, error: respError } = await supabase.from("responses").insert({
+      const responseId = crypto.randomUUID();
+      const { error: respError } = await supabase.from("responses").insert({
+        id: responseId,
         form_id: form.id, is_complete: true, started_at: new Date(startedAt ?? Date.now()).toISOString(), submitted_at: nowIso,
         duration_seconds: startedAt ? Math.round((Date.now() - startedAt) / 1000) : null,
         device: ua.device, browser: ua.browser, os: ua.os, user_agent: navigator.userAgent, referer: document.referrer || null,
-      }).select("id").single();
+      });
       if (respError) throw respError;
-      const rows = visibleQuestions.filter((q) => { const v = answers[q.id]; return !(v === undefined || v === null || String(v ?? "").trim() === ""); }).map((q) => ({ response_id: responseRow.id, question_id: q.id, value: normalizeAnswerValue(q, answers[q.id]), time_spent_seconds: Math.round(times[q.id] ?? 0) }));
-      if (rows.length) { const { error: ansError } = await supabase.from("answers").insert(rows); if (ansError) console.warn("answers insert failed:", ansError); }
+      const rows = visibleQuestions.filter((q) => { const v = answers[q.id]; return !(v === undefined || v === null || String(v ?? "").trim() === ""); }).map((q) => ({ response_id: responseId, question_id: q.id, value: normalizeAnswerValue(q, answers[q.id]), time_spent_seconds: Math.round(times[q.id] ?? 0) }));
+      if (rows.length) { const { error: ansError } = await supabase.from("answers").insert(rows); if (ansError) throw ansError; }
       localStorage.removeItem(draftKey(slug));
-      sendToTelegram(form.id, responseRow.id);
+      sendToTelegram(form.id, responseId);
       if (hasScoring(questions)) setScoreResult(calculateScore(visibleQuestions, answers));
       setDir(1); setStep(total);
     } catch (err) { console.error(err); setSubmitError("ثبت جواب ناموفق بود؛ دوباره تلاش کن."); }
