@@ -1,6 +1,5 @@
 // ══════════════════════════════════════════════════════════════
-// SuperAdmin — حالت خدایی: دسترسی کامل به تمامی بخش‌ها
-// طراحی: بر اساس دیزاین سیستم پرسکاد
+// SuperAdmin — God Mode: Full system access
 // ══════════════════════════════════════════════════════════════
 
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
@@ -14,16 +13,16 @@ import StickerCard from "../../components/ui/StickerCard";
 import Badge from "../../components/ui/Badge";
 import "./superadmin-ibm.css";
 
-// ─── تب‌ها ───
+// ─── Tabs ───
 import { LayoutDashboard, Database, Users, Shield, Cloud, FileText, Code } from "lucide-react";
 
 const TABS = [
-  { id: "dashboard", label: "داشبورد", icon: LayoutDashboard },
-  { id: "database", label: "دیتابیس", icon: Database },
-  { id: "users", label: "کاربران", icon: Users },
-  { id: "admins", label: "ادمین‌ها", icon: Shield },
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "database", label: "Database", icon: Database },
+  { id: "users", label: "Users", icon: Users },
+  { id: "admins", label: "Admins", icon: Shield },
   { id: "vercel", label: "Vercel", icon: Cloud },
-  { id: "logs", label: "لاگ‌ها", icon: FileText },
+  { id: "logs", label: "Logs", icon: FileText },
   { id: "query", label: "SQL", icon: Code },
 ];
 
@@ -37,7 +36,7 @@ export default function SuperAdmin() {
   const [search, setSearch] = useState("");
   const refreshRef = useRef(null);
 
-  // ─── داده‌ها ───
+  // ─── State ───
   const [dbStats, setDbStats] = useState({});
   const [tables] = useState(["forms", "questions", "responses", "answers", "profiles", "user_roles", "user_permissions", "logic_rules", "activity_log", "error_log"]);
   const [selectedTable, setSelectedTable] = useState(null);
@@ -51,7 +50,7 @@ export default function SuperAdmin() {
   const [vercelData, setVercelData] = useState({ deployments: [], projects: [] });
   const [vercelLoading, setVercelLoading] = useState(false);
 
-  // ─── مودال‌ها ───
+  // ─── Modals ───
   const [editModal, setEditModal] = useState(null); // { table, row, isNew }
   const [editForm, setEditForm] = useState({});
   const [detailModal, setDetailModal] = useState(null); // user detail
@@ -62,7 +61,7 @@ export default function SuperAdmin() {
   const [sqlRunning, setSqlRunning] = useState(false);
   const [toast, setToast] = useState(null);
 
-  // ─── مدیریت کاربران (سوپرادمین) ───
+  // ─── User Management (SuperAdmin) ───
   const [resetPasswordModal, setResetPasswordModal] = useState(null);
   const [newPassword, setNewPassword] = useState("");
   const [resetEmailModal, setResetEmailModal] = useState(null);
@@ -71,7 +70,7 @@ export default function SuperAdmin() {
   const [editFullName, setEditFullName] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
 
-  // ─── بارگذاری ───
+  // ─── Init ───
   useEffect(() => { loadAll(); return () => { if (refreshRef.current) clearInterval(refreshRef.current); }; }, []);
 
   async function loadAll() {
@@ -273,7 +272,7 @@ export default function SuperAdmin() {
     } finally { setSqlRunning(false); }
   }
 
-  // ─── ریست رمز عبور ───
+  // ─── Reset Password ───
   async function doResetPassword() {
     if (!resetPasswordModal || !newPassword.trim()) return;
     try {
@@ -282,15 +281,15 @@ export default function SuperAdmin() {
         p_new_password: newPassword.trim(),
       });
       if (error) throw error;
-      showToast("رمز عبور با موفقیت تغییر کرد ✅");
+      showToast("Password updated successfully ✅");
       setResetPasswordModal(null);
       setNewPassword("");
     } catch (err) {
-      showToast("خطا: " + err.message, "error");
+      showToast("Error: " + err.message, "error");
     }
   }
 
-  // ─── تغییر ایمیل ───
+  // ─── Update Email ───
   async function doUpdateEmail() {
     if (!resetEmailModal || !newEmail.trim()) return;
     try {
@@ -299,7 +298,7 @@ export default function SuperAdmin() {
         p_new_email: newEmail.trim(),
       });
       if (error) throw error;
-      showToast("ایمیل با موفقیت تغییر کرد ✅");
+      showToast("Email updated successfully ✅");
       setResetEmailModal(null);
       setNewEmail("");
       loadUsers();
@@ -309,13 +308,13 @@ export default function SuperAdmin() {
     }
   }
 
-  // ─── تغییر نام ───
+  // ─── Update Name ───
   async function doUpdateName() {
     if (!editNameModal || !editFullName.trim()) return;
     try {
       const { error } = await supabase.from("profiles").update({ full_name: editFullName.trim() }).eq("id", editNameModal.id);
       if (error) throw error;
-      showToast("نام با موفقیت تغییر کرد ✅");
+      showToast("Name updated successfully ✅");
       setEditNameModal(null);
       setEditFullName("");
       loadUsers();
@@ -385,7 +384,7 @@ export default function SuperAdmin() {
     }
   }
 
-  // ─── آمار ───
+  // ─── Stats ───
   const stats = useMemo(() => ({
     forms: dbStats.forms || 0, responses: dbStats.responses || 0,
     questions: dbStats.questions || 0, answers: dbStats.answers || 0,
@@ -394,7 +393,7 @@ export default function SuperAdmin() {
     activities: activityLog.length,
   }), [dbStats, users, admins, errorLog, activityLog]);
 
-  // ─── فیلتر ───
+  // ─── Filter ───
   const filteredData = useMemo(() => {
     if (!search || !tableData.length) return tableData;
     const q = search.toLowerCase();
@@ -402,18 +401,18 @@ export default function SuperAdmin() {
   }, [tableData, search]);
 
   if (loading) {
-    return <Spinner label="بارگذاری سوپرادمین..." />;
+    return <Spinner label="Loading SuperAdmin..." />;
   }
 
-  // فقط اکانت superadmin (هر دو نسخه ایمیل) اجازه دسترسی دارد
+  // Only superadmin account has access
   const isSuperAdmin = isOwner();
   if (!isSuperAdmin) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center p-8 rounded-xl border-2 border-ink/10 bg-white max-w-sm">
           <div className="text-4xl mb-3">🚫</div>
-          <h2 className="text-lg font-extrabold text-navy mb-2">دسترسی غیرمجاز</h2>
-          <p className="text-sm font-semibold text-ink-subtle">فقط اکانت superadmin اجازه دسترسی به این بخش را دارد.</p>
+          <h2 className="text-lg font-extrabold text-navy mb-2">Unauthorized Access</h2>
+          <p className="text-sm font-semibold text-ink-subtle">Only superadmin account has access to this section.</p>
         </div>
       </div>
     );
@@ -647,7 +646,7 @@ export default function SuperAdmin() {
           {vercelData.projects.length > 0 && (
             <StickerCard theme="navy">
               <div className="p-3.5">
-                <h3 className="text-xs font-extrabold text-navy mb-2">پروژه‌ها</h3>
+                <h3 className="text-xs font-extrabold text-navy mb-2">Projects</h3>
                 {vercelData.projects.map((p) => (
                   <div key={p.id} className="flex items-center gap-2 py-1.5 border-b border-ink/10 last:border-0">
                     <span className="text-xs font-bold text-white flex-1">{p.name}</span>
@@ -661,10 +660,10 @@ export default function SuperAdmin() {
             <div className="overflow-x-auto border-2 border-ink/10 rounded-pill-md bg-white">
               <table className="w-full text-xs">
                 <thead><tr className="bg-bg-lavender border-b-2 border-ink/10">
-                  <th className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">پروژه</th>
-                  <th className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">وضعیت</th>
-                  <th className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">زمان</th>
-                  <th className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">آدرس</th>
+                  <th className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">Project</th>
+                  <th className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">Status</th>
+                  <th className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">Time</th>
+                  <th className="text-right py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">URL</th>
                 </tr></thead>
                 <tbody>
                   {vercelData.deployments.map((r, i) => (
@@ -679,7 +678,7 @@ export default function SuperAdmin() {
               </table>
             </div>
           )}
-          {!vercelToken && <div className="bg-bg-lavender border-2 border-ink/10 rounded-pill-md p-6 text-center text-xs font-semibold text-ink-subtle">توکن Vercel API را وارد کنید تا دیپلوی‌ها مانیتور شوند</div>}
+          {!vercelToken && <div className="bg-bg-lavender border-2 border-ink/10 rounded-pill-md p-6 text-center text-xs font-semibold text-ink-subtle">Enter your Vercel API token to monitor deployments</div>}
         </div>
       )}
 
@@ -691,7 +690,7 @@ export default function SuperAdmin() {
             <button className="sa-btn sa-btn-ghost" onClick={async () => {
               try {
                 await supabase.rpc("log_activity", { p_action: "test_log", p_target_type: "system", p_details: { test: true } });
-                showToast("لاگ تست ایجاد شد");
+                showToast("Test log created");
                 loadActivity();
               } catch (err) { showToast("Error: " + err.message, "error"); }
             }}>+ Test Log</button>
@@ -796,7 +795,7 @@ export default function SuperAdmin() {
         </div>
       )}
 
-      {/* ═══════════ مودال ویرایش ═══════════ */}
+      {/* ═══════════ Edit Modal ═══════════ */}
       <Modal open={!!editModal} onClose={() => setEditModal(null)} title={`${editModal?.isNew ? 'Create' : 'Edit'} ${editModal?.table || ''}`}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '70vh', overflowY: 'auto' }}>
           {Object.entries(editForm).map(([key, val]) => {
@@ -825,7 +824,7 @@ export default function SuperAdmin() {
         </div>
       </Modal>
 
-      {/* ═══════════ مودال جزئیات کاربر + ویرایش دسترسی ═══════════ */}
+      {/* ═══════════ User Detail + Permissions Modal ═══════════ */}
       <Modal open={!!detailModal} onClose={() => setDetailModal(null)} title={`${detailModal?.is_owner ? '👑 Owner' : 'User'}: ${detailModal?.full_name || detailModal?.email || ''}`}>
         {detailModal && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '80vh', overflowY: 'auto', fontSize: '0.85rem' }}>
@@ -836,7 +835,7 @@ export default function SuperAdmin() {
               ))}
             </div>
 
-            {/* ─── ویرایش نام (برای همه شامل owner) ─── */}
+            {/* ─── Edit Name (all users including owner) ─── */}
             <div style={{ border: '1px solid #e0e0e0', padding: '0.75rem' }}>
               <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#525252', textTransform: 'uppercase' }}>Edit Name</span>
               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
@@ -853,7 +852,7 @@ export default function SuperAdmin() {
               </div>
             </div>
 
-            {/* ─── تغییر رمز عبور (برای همه شامل owner) ─── */}
+            {/* ─── Reset Password (all users including owner) ─── */}
             <div style={{ border: '1px solid #da1e28', padding: '0.75rem', background: '#fff1f1' }}>
               <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#da1e28', textTransform: 'uppercase' }}>🔑 Reset Password</span>
               <p style={{ fontSize: '0.7rem', color: '#6f6f6f', margin: '0.25rem 0 0.5rem' }}>Set a new password for this user. They will need to login with the new password.</p>
@@ -881,7 +880,7 @@ export default function SuperAdmin() {
               </div>
             </div>
 
-            {/* ─── تغییر ایمیل (برای همه شامل owner) ─── */}
+            {/* ─── Change Email (all users including owner) ─── */}
             <div style={{ border: '1px solid #e0e0e0', padding: '0.75rem' }}>
               <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#525252', textTransform: 'uppercase' }}>📧 Change Email</span>
               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
@@ -906,7 +905,7 @@ export default function SuperAdmin() {
               </div>
             </div>
 
-            {/* ─── ویرایش نقش ─── */}
+            {/* ─── Edit Role ─── */}
             {!detailModal.is_owner && (
               <div style={{ border: '1px solid #e0e0e0', padding: '0.75rem' }}>
                 <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#525252', textTransform: 'uppercase' }}>Role</span>
@@ -930,7 +929,7 @@ export default function SuperAdmin() {
               </div>
             )}
 
-            {/* ─── فعال/غیرفعال ─── */}
+            {/* ─── Activate/Deactivate ─── */}
             {!detailModal.is_owner && (
               <div style={{ border: '1px solid #e0e0e0', padding: '0.75rem' }}>
                 <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#525252', textTransform: 'uppercase' }}>Status</span>
@@ -1024,7 +1023,7 @@ export default function SuperAdmin() {
         )}
       </Modal>
 
-      {/* ═══════════ مودال Login As ═══════════ */}
+      {/* ═══════════ Login As Modal ═══════════ */}
       <Modal open={!!impersonateModal} onClose={() => setImpersonateModal(null)} title="Login as User">
         {impersonateModal && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
