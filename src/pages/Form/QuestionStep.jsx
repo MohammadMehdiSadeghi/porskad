@@ -58,7 +58,7 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
     return (
       <select
         value={value || ""}
-        onChange={(e) => { const v = e.target.value || null; onChange(v); if (v) setTimeout(onEnter, 250); }}
+        onChange={(e) => { const v = e.target.value || null; onChange(v); }}
         className="w-full bg-white border-2 border-ink/15 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:px-4 sm:py-3.5 font-bold text-sm sm:text-base text-ink focus:outline-none transition-all duration-200 cursor-pointer text-right"
       >
         <option value="">یک گزینه انتخاب کنید...</option>
@@ -75,7 +75,7 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
       {options.map((opt, i) => {
         const selected = value === opt;
         return (
-          <button key={i} type="button" onClick={() => { onChange(opt); setTimeout(onEnter, 250); }}
+          <button key={i} type="button" onClick={() => { onChange(opt); }}
             className={clsx("relative group flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 transition-all duration-200 cursor-pointer hover:-translate-y-px",
               selected ? "border-ecosystem-normal bg-ecosystem-light rotate-[-0.5deg]" : "border-ink/10 bg-white hover:border-ecosystem-normal/50",
             )}>
@@ -102,7 +102,7 @@ function YesNoOptions({ value, onChange, onEnter }) {
           ? o.theme === "ecosystem" ? "border-ecosystem-normal bg-ecosystem-light text-ecosystem-dark" : "border-female-normal bg-female-light text-female-dark"
           : "border-ink/10 bg-white text-ink";
         return (
-          <button key={o.label} type="button" onClick={() => { onChange(o.label); setTimeout(onEnter, 250); }}
+          <button key={o.label} type="button" onClick={() => { onChange(o.label); }}
             className={clsx("flex flex-col items-center gap-1.5 border-2 rounded-pill-md [corner-shape:squircle] py-4 sm:py-5 text-base sm:text-lg font-black transition-all duration-200 hover:-translate-y-px cursor-pointer",
               active, selected && "rotate-[-0.5deg]",
             )}>
@@ -188,8 +188,8 @@ export default function QuestionStep({ question, index, total, value, timeSpent,
         {(question.type === "short_text" || question.type === "long_text" || question.type === "email" || question.type === "number" || question.type === "phone_ir" || question.type === "telegram_id") && (
           <TextInput type={question.type} value={value} error={error} onChange={handleChange} onEnter={handleNext} placeholder={question.placeholder} />
         )}
-        {question.type === "choice" && <ChoiceOptions options={question.options} value={value} onChange={(val) => { handleChange(val); setTimeout(handleNext, 250); }} onEnter={handleNext} displayMode={question.display_mode || "buttons"} />}
-        {question.type === "yes_no" && <YesNoOptions value={value} onChange={(val) => { handleChange(val); setTimeout(handleNext, 250); }} onEnter={handleNext} />}
+        {question.type === "choice" && <ChoiceOptions options={question.options} value={value} onChange={handleChange} onEnter={handleNext} displayMode={question.display_mode || "buttons"} />}
+        {question.type === "yes_no" && <YesNoOptions value={value} onChange={handleChange} onEnter={handleNext} />}
         {question.type === "rating" && <RatingStars value={value} onChange={(val) => handleChange(val)} />}
         {question.type === "checkbox" && (
           <div className="flex flex-col gap-2">
