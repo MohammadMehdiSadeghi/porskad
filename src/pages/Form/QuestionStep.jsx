@@ -124,9 +124,9 @@ function RatingStars({ value, onChange }) {
   const [hover, setHover] = useState(null);
   const current = hover ?? Number(value ?? 0);
   return (
-    <div className="flex flex-row-reverse justify-center gap-1.5 sm:gap-2" dir="ltr">
+    <div className="flex flex-row-reverse justify-center items-center gap-2 sm:gap-3 px-2" dir="ltr">
       {[1, 2, 3, 4, 5].map((n) => (
-        <button key={n} type="button" className={clsx("star-btn text-3xl sm:text-4xl cursor-pointer transition-all duration-150", n <= current ? "grayscale-0" : "grayscale opacity-40")}
+        <button key={n} type="button" className={clsx("star-btn text-2xl sm:text-3xl lg:text-4xl cursor-pointer transition-all duration-150 p-1", n <= current ? "grayscale-0" : "grayscale opacity-40")}
           onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(null)} onClick={() => onChange(n)} aria-label={`${n} ستاره`}>⭐</button>
       ))}
     </div>
@@ -163,7 +163,7 @@ export default function QuestionStep({ question, index, total, value, timeSpent,
     <div className="relative">
       <div aria-hidden="true" className={clsx("absolute top-1.5 left-1.5 w-full h-full", theme.backBg, "rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]")} />
 
-      <div className={clsx("relative z-10 flex flex-col gap-3.5 sm:gap-4 rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] border-2 p-4 sm:p-5 lg:p-6 transition-colors duration-300", theme.bg, theme.border)}>
+      <div className={clsx("relative z-10 flex flex-col gap-3.5 sm:gap-4 rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] border-2 p-4 sm:p-5 lg:p-6 transition-colors duration-300 overflow-hidden", theme.bg, theme.border)}>
         {/* شماره + برچسب */}
         <div className="flex items-center justify-between gap-2">
           <span className={clsx("text-xs sm:text-sm font-black flex items-center gap-1", theme.label)}>
