@@ -61,7 +61,65 @@ serve(async (req) => {
       );
     }
 
-    const { action, target_user_id, new_password, new_email } = await req.json();
+    const { action, target_user_id, new_password, new_email, email, password, full_name } = await req.json();
+
+    // ─── create_user: ایجاد مدیر جدید ───
+    if (action === "create_user") {
+      if (!email || !email.includes("@")) {
+        return new Response(
+          JSON.stringify({ error: "ایمیل نامعتبر است" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (!password || password.length < 6) {
+        return new Response(
+          JSON.stringify({ error: "رمز عبور باید حداقل ۶ کاراکتر باشد" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // ایجاد کاربر از طریق Supabase Admin API (امن و سازگار با همه نسخه‌ها)
+      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        email: email.trim(),
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: full_name || email.split("@")[0] },
+      });
+
+      if (createError) throw createError;
+
+      const userId = newUser.user.id;
+
+      // به‌روزرسانی پروفایل (trigger خودکار on_auth_user_created ممکنه اجرا نشده باشه)
+      await supabase
+        .from("profiles")
+        .upsert({
+          id: userId,
+          email: email.trim(),
+          full_name: full_name || email.split("@")[0],
+          is_active: true,
+          created_by: user.id,
+        }, { onConflict: "id" });
+
+      // اختصاص نقش admin
+      await supabase
+        .from("user_roles")
+        .upsert({ user_id: userId, role_id: "admin", active: true }, { onConflict: "user_id" });
+
+      // لاگ فعالیت
+      await supabase.from("activity_log").insert({
+        user_id: user.id,
+        action: "create_manager",
+        target_type: "user",
+        target_id: userId,
+        details: { email: email.trim(), name: full_name, created_by: user.id },
+      });
+
+      return new Response(
+        JSON.stringify({ success: true, user_id: userId }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (action === "reset_password") {
       if (!new_password || new_password.length < 6) {

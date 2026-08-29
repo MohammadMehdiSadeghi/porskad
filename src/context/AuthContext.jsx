@@ -199,13 +199,31 @@ export function AuthProvider({ children }) {
     fullName,
     permissionIds = null,
   }) {
-    // ساخت کاربر باید سمت سرور انجام شود (Admin API از مرورگر قابل استفاده نیست)
-    const { data: userId, error } = await supabase.rpc("create_manager", {
-      p_email: email.trim(),
-      p_password: password,
-      p_full_name: fullName ?? email.split("@")[0],
-    });
-    if (error) throw error;
+    // ساخت کاربر از طریق Edge Function (امن و سازگار با همه نسخه‌ها)
+    const response = await fetch(
+      `${supabase.supabaseUrl}/functions/v1/admin-user-management`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: session?.access_token ? `Bearer ${session.access_token}` : "",
+          apikey: supabase.supabaseKey,
+        },
+        body: JSON.stringify({
+          action: "create_user",
+          email: email.trim(),
+          password,
+          full_name: fullName ?? email.split("@")[0],
+        }),
+      }
+    );
+
+    const result = await response.json();
+    if (!response.ok || result.error) {
+      throw new Error(result.error || "ایجاد مدیر ناموفق بود");
+    }
+
+    const userId = result.user_id;
 
     if (Array.isArray(permissionIds) && userId) {
       const { error: permError } = await supabase.rpc("set_user_permissions", {
