@@ -270,23 +270,23 @@ export default function FormsList() {
                     </div>
 
                     <div className="flex flex-wrap gap-1.5 mt-1">
-                      <Button as={Link} to={`/admin/forms/${f.id}`} variant="ghost" size="sm" className="!bg-white/60 !backdrop-blur-sm !border-white/80 rotate-[1deg]">ویرایش</Button>
-                      <Button as={Link} to={`/admin/forms/${f.id}/responses`} variant="ghost" size="sm" className="!bg-white/60 !backdrop-blur-sm !border-white/80 -rotate-[1deg]">پاسخ‌ها</Button>
-                      <Button as={Link} to={`/admin/forms/${f.id}/share`} variant="ghost" size="sm" className="!bg-white/60 !backdrop-blur-sm !border-white/80 rotate-[1deg]">اشتراک</Button>
+                      <Button as={Link} to={`/admin/forms/${f.id}`} variant="glass" size="sm" rotate="rotate-[1deg]">ویرایش</Button>
+                      <Button as={Link} to={`/admin/forms/${f.id}/responses`} variant="glass" size="sm" rotate="-rotate-[1deg]">پاسخ‌ها</Button>
+                      <Button as={Link} to={`/admin/forms/${f.id}/share`} variant="glass" size="sm" rotate="rotate-[1deg]">اشتراک</Button>
                       {f.published && (
                         <>
-                          <Button variant="ghost" size="sm" onClick={() => share(f)} className="!bg-white/60 !backdrop-blur-sm !border-white/80 -rotate-[1deg]">کپی لینک</Button>
-                          <Button as="a" href={`/f/${f.slug}`} target="_blank" variant="ghost" size="sm" className="!bg-white/60 !backdrop-blur-sm !border-white/80 rotate-[1deg]">مشاهده ↗</Button>
+                          <Button variant="glass" size="sm" onClick={() => share(f)} rotate="-rotate-[1deg]">کپی لینک</Button>
+                          <Button as="a" href={`/f/${f.slug}`} target="_blank" variant="glass" size="sm" rotate="rotate-[1deg]">مشاهده ↗</Button>
                         </>
                       )}
                       {hasPermission("publish_form") && (
-                        <Button variant="ghost" size="sm" onClick={() => togglePublish(f)} className="!bg-white/60 !backdrop-blur-sm !border-white/80 -rotate-[1deg]">
+                        <Button variant="glass" size="sm" onClick={() => togglePublish(f)} rotate="-rotate-[1deg]">
                           {f.published ? "لغو انتشار" : "انتشار 🚀"}
                         </Button>
                       )}
-                      <Button variant="ghost" size="sm" onClick={() => duplicate(f)} disabled={busy} className="!bg-white/60 !backdrop-blur-sm !border-white/80 rotate-[1deg]">کپی 📄</Button>
+                      <Button variant="glass" size="sm" onClick={() => duplicate(f)} disabled={busy} rotate="rotate-[1deg]">کپی 📄</Button>
                       {hasPermission("delete_form") && (
-                        <Button variant="ghost" size="sm" className="!bg-white/60 !backdrop-blur-sm !border-white/80 -rotate-[1deg] !text-magenta-text" onClick={() => setDeleting(f)}>حذف</Button>
+                        <Button variant="glass" size="sm" className="!text-magenta-text" onClick={() => setDeleting(f)} rotate="-rotate-[1deg]">حذف</Button>
                       )}
                     </div>
 
