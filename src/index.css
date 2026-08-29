@@ -110,13 +110,16 @@ html {
 
 /* ─── Desktop: text sizes ─── */
 @media (min-width: 768px) {
-    .text-xs { font-size: 9px; line-height: 15px; }
-    .text-sm { font-size: 12px; line-height: 20px; }
-    .text-base { font-size: 15px; line-height: 24px; }
-    .text-lg { font-size: 24px; line-height: 38px; }
-    .text-xl { font-size: 31px; line-height: 48px; }
-    .text-2xl { font-size: 39px; line-height: 60px; }
-    .text-3xl { font-size: 51px; line-height: 78px; }
-    h1.text-xl { font-size: 30px; line-height: 47px; }
-    h1.text-3xl { font-size: 50px; line-height: 77px; }
+    .text-xs { font-size: 10px; line-height: 16px; }
+    .text-sm { font-size: 13px; line-height: 21px; }
+    .text-base { font-size: 16px; line-height: 25px; }
+    .text-lg { font-size: 25px; line-height: 39px; }
+    .text-xl { font-size: 32px; line-height: 49px; }
+    .text-2xl { font-size: 40px; line-height: 61px; }
+    .text-3xl { font-size: 52px; line-height: 79px; }
+    h1.text-xl { font-size: 31px; line-height: 48px; }
+    h1.text-3xl { font-size: 51px; line-height: 78px; }
+    /* Form card glass buttons: -2px */
+    .rounded-pill-md.text-sm,
+    .rounded-pill-md.text-base { font-size: 11px; line-height: 19px; }
 }
