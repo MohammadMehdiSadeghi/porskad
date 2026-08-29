@@ -122,4 +122,9 @@ html {
     /* Form card glass buttons: -2px */
     .rounded-pill-md.text-sm,
     .rounded-pill-md.text-base { font-size: 11px; line-height: 19px; }
+    /* Form card content: +4px bigger */
+    [data-form-card] .text-xs { font-size: 14px; line-height: 20px; }
+    [data-form-card] .text-sm { font-size: 17px; line-height: 25px; }
+    [data-form-card] .text-base { font-size: 20px; line-height: 29px; }
+    [data-form-card] .text-lg { font-size: 29px; line-height: 43px; }
 }

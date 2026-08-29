@@ -267,7 +267,7 @@ export default function FormsList() {
             const c = counts[f.id] ?? { total: 0, complete: 0 };
             const isReg = f.form_type === "registration";
             return (
-              <div key={f.id} className={i % 2 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"}>
+              <div key={f.id} data-form-card className={i % 2 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"}>
                 <StickerCard theme="white">
                   <div className="p-5 sm:p-6 flex flex-col gap-3.5">
                     <div className="flex items-start justify-between gap-3">
