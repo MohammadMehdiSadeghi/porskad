@@ -243,7 +243,7 @@ export default function FormsList() {
           action={!search && <Button variant="indigo" size="sm" onClick={() => setShowTypeModal(true)}>+ فرم جدید</Button>}
         />
       ) : (
-        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 lg:gap-5">
+        <div className="grid sm:grid-cols-2 gap-3 lg:gap-5">
           {filtered.map((f, i) => {
             const c = counts[f.id] ?? { total: 0, complete: 0 };
             const isReg = f.form_type === "registration";
