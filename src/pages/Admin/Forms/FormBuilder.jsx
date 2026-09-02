@@ -360,11 +360,12 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                   value={q.max_selections ?? 1}
                   onChange={(e) => {
                     const val = Number(e.target.value);
-                    onChange({ max_selections: val });
+                    const patch = { max_selections: val };
                     // اگه max_selections > 1 شد و display_mode دراپ‌داون بود → به دکمه‌ای برگردان
                     if (val > 1 && q.display_mode === "dropdown") {
-                      onChange({ max_selections: val, display_mode: "buttons" });
+                      patch.display_mode = "buttons";
                     }
+                    onChange(patch);
                   }}
                   className="flex-1 accent-orange h-1.5 cursor-pointer"
                 />

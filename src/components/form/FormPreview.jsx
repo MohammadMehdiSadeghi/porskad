@@ -47,8 +47,9 @@ function MiniLongTextInput({ q }) {
   );
 }
 
-function MiniChoiceOptions({ options, displayMode }) {
-  if (displayMode === "dropdown") {
+function MiniChoiceOptions({ options, displayMode, maxSelections = 1 }) {
+  const isMulti = maxSelections > 1;
+  if (displayMode === "dropdown" && !isMulti) {
     return (
       <div className="w-full border border-ink/15 bg-white rounded-lg px-2 py-1.5 flex items-center justify-between">
         <span className="text-[0.55rem] font-semibold text-ink/40">یک گزینه انتخاب کنید...</span>
@@ -60,7 +61,7 @@ function MiniChoiceOptions({ options, displayMode }) {
     <div className="flex flex-col gap-1">
       {(options || []).map((opt, i) => (
         <div key={i} className="flex items-center gap-1.5 border border-ink/15 bg-white rounded-lg px-2 py-1">
-          <span className="w-4 h-4 shrink-0 flex items-center justify-center rounded-full border border-ink/20 text-[0.45rem] font-bold text-navy">
+          <span className={`w-4 h-4 shrink-0 flex items-center justify-center border border-ink/20 text-[0.45rem] font-bold text-navy ${isMulti ? "rounded" : "rounded-full"}`}>
             {faNum(i + 1)}
           </span>
           <span className="text-[0.55rem] font-semibold text-ink">{opt}</span>
@@ -107,7 +108,7 @@ function MiniQuestion({ q, index, total }) {
       {q.description && <p className="text-[0.5rem] text-ink/40 -mt-0.5">{q.description}</p>}
       {(q.type === "short_text" || q.type === "email" || q.type === "phone_ir" || q.type === "number" || q.type === "telegram_id") && <MiniTextInput q={q} />}
       {q.type === "long_text" && <MiniLongTextInput q={q} />}
-      {q.type === "choice" && <MiniChoiceOptions options={q.options} displayMode={(q.max_selections ?? 1) > 1 ? "buttons" : q.display_mode} />}
+      {q.type === "choice" && <MiniChoiceOptions options={q.options} displayMode={(q.max_selections ?? 1) > 1 ? "buttons" : q.display_mode} maxSelections={q.max_selections ?? 1} />}
       {q.type === "choice" && (q.max_selections ?? 1) > 1 && <span className="text-[0.5rem] font-bold text-orange">حداکثر {faNum(q.max_selections)} انتخاب</span>}
       {q.type === "yes_no" && <MiniYesNo />}
       {q.type === "rating" && <MiniRating />}

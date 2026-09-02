@@ -9,6 +9,7 @@ import { faNum, faDuration, parseUserAgent } from "../../lib/utils";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import { calculateScore, hasScoring } from "../../lib/scoring";
 import ScoreResult from "../../components/ui/ScoreResult";
+import { sendToTelegram } from "../../lib/telegram";
 import "../../index.css";
 
 const inputCls = "w-full bg-white border-2 border-ink/10 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 font-semibold text-ink text-sm sm:text-base placeholder:text-ink/40 placeholder:font-medium focus:outline-none transition-all duration-200";
@@ -367,6 +368,7 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
       }
 
       postToParent("pcode:submitted", { formId, responseId: data?.responseId });
+      sendToTelegram(formId, data?.responseId);
       setSubmitted(true);
     } catch (err) {
       console.error("Submit error:", err);
@@ -748,6 +750,7 @@ export default function EmbedForm() {
       }
 
       postToParent("pcode:submitted", { formId, responseId: data?.responseId });
+      sendToTelegram(formId, data?.responseId);
       setDir(1);
       setStep(total);
     } catch (err) {

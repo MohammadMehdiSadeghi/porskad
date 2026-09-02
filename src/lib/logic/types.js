@@ -20,7 +20,7 @@ export const OPERATORS = {
   is_not_empty:        { label: "خالی نباشد",         needsValue: false, type: "empty" },
   is_selected:         { label: "انتخاب شده",         needsValue: true,  type: "select" },
   is_not_selected:     { label: "انتخاب نشده",        needsValue: true,  type: "select" },
-  // ─── عملگرهای جدید: تعداد انتخاب (برای checkbox) ───
+  // ─── عملگرهای جدید: تعداد انتخاب (برای choice چند-انتخابی) ───
   selected_count_equals:         { label: "تعداد انتخاب برابر با",   needsValue: true,  type: "number" },
   selected_count_greater_than:   { label: "تعداد انتخاب بیشتر از",    needsValue: true,  type: "number" },
   selected_count_less_than:      { label: "تعداد انتخاب کمتر از",     needsValue: true,  type: "number" },

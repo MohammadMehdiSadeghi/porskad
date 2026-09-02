@@ -159,7 +159,7 @@ export function evaluateNextStep(currentQuestion, answer, questions, visibleQues
       } else if (answer === "خیر" || answer === "false" || answer === false) {
         selectedIndices = [1];
       }
-    } else if (currentQuestion.type === "choice") {
+    } else if (currentQuestion.type === "choice" && (currentQuestion.max_selections ?? 1) <= 1) {
       const optIdx = currentQuestion.options?.findIndex((o) => o === answer);
       if (optIdx >= 0) selectedIndices = [optIdx];
     }

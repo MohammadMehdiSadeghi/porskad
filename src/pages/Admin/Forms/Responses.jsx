@@ -125,8 +125,8 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
       }
     }
 
-    // برای multi-select، denominator تعداد پاسخ‌دهندگانه نه تعداد انتخاب‌ها
-    const denom = isCheckbox ? total : total;
+    // denominator = تعداد پاسخ‌دهندگان (درصد هر گزینه از کل پاسخ‌دهندگان)
+    const denom = total;
 
     return keys.map((k) => ({
       key: k,
