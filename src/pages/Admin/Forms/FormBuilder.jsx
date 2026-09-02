@@ -338,6 +338,49 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
             </div>
           )}
 
+          {/* ─── تعداد انتخاب مجاز (فقط choice) ─── */}
+          {meta.hasMaxSelections && (
+            <div className="flex flex-col gap-2 border-2 border-dashed border-orange/40 rounded-pill-md bg-[#FEF7EC]/40 p-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-extrabold text-orange">تعداد انتخاب مجاز</span>
+                {(q.max_selections ?? 1) > 1 && (
+                  <span className="text-[0.55rem] font-bold text-teal bg-teal/10 border border-teal/30 rounded-pill-sm px-1.5 py-0.5">
+                    چند انتخابی
+                  </span>
+                )}
+              </div>
+              <span className="text-[0.6rem] font-medium text-ink-subtle">
+                کاربر چند گزینه می‌تواند انتخاب کند؟ ۱ = تک‌انتخابی، بیشتر از ۱ = چند انتخابی
+              </span>
+              <div className="flex items-center gap-3">
+                <input
+                  type="range"
+                  min="1"
+                  max={Math.min(q.options?.length || 4, 15)}
+                  value={q.max_selections ?? 1}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    onChange({ max_selections: val });
+                    // اگه max_selections > 1 شد و display_mode دراپ‌داون بود → به دکمه‌ای برگردان
+                    if (val > 1 && q.display_mode === "dropdown") {
+                      onChange({ max_selections: val, display_mode: "buttons" });
+                    }
+                  }}
+                  className="flex-1 accent-orange h-1.5 cursor-pointer"
+                />
+                <span className="min-w-[2rem] text-center text-sm font-black text-orange bg-white border-2 border-orange/30 rounded-pill-sm px-2 py-1">
+                  {faNum(q.max_selections ?? 1)}
+                </span>
+              </div>
+              <span className="text-[0.55rem] font-medium text-ink-subtle">
+                {(q.max_selections ?? 1) === 1
+                  ? "کاربر فقط یک گزینه می‌تواند انتخاب کند (حالت رادیویی)"
+                  : `کاربر حداکثر ${faNum(q.max_selections)} گزینه می‌تواند انتخاب کند`
+                }
+              </span>
+            </div>
+          )}
+
           {/* ─── گزینه صحیح (Correct Answer) ─── */}
           {isChoice && (
             <div className="flex flex-col gap-2 border-2 border-dashed border-teal/40 rounded-pill-md bg-teal/5 p-3">
@@ -348,8 +391,39 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                 اگه گزینه صحیح مشخص کنید، بعد از ارسال فرم به کاربر نمره نمایش داده می‌شود.
               </span>
 
-              {/* choice / yes_no → تک انتخابی */}
-              {q.type !== "checkbox" ? (
+              {/* choice با max_selections > 1 → چند انتخابی (مثل checkbox) */}
+              {/* choice با max_selections > 1 → چند انتخابی */}
+              {q.type === "choice" && (q.max_selections ?? 1) > 1 ? (
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[0.6rem] font-medium text-ink-subtle">چند گزینه صحیح انتخاب کنید:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {q.options.map((opt, i) => {
+                      const correctArr = Array.isArray(q.correct_answer) ? q.correct_answer : [];
+                      const isSelected = correctArr.includes(opt);
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => {
+                            const next = isSelected
+                              ? correctArr.filter((v) => v !== opt)
+                              : [...correctArr, opt];
+                            onChange({ correct_answer: next.length > 0 ? next : null });
+                          }}
+                          className={`text-[0.65rem] font-bold px-3 py-1.5 rounded-pill-md border-2 transition-all cursor-pointer ${
+                            isSelected
+                              ? "border-teal bg-teal text-white"
+                              : "border-ink/15 bg-white text-ink hover:border-teal/40"
+                          }`}
+                        >
+                          {isSelected ? "✓ " : ""}{opt}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : q.type !== "checkbox" ? (
+                /* choice / yes_no → تک انتخابی */
                 <div className="flex flex-wrap gap-1.5">
                   {(q.type === "yes_no" ? ["بله", "خیر"] : q.options).map((opt, i) => {
                     const isSelected = q.correct_answer === opt;
@@ -656,6 +730,7 @@ export default function FormBuilder() {
         validation: q.validation ?? null,
         correct_answer: q.correct_answer ?? null,
         points: q.points ?? undefined,
+        max_selections: q.max_selections ?? 1,
         // مهاجرت: اگه conditions وجود نداشت از condition قدیمی بساز
         conditions: normalizeConditionGroup(q.conditions ?? (q.condition ? { group_operator: "AND", conditions: [q.condition] } : null)),
         jump_actions: q.jump_actions ?? [],
@@ -767,6 +842,7 @@ export default function FormBuilder() {
         correct_answer: q.correct_answer ?? null,
         points: q.points ?? null,
         display_mode: q.display_mode ?? null,
+        max_selections: q.max_selections ?? 1,
       }));
 
       const { data: freshQs, error } = await supabase.rpc("save_form", {

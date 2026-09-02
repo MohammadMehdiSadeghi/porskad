@@ -32,12 +32,13 @@ export const QUESTION_TYPES = {
     valueFieldType: "text",
   },
   choice: {
-    label: "چهارگزینه‌ای (تک‌انتخابی)",
+    label: "چندگزینه‌ای",
     icon: "○",
     color: "orange",
-    hint: "۲ تا ۶ گزینه، انتخاب یکی",
+    hint: "۲ تا ۱۵ گزینه، انتخاب ۱ تا N گزینه",
     hasOptions: true,
     isMultiChoice: false,
+    hasMaxSelections: true,
     hasDisplayMode: true,
     defaultDisplayMode: "buttons",
     defaultOptions: ["گزینه ۱", "گزینه ۲", "گزینه ۳", "گزینه ۴"],
@@ -136,6 +137,7 @@ export function makeQuestion(type, position = 0) {
     correct_answer: null,
     points: undefined,
     display_mode: meta.hasDisplayMode ? (meta.defaultDisplayMode || "buttons") : undefined,
+    max_selections: meta.hasMaxSelections ? 1 : undefined,
     validation: null,
   };
 }

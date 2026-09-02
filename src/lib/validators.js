@@ -105,8 +105,20 @@ export function validateAnswer(question, value) {
       if (n === null) return "فقط عدد وارد کن.";
       return null;
     }
-    case "choice":
+    case "choice": {
+      const maxSel = question.max_selections ?? 1;
+      if (maxSel > 1) {
+        // حالت چند انتخابی — value آرایه است
+        const arr = Array.isArray(value) ? value : (value != null ? [value] : []);
+        if (arr.length === 0) return "حداقل یک گزینه انتخاب کنید.";
+        if (arr.length > maxSel) return `حداکثر ${maxSel} گزینه می‌توانید انتخاب کنید.`;
+        const invalid = arr.filter((v) => !question.options?.includes?.(v));
+        if (invalid.length > 0) return "یکی از گزینه‌ها نامعتبر است.";
+        return null;
+      }
+      // حالت تک انتخابی
       return question.options?.includes?.(value) ? null : "یکی از گزینه‌ها را انتخاب کن.";
+    }
     case "yes_no":
       return value === "بله" || value === "خیر" ? null : "بله یا خیر را انتخاب کن.";
     case "rating": {

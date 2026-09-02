@@ -107,7 +107,8 @@ function MiniQuestion({ q, index, total }) {
       {q.description && <p className="text-[0.5rem] text-ink/40 -mt-0.5">{q.description}</p>}
       {(q.type === "short_text" || q.type === "email" || q.type === "phone_ir" || q.type === "number" || q.type === "telegram_id") && <MiniTextInput q={q} />}
       {q.type === "long_text" && <MiniLongTextInput q={q} />}
-      {q.type === "choice" && <MiniChoiceOptions options={q.options} displayMode={q.display_mode} />}
+      {q.type === "choice" && <MiniChoiceOptions options={q.options} displayMode={(q.max_selections ?? 1) > 1 ? "buttons" : q.display_mode} />}
+      {q.type === "choice" && (q.max_selections ?? 1) > 1 && <span className="text-[0.5rem] font-bold text-orange">حداکثر {faNum(q.max_selections)} انتخاب</span>}
       {q.type === "yes_no" && <MiniYesNo />}
       {q.type === "rating" && <MiniRating />}
       {q.type === "checkbox" && <MiniChoiceOptions options={q.options} displayMode={q.display_mode} />}

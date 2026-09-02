@@ -52,9 +52,24 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
   );
 }
 
-function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "buttons" }) {
-  // حالت دراپ‌داون — select ساده
-  if (displayMode === "dropdown") {
+function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "buttons", maxSelections = 1 }) {
+  const isMulti = maxSelections > 1;
+  const selectedArr = isMulti ? (Array.isArray(value) ? value : (value != null ? [value] : [])) : [];
+  const atLimit = isMulti && selectedArr.length >= maxSelections;
+
+  function handleMultiToggle(opt) {
+    const cur = [...selectedArr];
+    const idx = cur.indexOf(opt);
+    if (idx >= 0) {
+      cur.splice(idx, 1);
+    } else if (cur.length < maxSelections) {
+      cur.push(opt);
+    }
+    onChange(cur.length > 0 ? cur : null);
+  }
+
+  // حالت دراپ‌داون — فقط تک انتخابی
+  if (displayMode === "dropdown" && !isMulti) {
     return (
       <select
         value={value || ""}
@@ -69,20 +84,34 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
     );
   }
 
-  // حالت دکمه‌ای (پیش‌فرض)
+  // حالت دکمه‌ای — تک یا چند انتخابی
   return (
     <div className="flex flex-col gap-2">
+      {isMulti && (
+        <span className="text-xs font-bold text-ink-subtle">
+          حداکثر {faNum(maxSelections)} گزینه انتخاب کنید {selectedArr.length > 0 && `(${faNum(selectedArr.length)} انتخاب شده)`}
+        </span>
+      )}
       {options.map((opt, i) => {
-        const selected = value === opt;
+        const selected = isMulti ? selectedArr.includes(opt) : value === opt;
+        const disabled = !selected && isMulti && atLimit;
         return (
-          <button key={i} type="button" onClick={() => { onChange(opt); }}
+          <button key={i} type="button" onClick={() => isMulti ? handleMultiToggle(opt) : onChange(opt)}
+            disabled={disabled}
             className={clsx("relative group flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 transition-all duration-200 cursor-pointer hover:-translate-y-px",
+              disabled ? "opacity-40 cursor-not-allowed hover:translate-y-0" : "",
               selected ? "border-ecosystem-normal bg-ecosystem-light rotate-[-0.5deg]" : "border-ink/10 bg-white hover:border-ecosystem-normal/50",
             )}>
             {selected && <div aria-hidden="true" className="absolute top-[2px] left-[2px] w-full h-full bg-ecosystem-dark/15 rounded-pill-md [corner-shape:squircle] pointer-events-none" />}
-            <span className={clsx("relative z-10 w-8 h-8 sm:w-9 sm:h-9 shrink-0 flex items-center justify-center rounded-full border-2 font-black text-sm sm:text-base transition-colors duration-200",
-              selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal group-hover:border-ecosystem-normal",
-            )}>{faNum(i + 1)}</span>
+            {isMulti ? (
+              <span className={clsx("relative z-10 w-7 h-7 sm:w-8 sm:h-8 shrink-0 flex items-center justify-center rounded-md border-2 font-black text-xs sm:text-sm transition-colors duration-200",
+                selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal group-hover:border-ecosystem-normal",
+              )}>{selected ? "✓" : ""}</span>
+            ) : (
+              <span className={clsx("relative z-10 w-8 h-8 sm:w-9 sm:h-9 shrink-0 flex items-center justify-center rounded-full border-2 font-black text-sm sm:text-base transition-colors duration-200",
+                selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal group-hover:border-ecosystem-normal",
+              )}>{faNum(i + 1)}</span>
+            )}
             <span className={clsx("relative z-10 font-bold text-sm sm:text-base", selected ? "text-ecosystem-dark" : "text-ink")}>{opt}</span>
             {selected && <CheckIcon className="mr-auto text-ecosystem-normal shrink-0" />}
           </button>
@@ -188,7 +217,7 @@ export default function QuestionStep({ question, index, total, value, timeSpent,
         {(question.type === "short_text" || question.type === "long_text" || question.type === "email" || question.type === "number" || question.type === "phone_ir" || question.type === "telegram_id") && (
           <TextInput type={question.type} value={value} error={error} onChange={handleChange} onEnter={handleNext} placeholder={question.placeholder} />
         )}
-        {question.type === "choice" && <ChoiceOptions options={question.options} value={value} onChange={handleChange} onEnter={handleNext} displayMode={question.display_mode || "buttons"} />}
+        {question.type === "choice" && <ChoiceOptions options={question.options} value={value} onChange={handleChange} onEnter={handleNext} displayMode={question.display_mode || "buttons"} maxSelections={question.max_selections ?? 1} />}
         {question.type === "yes_no" && <YesNoOptions value={value} onChange={handleChange} onEnter={handleNext} />}
         {question.type === "rating" && <RatingStars value={value} onChange={(val) => handleChange(val)} />}
         {question.type === "checkbox" && (

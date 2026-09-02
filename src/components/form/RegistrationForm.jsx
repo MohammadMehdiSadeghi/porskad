@@ -148,23 +148,52 @@ export default function RegistrationForm({ form, questions, slug }) {
         {q.type === "long_text" && <textarea dir="rtl" rows={2} value={val} onChange={(e) => setAnswer(q.id, e.target.value, q)} onBlur={(e) => handleBlur(q.id, e.target.value, q)} placeholder={q.placeholder?.trim() || "بنویس..."} className={`${inputCls} resize-y leading-6 ${fieldErr ? "!border-female-normal" : ""}`} />}
         {q.type === "number" && <input type="text" inputMode="numeric" dir="rtl" value={val} onChange={(e) => setAnswer(q.id, e.target.value, q)} onBlur={(e) => handleBlur(q.id, e.target.value, q)} placeholder={q.placeholder?.trim() || "عدد را وارد کنید..."} className={`${inputCls} ${fieldErr ? "!border-female-normal" : ""}`} />}
 
-        {q.type === "choice" && (q.display_mode === "dropdown" ? (
-          <DropdownChoice options={q.options} value={val} onChange={(opt) => { setAnswer(q.id, opt, q); handleBlur(q.id, opt, q); }} />
-        ) : (
-          <div className="flex flex-col gap-2">
-            {(q.options || []).map((opt, i) => {
-              const selected = val === opt;
-              return (
-                <button key={i} type="button" onClick={() => { setAnswer(q.id, opt, q); handleBlur(q.id, opt, q); }}
-                  className={`relative flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3 py-2 sm:py-2.5 transition-all duration-200 cursor-pointer hover:-translate-y-px ${selected ? "border-ecosystem-normal bg-ecosystem-light rotate-[-0.5deg]" : "border-ink/10 bg-white hover:border-ecosystem-normal/50"}`}>
-                  {selected && <div aria-hidden="true" className="absolute top-[2px] left-[2px] w-full h-full bg-ecosystem-dark/15 rounded-pill-md [corner-shape:squircle] pointer-events-none" />}
-                  <span className={`relative z-10 w-8 h-8 shrink-0 flex items-center justify-center rounded-full border-2 text-sm font-bold transition-colors duration-200 ${selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal"}`}>{faNum(i + 1)}</span>
-                  <span className={`relative z-10 font-bold text-sm sm:text-base ${selected ? "text-ecosystem-dark" : "text-ink"}`}>{opt}</span>
-                </button>
-              );
-            })}
-          </div>
-        ))}
+        {q.type === "choice" && (() => {
+          const maxSel = q.max_selections ?? 1;
+          const isMulti = maxSel > 1;
+          const selectedArr = isMulti ? (Array.isArray(val) ? val : (val != null ? [val] : [])) : [];
+          const atLimit = isMulti && selectedArr.length >= maxSel;
+
+          function handleMultiToggle(opt) {
+            const cur = [...selectedArr];
+            const idx = cur.indexOf(opt);
+            if (idx >= 0) { cur.splice(idx, 1); }
+            else if (cur.length < maxSel) { cur.push(opt); }
+            setAnswer(q.id, cur.length > 0 ? cur : null, q);
+            handleBlur(q.id, cur.length > 0 ? cur : null, q);
+          }
+
+          if (!isMulti && q.display_mode === "dropdown") {
+            return <DropdownChoice options={q.options} value={val} onChange={(opt) => { setAnswer(q.id, opt, q); handleBlur(q.id, opt, q); }} />;
+          }
+
+          return (
+            <div className="flex flex-col gap-2">
+              {isMulti && (
+                <span className="text-xs font-bold text-ink-subtle">
+                  حداکثر {faNum(maxSel)} گزینه انتخاب کنید {selectedArr.length > 0 && `(${faNum(selectedArr.length)} انتخاب شده)`}
+                </span>
+              )}
+              {(q.options || []).map((opt, i) => {
+                const selected = isMulti ? selectedArr.includes(opt) : val === opt;
+                const disabled = !selected && isMulti && atLimit;
+                return (
+                  <button key={i} type="button" disabled={disabled}
+                    onClick={() => isMulti ? handleMultiToggle(opt) : (() => { setAnswer(q.id, opt, q); handleBlur(q.id, opt, q); })()}
+                    className={`relative flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3 py-2 sm:py-2.5 transition-all duration-200 cursor-pointer hover:-translate-y-px ${disabled ? "opacity-40 cursor-not-allowed hover:translate-y-0" : ""} ${selected ? "border-ecosystem-normal bg-ecosystem-light rotate-[-0.5deg]" : "border-ink/10 bg-white hover:border-ecosystem-normal/50"}`}>
+                    {selected && <div aria-hidden="true" className="absolute top-[2px] left-[2px] w-full h-full bg-ecosystem-dark/15 rounded-pill-md [corner-shape:squircle] pointer-events-none" />}
+                    {isMulti ? (
+                      <span className={`relative z-10 w-7 h-7 shrink-0 flex items-center justify-center rounded-md border-2 text-xs font-bold transition-colors duration-200 ${selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal"}`}>{selected ? "✓" : ""}</span>
+                    ) : (
+                      <span className={`relative z-10 w-8 h-8 shrink-0 flex items-center justify-center rounded-full border-2 text-sm font-bold transition-colors duration-200 ${selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal"}`}>{faNum(i + 1)}</span>
+                    )}
+                    <span className={`relative z-10 font-bold text-sm sm:text-base ${selected ? "text-ecosystem-dark" : "text-ink"}`}>{opt}</span>
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })()}
 
         {q.type === "checkbox" && (
           <div className="flex flex-col gap-2">

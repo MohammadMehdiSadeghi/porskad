@@ -149,8 +149,23 @@ function TextInput({ type, value, onChange, autoFocus = true, onEnter, placehold
 }
 
 // ─── گزینه‌ها — طراحی رکاد ───
-function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "buttons" }) {
-  if (displayMode === "dropdown") {
+function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "buttons", maxSelections = 1 }) {
+  const isMulti = maxSelections > 1;
+  const selectedArr = isMulti ? (Array.isArray(value) ? value : (value != null ? [value] : [])) : [];
+  const atLimit = isMulti && selectedArr.length >= maxSelections;
+
+  function handleMultiToggle(opt) {
+    const cur = [...selectedArr];
+    const idx = cur.indexOf(opt);
+    if (idx >= 0) { cur.splice(idx, 1); }
+    else if (cur.length < maxSelections) { cur.push(opt); }
+    const nextVal = cur.length > 0 ? cur : null;
+    onChange(nextVal);
+    if (nextVal) setTimeout(onEnter, 250);
+  }
+
+  // حالت دراپ‌داون — فقط تک انتخابی
+  if (displayMode === "dropdown" && !isMulti) {
     return (
       <select
         value={value || ""}
@@ -165,27 +180,45 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
     );
   }
 
-  // حالت دکمه‌ای (پیش‌فرض)
+  // حالت دکمه‌ای — تک یا چند انتخابی
   return (
     <div className="flex flex-col gap-2.5">
-      {options.map((opt, i) => (
-        <button
-          key={i}
-          type="button"
-          onClick={() => { onChange(opt); setTimeout(onEnter, 250); }}
-          className={`relative flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 transition-all duration-200 cursor-pointer hover:-translate-y-px ${
-            value === opt
-              ? "border-ecosystem-normal bg-ecosystem-light rotate-[-0.5deg]"
-              : "border-ink/10 bg-white hover:border-ecosystem-normal/50"
-          }`}
-        >
-          {value === opt && <div aria-hidden="true" className="absolute top-[2px] left-[2px] w-full h-full bg-ecosystem-dark/15 rounded-pill-md [corner-shape:squircle] pointer-events-none" />}
-          <span className={`relative z-10 w-8 h-8 sm:w-9 sm:h-9 shrink-0 flex items-center justify-center rounded-full border-2 text-sm sm:text-base font-bold transition-colors duration-200 ${
-            value === opt ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal"
-          }`}>{faNum(i + 1)}</span>
-          <span className={`relative z-10 font-bold text-sm sm:text-base ${value === opt ? "text-ecosystem-dark" : "text-ink"}`}>{opt}</span>
-        </button>
-      ))}
+      {isMulti && (
+        <span className="text-xs font-bold text-ink-subtle">
+          حداکثر {faNum(maxSelections)} گزینه انتخاب کنید {selectedArr.length > 0 && `(${faNum(selectedArr.length)} انتخاب شده)`}
+        </span>
+      )}
+      {options.map((opt, i) => {
+        const selected = isMulti ? selectedArr.includes(opt) : value === opt;
+        const disabled = !selected && isMulti && atLimit;
+        return (
+          <button
+            key={i}
+            type="button"
+            disabled={disabled}
+            onClick={() => isMulti ? handleMultiToggle(opt) : (() => { onChange(opt); setTimeout(onEnter, 250); })()}
+            className={`relative flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 transition-all duration-200 cursor-pointer hover:-translate-y-px ${
+              disabled ? "opacity-40 cursor-not-allowed hover:translate-y-0" : ""
+            } ${
+              selected
+                ? "border-ecosystem-normal bg-ecosystem-light rotate-[-0.5deg]"
+                : "border-ink/10 bg-white hover:border-ecosystem-normal/50"
+            }`}
+          >
+            {selected && <div aria-hidden="true" className="absolute top-[2px] left-[2px] w-full h-full bg-ecosystem-dark/15 rounded-pill-md [corner-shape:squircle] pointer-events-none" />}
+            {isMulti ? (
+              <span className={`relative z-10 w-7 h-7 sm:w-8 sm:h-8 shrink-0 flex items-center justify-center rounded-md border-2 text-xs font-bold transition-colors duration-200 ${
+                selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal"
+              }`}>{selected ? "✓" : ""}</span>
+            ) : (
+              <span className={`relative z-10 w-8 h-8 sm:w-9 sm:h-9 shrink-0 flex items-center justify-center rounded-full border-2 text-sm sm:text-base font-bold transition-colors duration-200 ${
+                selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal"
+              }`}>{faNum(i + 1)}</span>
+            )}
+            <span className={`relative z-10 font-bold text-sm sm:text-base ${selected ? "text-ecosystem-dark" : "text-ink"}`}>{opt}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -430,7 +463,7 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
                       {q.type === "choice" && (
                         <ChoiceOptions options={q.options} value={val}
                           onChange={(opt) => { setAnswer(q.id, opt, q); handleBlur(q.id, opt, q); }}
-                          onEnter={() => {}} displayMode={q.display_mode || "buttons"} />
+                          onEnter={() => {}} displayMode={q.display_mode || "buttons"} maxSelections={q.max_selections ?? 1} />
                       )}
 
                       {q.type === "yes_no" && (
@@ -848,7 +881,7 @@ export default function EmbedForm() {
                       <TextInput type={currentQuestion.type} value={answers[currentQuestion.id]} onChange={setAnswer} onEnter={goNext} placeholder={currentQuestion.placeholder} />
                     )}
                     {currentQuestion.type === "choice" && (
-                      <ChoiceOptions options={currentQuestion.options} value={answers[currentQuestion.id]} onChange={setAnswer} onEnter={goNext} displayMode={currentQuestion.display_mode || "buttons"} />
+                      <ChoiceOptions options={currentQuestion.options} value={answers[currentQuestion.id]} onChange={setAnswer} onEnter={goNext} displayMode={currentQuestion.display_mode || "buttons"} maxSelections={currentQuestion.max_selections ?? 1} />
                     )}
                     {currentQuestion.type === "yes_no" && (
                       <YesNoOptions value={answers[currentQuestion.id]} onChange={setAnswer} onEnter={goNext} />

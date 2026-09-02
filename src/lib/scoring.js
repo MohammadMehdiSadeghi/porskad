@@ -14,6 +14,14 @@ export function isCorrectAnswer(question, answer) {
 
   switch (question.type) {
     case "choice":
+      // اگه max_selections > 1 باشه، correct_answer آرایه است
+      if ((question.max_selections ?? 1) > 1 && Array.isArray(correct)) {
+        if (!Array.isArray(answer)) return false;
+        const sortedA = [...answer].sort();
+        const sortedC = [...correct].sort();
+        return sortedA.length === sortedC.length && sortedA.every((v, i) => v === sortedC[i]);
+      }
+      return answer === correct;
     case "yes_no":
       return answer === correct;
 
