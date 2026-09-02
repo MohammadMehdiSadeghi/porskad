@@ -9,9 +9,9 @@ const NAV_ITEMS = [
   { to: "/admin", label: "داشبورد", icon: LayoutDashboard, end: true },
   { to: "/admin/forms", label: "فرم‌ها", icon: FileText, end: false },
   { to: "/admin/embed", label: "اشتراک‌گذاری", icon: Share2, end: false },
-  { to: "/admin/sms", label: "پنل پیامک", icon: MessageSquare, end: false, permission: "manage_sms" },
-  { to: "/admin/telegram", label: "بات تلگرام", icon: Bot, end: false, permission: "manage_telegram" },
-  { to: "/admin/managers", label: "مدیران", icon: Users, end: false, adminOnly: true },
+  { to: "/admin/sms", label: "پنل پیامک", icon: MessageSquare, end: false },
+  { to: "/admin/telegram", label: "بات تلگرام", icon: Bot, end: false },
+  { to: "/admin/managers", label: "مدیران", icon: Users, end: false },
   { to: "/admin/profile", label: "پروفایل", icon: User, end: false },
 ];
 
@@ -49,11 +49,7 @@ export default function AdminLayout() {
 
         {/* نав موبایل: افقی اسکرولی — نав دسکتاپ: عمودی */}
         <nav className="flex sm:flex-col gap-1 px-1.5 sm:px-2 py-1.5 sm:py-2 overflow-x-auto scrollbar-none">
-          {NAV_ITEMS.filter((item) => {
-            if (item.adminOnly && role !== "admin" && !isOwner()) return false;
-            if (item.permission && !hasPermission(item.permission) && !isOwner()) return false;
-            return true;
-          }).map((item) => (
+          {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

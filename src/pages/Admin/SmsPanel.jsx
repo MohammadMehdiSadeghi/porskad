@@ -63,17 +63,7 @@ export default function SmsPanel() {
     // UI only — no real save
   }
 
-  if (!canSms) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <XCircle size={64} className="text-magenta/30" />
-        <h2 className="text-xl font-black text-navy">دسترسی غیرمجاز</h2>
-        <p className="text-sm font-semibold text-ink-subtle">
-          شما مجوز دسترسی به پنل پیامک را ندارید.
-        </p>
-      </div>
-    );
-  }
+
 
   const TABS = [
     { id: "dashboard", label: "داشبورد", icon: BarChart3 },
@@ -104,6 +94,14 @@ export default function SmsPanel() {
           </p>
         </div>
       </div>
+
+      {/* هشدار عدم دسترسی */}
+      {!canSms && (
+        <div className="bg-college-light border-2 border-orange/30 rounded-pill-md px-4 py-3 flex items-center gap-3">
+          <AlertTriangle size={18} className="text-orange shrink-0" />
+          <p className="text-sm font-bold text-orange">شما مجوز استفاده از پنل پیامک را ندارید. فقط مشاهده امکان‌پذیر است.</p>
+        </div>
+      )}
 
       {/* تب‌ها */}
       <div className="flex gap-1 bg-white border-2 border-ink/10 rounded-pill-md p-1 overflow-x-auto">
@@ -264,7 +262,7 @@ export default function SmsPanel() {
                   variant="teal"
                   size="lg"
                   type="submit"
-                  disabled={!smsText.trim() || !smsNumbers.trim()}
+                  disabled={!canSms || !smsText.trim() || !smsNumbers.trim()}
                   className="self-start"
                   rotate="-rotate-[1deg]"
                 >
@@ -376,7 +374,7 @@ export default function SmsPanel() {
                 </div>
 
                 <div className="flex gap-2 justify-end mt-1">
-                  <Button variant="teal" size="sm" type="submit">
+                  <Button variant="teal" size="sm" type="submit" disabled={!canSms}>
                     ذخیره تنظیمات
                   </Button>
                 </div>

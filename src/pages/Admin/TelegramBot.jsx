@@ -229,17 +229,7 @@ export default function TelegramBot() {
     configs.map((c) => [c.id, c.chat_title || c.chat_id])
   );
 
-  if (!canManage) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <XCircle size={64} className="text-magenta/30" />
-        <h2 className="text-xl font-black text-navy">دسترسی غیرمجاز</h2>
-        <p className="text-sm font-semibold text-ink-subtle">
-          شما مجوز دسترسی به بات تلگرام را ندارید.
-        </p>
-      </div>
-    );
-  }
+
 
   const TABS = [
     { id: "config", label: "تنظیمات ربات", icon: Settings },
@@ -268,6 +258,14 @@ export default function TelegramBot() {
           </p>
         </div>
       </div>
+
+      {/* هشدار عدم دسترسی */}
+      {!canManage && (
+        <div className="bg-college-light border-2 border-orange/30 rounded-pill-md px-4 py-3 flex items-center gap-3">
+          <AlertTriangle size={18} className="text-orange shrink-0" />
+          <p className="text-sm font-bold text-orange">شما مجوز مدیریت بات تلگرام را ندارید. فقط مشاهده امکان‌پذیر است.</p>
+        </div>
+      )}
 
       {/* تب‌ها */}
       <div className="flex gap-1 bg-white border-2 border-ink/10 rounded-pill-md p-1 overflow-x-auto">
@@ -320,17 +318,17 @@ export default function TelegramBot() {
                   <div>
                     <label className="block text-xs font-bold text-navy mb-1">
                       توکن ربات تلگرام *
-                    </label>
-                    <input
-                      type="text"
-                      value={configForm.bot_token}
-                      onChange={(e) =>
-                        setConfigForm((p) => ({ ...p, bot_token: e.target.value }))
-                      }
-                      className={inputCls}
-                      placeholder="123456:ABC-DEF..."
-                      dir="ltr"
-                    />
+                    </label>                      <input
+                        type="text"
+                        value={configForm.bot_token}
+                        onChange={(e) =>
+                          setConfigForm((p) => ({ ...p, bot_token: e.target.value }))
+                        }
+                        className={inputCls}
+                        placeholder="123456:ABC-DEF..."
+                        dir="ltr"
+                        disabled={!canManage}
+                      />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
@@ -346,6 +344,7 @@ export default function TelegramBot() {
                         className={inputCls}
                         placeholder="-100123456789"
                         dir="ltr"
+                        disabled={!canManage}
                       />
                     </div>
                     <div>
@@ -360,6 +359,7 @@ export default function TelegramBot() {
                         }
                         className={inputCls}
                         placeholder="گروه مدیریت"
+                        disabled={!canManage}
                       />
                     </div>
                   </div>
@@ -379,7 +379,7 @@ export default function TelegramBot() {
                       انصراف
                     </Button>
                   )}
-                  <Button variant="teal" size="sm" type="submit" rotate="-rotate-[1deg]">
+                  <Button variant="teal" size="sm" type="submit" rotate="-rotate-[1deg]" disabled={!canManage}>
                     {editingConfig ? "بروزرسانی" : "ذخیره"}
                   </Button>
                 </div>
@@ -418,10 +418,11 @@ export default function TelegramBot() {
                           variant="ghost"
                           size="sm"
                           onClick={() => toggleConfigActive(cfg.id, cfg.is_active)}
+                          disabled={!canManage}
                         >
                           {cfg.is_active ? "غیرفعال" : "فعال"}
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => editConfig(cfg)}>
+                        <Button variant="ghost" size="sm" onClick={() => editConfig(cfg)} disabled={!canManage}>
                           ویرایش
                         </Button>
                         <Button
@@ -429,6 +430,7 @@ export default function TelegramBot() {
                           size="sm"
                           className="!text-female-normal"
                           onClick={() => deleteConfig(cfg.id)}
+                          disabled={!canManage}
                         >
                           <Trash2 size={14} />
                         </Button>
@@ -500,13 +502,13 @@ export default function TelegramBot() {
                             ))}
                         </select>
                       </div>
-                      <div className="flex items-end">
-                        <Button
+                      <div className="flex items-end">                          <Button
                           variant="teal"
                           size="sm"
                           onClick={addLink}
                           rotate="-rotate-[1deg]"
                           className="w-full"
+                          disabled={!canManage}
                         >
                           <Plus size={14} className="ml-1" />
                           افزودن لینک
@@ -560,6 +562,7 @@ export default function TelegramBot() {
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => toggleLinkActive(link.id, link.is_active)}
+                                      disabled={!canManage}
                                     >
                                       {link.is_active ? "غیرفعال" : "فعال"}
                                     </Button>
@@ -568,6 +571,7 @@ export default function TelegramBot() {
                                       size="sm"
                                       className="!text-female-normal"
                                       onClick={() => deleteLink(link.id)}
+                                      disabled={!canManage}
                                     >
                                       <Trash2 size={13} />
                                     </Button>
