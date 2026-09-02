@@ -51,7 +51,7 @@ function normalizeConditionGroup(cg) {
 function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDelete }) {
   const meta = QUESTION_TYPES[q.type];
   const rots = index % 2 ? "rotate-[0.4deg]" : "-rotate-[0.4deg]";
-  const isChoice = q.type === "choice" || q.type === "yes_no" || q.type === "checkbox";
+  const isChoice = q.type === "choice" || q.type === "yes_no";
 
   function setOpt(i, val) {
     const opts = [...q.options];
@@ -391,7 +391,6 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                 اگه گزینه صحیح مشخص کنید، بعد از ارسال فرم به کاربر نمره نمایش داده می‌شود.
               </span>
 
-              {/* choice با max_selections > 1 → چند انتخابی (مثل checkbox) */}
               {/* choice با max_selections > 1 → چند انتخابی */}
               {q.type === "choice" && (q.max_selections ?? 1) > 1 ? (
                 <div className="flex flex-col gap-1.5">
@@ -422,8 +421,8 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                     })}
                   </div>
                 </div>
-              ) : q.type !== "checkbox" ? (
-                /* choice / yes_no → تک انتخابی */
+              ) : (
+                /* تک انتخابی: choice (max=1) یا yes_no */
                 <div className="flex flex-wrap gap-1.5">
                   {(q.type === "yes_no" ? ["بله", "خیر"] : q.options).map((opt, i) => {
                     const isSelected = q.correct_answer === opt;
@@ -442,36 +441,6 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                       </button>
                     );
                   })}
-                </div>
-              ) : (
-                /* checkbox → چند انتخابی */
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[0.6rem] font-medium text-ink-subtle">چند گزینه صحیح انتخاب کنید:</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {q.options.map((opt, i) => {
-                      const correctArr = Array.isArray(q.correct_answer) ? q.correct_answer : [];
-                      const isSelected = correctArr.includes(opt);
-                      return (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => {
-                            const next = isSelected
-                              ? correctArr.filter((v) => v !== opt)
-                              : [...correctArr, opt];
-                            onChange({ correct_answer: next.length > 0 ? next : null });
-                          }}
-                          className={`text-[0.65rem] font-bold px-3 py-1.5 rounded-pill-md border-2 transition-all cursor-pointer ${
-                            isSelected
-                              ? "border-teal bg-teal text-white"
-                              : "border-ink/15 bg-white text-ink hover:border-teal/40"
-                          }`}
-                        >
-                          {isSelected ? "✓ " : ""}{opt}
-                        </button>
-                      );
-                    })}
-                  </div>
                 </div>
               )}
 
@@ -835,7 +804,7 @@ export default function FormBuilder() {
         placeholder: q.placeholder ?? "",
         validation: q.validation ?? null,
         required: !!q.required,
-        options: (q.type === "choice" || q.type === "checkbox") ? q.options.map((o) => o.trim()) : q.type === "yes_no" ? ["بله", "خیر"] : [],
+        options: q.type === "choice" ? q.options.map((o) => o.trim()) : q.type === "yes_no" ? ["بله", "خیر"] : [],
         position: i,
         conditions: q.conditions ?? null,
         jump_actions: q.jump_actions ?? [],

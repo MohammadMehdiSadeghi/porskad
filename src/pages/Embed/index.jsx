@@ -488,31 +488,6 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
                         </div>
                       )}
 
-                      {q.type === "checkbox" && (
-                        <div className="flex flex-col gap-2.5">
-                          {(q.options || []).map((opt, i) => {
-                            const selected = Array.isArray(val) && val.includes(opt);
-                            return (
-                              <button key={i} type="button"
-                                onClick={() => {
-                                  const current = Array.isArray(val) ? [...val] : [];
-                                  const next = selected ? current.filter((v) => v !== opt) : [...current, opt];
-                                  setAnswer(q.id, next, q);
-                                  handleBlur(q.id, next, q);
-                                }}
-                                className={`flex items-center gap-3 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-4 py-3 sm:py-3.5 transition-all duration-200 cursor-pointer ${
-                                  selected ? "border-ecosystem-normal bg-ecosystem-light" : "border-ink/15 bg-white hover:border-ecosystem-normal/60"
-                                }`}>
-                        <span className={`w-7 h-7 shrink-0 flex items-center justify-center rounded-md border-2 text-xs font-bold transition-colors duration-200 ${
-                          selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15"
-                        }`}>{selected ? "✓" : ""}</span>
-                                <span className={`font-semibold text-sm sm:text-base ${selected ? "text-ecosystem-dark" : "text-ink"}`}>{opt}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-
                       {fieldErr && (
                         <div className="flex items-center gap-1.5 bg-female-light border border-female-normal rounded-pill-md px-2.5 py-1.5">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-female-normal shrink-0">
@@ -888,29 +863,6 @@ export default function EmbedForm() {
                     )}
                     {currentQuestion.type === "rating" && (
                       <RatingStars value={answers[currentQuestion.id]} onChange={setAnswer} />
-                    )}
-                    {currentQuestion.type === "checkbox" && (
-                      <div className="flex flex-col gap-2.5">
-                        {(currentQuestion.options || []).map((opt, i) => {
-                          const selected = Array.isArray(answers[currentQuestion.id]) && answers[currentQuestion.id].includes(opt);
-                          return (
-                            <button key={i} type="button"
-                              onClick={() => {
-                                const current = Array.isArray(answers[currentQuestion.id]) ? [...answers[currentQuestion.id]] : [];
-                                const next = selected ? current.filter((v) => v !== opt) : [...current, opt];
-                                setAnswer(next);
-                              }}
-                              className={`flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 transition-all duration-200 cursor-pointer ${
-                                selected ? "border-ecosystem-normal bg-ecosystem-light" : "border-ink/10 bg-white hover:border-ecosystem-normal/50"
-                              }`}>
-                              <span className={`w-7 h-7 shrink-0 flex items-center justify-center rounded-md border-2 text-xs font-bold transition-colors duration-200 ${
-                                selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15"
-                              }`}>{selected ? "✓" : ""}</span>
-                              <span className={`font-bold text-sm sm:text-base ${selected ? "text-ecosystem-dark" : "text-ink"}`}>{opt}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
                     )}
 
                     {touchedFields[currentQuestion.id] && fieldErrors[currentQuestion.id] && (

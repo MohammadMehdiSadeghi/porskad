@@ -172,8 +172,8 @@ export function evaluateNextStep(currentQuestion, answer, questions, visibleQues
     return checkJumpQueue(jumpQueue);
   }
 
-  // ─── checkbox: چند انتخاب → صف چند مقصد ───
-  if (currentQuestion.type === "checkbox" && Array.isArray(answer)) {
+  // ─── choice با چند انتخاب → صف چند مقصد ───
+  if (currentQuestion.type === "choice" && (currentQuestion.max_selections ?? 1) > 1 && Array.isArray(answer)) {
     // بر اساس ترتیب چیدمان گزینه‌ها (نه ترتیب انتخاب کاربر)
     const destinations = [];
     for (let idx = 0; idx < (currentQuestion.options?.length || 0); idx++) {

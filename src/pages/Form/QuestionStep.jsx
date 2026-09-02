@@ -220,24 +220,6 @@ export default function QuestionStep({ question, index, total, value, timeSpent,
         {question.type === "choice" && <ChoiceOptions options={question.options} value={value} onChange={handleChange} onEnter={handleNext} displayMode={question.display_mode || "buttons"} maxSelections={question.max_selections ?? 1} />}
         {question.type === "yes_no" && <YesNoOptions value={value} onChange={handleChange} onEnter={handleNext} />}
         {question.type === "rating" && <RatingStars value={value} onChange={(val) => handleChange(val)} />}
-        {question.type === "checkbox" && (
-          <div className="flex flex-col gap-2">
-            {(question.options || []).map((opt, i) => {
-              const selected = Array.isArray(value) && value.includes(opt);
-              return (
-                <button key={i} type="button" onClick={() => { const cur = Array.isArray(value) ? [...value] : []; handleChange(selected ? cur.filter((v) => v !== opt) : [...cur, opt]); }}
-                  className={clsx("relative flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 transition-all duration-200 cursor-pointer hover:-translate-y-px",
-                    selected ? "border-ecosystem-normal bg-ecosystem-light rotate-[-0.5deg]" : "border-ink/10 bg-white hover:border-ecosystem-normal/50",
-                  )}>
-                  <span className={clsx("w-7 h-7 sm:w-8 sm:h-8 shrink-0 flex items-center justify-center rounded-md border-2 font-black text-xs sm:text-sm transition-colors duration-200",
-                    selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal group-hover:border-ecosystem-normal",
-                  )}>{selected ? "✓" : ""}</span>
-                  <span className={clsx("font-bold text-sm sm:text-base", selected ? "text-ecosystem-dark" : "text-ink")}>{opt}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
 
         {/* ارور */}
         {error && (

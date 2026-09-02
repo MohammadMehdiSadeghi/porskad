@@ -62,7 +62,7 @@ const CHART_COLORS = ["#6366f1", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#3
 function AnswerValue({ question, value }) {
   if (value === null || value === undefined || value === "") return <span className="text-ink/40">—</span>;
   if (question.type === "rating") return <span>{"⭐".repeat(Number(value))}</span>;
-  if (question.type === "checkbox" && Array.isArray(value)) return <span className="font-medium">{value.join("، ")}</span>;
+  if (question.type === "choice" && Array.isArray(value)) return <span className="font-medium">{value.join("، ")}</span>;
   if (question.type === "phone_ir" || question.type === "email")
     return <span dir="ltr" className="font-mono font-bold">{String(value)}</span>;
   return <span className="font-medium whitespace-pre-wrap">{String(value)}</span>;
@@ -94,11 +94,11 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
     let keys;
     if (question.type === "choice") keys = question.options ?? [];
     else if (question.type === "yes_no") keys = ["بله", "خیر"];
-    else if (question.type === "checkbox") keys = question.options ?? [];
+    // choice با max_selections > 1 هم آرایه‌ایه
     else if (question.type === "rating") keys = [5, 4, 3, 2, 1];
     if (!keys) return null;
 
-    const isCheckbox = question.type === "checkbox";
+    const isCheckbox = question.type === "choice" && (question.max_selections ?? 1) > 1;
     const counts = Object.fromEntries(keys.map((k) => [String(k), 0]));
 
     for (const v of values) {
@@ -113,7 +113,7 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
       }
     }
 
-    // برای checkbox، denominator تعداد پاسخ‌دهندگانه نه تعداد انتخاب‌ها
+    // برای multi-select، denominator تعداد پاسخ‌دهندگانه نه تعداد انتخاب‌ها
     const denom = isCheckbox ? total : total;
 
     return keys.map((k) => ({
@@ -617,7 +617,7 @@ export default function Responses() {
         const a = rAnswers.find((x) => x.question_id === q.id);
         if (!a || a.value === null || a.value === undefined) return "";
         if (q.type === "rating") return Number(a.value);
-        if (q.type === "checkbox" && Array.isArray(a.value)) return a.value.join(", ");
+        if (q.type === "choice" && (q.max_selections ?? 1) > 1 && Array.isArray(a.value)) return a.value.join(", ");
         return a.value;
       });
       return [
@@ -758,10 +758,10 @@ export default function Responses() {
       </div>
 
       {/* فیلترهای سوالات */}
-      {questions.filter((q) => (q.type === "choice" || q.type === "yes_no" || q.type === "checkbox") && q.options?.length).length > 0 && (
+      {questions.filter((q) => (q.type === "choice" || q.type === "yes_no") && q.options?.length).length > 0 && (
         <div className="flex flex-wrap gap-2">
           {questions
-            .filter((q) => (q.type === "choice" || q.type === "yes_no" || q.type === "checkbox") && q.options?.length)
+            .filter((q) => (q.type === "choice" || q.type === "yes_no") && q.options?.length)
             .map((q) => {
               const opts = q.type === "yes_no" ? ["بله", "خیر"] : q.options;
               const activeVal = questionFilters[q.id] || "";

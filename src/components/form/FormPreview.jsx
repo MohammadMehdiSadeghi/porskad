@@ -111,7 +111,6 @@ function MiniQuestion({ q, index, total }) {
       {q.type === "choice" && (q.max_selections ?? 1) > 1 && <span className="text-[0.5rem] font-bold text-orange">حداکثر {faNum(q.max_selections)} انتخاب</span>}
       {q.type === "yes_no" && <MiniYesNo />}
       {q.type === "rating" && <MiniRating />}
-      {q.type === "checkbox" && <MiniChoiceOptions options={q.options} displayMode={q.display_mode} />}
     </div>
   );
 }

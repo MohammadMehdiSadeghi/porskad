@@ -14,8 +14,8 @@ export function isCorrectAnswer(question, answer) {
 
   switch (question.type) {
     case "choice":
-      // اگه max_selections > 1 باشه، correct_answer آرایه است
-      if ((question.max_selections ?? 1) > 1 && Array.isArray(correct)) {
+      // اگه correct_answer آرایه باشه (multi-select)، همه باید درست انتخاب شده باشن
+      if (Array.isArray(correct)) {
         if (!Array.isArray(answer)) return false;
         const sortedA = [...answer].sort();
         const sortedC = [...correct].sort();
@@ -24,17 +24,6 @@ export function isCorrectAnswer(question, answer) {
       return answer === correct;
     case "yes_no":
       return answer === correct;
-
-    case "checkbox": {
-      if (!Array.isArray(answer) || !Array.isArray(correct)) return false;
-      // همه گزینه‌های صحیح باید انتخاب شده باشن و هیچ اضافه‌ای نباشه
-      const sortedAnswer = [...answer].sort();
-      const sortedCorrect = [...correct].sort();
-      return (
-        sortedAnswer.length === sortedCorrect.length &&
-        sortedAnswer.every((v, i) => v === sortedCorrect[i])
-      );
-    }
 
     case "number":
     case "rating": {

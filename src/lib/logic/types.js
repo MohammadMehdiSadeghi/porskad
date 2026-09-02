@@ -40,10 +40,9 @@ export const OPERATOR_ORDER = [
 
 // ─── عملگرهای مناسب برای هر نوع سوال ───
 export const TYPE_OPERATORS = {
-  choice:    ["is_selected", "is_not_selected", "is_empty", "is_not_empty"],
-  yes_no:    ["is_selected", "is_not_selected", "is_empty", "is_not_empty"],
-  checkbox:  ["is_selected", "is_not_selected", "is_empty", "is_not_empty",
+  choice:    ["is_selected", "is_not_selected", "is_empty", "is_not_empty",
               "selected_count_equals", "selected_count_greater_than", "selected_count_less_than"],
+  yes_no:    ["is_selected", "is_not_selected", "is_empty", "is_not_empty"],
   number:    ["equals", "not_equals", "greater_than", "greater_than_or_equal",
               "less_than", "less_than_or_equal", "between", "is_empty", "is_not_empty"],
   rating:    ["equals", "not_equals", "greater_than", "greater_than_or_equal",
@@ -61,7 +60,6 @@ export const TYPE_OPERATORS = {
 export const TYPE_VALUE_FIELD = {
   choice:    "option_select",
   yes_no:    "yes_no_select",
-  checkbox:  "option_select",
   number:    "number",
   rating:    "number",
   short_text: "text",
@@ -192,7 +190,7 @@ export function makeJumpAction() {
 // ════════════════════════════════════════════════════════════════
 
 export function isChoiceType(type) {
-  return type === "choice" || type === "yes_no" || type === "checkbox";
+  return type === "choice" || type === "yes_no";
 }
 
 export function isNumericType(type) {
