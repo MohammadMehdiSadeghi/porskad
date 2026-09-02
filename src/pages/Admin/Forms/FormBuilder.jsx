@@ -294,7 +294,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
               ))}
               <button
                 onClick={() => onChange({ options: [...q.options, `گزینه ${faNum(q.options.length + 1)}`] })}
-                disabled={q.options.length >= 15}
+                disabled={false}
                 className="self-start text-xs font-extrabold text-orange hover:text-orange-alt disabled:opacity-40 transition-opacity"
               >
                 + افزودن گزینه
@@ -356,7 +356,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                 <input
                   type="range"
                   min="1"
-                  max={Math.min(q.options?.length || 4, 15)}
+                  max={q.options?.length || 4}
                   value={q.max_selections ?? 1}
                   onChange={(e) => {
                     const val = Number(e.target.value);
@@ -778,7 +778,7 @@ export default function FormBuilder() {
       (q) => q.type === "choice" && (q.options.length < 2 || q.options.some((o) => !o.trim())),
     );
     if (badChoice) {
-      push("سوال چندگزینه‌ای باید ۲ تا ۶ گزینه‌ی غیرخالی داشته باشد", "error");
+      push("سوال چندگزینه‌ای باید حداقل ۲ گزینه‌ی غیرخالی داشته باشد", "error");
       return;
     }
 

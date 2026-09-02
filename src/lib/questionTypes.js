@@ -35,7 +35,7 @@ export const QUESTION_TYPES = {
     label: "چندگزینه‌ای",
     icon: "☐",
     color: "orange",
-    hint: "۲ تا ۱۵ گزینه، انتخاب ۱ تا N گزینه",
+    hint: "حداقل ۲ گزینه، انتخاب ۱ تا N گزینه",
     hasOptions: true,
     hasMaxSelections: true,
     hasDisplayMode: true,
