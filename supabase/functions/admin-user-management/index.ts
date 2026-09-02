@@ -14,13 +14,13 @@ serve(async (req) => {
   }
 
   try {
-    // Create admin client with service_role key
+    // service_role client — bypasses RLS for all writes
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Verify the caller is authenticated and is the owner
+    // Verify the caller is authenticated
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
@@ -47,16 +47,28 @@ serve(async (req) => {
       );
     }
 
-    // Check if caller is owner
-    const { data: profile } = await supabase
+    // Check if caller is admin OR owner
+    const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("is_owner")
       .eq("id", user.id)
       .single();
 
-    if (!profile?.is_owner) {
+    const isOwner = profile?.is_owner === true;
+
+    // Check admin role via user_roles
+    const { data: roleData } = await supabaseAdmin
+      .from("user_roles")
+      .select("role_id")
+      .eq("user_id", user.id)
+      .eq("active", true)
+      .maybeSingle();
+
+    const isAdmin = isOwner || roleData?.role_id === "admin";
+
+    if (!isAdmin) {
       return new Response(
-        JSON.stringify({ error: "Only site owner can perform this action" }),
+        JSON.stringify({ error: "فقط مدیران ارشد می‌توانند این عملیات را انجام دهند" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -78,7 +90,7 @@ serve(async (req) => {
         );
       }
 
-      // ایجاد کاربر از طریق Supabase Admin API (امن و سازگار با همه نسخه‌ها)
+      // ایجاد کاربر از طریق Supabase Admin API
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email: email.trim(),
         password,
@@ -90,8 +102,8 @@ serve(async (req) => {
 
       const userId = newUser.user.id;
 
-      // به‌روزرسانی پروفایل (trigger خودکار on_auth_user_created ممکنه اجرا نشده باشه)
-      await supabase
+      // به‌روزرسانی پروفایل (با service_role تا RLS مشکلی ایجاد نکنه)
+      await supabaseAdmin
         .from("profiles")
         .upsert({
           id: userId,
@@ -101,13 +113,13 @@ serve(async (req) => {
           created_by: user.id,
         }, { onConflict: "id" });
 
-      // اختصاص نقش admin
-      await supabase
+      // اختصاص نقش admin (با service_role)
+      await supabaseAdmin
         .from("user_roles")
         .upsert({ user_id: userId, role_id: "admin", active: true }, { onConflict: "user_id" });
 
-      // لاگ فعالیت
-      await supabase.from("activity_log").insert({
+      // لاگ فعالیت (فقط اینجا — Managers.jsx لاگ نمیزنه)
+      await supabaseAdmin.from("activity_log").insert({
         user_id: user.id,
         action: "create_manager",
         target_type: "user",
@@ -129,15 +141,14 @@ serve(async (req) => {
         );
       }
 
-      const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(
         target_user_id,
         { password: new_password }
       );
 
       if (error) throw error;
 
-      // Log the activity
-      await supabase.from("activity_log").insert({
+      await supabaseAdmin.from("activity_log").insert({
         user_id: user.id,
         action: "reset_password",
         target_type: "user",
@@ -159,7 +170,7 @@ serve(async (req) => {
         );
       }
 
-      const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(
         target_user_id,
         { email: new_email }
       );
@@ -167,13 +178,12 @@ serve(async (req) => {
       if (error) throw error;
 
       // Update profiles table too
-      await supabase
+      await supabaseAdmin
         .from("profiles")
         .update({ email: new_email })
         .eq("id", target_user_id);
 
-      // Log the activity
-      await supabase.from("activity_log").insert({
+      await supabaseAdmin.from("activity_log").insert({
         user_id: user.id,
         action: "update_email",
         target_type: "user",

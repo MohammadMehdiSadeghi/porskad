@@ -213,13 +213,13 @@ export default function Managers() {
     setBusy(true);
     setCreateError(null);
     try {
-      const mgrId = await createManager({
+      await createManager({
         email: newEmail.trim(),
         password: newPassword,
         fullName: newName.trim() || newEmail.split("@")[0],
         permissionIds: newPermissions,
       });
-      logActivity("create_manager", "user", mgrId, { email: newEmail.trim(), name: newName.trim() });
+      // logActivity توسط Edge Function انجام میشه — نیازی به تکرار نیست
       push("مدیر جدید ایجاد شد! ✅");
       setShowCreateModal(false);
       setNewEmail("");
