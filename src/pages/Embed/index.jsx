@@ -368,7 +368,9 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
       }
 
       postToParent("pcode:submitted", { formId, responseId: data?.responseId });
-      sendToTelegram(formId, data?.responseId);
+      // مهم: باید UUID واقعی فرم رو بفرستیم نه public_id ("fr_...") —
+      // چون telegram_form_links با UUID کار می‌کنه
+      sendToTelegram(schema?.uuid_id || formId, data?.responseId);
       setSubmitted(true);
     } catch (err) {
       console.error("Submit error:", err);
@@ -750,7 +752,9 @@ export default function EmbedForm() {
       }
 
       postToParent("pcode:submitted", { formId, responseId: data?.responseId });
-      sendToTelegram(formId, data?.responseId);
+      // مهم: باید UUID واقعی فرم رو بفرستیم نه public_id ("fr_...") —
+      // چون telegram_form_links با UUID کار می‌کنه
+      sendToTelegram(schema?.uuid_id || formId, data?.responseId);
       setDir(1);
       setStep(total);
     } catch (err) {
@@ -760,7 +764,7 @@ export default function EmbedForm() {
     } finally {
       setSubmitting(false);
     }
-  }, [submitting, visibleQuestions, questions, answers, times, startedAt, formId, total]);
+  }, [submitting, visibleQuestions, questions, answers, times, startedAt, formId, total, schema]);
 
   useEffect(() => {
     if (formEnded && step >= 0 && step < total) {
