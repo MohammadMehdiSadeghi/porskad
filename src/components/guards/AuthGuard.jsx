@@ -8,7 +8,7 @@ export default function AuthGuard({ children, adminOnly = false, ownerOnly = fal
   if (loading) {
     return (
       <div className="min-h-screen bg-bg-neutral flex items-center justify-center">
-        <Spinner label="در حال بررسی وضعیت ورود..." />
+        <Spinner label="در حال بررسی وضعیت ورود.." />
       </div>
     );
   }
