@@ -53,7 +53,7 @@ export default function FormsList() {
     try {
       const [{ data: formsData, error: formsError }, { data: countsData }] =
         await Promise.all([
-          supabase.from("forms").select("*").order("created_at", { ascending: false }),
+          supabase.from("forms").select("*, profiles:manager_id(full_name)").order("created_at", { ascending: false }),
           supabase.rpc("get_form_response_counts"),
         ]);
       if (formsError) throw formsError;
@@ -177,13 +177,18 @@ export default function FormsList() {
       push("شما مجوز آرشیو فرم ندارید.", "error");
       return;
     }
-    const { error } = await supabase.from("forms").update({ archived: !form.archived }).eq("id", form.id);
+    const update = { archived: !form.archived };
+    // اگه فرم منتشره و آرشیو میشه، غیرفعالش کن
+    if (!form.archived && form.published) {
+      update.published = false;
+    }
+    const { error } = await supabase.from("forms").update(update).eq("id", form.id);
     if (error) {
       push("آرشیو ناموفق بود", "error");
       return;
     }
-    push(form.archived ? "فرم از آرشیو بازیابی شد" : "فرم آرشیو شد 📦");
-    setForms((fs) => fs.map((f) => (f.id === form.id ? { ...f, archived: !f.archived } : f)));
+    push(form.archived ? "فرم از آرشیو بازیابی شد" : "فرم آرشیو شد");
+    setForms((fs) => fs.map((f) => (f.id === form.id ? { ...f, ...update } : f)));
   }
 
   const filtered = useMemo(() => {
@@ -271,7 +276,12 @@ export default function FormsList() {
                 <StickerCard theme="white">
                   <div className="p-5 sm:p-6 flex flex-col gap-3.5">
                     <div className="flex items-start justify-between gap-3">
-                      <h3 className="font-black text-navy text-base leading-6 line-clamp-1">{f.title}</h3>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-black text-navy text-base leading-6 line-clamp-1">{f.title}</h3>
+                        {f.profiles?.full_name && (
+                          <span className="text-[0.65rem] font-medium text-ink-subtle/60 mt-0.5 block">ساخته شده توسط {f.profiles.full_name}</span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {f.archived && <Badge color="gray">آرشیو</Badge>}
                         {isReg && !f.archived && <Badge color="orange">ثبت‌نامی</Badge>}
@@ -284,8 +294,8 @@ export default function FormsList() {
                     </div>
 
                     <div className="flex items-center gap-3 text-sm font-semibold text-ink-subtle">
-                      <span>📥 {c.total}</span>
-                      <span>✓ {c.complete}</span>
+                      <span>{c.total} دریافتی</span>
+                      <span>{c.complete} تکمیل</span>
                       <span className="mr-auto">{new Date(f.created_at).toLocaleDateString("fa-IR")}</span>
                     </div>
 
@@ -296,17 +306,16 @@ export default function FormsList() {
                       {f.published && (
                         <>
                           <Button variant="glass" size="md" onClick={() => share(f)} rotate="-rotate-[1deg]">کپی لینک</Button>
-                          <Button as="a" href={`/f/${f.slug}`} target="_blank" variant="glass" size="md" rotate="rotate-[1deg]">مشاهده ↗</Button>
+                          <Button as="a" href={`/f/${f.slug}`} target="_blank" variant="glass" size="md" rotate="rotate-[1deg]">مشاهده</Button>
                         </>
                       )}
-                      {hasPermission("publish_form") && (
-                        <Button variant="glass" size="md" onClick={() => togglePublish(f)} rotate="-rotate-[1deg]">
-                          {f.published ? "لغو انتشار" : "انتشار 🚀"}
+                      {hasPermission("publish_form") && (                          <Button variant="glass" size="md" onClick={() => togglePublish(f)} rotate="-rotate-[1deg]">
+                          {f.published ? "لغو انتشار" : "انتشار"}
                         </Button>
                       )}
-                      <Button variant="glass" size="md" onClick={() => duplicate(f)} disabled={busy} rotate="rotate-[1deg]">کپی 📄</Button>
+                      <Button variant="glass" size="md" onClick={() => duplicate(f)} disabled={busy} rotate="rotate-[1deg]">کپی</Button>
                       <Button variant="glass" size="md" onClick={() => archiveForm(f)} rotate="-rotate-[1deg]">
-                        {f.archived ? "بازیابی 📂" : "آرشیو 📦"}
+                        {f.archived ? "بازیابی" : "آرشیو"}
                       </Button>
                       {hasPermission("delete_form") && (
                         <Button variant="glass" size="md" className="!text-magenta-text" onClick={() => setDeleting(f)} rotate="rotate-[1deg]">حذف</Button>
