@@ -184,6 +184,14 @@ export default function FormsList() {
       const rows = (qs ?? []).map((q, i) => ({
         form_id: newForm.id, type: q.type, title: q.title, description: q.description,
         required: q.required, options: q.options, position: i,
+        placeholder: q.placeholder ?? "",
+        validation: q.validation ?? null,
+        conditions: q.conditions ?? null,
+        jump_actions: q.jump_actions ?? [],
+        correct_answer: q.correct_answer ?? null,
+        points: q.points ?? null,
+        display_mode: q.display_mode ?? null,
+        max_selections: q.max_selections ?? 1,
       }));
       if (rows.length) {
         const { error: qError } = await supabase.from("questions").insert(rows);

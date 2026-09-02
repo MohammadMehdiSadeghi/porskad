@@ -281,7 +281,7 @@ function BrandingBadge({ formId }) {
 // ══════════════════════════════════════════════════════════════
 // EmbedRegistrationForm — فرم ثبت‌نامی embed — طراحی رکاد
 // ══════════════════════════════════════════════════════════════
-function EmbedRegistrationForm({ schema, questions, formId }) {
+function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
   const [answers, setAnswers] = useState({});
   const [fieldErrors, setFieldErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -292,6 +292,25 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
   const [confirmUnfilled, setConfirmUnfilled] = useState([]);
   const [scoreResult, setScoreResult] = useState(null);
   const [startedAt] = useState(() => Date.now());
+  const [variables, setVariables] = useState({});
+
+  // ─── موتور شرطی برای فرم ثبت‌نامی Embed ───
+  const sortedQuestions = useMemo(() => [...questions].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)), [questions]);
+  const flow = useMemo(
+    () => calculateFlow(sortedQuestions, logicRules || [], answers, variables),
+    [sortedQuestions, logicRules, answers, variables]
+  );
+  const visibleQuestions = flow.visibleQuestions;
+
+  useEffect(() => {
+    if (flow.variableChanges?.length > 0) {
+      setVariables((prev) => {
+        const next = { ...prev };
+        for (const vc of flow.variableChanges) next[vc.variableKey] = (Number(next[vc.variableKey]) || 0) + vc.amount;
+        return next;
+      });
+    }
+  }, [flow.variableChanges]);
 
   function setAnswer(qId, val, q) {
     setAnswers((p) => ({ ...p, [qId]: val }));
@@ -314,16 +333,16 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
     setError(null);
 
     const errors = {};
-    for (const q of questions) {
-      const err = validateAnswer(q, answers[q.id]);
-      if (err) { errors[q.id] = err; }
-    }
-    setFieldErrors(errors);
-    setTouched(Object.fromEntries(questions.map((q) => [q.id, true])));
+        for (const q of visibleQuestions) {
+          const err = validateAnswer(q, answers[q.id]);
+          if (err) { errors[q.id] = err; }
+        }
+        setFieldErrors(errors);
+        setTouched(Object.fromEntries(visibleQuestions.map((q) => [q.id, true])));
 
-    const unfilled = [];
-    for (const q of questions) {
-      if (errors[q.id]) {
+        const unfilled = [];
+        for (const q of visibleQuestions) {
+          if (errors[q.id]) {
         unfilled.push({ id: q.id, title: `${q.title} (${errors[q.id]})`, typeLabel: QUESTION_TYPES[q.type]?.label || q.type });
       } else if (q.required) {
         const v = answers[q.id];
@@ -351,7 +370,7 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
         startedAt: new Date(startedAt).toISOString(), completedAt: nowIso,
       };
       const answersObj = {};
-      for (const q of questions) {
+      for (const q of visibleQuestions) {
         const v = answers[q.id];
         if (v !== undefined && v !== null && String(v).trim() !== "") {
           answersObj[q.id] = normalizeAnswerValue(q, v);
@@ -421,10 +440,10 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
                 <div className="text-center mb-0.5">
                   <h1 className="text-lg sm:text-xl font-black text-male-normal mb-0.5">{schema.title}</h1>
                   {schema.description && <p className="text-xs sm:text-sm text-ink-subtle">{schema.description}</p>}
-                  <span className="text-[0.6rem] sm:text-xs font-bold text-ink/40 bg-bg-neutral rounded-pill-sm px-1.5 py-0.5 mt-1.5 inline-block">{faNum(questions.length)} فیلد</span>
-                </div>
+                  <span className="text-[0.6rem] sm:text-xs font-bold text-ink/40 bg-bg-neutral rounded-pill-sm px-1.5 py-0.5 mt-1.5 inline-block">{faNum(visibleQuestions.length)} فیلد</span>
+                                  </div>
 
-                {questions.map((q, i) => {
+                                  {visibleQuestions.map((q, i) => {
                   const val = answers[q.id] ?? "";
                   const fieldErr = touched[q.id] ? fieldErrors[q.id] : null;
                   return (
@@ -523,13 +542,13 @@ function EmbedRegistrationForm({ schema, questions, formId }) {
       </main>
 
       <ConfirmDialog
-        open={showConfirm}
-        onConfirm={doSubmit}
-        onCancel={() => setShowConfirm(false)}
-        unfilledFields={confirmUnfilled}
-        totalRequired={questions.filter((q) => q.required).length}
-        filledCount={questions.filter((q) => q.required && answers[q.id] != null && String(answers[q.id]).trim() !== "").length}
-      />
+              open={showConfirm}
+              onConfirm={doSubmit}
+              onCancel={() => setShowConfirm(false)}
+              unfilledFields={confirmUnfilled}
+              totalRequired={visibleQuestions.filter((q) => q.required).length}
+              filledCount={visibleQuestions.filter((q) => q.required && answers[q.id] != null && String(answers[q.id]).trim() !== "").length}
+            />
     </div>
   );
 }
@@ -594,12 +613,19 @@ export default function EmbedForm() {
     [schema]
   );
   const logicRules = useMemo(() => {
-    return (schema?.logicRules ?? []).map((r) => ({
-      ...r,
-      conditions: r.conditions_json ?? [],
-      action: { type: r.action_type, target_id: r.action_target_id },
-    }));
-  }, [schema]);
+      return (schema?.logicRules ?? []).map((r) => ({
+        ...r,
+        conditions: r.conditions_json ?? [],
+        action: {
+          type: r.action_type,
+          targetId: r.action_target_id,
+          endId: r.action_end_id ?? null,
+          url: r.action_url ?? null,
+          variableKey: r.action_variable_key ?? null,
+          amount: r.action_amount ?? 0,
+        },
+      }));
+    }, [schema]);
 
   const total = questions.length;
 
@@ -792,7 +818,7 @@ export default function EmbedForm() {
   if (!schema) return null;
 
   if (isRegistration) {
-    return <EmbedRegistrationForm schema={schema} questions={questions} formId={formId} />;
+    return <EmbedRegistrationForm schema={schema} questions={questions} logicRules={logicRules} formId={formId} />;
   }
 
   // ─── فرم مرحله‌ای embed — طراحی رکاد ───

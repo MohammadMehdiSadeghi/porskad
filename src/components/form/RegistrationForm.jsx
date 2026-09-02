@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import StickerCard from "../ui/StickerCard";
 import Button from "../ui/Button";
@@ -11,7 +11,7 @@ import { supabase } from "../../lib/supabaseClient";
 import ConfirmDialog from "../ui/ConfirmDialog";
 import SEO from "../ui/SEO";
 import { calculateScore, hasScoring } from "../../lib/scoring";
-import { evaluateQuestionConditions } from "../../lib/logic/conditionEvaluator";
+import { calculateFlow } from "../../lib/logic/flowEngine";
 import ScoreResult from "../ui/ScoreResult";
 import { sendToTelegram } from "../../lib/telegram";
 
@@ -37,7 +37,7 @@ function DropdownChoice({ options = [], value, onChange }) {
   );
 }
 
-export default function RegistrationForm({ form, questions, slug }) {
+export default function RegistrationForm({ form, questions, logicRules = [], hiddenFields = {}, slug }) {
   const [answers, setAnswers] = useState({});
   const [fieldErrors, setFieldErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -49,10 +49,28 @@ export default function RegistrationForm({ form, questions, slug }) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmUnfilled, setConfirmUnfilled] = useState([]);
   const [scoreResult, setScoreResult] = useState(null);
+  const [variables, setVariables] = useState({});
   const formRef = useRef(null);
 
   const sortedQuestions = useMemo(() => [...questions].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)), [questions]);
-  const visibleQuestions = useMemo(() => sortedQuestions.filter((q) => evaluateQuestionConditions(q.conditions, answers, {}, {})), [sortedQuestions, answers]);
+
+  // ─── موتور شرطی: هم conditions سوال، هم logic_rules متمرکز + متغیرها + hiddenFields ───
+  const flow = useMemo(
+    () => calculateFlow(sortedQuestions, logicRules || [], answers, variables, hiddenFields),
+    [sortedQuestions, logicRules, answers, variables, hiddenFields]
+  );
+  const visibleQuestions = flow.visibleQuestions;
+
+  // اعمال تغییرات متغیرها (ADD_TO_VARIABLE)
+  useEffect(() => {
+    if (flow.variableChanges?.length > 0) {
+      setVariables((prev) => {
+        const next = { ...prev };
+        for (const vc of flow.variableChanges) next[vc.variableKey] = (Number(next[vc.variableKey]) || 0) + vc.amount;
+        return next;
+      });
+    }
+  }, [flow.variableChanges]);
 
   function setAnswer(questionId, val, q) {
     setAnswers((prev) => ({ ...prev, [questionId]: val }));

@@ -130,13 +130,17 @@ function NotificationProvider({ children }) {
         async (payload) => {
           // گرفتن اطلاعات فرم
           let formTitle = "فرم";
+          let formSlug = null;
           try {
             const { data } = await supabase
               .from("forms")
               .select("title, slug")
               .eq("id", payload.new.form_id)
               .maybeSingle();
-            if (data) formTitle = data.title;
+            if (data) {
+              formTitle = data.title;
+              formSlug = data.slug;
+            }
           } catch {}
 
           addNotification({
@@ -144,7 +148,7 @@ function NotificationProvider({ children }) {
             title: "پاسخ جدید!",
             message: `کاربری فرم «${formTitle}» رو پر کرد`,
             formId: payload.new.form_id,
-            formSlug: payload.new.form_id,
+            formSlug,
           });
         }
       )

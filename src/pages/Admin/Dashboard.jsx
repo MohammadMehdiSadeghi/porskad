@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
 import StatCard from "../../components/ui/StatCard";
@@ -48,6 +48,10 @@ export default function Dashboard() {
     setLoading(false);
   }
 
+  // ref همیشه‌به‌روز از forms — تا callback ریل‌تایم closure قدیمی نگیرد
+  const formsRef = useRef(forms);
+  useEffect(() => { formsRef.current = forms; }, [forms]);
+
   useEffect(() => {
     loadAll();
     if (!supabase) return;
@@ -57,7 +61,7 @@ export default function Dashboard() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "responses" },
         (payload) => {
-          const form = forms.find((f) => f.id === payload.new.form_id);
+          const form = formsRef.current.find((f) => f.id === payload.new.form_id);
           push(`پاسخ جدید برای «${form?.title ?? "فرم"}» ثبت شد!`, "info");
           loadAll();
         },
@@ -67,7 +71,7 @@ export default function Dashboard() {
       supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [forms.length]);
+  }, []);
 
   const formTitleById = useMemo(() => Object.fromEntries(forms.map((f) => [f.id, f.title])), [forms]);
 

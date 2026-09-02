@@ -93,7 +93,18 @@ export default function FormFill() {
       try {
         const { data: lrs, error: lrError } = await supabase.from("logic_rules").select("*").eq("form_id", formData.id).order("priority");
         if (lrError) setLogicRules([]);
-        else setLogicRules((lrs ?? []).map((r) => ({ ...r, conditions: r.conditions_json ?? [], action: { type: r.action_type, target_id: r.action_target_id } })));
+        else setLogicRules((lrs ?? []).map((r) => ({
+          ...r,
+          conditions: r.conditions_json ?? [],
+          action: {
+            type: r.action_type,
+            targetId: r.action_target_id,
+            endId: r.action_end_id ?? null,
+            url: r.action_url ?? null,
+            variableKey: r.action_variable_key ?? null,
+            amount: r.action_amount ?? 0,
+          },
+        })));
       } catch { setLogicRules([]); }
       setLoading(false);
     }
@@ -203,7 +214,7 @@ export default function FormFill() {
   if (loading) return <div className="min-h-dvh dot-pattern bg-ecosystem-light"><Spinner label="فرم داره لود می‌شه..." /></div>;
   if (unavailable) return <NotAvailable message={unavailable} />;
   if (!form) return null;
-  if (formType === "registration") return <RegistrationForm form={form} questions={questions} slug={slug} />;
+  if (formType === "registration") return <RegistrationForm form={form} questions={questions} logicRules={logicRules} hiddenFields={hiddenFields} slug={slug} />;
 
   return (
     <div className="min-h-dvh dot-pattern bg-ecosystem-light flex flex-col overflow-x-hidden">

@@ -1,6 +1,6 @@
 import * as XLSX from "xlsx";
 
-export function downloadExcel(filename, header, rows) {
+export function downloadExcel(filename, header, rows, dates = {}) {
   const wb = XLSX.utils.book_new();
 
   // Sheet 1: Responses
@@ -18,8 +18,8 @@ export function downloadExcel(filename, header, rows) {
     [""],
     ["تعداد کل پاسخ‌ها", rows.length],
     ["تعداد پاسخ‌های کامل", rows.filter((r) => r[2] === "بله").length],
-    ["تاریخ اولین پاسخ", rows.length ? new Date().toLocaleDateString("fa-IR") : "—"],
-    ["تاریخ آخرین پاسخ", rows.length ? new Date().toLocaleDateString("fa-IR") : "—"],
+    ["تاریخ اولین پاسخ", rows.length ? (dates.firstSubmittedAt ?? new Date().toLocaleDateString("fa-IR")) : "—"],
+    ["تاریخ آخرین پاسخ", rows.length ? (dates.lastSubmittedAt ?? new Date().toLocaleDateString("fa-IR")) : "—"],
   ];
   const ws2 = XLSX.utils.aoa_to_sheet(summaryData);
   ws2["!cols"] = [{ wch: 20 }, { wch: 15 }];

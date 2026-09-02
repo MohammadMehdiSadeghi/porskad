@@ -26,6 +26,7 @@ export function faDateTime(isoString) {
 export function faRelative(isoString) {
   if (!isoString) return "—";
   const diff = (Date.now() - new Date(isoString).getTime()) / 1000;
+  if (diff < 0) return "به‌زودی"; // تاریخ از آینده
   if (diff < 60) return "همین الان";
   if (diff < 3600) return `${faNum(Math.floor(diff / 60))} دقیقه پیش`;
   if (diff < 86400) return `${faNum(Math.floor(diff / 3600))} ساعت پیش`;
@@ -62,7 +63,7 @@ export function parseUserAgent(ua = navigator.userAgent) {
 
   let os = "سایر";
   if (uaLower.includes("android")) os = "Android";
-  else if (uaLower.includes("iphone|ipad|ipod") || /iphone|ipad|ipod/.test(uaLower)) os = "iOS";
+  else if (/iphone|ipad|ipod/.test(uaLower)) os = "iOS";
   else if (uaLower.includes("windows")) os = "Windows";
   else if (uaLower.includes("mac os")) os = "macOS";
   else if (uaLower.includes("linux")) os = "Linux";
@@ -95,26 +96,31 @@ export function slugify(str = "") {
 
 // ─── میانبر کپی کلیپ‌بورد ───
 export async function copyToClipboard(text) {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    // فالبک برای مرورگرهای قدیمی / http
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    ta.style.position = "fixed";
-    ta.style.opacity = "0";
-    document.body.appendChild(ta);
-    ta.select();
-    let ok = false;
+  // در context امن (HTTPS/localhost) از Clipboard API استفاده کن
+  if (window.isSecureContext && navigator.clipboard?.writeText) {
     try {
-      ok = document.execCommand("copy");
+      await navigator.clipboard.writeText(text);
+      return true;
     } catch {
-      ok = false;
+      // fallback به روش قدیمی
     }
-    document.body.removeChild(ta);
-    return ok;
   }
+  // فالبک برای مرورگرهای قدیمی / http
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  let ok = false;
+  try {
+    ok = document.execCommand("copy");
+  } catch {
+    ok = false;
+  }
+  document.body.removeChild(ta);
+  return ok;
 }
 
 export const DEVICE_FA = {

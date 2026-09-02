@@ -293,7 +293,7 @@ function MiniStat({ label, value }) {
 }
 
 // ─── تحلیل فردی یک پاسخ ───
-function PersonAnalytics({ response, questions, answersByResponse, allAnswers, questionById }) {
+function PersonAnalytics({ response, questions, answersByResponse }) {
   const rAnswers = answersByResponse[response.id] ?? [];
   const scored = hasScoring(questions);
 
@@ -305,14 +305,6 @@ function PersonAnalytics({ response, questions, answersByResponse, allAnswers, q
     }
     return calculateScore(questions, answersObj);
   }, [scored, rAnswers, questions]);
-
-  // مقایسه با میانگین
-  const comparison = useMemo(() => {
-    if (!scored || !scoreData) return null;
-    // میانگین نمره بقیه
-    const otherResponses = allAnswers.length > 0 ? rAnswers : [];
-    return null; // TODO: implement when we have all scores
-  }, [scored, scoreData, rAnswers, allAnswers]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -639,8 +631,17 @@ export default function Responses() {
         ...vals,
       ];
     });
-    if (format === "excel") downloadExcel(`${form?.slug ?? "form"}-responses.xlsx`, header, rows);
-    else downloadCsv(`${form?.slug ?? "form"}-responses.csv`, [header, ...rows]);
+    if (format === "excel") {
+      // تاریخ واقعی اولین و آخرین پاسخ از داده‌ها
+      const times = filtered
+        .map((r) => new Date(r.submitted_at || r.created_at))
+        .filter((d) => !isNaN(d));
+      const dates = {
+        firstSubmittedAt: times.length ? times.reduce((a, b) => (a < b ? a : b)).toLocaleDateString("fa-IR") : null,
+        lastSubmittedAt: times.length ? times.reduce((a, b) => (a > b ? a : b)).toLocaleDateString("fa-IR") : null,
+      };
+      downloadExcel(`${form?.slug ?? "form"}-responses.xlsx`, header, rows, dates);
+    } else downloadCsv(`${form?.slug ?? "form"}-responses.csv`, [header, ...rows]);
     push(`فایل ${format === "excel" ? "Excel" : "CSV"} دانلود شد 📥`);
   }
 
@@ -1006,8 +1007,6 @@ export default function Responses() {
                     response={detail}
                     questions={questions}
                     answersByResponse={answersByResponse}
-                    allAnswers={answers}
-                    questionById={questionById}
                   />
                 </div>
                 <div className="flex items-center justify-between px-6 py-4 border-t border-ink/10 shrink-0">

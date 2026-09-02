@@ -22,7 +22,6 @@ export {
   makeJumpAction,
   isChoiceType,
   isNumericType,
-  buildDependencyGraph,
 } from "./types";
 
 export {
@@ -41,5 +40,4 @@ export {
 
 export {
   validateRules,
-  findUnreachableQuestions,
 } from "./logicValidator";
