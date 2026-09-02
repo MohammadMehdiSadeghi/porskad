@@ -284,8 +284,8 @@ export default function FormsList() {
     } else if (filter === "archived") {
       result = result.filter((f) => f.archived && !f.deleted_at);
     } else {
-      // حالت عادی: حذف‌شده‌ها رو نشون نده
-      result = result.filter((f) => !f.deleted_at);
+      // حالت عادی: حذف‌شده و آرشیو‌شده رو نشون نده
+      result = result.filter((f) => !f.deleted_at && !f.archived);
       if (filter === "published") result = result.filter((f) => f.published);
       else if (filter === "draft") result = result.filter((f) => !f.published);
     }

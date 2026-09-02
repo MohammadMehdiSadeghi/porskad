@@ -162,7 +162,9 @@ function PermissionSummary({ permissions }) {
 
 export default function Managers() {
   const { push } = useToast();
-  const { listManagers, createManager, updateManager, deactivateManager, activateManager, deleteManager, isOwner, user } = useAuth();
+  const { listManagers, createManager, updateManager, deactivateManager, activateManager, deleteManager, isOwner, user, hasPermission } = useAuth();
+  const canManage = isOwner() || hasPermission("manage_managers");
+  const canView = isOwner() || hasPermission("manage_managers") || hasPermission("view_admins");
   const [loading, setLoading] = useState(true);
   const [managers, setManagers] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -283,6 +285,15 @@ export default function Managers() {
 
   if (loading) return <Spinner label="لیست مدیران..." />;
 
+  if (!canView) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <h2 className="text-xl font-black text-navy">دسترسی غیرمجاز</h2>
+        <p className="text-sm font-semibold text-ink-subtle">شما مجوز مشاهده مدیران را ندارید.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <SEO title="مدیریت مدیران" description="مدیریت مدیران و مجوزها — پرس‌کاد" url="/admin/managers" noIndex />
@@ -293,9 +304,11 @@ export default function Managers() {
             {managers.filter((m) => m.is_active).length} فعال — {ALL_PERM_IDS.length} مجوز
           </p>
         </div>
-        <Button variant="teal" size="sm" onClick={() => setShowCreateModal(true)} rotate="-rotate-[1deg]">
-          <Plus size={14} className="ml-1" /> مدیر جدید
-        </Button>
+        {canManage && (
+          <Button variant="teal" size="sm" onClick={() => setShowCreateModal(true)} rotate="-rotate-[1deg]">
+            <Plus size={14} className="ml-1" /> مدیر جدید
+          </Button>
+        )}
       </div>
 
       {/* لیست مدیران */}
@@ -362,24 +375,26 @@ export default function Managers() {
                   </div>
 
                   {/* دکمه‌ها */}
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    <Button variant="ghost" size="sm" onClick={() => openEdit(m)}
-                      title={m.is_owner ? "فقط نام صاحب اصلی قابل تغییر است" : "ویرایش"}>
-                      ویرایش ✏️
-                    </Button>
-                    {!m.is_owner && (
-                      <>
-                        <Button variant="ghost" size="sm" className="!text-amber-600"
-                          onClick={() => handleDeactivate(m.id)}>
-                          {m.is_active ? "غیرفعال 🛑" : "فعال 🟢"}
-                        </Button>
-                        <Button variant="ghost" size="sm" className="!text-magenta-text"
-                          onClick={() => setDeleteTarget(m)}>
-                          حذف 🗑️
-                        </Button>
-                      </>
-                    )}
-                  </div>
+                  {canManage && (
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      <Button variant="ghost" size="sm" onClick={() => openEdit(m)}
+                        title={m.is_owner ? "فقط نام صاحب اصلی قابل تغییر است" : "ویرایش"}>
+                        ویرایش
+                      </Button>
+                      {!m.is_owner && (
+                        <>
+                          <Button variant="ghost" size="sm" className="!text-amber-600"
+                            onClick={() => handleDeactivate(m.id)}>
+                            {m.is_active ? "غیرفعال" : "فعال"}
+                          </Button>
+                          <Button variant="ghost" size="sm" className="!text-magenta-text"
+                            onClick={() => setDeleteTarget(m)}>
+                            حذف
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               </StickerCard>
             </div>
