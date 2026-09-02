@@ -145,51 +145,70 @@ export default function SmsPanel() {
     setSavingSettings(false);
   }
 
-  // ─── Send SMS ───
-  async function handleSendSms(e) {
-    e.preventDefault();
-    if (!smsText.trim() || !smsNumbers.trim() || !canSms || sending) return;
-    setSending(true);
-    setSendResult(null);
-    try {
-      const mobiles = smsNumbers.split(/[,;\n]+/).map((n) => n.trim()).filter(Boolean).join(",");
-      const session = await supabase.auth.getSession();
-      const token = session.data?.session?.access_token || "";
+  // ─── Send SMS (با تأیید دو مرحله‌ای) ───
+    const [confirmShow, setConfirmShow] = useState(false);
+    const [confirmData, setConfirmData] = useState(null);
 
-      const res = await fetch("/api/amoot-proxy", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ endpoint: "SendSimple", params: { Mobile: mobiles, Message: smsText, Sender: settings.line_number || undefined } }),
+    // مرحله ۱: کلیک روی ارسال → نمایش پیش‌نمایش تأیید
+    function handleSendSms(e) {
+      e.preventDefault();
+      if (!smsText.trim() || !smsNumbers.trim() || !canSms || sending) return;
+      const mobiles = smsNumbers.split(/[,;\n]+/).map((n) => n.trim()).filter(Boolean);
+      setConfirmData({
+        mobiles: mobiles.join(", "),
+        count: mobiles.length,
+        text: smsText.trim(),
+        chars: smsText.trim().length,
+        pages: Math.ceil(smsText.trim().length / 70),
       });
-      const data = await res.json();
-
-      // لاگ در outbox (اگر message_id برگشت)
-      if (data.Status === 1 || data.Status === "1" || data.MessageID) {
-        const messageId = String(data.MessageID || data.MessageIds || "");
-        await supabase.from("sms_outbox").insert({
-          message_id: messageId,
-          mobile: mobiles,
-          text: smsText,
-          status: "sent",
-          line_number: settings.line_number,
-          parts: data.Parts || null,
-          cost: data.Cost || null,
-        });
-        showToast("پیامک با موفقیت ارسال شد ✅");
-        setSendResult({ success: true, data });
-        setSmsText("");
-        setSmsNumbers("");
-        loadDashboard();
-      } else {
-        showToast("ارسال ناموفق: " + (data.Message || JSON.stringify(data)), "error");
-        setSendResult({ success: false, error: data.Message || data });
-      }
-    } catch (err) {
-      showToast("خطا: " + err.message, "error");
-      setSendResult({ success: false, error: err.message });
+      setConfirmShow(true);
     }
-    setSending(false);
-  }
+
+    // مرحله ۲: تأیید نهایی → ارسال واقعی
+    async function doSendSms() {
+      if (!confirmData) return;
+      setConfirmShow(false);
+      setSending(true);
+      setSendResult(null);
+      try {
+        const session = await supabase.auth.getSession();
+        const token = session.data?.session?.access_token || "";
+
+        const res = await fetch("/api/amoot-proxy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ endpoint: "SendSimple", params: { Mobile: confirmData.mobiles, Message: confirmData.text, Sender: settings.line_number || undefined } }),
+        });
+        const data = await res.json();
+
+        // لاگ در outbox
+        if (data.Status === 1 || data.Status === "1" || data.MessageID) {
+          const messageId = String(data.MessageID || data.MessageIds || "");
+          await supabase.from("sms_outbox").insert({
+            message_id: messageId,
+            mobile: confirmData.mobiles,
+            text: confirmData.text,
+            status: "sent",
+            line_number: settings.line_number,
+            parts: data.Parts || null,
+            cost: data.Cost || null,
+          });
+          showToast("پیامک با موفقیت ارسال شد ✅");
+          setSendResult({ success: true, data });
+          setSmsText("");
+          setSmsNumbers("");
+          loadDashboard();
+        } else {
+          showToast("ارسال ناموفق: " + (data.Message || JSON.stringify(data)), "error");
+          setSendResult({ success: false, error: data.Message || data });
+        }
+      } catch (err) {
+        showToast("خطا: " + err.message, "error");
+        setSendResult({ success: false, error: err.message });
+      }
+      setSending(false);
+      setConfirmData(null);
+    }
 
   const TABS = [
     { id: "dashboard", label: "داشبورد", icon: BarChart3 },
@@ -318,8 +337,11 @@ export default function SmsPanel() {
                 )}
                 <Button variant="teal" size="lg" type="submit" disabled={!canSms || !smsText.trim() || !smsNumbers.trim() || sending}
                   className="self-start" rotate="-rotate-[1deg]">
-                  <Send size={16} className="ml-2" /> {sending ? "در حال ارسال..." : "ارسال پیامک"}
+                  <Send size={16} className="ml-2" /> {sending ? "در حال ارسال..." : "پیش‌نمایش و تأیید ارسال"}
                 </Button>
+                <p className="text-[0.65rem] font-medium text-ink-subtle -mt-1">
+                  ⚠️ پیامک فقط بعد از تأیید نهایی شما ارسال می‌شود.
+                </p>
               </form>
             </StickerCard>
           </div>
@@ -454,7 +476,62 @@ export default function SmsPanel() {
             </StickerCard>
           </div>
         </div>
-      )}
-    </div>
-  );
-}
+              )}
+
+              {/* ─── مودال تأیید ارسال پیامک ─── */}
+              {confirmShow && confirmData && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-[2px]" onClick={() => setConfirmShow(false)} role="dialog" aria-modal="true">
+                  <div className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+                    <div className="relative" style={{ zIndex: 1 }}>
+                      <div aria-hidden="true" className="absolute top-2 left-2 w-full h-full bg-ink rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
+                      <div className="relative z-10 bg-white border-2 border-ink rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-4 sm:p-5">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 rounded-full bg-magenta/10 flex items-center justify-center">
+                            <Send size={15} className="text-magenta-text" />
+                          </div>
+                          <h3 className="text-sm font-black text-navy">تأیید ارسال پیامک</h3>
+                        </div>
+
+                        <div className="flex flex-col gap-3 mb-4">
+                          <div className="bg-bg-mint rounded-lg p-3 flex items-center gap-2">
+                            <div className="flex-1">
+                              <span className="text-xs font-bold text-teal-text block">گیرندگان</span>
+                              <span className="text-sm font-black text-navy" dir="ltr">{confirmData.mobiles}</span>
+                            </div>
+                            <span className="text-xs font-bold text-navy bg-white rounded-pill-sm px-2 py-1">{faNum(confirmData.count)} شماره</span>
+                          </div>
+
+                          <div className="bg-bg-lavender/50 rounded-lg p-3">
+                            <span className="text-xs font-bold text-ink-subtle block mb-1">متن پیامک</span>
+                            <p className="text-sm font-semibold text-ink leading-6 whitespace-pre-wrap bg-white rounded-lg px-2.5 py-2 border border-ink/10">{confirmData.text}</p>
+                            <div className="flex items-center gap-2 mt-1.5">
+                              <span className="text-[0.6rem] font-bold text-ink-subtle">{faNum(confirmData.chars)} کاراکتر</span>
+                              <span className="text-[0.6rem] font-bold text-ink-subtle">• {faNum(confirmData.pages)} صفحه</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <div aria-hidden="true" className="absolute top-[0.125rem] left-[0.125rem] w-full h-full bg-ecosystem-dark rounded-pill-md [corner-shape:squircle]" />
+                            <button onClick={doSendSms} disabled={sending}
+                              className="relative z-10 w-full bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-4 py-2.5 rounded-pill-md [corner-shape:squircle] font-extrabold hover:bg-ecosystem-dark transition-colors disabled:opacity-50 text-sm">
+                              {sending ? "در حال ارسال..." : "✅ بله، ارسال کن"}
+                            </button>
+                          </div>
+                          <div className="relative flex-1">
+                            <div aria-hidden="true" className="absolute top-[0.125rem] left-[0.125rem] w-full h-full bg-ink/70 rounded-pill-md [corner-shape:squircle]" />
+                            <button onClick={() => { setConfirmShow(false); setConfirmData(null); }}
+                              className="relative z-10 w-full bg-white border-2 border-ink text-ink px-4 py-2.5 rounded-pill-md [corner-shape:squircle] font-extrabold hover:bg-bg-neutral transition-colors text-sm">
+                              ✕ انصراف
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        }

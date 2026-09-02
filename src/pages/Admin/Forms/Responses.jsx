@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabaseClient";
 import Button from "../../../components/ui/Button";
@@ -296,6 +296,8 @@ function MiniStat({ label, value }) {
 function PersonAnalytics({ response, questions, answersByResponse }) {
   const rAnswers = answersByResponse[response.id] ?? [];
   const scored = hasScoring(questions);
+  const [activeQ, setActiveQ] = useState(null);
+  const qRefs = useRef({});
 
   const scoreData = useMemo(() => {
     if (!scored) return null;
@@ -306,8 +308,14 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
     return calculateScore(questions, answersObj);
   }, [scored, rAnswers, questions]);
 
+  function scrollToQ(questionId) {
+    setActiveQ(questionId);
+    const el = qRefs.current[questionId];
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" dir="rtl">
       {/* اطلاعات فرد */}
       <div className="bg-bg-lavender/50 rounded-xl p-4 border border-navy/10">
         <div className="flex items-center gap-3 mb-3">
@@ -370,6 +378,30 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
         )}
       </div>
 
+      {/* ─── ناوبری سریع بین سوالات ─── */}
+      <div className="bg-white border border-ink/10 rounded-xl p-2.5">
+        <div className="flex items-center gap-1.5 mb-1.5">
+          <span className="text-[0.6rem] font-extrabold text-ink-subtle">پرش به سوال:</span>
+        </div>
+        <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto scrollbar-none">
+          {questions.map((q, i) => {
+            const a = rAnswers.find((x) => x.question_id === q.id);
+            const answered = a?.value !== null && a?.value !== undefined && a?.value !== "";
+            return (
+              <button key={q.id}
+                onClick={() => scrollToQ(q.id)}
+                className={`text-[0.6rem] font-bold px-2 py-1 rounded-pill-sm border transition-all cursor-pointer
+                  ${activeQ === q.id ? "border-navy bg-navy text-white" : answered ? "border-teal/40 bg-teal/5 text-teal-text" : "border-ink/15 bg-white text-ink-subtle hover:border-teal/30"}
+                `}
+                title={q.title}
+              >
+                {faNum(i + 1)}. {q.title.slice(0, 18)}{q.title.length > 18 ? "…" : ""}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* جزئیات پاسخ‌ها */}
       <div className="flex flex-col gap-2">
         {questions.map((q, i) => {
@@ -378,11 +410,16 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
           const answered = a?.value !== null && a?.value !== undefined && a?.value !== "";
 
           return (
-            <div key={q.id} className={`border rounded-xl p-3 transition-colors ${
-              correct === true ? "border-teal/30 bg-teal/5" :
-              correct === false ? "border-magenta/30 bg-magenta/5" :
-              "border-ink/10 bg-white"
-            }`}>
+            <div key={q.id} ref={(el) => { qRefs.current[q.id] = el; }}
+              id={`q-${q.id}`}
+              className={`border rounded-xl p-3 transition-colors scroll-mt-20 ${
+                activeQ === q.id ? "ring-2 ring-navy/30 border-navy/30" :
+                correct === true ? "border-teal/30 bg-teal/5" :
+                correct === false ? "border-magenta/30 bg-magenta/5" :
+                "border-ink/10 bg-white"
+              }`}
+              onClick={() => setActiveQ(q.id)}
+            >
               <div className="flex items-start justify-between gap-2 mb-1.5">
                 <span className="text-xs font-bold text-navy flex items-center gap-1.5">
                   <span className="w-5 h-5 shrink-0 flex items-center justify-center rounded-full bg-navy/10 text-[0.6rem] font-black">
@@ -407,7 +444,6 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
                   )}
                 </div>
 
-                {/* نشان دادن گزینه صحیح اگر غلط جواب داده */}
                 {correct === false && q.correct_answer && (
                   <span className="text-[0.6rem] font-bold text-teal-text bg-teal/10 px-2 py-0.5 rounded-full shrink-0">
                     پاسخ صحیح: {Array.isArray(q.correct_answer) ? q.correct_answer.join("، ") : String(q.correct_answer)}
