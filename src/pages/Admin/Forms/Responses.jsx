@@ -19,6 +19,15 @@ import {
 import { QUESTION_TYPES } from "../../../lib/questionTypes";
 import { isCorrectAnswer, calculateScore, hasScoring } from "../../../lib/scoring";
 import {
+  getInvalidRecords,
+  getMemberLevelReport,
+  getFrequencyReport,
+  getPivotTable,
+  getUnionReport,
+  getAvailableLevels,
+  formatOptionsForExport,
+} from "../../../lib/analytics";
+import {
   Eye,
   Download,
   ArrowLeft,
@@ -38,6 +47,9 @@ import {
   Users,
   Calendar,
   Zap,
+  Layers,
+  AlertTriangle,
+  Filter,
 } from "lucide-react";
 import SEO from "../../../components/ui/SEO";
 import {
@@ -789,6 +801,7 @@ export default function Responses() {
         {[
           { key: "list", label: `پاسخ‌ها (${filtered.length})` },
           { key: "analysis", label: "تحلیل سوال‌ها" },
+          { key: "group", label: "آنالیتیکس گروهی" },
           { key: "trend", label: "روندها" },
         ].map((t) => (
           <button
@@ -924,6 +937,11 @@ export default function Responses() {
         </div>
       )}
 
+      {/* تب آنالیتیکس گروهی */}
+      {tab === "group" && (
+        <GroupAnalytics questions={questions} answers={answers} responses={responses} form={form} />
+      )}
+
       {/* تب روندها */}
       {tab === "trend" && (
         <div className="flex flex-col gap-4">
@@ -1000,6 +1018,476 @@ export default function Responses() {
             </StickerCard>
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════
+// آنالیتیکس گروهی فیلد چندانتخابی (اسپک multi-select analytics)
+// سه خروجی: سطح عضو (خام) / فراوانی + Pivot / اجتماع — بر اساس
+// سطح‌های شناسه‌ی تعریف‌شده در form.identifier_mapping
+// ════════════════════════════════════════════════════════════════
+function GroupAnalytics({ questions, answers, responses, form }) {
+  const multiQs = useMemo(
+    () => questions.filter((q) => q.type === "choice" && (q.max_selections ?? 1) > 1),
+    [questions]
+  );
+
+  const identifierMapping = useMemo(() => {
+    const raw = form?.identifier_mapping;
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .filter((m) => m && m.field_id)
+      .map((m, i) => ({
+        level: m.level ?? i + 1,
+        field_id: m.field_id,
+        label:
+          m.label ||
+          questions.find((q) => q.id === m.field_id)?.title ||
+          `سطح ${m.level ?? i + 1}`,
+      }))
+      .sort((a, b) => a.level - b.level);
+  }, [form, questions]);
+
+  const [fieldId, setFieldId] = useState(null);
+  const [groupByLevel, setGroupByLevel] = useState(null);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [subTab, setSubTab] = useState("members"); // members | frequency | union | invalid
+  const [pivotMode, setPivotMode] = useState(true);
+  const [showInvalidOnly, setShowInvalidOnly] = useState(false);
+
+  const activeFieldId = fieldId ?? multiQs[0]?.id ?? null;
+  const activeField = multiQs.find((q) => q.id === activeFieldId) ?? null;
+  const activeLevel = groupByLevel ?? identifierMapping[identifierMapping.length - 1]?.level ?? null;
+
+  // ─── فیلتر بازه زمانی (برای همه‌ی خروجی‌ها) ───
+  const filteredResponseIds = useMemo(() => {
+    const set = new Set();
+    for (const r of responses) {
+      const d = r.submitted_at || r.created_at;
+      if (!d) { set.add(r.id); continue; }
+      if (dateFrom && new Date(d) < new Date(`${dateFrom}T00:00:00`)) continue;
+      if (dateTo && new Date(d) > new Date(`${dateTo}T23:59:59`)) continue;
+      set.add(r.id);
+    }
+    return set;
+  }, [responses, dateFrom, dateTo]);
+
+  const scopedAnswers = useMemo(
+    () => answers.filter((a) => filteredResponseIds.has(a.response_id)),
+    [answers, filteredResponseIds]
+  );
+  const scopedResponses = useMemo(
+    () => responses.filter((r) => filteredResponseIds.has(r.id)),
+    [responses, filteredResponseIds]
+  );
+
+  // ─── پرچم رکوردهای نامعتبر (selected_count > max_selectable) ───
+  const invalidRecords = useMemo(
+    () => getInvalidRecords(questions, scopedAnswers, scopedResponses),
+    [questions, scopedAnswers, scopedResponses]
+  );
+  const invalidResponseIds = useMemo(
+    () => new Set(invalidRecords.map((r) => r.response_id)),
+    [invalidRecords]
+  );
+
+  // ─── خروجی سطح ۱: Member-level ───
+  const memberRows = useMemo(
+    () =>
+      getMemberLevelReport({
+        questions,
+        answers: scopedAnswers,
+        responses: scopedResponses,
+        identifierMapping,
+        multiSelectFieldId: activeFieldId,
+      }),
+    [questions, scopedAnswers, scopedResponses, identifierMapping, activeFieldId]
+  );
+
+  // ردیف‌های سالم برای تجمیع (نامعتبرها پرچم می‌خورند، در تجمیع وارد نمی‌شوند)
+  const validMemberRows = useMemo(
+    () => memberRows.filter((r) => !invalidResponseIds.has(r.response_id)),
+    [memberRows, invalidResponseIds]
+  );
+
+  const frequencyRows = useMemo(
+    () => (activeLevel ? getFrequencyReport(validMemberRows, activeLevel, identifierMapping) : []),
+    [validMemberRows, activeLevel, identifierMapping]
+  );
+  const pivotRows = useMemo(
+    () => getPivotTable(frequencyRows),
+    [frequencyRows]
+  );
+  const unionRows = useMemo(
+    () => (activeLevel ? getUnionReport(validMemberRows, activeLevel, identifierMapping) : []),
+    [validMemberRows, activeLevel, identifierMapping]
+  );
+
+  function exportCurrentView() {
+    if (!activeField) return;
+    const slug = form?.slug ?? "form";
+    const fname = `${slug}-group-analytics`;
+    if (subTab === "members") {
+      const header = [
+        "زمان ثبت",
+        ...identifierMapping.map((m) => m.label),
+        "گزینه‌های انتخاب‌شده",
+        "تعداد انتخاب",
+        "حد مجاز",
+        "وضعیت",
+      ];
+      const rows = memberRows.map((r) => [
+        faDateTime(r.submitted_at),
+        ...r.identifiers.map((id) => id.value),
+        formatOptionsForExport(r.selected_options),
+        r.selected_count,
+        r.max_selectable,
+        r.is_invalid ? "نامعتبر" : "معتبر",
+      ]);
+      downloadCsv(`${fname}-members.csv`, [header, ...rows]);
+    } else if (subTab === "frequency") {
+      if (pivotMode) {
+        const header = [identifierMapping.find((m) => m.level === activeLevel)?.label ?? "گروه", ...Object.keys(pivotRows[0] ?? {}).filter((k) => k !== "level_value")];
+        const rows = pivotRows.map((p) => [p.level_value, ...Object.keys(p).filter((k) => k !== "level_value").map((k) => p[k])]);
+        downloadCsv(`${fname}-frequency-pivot.csv`, [header, ...rows]);
+      } else {
+        const header = [identifierMapping.find((m) => m.level === activeLevel)?.label ?? "گروه", "گزینه", "تعداد"];
+        const rows = frequencyRows.map((f) => [f.level_value, f.option_id, f.vote_count]);
+        downloadCsv(`${fname}-frequency.csv`, [header, ...rows]);
+      }
+    } else if (subTab === "union") {
+      const header = [identifierMapping.find((m) => m.level === activeLevel)?.label ?? "گروه", "گزینه‌های یکتا", "تعداد گزینه یکتا"];
+      const rows = unionRows.map((u) => [u.level_value, formatOptionsForExport(u.selected_options_union), u.count]);
+      downloadCsv(`${fname}-union.csv`, [header, ...rows]);
+    } else if (subTab === "invalid") {
+      const header = ["سوال", "گزینه‌های انتخاب‌شده", "تعداد", "حد مجاز", "دلیل"];
+      const rows = invalidRecords.map((r) => [r.question_title, formatOptionsForExport(r.selected_options), r.selected_count, r.max_selectable, r.reason]);
+      downloadCsv(`${fname}-invalid.csv`, [header, ...rows]);
+    }
+  }
+
+  // ─── گارد: فیلد چندانتخابی نداریم ───
+  if (multiQs.length === 0) {
+    return (
+      <EmptyState
+        icon={<Layers size={48} />}
+        title="سوال چندانتخابی ندارد!"
+        subtitle="برای آنالیتیکس گروهی، حداقل یک سوال چندگزینه‌ای با «تعداد انتخاب مجاز» بیشتر از ۱ لازم است."
+      />
+    );
+  }
+
+  // ─── گارد: نگاشت شناسه تعریف نشده ───
+  if (identifierMapping.length === 0) {
+    return (
+      <EmptyState
+        icon={<Users size={48} />}
+        title="شناسه‌های گروه‌بندی تعریف نشده!"
+        subtitle="در فرم‌ساز → تنظیمات فرم → «شناسه‌های آنالیتیکس»، فیلدهای متنی (مثل نام فرد و نام تیم) را به سطح اختصاص بده."
+        action={<Button as={Link} to={`/admin/forms/${form?.id}`} variant="indigo" size="sm">رفتن به فرم‌ساز</Button>}
+      />
+    );
+  }
+
+  const memberViewRows = showInvalidOnly
+    ? memberRows.filter((r) => invalidResponseIds.has(r.response_id))
+    : memberRows;
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* ─── نوار فیلترها ─── */}
+      <div className="flex flex-wrap items-center gap-2">
+        {multiQs.length > 1 && (
+          <select
+            value={activeFieldId ?? ""}
+            onChange={(e) => setFieldId(e.target.value)}
+            className="text-xs font-bold rounded-lg border-2 border-ink/15 bg-white text-ink/70 px-2.5 py-2 cursor-pointer focus:outline-none focus:border-teal"
+          >
+            {multiQs.map((q) => (
+              <option key={q.id} value={q.id}>{q.title.slice(0, 30)}</option>
+            ))}
+          </select>
+        )}
+        <select
+          value={activeLevel ?? ""}
+          onChange={(e) => setGroupByLevel(Number(e.target.value))}
+          className="text-xs font-bold rounded-lg border-2 border-ink/15 bg-white text-ink/70 px-2.5 py-2 cursor-pointer focus:outline-none focus:border-teal"
+        >
+          {identifierMapping.map((m) => (
+            <option key={m.level} value={m.level}>گروه‌بندی: {m.label}</option>
+          ))}
+        </select>
+        <label className="flex items-center gap-1.5 text-xs font-bold text-ink/60 bg-white border-2 border-ink/15 rounded-lg px-2.5 py-1.5">
+          از
+          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="text-xs font-semibold text-navy bg-transparent focus:outline-none" />
+        </label>
+        <label className="flex items-center gap-1.5 text-xs font-bold text-ink/60 bg-white border-2 border-ink/15 rounded-lg px-2.5 py-1.5">
+          تا
+          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="text-xs font-semibold text-navy bg-transparent focus:outline-none" />
+        </label>
+        {(dateFrom || dateTo) && (
+          <button
+            onClick={() => { setDateFrom(""); setDateTo(""); }}
+            className="text-xs font-bold text-magenta-text bg-magenta/10 border border-magenta/20 rounded-lg px-3 py-2 hover:bg-magenta/20 transition-colors"
+          >
+            پاک کردن بازه ✕
+          </button>
+        )}
+        <Button variant="ghost" size="sm" onClick={exportCurrentView} className="mr-auto">
+          <Download size={14} /> خروجی CSV
+        </Button>
+      </div>
+
+      {/* ─── کارت‌های خلاصه ─── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+        <SummaryCard icon={MessagesSquare} label="کل رکوردها" value={faNum(memberRows.length)} color="indigo" />
+        <SummaryCard
+          icon={AlertTriangle}
+          label="نامعتبر (بیش از حد مجاز)"
+          value={faNum(invalidRecords.length)}
+          color={invalidRecords.length ? "amber" : "emerald"}
+        />
+        <SummaryCard icon={Users} label={`گروه‌های ${identifierMapping.find((m) => m.level === activeLevel)?.label ?? "—"}`} value={faNum(pivotRows.length)} color="violet" />
+        <SummaryCard icon={Target} label="حد مجاز هر پاسخ" value={faNum(activeField?.max_selections ?? 1)} color="emerald" />
+      </div>
+
+      {/* ─── زیر تب‌ها ─── */}
+      <div className="flex flex-wrap gap-1 bg-bg-neutral rounded-lg p-1 w-fit">
+        {[
+          { key: "members", label: "سطح عضو" },
+          { key: "frequency", label: "فراوانی" },
+          { key: "union", label: "اجتماع انتخاب‌ها" },
+          { key: "invalid", label: `نامعتبرها${invalidRecords.length ? ` (${invalidRecords.length})` : ""}` },
+        ].map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setSubTab(t.key)}
+            className={`px-3.5 py-1.5 rounded-md text-sm font-bold transition-colors ${
+              subTab === t.key ? "bg-white text-teal-text shadow-sm" : "text-ink/50 hover:text-ink"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ─── تب سطح عضو (خام) ─── */}
+      {subTab === "members" && (
+        <div className="flex flex-col gap-2">
+          <label className="flex items-center gap-2 text-xs font-bold text-ink/60 cursor-pointer w-fit">
+            <input type="checkbox" checked={showInvalidOnly} onChange={(e) => setShowInvalidOnly(e.target.checked)} className="accent-teal w-4 h-4" />
+            فقط نامعتبرها
+          </label>
+          {memberViewRows.length === 0 ? (
+            <EmptyState icon={<Inbox size={40} />} title="رکوردی در این بازه نیست." />
+          ) : (
+            <StickerCard theme="white">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs sm:text-sm">
+                  <thead>
+                    <tr className="text-navy border-b-2 border-ink/10">
+                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">#</th>
+                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">زمان</th>
+                      {identifierMapping.map((m) => (
+                        <th key={m.level} className="text-right font-extrabold text-ink/70 px-3 py-2">{m.label}</th>
+                      ))}
+                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">انتخاب‌ها</th>
+                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">تعداد</th>
+                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">وضعیت</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {memberViewRows.map((r, i) => (
+                      <tr key={`${r.response_id}-${r.field_id}`} className={`border-b border-ink/5 last:border-0 ${r.is_invalid ? "bg-magenta/5" : ""}`}>
+                        <td className="px-3 py-2 font-mono text-ink/40 text-[0.65rem]">{faNum(i + 1)}</td>
+                        <td className="px-3 py-2 text-ink/60 text-xs whitespace-nowrap">{faDateTime(r.submitted_at)}</td>
+                        {r.identifiers.map((id) => (
+                          <td key={id.level} className="px-3 py-2 font-bold text-navy">{id.value}</td>
+                        ))}
+                        <td className="px-3 py-2 text-ink/70">{formatOptionsForExport(r.selected_options)}</td>
+                        <td className="px-3 py-2 font-black text-navy">{faNum(r.selected_count)}</td>
+                        <td className="px-3 py-2">
+                          {r.is_invalid ? (
+                            <span className="inline-flex items-center gap-0.5 text-[0.65rem] font-semibold text-magenta-text bg-magenta/10 px-1.5 py-0.5 rounded-full">
+                              <AlertTriangle size={10} /> نامعتبر
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-0.5 text-[0.65rem] font-semibold text-teal-text bg-bg-mint px-1.5 py-0.5 rounded-full">
+                              <CheckCircle2 size={10} /> معتبر
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </StickerCard>
+          )}
+        </div>
+      )}
+
+      {/* ─── تب فراوانی (Frequency + Pivot) ─── */}
+      {subTab === "frequency" && (
+        <div className="flex flex-col gap-3">
+          <label className="flex items-center gap-2 text-xs font-bold text-ink/60 cursor-pointer w-fit">
+            <input type="checkbox" checked={pivotMode} onChange={(e) => setPivotMode(e.target.checked)} className="accent-teal w-4 h-4" />
+            نمایش جدول محوری (Pivot)
+          </label>
+          {frequencyRows.length === 0 ? (
+            <EmptyState icon={<BarChart2 size={40} />} title="داده‌ای برای تجمیع نیست." />
+          ) : pivotMode ? (
+            <StickerCard theme="white">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs sm:text-sm">
+                  <thead>
+                    <tr className="text-navy border-b-2 border-ink/10">
+                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">
+                        {identifierMapping.find((m) => m.level === activeLevel)?.label ?? "گروه"}
+                      </th>
+                      {Object.keys(pivotRows[0] ?? {}).filter((k) => k !== "level_value").map((opt) => (
+                        <th key={opt} className="text-center font-extrabold text-ink/70 px-3 py-2">{opt}</th>
+                      ))}
+                      <th className="text-center font-extrabold text-navy px-3 py-2 bg-bg-lavender/50">جمع</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pivotRows.map((p, i) => {
+                      const opts = Object.keys(p).filter((k) => k !== "level_value");
+                      const sum = opts.reduce((acc, k) => acc + (p[k] || 0), 0);
+                      const maxVal = Math.max(...opts.map((k) => p[k] || 0), 0);
+                      return (
+                        <tr key={i} className="border-b border-ink/5 last:border-0">
+                          <td className="px-3 py-2 font-bold text-navy whitespace-nowrap">{p.level_value}</td>
+                          {opts.map((opt) => (
+                            <td key={opt} className={`px-3 py-2 text-center font-bold ${p[opt] ? (p[opt] === maxVal ? "text-teal-text" : "text-navy") : "text-ink/25"}`}>
+                              {faNum(p[opt] || 0)}
+                            </td>
+                          ))}
+                          <td className="px-3 py-2 text-center font-black text-navy bg-bg-lavender/30">{faNum(sum)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </StickerCard>
+          ) : (
+            <StickerCard theme="white">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs sm:text-sm">
+                  <thead>
+                    <tr className="text-navy border-b-2 border-ink/10">
+                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">{identifierMapping.find((m) => m.level === activeLevel)?.label ?? "گروه"}</th>
+                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">گزینه</th>
+                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">تعداد</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {frequencyRows.map((f, i) => (
+                      <tr key={i} className={`border-b border-ink/5 last:border-0 ${f.vote_count > 0 ? "" : "opacity-40"}`}>
+                        <td className="px-3 py-2 font-bold text-navy">{f.level_value}</td>
+                        <td className="px-3 py-2 text-ink/70">{f.option_id}</td>
+                        <td className="px-3 py-2 font-black text-navy">{faNum(f.vote_count)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </StickerCard>
+          )}
+
+          {/* نمودار میله‌ای فراوانی per گروه */}
+          {pivotRows.length > 0 && (
+            <div className="bg-white rounded-xl border border-ink/10 p-4">
+              <h4 className="text-sm font-black text-navy mb-3 flex items-center gap-2">
+                <BarChart2 size={16} /> فراوانی گزینه‌ها به تفکیک {identifierMapping.find((m) => m.level === activeLevel)?.label}
+              </h4>
+              <ResponsiveContainer width="100%" height={Math.max(160, pivotRows.length * 46 + 40)}>
+                <BarChart data={pivotRows.map((p) => {
+                  const row = { name: p.level_value };
+                  for (const [k, v] of Object.entries(p)) { if (k !== "level_value") row[k] = v; }
+                  return row;
+                })} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} />
+                  <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 11 }} />
+                  <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  {Object.keys(pivotRows[0] ?? {}).filter((k) => k !== "level_value").map((opt, i) => (
+                    <Bar key={opt} dataKey={opt} stackId="a" fill={CHART_COLORS[i % CHART_COLORS.length]} radius={i === Object.keys(pivotRows[0]).length - 2 ? [0, 4, 4, 0] : undefined} />
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── تب اجتماع (Union) ─── */}
+      {subTab === "union" && (
+        unionRows.length === 0 ? (
+          <EmptyState icon={<Layers size={40} />} title="داده‌ای برای تجمیع نیست." />
+        ) : (
+          <div className="grid md:grid-cols-2 gap-3">
+            {unionRows.map((u, i) => (
+              <div key={i} className="bg-white rounded-xl border-2 border-ink/10 p-4 rotate-[0.2deg]">
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <h4 className="text-sm font-black text-navy truncate">{u.level_value}</h4>
+                  <Badge color="teal" rotate="0">{faNum(u.count)} گزینه یکتا</Badge>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {u.selected_options_union.map((opt) => (
+                    <span key={opt} className="text-[0.7rem] font-bold text-navy bg-bg-lavender/60 border border-navy/10 rounded-pill-sm px-2 py-1">
+                      {opt}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      )}
+
+      {/* ─── تب نامعتبرها ─── */}
+      {subTab === "invalid" && (
+        invalidRecords.length === 0 ? (
+          <EmptyState
+            icon={<CheckCircle2 size={40} />}
+            title="رکورد نامعتبری نیست! ✨"
+            subtitle="همه‌ی پاسخ‌ها در حد مجاز انتخاب داشته‌اند. (پاسخ‌های جدیدی که بیش از حد مجاز تیک بخورند، در دیتابیس رد می‌شوند و اصلاً ثبت نمی‌شوند)"
+          />
+        ) : (
+          <StickerCard theme="white">
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs sm:text-sm">
+                <thead>
+                  <tr className="text-navy border-b-2 border-ink/10">
+                    <th className="text-right font-extrabold text-ink/70 px-3 py-2">#</th>
+                    <th className="text-right font-extrabold text-ink/70 px-3 py-2">سوال</th>
+                    <th className="text-right font-extrabold text-ink/70 px-3 py-2">انتخاب‌ها</th>
+                    <th className="text-right font-extrabold text-ink/70 px-3 py-2">تعداد / حد</th>
+                    <th className="text-right font-extrabold text-ink/70 px-3 py-2">دلیل</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invalidRecords.map((r, i) => (
+                    <tr key={`${r.response_id}-${r.question_id}-${i}`} className="border-b border-ink/5 last:border-0 bg-magenta/5">
+                      <td className="px-3 py-2 font-mono text-ink/40 text-[0.65rem]">{faNum(i + 1)}</td>
+                      <td className="px-3 py-2 font-bold text-navy">{r.question_title}</td>
+                      <td className="px-3 py-2 text-ink/70">{formatOptionsForExport(r.selected_options)}</td>
+                      <td className="px-3 py-2 font-black text-magenta-text whitespace-nowrap">{faNum(r.selected_count)} / {faNum(r.max_selectable)}</td>
+                      <td className="px-3 py-2 text-ink/60 text-xs">{r.reason}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </StickerCard>
+        )
       )}
     </div>
   );

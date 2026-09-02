@@ -795,6 +795,7 @@ export default function FormBuilder() {
         exit_message: form.exit_message,
         published: form.published,
         form_type: form.form_type || "step_by_step",
+        identifier_mapping: form.identifier_mapping ?? null,
       };
       const pQuestions = questions.map((q, i) => ({
         id: q.id ?? null,
@@ -983,6 +984,57 @@ export default function FormBuilder() {
                     </button>
                   ))}
                 </div>
+              </Field>
+            </div>
+
+            {/* ─── شناسه‌های گروه‌بندی برای آنالیتیکس چندانتخابی ─── */}
+            <div className="border-t-2 border-dashed border-navy/15 pt-4">
+              <Field
+                label={<><BarChart3 size={14} /> شناسه‌های آنالیتیکس (گروه‌بندی گزارش چندانتخابی)</>}
+                hint="فیلدهای متنی که نقش «شناسه» دارند — مثل نام فرد (سطح ۱) و نام تیم (سطح ۲). گزارش تحلیل سوال‌های چندانتخابی به تفکیک همین سطح‌ها ساخته می‌شود. خالی بگذار = گزارش گروهی غیرفعال."
+              >
+                {questions.filter((q) => ["short_text", "long_text", "email", "phone_ir", "telegram_id"].includes(q.type)).length === 0 ? (
+                  <span className="text-xs font-bold text-ink/40 bg-bg-neutral rounded-pill-md px-3 py-2 block">
+                    اول یک فیلد متنی به فرم اضافه کن؛ بعد اینجا به‌عنوان شناسه انتخابش می‌کنی.
+                  </span>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {questions
+                      .filter((q) => ["short_text", "long_text", "email", "phone_ir", "telegram_id"].includes(q.type))
+                      .map((q) => {
+                        const mapping = Array.isArray(form.identifier_mapping) ? form.identifier_mapping : [];
+                        const current = mapping.find((m) => m.field_id === q.id || m.field_id === q.localId);
+                        const currentLevel = current ? current.level : 0;
+                        const MAX_LEVELS = 3;
+                        return (
+                          <div key={q.localId || q.id} className="flex items-center gap-2 bg-white border-2 border-ink/10 rounded-pill-md px-3 py-2">
+                            <span className="text-xs font-bold text-navy flex-1 truncate">{q.title || "بدون عنوان"}</span>
+                            <select
+                              value={currentLevel}
+                              onChange={(e) => {
+                                const lvl = Number(e.target.value);
+                                let next = mapping.filter((m) => m.field_id !== q.id && m.field_id !== q.localId);
+                                if (lvl > 0) {
+                                  next = next.filter((m) => m.level !== lvl);
+                                  next.push({ level: lvl, field_id: q.id ?? q.localId, label: q.title });
+                                }
+                                next.sort((a, b) => a.level - b.level);
+                                setFormField({ identifier_mapping: next.length ? next : null });
+                              }}
+                              className={`text-xs font-bold rounded-pill-sm border-2 px-2 py-1.5 cursor-pointer focus:outline-none ${
+                                currentLevel > 0 ? "border-teal bg-teal/10 text-teal-text" : "border-ink/15 bg-white text-ink/60"
+                              }`}
+                            >
+                              <option value={0}>— شناسه نیست</option>
+                              {Array.from({ length: MAX_LEVELS }, (_, i) => i + 1).map((lvl) => (
+                                <option key={lvl} value={lvl}>سطح {faNum(lvl)}</option>
+                              ))}
+                            </select>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
               </Field>
             </div>
 
