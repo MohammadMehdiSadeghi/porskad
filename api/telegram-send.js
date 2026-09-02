@@ -110,8 +110,9 @@ export default async function handler(req, res) {
     });
 
     const now = new Date();
-    const timeStr = now.toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" });
-    const dateStr = now.toLocaleDateString("fa-IR", { year: "numeric", month: "2-digit", day: "2-digit" });
+    // ساعت و تاریخ باید به‌وقت ایران باشه (Vercel به‌صورت پیش‌فرض UTC است)
+    const timeStr = now.toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Tehran" });
+    const dateStr = now.toLocaleDateString("fa-IR", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Tehran" });
 
     const lines = [];
     lines.push("━━━━━━━━━━━━━━━━━━");
