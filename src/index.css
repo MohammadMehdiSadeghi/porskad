@@ -108,6 +108,15 @@ html {
     animation: spin 1s linear infinite;
 }
 
+/* ─── انیمیشن slide-up برای Undo Toast ─── */
+@keyframes slide-up {
+    from { transform: translate(-50%, 20px); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+}
+.animate-slide-up {
+    animation: slide-up 0.3s ease-out;
+}
+
 /* ─── Desktop: text sizes ─── */
 @media (min-width: 768px) {
     .text-xs { font-size: 10px; line-height: 16px; }

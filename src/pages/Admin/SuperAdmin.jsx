@@ -181,21 +181,8 @@ export default function SuperAdmin() {
     }
   }
 
-  // ─── Users ───
-  async function loadUsers() {
-    try {
-      const { data: profiles } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
-      const { data: roles } = await supabase.from("user_roles").select("user_id, role_id, active");
-      const { data: perms } = await supabase.from("user_permissions").select("user_id, permission_id");
-      const roleMap = {}; const permMap = {};
-      (roles || []).forEach((r) => { roleMap[r.user_id] = { role: r.role_id, roleActive: r.active }; });
-      (perms || []).forEach((p) => { if (!permMap[p.user_id]) permMap[p.user_id] = []; permMap[p.user_id].push(p.permission_id); });
-      setUsers((profiles || []).map((p) => ({ ...p, ...(roleMap[p.id] || {}), permissions: permMap[p.id] || [] })));
-    } catch (err) { console.error(err); }
-  }
-
-  // ─── Admins ───
-  async function loadAdmins() {
+  // ─── Users + Admins (shared fetch) ───
+  async function loadUsersAndAdmins() {
     try {
       const { data: profiles } = await supabase.from("profiles").select("*").order("created_at");
       const { data: roles } = await supabase.from("user_roles").select("user_id, role_id, active");
@@ -203,9 +190,13 @@ export default function SuperAdmin() {
       const roleMap = {}; const permMap = {};
       (roles || []).forEach((r) => { roleMap[r.user_id] = { role: r.role_id, roleActive: r.active }; });
       (perms || []).forEach((p) => { if (!permMap[p.user_id]) permMap[p.user_id] = []; permMap[p.user_id].push(p.permission_id); });
-      setAdmins((profiles || []).map((p) => ({ ...p, ...(roleMap[p.id] || {}), permissions: permMap[p.id] || [] })));
+      const merged = (profiles || []).map((p) => ({ ...p, ...(roleMap[p.id] || {}), permissions: permMap[p.id] || [] }));
+      setUsers([...merged].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+      setAdmins([...merged].sort((a, b) => new Date(a.created_at) - new Date(b.created_at)));
     } catch (err) { console.error(err); }
   }
+  const loadUsers = loadUsersAndAdmins;
+  const loadAdmins = loadUsersAndAdmins;
 
   // ─── Activity Log ───
   async function loadActivity() {
@@ -296,6 +287,7 @@ export default function SuperAdmin() {
   // ─── Reset Password ───
   async function doResetPassword() {
     if (!resetPasswordModal || !newPassword.trim()) return;
+    if (!confirm(`آیا رمز عبور ${resetPasswordModal.email} تغییر کند؟`)) return;
     try {
       await adminAction("reset_password", {
         target_user_id: resetPasswordModal.id,
@@ -633,7 +625,7 @@ export default function SuperAdmin() {
               </div>
               {!a.is_owner && (
                 <div className="sa-perms">
-                  {["create_form", "edit_form", "delete_form", "publish_form", "view_responses", "view_analytics", "export_excel", "manage_managers", "manage_sms", "manage_telegram"].map((perm) => {
+                  {["create_form", "edit_form", "delete_form", "publish_form", "view_responses", "view_analytics", "export_excel", "manage_managers", "manage_sms", "manage_telegram", "view_admins"].map((perm) => {
                     const has = a.permissions?.includes(perm);
                     return (
                       <button key={perm} onClick={() => toggleAdminPermission(a.id, perm, a.permissions || [])} className={`sa-perm ${has ? 'active' : 'inactive'}`}>
@@ -886,7 +878,7 @@ export default function SuperAdmin() {
                 </div>
                 <button type="button" className="sa-btn sa-btn-danger" onClick={async () => {
                   if (!newPassword.trim() || newPassword.trim().length < 6) { showToast("Password must be at least 6 chars", "error"); return; }
-                  if (!confirm(`Reset password for ${detailModal.email}?`)) return;
+                  if (!confirm(`آیا رمز عبور ${detailModal.email} تغییر کند؟`)) return;
                   try {
                     await adminAction("reset_password", {
                       target_user_id: detailModal.id,
@@ -954,12 +946,16 @@ export default function SuperAdmin() {
                 <div style={{ marginTop: '0.5rem' }}>
                   <button
                     onClick={async () => {
+                      if (detailModal.is_owner) { showToast("Cannot deactivate owner", "error"); return; }
+                      const newActive = !detailModal.is_active;
                       try {
-                        const { error } = await supabase.from("profiles").update({ is_active: !detailModal.is_active }).eq("id", detailModal.id);
-                        if (error) throw error;
-                        showToast(detailModal.is_active ? 'Deactivated' : 'Activated');
-                        setDetailModal({ ...detailModal, is_active: !detailModal.is_active });
-                        loadUsers();
+                        const { error: profErr } = await supabase.from("profiles").update({ is_active: newActive }).eq("id", detailModal.id);
+                        if (profErr) throw profErr;
+                        const { error: roleErr } = await supabase.from("user_roles").update({ active: newActive }).eq("user_id", detailModal.id);
+                        if (roleErr) throw roleErr;
+                        showToast(newActive ? 'Activated' : 'Deactivated');
+                        setDetailModal({ ...detailModal, is_active: newActive });
+                        loadUsers(); loadAdmins();
                       } catch (err) { showToast("Error: " + err.message, "error"); }
                     }}
                     className={`sa-btn ${detailModal.is_active ? 'sa-btn-danger' : 'sa-btn-primary'}`}>

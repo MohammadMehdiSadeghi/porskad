@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabaseClient";
 import StickerCard from "../../../components/ui/StickerCard";
@@ -10,11 +10,8 @@ import Modal from "../../../components/ui/Modal";
 import { useToast } from "../../../components/ui/Toast";
 import { useAuth } from "../../../context/AuthContext";
 import { copyToClipboard, randomSlug } from "../../../lib/utils";
-import { FileText, Plus, AlignLeft, ClipboardList } from "lucide-react";
+import { FileText, Plus, AlignLeft, ClipboardList, Undo2, Trash2 } from "lucide-react";
 import SEO from "../../../components/ui/SEO";
-
-// ─── تمپلیت فرم ثبت‌نامی ───
-// فرم ثبت‌نامی بدون فیلدهای پیش‌فرض — ادمین خودش فیلدها رو اضافه می‌کنه
 
 const FORM_TYPES = [
   {
@@ -35,6 +32,53 @@ const FORM_TYPES = [
   },
 ];
 
+// ─── کامپوننت نوتیفیکیشن Undo ───
+function UndoToast({ message, onUndo, onDismiss, duration = 6000 }) {
+  const [progress, setProgress] = useState(100);
+  const timerRef = useRef(null);
+  const startTime = useRef(Date.now());
+
+  useEffect(() => {
+    const tick = () => {
+      const elapsed = Date.now() - startTime.current;
+      const remaining = Math.max(0, 100 - (elapsed / duration) * 100);
+      setProgress(remaining);
+      if (remaining > 0) {
+        timerRef.current = requestAnimationFrame(tick);
+      } else {
+        onDismiss();
+      }
+    };
+    timerRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (timerRef.current) cancelAnimationFrame(timerRef.current);
+    };
+  }, [duration, onDismiss]);
+
+  return (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-slide-up">
+      <div className="bg-navy text-white rounded-pill-md px-4 py-3 shadow-2xl flex items-center gap-3 min-w-[300px]">
+        <Trash2 size={16} className="shrink-0 text-magenta" />
+        <span className="text-sm font-bold flex-1">{message}</span>
+        <button
+          onClick={() => { cancelAnimationFrame(timerRef.current); onUndo(); }}
+          className="flex items-center gap-1 bg-white/20 hover:bg-white/30 rounded-pill-sm px-3 py-1.5 text-xs font-bold text-teal transition-colors shrink-0"
+        >
+          <Undo2 size={12} />
+          بازگردانی
+        </button>
+        {/* Progress bar */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10 rounded-b-pill-md overflow-hidden">
+          <div
+            className="h-full bg-teal transition-none rounded-b-pill-md"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function FormsList() {
   const { push } = useToast();
   const { hasPermission, canManage, user } = useAuth();
@@ -47,6 +91,10 @@ export default function FormsList() {
   const [deleting, setDeleting] = useState(null);
   const [busy, setBusy] = useState(false);
   const [showTypeModal, setShowTypeModal] = useState(false);
+
+  // ─── Undo state ───
+  const [undoToast, setUndoToast] = useState(null);
+  const undoTimerRef = useRef(null);
 
   async function load() {
     setLoading(true);
@@ -109,7 +157,7 @@ export default function FormsList() {
       return;
     }
     push(form.published ? "فرم از انتشار خارج شد" : "فرم منتشر شد!");
-    setForms((fs) => fs.map((f) => (f.id === form.id ? { ...f, published: !f.published } : f)));
+    setForms((fs) => fs.map((f) => (f.id === form.id ? { ...f, published: !form.published } : f)));
   }
 
   async function duplicate(form) {
@@ -155,6 +203,7 @@ export default function FormsList() {
     push(ok ? "لینک فرم کپی شد!" : `لینک: ${url}`, ok ? "success" : "info");
   }
 
+  // ─── حذف نرم (سطل زباله) ───
   async function confirmDelete() {
     if (!deleting) return;
     if (!hasPermission("delete_form")) {
@@ -162,23 +211,57 @@ export default function FormsList() {
       setDeleting(null);
       return;
     }
-    const { error } = await supabase.from("forms").delete().eq("id", deleting.id);
+    const formToDelete = deleting;
+    const { error } = await supabase.from("forms").update({ deleted_at: new Date().toISOString() }).eq("id", formToDelete.id);
     setDeleting(null);
     if (error) {
       push("حذف ناموفق بود", "error");
       return;
     }
-    push("فرم و همه‌ی پاسخ‌هایش حذف شد");
+
+    // حذف از لیست
+    setForms((fs) => fs.filter((f) => f.id !== formToDelete.id));
+
+    // نمایش Undo toast به مدت ۶ ثانیه
+    setUndoToast(formToDelete);
+
+    // ذخیره تایمر برای حذف دائمی بعد از ۶ ثانیه
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    undoTimerRef.current = setTimeout(() => {
+      setUndoToast(null);
+    }, 6000);
+  }
+
+  // ─── بازگردانی از سطل زباله ───
+  async function restoreForm(form) {
+    const { error } = await supabase.from("forms").update({ deleted_at: null }).eq("id", form.id);
+    if (error) {
+      push("بازیابی ناموفق بود", "error");
+      return;
+    }
+    push("فرم بازیابی شد");
     load();
   }
 
+  // ─── حذف دائمی ───
+  async function permanentDelete(form) {
+    if (!confirm(`حذف دائمی فرم «${form.title}»؟ این عمل غیرقابل بازگشت است.`)) return;
+    const { error } = await supabase.from("forms").delete().eq("id", form.id);
+    if (error) {
+      push("حذف ناموفق بود", "error");
+      return;
+    }
+    push("فرم برای همیشه حذف شد");
+    load();
+  }
+
+  // ─── آرشیو ───
   async function archiveForm(form) {
     if (!hasPermission("delete_form")) {
       push("شما مجوز آرشیو فرم ندارید.", "error");
       return;
     }
     const update = { archived: !form.archived };
-    // اگه فرم منتشره و آرشیو میشه، غیرفعالش کن
     if (!form.archived && form.published) {
       update.published = false;
     }
@@ -191,20 +274,31 @@ export default function FormsList() {
     setForms((fs) => fs.map((f) => (f.id === form.id ? { ...f, ...update } : f)));
   }
 
+  // ─── فیلتر ───
   const filtered = useMemo(() => {
     let result = forms;
-    if (filter === "archived") result = result.filter((f) => f.archived);
-    else {
-      result = result.filter((f) => !f.archived);
+
+    if (filter === "trash") {
+      // سطل زباله: فقط فرم‌های حذف‌شده
+      result = result.filter((f) => f.deleted_at);
+    } else if (filter === "archived") {
+      result = result.filter((f) => f.archived && !f.deleted_at);
+    } else {
+      // حالت عادی: حذف‌شده‌ها رو نشون نده
+      result = result.filter((f) => !f.deleted_at);
       if (filter === "published") result = result.filter((f) => f.published);
       else if (filter === "draft") result = result.filter((f) => !f.published);
     }
+
     if (search) {
       const s = search.toLowerCase();
       result = result.filter((f) => f.title.toLowerCase().includes(s));
     }
     return result;
   }, [forms, filter, search]);
+
+  // شمارنده سطل زباله
+  const trashCount = useMemo(() => forms.filter((f) => f.deleted_at).length, [forms]);
 
   if (loading) return <Spinner label="فرم‌ها در حال بارگذاری..." />;
 
@@ -218,8 +312,10 @@ export default function FormsList() {
       />
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>           <h1 className="text-xl sm:text-3xl font-black text-navy">فرم‌ها</h1>           <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-1">
-            {forms.length} فرم — برای ویرایش روی هر فرم بزنید
+        <div>
+          <h1 className="text-xl sm:text-3xl font-black text-navy">فرم‌ها</h1>
+          <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-1">
+            {forms.filter((f) => !f.deleted_at).length} فرم — برای ویرایش روی هر فرم بزنید
           </p>
         </div>
         <Button variant="indigo" size="sm" onClick={() => setShowTypeModal(true)} disabled={busy} rotate="-rotate-[1deg]">
@@ -242,13 +338,14 @@ export default function FormsList() {
             { key: "published", label: "منتشر" },
             { key: "draft", label: "پیش‌نویس" },
             { key: "archived", label: "آرشیو" },
+            { key: "trash", label: `سطل زباله${trashCount > 0 ? ` (${trashCount})` : ""}` },
           ].map((f) => (
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
               className={`px-3 py-1.5 text-sm font-bold rounded-pill-sm transition-colors ${
                 filter === f.key
-                  ? "bg-teal text-white"
+                  ? f.key === "trash" ? "bg-magenta text-white" : "bg-teal text-white"
                   : "text-ink-subtle hover:text-ink"
               }`}
             >
@@ -262,19 +359,21 @@ export default function FormsList() {
       {filtered.length === 0 ? (
         <EmptyState
           icon={<FileText size={48} />}
-          title={search ? "فرمی یافت نشد" : "هنوز فرمی نساخته‌ای!"}
-          subtitle={search ? "عبارت جستجو را تغییر دهید." : "با دکمه‌ی «فرم جدید» شروع کن."}
-          action={!search && <Button variant="indigo" size="sm" onClick={() => setShowTypeModal(true)}>+ فرم جدید</Button>}
+          title={search ? "فرمی یافت نشد" : filter === "trash" ? "سطل زباله خالی است" : "هنوز فرمی نساخته‌ای!"}
+          subtitle={search ? "عبارت جستجو را تغییر دهید." : filter === "trash" ? "فرم حذف‌شده‌ای وجود ندارد." : "با دکمه‌ی «فرم جدید» شروع کن."}
+          action={!search && filter !== "trash" && <Button variant="indigo" size="sm" onClick={() => setShowTypeModal(true)}>+ فرم جدید</Button>}
         />
       ) : (
         <div className="grid sm:grid-cols-2 gap-3 lg:gap-5">
           {filtered.map((f, i) => {
             const c = counts[f.id] ?? { total: 0, complete: 0 };
             const isReg = f.form_type === "registration";
+            const isTrashed = filter === "trash";
+
             return (
               <div key={f.id} data-form-card className={i % 2 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"}>
-                <StickerCard theme="white">
-                  <div className="p-5 sm:p-6 flex flex-col gap-3.5">
+                <StickerCard theme={isTrashed ? "orange" : "white"}>
+                  <div className={`p-5 sm:p-6 flex flex-col gap-3.5 ${isTrashed ? "opacity-75" : ""}`}>
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <h3 className="font-black text-navy text-base leading-6 line-clamp-1">{f.title}</h3>
@@ -283,9 +382,10 @@ export default function FormsList() {
                         )}
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        {f.archived && <Badge color="gray">آرشیو</Badge>}
-                        {isReg && !f.archived && <Badge color="orange">ثبت‌نامی</Badge>}
-                        {!f.archived && (f.published ? (
+                        {isTrashed && <Badge color="red">حذف شده</Badge>}
+                        {!isTrashed && f.archived && <Badge color="gray">آرشیو</Badge>}
+                        {!isTrashed && isReg && !f.archived && <Badge color="orange">ثبت‌نامی</Badge>}
+                        {!isTrashed && !f.archived && (f.published ? (
                           <Badge color="green">منتشر</Badge>
                         ) : (
                           <Badge color="gray">پیش‌نویس</Badge>
@@ -293,36 +393,55 @@ export default function FormsList() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 text-sm font-semibold text-ink-subtle">
-                      <span>{c.total} دریافتی</span>
-                      <span>{c.complete} تکمیل</span>
-                      <span className="mr-auto">{new Date(f.created_at).toLocaleDateString("fa-IR")}</span>
-                    </div>
+                    {!isTrashed && (
+                      <div className="flex items-center gap-3 text-sm font-semibold text-ink-subtle">
+                        <span>{c.total} دریافتی</span>
+                        <span>{c.complete} تکمیل</span>
+                        <span className="mr-auto">{new Date(f.created_at).toLocaleDateString("fa-IR")}</span>
+                      </div>
+                    )}
 
+                    {isTrashed && (
+                      <div className="text-xs font-semibold text-ink-subtle">
+                        حذف شده در {new Date(f.deleted_at).toLocaleDateString("fa-IR")}
+                      </div>
+                    )}
+
+                    {/* ─── دکمه‌ها ─── */}
                     <div className="flex flex-wrap gap-2 mt-1">
-                      <Button as={Link} to={`/admin/forms/${f.id}`} variant="glass" size="md" rotate="rotate-[1deg]">ویرایش</Button>
-                      <Button as={Link} to={`/admin/forms/${f.id}/responses`} variant="glass" size="md" rotate="-rotate-[1deg]">پاسخ‌ها</Button>
-                      <Button as={Link} to={`/admin/forms/${f.id}/share`} variant="glass" size="md" rotate="rotate-[1deg]">اشتراک</Button>
-                      {f.published && (
+                      {isTrashed ? (
                         <>
-                          <Button variant="glass" size="md" onClick={() => share(f)} rotate="-rotate-[1deg]">کپی لینک</Button>
-                          <Button as="a" href={`/f/${f.slug}`} target="_blank" variant="glass" size="md" rotate="rotate-[1deg]">مشاهده</Button>
+                          <Button variant="teal" size="md" onClick={() => restoreForm(f)} rotate="rotate-[1deg]">بازیابی</Button>
+                          <Button variant="red" size="md" onClick={() => permanentDelete(f)} rotate="-rotate-[1deg]">حذف دائمی</Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button as={Link} to={`/admin/forms/${f.id}`} variant="glass" size="md" rotate="rotate-[1deg]">ویرایش</Button>
+                          <Button as={Link} to={`/admin/forms/${f.id}/responses`} variant="glass" size="md" rotate="-rotate-[1deg]">پاسخ‌ها</Button>
+                          <Button as={Link} to={`/admin/forms/${f.id}/share`} variant="glass" size="md" rotate="rotate-[1deg]">اشتراک</Button>
+                          {f.published && (
+                            <>
+                              <Button variant="glass" size="md" onClick={() => share(f)} rotate="-rotate-[1deg]">کپی لینک</Button>
+                              <Button as="a" href={`/f/${f.slug}`} target="_blank" variant="glass" size="md" rotate="rotate-[1deg]">مشاهده</Button>
+                            </>
+                          )}
+                          {hasPermission("publish_form") && (
+                            <Button variant="glass" size="md" onClick={() => togglePublish(f)} rotate="-rotate-[1deg]">
+                              {f.published ? "لغو انتشار" : "انتشار"}
+                            </Button>
+                          )}
+                          <Button variant="glass" size="md" onClick={() => duplicate(f)} disabled={busy} rotate="rotate-[1deg]">کپی</Button>
+                          <Button variant="glass" size="md" onClick={() => archiveForm(f)} rotate="-rotate-[1deg]">
+                            {f.archived ? "بازیابی" : "آرشیو"}
+                          </Button>
+                          {hasPermission("delete_form") && (
+                            <Button variant="glass" size="md" className="!text-magenta-text" onClick={() => setDeleting(f)} rotate="rotate-[1deg]">حذف</Button>
+                          )}
                         </>
                       )}
-                      {hasPermission("publish_form") && (                          <Button variant="glass" size="md" onClick={() => togglePublish(f)} rotate="-rotate-[1deg]">
-                          {f.published ? "لغو انتشار" : "انتشار"}
-                        </Button>
-                      )}
-                      <Button variant="glass" size="md" onClick={() => duplicate(f)} disabled={busy} rotate="rotate-[1deg]">کپی</Button>
-                      <Button variant="glass" size="md" onClick={() => archiveForm(f)} rotate="-rotate-[1deg]">
-                        {f.archived ? "بازیابی" : "آرشیو"}
-                      </Button>
-                      {hasPermission("delete_form") && (
-                        <Button variant="glass" size="md" className="!text-magenta-text" onClick={() => setDeleting(f)} rotate="rotate-[1deg]">حذف</Button>
-                      )}
                     </div>
 
-                    {f.published && (
+                    {!isTrashed && f.published && (
                       <span className="text-sm font-mono text-teal-text truncate" dir="ltr">/f/{f.slug}</span>
                     )}
                   </div>
@@ -364,16 +483,32 @@ export default function FormsList() {
       </Modal>
 
       {/* Delete Modal */}
-      <Modal open={!!deleting} onClose={() => setDeleting(null)} title="حذف فرم؟">
+      <Modal open={!!deleting} onClose={() => setDeleting(null)} title="انتقال به سطل زباله؟">
         <p className="text-sm font-semibold text-ink-soft leading-7 mb-5">
-          فرم «<span className="font-black text-magenta-text">{deleting?.title}</span>» و همه‌ی سوال‌ها و پاسخ‌هایش
-          برای همیشه حذف می‌شود. مطمئنید؟
+          فرم «<span className="font-black text-magenta-text">{deleting?.title}</span>» به سطل زباله منتقل می‌شود.
+          می‌توانید بعداً آن را بازیابی یا برای همیشه حذف کنید.
         </p>
         <div className="flex gap-3 justify-end">
           <Button variant="red" size="sm" onClick={confirmDelete}>بله، حذف کن</Button>
           <Button variant="ghost" size="sm" onClick={() => setDeleting(null)}>انصراف</Button>
         </div>
       </Modal>
+
+      {/* ─── Undo Toast ─── */}
+      {undoToast && (
+        <UndoToast
+          message={`«${undoToast.title}» به سطل زباله منتقل شد`}
+          duration={6000}
+          onUndo={async () => {
+            // لغو تایمر حذف دائمی
+            if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+            setUndoToast(null);
+            // بازگردانی فرم
+            await restoreForm(undoToast);
+          }}
+          onDismiss={() => setUndoToast(null)}
+        />
+      )}
     </div>
   );
 }

@@ -68,6 +68,14 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  // ─── Timeout wrapper: جلوگیری از آویزان ماندن فچ‌ها ───
+  function withTimeout(promise, ms = 10000) {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
+    ]);
+  }
+
   const fetchRole = useCallback(async (uid) => {
     if (!supabase || !uid) return null;
     try {
@@ -88,21 +96,26 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const fetchPermissions = useCallback(async (uid) => {
+  const fetchPermissions = useCallback(async (uid, userRole) => {
     if (!supabase || !uid) return [];
     try {
-      // fail-closed: در صورت خطا هیچ مجوزی برنمی‌گردد
       const { data, error } = await supabase.rpc("get_user_permissions", {
         p_user_id: uid,
       });
       if (error) {
         console.error("Error fetching permissions:", error);
-        return [];
+        // Fallback: اگه RPC خطا داد، بر اساس نقش مجوز بده
+        if (userRole === "admin") return [...ALL_PERMISSIONS];
+        return [...DEFAULT_MANAGER_PERMISSIONS];
       }
-      return data?.map((p) => p.permission_id) ?? [];
+      const perms = data?.map((p) => p.permission_id) ?? [];
+      // اگه هیچ مجوزی برنگشت ولی نقش admin هست، fallback بده
+      if (perms.length === 0 && userRole === "admin") return [...ALL_PERMISSIONS];
+      return perms;
     } catch (err) {
       console.error("fetchPermissions error:", err);
-      return [];
+      if (userRole === "admin") return [...ALL_PERMISSIONS];
+      return [...DEFAULT_MANAGER_PERMISSIONS];
     }
   }, []);
 
@@ -119,14 +132,16 @@ export function AuthProvider({ children }) {
       if (newSession?.user) {
         try {
           const uid = newSession.user.id;
-          const [profileData, roleData, permsData] = await Promise.all([
-            fetchProfile(uid),
-            fetchRole(uid),
-            fetchPermissions(uid),
+          const [profileData, roleData] = await Promise.allSettled([
+            withTimeout(fetchProfile(uid), 10000),
+            withTimeout(fetchRole(uid), 10000),
           ]);
+          const pProfile = profileData.status === 'fulfilled' ? profileData.value : null;
+          const pRole = roleData.status === 'fulfilled' ? roleData.value : null;
+          const permsData = await fetchPermissions(uid, pRole);
           setUser({ id: uid, email: newSession.user.email });
-          setProfile(profileData);
-          setRole(roleData);
+          setProfile(pProfile);
+          setRole(pRole);
           setPermissions(permsData);
           setError(null);
         } catch (err) {
