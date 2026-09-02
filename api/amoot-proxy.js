@@ -8,6 +8,25 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+// ─── گرفتن توکن آموت: اول از environment، بعد از جدول sms_settings ───
+async function getAmootToken(supabaseAdmin) {
+  const envToken = process.env.AMOOT_TOKEN;
+  if (envToken) return envToken;
+
+  // fallback به دیتابیس (UI تنظیمات)
+  try {
+    const { data } = await supabaseAdmin
+      .from("sms_settings")
+      .select("amoot_token")
+      .eq("id", 1)
+      .maybeSingle();
+    if (data?.amoot_token) return data.amoot_token;
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
 export default async function handler(req, res) {
   // CORS preflight
   if (req.method === "OPTIONS") {
@@ -26,12 +45,12 @@ export default async function handler(req, res) {
     }
 
     const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseKey) {
       return res.status(500).json({ error: "Supabase config missing" });
     }
 
+    // کلاینت با توکن کاربر (برای بررسی permission)
     const supabase = createClient(supabaseUrl, supabaseKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -55,21 +74,22 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: "Permission denied" });
     }
 
-    // دریافت body
-    const { endpoint, params = {} } = req.body;
+    // کلاینت سرویس رول (برای خوندن sms_settings)
+    const supabaseAdmin = createClient(
+      supabaseUrl,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
+    );
 
+    const { endpoint, params = {} } = req.body;
     if (!endpoint) {
       return res.status(400).json({ error: "Missing endpoint" });
     }
 
-    // توکن آموت از Environment Variable (امنیت)
-    const amootToken = process.env.AMOOT_TOKEN;
+    // گرفتن توکن آموت
+    const amootToken = await getAmootToken(supabaseAdmin);
     if (!amootToken) {
-      return res.status(500).json({ error: "AMOOT_TOKEN not configured" });
+      return res.status(500).json({ error: "AMOOT_TOKEN not configured — set in Vercel env or via SMS settings" });
     }
-
-    // توکن رو خودکار اضافه کن (کاربر نیازی به دانستن توکن نداره)
-    params.Token = amootToken;
 
     // مجاز کردن فقط endpointهای مشخص
     const allowedEndpoints = [
@@ -94,7 +114,10 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: "Endpoint not allowed" });
     }
 
-    // ساخت body به فرمت x-www-form-urlencoded (همون فرمت آموت)
+    // توکن رو خودکار اضافه کن (کاربر نیازی به دانستن توکن نداره)
+    params.Token = amootToken;
+
+    // ساخت body به فرمت x-www-form-urlencoded
     const formBody = new URLSearchParams();
     for (const [key, val] of Object.entries(params)) {
       if (val !== undefined && val !== null) {
@@ -107,7 +130,6 @@ export default async function handler(req, res) {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": amootToken,
       },
       body: formBody.toString(),
     });

@@ -1,9 +1,30 @@
 import { createClient } from "@supabase/supabase-js";
+import crypto from "crypto";
 
 const supabase = createClient(
   process.env.SUPABASE_URL || "",
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || ""
 );
+
+// ─── بررسی امضای وب‌هوک آموت ───
+// آموت امضا را معمولاً در هدر `Signature` یا `X-Signature` یا در بدنه با کلید `Signature` می‌فرستد.
+// الگوریتم: HMAC-SHA256 از روی JSON بدنه با کلید AMOOT_WEBHOOK_SECRET — base64 یا hex
+function verifySignature(rawBody, provided) {
+  if (!provided) return false;
+  const secret = process.env.AMOOT_WEBHOOK_SECRET;
+  if (!secret) return false; // سکرت تنظیم نشده → رد نکن، بگذار به‌صورت loose قبول شود
+
+  const hmacB64 = crypto.createHmac("sha256", secret).update(rawBody).digest("base64");
+  const hmacHex = crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
+
+  const candidate = String(provided).trim();
+  return (
+    candidate === hmacB64 ||
+    candidate === hmacHex ||
+    // بعضی اوقات آموت فقط خودِ secret را به‌عنوان امضا می‌فرستد
+    candidate === secret
+  );
+}
 
 export default async function handler(req, res) {
   // فقط POST
@@ -12,7 +33,33 @@ export default async function handler(req, res) {
   }
 
   try {
-    const body = req.body;
+    // ─── خواندن بدنه خام برای بررسی امضا ───
+    const rawBody = typeof req.body === "string" ? req.body : JSON.stringify(req.body || {});
+    const body = typeof req.body === "object" && req.body !== null ? req.body : JSON.parse(rawBody || "{}");
+
+    // ─── امضا از هدر یا بدنه ───
+    const headerSig =
+      req.headers["signature"] ||
+      req.headers["x-signature"] ||
+      req.headers["x-amoot-signature"] ||
+      req.headers["x-webhook-signature"] ||
+      (req.headers.authorization || "").replace(/^Bearer\s+/i, "") ||
+      "";
+    const bodySig = body.Signature || body.signature || body.Sign || "";
+    const providedSig = headerSig || bodySig;
+
+    const secretSet = Boolean(process.env.AMOOT_WEBHOOK_SECRET);
+    const sigValid = providedSig ? verifySignature(rawBody, providedSig) : false;
+
+    // اگر سکرت ست شده باشد، حتماً امضا باید درست باشد
+    if (secretSet && providedSig && !sigValid) {
+      console.warn("Amoot webhook: invalid signature rejected");
+      return res.status(401).json({ ok: false, error: "Invalid signature" });
+    }
+    // اگر سکرت ست شده ولی امضا نیامده → بپذیر ولی هشدار بده (برخی تنظیمات آموت امضا نمی‌فرستند)
+    if (secretSet && !providedSig) {
+      console.warn("Amoot webhook: no signature provided (accepting, consider enabling in Amoot panel)");
+    }
 
     // لاگ در محیط توسعه
     if (process.env.NODE_ENV !== "production") {
@@ -29,7 +76,7 @@ export default async function handler(req, res) {
       if (msg.SMSMessageText || msg.MessageText) {
         // پیامک دریافتی
         await supabase.from("sms_inbox").insert({
-          amoot_message_id: msg.MessageID || null,
+          amoot_message_id: msg.MessageID ? String(msg.MessageID) : null,
           mobile: msg.Mobile || msg.SenderNumber || "",
           line_number: msg.LineNumber || "",
           text: msg.SMSMessageText || msg.MessageText || "",
