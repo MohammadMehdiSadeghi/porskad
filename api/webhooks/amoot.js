@@ -27,17 +27,25 @@ function verifySignature(rawBody, provided) {
 }
 
 export default async function handler(req, res) {
-  // فقط POST
-  if (req.method !== "POST") {
-    return res.status(200).json({ ok: true });
-  }
-
   try {
-    // ─── خواندن بدنه خام برای بررسی امضا ───
-    const rawBody = typeof req.body === "string" ? req.body : JSON.stringify(req.body || {});
-    const body = typeof req.body === "object" && req.body !== null ? req.body : JSON.parse(rawBody || "{}");
+    // ─── پشتیبانی از GET (query string) و POST (بدنه) ───
+    // آموت طبق مستندات: پارامترها را به‌صورت query string به آدرس اضافه می‌کند
+    const query = req.query || {};
+    const body =
+      typeof req.body === "object" && req.body !== null
+        ? req.body
+        : (() => {
+            try {
+              return JSON.parse(req.body || "{}");
+            } catch {
+              return {};
+            }
+          })();
 
-    // ─── امضا از هدر یا بدنه ───
+    // ادغام: پارامترهای query + بدنه (هر کدام که آموت فرستاد)
+    const merged = { ...query, ...body };
+
+    // ─── امضا از هدر یا بدنه یا کوئری ───
     // آموت طبق مستندات: هدر X-SMSCenter-Signature
     const headerSig =
       req.headers["x-smscenter-signature"] ||
@@ -47,10 +55,11 @@ export default async function handler(req, res) {
       req.headers["x-webhook-signature"] ||
       (req.headers.authorization || "").replace(/^Bearer\s+/i, "") ||
       "";
-    const bodySig = body.Signature || body.signature || body.Sign || "";
+    const bodySig = merged.Signature || merged.signature || merged.Sign || "";
     const providedSig = headerSig || bodySig;
 
     const secretSet = Boolean(process.env.AMOOT_WEBHOOK_SECRET);
+    const rawBody = typeof req.body === "string" ? req.body : JSON.stringify(body || {});
     const sigValid = providedSig ? verifySignature(rawBody, providedSig) : false;
 
     // اگر سکرت ست شده باشد، حتماً امضا باید درست باشد
@@ -65,12 +74,12 @@ export default async function handler(req, res) {
 
     // لاگ در محیط توسعه
     if (process.env.NODE_ENV !== "production") {
-      console.log("Amoot webhook received:", JSON.stringify(body, null, 2));
+      console.log("Amoot webhook received:", JSON.stringify(merged, null, 2));
     }
 
     // بررسی اینکه آیا گزارش تحویل هست یا پیامک دریافتی
-    // فرمت آموت: معمولاً آرایه‌ای از آبجکت‌ها
-    const messages = Array.isArray(body) ? body : [body];
+    // فرمت آموت: معمولاً آرایه‌ای از آبجکت‌ها یا یک آبجکت تکی
+    const messages = Array.isArray(merged) ? merged : [merged];
 
     for (const msg of messages) {
       // اگر MessageID داشته باشه → گزارش تحویل یا پیامک ارسالی
@@ -84,21 +93,21 @@ export default async function handler(req, res) {
           text: msg.SMSMessageText || msg.MessageText || "",
           raw_payload: msg,
         });
-      } else if (msg.MessageID || msg.Status) {
+      } else if (msg.MessageID || msg.Status || msg.DeliveryType) {
         // گزارش تحویل
         await supabase.from("sms_delivery_reports").insert({
           message_id: String(msg.MessageID || ""),
           mobile: msg.Mobile || "",
-          status: msg.Status || "",
-          delivered_at: msg.DeliveryDateTime || new Date().toISOString(),
+          status: String(msg.Status || msg.DeliveryType || ""),
+          delivered_at: msg.SendDateTime || msg.DeliveryDateTime || new Date().toISOString(),
           raw_payload: msg,
         });
 
         // به‌روزرسانی وضعیت در outbox
-        if (msg.MessageID && msg.Status) {
+        if (msg.MessageID && (msg.Status || msg.DeliveryType)) {
           await supabase
             .from("sms_outbox")
-            .update({ status: String(msg.Status) })
+            .update({ status: String(msg.Status || msg.DeliveryType) })
             .eq("message_id", String(msg.MessageID));
         }
       }
