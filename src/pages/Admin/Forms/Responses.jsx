@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabaseClient";
 import Button from "../../../components/ui/Button";
@@ -81,35 +81,32 @@ function AnswerValue({ question, value }) {
   return <span className="font-medium whitespace-pre-wrap">{String(value)}</span>;
 }
 
-// ─── نمایش پاسخ با محدودیت طول + دکمهٔ «نمایش بیشتر» (برای حالت بازشده) ───
-function AnswerBlock({ question, value, max = 120 }) {
-  const [open, setOpen] = useState(false);
-  const empty = value === null || value === undefined || value === "";
-  if (empty) return <span className="text-ink/40">—</span>;
-  if (question.type === "rating") return <span>{"⭐".repeat(Number(value))}</span>;
+// ─── مقدار پاسخ غیرخالی است؟ ───
+function hasAnswerValue(ans) {
+  if (!ans) return false;
+  const v = ans.value;
+  return v !== null && v !== undefined && (Array.isArray(v) ? v.length > 0 : String(v) !== "");
+}
+
+// ─── نمایش پاسخ داخل سلول ستون «پاسخ» (خلاصه + «…» برای پاسخ بلند) ───
+function CellAnswer({ question, value, max = 60 }) {
+  const empty =
+    value === null || value === undefined || value === "" ||
+    (Array.isArray(value) && value.length === 0);
+  if (!question || empty) return <span className="text-ink/25 text-xs">—</span>;
+  if (question.type === "rating") return <span dir="ltr">{"⭐".repeat(Number(value))}</span>;
 
   const ltr = question.type === "phone_ir" || question.type === "email" || question.type === "telegram_id";
   const text = Array.isArray(value) ? value.join("， ") : String(value);
-  const long = text.length > max;
-  const shown = !long || open ? text : text.slice(0, max).trimEnd() + "…";
+  const shown = text.length > max ? text.slice(0, max).trimEnd() + "…" : text;
   return (
-    <div className="flex flex-col items-start gap-1 min-w-0">
-      <span
-        dir={ltr ? "ltr" : undefined}
-        className={`whitespace-pre-wrap break-words ${ltr ? "font-mono font-bold" : "font-medium"}`}
-      >
-        {shown}
-      </span>
-      {long && (
-        <button
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          className="text-[0.65rem] font-bold text-teal-text hover:underline cursor-pointer"
-        >
-          {open ? "بستن ▲" : "نمایش بیشتر ▼"}
-        </button>
-      )}
-    </div>
+    <span
+      dir={ltr ? "ltr" : undefined}
+      title={text}
+      className={`block max-w-full truncate leading-5 ${ltr ? "font-mono font-bold text-xs text-navy/80" : "font-medium text-ink/80"}`}
+    >
+      {shown}
+    </span>
   );
 }
 
@@ -497,97 +494,6 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
   );
 }
 
-// ─── نمایش سریع پاسخ یک نفر (بدون باز کردن مودال کامل) ───
-function QuickAnswerPanel({ response, index, questions, rAns, questionId, onSelectQuestion, onOpenFull, onClose }) {
-  const hasValue = (ans) =>
-    ans && ans.value !== null && ans.value !== undefined &&
-    (Array.isArray(ans.value) ? ans.value.length > 0 : String(ans.value) !== "");
-  const pairs = questions.map((q, qi) => ({
-    q, qi,
-    ans: rAns.find((a) => a.question_id === q.id),
-    answered: hasValue(rAns.find((a) => a.question_id === q.id)),
-  }));
-  const answeredCount = pairs.filter((p) => p.answered).length;
-  const active = pairs.find((p) => p.q.id === questionId) ?? pairs.find((p) => p.answered) ?? pairs[0];
-  return (
-    <div className="flex flex-col gap-3" onClick={(e) => e.stopPropagation()}>
-      {/* هدر پنل */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="inline-flex items-center gap-1.5 text-[0.7rem] font-extrabold text-navy">
-            <Zap size={13} className="text-teal-text" /> نمایش سریع پاسخ
-          </span>
-          <span className="text-[0.6rem] font-semibold text-ink/50 bg-white border border-ink/10 rounded-full px-2 py-0.5">
-            پاسخ #{faNum(index + 1)}
-          </span>
-          <span className="text-[0.6rem] text-ink/40">{faDateTime(response.submitted_at || response.created_at)}</span>
-          <span className="text-[0.6rem] font-bold text-teal-text bg-teal/10 rounded-full px-2 py-0.5">
-            {faNum(answeredCount)} از {faNum(questions.length)} سوال
-          </span>
-        </div>
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" onClick={onOpenFull}>
-            <Eye size={13} /> مشاهده کامل
-          </Button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-ink/40 hover:text-ink/70 hover:bg-white transition-colors"
-            title="بستن نمایش سریع"
-          >
-            ✕
-          </button>
-        </div>
-      </div>
-
-      {pairs.length === 0 ? (
-        <p className="text-xs text-ink/40">این فرم سوالی ندارد.</p>
-      ) : (
-        <>
-          {/* انتخاب سوال */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[0.65rem] font-extrabold text-ink/50 shrink-0">سوال:</span>
-            <select
-              value={active?.q.id ?? ""}
-              onChange={(e) => onSelectQuestion(e.target.value)}
-              className="flex-1 min-w-[180px] bg-white border border-ink/15 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-navy cursor-pointer focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
-            >
-              {pairs.map(({ q, qi, answered }) => (
-                <option key={q.id} value={q.id}>
-                  {faNum(qi + 1)}. {q.title}{answered ? "" : " (بی‌پاسخ)"}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* پاسخ سوال انتخابی */}
-          {active && (
-            <div className={`rounded-xl border px-4 py-3 ${active.answered ? "bg-white border-ink/10" : "bg-bg-neutral/60 border-dashed border-ink/15"}`}>
-              <div className="flex items-start gap-2 mb-2">
-                <span className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-navy/10 text-[0.65rem] font-black text-navy">
-                  {faNum(active.qi + 1)}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-black text-navy leading-5">{active.q.title}</p>
-                  <p className="text-[0.6rem] text-ink/40 mt-0.5">
-                    {QUESTION_TYPES[active.q.type]?.icon} {QUESTION_TYPES[active.q.type]?.label || active.q.type}
-                  </p>
-                </div>
-              </div>
-              <div className="text-sm text-ink">
-                {active.answered ? (
-                  <AnswerBlock question={active.q} value={active.ans.value} max={240} />
-                ) : (
-                  <span className="text-xs text-ink/30">پاسخی داده نشده</span>
-                )}
-              </div>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
-}
 
 // ─── صفحه اصلی ───
 export default function Responses() {
@@ -601,7 +507,8 @@ export default function Responses() {
   const [answers, setAnswers] = useState([]);
   const [tab, setTab] = useState("list");
   const [detail, setDetail] = useState(null); // مودال کامل یک پاسخ
-  const [quick, setQuick] = useState(null); // { responseId, questionId } — نمایش سریع
+  const [quickQId, setQuickQId] = useState(null); // سوالِ سراسریِ انتخابی در «نمایش سریع پاسخ‌ها» (ستون «پاسخ»)
+  const [quickBarOpen, setQuickBarOpen] = useState(false); // باز/بسته بودن نوار «نمایش سریع پاسخ‌ها»
   const [onlyComplete, setOnlyComplete] = useState(false);
   const [search, setSearch] = useState("");
   const [questionFilters, setQuestionFilters] = useState({}); // { questionId: value }
@@ -709,6 +616,24 @@ export default function Responses() {
     return result;
   }, [responses, onlyComplete, search, answersByResponse, questionById, questionFilters]);
 
+  // سوالِ انتخابیِ سراسری (نمایش سریع) — روی کل لیست پاسخ‌ها اعمال می‌شود
+  const activeQuickQ = useMemo(
+    () => (quickQId ? questionById[quickQId] ?? null : null),
+    [quickQId, questionById]
+  );
+
+  // تعداد پاسخ‌های هر سوال در لیست فیلترشده (برای منوی نمایش سریع)
+  const quickCounts = useMemo(() => {
+    const counts = {};
+    for (const q of questions) counts[q.id] = 0;
+    for (const r of filtered) {
+      for (const a of answersByResponse[r.id] ?? []) {
+        if (counts[a.question_id] !== undefined && hasAnswerValue(a)) counts[a.question_id]++;
+      }
+    }
+    return counts;
+  }, [filtered, questions, answersByResponse]);
+
   // ─── آمار کلی ───
   const stats = useMemo(() => {
     const complete = responses.filter((r) => r.is_complete);
@@ -813,7 +738,6 @@ export default function Responses() {
     if (error) { push("حذف ناموفق بود", "error"); return; }
     push("پاسخ حذف شد");
     setDetail(null);
-    setQuick(null);
     load();
   }
 
@@ -830,6 +754,7 @@ export default function Responses() {
   }
 
   const scored = hasScoring(questions);
+  const activeQIdx = activeQuickQ ? questions.findIndex((q) => q.id === activeQuickQ.id) : -1;
 
   return (
     <div className="flex flex-col gap-5">
@@ -1004,16 +929,77 @@ export default function Responses() {
                       <th className="text-right font-extrabold text-ink/70 px-3 py-2 hidden md:table-cell">مدت</th>
                       <th className="text-right font-extrabold text-ink/70 px-3 py-2 hidden lg:table-cell">دستگاه</th>
                       {scored && <th className="text-right font-extrabold text-ink/70 px-3 py-2">نمره</th>}
-                      <th className="text-right font-extrabold text-ink/70 px-3 py-2 hidden sm:table-cell">پاسخ</th>
+                      <th className="text-right font-extrabold text-ink/70 px-3 py-2 hidden sm:table-cell whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => setQuickBarOpen((o) => !o)}
+                          disabled={questions.length === 0}
+                          title={questions.length === 0 ? "این فرم سوالی ندارد" : "نمایش سریع پاسخ یک سوال برای همهٔ ردیف‌ها"}
+                          className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-default ${
+                            quickBarOpen || activeQuickQ ? "bg-teal/10 text-teal-text" : "hover:bg-bg-neutral text-ink/70"
+                          }`}
+                        >
+                          <span>{activeQuickQ ? "پاسخ سوال" : "پاسخ"}</span>
+                          {activeQuickQ && activeQIdx >= 0 && (
+                            <span className="shrink-0 min-w-5 h-5 px-1 flex items-center justify-center rounded-full bg-navy text-white text-[0.6rem] font-black">
+                              {faNum(activeQIdx + 1)}
+                            </span>
+                          )}
+                          {questions.length > 0 && (
+                            <ChevronDown size={13} className={`transition-transform duration-200 ${quickBarOpen ? "rotate-180" : ""}`} />
+                          )}
+                        </button>
+                      </th>
                       <th className="text-left font-extrabold text-ink/70 px-3 py-2">عملیات</th>
                     </tr>
                   </thead>
                   <tbody>
+                    {/* ─── نوار «نمایش سریع پاسخ‌ها»: انتخاب سوالِ سراسری برای کل لیست ─── */}
+                    {quickBarOpen && (
+                      <tr className="bg-teal/5 border-b border-teal/15">
+                        <td colSpan={scored ? 8 : 7} className="px-3 py-2.5">
+                          <div className="flex flex-wrap items-center gap-2.5">
+                            <span className="inline-flex items-center gap-1.5 text-[0.7rem] font-extrabold text-teal-text">
+                              <Zap size={13} /> نمایش سریع پاسخ‌ها
+                            </span>
+                            <span className="text-[0.65rem] font-semibold text-ink/50">
+                              پاسخِ سوالِ انتخابی برای همهٔ {faNum(filtered.length)} ردیفِ این لیست نمایش داده می‌شود:
+                            </span>
+                            <select
+                              value={activeQuickQ?.id ?? ""}
+                              onChange={(e) => setQuickQId(e.target.value || null)}
+                              className="flex-1 min-w-[220px] max-w-md bg-white border border-ink/15 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-navy cursor-pointer focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
+                            >
+                              <option value="">— بدون انتخاب (پاسخ اول هر نفر) —</option>
+                              {questions.map((q, qi) => (
+                                <option key={q.id} value={q.id}>
+                                  {faNum(qi + 1)}. {q.title} — {faNum(quickCounts[q.id] ?? 0)} پاسخ
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              type="button"
+                              onClick={() => { setQuickQId(null); setQuickBarOpen(false); }}
+                              className="text-[0.65rem] font-bold text-magenta-text bg-magenta/10 border border-magenta/20 rounded-lg px-2.5 py-1.5 hover:bg-magenta/20 transition-colors cursor-pointer"
+                            >
+                              بستن نمایش سریع ✕
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+
                     {filtered.map((r, i) => {
                       const rAns = answersByResponse[r.id] ?? [];
                       const firstText = questions
                         .map((q) => rAns.find((a) => a.question_id === q.id))
-                        .find((a) => a && a.value !== null && a.value !== undefined && String(a.value) !== "");
+                        .find((a) => hasAnswerValue(a));
+                      const previewQ = activeQuickQ
+                        ? activeQuickQ
+                        : (firstText ? questionById[firstText.question_id] ?? null : null);
+                      const previewValue = previewQ
+                        ? (rAns.find((a) => a.question_id === previewQ.id)?.value ?? null)
+                        : null;
 
                       // محاسبه نمره
                       let personScore = null;
@@ -1024,24 +1010,12 @@ export default function Responses() {
                         if (s.total > 0) personScore = s;
                       }
 
-                      const hasAnswerValue = (ans) =>
-                        ans && ans.value !== null && ans.value !== undefined &&
-                        (Array.isArray(ans.value) ? ans.value.length > 0 : String(ans.value) !== "");
-                      const answeredPairs = questions
-                        .map((q, qi) => ({ q, qi, ans: rAns.find((a) => a.question_id === q.id) }))
-                        .filter(({ q, ans }) => hasAnswerValue(ans));
-                      const quickOpen = quick?.responseId === r.id;
-                      // سوالی که پاسخ پیش‌نمایش آن در ستون «پاسخ» دیده می‌شود
-                      const quickDefaultQ = firstText
-                        ? (questions.find((q) => q.id === firstText.question_id) ?? answeredPairs[0]?.q)
-                        : (answeredPairs[0]?.q ?? null);
-
                       return (
-                        <Fragment key={r.id}>
-                          <tr
-                            className={`border-b border-ink/5 last:border-0 transition-colors cursor-pointer ${quickOpen ? "bg-bg-neutral/70" : "hover:bg-bg-neutral/50"}`}
-                            onClick={() => { setQuick(null); setDetail(r); }}
-                          >
+                        <tr
+                          key={r.id}
+                          className="border-b border-ink/5 last:border-0 transition-colors cursor-pointer hover:bg-bg-neutral/50"
+                          onClick={() => setDetail(r)}
+                        >
                             <td className="px-3 py-2 font-mono text-ink/40 text-[0.65rem]">{i + 1}</td>
                             <td className="px-3 py-2 font-medium text-navy text-xs hidden sm:table-cell">{faDateTime(r.submitted_at || r.created_at)}</td>
                             <td className="px-3 py-2">
@@ -1071,24 +1045,12 @@ export default function Responses() {
                                 )}
                               </td>
                             )}
-                            <td className="px-3 py-2 min-w-0">
-                              <button
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); setDetail(null); setQuick(quickOpen ? null : { responseId: r.id, questionId: quickDefaultQ?.id ?? answeredPairs[0]?.q?.id ?? null }); }}
-                                className={`group inline-flex items-center gap-1.5 max-w-full rounded-lg px-2 py-1 transition-colors cursor-pointer ${
-                                  quickOpen ? "bg-teal/10 text-teal-text" : "hover:bg-bg-neutral text-navy"
-                                }`}
-                                title={quickOpen ? "بستن نمایش سریع" : "نمایش سریع پاسخ و تغییر سوال"}
-                              >
-                                <ChevronDown size={13} className={`shrink-0 transition-transform duration-200 ${quickOpen ? "rotate-180" : ""} text-ink/40 group-hover:text-teal-text`} />
-                                <span className="truncate text-ink/70 group-hover:text-navy max-w-[11rem]">
-                                  {firstText ? String(firstText.value).slice(0, 40) : "—"}
-                                </span>
-                              </button>
+                            <td className="px-3 py-2 min-w-0 max-w-[13rem]">
+                              <CellAnswer question={previewQ} value={previewValue} />
                             </td>
                             <td className="px-3 py-2">
                               <div className="flex items-center gap-1">
-                                <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setQuick(null); setDetail(r); }}>
+                                <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setDetail(r); }}>
                                   <Eye size={14} />
                                 </Button>
                                 <button
@@ -1100,24 +1062,7 @@ export default function Responses() {
                                 </button>
                               </div>
                             </td>
-                          </tr>
-                          {quickOpen && (
-                            <tr className="border-b border-ink/5 bg-bg-lavender/30">
-                              <td colSpan={scored ? 8 : 7} className="px-3 py-3">
-                                <QuickAnswerPanel
-                                  response={r}
-                                  index={i}
-                                  questions={questions}
-                                  rAns={rAns}
-                                  questionId={quick?.questionId}
-                                  onSelectQuestion={(qid) => setQuick((q) => (q ? { ...q, questionId: qid } : q))}
-                                  onOpenFull={() => { setQuick(null); setDetail(r); }}
-                                  onClose={() => setQuick(null)}
-                                />
-                              </td>
-                            </tr>
-                          )}
-                        </Fragment>
+                        </tr>
                       );
                     })}
                   </tbody>
