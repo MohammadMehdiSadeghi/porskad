@@ -56,21 +56,41 @@ function UndoToast({ message, onUndo, onDismiss, duration = 6000 }) {
   }, [duration, onDismiss]);
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-slide-up">
-      <div className="bg-navy text-white rounded-pill-md px-4 py-3 shadow-2xl flex items-center gap-3 min-w-[300px]">
-        <Trash2 size={16} className="shrink-0 text-magenta" />
-        <span className="text-sm font-bold flex-1">{message}</span>
+    <div dir="rtl" className="fixed bottom-6 inset-x-0 z-50 flex justify-center px-4 pointer-events-none animate-slide-up">
+      <div className="pointer-events-auto relative overflow-hidden bg-navy text-white rounded-2xl border border-white/10 shadow-2xl shadow-navy/30 flex items-center gap-2.5 sm:gap-3 pr-5 pl-2.5 sm:pl-3 py-3 w-full sm:w-auto sm:min-w-[380px] sm:max-w-md rotate-[0.3deg]">
+        {/* نوار تاکید رنگی سمت راست */}
+        <span className="absolute inset-y-0 right-0 w-1 bg-gradient-to-b from-teal via-teal/50 to-magenta" />
+
+        {/* آیکون */}
+        <div className="w-10 h-10 shrink-0 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center">
+          <Trash2 size={16} className="text-magenta" />
+        </div>
+
+        {/* پیام */}
+        <p className="text-sm font-bold leading-6 flex-1 min-w-0">{message}</p>
+
+        {/* دکمه بازگردانی */}
         <button
           onClick={() => { cancelAnimationFrame(timerRef.current); onUndo(); }}
-          className="flex items-center gap-1 bg-white/20 hover:bg-white/30 rounded-pill-sm px-3 py-1.5 text-xs font-bold text-teal transition-colors shrink-0"
+          className="shrink-0 flex items-center gap-1.5 bg-teal hover:bg-teal/85 active:scale-95 text-white rounded-xl px-3.5 py-2 text-xs font-extrabold shadow-lg shadow-teal/30 transition-all cursor-pointer"
         >
-          <Undo2 size={12} />
+          <Undo2 size={13} />
           بازگردانی
         </button>
-        {/* Progress bar */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10 rounded-b-pill-md overflow-hidden">
+
+        {/* دکمه بستن */}
+        <button
+          onClick={() => { cancelAnimationFrame(timerRef.current); onDismiss(); }}
+          className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-white/35 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+          aria-label="بستن اعلان"
+        >
+          ✕
+        </button>
+
+        {/* نوار پیشرفت */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10 overflow-hidden">
           <div
-            className="h-full bg-teal transition-none rounded-b-pill-md"
+            className="h-full bg-gradient-to-l from-teal to-magenta transition-none"
             style={{ width: `${progress}%` }}
           />
         </div>

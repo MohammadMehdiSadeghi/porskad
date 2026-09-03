@@ -311,9 +311,13 @@ export default function EmbedHub() {
   useEffect(() => {
     async function load() {
       try {
+        // فقط فرم‌های فعال (منتشرشده و حذف/آرشیو نشده) در این صفحه نمایش داده می‌شوند
         const { data, error } = await supabase
           .from("forms")
           .select("id, slug, title, public_id, published, created_at")
+          .eq("published", true)
+          .eq("archived", false)
+          .is("deleted_at", null)
           .order("created_at", { ascending: false });
         if (error) throw error;
 
@@ -365,17 +369,21 @@ export default function EmbedHub() {
         <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-1">
           روی فرم کلیک کن، حالت Embed رو انتخاب کن و کدش رو کپی کن
         </p>
+        <p className="text-[0.65rem] font-bold text-ink-subtle/70 mt-1.5 inline-flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-teal" />
+          فقط فرم‌های منتشرشده اینجا نمایش داده می‌شوند
+        </p>
       </div>
 
       {/* لیست فرم‌ها — گرید شبیه صفحه فرم‌ها */}
       {forms.length === 0 ? (
         <EmptyState
           icon={<FileText size={48} />}
-          title="هنوز فرمی نداری!"
-          subtitle="اول یه فرم بساز، بعد بیا اینجا کدش رو بردار."
+          title="فرم منتشرشده‌ای برای اشتراک‌گذاری نیست!"
+          subtitle="فقط فرم‌های منتشرشده اینجا ظاهر می‌شوند؛ فرم پیش‌نویس خود را از صفحه «فرم‌ها» منتشر کن."
           action={
             <Button as={Link} to="/admin/forms" variant="indigo">
-              ساخت فرم جدید
+              رفتن به فرم‌ها
             </Button>
           }
         />
