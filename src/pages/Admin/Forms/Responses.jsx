@@ -932,18 +932,19 @@ export default function Responses() {
                       }
 
                       const isOpen = expandedId === r.id;
+                      const hasAnswerValue = (ans) =>
+                        ans && ans.value !== null && ans.value !== undefined &&
+                        (Array.isArray(ans.value) ? ans.value.length > 0 : String(ans.value) !== "");
+                      const answeredPairs = questions
+                        .map((q, qi) => ({ q, qi, ans: rAns.find((a) => a.question_id === q.id) }))
+                        .filter(({ q, ans }) => hasAnswerValue(ans));
+
                       return (
                         <Fragment key={r.id}>
                           <tr
-                            className={`border-b border-ink/5 last:border-0 cursor-pointer transition-colors ${isOpen ? "bg-bg-neutral/70" : "hover:bg-bg-neutral/50"}`}
-                            onClick={() => setExpandedId(isOpen ? null : r.id)}
+                            className={`border-b border-ink/5 last:border-0 transition-colors ${isOpen ? "bg-bg-neutral/70" : ""}`}
                           >
-                            <td className="px-3 py-2">
-                              <span className="inline-flex items-center gap-1.5">
-                                <ChevronDown size={13} className={`text-ink/40 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
-                                <span className="font-mono text-ink/40 text-[0.65rem]">{i + 1}</span>
-                              </span>
-                            </td>
+                            <td className="px-3 py-2 font-mono text-ink/40 text-[0.65rem]">{i + 1}</td>
                             <td className="px-3 py-2 font-medium text-navy text-xs hidden sm:table-cell">{faDateTime(r.submitted_at || r.created_at)}</td>
                             <td className="px-3 py-2">
                               {r.is_complete ? (
@@ -972,10 +973,22 @@ export default function Responses() {
                                 )}
                               </td>
                             )}
-                            <td className="px-4 py-3 text-ink/70 max-w-[12rem] truncate">
-                              {firstText ? String(firstText.value).slice(0, 40) : "—"}
+                            <td className="px-3 py-2 min-w-0">
+                              <button
+                                type="button"
+                                onClick={() => setExpandedId(isOpen ? null : r.id)}
+                                className={`group inline-flex items-center gap-1.5 max-w-full rounded-lg px-2 py-1 transition-colors cursor-pointer ${
+                                  isOpen ? "bg-teal/10 text-teal-text" : "hover:bg-bg-neutral text-navy"
+                                }`}
+                                title={isOpen ? "بستن پاسخ‌ها" : "نمایش همهٔ پاسخ‌های این نفر"}
+                              >
+                                <ChevronDown size={13} className={`shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""} text-ink/40 group-hover:text-teal-text`} />
+                                <span className="truncate text-ink/70 group-hover:text-navy max-w-[11rem]">
+                                  {firstText ? String(firstText.value).slice(0, 40) : "—"}
+                                </span>
+                              </button>
                             </td>
-                            <td className="px-4 py-3">
+                            <td className="px-3 py-2">
                               <div className="flex items-center gap-1">
                                 <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setDetail(r); }}>
                                   <Eye size={14} />
@@ -995,34 +1008,29 @@ export default function Responses() {
                               <td colSpan={scored ? 8 : 7} className="px-4 py-3">
                                 <div className="flex items-center justify-between gap-2 mb-2">
                                   <span className="text-[0.7rem] font-extrabold text-ink/50 inline-flex items-center gap-1.5">
-                                    <Layers size={12} /> پاسخ سوال‌ها
+                                    <Layers size={12} /> پاسخ‌های این نفر
                                   </span>
                                   <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setDetail(r); }}>
                                     <Eye size={13} /> مشاهده کامل
                                   </Button>
                                 </div>
                                 <div className="grid sm:grid-cols-2 gap-2">
-                                  {questions.map((q, qi) => {
-                                    const ans = rAns.find((x) => x.question_id === q.id);
-                                    const answered = ans?.value !== null && ans?.value !== undefined && ans?.value !== "";
-                                    return (
-                                      <div key={q.id} className="bg-white rounded-xl border border-ink/10 px-3 py-2 flex items-start gap-2 min-w-0">
-                                        <span className="shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-navy/10 text-[0.6rem] font-black text-navy mt-0.5">
-                                          {faNum(qi + 1)}
-                                        </span>
-                                        <div className="min-w-0 flex-1">
-                                          <p className="text-xs font-bold text-navy mb-1 leading-5">{q.title}</p>
-                                          {answered ? (
-                                            <div className="text-xs text-ink">
-                                              <AnswerBlock question={q} value={ans.value} />
-                                            </div>
-                                          ) : (
-                                            <span className="text-xs text-ink/30">پاسخی داده نشده</span>
-                                          )}
+                                  {answeredPairs.length === 0 && (
+                                    <p className="text-xs text-ink/40">هنوز پاسخی ثبت نشده.</p>
+                                  )}
+                                  {answeredPairs.map(({ q, qi, ans }) => (
+                                    <div key={q.id} className="bg-white rounded-xl border border-ink/10 px-3 py-2 flex items-start gap-2 min-w-0">
+                                      <span className="shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-navy/10 text-[0.6rem] font-black text-navy mt-0.5">
+                                        {faNum(qi + 1)}
+                                      </span>
+                                      <div className="min-w-0 flex-1">
+                                        <p className="text-xs font-bold text-navy mb-1 leading-5">{q.title}</p>
+                                        <div className="text-xs text-ink">
+                                          <AnswerBlock question={q} value={ans.value} />
                                         </div>
                                       </div>
-                                    );
-                                  })}
+                                    </div>
+                                  ))}
                                 </div>
                               </td>
                             </tr>
