@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { Fragment, useEffect, useMemo, useState, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabaseClient";
 import Button from "../../../components/ui/Button";
@@ -41,6 +41,7 @@ import {
   Inbox,
   Trash2,
   Puzzle,
+  ChevronDown,
   Award,
   Target,
   BarChart2,
@@ -78,6 +79,38 @@ function AnswerValue({ question, value }) {
   if (question.type === "phone_ir" || question.type === "email")
     return <span dir="ltr" className="font-mono font-bold">{String(value)}</span>;
   return <span className="font-medium whitespace-pre-wrap">{String(value)}</span>;
+}
+
+// ─── نمایش پاسخ با محدودیت طول + دکمهٔ «نمایش بیشتر» (برای حالت بازشده) ───
+function AnswerBlock({ question, value }) {
+  const [open, setOpen] = useState(false);
+  const empty = value === null || value === undefined || value === "";
+  if (empty) return <span className="text-ink/40">—</span>;
+  if (question.type === "rating") return <span>{"⭐".repeat(Number(value))}</span>;
+
+  const ltr = question.type === "phone_ir" || question.type === "email" || question.type === "telegram_id";
+  const text = Array.isArray(value) ? value.join("， ") : String(value);
+  const long = text.length > 120;
+  const shown = !long || open ? text : text.slice(0, 120).trimEnd() + "…";
+  return (
+    <div className="flex flex-col items-start gap-1 min-w-0">
+      <span
+        dir={ltr ? "ltr" : undefined}
+        className={`whitespace-pre-wrap break-words ${ltr ? "font-mono font-bold" : "font-medium"}`}
+      >
+        {shown}
+      </span>
+      {long && (
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="text-[0.65rem] font-bold text-teal-text hover:underline cursor-pointer"
+        >
+          {open ? "بستن ▲" : "نمایش بیشتر ▼"}
+        </button>
+      )}
+    </div>
+  );
 }
 
 // ─── نشانگر درست/غلط ───
@@ -476,6 +509,7 @@ export default function Responses() {
   const [answers, setAnswers] = useState([]);
   const [tab, setTab] = useState("list");
   const [detail, setDetail] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
   const [onlyComplete, setOnlyComplete] = useState(false);
   const [search, setSearch] = useState("");
   const [questionFilters, setQuestionFilters] = useState({}); // { questionId: value }
@@ -897,55 +931,103 @@ export default function Responses() {
                         if (s.total > 0) personScore = s;
                       }
 
+                      const isOpen = expandedId === r.id;
                       return (
-                        <tr key={r.id} className="border-b border-ink/5 last:border-0 hover:bg-bg-neutral/50 cursor-pointer" onClick={() => setDetail(r)}>
-                          <td className="px-3 py-2 font-mono text-ink/40 text-[0.65rem]">{i + 1}</td>
-                          <td className="px-3 py-2 font-medium text-navy text-xs hidden sm:table-cell">{faDateTime(r.submitted_at || r.created_at)}</td>
-                          <td className="px-3 py-2">
-                            {r.is_complete ? (
-                              <span className="inline-flex items-center gap-0.5 text-[0.65rem] font-semibold text-teal-text bg-bg-mint px-1.5 py-0.5 rounded-full">
-                                <CheckCircle2 size={10} /> کامل
+                        <Fragment key={r.id}>
+                          <tr
+                            className={`border-b border-ink/5 last:border-0 cursor-pointer transition-colors ${isOpen ? "bg-bg-neutral/70" : "hover:bg-bg-neutral/50"}`}
+                            onClick={() => setExpandedId(isOpen ? null : r.id)}
+                          >
+                            <td className="px-3 py-2">
+                              <span className="inline-flex items-center gap-1.5">
+                                <ChevronDown size={13} className={`text-ink/40 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                                <span className="font-mono text-ink/40 text-[0.65rem]">{i + 1}</span>
                               </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-0.5 text-[0.65rem] font-semibold text-ink/50 bg-bg-neutral px-1.5 py-0.5 rounded-full">
-                                <AlertCircle size={10} /> ناقص
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2 text-ink/50 text-xs hidden md:table-cell">{r.duration_seconds ? faDuration(r.duration_seconds) : "—"}</td>
-                          <td className="px-3 py-2 text-ink/50 text-xs hidden lg:table-cell">{DEVICE_FA[r.device] ?? r.device ?? "—"}</td>
-                          {scored && (
-                            <td className="px-4 py-3">
-                              {personScore ? (
-                                <span className={`text-xs font-black ${
-                                  (personScore.score / personScore.total) >= 0.7 ? "text-teal-text" :
-                                  (personScore.score / personScore.total) >= 0.4 ? "text-orange" : "text-magenta-text"
-                                }`}>
-                                  {faNum(personScore.score)}/{faNum(personScore.total)}
+                            </td>
+                            <td className="px-3 py-2 font-medium text-navy text-xs hidden sm:table-cell">{faDateTime(r.submitted_at || r.created_at)}</td>
+                            <td className="px-3 py-2">
+                              {r.is_complete ? (
+                                <span className="inline-flex items-center gap-0.5 text-[0.65rem] font-semibold text-teal-text bg-bg-mint px-1.5 py-0.5 rounded-full">
+                                  <CheckCircle2 size={10} /> کامل
                                 </span>
                               ) : (
-                                <span className="text-xs text-ink/30">—</span>
+                                <span className="inline-flex items-center gap-0.5 text-[0.65rem] font-semibold text-ink/50 bg-bg-neutral px-1.5 py-0.5 rounded-full">
+                                  <AlertCircle size={10} /> ناقص
+                                </span>
                               )}
                             </td>
+                            <td className="px-3 py-2 text-ink/50 text-xs hidden md:table-cell">{r.duration_seconds ? faDuration(r.duration_seconds) : "—"}</td>
+                            <td className="px-3 py-2 text-ink/50 text-xs hidden lg:table-cell">{DEVICE_FA[r.device] ?? r.device ?? "—"}</td>
+                            {scored && (
+                              <td className="px-4 py-3">
+                                {personScore ? (
+                                  <span className={`text-xs font-black ${
+                                    (personScore.score / personScore.total) >= 0.7 ? "text-teal-text" :
+                                    (personScore.score / personScore.total) >= 0.4 ? "text-orange" : "text-magenta-text"
+                                  }`}>
+                                    {faNum(personScore.score)}/{faNum(personScore.total)}
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-ink/30">—</span>
+                                )}
+                              </td>
+                            )}
+                            <td className="px-4 py-3 text-ink/70 max-w-[12rem] truncate">
+                              {firstText ? String(firstText.value).slice(0, 40) : "—"}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-1">
+                                <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setDetail(r); }}>
+                                  <Eye size={14} />
+                                </Button>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); deleteResponse(r); }}
+                                  className="p-1.5 rounded-lg text-ink/30 hover:text-magenta-text hover:bg-magenta/10 transition-colors"
+                                  title="حذف پاسخ"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                          {isOpen && (
+                            <tr className="border-b border-ink/5 bg-bg-lavender/30">
+                              <td colSpan={scored ? 8 : 7} className="px-4 py-3">
+                                <div className="flex items-center justify-between gap-2 mb-2">
+                                  <span className="text-[0.7rem] font-extrabold text-ink/50 inline-flex items-center gap-1.5">
+                                    <Layers size={12} /> پاسخ سوال‌ها
+                                  </span>
+                                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setDetail(r); }}>
+                                    <Eye size={13} /> مشاهده کامل
+                                  </Button>
+                                </div>
+                                <div className="grid sm:grid-cols-2 gap-2">
+                                  {questions.map((q, qi) => {
+                                    const ans = rAns.find((x) => x.question_id === q.id);
+                                    const answered = ans?.value !== null && ans?.value !== undefined && ans?.value !== "";
+                                    return (
+                                      <div key={q.id} className="bg-white rounded-xl border border-ink/10 px-3 py-2 flex items-start gap-2 min-w-0">
+                                        <span className="shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-navy/10 text-[0.6rem] font-black text-navy mt-0.5">
+                                          {faNum(qi + 1)}
+                                        </span>
+                                        <div className="min-w-0 flex-1">
+                                          <p className="text-xs font-bold text-navy mb-1 leading-5">{q.title}</p>
+                                          {answered ? (
+                                            <div className="text-xs text-ink">
+                                              <AnswerBlock question={q} value={ans.value} />
+                                            </div>
+                                          ) : (
+                                            <span className="text-xs text-ink/30">پاسخی داده نشده</span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </td>
+                            </tr>
                           )}
-                          <td className="px-4 py-3 text-ink/70 max-w-[12rem] truncate">
-                            {firstText ? String(firstText.value).slice(0, 40) : "—"}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-1">
-                              <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setDetail(r); }}>
-                                <Eye size={14} />
-                              </Button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); deleteResponse(r); }}
-                                className="p-1.5 rounded-lg text-ink/30 hover:text-magenta-text hover:bg-magenta/10 transition-colors"
-                                title="حذف پاسخ"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
+                        </Fragment>
                       );
                     })}
                   </tbody>
