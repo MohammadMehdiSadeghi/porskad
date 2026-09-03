@@ -38,7 +38,9 @@ export default async function handler(req, res) {
     const body = typeof req.body === "object" && req.body !== null ? req.body : JSON.parse(rawBody || "{}");
 
     // ─── امضا از هدر یا بدنه ───
+    // آموت طبق مستندات: هدر X-SMSCenter-Signature
     const headerSig =
+      req.headers["x-smscenter-signature"] ||
       req.headers["signature"] ||
       req.headers["x-signature"] ||
       req.headers["x-amoot-signature"] ||
