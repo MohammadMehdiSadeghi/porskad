@@ -454,11 +454,10 @@ export default function FormsList() {
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`px-3 py-1.5 text-sm font-bold rounded-pill-sm transition-colors ${
-                filter === f.key
+              className={`px-3 py-1.5 text-sm font-bold rounded-pill-sm transition-colors ${filter === f.key
                   ? f.key === "trash" ? "bg-magenta text-white" : "bg-teal text-white"
                   : "text-ink-subtle hover:text-ink"
-              }`}
+                }`}
             >
               {f.label}
             </button>

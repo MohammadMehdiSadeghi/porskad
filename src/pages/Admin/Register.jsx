@@ -66,6 +66,8 @@ export default function Register() {
       console.error(err);
       if (err?.message?.includes("User already registered")) {
         setError("این ایمیل قبلاً ثبت شده است. لطفاً وارد شوید.");
+      } else if (err?.message?.toLowerCase().includes("rate limit")) {
+        setError("سقف ارسال ایمیل تایید سپابیس پر شده است. لطفاً در داشبورد Supabase بخش Authentication > Providers > Email گزینه Confirm email را خاموش کنید تا ثبت‌نام‌ها فوری و بدون محدودیت انجام شوند.");
       } else {
         setError(err?.message || "ثبت‌نام با خطا مواجه شد؛ لطفاً دوباره تلاش کنید.");
       }

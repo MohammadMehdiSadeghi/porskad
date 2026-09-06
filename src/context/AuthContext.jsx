@@ -221,6 +221,34 @@ export function AuthProvider({ children }) {
   }
 
   async function register(email, password, fullName) {
+    // ۱. ابتدا تلاش از طریق API برای تایید خودکار و دور زدن محدودیت ایمیل
+    try {
+      const apiRes = await fetch("/api/auth-register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password, fullName }),
+      });
+      if (apiRes.ok) {
+        const { data: loginData } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
+        if (loginData?.session) {
+          return loginData;
+        }
+      } else {
+        const errJson = await apiRes.json().catch(() => ({}));
+        if (errJson.error && apiRes.status !== 501) {
+          throw new Error(errJson.error);
+        }
+      }
+    } catch (e) {
+      if (e.message && !e.message.includes("501") && !e.message.includes("Failed to fetch")) {
+        throw e;
+      }
+    }
+
+    // ۲. فالبک به signUp عادی Supabase
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
@@ -298,31 +326,54 @@ export function AuthProvider({ children }) {
     fullName,
     permissionIds = null,
   }) {
-    // ساخت کاربر از طریق Edge Function (امن و سازگار با همه نسخه‌ها)
-    const response = await fetch(
-      `${supabase.supabaseUrl}/functions/v1/admin-user-management`,
-      {
+    let userId = null;
+
+    // ۱. اول سعی کن از طریق API سرورلس اختصاصی ایجاد کنی
+    try {
+      const apiRes = await fetch("/api/admin-create-user", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: session?.access_token ? `Bearer ${session.access_token}` : "",
-          apikey: supabase.supabaseKey,
         },
         body: JSON.stringify({
-          action: "create_user",
           email: email.trim(),
           password,
-          full_name: fullName ?? email.split("@")[0],
+          fullName: fullName ?? email.split("@")[0],
         }),
+      });
+      if (apiRes.ok) {
+        const json = await apiRes.json();
+        userId = json.user_id;
       }
-    );
+    } catch {}
 
-    const result = await response.json();
-    if (!response.ok || result.error) {
-      throw new Error(result.error || "ایجاد مدیر ناموفق بود");
+    // ۲. فالبک به Edge Function
+    if (!userId) {
+      const response = await fetch(
+        `${supabase.supabaseUrl}/functions/v1/admin-user-management`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: session?.access_token ? `Bearer ${session.access_token}` : "",
+            apikey: supabase.supabaseKey,
+          },
+          body: JSON.stringify({
+            action: "create_user",
+            email: email.trim(),
+            password,
+            full_name: fullName ?? email.split("@")[0],
+          }),
+        }
+      );
+
+      const result = await response.json();
+      if (!response.ok || result.error) {
+        throw new Error(result.error || "ایجاد مدیر ناموفق بود");
+      }
+      userId = result.user_id;
     }
-
-    const userId = result.user_id;
 
     if (Array.isArray(permissionIds) && userId) {
       const { error: permError } = await supabase.rpc("set_user_permissions", {
