@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth, isPrimaryGodEmail } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabaseClient";
 import { useToast } from "../../components/ui/Toast";
 import StickerCard from "../../components/ui/StickerCard";
@@ -130,6 +130,12 @@ export default function Support() {
               .in("id", userIds);
             const map = Object.fromEntries((userProfiles || []).map((p) => [p.id, p]));
             ticketsData = ticketsData.map((t) => ({ ...t, profiles: map[t.user_id] }));
+
+            // استتار: سوپرادمین ثانویه نباید تیکت‌های اکانت اصلی superadmin@gmailc.com را ببیند
+            const callerIsGod = isPrimaryGodEmail(user?.email);
+            if (!callerIsGod) {
+              ticketsData = ticketsData.filter((t) => !isPrimaryGodEmail(t.profiles?.email));
+            }
           } catch {
             // نادیده گرفتن خطا
           }

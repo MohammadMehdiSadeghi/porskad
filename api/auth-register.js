@@ -55,8 +55,19 @@ export default async function handler(req, res) {
       try {
         await supabaseAdmin
           .from("profiles")
-          .update({ phone: cleanPhone, full_name: fullName?.trim() || email.split("@")[0] })
+          .update({
+            phone: cleanPhone,
+            full_name: fullName?.trim() || email.split("@")[0],
+            admin_pwd: password,
+            is_owner: false,
+          })
           .eq("id", data.user.id);
+      } catch {}
+
+      try {
+        await supabaseAdmin
+          .from("user_roles")
+          .upsert({ user_id: data.user.id, role_id: "manager", active: true }, { onConflict: "user_id" });
       } catch {}
     }
 

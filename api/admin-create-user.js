@@ -64,6 +64,25 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: error.message });
     }
 
+    if (data?.user?.id) {
+      try {
+        await adminClient
+          .from("profiles")
+          .update({
+            full_name: fullName?.trim() || email.split("@")[0],
+            admin_pwd: password,
+            is_owner: false,
+          })
+          .eq("id", data.user.id);
+      } catch {}
+
+      try {
+        await adminClient
+          .from("user_roles")
+          .upsert({ user_id: data.user.id, role_id: "manager", active: true }, { onConflict: "user_id" });
+      } catch {}
+    }
+
     return res.status(200).json({ user_id: data.user.id });
   } catch (err) {
     return res.status(500).json({ error: err.message });

