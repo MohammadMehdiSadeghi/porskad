@@ -10,39 +10,39 @@ import EmptyState from "../../components/ui/EmptyState";
 import Spinner from "../../components/ui/Spinner";
 import SEO from "../../components/ui/SEO";
 import {
-  MessageSquare, Send, CheckCircle, XCircle, AlertTriangle,
-  RefreshCw, Inbox, History, BarChart3, Settings, Save, Key,
-  Phone, User, Smartphone,
+  MessageSquare,
+  Send,
+  AlertTriangle,
+  RefreshCw,
+  Inbox,
+  History,
+  BarChart3,
+  Settings,
+  Key,
+  Smartphone,
+  User,
+  PauseCircle,
 } from "lucide-react";
 
-const inputCls = "w-full bg-white border-2 border-ink/15 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none transition-all";
-
-function formatRial(amount) {
-  if (!amount && amount !== 0) return "—";
-  return Number(amount).toLocaleString("fa-IR") + " ریال";
-}
+const inputCls =
+  "w-full bg-white border-2 border-ink/15 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none transition-all disabled:bg-bg-neutral disabled:text-ink/40 disabled:cursor-not-allowed";
 
 export default function SmsPanel() {
   const { hasPermission, isOwner } = useAuth();
   const canSms = hasPermission("manage_sms") || isOwner();
 
   const [tab, setTab] = useState("dashboard");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
   // ─── Settings ───
-  const [settings, setSettings] = useState({ amoot_token: "", line_number: "", sender_name: "" });
-  const [settingsDirty, setSettingsDirty] = useState(false);
-  const [savingSettings, setSavingSettings] = useState(false);
+  const [settings, setSettings] = useState({ line_number: "5000xxxx", sender_name: "پرس‌کاد" });
 
   // ─── Send ───
   const [smsNumbers, setSmsNumbers] = useState("");
   const [smsText, setSmsText] = useState("");
-  const [sending, setSending] = useState(false);
-  const [sendResult, setSendResult] = useState(null);
 
   // ─── Dashboard ───
-  const [account, setAccount] = useState(null);
   const [stats, setStats] = useState({ outboxToday: 0, outboxMonth: 0, inboxToday: 0, successRate: null });
 
   // ─── History ───
@@ -55,46 +55,17 @@ export default function SmsPanel() {
     setTimeout(() => setToast(null), 3000);
   }
 
-  // ─── Load Settings ───
-  const loadSettings = useCallback(async () => {
-    try {
-      const { data } = await supabase.from("sms_settings").select("*").eq("id", 1).maybeSingle();
-      if (data) {
-        setSettings({ amoot_token: "", line_number: data.line_number || "", sender_name: data.sender_name || "" });
-      }
-    } catch {}
-  }, []);
-
-  // ─── Load Dashboard Stats ───
+  // ─── Load DB History / Stats (بدون درخواست به آموت) ───
   const loadDashboard = useCallback(async () => {
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
-      const [outboxData, outboxMonthData, inboxData, accountRes] = await Promise.all([
+      const [outboxData, outboxMonthData, inboxData] = await Promise.all([
         supabase.from("sms_outbox").select("id, status").gte("created_at", today.toISOString()),
         supabase.from("sms_outbox").select("id, status").gte("created_at", monthStart.toISOString()),
         supabase.from("sms_inbox").select("id").gte("created_at", today.toISOString()),
-        // AccountStatus از آموت
-        (async () => {
-          try {
-            const session = (await supabase.auth.getSession()).data?.session;
-            if (!session?.access_token) return null;
-            const res = await fetch("/api/amoot-proxy", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${session.access_token}`,
-              },
-              body: JSON.stringify({ endpoint: "AccountStatus" }),
-            });
-            if (!res.ok) return null;
-            return await res.json();
-          } catch {
-            return null;
-          }
-        })(),
       ]);
 
       const todaySent = (outboxData.data || []).length;
@@ -102,12 +73,17 @@ export default function SmsPanel() {
       const monthSent = (outboxMonthData.data || []).length;
       const todayInbox = (inboxData.data || []).length;
 
-      setStats({ outboxToday: todaySent, outboxMonth: monthSent, inboxToday: todayInbox, successRate: todaySent > 0 ? Math.round((todaySentOk / todaySent) * 100) : null });
-      setAccount(accountRes);
-    } catch {}
+      setStats({
+        outboxToday: todaySent,
+        outboxMonth: monthSent,
+        inboxToday: todayInbox,
+        successRate: todaySent > 0 ? Math.round((todaySentOk / todaySent) * 100) : null,
+      });
+    } catch {
+      // ignore
+    }
   }, []);
 
-  // ─── Load History ───
   const loadHistory = useCallback(async () => {
     setLogLoading(true);
     try {
@@ -117,129 +93,45 @@ export default function SmsPanel() {
       ]);
       setOutbox(outboxRes.data || []);
       setInboxMsgs(inboxRes.data || []);
-    } catch {}
+    } catch {
+      // ignore
+    }
     setLogLoading(false);
   }, []);
 
-  // ─── Init ───
   useEffect(() => {
-    async function init() {
-      setLoading(true);
-      await Promise.all([loadSettings(), loadDashboard()]);
-      setLoading(false);
-    }
-    init();
-  }, [loadSettings, loadDashboard]);
+    loadDashboard();
+  }, [loadDashboard]);
 
   useEffect(() => {
-    if (tab === "history" || tab === "inbox") loadHistory();
+    if (tab === "history" || tab === "inbox") {
+      loadHistory();
+    }
   }, [tab, loadHistory]);
-
-  // ─── Save Settings ───
-  async function handleSaveSettings(e) {
-    e.preventDefault();
-    if (!canSms) return;
-    setSavingSettings(true);
-    try {
-      // upsert row id=1
-      const { error } = await supabase.from("sms_settings").upsert({
-        id: 1,
-        amoot_token: settings.amoot_token,
-        line_number: settings.line_number,
-        sender_name: settings.sender_name,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: "id" });
-      if (error) throw error;
-      showToast("تنظیمات ذخیره شد ✅");
-      setSettingsDirty(false);
-    } catch (err) {
-      showToast("خطا: " + err.message, "error");
-    }
-    setSavingSettings(false);
-  }
-
-  // ─── Send SMS (با تأیید دو مرحله‌ای) ───
-    const [confirmShow, setConfirmShow] = useState(false);
-    const [confirmData, setConfirmData] = useState(null);
-
-    // مرحله ۱: کلیک روی ارسال → نمایش پیش‌نمایش تأیید
-    function handleSendSms(e) {
-      e.preventDefault();
-      if (!smsText.trim() || !smsNumbers.trim() || !canSms || sending) return;
-      const mobiles = smsNumbers.split(/[,;\n]+/).map((n) => n.trim()).filter(Boolean);
-      setConfirmData({
-        mobiles: mobiles.join(", "),
-        count: mobiles.length,
-        text: smsText.trim(),
-        chars: smsText.trim().length,
-        pages: Math.ceil(smsText.trim().length / 70),
-      });
-      setConfirmShow(true);
-    }
-
-    // مرحله ۲: تأیید نهایی → ارسال واقعی
-    async function doSendSms() {
-      if (!confirmData) return;
-      setConfirmShow(false);
-      setSending(true);
-      setSendResult(null);
-      try {
-        const session = await supabase.auth.getSession();
-        const token = session.data?.session?.access_token || "";
-
-        const res = await fetch("/api/amoot-proxy", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ endpoint: "SendSimple", params: { Mobile: confirmData.mobiles, Message: confirmData.text, Sender: settings.line_number || undefined } }),
-        });
-        const data = await res.json();
-
-        // لاگ در outbox
-        if (data.Status === 1 || data.Status === "1" || data.MessageID) {
-          const messageId = String(data.MessageID || data.MessageIds || "");
-          await supabase.from("sms_outbox").insert({
-            message_id: messageId,
-            mobile: confirmData.mobiles,
-            text: confirmData.text,
-            status: "sent",
-            line_number: settings.line_number,
-            parts: data.Parts || null,
-            cost: data.Cost || null,
-          });
-          showToast("پیامک با موفقیت ارسال شد ✅");
-          setSendResult({ success: true, data });
-          setSmsText("");
-          setSmsNumbers("");
-          loadDashboard();
-        } else {
-          showToast("ارسال ناموفق: " + (data.Message || JSON.stringify(data)), "error");
-          setSendResult({ success: false, error: data.Message || data });
-        }
-      } catch (err) {
-        showToast("خطا: " + err.message, "error");
-        setSendResult({ success: false, error: err.message });
-      }
-      setSending(false);
-      setConfirmData(null);
-    }
 
   const TABS = [
     { id: "dashboard", label: "داشبورد", icon: BarChart3 },
     { id: "send", label: "ارسال پیامک", icon: Send },
     { id: "history", label: "تاریخچه ارسال", icon: History },
     { id: "inbox", label: "دریافتی", icon: Inbox },
-    { id: "settings", label: "تنظیمات آموت", icon: Settings },
+    { id: "settings", label: "تنظیمات پیامک", icon: Settings },
   ];
 
   if (loading) return <Spinner label="بارگذاری پنل پیامک..." />;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <SEO title="پنل پیامک" description="ارسال و مدیریت پیامک — پنل مدیریت پرس‌کاد" url="/admin/sms" noIndex />
 
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-pill-md text-sm font-bold shadow-lg transition-all ${toast.type === "error" ? "bg-female-light border-2 border-female-normal text-female-dark" : "bg-ecosystem-light border-2 border-teal text-teal-text"}`}>
+        <div
+          className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-pill-md text-sm font-bold shadow-lg transition-all ${
+            toast.type === "error"
+              ? "bg-female-light border-2 border-female-normal text-female-dark"
+              : "bg-ecosystem-light border-2 border-teal text-teal-text"
+          }`}
+        >
           {toast.msg}
         </div>
       )}
@@ -251,23 +143,46 @@ export default function SmsPanel() {
             <MessageSquare size={22} className="text-teal" />
             پنل پیامک
           </h1>
-          <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-0.5">ارسال و مدیریت پیامک از طریق آموت</p>
+          <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-0.5">
+            ارسال و مدیریت پیامک‌های اطلاع‌رسانی
+          </p>
         </div>
       </div>
 
-      {/* Warning */}
-      {!canSms && (
-        <div className="bg-college-light border-2 border-orange/30 rounded-pill-md px-4 py-3 flex items-center gap-3">
-          <AlertTriangle size={18} className="text-orange shrink-0" />
-          <p className="text-sm font-bold text-orange">شما مجوز استفاده از پنل پیامک را ندارید. فقط مشاهده امکان‌پذیر است.</p>
-        </div>
-      )}
+      {/* ─── باکس اطلاع‌رسانی غیرفعال بودن پنل پیامک ─── */}
+      <div className="-rotate-[0.3deg]">
+        <StickerCard theme="orange">
+          <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <span className="w-11 h-11 rounded-full bg-orange text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                <PauseCircle size={24} />
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-black text-navy text-base">سامانه پیامک در حال حاضر غیرفعال است</h3>
+                  <Badge color="orange">غیرفعال موقت</Badge>
+                </div>
+                <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-1 leading-6">
+                  ارسال پیامک و اتصال به وب‌سرویس پیامکی موقتاً غیرفعال شده است. رابط کاربری پنل صرفاً برای مشاهده اطلاعات قبلی و پیش‌نمایش در دسترس می‌باشد.
+                </p>
+              </div>
+            </div>
+          </div>
+        </StickerCard>
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-1 bg-white border-2 border-ink/10 rounded-pill-md p-1 overflow-x-auto">
         {TABS.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-pill-sm text-sm font-bold transition-all whitespace-nowrap ${tab === t.id ? "bg-teal text-white shadow-[2px_2px_0_0_rgba(0,0,0,0.15)]" : "text-ink-subtle hover:text-ink hover:bg-bg-lavender"}`}>
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-pill-sm text-sm font-bold transition-all whitespace-nowrap ${
+              tab === t.id
+                ? "bg-teal text-white shadow-[2px_2px_0_0_rgba(0,0,0,0.15)]"
+                : "text-ink-subtle hover:text-ink hover:bg-bg-lavender"
+            }`}
+          >
             <t.icon size={14} /> {t.label}
           </button>
         ))}
@@ -275,38 +190,30 @@ export default function SmsPanel() {
 
       {/* ═══ Dashboard ═══ */}
       {tab === "dashboard" && (
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
             <StatCard theme="teal" label="ارسال امروز" value={faNum(stats.outboxToday)} caption="پیامک ارسال شده" />
             <StatCard theme="navy" label="ارسال ماه" value={faNum(stats.outboxMonth)} caption="پیامک این ماه" />
             <StatCard theme="magenta" label="دریافتی امروز" value={faNum(stats.inboxToday)} caption="پیامک دریافتی" />
-            <StatCard theme="orange" label="موفقیت" value={stats.successRate !== null ? `${faNum(stats.successRate)}٪` : "—"} caption="نرخ تحویل امروز" />
+            <StatCard theme="orange" label="موفقیت" value={stats.successRate !== null ? `${faNum(stats.successRate)}٪` : "—"} caption="نرخ تحویل" />
           </div>
 
-          {/* Account Status */}
+          {/* وضعیت سرویس */}
           <div>
-            <h2 className="text-xl font-extrabold text-navy mb-3">وضعیت حساب آموت</h2>
+            <h2 className="text-lg font-extrabold text-navy mb-3">وضعیت سرویس پیامک</h2>
             <div className="rotate-[0.3deg]">
               <StickerCard theme="white">
-                <div className="p-6">
-                  {account ? (
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-teal/10 flex items-center justify-center"><Phone size={18} className="text-teal-text" /></div>
-                        <div>
-                          <p className="text-sm font-bold text-navy">وضعیت: {account.Status === 1 ? "فعال ✅" : "غیرفعال ❌"}</p>
-                          {account.Balance !== undefined && <p className="text-xs font-semibold text-ink-subtle">موجودی: {formatRial(account.Balance)}</p>}
-                        </div>
-                      </div>
-                      {account.ExpireDate && <p className="text-xs font-medium text-ink/50">تاریخ انقضا: {account.ExpireDate}</p>}
+                <div className="p-5 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-orange/10 flex items-center justify-center">
+                      <PauseCircle size={20} className="text-orange" />
                     </div>
-                  ) : (
-                    <div className="text-center">
-                      <AlertTriangle size={40} className="mx-auto text-orange/50 mb-3" />
-                      <p className="text-sm font-bold text-ink-subtle mb-3">اطلاعات حساب قابل دریافت نیست</p>
-                      <p className="text-xs text-ink-subtle">توکن آموت را در تب «تنظیمات آموت» وارد کنید.</p>
+                    <div>
+                      <p className="text-sm font-bold text-navy">وضعیت ارائه‌دهنده: غیرفعال (معلق)</p>
+                      <p className="text-xs font-semibold text-ink-subtle">ارسال پیامک تا راه‌اندازی نسخه جدید متوقف است</p>
                     </div>
-                  )}
+                  </div>
+                  <Badge color="orange">غیرفعال</Badge>
                 </div>
               </StickerCard>
             </div>
@@ -319,42 +226,36 @@ export default function SmsPanel() {
         <div className="flex flex-col gap-4 max-w-2xl">
           <div className="-rotate-[0.5deg]">
             <StickerCard theme="white">
-              <form onSubmit={handleSendSms} className="p-4 flex flex-col gap-4">
+              <form onSubmit={(e) => { e.preventDefault(); showToast("سامانه پیامک در حال حاضر غیرفعال است", "error"); }} className="p-4 flex flex-col gap-4">
                 <div>
                   <label className="block text-base font-extrabold text-navy mb-1">شماره موبایل‌ها</label>
-                  <textarea value={smsNumbers} onChange={(e) => setSmsNumbers(e.target.value)}
-                    className={`${inputCls} min-h-[70px] font-mono text-xs`} placeholder={"09121234567\n09351234567\n09191234567"} dir="ltr" />
+                  <textarea
+                    value={smsNumbers}
+                    onChange={(e) => setSmsNumbers(e.target.value)}
+                    className={`${inputCls} min-h-[70px] font-mono text-xs`}
+                    placeholder={"09121234567\n09351234567\n09191234567"}
+                    dir="ltr"
+                    disabled
+                  />
                   <p className="text-[0.65rem] font-semibold text-ink-subtle mt-0.5">
-                    {smsNumbers.split(/[,;\n]+/).map((n) => n.trim()).filter(Boolean).length} شماره وارد شده
+                    ورود شماره‌ها در حال حاضر غیرفعال است.
                   </p>
                 </div>
                 <div>
                   <label className="block text-base font-extrabold text-navy mb-1">متن پیامک</label>
-                  <textarea value={smsText} onChange={(e) => setSmsText(e.target.value)}
-                    className={`${inputCls} min-h-[100px] text-xs`} placeholder="متن پیامک خود را اینجا بنویسید..." />
-                  <div className="flex items-center justify-between mt-0.5">
-                    <span className="text-sm font-semibold text-ink-subtle">{smsText.length} کاراکتر</span>
-                    <span className="text-sm font-semibold text-ink-subtle">{Math.ceil(smsText.length / 70)} صفحه</span>
-                  </div>
+                  <textarea
+                    value={smsText}
+                    onChange={(e) => setSmsText(e.target.value)}
+                    className={`${inputCls} min-h-[100px] text-xs`}
+                    placeholder="سامانه پیامک در حال حاضر غیرفعال است..."
+                    disabled
+                  />
                 </div>
-                {sendResult && (
-                  <div className={`rounded-pill-md border-2 p-4 ${sendResult.success ? "bg-ecosystem-light border-teal" : "bg-female-light border-magenta"}`}>
-                    <div className="flex items-center gap-2">
-                      {sendResult.success ? <CheckCircle size={20} className="text-teal-text" /> : <XCircle size={20} className="text-magenta-text" />}
-                      <span className={`font-black text-sm ${sendResult.success ? "text-teal-text" : "text-magenta-text"}`}>
-                        {sendResult.success ? "ارسال موفق ✅" : "ارسال ناموفق ❌"}
-                      </span>
-                    </div>
-                    {sendResult.error && <p className="text-xs font-medium text-ink-subtle mt-1">{JSON.stringify(sendResult.error)}</p>}
-                  </div>
-                )}
-                <Button variant="teal" size="lg" type="submit" disabled={!canSms || !smsText.trim() || !smsNumbers.trim() || sending}
-                  className="self-start" rotate="-rotate-[1deg]">
-                  <Send size={16} className="ml-2" /> {sending ? "در حال ارسال..." : "پیش‌نمایش و تأیید ارسال"}
-                </Button>
-                <p className="text-[0.65rem] font-medium text-ink-subtle -mt-1">
-                  ⚠️ پیامک فقط بعد از تأیید نهایی شما ارسال می‌شود.
-                </p>
+                <div className="flex items-center gap-3">
+                  <Button variant="teal" size="lg" type="submit" disabled className="self-start opacity-50 cursor-not-allowed">
+                    <Send size={16} className="ml-2" /> ارسال پیامک (غیرفعال)
+                  </Button>
+                </div>
               </form>
             </StickerCard>
           </div>
@@ -366,10 +267,14 @@ export default function SmsPanel() {
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-extrabold text-navy">تاریخچه ارسال‌ها</h2>
-            <Button variant="ghost" size="sm" onClick={loadHistory}><RefreshCw size={14} /></Button>
+            <Button variant="ghost" size="sm" onClick={loadHistory}>
+              <RefreshCw size={14} />
+            </Button>
           </div>
-          {logLoading ? <Spinner label="بارگذاری..." /> : outbox.length === 0 ? (
-            <EmptyState icon={<History size={48} />} title="هنوز پیامکی ارسال نشده" subtitle="اولین پیامک خود را ارسال کنید." />
+          {logLoading ? (
+            <Spinner label="بارگذاری..." />
+          ) : outbox.length === 0 ? (
+            <EmptyState icon={<History size={48} />} title="هنوز پیامکی ارسال نشده" subtitle="تاریخچه ارسال‌ها پس از فعال‌سازی سیستم ثبت خواهد شد." />
           ) : (
             <div className="rotate-[0.3deg]">
               <StickerCard theme="white">
@@ -412,10 +317,14 @@ export default function SmsPanel() {
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-extrabold text-navy">پیامک‌های دریافتی</h2>
-            <Button variant="ghost" size="sm" onClick={loadHistory}><RefreshCw size={14} /></Button>
+            <Button variant="ghost" size="sm" onClick={loadHistory}>
+              <RefreshCw size={14} />
+            </Button>
           </div>
-          {logLoading ? <Spinner label="بارگذاری..." /> : inboxMsgs.length === 0 ? (
-            <EmptyState icon={<Inbox size={48} />} title="هنوز پیامک دریافتی ندارید" subtitle="پیامک‌های دریافتی از وب‌هوک آموت اینجا نمایش داده می‌شوند." />
+          {logLoading ? (
+            <Spinner label="بارگذاری..." />
+          ) : inboxMsgs.length === 0 ? (
+            <EmptyState icon={<Inbox size={48} />} title="هنوز پیامک دریافتی ندارید" subtitle="پیامک‌های دریافتی اینجا نمایش داده می‌شوند." />
           ) : (
             <div className="flex flex-col gap-3">
               {inboxMsgs.map((msg) => (
@@ -426,7 +335,6 @@ export default function SmsPanel() {
                       <span className="text-xs font-medium text-ink-subtle">{new Date(msg.created_at).toLocaleString("fa-IR")}</span>
                     </div>
                     <p className="text-sm font-semibold text-ink leading-6">{msg.text}</p>
-                    {msg.line_number && <span className="text-[0.65rem] font-medium text-ink-subtle">خط: {msg.line_number}</span>}
                   </div>
                 </StickerCard>
               ))}
@@ -440,35 +348,23 @@ export default function SmsPanel() {
         <div className="flex flex-col gap-4 max-w-2xl">
           <div className="rotate-[0.3deg]">
             <StickerCard theme="white">
-              <form onSubmit={handleSaveSettings} className="p-5 flex flex-col gap-4">
+              <form onSubmit={(e) => { e.preventDefault(); showToast("تنظیمات پیامک در حال حاضر غیرفعال است", "error"); }} className="p-5 flex flex-col gap-4">
                 <div>
-                  <h2 className="text-lg font-black text-navy mb-1">تنظیمات آموت SMS</h2>
+                  <h2 className="text-lg font-black text-navy mb-1">تنظیمات درگاه پیامک</h2>
                   <p className="text-xs font-semibold text-ink-subtle">
-                    توکن وب‌سرویس آموت را از پنل کاربری آموت کپی کنید. آدرس وب‌هوک برای دریافت پیامک‌های ورودی و گزارش تحویل:
+                    تنظیمات وب‌سرویس و خطوط ارسال پیامک در حال حاضر در دست بازطراحی است.
                   </p>
-                  <div className="bg-bg-lavender rounded-lg px-3 py-2 mt-2 text-xs font-mono text-navy" dir="ltr">
-                    {window.location.origin}/api/webhooks/amoot
-                  </div>
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-navy mb-1">
-                      <Key size={12} className="inline ml-1" /> توکن وب‌سرویس آموت
-                    </label>
-                    <input type="password" value={settings.amoot_token} onChange={(e) => { setSettings((p) => ({ ...p, amoot_token: e.target.value })); setSettingsDirty(true); }}
-                      className={inputCls} placeholder="از پنل آموت کپی کنید" dir="ltr" disabled={!canSms} />
-                  </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold text-navy mb-1"><Smartphone size={12} className="inline ml-1" /> شماره خط</label>
-                      <input type="text" value={settings.line_number} onChange={(e) => { setSettings((p) => ({ ...p, line_number: e.target.value })); setSettingsDirty(true); }}
-                        className={inputCls} placeholder="مثلاً 5000xxxx" dir="ltr" disabled={!canSms} />
+                      <input type="text" value={settings.line_number} readOnly className={inputCls} dir="ltr" disabled />
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-navy mb-1"><User size={12} className="inline ml-1" /> نام فرستنده</label>
-                      <input type="text" value={settings.sender_name} onChange={(e) => { setSettings((p) => ({ ...p, sender_name: e.target.value })); setSettingsDirty(true); }}
-                        className={inputCls} placeholder="پرس‌کاد" disabled={!canSms} />
+                      <input type="text" value={settings.sender_name} readOnly className={inputCls} disabled />
                     </div>
                   </div>
                 </div>
@@ -476,75 +372,14 @@ export default function SmsPanel() {
                 <div className="bg-college-light border-2 border-orange/30 rounded-pill-md px-4 py-3 flex items-center gap-3">
                   <AlertTriangle size={18} className="text-orange shrink-0" />
                   <p className="text-xs font-semibold text-ink-subtle">
-                    توکن آموت به‌صورت رمزنگاری‌شده در دیتابیس ذخیره می‌شود. همچنین می‌توانید آن را در Vercel env با کلید <span className="font-mono font-bold text-navy">AMOOT_TOKEN</span> تنظیم کنید (اولویت با env).
+                    این ماژول موقتاً غیرفعال شده است. تنظیمات به‌زودی در دسترس قرار می‌گیرد.
                   </p>
-                </div>
-
-                <div className="flex gap-2 justify-end mt-1">
-                  <Button variant="teal" size="sm" type="submit" disabled={!canSms || !settingsDirty || savingSettings}>
-                    <Save size={14} className="ml-1" /> {savingSettings ? "در حال ذخیره..." : "ذخیره تنظیمات"}
-                  </Button>
                 </div>
               </form>
             </StickerCard>
           </div>
         </div>
-              )}
-
-              {/* ─── مودال تأیید ارسال پیامک ─── */}
-              {confirmShow && confirmData && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-[2px]" onClick={() => setConfirmShow(false)} role="dialog" aria-modal="true">
-                  <div className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-                    <div className="relative" style={{ zIndex: 1 }}>
-                      <div aria-hidden="true" className="absolute top-2 left-2 w-full h-full bg-ink rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
-                      <div className="relative z-10 bg-white border-2 border-ink rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-4 sm:p-5">
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="w-8 h-8 rounded-full bg-magenta/10 flex items-center justify-center">
-                            <Send size={15} className="text-magenta-text" />
-                          </div>
-                          <h3 className="text-sm font-black text-navy">تأیید ارسال پیامک</h3>
-                        </div>
-
-                        <div className="flex flex-col gap-3 mb-4">
-                          <div className="bg-bg-mint rounded-lg p-3 flex items-center gap-2">
-                            <div className="flex-1">
-                              <span className="text-xs font-bold text-teal-text block">گیرندگان</span>
-                              <span className="text-sm font-black text-navy" dir="ltr">{confirmData.mobiles}</span>
-                            </div>
-                            <span className="text-xs font-bold text-navy bg-white rounded-pill-sm px-2 py-1">{faNum(confirmData.count)} شماره</span>
-                          </div>
-
-                          <div className="bg-bg-lavender/50 rounded-lg p-3">
-                            <span className="text-xs font-bold text-ink-subtle block mb-1">متن پیامک</span>
-                            <p className="text-sm font-semibold text-ink leading-6 whitespace-pre-wrap bg-white rounded-lg px-2.5 py-2 border border-ink/10">{confirmData.text}</p>
-                            <div className="flex items-center gap-2 mt-1.5">
-                              <span className="text-[0.6rem] font-bold text-ink-subtle">{faNum(confirmData.chars)} کاراکتر</span>
-                              <span className="text-[0.6rem] font-bold text-ink-subtle">• {faNum(confirmData.pages)} صفحه</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2">
-                          <div className="relative flex-1">
-                            <div aria-hidden="true" className="absolute top-[0.125rem] left-[0.125rem] w-full h-full bg-ecosystem-dark rounded-pill-md [corner-shape:squircle]" />
-                            <button onClick={doSendSms} disabled={sending}
-                              className="relative z-10 w-full bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-4 py-2.5 rounded-pill-md [corner-shape:squircle] font-extrabold hover:bg-ecosystem-dark transition-colors disabled:opacity-50 text-sm">
-                              {sending ? "در حال ارسال..." : "✅ بله، ارسال کن"}
-                            </button>
-                          </div>
-                          <div className="relative flex-1">
-                            <div aria-hidden="true" className="absolute top-[0.125rem] left-[0.125rem] w-full h-full bg-ink/70 rounded-pill-md [corner-shape:squircle]" />
-                            <button onClick={() => { setConfirmShow(false); setConfirmData(null); }}
-                              className="relative z-10 w-full bg-white border-2 border-ink text-ink px-4 py-2.5 rounded-pill-md [corner-shape:squircle] font-extrabold hover:bg-bg-neutral transition-colors text-sm">
-                              ✕ انصراف
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        }
+      )}
+    </div>
+  );
+}
