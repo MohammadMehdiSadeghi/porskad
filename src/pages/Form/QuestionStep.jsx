@@ -208,7 +208,7 @@ export default function QuestionStep({ question, index, total, value, timeSpent,
         </div>
 
         {/* عنوان */}
-        <h2 className="text-base sm:text-lg lg:text-xl font-black text-male-normal leading-snug">
+        <h2 className="text-[17px] leading-[26px] sm:text-[20px] sm:leading-[30px] font-black text-male-normal">
           {question.title}{question.required && <span className="text-female-normal mr-0.5">*</span>}
         </h2>
         {question.description && <p className="text-xs sm:text-sm font-semibold text-ink-subtle leading-6 -mt-1.5">{question.description}</p>}

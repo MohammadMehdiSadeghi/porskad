@@ -882,7 +882,7 @@ export default function EmbedForm() {
                       <span className="text-xs sm:text-sm font-black text-male-normal">سوال {faNum(currentVisibleIndex)} از {faNum(visibleTotal)}</span>
                       {currentQuestion.required && <span className="text-[0.6rem] sm:text-xs font-bold text-female-normal">اجباری *</span>}
                     </div>
-                    <h2 className="text-base sm:text-lg font-black text-male-normal">{currentQuestion.title}</h2>
+                    <h2 className="text-[17px] leading-[26px] sm:text-[20px] sm:leading-[30px] font-black text-male-normal">{currentQuestion.title}</h2>
                     {currentQuestion.description && <p className="text-xs sm:text-sm text-ink-subtle -mt-1.5">{currentQuestion.description}</p>}
 
                     {(currentQuestion.type === "short_text" || currentQuestion.type === "long_text" || currentQuestion.type === "email" || currentQuestion.type === "number" || currentQuestion.type === "phone_ir" || currentQuestion.type === "telegram_id") && (
