@@ -95,7 +95,7 @@ export default function ShareForm() {
         setLoading(false);
         return;
       }
-      if (!isOwner() && user?.id && data.manager_id !== user.id && data.created_by !== user.id) {
+      if (!isOwner() && (!user || (data.manager_id !== user.id && data.created_by !== user.id))) {
         push("شما به این فرم دسترسی ندارید", "error");
         setForm(null);
         setLoading(false);

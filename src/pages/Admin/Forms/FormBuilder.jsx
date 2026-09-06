@@ -690,7 +690,7 @@ export default function FormBuilder() {
         setLoading(false);
         return;
       }
-      if (!isOwner() && user?.id && f.manager_id !== user.id && f.created_by !== user.id) {
+      if (!isOwner() && (!user || (f.manager_id !== user.id && f.created_by !== user.id))) {
         push("شما به این فرم دسترسی ندارید.", "error");
         setNotFound(true);
         setLoading(false);

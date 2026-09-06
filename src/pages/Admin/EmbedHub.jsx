@@ -304,62 +304,77 @@ function FormEmbedCard({ form, baseUrl, index }) {
 
 // ─── صفحه اصلی ───
 export default function EmbedHub() {
-  const { user, isOwner } = useAuth();
+  const { user, isOwner, loading: authLoading } = useAuth();
   const { push } = useToast();
   const [loading, setLoading] = useState(true);
   const [forms, setForms] = useState([]);
   const baseUrl = window.location.origin;
 
-  useEffect(() => {
-    async function load() {
-      try {
-        // فقط فرم‌های فعال (منتشرشده و حذف/آرشیو نشده) در این صفحه نمایش داده می‌شوند
-        const { data, error } = await supabase
-          .from("forms")
-          .select("id, slug, title, public_id, published, created_at, manager_id, created_by")
-          .eq("published", true)
-          .eq("archived", false)
-          .is("deleted_at", null)
-          .order("created_at", { ascending: false });
-        if (error) throw error;
+  const load = useCallback(async () => {
+    if (authLoading) return;
+    if (!user) {
+      setForms([]);
+      setLoading(false);
+      return;
+    }
 
-        let activeForms = data ?? [];
-        if (!isOwner() && user?.id) {
-          activeForms = activeForms.filter(
-            (f) => f.manager_id === user.id || f.created_by === user.id
-          );
-        }
+    setLoading(true);
+    try {
+      // فقط فرم‌های فعال (منتشرشده و حذف/آرشیو نشده) متعلق به خود کاربر نمایش داده می‌شوند
+      let query = supabase
+        .from("forms")
+        .select("id, slug, title, public_id, published, created_at, manager_id, created_by")
+        .eq("published", true)
+        .eq("archived", false)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false });
 
-        const formIds = activeForms.map((f) => f.id);
-        let questionCounts = {};
-        if (formIds.length) {
-          const { data: qData } = await supabase
-            .from("questions")
-            .select("form_id")
-            .in("form_id", formIds);
-          if (qData) {
-            for (const q of qData) {
-              questionCounts[q.form_id] = (questionCounts[q.form_id] ?? 0) + 1;
-            }
+      if (!isOwner()) {
+        query = query.or(`manager_id.eq.${user.id},created_by.eq.${user.id}`);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      let activeForms = data ?? [];
+      if (!isOwner()) {
+        activeForms = activeForms.filter(
+          (f) => f.manager_id === user.id || f.created_by === user.id
+        );
+      }
+
+      const formIds = activeForms.map((f) => f.id);
+      let questionCounts = {};
+      if (formIds.length) {
+        const { data: qData } = await supabase
+          .from("questions")
+          .select("form_id")
+          .in("form_id", formIds);
+        if (qData) {
+          for (const q of qData) {
+            questionCounts[q.form_id] = (questionCounts[q.form_id] ?? 0) + 1;
           }
         }
-
-        setForms(
-          (data ?? []).map((f) => ({
-            ...f,
-            question_count: questionCounts[f.id] ?? 0,
-          }))
-        );
-      } catch (err) {
-        push("خطا در بارگذاری فرم‌ها: " + err.message, "error");
-      } finally {
-        setLoading(false);
       }
-    }
-    load();
-  }, []);
 
-  if (loading) return <Spinner label="در حال بارگذاری فرم‌ها..." />;
+      setForms(
+        activeForms.map((f) => ({
+          ...f,
+          question_count: questionCounts[f.id] ?? 0,
+        }))
+      );
+    } catch (err) {
+      push("خطا در بارگذاری فرم‌ها: " + err.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [user, isOwner, authLoading, push]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (loading || authLoading) return <Spinner label="در حال بارگذاری فرم‌ها..." />;
 
   return (
     <div className="flex flex-col gap-6">

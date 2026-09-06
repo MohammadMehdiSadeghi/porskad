@@ -541,7 +541,7 @@ export default function Responses() {
       if (formError) throw formError;
       if (qError) throw qError;
 
-      if (!isOwner() && user?.id && f && f.manager_id !== user.id && f.created_by !== user.id) {
+      if (!isOwner() && (!user || (f && f.manager_id !== user.id && f.created_by !== user.id))) {
         push("شما به پاسخ‌های این فرم دسترسی ندارید.", "error");
         setForm(null);
         setLoading(false);
