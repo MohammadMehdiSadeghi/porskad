@@ -7,12 +7,20 @@
     html {
         scroll-behavior: smooth;
         direction: rtl;
-        font-size: 19px;
+        font-size: 16px;
         overflow-x: hidden;
     }
-    /* Desktop: reduce root font-size by 4px */
+    /* Tablet & Small Laptop: 14px (1px smaller than previous 15px) */
     @media (min-width: 768px) {
-        html { font-size: 15px; }
+        html { font-size: 14px; }
+    }
+    /* Standard Laptop & Desktop Monitor: 13.5px (1.5px smaller for sleek layout) */
+    @media (min-width: 1024px) {
+        html { font-size: 13.5px; }
+    }
+    /* Large Widescreen Displays */
+    @media (min-width: 1440px) {
+        html { font-size: 14px; }
     }
     body {
         @apply font-sans text-ink bg-white antialiased;
@@ -117,23 +125,32 @@ html {
     animation: slide-up 0.3s ease-out;
 }
 
-/* ─── Desktop: text sizes ─── */
+/* ─── Laptop & Desktop Monitor: Scaled typography (-1px for body/sm/xs, -1.5px to -2px for headings) ─── */
 @media (min-width: 768px) {
-    .text-xs { font-size: 10px; line-height: 16px; }
-    .text-sm { font-size: 13px; line-height: 21px; }
-    .text-base { font-size: 16px; line-height: 25px; }
-    .text-lg { font-size: 25px; line-height: 39px; }
-    .text-xl { font-size: 32px; line-height: 49px; }
-    .text-2xl { font-size: 40px; line-height: 61px; }
-    .text-3xl { font-size: 52px; line-height: 79px; }
-    h1.text-xl { font-size: 31px; line-height: 48px; }
-    h1.text-3xl { font-size: 51px; line-height: 78px; }
-    /* Form card glass buttons: -2px */
+    .text-xs { font-size: 9.5px; line-height: 15px; }
+    .text-sm { font-size: 12px; line-height: 19px; }
+    .text-base { font-size: 15px; line-height: 23px; }
+    .text-md { font-size: 18px; line-height: 27px; }
+    .text-lg { font-size: 23px; line-height: 34px; }
+    .text-xl { font-size: 29px; line-height: 42px; }
+    .text-2xl { font-size: 37px; line-height: 52px; }
+    .text-3xl { font-size: 47px; line-height: 66px; }
+    h1.text-xl { font-size: 28px; line-height: 40px; }
+    h1.text-2xl { font-size: 36px; line-height: 50px; }
+    h1.text-3xl { font-size: 46px; line-height: 64px; }
+    
+    /* Button typography refined for sleek desktop feel */
     .rounded-pill-md.text-sm,
-    .rounded-pill-md.text-base { font-size: 11px; line-height: 19px; }
-    /* Form card content: +4px bigger */
-    [data-form-card] .text-xs { font-size: 14px; line-height: 20px; }
-    [data-form-card] .text-sm { font-size: 17px; line-height: 25px; }
-    [data-form-card] .text-base { font-size: 20px; line-height: 29px; }
-    [data-form-card] .text-lg { font-size: 29px; line-height: 43px; }
+    .rounded-pill-md.text-base { font-size: 12px; line-height: 18px; }
+}
+
+@media (min-width: 1024px) {
+    .text-xs { font-size: 9.5px; line-height: 15px; }
+    .text-sm { font-size: 12px; line-height: 19px; }
+    .text-base { font-size: 14.5px; line-height: 22px; }
+    .text-md { font-size: 18px; line-height: 27px; }
+    .text-lg { font-size: 22.5px; line-height: 33px; }
+    .text-xl { font-size: 28.5px; line-height: 41px; }
+    .text-2xl { font-size: 36.5px; line-height: 51px; }
+    .text-3xl { font-size: 46px; line-height: 64px; }
 }

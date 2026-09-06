@@ -547,8 +547,8 @@ export default function Support() {
                   <Headphones size={20} />
                 </span>
                 <div>
-                  <h3 className="font-black text-navy text-sm sm:text-base">افزایش سهمیه و پلن</h3>
-                  <p className="text-xs font-semibold text-ink-subtle mt-0.5">سفارشی‌سازی سقف فرم‌ها و قابلیت‌ها</p>
+                  <h3 className="font-black text-navy text-sm sm:text-base">افزایش سهمیه فرم‌ها</h3>
+                  <p className="text-xs font-semibold text-ink-subtle mt-0.5">سفارشی‌سازی سقف فرم‌ها و پاسخ‌ها</p>
                 </div>
               </div>
               <button
@@ -571,7 +571,7 @@ export default function Support() {
       {isOwner() && (
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           {/* تب‌های فیلتر */}
-          <div className="flex flex-wrap items-center gap-1 bg-white border-2 border-ink/15 rounded-pill-md p-1 shadow-sm">
+          <div className="flex items-center gap-1 bg-white border-2 border-ink/15 rounded-pill-md p-1 shadow-sm overflow-x-auto scrollbar-none max-w-full">
             <button
               onClick={() => setAdminFilter("all")}
               className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors ${

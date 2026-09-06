@@ -427,7 +427,7 @@ export default function FormsList() {
                 </Badge>
               </div>
               <p className="text-xs font-semibold text-ink-subtle mt-0.5">
-                پلن: {profile?.plan === "enterprise" ? "سازمانی" : profile?.plan === "pro" ? "حرفه‌ای" : "رایگان"}
+                مدیریت و پایش فرم‌های فعال شما
               </p>
             </div>
           </div>
@@ -456,7 +456,7 @@ export default function FormsList() {
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1 min-w-[200px] bg-white border-2 border-ink/15 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
         />
-        <div className="flex items-center gap-0.5 bg-white border-2 border-ink/15 rounded-pill-md p-0.5">
+        <div className="flex items-center gap-0.5 bg-white border-2 border-ink/15 rounded-pill-md p-0.5 overflow-x-auto scrollbar-none max-w-full">
           {[
             { key: "all", label: "همه" },
             { key: "published", label: "منتشر" },

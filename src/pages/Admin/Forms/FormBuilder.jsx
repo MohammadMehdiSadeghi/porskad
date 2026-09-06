@@ -902,7 +902,7 @@ export default function FormBuilder() {
           <h1 className="text-2xl font-black text-navy">فرم‌ساز</h1>
           {dirty && <Badge color="orange" rotate="rotate-[2deg]">• تغییرات</Badge>}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           {form.published && (
             <>
               <Button variant="white" size="sm" onClick={async () => {
@@ -918,9 +918,9 @@ export default function FormBuilder() {
             <BarChart3 size={14} /> پاسخ‌ها
           </Button>
           <Button as={Link} to={`/admin/forms/${id}/share`} variant="white" size="sm">
-            <Share2 size={14} /> اشتراک‌گذاری
+            <Share2 size={14} /> اشتراک
           </Button>
-          <Button variant="teal" onClick={save} disabled={saving || !dirty}>
+          <Button variant="teal" size="sm" onClick={save} disabled={saving || !dirty}>
             {saving ? "در حال ذخیره..." : "ذخیره"}
           </Button>
         </div>
@@ -969,7 +969,7 @@ export default function FormBuilder() {
             {/* انتخاب نوع فرم */}
             <div className="border-t-2 border-dashed border-navy/15 pt-4">
               <Field label={<><Settings size={14} /> نوع فرم</>}>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
                   {[
                     { key: "step_by_step", label: "مرحله به مرحله", icon: "📄", desc: "هر سوال یک صفحه جداگانه" },
                     { key: "registration", label: "ثبت‌نامی", icon: "reg", desc: "همه فیلدها یکجا در یک صفحه" },

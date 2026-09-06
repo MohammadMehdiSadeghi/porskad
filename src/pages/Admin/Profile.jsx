@@ -206,7 +206,7 @@ export default function Profile() {
         </StickerCard>
       </div>
 
-      {/* سهمیه و پلن اکانت */}
+      {/* سهمیه و دسترسی‌های حساب */}
       <div className="rotate-[0.3deg]">
         <StickerCard theme="teal" radius="rounded-tl-[1.75rem] rounded-br-[1.75rem] rounded-tr-none rounded-bl-none">
           <div className="p-5 sm:p-6 flex flex-col gap-4">

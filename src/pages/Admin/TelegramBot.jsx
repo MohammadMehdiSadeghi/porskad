@@ -355,7 +355,7 @@ export default function TelegramBot() {
       )}
 
       {/* تب‌ها */}
-      <div className="flex gap-1 bg-white border-2 border-ink/10 rounded-pill-md p-1 overflow-x-auto">
+      <div className="flex gap-1 bg-white border-2 border-ink/10 rounded-pill-md p-1 overflow-x-auto scrollbar-none max-w-full">
         {TABS.map((t) => (
           <button
             key={t.id}

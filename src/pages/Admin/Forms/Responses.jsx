@@ -894,7 +894,7 @@ export default function Responses() {
       )}
 
       {/* تب‌ها */}
-      <div className="flex gap-1 bg-bg-neutral rounded-lg p-1 w-fit">
+      <div className="flex gap-1 bg-bg-neutral rounded-lg p-1 w-fit max-w-full overflow-x-auto scrollbar-none">
         {[
           { key: "list", label: `پاسخ‌ها (${filtered.length})` },
           { key: "analysis", label: "تحلیل سوال‌ها" },

@@ -94,11 +94,6 @@ export default function SuperAdmin() {
   const [sqlRunning, setSqlRunning] = useState(false);
   const [toast, setToast] = useState(null);
 
-  // ─── User Management State ───
-  const [newPassword, setNewPassword] = useState("");
-  const [newEmail, setNewEmail] = useState("");
-  const [passwordVisible, setPasswordVisible] = useState(false);
-
   // ─── Dedicated User Activity Logs Modal State ───
   const [userLogsModal, setUserLogsModal] = useState(false);
   const [selectedUserForLogs, setSelectedUserForLogs] = useState(null);

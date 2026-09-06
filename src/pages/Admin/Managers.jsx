@@ -477,7 +477,7 @@ export default function Managers() {
                         ویرایش
                       </Button>
                       {isOwner() && !m.is_owner && (
-                        <Button variant="ghost" size="sm" className="!text-teal-text" onClick={() => openQuotaModal(m)} title="تنظیم سهمیه و پلن">
+                        <Button variant="ghost" size="sm" className="!text-teal-text" onClick={() => openQuotaModal(m)} title="تنظیم سهمیه و فرم‌ها">
                           سهمیه ⚙️
                         </Button>
                       )}
