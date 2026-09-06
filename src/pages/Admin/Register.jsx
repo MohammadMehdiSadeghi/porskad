@@ -5,6 +5,7 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabaseClient";
+import { isValidIranPhone, normalizeIranPhone, isValidPassword } from "../../lib/validators";
 import SEO from "../../components/ui/SEO";
 
 export default function Register() {
@@ -12,6 +13,7 @@ export default function Register() {
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState(null);
@@ -31,8 +33,19 @@ export default function Register() {
       return;
     }
 
-    if (password.length < 6) {
-      setError("رمز عبور باید حداقل ۶ کاراکتر باشد.");
+    if (!email.trim() || !email.includes("@")) {
+      setError("لطفاً یک آدرس ایمیل معتبر وارد کنید.");
+      return;
+    }
+
+    const normalizedPhone = normalizeIranPhone(phone);
+    if (!isValidIranPhone(phone)) {
+      setError("شماره موبایل نامعتبر است (مثال: ۰۹۱۲۳۴۵۶۷۸۹).");
+      return;
+    }
+
+    if (!isValidPassword(password)) {
+      setError("رمز عبور باید حداقل ۶ کاراکتر و شامل حروف انگلیسی و عدد باشد (مثال: pors1234).");
       return;
     }
 
@@ -43,7 +56,7 @@ export default function Register() {
 
     setBusy(true);
     try {
-      const data = await register(email.trim(), password, fullName.trim());
+      const data = await register(email.trim(), password, fullName.trim(), normalizedPhone);
       if (data?.session) {
         navigate("/admin/forms", { replace: true });
       } else {
@@ -143,6 +156,23 @@ export default function Register() {
                 />
               </label>
 
+              <label className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs sm:text-sm font-extrabold text-navy">شماره موبایل</span>
+                  <span className="text-[0.65rem] font-bold text-teal">اجباری</span>
+                </div>
+                <input
+                  type="tel"
+                  dir="ltr"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full bg-white border-2 border-ink/25 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink text-left focus:outline-none transition-all text-sm"
+                  placeholder="۰۹۱۲۳۴۵۶۷۸۹"
+                  autoComplete="tel"
+                />
+              </label>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <label className="flex flex-col gap-1">
                   <span className="text-xs sm:text-sm font-extrabold text-navy">رمز عبور</span>
@@ -153,7 +183,7 @@ export default function Register() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full bg-white border-2 border-ink/25 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink text-left focus:outline-none transition-all text-sm"
-                    placeholder="حداقل ۶ کاراکتر"
+                    placeholder="حداقل ۶ کاراکتر (حروف و عدد)"
                     autoComplete="new-password"
                   />
                 </label>

@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../components/ui/Toast";
 import { supabase } from "../../lib/supabaseClient";
+import { isValidIranPhone, normalizeIranPhone } from "../../lib/validators";
 import Button from "../../components/ui/Button";
 import StickerCard from "../../components/ui/StickerCard";
 import Badge from "../../components/ui/Badge";
@@ -35,7 +36,15 @@ export default function Profile() {
   const { push } = useToast();
 
   const [fullName, setFullName] = useState(profile?.full_name ?? "");
+  const [phone, setPhone] = useState(profile?.phone ?? "");
   const [savingProfile, setSavingProfile] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setFullName(profile.full_name ?? "");
+      setPhone(profile.phone ?? "");
+    }
+  }, [profile]);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -48,9 +57,14 @@ export default function Profile() {
       push("نام نمی‌تواند خالی باشد", "error");
       return;
     }
+    const cleanPhone = phone ? normalizeIranPhone(phone) : "";
+    if (phone && !isValidIranPhone(cleanPhone)) {
+      push("شماره موبایل نامعتبر است (مثال: ۰۹۱۲۳۴۵۶۷۸۹)", "error");
+      return;
+    }
     setSavingProfile(true);
     try {
-      await updateProfile({ full_name: fullName.trim() });
+      await updateProfile({ full_name: fullName.trim(), phone: cleanPhone || null });
       push("پروفایل به‌روزرسانی شد");
     } catch (err) {
       push("خطا: " + err.message, "error");
@@ -145,6 +159,14 @@ export default function Profile() {
               </div>
             </div>
 
+            {/* شماره موبایل */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-ink-subtle">شماره موبایل:</span>
+              <span className="text-sm font-mono font-bold text-navy" dir="ltr">
+                {profile?.phone || "ثبت نشده"}
+              </span>
+            </div>
+
             {/* نقش */}
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold text-ink-subtle">نقش:</span>
@@ -230,33 +252,50 @@ export default function Profile() {
         </StickerCard>
       </div>
 
-      {/* ویرایش نام */}
+      {/* ویرایش نام و شماره موبایل */}
       <div className="rotate-[0.3deg]">
         <StickerCard theme="white" radius="rounded-tl-[1.75rem] rounded-br-[1.75rem] rounded-tr-none rounded-bl-none">
           <div className="p-5 sm:p-6 flex flex-col gap-4">
             <h2 className="text-lg font-extrabold text-navy flex items-center gap-2">
-              ویرایش نام نمایشی
+              ویرایش اطلاعات حساب
             </h2>
 
-            <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-extrabold text-navy">نام نمایشی</span>
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink focus:outline-none transition-all"
-                placeholder="نام و نام خانوادگی"
-              />
-            </label>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <label className="flex flex-col gap-1.5">
+                <span className="text-sm font-extrabold text-navy">نام و نام خانوادگی</span>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink focus:outline-none transition-all"
+                  placeholder="نام و نام خانوادگی"
+                />
+              </label>
+
+              <label className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-extrabold text-navy">شماره موبایل</span>
+                  <span className="text-[0.65rem] font-bold text-teal">ایران</span>
+                </div>
+                <input
+                  type="tel"
+                  dir="ltr"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink text-left focus:outline-none transition-all"
+                  placeholder="۰۹۱۲۳۴۵۶۷۸۹"
+                />
+              </label>
+            </div>
 
             <div className="flex justify-end">
               <Button
                 variant="teal"
                 size="sm"
                 onClick={handleSaveProfile}
-                disabled={savingProfile || fullName === (profile?.full_name ?? "")}
+                disabled={savingProfile || (fullName === (profile?.full_name ?? "") && phone === (profile?.phone ?? ""))}
               >
-                {savingProfile ? "در حال ذخیره..." : "ذخیره نام"}
+                {savingProfile ? "در حال ذخیره..." : "ذخیره تغییرات"}
               </Button>
             </div>
           </div>

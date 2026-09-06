@@ -42,7 +42,7 @@ export function AuthProvider({ children }) {
       // اول با is_owner و فیلدهای سهمیه سعی کن
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, email, full_name, avatar_url, is_active, is_owner, created_by, max_forms, max_responses_per_month, plan, can_use_telegram, can_export_excel")
+        .select("id, email, full_name, phone, avatar_url, is_active, is_owner, created_by, max_forms, max_responses_per_month, plan, can_use_telegram, can_export_excel")
         .eq("id", uid)
         .maybeSingle();
 
@@ -59,7 +59,7 @@ export function AuthProvider({ children }) {
       // اگه خطا بود، فالبک با is_owner بدون فیلدهای سهمیه
       const { data: fallbackData, error: fallbackError } = await supabase
         .from("profiles")
-        .select("id, email, full_name, avatar_url, is_active, is_owner, created_by")
+        .select("id, email, full_name, phone, avatar_url, is_active, is_owner, created_by")
         .eq("id", uid)
         .maybeSingle();
 
@@ -67,7 +67,7 @@ export function AuthProvider({ children }) {
         // فالبک حداقلی اگر حتی is_owner در ستون‌ها نبود
         const { data: minData } = await supabase
           .from("profiles")
-          .select("id, email, full_name, avatar_url, is_active, created_by")
+          .select("id, email, full_name, phone, avatar_url, is_active, created_by")
           .eq("id", uid)
           .maybeSingle();
 
@@ -220,13 +220,14 @@ export function AuthProvider({ children }) {
     return data;
   }
 
-  async function register(email, password, fullName) {
+  async function register(email, password, fullName, phone) {
+    const cleanPhone = phone?.trim() || "";
     // ۱. ابتدا تلاش از طریق API برای تایید خودکار و دور زدن محدودیت ایمیل
     try {
       const apiRes = await fetch("/api/auth-register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password, fullName }),
+        body: JSON.stringify({ email: email.trim(), password, fullName, phone: cleanPhone }),
       });
       if (apiRes.ok) {
         const { data: loginData } = await supabase.auth.signInWithPassword({
@@ -234,6 +235,11 @@ export function AuthProvider({ children }) {
           password,
         });
         if (loginData?.session) {
+          if (cleanPhone) {
+            try {
+              await supabase.from("profiles").update({ phone: cleanPhone }).eq("id", loginData.user.id);
+            } catch {}
+          }
           return loginData;
         }
       } else {
@@ -255,16 +261,18 @@ export function AuthProvider({ children }) {
       options: {
         data: {
           full_name: fullName?.trim() || email.split("@")[0],
+          phone: cleanPhone,
         },
       },
     });
     if (error) throw error;
 
-    // ثبت لاگ فعالیت
+    // ثبت لاگ و اطلاعات تکمیلی در profiles
     try {
       if (data?.user) {
         await supabase.from("profiles").update({
           full_name: fullName?.trim() || email.split("@")[0],
+          phone: cleanPhone,
           max_forms: 5,
           max_responses_per_month: 100,
           plan: 'free',

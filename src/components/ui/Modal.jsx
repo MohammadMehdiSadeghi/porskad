@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import StickerCard from "./StickerCard";
 
-export default function Modal({ open, onClose, title, children, wide = false }) {
+export default function Modal({ open, onClose, title, children, wide = false, closable = true }) {
   useEffect(() => {
-    if (!open) return;
+    if (!open || !closable) return;
     const onKey = (e) => e.key === "Escape" && onClose?.();
     window.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
@@ -11,14 +11,14 @@ export default function Modal({ open, onClose, title, children, wide = false }) 
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [open, onClose]);
+  }, [open, onClose, closable]);
 
   if (!open) return null;
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-[2px]"
-      onClick={onClose}
+      onClick={closable ? onClose : undefined}
       role="dialog"
       aria-modal="true"
     >
@@ -32,13 +32,15 @@ export default function Modal({ open, onClose, title, children, wide = false }) 
             {title && (
               <div className="flex items-center justify-between gap-3 mb-4">
                 <h3 className="text-xl font-black text-navy">{title}</h3>
-                <button
-                  onClick={onClose}
-                  className="w-9 h-9 flex items-center justify-center rounded-pill-md border-2 border-ink bg-white text-ink font-black hover:bg-bg-neutral transition-colors"
-                  aria-label="بستن"
-                >
-                  ✕
-                </button>
+                {closable && onClose && (
+                  <button
+                    onClick={onClose}
+                    className="w-9 h-9 flex items-center justify-center rounded-pill-md border-2 border-ink bg-white text-ink font-black hover:bg-bg-neutral transition-colors"
+                    aria-label="بستن"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
             )}
             {children}

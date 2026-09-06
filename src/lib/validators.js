@@ -31,6 +31,14 @@ export function isValidEmail(raw) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s);
 }
 
+// ─── رمز عبور (نه خیلی سخت، نه خیلی شل: حداقل ۶ کاراکتر شامل حروف و اعداد) ───
+export const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
+
+export function isValidPassword(pass) {
+  if (typeof pass !== "string") return false;
+  return PASSWORD_REGEX.test(pass);
+}
+
 // ─── عدد ───
 export function parseNumber(raw) {
   if (raw === null || raw === undefined) return null;
