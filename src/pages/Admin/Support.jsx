@@ -46,7 +46,7 @@ export default function Support() {
     try {
       let query = supabase
         .from("support_tickets")
-        .select("*, profiles:user_id(full_name, email)")
+        .select("*")
         .order("created_at", { ascending: false });
 
       // کاربر عادی فقط تیکت‌های خودش را می‌بیند
@@ -55,11 +55,31 @@ export default function Support() {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
-      setTickets(data || []);
-    } catch (err) {
-      console.error("loadTickets error:", err);
-      // اگر جدول هنوز ساخته نشده باشد بی‌صدا رد شو
+      if (error) {
+        setTickets([]);
+        return;
+      }
+
+      let ticketsData = data || [];
+      if (isOwner() && ticketsData.length > 0) {
+        const userIds = [...new Set(ticketsData.map((t) => t.user_id).filter(Boolean))];
+        if (userIds.length > 0) {
+          try {
+            const { data: userProfiles } = await supabase
+              .from("profiles")
+              .select("id, full_name, email")
+              .in("id", userIds);
+            const map = Object.fromEntries((userProfiles || []).map((p) => [p.id, p]));
+            ticketsData = ticketsData.map((t) => ({ ...t, profiles: map[t.user_id] }));
+          } catch {
+            // ignore profile load error
+          }
+        }
+      }
+
+      setTickets(ticketsData);
+    } catch {
+      setTickets([]);
     } finally {
       setLoading(false);
     }

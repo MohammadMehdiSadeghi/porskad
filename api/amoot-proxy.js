@@ -40,19 +40,29 @@ export default async function handler(req, res) {
   try {
     // احراز هویت کاربر
     const authHeader = req.headers.authorization;
-    if (!authHeader) {
+    if (!authHeader || !authHeader.startsWith("Bearer ") || authHeader.trim() === "Bearer") {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    const token = authHeader.replace("Bearer ", "").trim();
+    if (!token) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseKey) {
       return res.status(500).json({ error: "Supabase config missing" });
     }
 
-    // کلاینت با توکن کاربر (برای بررسی permission)
+    // کلاینت سرویس رول (برای خوندن تنظیمات و چک پروفایل)
+    const supabaseAdmin = createClient(
+      supabaseUrl,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseKey
+    );
+
+    // کلاینت با توکن کاربر (برای احراز هویت)
     const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } },
+      global: { headers: { Authorization: `Bearer ${token}` } },
     });
 
     const {
@@ -64,21 +74,43 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // بررسی permission
-    const { data: permData } = await supabase.rpc("has_permission", {
-      p_user_id: user.id,
-      p_permission_id: "manage_sms",
-    });
+    // بررسی permission: مالک/ادمین یا دارنده مجوز manage_sms
+    let hasPerm = false;
 
-    if (!permData) {
-      return res.status(403).json({ error: "Permission denied" });
+    // ۱. بررسی رول یا مالک از طریق profiles
+    try {
+      const { data: prof } = await supabaseAdmin
+        .from("profiles")
+        .select("is_owner")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (prof?.is_owner) hasPerm = true;
+    } catch {}
+
+    // ۲. بررسی RPC is_admin
+    if (!hasPerm) {
+      try {
+        const { data: isOwnerOrAdmin } = await supabase.rpc("is_admin", {
+          p_user_id: user.id,
+        });
+        if (isOwnerOrAdmin) hasPerm = true;
+      } catch {}
     }
 
-    // کلاینت سرویس رول (برای خوندن sms_settings)
-    const supabaseAdmin = createClient(
-      supabaseUrl,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
-    );
+    // ۳. بررسی RPC has_permission
+    if (!hasPerm) {
+      try {
+        const { data: permData } = await supabase.rpc("has_permission", {
+          p_user_id: user.id,
+          p_permission_id: "manage_sms",
+        });
+        if (permData) hasPerm = true;
+      } catch {}
+    }
+
+    if (!hasPerm) {
+      return res.status(403).json({ error: "Permission denied" });
+    }
 
     const { endpoint, params = {} } = req.body;
     if (!endpoint) {

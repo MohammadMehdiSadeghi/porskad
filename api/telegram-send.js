@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     }
 
     // ─── اتصال به Supabase ───
-    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
     // جداول telegram_config / telegram_form_links RLS دارن (فقط admin/owner می‌تونن بخونن).
     // پس حتماً باید SERVICE_ROLE_KEY استفاده بشه، نه anon key.
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

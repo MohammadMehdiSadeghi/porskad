@@ -9,7 +9,7 @@ import EmptyState from "../../../components/ui/EmptyState";
 import Modal from "../../../components/ui/Modal";
 import { useToast } from "../../../components/ui/Toast";
 import { useAuth } from "../../../context/AuthContext";
-import { copyToClipboard, randomSlug } from "../../../lib/utils";
+import { copyToClipboard, randomSlug, faNum } from "../../../lib/utils";
 import { FileText, Plus, AlignLeft, ClipboardList, Undo2, Trash2 } from "lucide-react";
 import SEO from "../../../components/ui/SEO";
 

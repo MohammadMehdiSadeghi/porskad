@@ -77,11 +77,24 @@ export default function SmsPanel() {
         supabase.from("sms_outbox").select("id, status").gte("created_at", monthStart.toISOString()),
         supabase.from("sms_inbox").select("id").gte("created_at", today.toISOString()),
         // AccountStatus از آموت
-        fetch("/api/amoot-proxy", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${(await supabase.auth.getSession()).data?.session?.access_token || ""}` },
-          body: JSON.stringify({ endpoint: "AccountStatus" }),
-        }).then((r) => r.json()).catch(() => null),
+        (async () => {
+          try {
+            const session = (await supabase.auth.getSession()).data?.session;
+            if (!session?.access_token) return null;
+            const res = await fetch("/api/amoot-proxy", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${session.access_token}`,
+              },
+              body: JSON.stringify({ endpoint: "AccountStatus" }),
+            });
+            if (!res.ok) return null;
+            return await res.json();
+          } catch {
+            return null;
+          }
+        })(),
       ]);
 
       const todaySent = (outboxData.data || []).length;
