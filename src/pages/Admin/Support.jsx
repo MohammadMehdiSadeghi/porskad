@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabaseClient";
@@ -10,7 +10,7 @@ import Spinner from "../../components/ui/Spinner";
 import Modal from "../../components/ui/Modal";
 import EmptyState from "../../components/ui/EmptyState";
 import SEO from "../../components/ui/SEO";
-import { faDateTime, faRelative } from "../../lib/utils";
+import { faDateTime, faRelative, faNum } from "../../lib/utils";
 import {
   MessageSquare,
   Send,
@@ -21,6 +21,17 @@ import {
   Bot,
   ExternalLink,
   MessageCircle,
+  Lock,
+  Unlock,
+  Archive,
+  ArchiveRestore,
+  ChevronDown,
+  ChevronUp,
+  Search,
+  Phone,
+  User as UserIcon,
+  X,
+  Layers,
 } from "lucide-react";
 
 export default function Support() {
@@ -29,13 +40,28 @@ export default function Support() {
   const { push } = useToast();
   const [loading, setLoading] = useState(true);
   const [tickets, setTickets] = useState([]);
-  const [filter, setFilter] = useState("all"); // 'all' | 'open' | 'answered'
 
-  // کاربر: تیکت جدید
+  // فیلترها
+  // ادمین: 'all' | 'open' | 'answered' | 'closed' | 'archived'
+  // کاربر: 'active' | 'archived'
+  const [adminFilter, setAdminFilter] = useState("all");
+  const [userFilter, setUserFilter] = useState("active");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // آکاردئون کاربران برای ادمین (کدام کاربرها باز هستند)
+  const [expandedUsers, setExpandedUsers] = useState({});
+
+  // کاربر: ساخت تیکت جدید
   const [newTicketModal, setNewTicketModal] = useState(false);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // ادمین: پاسخ به تیکت
+  const [replyTicket, setReplyTicket] = useState(null);
+  const [replyText, setReplyText] = useState("");
+  const [closeOnReply, setCloseOnReply] = useState(false);
+  const [replying, setReplying] = useState(false);
 
   useEffect(() => {
     const subjParam = searchParams.get("subject");
@@ -47,11 +73,22 @@ export default function Support() {
     }
   }, [searchParams]);
 
-  // ادمین: پاسخ به تیکت
-  const [replyTicket, setReplyTicket] = useState(null);
-  const [replyText, setReplyText] = useState("");
-  const [replying, setReplying] = useState(false);
+  // توابع کمکی بررسی آرشیو با فالبک localStorage
+  const isArchivedByAdmin = useCallback((t) => {
+    if (t.archived_by_admin !== undefined && t.archived_by_admin !== null) {
+      return Boolean(t.archived_by_admin);
+    }
+    return localStorage.getItem(`admin_archived_${t.id}`) === "true";
+  }, []);
 
+  const isArchivedByUser = useCallback((t) => {
+    if (t.archived_by_user !== undefined && t.archived_by_user !== null) {
+      return Boolean(t.archived_by_user);
+    }
+    return localStorage.getItem(`user_archived_${t.id}`) === "true";
+  }, []);
+
+  // بارگذاری تیکت‌ها از دیتابیس
   const loadTickets = useCallback(async () => {
     if (!user) return;
     setLoading(true);
@@ -79,12 +116,12 @@ export default function Support() {
           try {
             const { data: userProfiles } = await supabase
               .from("profiles")
-              .select("id, full_name, email")
+              .select("id, full_name, email, phone, is_owner")
               .in("id", userIds);
             const map = Object.fromEntries((userProfiles || []).map((p) => [p.id, p]));
             ticketsData = ticketsData.map((t) => ({ ...t, profiles: map[t.user_id] }));
           } catch {
-            // ignore profile load error
+            // نادیده گرفتن خطا
           }
         }
       }
@@ -116,6 +153,8 @@ export default function Support() {
         subject: subject.trim(),
         message: message.trim(),
         status: "open",
+        archived_by_user: false,
+        archived_by_admin: false,
       });
 
       if (error) throw error;
@@ -133,18 +172,19 @@ export default function Support() {
     }
   }
 
-  // ثبت پاسخ توسط ادمین
+  // ثبت پاسخ توسط مدیر
   async function handleSendReply(e) {
     e.preventDefault();
     if (!replyText.trim() || !replyTicket) return;
 
     setReplying(true);
+    const newStatus = closeOnReply ? "closed" : "answered";
     try {
       const { error } = await supabase
         .from("support_tickets")
         .update({
           admin_reply: replyText.trim(),
-          status: "answered",
+          status: newStatus,
           replied_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
@@ -152,9 +192,10 @@ export default function Support() {
 
       if (error) throw error;
 
-      push("پاسخ تیکت با موفقیت ثبت شد.", "success");
+      push(closeOnReply ? "پاسخ ثبت و تیکت بسته شد." : "پاسخ تیکت با موفقیت ثبت شد.", "success");
       setReplyTicket(null);
       setReplyText("");
+      setCloseOnReply(false);
       loadTickets();
     } catch (err) {
       console.error(err);
@@ -164,14 +205,198 @@ export default function Support() {
     }
   }
 
-  // فیلتر تیکت‌ها
-  const filteredTickets = tickets.filter((t) => {
-    if (filter === "open") return t.status === "open";
-    if (filter === "answered") return t.status === "answered";
-    return true;
-  });
+  // بستن یا بازگشایی تیکت توسط مدیر
+  async function handleToggleStatus(ticket) {
+    const nextStatus = ticket.status === "closed" ? "open" : "closed";
+    // به‌روزرسانی سریع در استیت
+    setTickets((prev) =>
+      prev.map((t) => (t.id === ticket.id ? { ...t, status: nextStatus } : t))
+    );
 
-  const openCount = tickets.filter((t) => t.status === "open").length;
+    try {
+      const { error } = await supabase
+        .from("support_tickets")
+        .update({
+          status: nextStatus,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", ticket.id);
+
+      if (error) throw error;
+      push(nextStatus === "closed" ? "تیکت بسته شد 🔒" : "تیکت مجدداً بازگشایی شد 🔓", "success");
+    } catch (err) {
+      console.error("Status update error:", err);
+      push("خطا در تغییر وضعیت تیکت: " + err.message, "error");
+      loadTickets();
+    }
+  }
+
+  // تغییر وضعیت آرشیو توسط مدیر
+  async function handleToggleAdminArchive(ticket) {
+    const isCurrentlyArchived = isArchivedByAdmin(ticket);
+    const nextArchived = !isCurrentlyArchived;
+
+    // به‌روزرسانی سریع در استیت و حافظه مرورگر
+    setTickets((prev) =>
+      prev.map((t) => (t.id === ticket.id ? { ...t, archived_by_admin: nextArchived } : t))
+    );
+    try {
+      localStorage.setItem(`admin_archived_${ticket.id}`, String(nextArchived));
+    } catch {}
+
+    try {
+      const { error } = await supabase
+        .from("support_tickets")
+        .update({
+          archived_by_admin: nextArchived,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", ticket.id);
+
+      if (error) console.warn("Supabase archive error, local used:", error);
+      push(nextArchived ? "تیکت به آرشیو منتقل شد 📦" : "تیکت از آرشیو خارج شد 📤", "success");
+    } catch {
+      push(nextArchived ? "تیکت به آرشیو منتقل شد 📦" : "تیکت از آرشیو خارج شد 📤", "success");
+    }
+  }
+
+  // تغییر وضعیت آرشیو توسط کاربر عادی
+  async function handleToggleUserArchive(ticket) {
+    const isCurrentlyArchived = isArchivedByUser(ticket);
+    const nextArchived = !isCurrentlyArchived;
+
+    setTickets((prev) =>
+      prev.map((t) => (t.id === ticket.id ? { ...t, archived_by_user: nextArchived } : t))
+    );
+    try {
+      localStorage.setItem(`user_archived_${ticket.id}`, String(nextArchived));
+    } catch {}
+
+    try {
+      const { error } = await supabase
+        .from("support_tickets")
+        .update({
+          archived_by_user: nextArchived,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", ticket.id);
+
+      if (error) console.warn("Supabase user archive error, local used:", error);
+      push(nextArchived ? "تیکت به آرشیو شما منتقل شد 📦" : "تیکت از آرشیو شما خارج شد 📤", "success");
+    } catch {
+      push(nextArchived ? "تیکت به آرشیو شما منتقل شد 📦" : "تیکت از آرشیو شما خارج شد 📤", "success");
+    }
+  }
+
+  // عملکردهای باز/بسته کردن همه گروه‌های کاربر در پنل مدیر
+  function toggleUserExpand(userId) {
+    setExpandedUsers((prev) => ({ ...prev, [userId]: !prev[userId] }));
+  }
+
+  function expandAllGroups(groups) {
+    const all = {};
+    groups.forEach((g) => {
+      all[g.userId] = true;
+    });
+    setExpandedUsers(all);
+  }
+
+  function collapseAllGroups() {
+    setExpandedUsers({});
+  }
+
+  // ─── محاسبات گروه‌بندی بر اساس کاربر برای مدیر ───
+  const userGroups = useMemo(() => {
+    if (!isOwner()) return [];
+
+    const map = {};
+    const q = searchQuery.trim().toLowerCase();
+
+    for (const t of tickets) {
+      const isArchived = isArchivedByAdmin(t);
+
+      // فیلتر تب فعال مدیر
+      if (adminFilter === "archived" && !isArchived) continue;
+      if (adminFilter !== "archived" && isArchived) continue;
+      if (adminFilter === "open" && t.status !== "open") continue;
+      if (adminFilter === "answered" && t.status !== "answered") continue;
+      if (adminFilter === "closed" && t.status !== "closed") continue;
+
+      // فیلتر جستجو در متن، نام، ایمیل و شماره
+      if (q) {
+        const prof = t.profiles || {};
+        const matchUser =
+          (prof.full_name || "").toLowerCase().includes(q) ||
+          (prof.email || "").toLowerCase().includes(q) ||
+          (prof.phone || "").toLowerCase().includes(q);
+        const matchContent =
+          (t.subject || "").toLowerCase().includes(q) ||
+          (t.message || "").toLowerCase().includes(q) ||
+          (t.admin_reply || "").toLowerCase().includes(q);
+        if (!matchUser && !matchContent) continue;
+      }
+
+      const uid = t.user_id || "unknown";
+      if (!map[uid]) {
+        map[uid] = {
+          userId: uid,
+          profile: t.profiles || { full_name: "کاربر بدون نام", email: "—", phone: null },
+          tickets: [],
+          openCount: 0,
+          answeredCount: 0,
+          closedCount: 0,
+          archivedCount: 0,
+          latestDate: t.created_at,
+        };
+      }
+
+      map[uid].tickets.push(t);
+      if (isArchived) map[uid].archivedCount++;
+      else if (t.status === "open") map[uid].openCount++;
+      else if (t.status === "answered") map[uid].answeredCount++;
+      else if (t.status === "closed") map[uid].closedCount++;
+
+      if (new Date(t.created_at) > new Date(map[uid].latestDate)) {
+        map[uid].latestDate = t.created_at;
+      }
+    }
+
+    // مرتب‌سازی: اول کاربرانی که تیکت در انتظار پاسخ دارند، سپس بر اساس جدیدترین فعالیت
+    return Object.values(map).sort((a, b) => {
+      if (a.openCount > 0 && b.openCount === 0) return -1;
+      if (b.openCount > 0 && a.openCount === 0) return 1;
+      return new Date(b.latestDate) - new Date(a.latestDate);
+    });
+  }, [tickets, isOwner, adminFilter, searchQuery, isArchivedByAdmin]);
+
+  // ─── محاسبات تیکت‌های کاربر عادی ───
+  const userFilteredTickets = useMemo(() => {
+    if (isOwner()) return [];
+    return tickets.filter((t) => {
+      const isArchived = isArchivedByUser(t);
+      if (userFilter === "archived") return isArchived;
+      return !isArchived;
+    });
+  }, [tickets, isOwner, userFilter, isArchivedByUser]);
+
+  // شمارنده‌های کلی
+  const adminCounts = useMemo(() => {
+    const unarchived = tickets.filter((t) => !isArchivedByAdmin(t));
+    return {
+      all: unarchived.length,
+      open: unarchived.filter((t) => t.status === "open").length,
+      answered: unarchived.filter((t) => t.status === "answered").length,
+      closed: unarchived.filter((t) => t.status === "closed").length,
+      archived: tickets.filter((t) => isArchivedByAdmin(t)).length,
+    };
+  }, [tickets, isArchivedByAdmin]);
+
+  const userCounts = useMemo(() => {
+    return {
+      active: tickets.filter((t) => !isArchivedByUser(t)).length,
+      archived: tickets.filter((t) => isArchivedByUser(t)).length,
+    };
+  }, [tickets, isArchivedByUser]);
 
   if (loading) return <Spinner label="در حال بارگذاری تیکت‌های پشتیبانی..." />;
 
@@ -179,7 +404,7 @@ export default function Support() {
     <div className="flex flex-col gap-6 max-w-5xl mx-auto">
       <SEO
         title="پشتیبانی و تیکت‌ها"
-        description="ارتباط با پشتیبانی و ارسال تیکت"
+        description="مرکز ارتباط و تیکت‌های پشتیبانی"
         url="/admin/support"
         noIndex
       />
@@ -187,13 +412,16 @@ export default function Support() {
       {/* هدر صفحه */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-3xl font-black text-navy">
-            {isOwner() ? "مرکز پشتیبانی و پیام‌های کاربران" : "پشتیبانی و ارتباط با ما"}
+          <h1 className="text-xl sm:text-3xl font-black text-navy flex items-center gap-2">
+            <span>{isOwner() ? "مرکز تیکت‌های پشتیبانی و کاربران" : "پشتیبانی و ارتباط با ما"}</span>
+            {isOwner() && adminCounts.open > 0 && (
+              <span className="w-3 h-3 rounded-full bg-orange animate-ping" title="تیکت در انتظار پاسخ" />
+            )}
           </h1>
           <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-1">
             {isOwner()
-              ? `${tickets.length} پیام دریافت شده (${openCount} در انتظار پاسخ)`
-              : "سوالی دارید یا به سهمیه و امکانات بیشتری نیاز دارید؟ پیام بفرستید."}
+              ? `نمایش بر اساس کاربر • ${faNum(adminCounts.all)} پیام فعال (${faNum(adminCounts.open)} در انتظار پاسخ)`
+              : "سوالی دارید یا به سهمیه و امکانات بیشتری نیاز دارید؟ تیکت بفرستید."}
           </p>
         </div>
 
@@ -261,125 +489,497 @@ export default function Support() {
         </div>
       )}
 
-      {/* تب‌های فیلتر برای ادمین */}
-      {isOwner() && tickets.length > 0 && (
-        <div className="flex items-center gap-1 bg-white border-2 border-ink/15 rounded-pill-md p-1 w-fit">
+      {/* ─── بخش فیلترها و جستجو برای مدیر ─── */}
+      {isOwner() && (
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          {/* تب‌های فیلتر */}
+          <div className="flex flex-wrap items-center gap-1 bg-white border-2 border-ink/15 rounded-pill-md p-1 shadow-sm">
+            <button
+              onClick={() => setAdminFilter("all")}
+              className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors ${
+                adminFilter === "all" ? "bg-navy text-white" : "text-ink-subtle hover:text-ink"
+              }`}
+            >
+              همه فعال‌ها ({faNum(adminCounts.all)})
+            </button>
+            <button
+              onClick={() => setAdminFilter("open")}
+              className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors ${
+                adminFilter === "open" ? "bg-orange text-white" : "text-ink-subtle hover:text-ink"
+              }`}
+            >
+              در انتظار پاسخ ({faNum(adminCounts.open)})
+            </button>
+            <button
+              onClick={() => setAdminFilter("answered")}
+              className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors ${
+                adminFilter === "answered" ? "bg-teal text-white" : "text-ink-subtle hover:text-ink"
+              }`}
+            >
+              پاسخ داده شده ({faNum(adminCounts.answered)})
+            </button>
+            <button
+              onClick={() => setAdminFilter("closed")}
+              className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors ${
+                adminFilter === "closed" ? "bg-slate-700 text-white" : "text-ink-subtle hover:text-ink"
+              }`}
+            >
+              بسته شده ({faNum(adminCounts.closed)})
+            </button>
+            <button
+              onClick={() => setAdminFilter("archived")}
+              className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors flex items-center gap-1 ${
+                adminFilter === "archived" ? "bg-purple-700 text-white" : "text-ink-subtle hover:text-ink"
+              }`}
+            >
+              <Archive size={12} />
+              آرشیو ({faNum(adminCounts.archived)})
+            </button>
+          </div>
+
+          {/* فیلد جستجو و کنترل باز/بسته کردن همه */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 sm:w-60">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="جستجو در کاربر یا پیام..."
+                className="w-full bg-white border-2 border-ink/20 focus:border-teal rounded-pill-md pl-8 pr-8 py-1.5 text-xs font-semibold text-ink focus:outline-none transition-all"
+              />
+              <Search size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink/40 pointer-events-none" />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+
+            {userGroups.length > 0 && (
+              <div className="flex items-center gap-1 bg-white border-2 border-ink/15 rounded-pill-md p-0.5">
+                <button
+                  onClick={() => expandAllGroups(userGroups)}
+                  className="px-2 py-1 text-[0.7rem] font-bold text-ink-subtle hover:text-navy rounded-pill-sm hover:bg-bg-neutral transition-colors"
+                  title="باز کردن تیکت‌های تمام کاربران"
+                >
+                  باز کردن همه
+                </button>
+                <span className="text-ink/20">|</span>
+                <button
+                  onClick={collapseAllGroups}
+                  className="px-2 py-1 text-[0.7rem] font-bold text-ink-subtle hover:text-navy rounded-pill-sm hover:bg-bg-neutral transition-colors"
+                  title="بستن همه"
+                >
+                  بستن همه
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ─── تب‌های فیلتر برای کاربر عادی (فعال / آرشیو) ─── */}
+      {!isOwner() && tickets.length > 0 && (
+        <div className="flex items-center gap-1 bg-white border-2 border-ink/15 rounded-pill-md p-1 w-fit shadow-sm">
           <button
-            onClick={() => setFilter("all")}
-            className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors ${
-              filter === "all" ? "bg-navy text-white" : "text-ink-subtle hover:text-ink"
+            onClick={() => setUserFilter("active")}
+            className={`px-3.5 py-1 text-xs font-bold rounded-pill-sm transition-colors ${
+              userFilter === "active" ? "bg-navy text-white" : "text-ink-subtle hover:text-ink"
             }`}
           >
-            همه ({tickets.length})
+            تیکت‌های من ({faNum(userCounts.active)})
           </button>
           <button
-            onClick={() => setFilter("open")}
-            className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors ${
-              filter === "open" ? "bg-orange text-white" : "text-ink-subtle hover:text-ink"
+            onClick={() => setUserFilter("archived")}
+            className={`px-3.5 py-1 text-xs font-bold rounded-pill-sm transition-colors flex items-center gap-1 ${
+              userFilter === "archived" ? "bg-purple-700 text-white" : "text-ink-subtle hover:text-ink"
             }`}
           >
-            در انتظار پاسخ ({openCount})
-          </button>
-          <button
-            onClick={() => setFilter("answered")}
-            className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors ${
-              filter === "answered" ? "bg-teal text-white" : "text-ink-subtle hover:text-ink"
-            }`}
-          >
-            پاسخ داده شده ({tickets.length - openCount})
+            <Archive size={12} />
+            آرشیو شده‌ها 📦 ({faNum(userCounts.archived)})
           </button>
         </div>
       )}
 
-      {/* لیست تیکت‌ها */}
-      {filteredTickets.length === 0 ? (
-        <EmptyState
-          icon={<MessageSquare size={48} />}
-          title={isOwner() ? "هیچ تیکت پشتیبانی وجود ندارد" : "هنوز پیامی ارسال نکرده‌اید"}
-          subtitle={
-            isOwner()
-              ? "پیام‌ها و سوالات کاربران در این بخش نمایش داده می‌شوند."
-              : "اگر سوال یا مشکلی دارید، با دکمه زیر پیام بفرستید."
-          }
-          action={
-            !isOwner() && (
-              <Button variant="teal" size="sm" onClick={() => setNewTicketModal(true)}>
-                + ارسال تیکت جدید
-              </Button>
-            )
-          }
-        />
-      ) : (
-        <div className="flex flex-col gap-4">
-          {filteredTickets.map((t, idx) => (
-            <div key={t.id} className={idx % 2 ? "rotate-[0.3deg]" : "-rotate-[0.3deg]"}>
-              <StickerCard theme={t.status === "open" ? "orange" : "white"}>
-                <div className="p-5 flex flex-col gap-3">
-                  <div className="flex flex-wrap items-start justify-between gap-2 border-b border-ink/10 pb-3">
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-black text-navy text-base">{t.subject}</h3>
-                        <Badge color={t.status === "open" ? "orange" : "green"}>
-                          {t.status === "open" ? "در انتظار پاسخ" : "پاسخ داده شد"}
-                        </Badge>
+      {/* ─── نمایش برای ادمین: گروه‌بندی بر اساس کاربران ─── */}
+      {isOwner() ? (
+        userGroups.length === 0 ? (
+          <EmptyState
+            icon={<MessageSquare size={48} />}
+            title="هیچ تیکتی با این فیلتر یافت نشد"
+            subtitle={
+              searchQuery
+                ? "عبارت جستجوی دیگری را امتحان کنید یا فیلتر را تغییر دهید."
+                : adminFilter === "archived"
+                ? "هیچ تیکتی در آرشیو مدیر قرار ندارد."
+                : "پیام‌ها و سوالات کاربران در این بخش به تفکیک کاربر نمایش داده می‌شوند."
+            }
+          />
+        ) : (
+          <div className="flex flex-col gap-4">
+            {userGroups.map((group) => {
+              const isExpanded = Boolean(expandedUsers[group.userId]);
+              const initialLetter = (group.profile?.full_name || group.profile?.email || "ک")[0].toUpperCase();
+
+              return (
+                <div
+                  key={group.userId}
+                  className={`bg-white border-2 transition-all duration-200 rounded-2xl p-4 sm:p-5 shadow-sm ${
+                    group.openCount > 0
+                      ? "border-orange/60 hover:border-orange bg-orange/5"
+                      : "border-ink/15 hover:border-teal"
+                  }`}
+                >
+                  {/* نوار بالایی کاربر — کلیک جهت باز و بسته شدن */}
+                  <div
+                    onClick={() => toggleUserExpand(group.userId)}
+                    className="flex flex-wrap items-center justify-between gap-3 cursor-pointer select-none"
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      {/* آواتار کاربر */}
+                      <div
+                        className={`w-11 h-11 shrink-0 rounded-2xl flex items-center justify-center font-black text-base shadow-sm ${
+                          group.openCount > 0
+                            ? "bg-orange text-white ring-2 ring-orange/30 animate-pulse"
+                            : "bg-navy text-white"
+                        }`}
+                      >
+                        {initialLetter}
                       </div>
-                      {isOwner() && t.profiles && (
-                        <span className="text-xs font-semibold text-ink-subtle">
-                          ارسال شده توسط: {t.profiles.full_name || t.profiles.email} ({t.profiles.email})
-                        </span>
-                      )}
+
+                      <div className="flex flex-col min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-navy text-sm sm:text-base truncate">
+                            {group.profile.full_name || "کاربر بدون نام"}
+                          </span>
+                          {group.profile.is_owner && (
+                            <span className="text-[0.65rem] font-bold bg-amber-100 text-amber-800 rounded-pill-sm px-2 py-0.5 shrink-0">
+                              مدیر کل 👑
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-ink-subtle mt-0.5">
+                          <span dir="ltr" className="truncate">{group.profile.email}</span>
+                          {group.profile.phone && (
+                            <span className="text-teal font-mono font-bold flex items-center gap-1" dir="ltr">
+                              <Phone size={11} /> {group.profile.phone}
+                            </span>
+                          )}
+                          <span className="text-[0.7rem] text-ink/30">• آخرین فعالیت: {faRelative(group.latestDate)}</span>
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-xs font-semibold text-ink-subtle" title={faDateTime(t.created_at)}>
-                      {faRelative(t.created_at)}
-                    </span>
+
+                    {/* بج‌ها و دکمه باز/بستن */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      {group.openCount > 0 && (
+                        <Badge color="orange" className="animate-pulse">
+                          {faNum(group.openCount)} در انتظار پاسخ
+                        </Badge>
+                      )}
+                      {group.answeredCount > 0 && (
+                        <Badge color="teal">
+                          {faNum(group.answeredCount)} پاسخ داده شده
+                        </Badge>
+                      )}
+                      {group.closedCount > 0 && (
+                        <Badge color="gray">
+                          {faNum(group.closedCount)} بسته
+                        </Badge>
+                      )}
+                      {group.archivedCount > 0 && (
+                        <Badge color="purple">
+                          {faNum(group.archivedCount)} آرشیو
+                        </Badge>
+                      )}
+                      <Badge color="navy">
+                        {faNum(group.tickets.length)} تیکت
+                      </Badge>
+
+                      <span
+                        className={`w-8 h-8 rounded-xl bg-ink/5 hover:bg-ink/10 flex items-center justify-center text-navy transition-transform duration-200 ${
+                          isExpanded ? "rotate-180 bg-teal/15 text-teal" : ""
+                        }`}
+                        aria-label="باز و بستن تیکت‌ها"
+                      >
+                        <ChevronDown size={18} />
+                      </span>
+                    </div>
                   </div>
 
-                  <p className="text-sm font-semibold text-ink leading-7 whitespace-pre-wrap">
-                    {t.message}
-                  </p>
+                  {/* ─── تیکت‌های این کاربر (با کلیک باز می‌شود) ─── */}
+                  {isExpanded && (
+                    <div className="mt-4 pt-4 border-t-2 border-dashed border-ink/10 flex flex-col gap-4">
+                      {group.tickets.map((t) => {
+                        const isClosed = t.status === "closed";
+                        const isArchived = isArchivedByAdmin(t);
 
-                  {/* پاسخ ادمین */}
-                  {t.admin_reply && (
-                    <div className="mt-2 p-4 rounded-xl bg-ecosystem-light/80 border-2 border-teal/40 flex flex-col gap-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-teal-text flex items-center gap-1.5">
-                          <CheckCircle2 size={14} /> پاسخ پشتیبانی پرس‌کاد
-                        </span>
-                        {t.replied_at && (
-                          <span className="text-[0.65rem] font-medium text-ink-subtle">
-                            {faRelative(t.replied_at)}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm font-semibold text-navy leading-7 whitespace-pre-wrap">
-                        {t.admin_reply}
-                      </p>
-                    </div>
-                  )}
+                        return (
+                          <div
+                            key={t.id}
+                            className={`rounded-xl p-4 sm:p-5 border-2 transition-all duration-200 ${
+                              isArchived
+                                ? "bg-purple-50/40 border-purple-200"
+                                : isClosed
+                                ? "bg-slate-50 border-slate-200 opacity-90"
+                                : t.status === "open"
+                                ? "bg-amber-50/50 border-amber-300"
+                                : "bg-white border-ink/15"
+                            }`}
+                          >
+                            <div className="flex flex-col gap-3">
+                              {/* سربرگ تیکت */}
+                              <div className="flex flex-wrap items-start justify-between gap-2 border-b border-ink/10 pb-3">
+                                <div className="flex flex-col gap-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <h4 className="font-black text-navy text-base">{t.subject}</h4>
+                                    <Badge
+                                      color={
+                                        isClosed
+                                          ? "gray"
+                                          : t.status === "open"
+                                          ? "orange"
+                                          : "green"
+                                      }
+                                    >
+                                      {isClosed
+                                        ? "بسته شده 🔒"
+                                        : t.status === "open"
+                                        ? "در انتظار پاسخ"
+                                        : "پاسخ داده شد"}
+                                    </Badge>
+                                    {isArchived && (
+                                      <Badge color="purple">آرشیو شده 📦</Badge>
+                                    )}
+                                  </div>
+                                </div>
+                                <span className="text-xs font-semibold text-ink-subtle" title={faDateTime(t.created_at)}>
+                                  {faRelative(t.created_at)}
+                                </span>
+                              </div>
 
-                  {/* دکمه پاسخ برای ادمین */}
-                  {isOwner() && (
-                    <div className="flex justify-end pt-2 border-t border-ink/10">
-                      <Button
-                        variant="teal"
-                        size="sm"
-                        onClick={() => {
-                          setReplyTicket(t);
-                          setReplyText(t.admin_reply || "");
-                        }}
-                      >
-                        {t.admin_reply ? "ویرایش پاسخ" : "پاسخ به تیکت ✍️"}
-                      </Button>
+                              {/* متن پیام کاربر */}
+                              <p className="text-sm font-semibold text-ink leading-7 whitespace-pre-wrap">
+                                {t.message}
+                              </p>
+
+                              {/* پاسخ مدیر در صورت وجود */}
+                              {t.admin_reply && (
+                                <div className="mt-2 p-4 rounded-xl bg-ecosystem-light/80 border-2 border-teal/40 flex flex-col gap-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs font-black text-teal-text flex items-center gap-1.5">
+                                      <CheckCircle2 size={14} /> پاسخ پشتیبانی پرسکاد
+                                    </span>
+                                    {t.replied_at && (
+                                      <span className="text-[0.65rem] font-medium text-ink-subtle">
+                                        {faRelative(t.replied_at)}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-sm font-semibold text-navy leading-7 whitespace-pre-wrap">
+                                    {t.admin_reply}
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* نوار ابزار اقدامات برای مدیر */}
+                              <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-ink/10 mt-1">
+                                {/* بستن / بازگشایی تیکت */}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleToggleStatus(t)}
+                                  className={`text-xs ${
+                                    isClosed
+                                      ? "text-teal hover:bg-teal/10"
+                                      : "text-slate-600 hover:bg-slate-100"
+                                  }`}
+                                >
+                                  {isClosed ? (
+                                    <>
+                                      <Unlock size={14} className="ml-1" /> بازگشایی تیکت
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Lock size={14} className="ml-1" /> بستن تیکت
+                                    </>
+                                  )}
+                                </Button>
+
+                                {/* آرشیو / خروج از آرشیو */}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleToggleAdminArchive(t)}
+                                  className="text-xs text-purple-700 hover:bg-purple-100/60"
+                                >
+                                  {isArchived ? (
+                                    <>
+                                      <ArchiveRestore size={14} className="ml-1" /> خروج از آرشیو
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Archive size={14} className="ml-1" /> آرشیو تیکت
+                                    </>
+                                  )}
+                                </Button>
+
+                                {/* پاسخ یا ویرایش پاسخ */}
+                                <Button
+                                  variant="teal"
+                                  size="sm"
+                                  onClick={() => {
+                                    setReplyTicket(t);
+                                    setReplyText(t.admin_reply || "");
+                                    setCloseOnReply(isClosed);
+                                  }}
+                                >
+                                  {t.admin_reply ? "ویرایش پاسخ ✍️" : "پاسخ به تیکت ✍️"}
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
-              </StickerCard>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )
+      ) : (
+        /* ─── نمایش برای کاربر عادی ─── */
+        userFilteredTickets.length === 0 ? (
+          <EmptyState
+            icon={<MessageSquare size={48} />}
+            title={userFilter === "archived" ? "هیچ تیکت آرشیو شده‌ای ندارید" : "هنوز پیامی ارسال نکرده‌اید"}
+            subtitle={
+              userFilter === "archived"
+                ? "تیکت‌هایی که آرشیو می‌کنید در این زبانه نگهداری می‌شوند."
+                : "اگر سوال، پیشنهاد یا مشکلی دارید، با دکمه زیر پیام بفرستید."
+            }
+            action={
+              userFilter !== "archived" && (
+                <Button variant="teal" size="sm" onClick={() => setNewTicketModal(true)}>
+                  + ارسال تیکت جدید
+                </Button>
+              )
+            }
+          />
+        ) : (
+          <div className="flex flex-col gap-4">
+            {userFilteredTickets.map((t, idx) => {
+              const isClosed = t.status === "closed";
+              const isArchived = isArchivedByUser(t);
+
+              return (
+                <div key={t.id} className={idx % 2 ? "rotate-[0.3deg]" : "-rotate-[0.3deg]"}>
+                  <StickerCard
+                    theme={
+                      isArchived
+                        ? "white"
+                        : isClosed
+                        ? "white"
+                        : t.status === "open"
+                        ? "orange"
+                        : "white"
+                    }
+                  >
+                    <div className="p-5 flex flex-col gap-3">
+                      {/* سربرگ تیکت کاربر */}
+                      <div className="flex flex-wrap items-start justify-between gap-2 border-b border-ink/10 pb-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-black text-navy text-base">{t.subject}</h3>
+                          <Badge
+                            color={
+                              isClosed
+                                ? "gray"
+                                : t.status === "open"
+                                ? "orange"
+                                : "green"
+                            }
+                          >
+                            {isClosed
+                              ? "بسته شده 🔒"
+                              : t.status === "open"
+                              ? "در انتظار پاسخ"
+                              : "پاسخ داده شد"}
+                          </Badge>
+                          {isArchived && <Badge color="purple">آرشیو شده 📦</Badge>}
+                        </div>
+                        <span className="text-xs font-semibold text-ink-subtle" title={faDateTime(t.created_at)}>
+                          {faRelative(t.created_at)}
+                        </span>
+                      </div>
+
+                      {/* متن پیام */}
+                      <p className="text-sm font-semibold text-ink leading-7 whitespace-pre-wrap">
+                        {t.message}
+                      </p>
+
+                      {/* پاسخ پشتیبانی */}
+                      {t.admin_reply && (
+                        <div className="mt-2 p-4 rounded-xl bg-ecosystem-light/80 border-2 border-teal/40 flex flex-col gap-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-black text-teal-text flex items-center gap-1.5">
+                              <CheckCircle2 size={14} /> پاسخ پشتیبانی پرسکاد
+                            </span>
+                            {t.replied_at && (
+                              <span className="text-[0.65rem] font-medium text-ink-subtle">
+                                {faRelative(t.replied_at)}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm font-semibold text-navy leading-7 whitespace-pre-wrap">
+                            {t.admin_reply}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* هشدار وضعیت بسته شده */}
+                      {isClosed && (
+                        <div className="mt-1 p-2.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-medium text-slate-700 flex items-center gap-2">
+                          <Lock size={14} className="shrink-0 text-slate-500" />
+                          <span>این تیکت توسط پشتیبانی بسته شده است. در صورت نیاز می‌توانید تیکت جدیدی ایجاد نمایید.</span>
+                        </div>
+                      )}
+
+                      {/* دکمه آرشیو تیکت برای کاربر */}
+                      <div className="flex justify-end pt-2 border-t border-ink/10">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleToggleUserArchive(t)}
+                          className="text-xs text-purple-700 hover:bg-purple-50"
+                        >
+                          {isArchived ? (
+                            <>
+                              <ArchiveRestore size={13} className="ml-1" /> خروج از آرشیو
+                            </>
+                          ) : (
+                            <>
+                              <Archive size={13} className="ml-1" /> انتقال به آرشیو 📦
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </StickerCard>
+                </div>
+              );
+            })}
+          </div>
+        )
       )}
 
-      {/* مودال ساخت تیکت جدید توسط کاربر */}
+      {/* ─── مودال ساخت تیکت جدید توسط کاربر ─── */}
       <Modal
         open={newTicketModal}
         onClose={() => setNewTicketModal(false)}
@@ -431,28 +1031,43 @@ export default function Support() {
         </form>
       </Modal>
 
-      {/* مودال پاسخ ادمین */}
+      {/* ─── مودال پاسخ مدیر با امکان بستن تیکت ─── */}
       <Modal
         open={!!replyTicket}
         onClose={() => setReplyTicket(null)}
         title={`پاسخ به تیکت: ${replyTicket?.subject || ""}`}
       >
         <form onSubmit={handleSendReply} className="flex flex-col gap-4">
-          <div className="bg-bg-lavender/50 p-3 rounded-lg text-xs font-semibold text-ink leading-5 max-h-32 overflow-y-auto">
-            <span className="font-black block text-navy mb-1">پیام کاربر:</span>
+          <div className="bg-bg-lavender/50 p-3 rounded-lg text-xs font-semibold text-ink leading-5 max-h-36 overflow-y-auto border border-ink/10">
+            <span className="font-black block text-navy mb-1">
+              پیام کاربر ({replyTicket?.profiles?.full_name || replyTicket?.profiles?.email || "کاربر"}):
+            </span>
             {replyTicket?.message}
           </div>
 
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-extrabold text-navy">متن پاسخ شما</span>
             <textarea
-              rows={4}
+              rows={5}
               required
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               placeholder="پاسخ خود را برای کاربر بنویسید..."
               className="w-full bg-white border-2 border-ink/20 focus:border-teal rounded-pill-md px-3.5 py-2.5 text-sm font-semibold text-ink focus:outline-none resize-y"
             />
+          </label>
+
+          {/* گزینه بستن همزمان تیکت */}
+          <label className="flex items-center gap-2 text-xs font-bold text-navy cursor-pointer select-none bg-slate-50 p-2.5 rounded-xl border border-ink/10">
+            <input
+              type="checkbox"
+              checked={closeOnReply}
+              onChange={(e) => setCloseOnReply(e.target.checked)}
+              className="w-4 h-4 rounded text-teal focus:ring-teal cursor-pointer"
+            />
+            <span className="flex items-center gap-1.5">
+              <Lock size={13} className="text-slate-600" /> ارسال پاسخ و بستن تیکت (Close Ticket)
+            </span>
           </label>
 
           <div className="flex justify-end gap-2 mt-2">

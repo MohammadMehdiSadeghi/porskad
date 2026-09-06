@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "./AuthContext";
 
 const NotificationContext = createContext(null);
 
@@ -61,7 +62,16 @@ function createNotifSound() {
 }
 
 function NotificationProvider({ children }) {
-  const [notifications, setNotifications] = useState([]);
+  const { user, isOwner } = useAuth() || {};
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const saved = localStorage.getItem("porskad_notifications");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [soundEnabled, setSoundEnabled] = useState(() => {
     return localStorage.getItem("notif_sound") !== "false";
   });
@@ -69,6 +79,13 @@ function NotificationProvider({ children }) {
     return localStorage.getItem("notif_enabled") !== "false";
   });
   const [isOpen, setIsOpen] = useState(false);
+
+  // ذخیره اعلان‌ها در localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem("porskad_notifications", JSON.stringify(notifications));
+    } catch {}
+  }, [notifications]);
 
   // پخش صدا
   const playSound = useCallback(() => {
@@ -79,7 +96,7 @@ function NotificationProvider({ children }) {
   // اضافه کردن نوتیف جدید
   const addNotification = useCallback((notif) => {
     setNotifications((prev) => [
-      { id: Date.now(), time: new Date(), read: false, ...notif },
+      { id: Date.now() + Math.random(), time: new Date().toISOString(), read: false, ...notif },
       ...prev,
     ].slice(0, 50)); // حداکثر ۵۰ نوتیف
     playSound();
@@ -118,17 +135,17 @@ function NotificationProvider({ children }) {
     });
   }, []);
 
-  // اشتراک real-time برای پاسخ‌های جدید
+  // اشتراک real-time برای پاسخ‌های فرم و تیکت‌های پشتیبانی
   useEffect(() => {
     if (!notifEnabled || !supabase) return;
 
     const channel = supabase
-      .channel("admin-notifications")
+      .channel("app-global-notifications")
+      // ۱. پاسخ جدید فرم
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "responses" },
         async (payload) => {
-          // گرفتن اطلاعات فرم
           let formTitle = "فرم";
           let formSlug = null;
           try {
@@ -145,11 +162,94 @@ function NotificationProvider({ children }) {
 
           addNotification({
             type: "response",
-            title: "پاسخ جدید!",
-            message: `کاربری فرم «${formTitle}» رو پر کرد`,
+            title: "پاسخ جدید دریافت شد!",
+            message: `کاربری فرم «${formTitle}» را تکمیل کرد`,
             formId: payload.new.form_id,
             formSlug,
+            link: "/admin/forms",
           });
+        }
+      )
+      // ۲. تیکت جدید پشتیبانی (ارسال به مدیر)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "support_tickets" },
+        async (payload) => {
+          const newTicket = payload.new;
+          if (!newTicket) return;
+
+          const owner = isOwner?.();
+          const isMyTicket = newTicket.user_id === user?.id;
+
+          // اگر مدیر است و تیکت مال خودش نیست
+          if (owner && !isMyTicket) {
+            let senderName = "کاربر";
+            try {
+              const { data: prof } = await supabase
+                .from("profiles")
+                .select("full_name, email")
+                .eq("id", newTicket.user_id)
+                .maybeSingle();
+              if (prof) {
+                senderName = prof.full_name || prof.email?.split("@")[0] || "کاربر";
+              }
+            } catch {}
+
+            addNotification({
+              type: "ticket_new",
+              title: "تیکت پشتیبانی جدید 💬",
+              message: `${senderName}: ${newTicket.subject || "پیام پشتیبانی جدید"}`,
+              link: "/admin/support",
+              ticketId: newTicket.id,
+            });
+          }
+        }
+      )
+      // ۳. به‌روزرسانی تیکت (پاسخ مدیر یا بستن تیکت)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "support_tickets" },
+        async (payload) => {
+          const updatedTicket = payload.new;
+          const oldTicket = payload.old;
+          if (!updatedTicket) return;
+
+          const isMyTicket = updatedTicket.user_id === user?.id;
+          const owner = isOwner?.();
+
+          // اعلان برای کاربر عادی
+          if (isMyTicket && !owner) {
+            if (updatedTicket.admin_reply && updatedTicket.admin_reply !== oldTicket?.admin_reply) {
+              addNotification({
+                type: "ticket_reply",
+                title: "پاسخ جدید به تیکت 🎧",
+                message: `پاسخ به تیکت «${updatedTicket.subject || ""}» ثبت شد`,
+                link: "/admin/support",
+                ticketId: updatedTicket.id,
+              });
+            } else if (updatedTicket.status === "closed" && oldTicket?.status !== "closed") {
+              addNotification({
+                type: "ticket_closed",
+                title: "تیکت پشتیبانی بسته شد 🔒",
+                message: `تیکت «${updatedTicket.subject || ""}» توسط پشتیبانی بسته شد`,
+                link: "/admin/support",
+                ticketId: updatedTicket.id,
+              });
+            }
+          }
+
+          // اعلان برای مدیر اگر تیکت مجدداً باز شد
+          if (owner && !isMyTicket) {
+            if (updatedTicket.status === "open" && oldTicket?.status === "closed") {
+              addNotification({
+                type: "ticket_reopen",
+                title: "بازگشایی تیکت 🔓",
+                message: `تیکت «${updatedTicket.subject || ""}» مجدداً بازگشایی شد`,
+                link: "/admin/support",
+                ticketId: updatedTicket.id,
+              });
+            }
+          }
         }
       )
       .subscribe();
@@ -157,7 +257,7 @@ function NotificationProvider({ children }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [notifEnabled, addNotification]);
+  }, [notifEnabled, addNotification, user, isOwner]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 

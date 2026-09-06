@@ -1,9 +1,11 @@
 import { useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useNotifications } from "../../context/NotificationContext";
 import { Bell, BellOff, Volume2, VolumeX, Trash2, CheckCheck, X } from "lucide-react";
 import { faDateTime } from "../../lib/utils";
 
 export default function NotificationBell() {
+  const navigate = useNavigate();
   const {
     notifications,
     unreadCount,
@@ -146,7 +148,13 @@ export default function NotificationBell() {
               {notifications.map((n, i) => (
                 <div
                   key={n.id}
-                  onClick={() => markAsRead(n.id)}
+                  onClick={() => {
+                    markAsRead(n.id);
+                    if (n.link) {
+                      navigate(n.link);
+                      setIsOpen(false);
+                    }
+                  }}
                   className={`group flex items-start gap-3 mx-2 px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 ${
                     n.read
                       ? "hover:bg-ink/3"
@@ -157,7 +165,7 @@ export default function NotificationBell() {
                   <div className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-lg ${
                     n.read ? "bg-ink/5" : "bg-gradient-to-br from-teal/15 to-teal/5"
                   }`}>
-                    {n.type === "response" ? "📥" : "🔔"}
+                    {n.type === "response" ? "📥" : n.type?.startsWith("ticket") ? "🎧" : "🔔"}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
