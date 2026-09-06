@@ -25,7 +25,8 @@ const inputCls =
   "w-full bg-white border-2 border-ink/15 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none transition-all";
 
 export default function TelegramBot() {
-  const { user, isOwner } = useAuth();
+  const { user, profile, isOwner, hasPermission } = useAuth();
+  const canManage = (isOwner() || hasPermission("manage_telegram")) && profile?.can_use_telegram !== false;
   const [tab, setTab] = useState("config");
   const [loading, setLoading] = useState(true);
 
@@ -131,6 +132,10 @@ export default function TelegramBot() {
   // ─── Config CRUD ───
   async function saveConfig(e) {
     e.preventDefault();
+    if (!canManage) {
+      showToast("شما مجوز مدیریت بات تلگرام را ندارید", "error");
+      return;
+    }
     if (!configForm.bot_token.trim() || !configForm.chat_id.trim()) {
       showToast("توکن و شناسه چت الزامی هستند", "error");
       return;
@@ -182,6 +187,7 @@ export default function TelegramBot() {
   }
 
   function editConfig(cfg) {
+    if (!canManage) return;
     setEditingConfig(cfg);
     setConfigForm({
       bot_token: cfg.bot_token,
@@ -192,6 +198,10 @@ export default function TelegramBot() {
   }
 
   async function deleteConfig(id) {
+    if (!canManage) {
+      showToast("شما مجوز مدیریت بات تلگرام را ندارید", "error");
+      return;
+    }
     if (!confirm("آیا از حذف این تنظیمات مطمئنید؟")) return;
     try {
       const { error } = await supabase.from("telegram_config").delete().eq("id", id);
@@ -204,6 +214,7 @@ export default function TelegramBot() {
   }
 
   async function toggleConfigActive(id, current) {
+    if (!canManage) return;
     try {
       const { error } = await supabase
         .from("telegram_config")
@@ -218,6 +229,10 @@ export default function TelegramBot() {
 
   // ─── Link CRUD ───
   async function addLink() {
+    if (!canManage) {
+      showToast("شما مجوز مدیریت بات تلگرام را ندارید", "error");
+      return;
+    }
     if (!selectedFormId || !selectedConfigId) {
       showToast("فرم و تنظیمات تلگرام را انتخاب کنید", "error");
       return;
@@ -243,6 +258,7 @@ export default function TelegramBot() {
   }
 
   async function toggleLinkActive(id, current) {
+    if (!canManage) return;
     try {
       const { error } = await supabase
         .from("telegram_form_links")
@@ -256,6 +272,10 @@ export default function TelegramBot() {
   }
 
   async function deleteLink(id) {
+    if (!canManage) {
+      showToast("شما مجوز مدیریت بات تلگرام را ندارید", "error");
+      return;
+    }
     if (!confirm("لینک حذف شود؟")) return;
     try {
       const { error } = await supabase.from("telegram_form_links").delete().eq("id", id);
