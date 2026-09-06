@@ -354,10 +354,35 @@ export default function SuperAdmin() {
     } finally { setSqlRunning(false); }
   }
 
-  // ─── Admin Edge Function helper ───
+  // ─── Admin Action helper (/api/admin-user-management or Edge Function) ───
   async function adminAction(action, payload) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error("Not logged in");
+
+    // ۱. ابتدا از اندپوینت سرورلس اختصاصی پروژه استفاده کن
+    try {
+      const res = await fetch("/api/admin-user-management", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ action, ...payload }),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+      const errJson = await res.json().catch(() => ({}));
+      if (res.status !== 404 && res.status !== 501) {
+        throw new Error(errJson.error || "خطا در مدیریت کاربر");
+      }
+    } catch (e) {
+      if (e.message && !e.message.includes("404") && !e.message.includes("501")) {
+        throw e;
+      }
+    }
+
+    // ۲. فالبک: Edge Function در صورت فعال بودن
     const res = await fetch(
       `${supabase.supabaseUrl}/functions/v1/admin-user-management`,
       {
@@ -841,20 +866,23 @@ export default function SuperAdmin() {
           <div className="sa-table-wrap">
             <table className="sa-table">
               <thead><tr>
-                <th>Name</th><th>Email</th><th>Role</th><th>Owner</th><th>Status</th><th>Joined</th><th></th>
+                <th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Plan</th><th>Owner</th><th>Status</th><th>Joined</th><th>Actions</th>
               </tr></thead>
               <tbody>
-                {users.filter((u) => !search || u.email?.toLowerCase().includes(search.toLowerCase()) || u.full_name?.toLowerCase().includes(search.toLowerCase())).map((r) => (
+                {users.filter((u) => !search || u.email?.toLowerCase().includes(search.toLowerCase()) || u.full_name?.toLowerCase().includes(search.toLowerCase()) || (u.phone && u.phone.includes(search))).map((r) => (
                   <tr key={r.id} onClick={() => setDetailModal(r)} style={{ cursor: 'pointer' }}>
                     <td style={{ fontWeight: 700 }}>{r.full_name || '—'}</td>
                     <td style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '0.75rem' }} dir="ltr">{r.email}</td>
+                    <td style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '0.75rem', color: '#0f62fe', fontWeight: 600 }} dir="ltr">{r.phone || '—'}</td>
                     <td><span className={`sa-tag ${r.role === 'admin' ? 'sa-tag-blue' : 'sa-tag-green'}`}>{r.role || '—'}</span></td>
+                    <td><span className="sa-tag sa-tag-gray">{r.plan || 'free'}</span></td>
                     <td>{r.is_owner ? <span className="sa-tag sa-tag-orange">Owner</span> : '—'}</td>
                     <td><span className={`sa-tag ${r.is_active ? 'sa-tag-green' : 'sa-tag-gray'}`}>{r.is_active ? 'Active' : 'Inactive'}</span></td>
                     <td style={{ fontSize: '0.75rem', color: '#6f6f6f' }}>{r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}</td>
                     <td>
                       <div style={{ display: 'flex', gap: '0.25rem' }}>
                         <button className="sa-btn sa-btn-ghost sa-btn-sm" onClick={(e) => { e.stopPropagation(); setDetailModal(r); }}>Details</button>
+                        <button className="sa-btn sa-btn-ghost sa-btn-sm" style={{ color: '#0f62fe' }} onClick={(e) => { e.stopPropagation(); setDetailModal(r); setPasswordVisible(true); }}>Set Password</button>
                         <button className="sa-btn sa-btn-ghost sa-btn-sm" onClick={(e) => { e.stopPropagation(); setImpersonateModal(r); }}>Login as</button>
                       </div>
                     </td>
@@ -1099,55 +1127,142 @@ export default function SuperAdmin() {
       <Modal open={!!detailModal} onClose={() => setDetailModal(null)} title={`${detailModal?.is_owner ? '👑 Owner' : 'User'}: ${detailModal?.full_name || detailModal?.email || ''}`}>
         {detailModal && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem' }}>
-            {/* ─── اطلاعات پایه ─── */}
+            {/* ─── اطلاعات پایه کاربر ─── */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-              {[['ID', detailModal.id], ['Email', detailModal.email], ['Name', detailModal.full_name || '—'], ['Role', detailModal.role || '—'], ['Owner', detailModal.is_owner ? 'Yes' : 'No'], ['Status', detailModal.is_active ? 'Active' : 'Inactive'], ['Joined', detailModal.created_at ? new Date(detailModal.created_at).toLocaleString() : '—'], ['Hidden from', `${detailModal.hidden_from?.length || 0} users`]].map(([label, value]) => (
-                <div key={label}><span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6f6f6f' }}>{label}</span><div style={{ fontSize: '0.8rem', fontWeight: 600 }}>{value}</div></div>
+              {[
+                ['User ID', detailModal.id],
+                ['Email', detailModal.email],
+                ['Name', detailModal.full_name || '—'],
+                ['Phone', detailModal.phone || '—'],
+                ['Role', detailModal.role || '—'],
+                ['Plan / Quota', `${detailModal.plan || 'free'} (${detailModal.max_forms ?? 5} فرم)`],
+                ['Owner', detailModal.is_owner ? 'Yes 👑' : 'No'],
+                ['Status', detailModal.is_active ? 'Active' : 'Inactive'],
+                ['Password Encryption', 'Bcrypt Hashed (One-Way Secure) 🔐'],
+                ['Joined', detailModal.created_at ? new Date(detailModal.created_at).toLocaleString() : '—'],
+                ['Hidden from', `${detailModal.hidden_from?.length || 0} users`],
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6f6f6f' }}>{label}</span>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: label === 'Phone' ? '#0f62fe' : '#161616' }} dir={label === 'Phone' ? 'ltr' : undefined}>{value}</div>
+                </div>
               ))}
             </div>
 
-            {/* ─── Edit Name (all users including owner) ─── */}
+            {/* ─── Edit Name & Phone ─── */}
             <div style={{ border: '1px solid #e0e0e0', padding: '0.75rem' }}>
-              <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#525252', textTransform: 'uppercase' }}>Edit Name</span>
-              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                <input type="text" value={detailModal.full_name || ''} onChange={(e) => setDetailModal({ ...detailModal, full_name: e.target.value })}
-                  style={{ flex: 1, padding: '0.5rem 0.75rem', border: '1px solid #c6c6c6', fontSize: '0.8rem', fontFamily: "'IBM Plex Sans', sans-serif", outline: 'none' }} />
-                <button className="sa-btn sa-btn-primary" onClick={async () => {
-                  try {
-                    const { error } = await supabase.from("profiles").update({ full_name: detailModal.full_name }).eq("id", detailModal.id);
-                    if (error) throw error;
-                    showToast("Name updated ✅");
-                    loadUsers(); loadAdmins();
-                  } catch (err) { showToast("Error: " + err.message, "error"); }
-                }}>Save</button>
+              <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#525252', textTransform: 'uppercase' }}>Edit Name & Phone</span>
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  value={detailModal.full_name || ''}
+                  onChange={(e) => setDetailModal({ ...detailModal, full_name: e.target.value })}
+                  style={{ flex: 1, minWidth: 140, padding: '0.5rem 0.75rem', border: '1px solid #c6c6c6', fontSize: '0.8rem', fontFamily: "'IBM Plex Sans', sans-serif", outline: 'none' }}
+                />
+                <input
+                  type="tel"
+                  dir="ltr"
+                  placeholder="Phone (09xxxxxxxxx)"
+                  value={detailModal.phone || ''}
+                  onChange={(e) => setDetailModal({ ...detailModal, phone: e.target.value })}
+                  style={{ flex: 1, minWidth: 140, padding: '0.5rem 0.75rem', border: '1px solid #c6c6c6', fontSize: '0.8rem', fontFamily: "'IBM Plex Sans', sans-serif", outline: 'none' }}
+                />
+                <button
+                  className="sa-btn sa-btn-primary"
+                  onClick={async () => {
+                    try {
+                      const { error } = await supabase
+                        .from("profiles")
+                        .update({ full_name: detailModal.full_name, phone: detailModal.phone })
+                        .eq("id", detailModal.id);
+                      if (error) throw error;
+                      showToast("User details updated ✅");
+                      loadUsers();
+                      loadAdmins();
+                    } catch (err) {
+                      showToast("Error: " + err.message, "error");
+                    }
+                  }}
+                >
+                  Save
+                </button>
               </div>
             </div>
 
-            {/* ─── Reset Password (all users including owner) ─── */}
-            <div style={{ border: '1px solid #da1e28', padding: '0.75rem', background: '#fff1f1' }}>
-              <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#da1e28', textTransform: 'uppercase' }}>🔑 Reset Password</span>
-              <p style={{ fontSize: '0.7rem', color: '#6f6f6f', margin: '0.25rem 0 0.5rem' }}>Set a new password for this user. They will need to login with the new password.</p>
-              <form onSubmit={(e) => { e.preventDefault(); }} style={{ display: 'flex', gap: '0.5rem' }}>
+            {/* ─── Password & Access Management ─── */}
+            <div style={{ border: '1px solid #da1e28', padding: '0.75rem', background: '#fff9f9' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#da1e28', textTransform: 'uppercase' }}>
+                  🔑 مدیریت و تنظیم مستقیم رمز عبور (Password Management)
+                </span>
+                <span className="sa-tag sa-tag-green" style={{ fontSize: '0.65rem' }}>Bcrypt Hashed</span>
+              </div>
+              
+              <div style={{ fontSize: '0.72rem', color: '#525252', background: '#fff', border: '1px solid #ffd7d9', padding: '0.5rem', marginBottom: '0.5rem', lineHeight: 1.6 }}>
+                💡 <strong>نکته امنیتی:</strong> رمز عبور کاربران در Supabase به صورت یک‌طرفه (bcrypt) هش شده و متن خام در دیتابیس وجود ندارد. اما شما به عنوان سوپرادمین می‌توانید <strong>مستقیماً هر رمزی را برای کاربر تعیین و ست کنید</strong>، یا با دکمه <strong>Login as</strong> بدون نیاز به رمز وارد حساب او شوید.
+              </div>
+
+              <form onSubmit={(e) => { e.preventDefault(); }} style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <input type="text" name="username" autoComplete="username" defaultValue={detailModal?.email || ''} style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }} tabIndex={-1} />
-                <div style={{ flex: 1, position: 'relative' }}>
-                  <input type={passwordVisible ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New password (min 6 chars)" autoComplete="new-password"
-                    style={{ width: '100%', padding: '0.5rem 2rem 0.5rem 0.75rem', border: '1px solid #c6c6c6', fontSize: '0.8rem', fontFamily: "'IBM Plex Sans', sans-serif", outline: 'none' }} dir="ltr" />
-                  <button type="button" onClick={() => setPasswordVisible(!passwordVisible)} style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                <div style={{ flex: 1, minWidth: 160, position: 'relative' }}>
+                  <input
+                    type={passwordVisible ? 'text' : 'password'}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="رمز عبور جدید (حداقل ۶ کاراکتر)"
+                    autoComplete="new-password"
+                    style={{ width: '100%', padding: '0.5rem 2rem 0.5rem 0.75rem', border: '1px solid #c6c6c6', fontSize: '0.8rem', fontFamily: "'IBM Plex Sans', sans-serif", outline: 'none' }}
+                    dir="ltr"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setPasswordVisible(!passwordVisible)}
+                    style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                  >
                     {passwordVisible ? <EyeOff size={14} color="#6f6f6f" /> : <Eye size={14} color="#6f6f6f" />}
                   </button>
                 </div>
-                <button type="button" className="sa-btn sa-btn-danger" onClick={async () => {
-                  if (!newPassword.trim() || newPassword.trim().length < 6) { showToast("Password must be at least 6 chars", "error"); return; }
-                  if (!confirm(`آیا رمز عبور ${detailModal.email} تغییر کند؟`)) return;
-                  try {
-                    await adminAction("reset_password", {
-                      target_user_id: detailModal.id,
-                      new_password: newPassword.trim(),
-                    });
-                    showToast("Password reset ✅");
-                    setNewPassword("");
-                  } catch (err) { showToast("Error: " + err.message, "error"); }
-                }}>Save Password</button>
+
+                <button
+                  type="button"
+                  className="sa-btn sa-btn-secondary"
+                  style={{ fontSize: '0.72rem' }}
+                  onClick={() => {
+                    const randomPass = "Pk" + Math.floor(100000 + Math.random() * 900000);
+                    setNewPassword(randomPass);
+                    setPasswordVisible(true);
+                    navigator.clipboard?.writeText?.(randomPass);
+                    showToast(`رمز تصادفی تولید و کپی شد: ${randomPass}`);
+                  }}
+                  title="تولید رمز تصادفی و کپی در کلیپ‌بورد"
+                >
+                  تولید رمز تصادفی 🎲
+                </button>
+
+                <button
+                  type="button"
+                  className="sa-btn sa-btn-danger"
+                  onClick={async () => {
+                    if (!newPassword.trim() || newPassword.trim().length < 6) {
+                      showToast("Password must be at least 6 chars", "error");
+                      return;
+                    }
+                    if (!confirm(`آیا رمز عبور ${detailModal.email} به «${newPassword.trim()}» تغییر کند؟`)) return;
+                    try {
+                      await adminAction("reset_password", {
+                        target_user_id: detailModal.id,
+                        new_password: newPassword.trim(),
+                      });
+                      showToast("رمز عبور کاربر با موفقیت تغییر یافت ✅");
+                      setNewPassword("");
+                    } catch (err) {
+                      showToast("Error: " + err.message, "error");
+                    }
+                  }}
+                >
+                  ثبت رمز جدید
+                </button>
               </form>
             </div>
 
