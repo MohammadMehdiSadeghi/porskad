@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabaseClient";
 import { useToast } from "../../components/ui/Toast";
 import StickerCard from "../../components/ui/StickerCard";
@@ -303,6 +304,7 @@ function FormEmbedCard({ form, baseUrl, index }) {
 
 // ─── صفحه اصلی ───
 export default function EmbedHub() {
+  const { user, isOwner } = useAuth();
   const { push } = useToast();
   const [loading, setLoading] = useState(true);
   const [forms, setForms] = useState([]);
@@ -312,13 +314,19 @@ export default function EmbedHub() {
     async function load() {
       try {
         // فقط فرم‌های فعال (منتشرشده و حذف/آرشیو نشده) در این صفحه نمایش داده می‌شوند
-        const { data, error } = await supabase
+        let query = supabase
           .from("forms")
           .select("id, slug, title, public_id, published, created_at")
           .eq("published", true)
           .eq("archived", false)
           .is("deleted_at", null)
           .order("created_at", { ascending: false });
+
+        if (!isOwner() && user?.id) {
+          query = query.or(`manager_id.eq.${user.id},created_by.eq.${user.id}`);
+        }
+
+        const { data, error } = await query;
         if (error) throw error;
 
         const formIds = (data ?? []).map((f) => f.id);

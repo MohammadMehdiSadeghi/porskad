@@ -22,7 +22,7 @@ export default function AuthGuard({ children, adminOnly = false, ownerOnly = fal
   }
 
   if (ownerOnly && !isOwner()) {
-    return <Navigate to="/admin" replace />;
+    return <Navigate to="/admin/forms" replace />;
   }
 
   return children;

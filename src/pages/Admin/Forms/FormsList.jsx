@@ -101,7 +101,7 @@ function UndoToast({ message, onUndo, onDismiss, duration = 6000 }) {
 
 export default function FormsList() {
   const { push } = useToast();
-  const { hasPermission, canManage, user } = useAuth();
+  const { hasPermission, canManage, user, profile, isOwner } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [forms, setForms] = useState([]);
@@ -111,6 +111,7 @@ export default function FormsList() {
   const [deleting, setDeleting] = useState(null);
   const [busy, setBusy] = useState(false);
   const [showTypeModal, setShowTypeModal] = useState(false);
+  const [showQuotaModal, setShowQuotaModal] = useState(false);
 
   // ─── Undo state ───
   const [undoToast, setUndoToast] = useState(null);
@@ -119,9 +120,19 @@ export default function FormsList() {
   async function load() {
     setLoading(true);
     try {
+      let formsQuery = supabase
+        .from("forms")
+        .select("*, profiles:manager_id(full_name)")
+        .order("created_at", { ascending: false });
+
+      // کاربر عادی فقط فرم‌های خودش را دریافت می‌کند
+      if (!isOwner() && user?.id) {
+        formsQuery = formsQuery.or(`manager_id.eq.${user.id},created_by.eq.${user.id}`);
+      }
+
       const [{ data: formsData, error: formsError }, { data: countsData }] =
         await Promise.all([
-          supabase.from("forms").select("*, profiles:manager_id(full_name)").order("created_at", { ascending: false }),
+          formsQuery,
           supabase.rpc("get_form_response_counts"),
         ]);
       if (formsError) throw formsError;
@@ -137,11 +148,21 @@ export default function FormsList() {
 
   useEffect(() => { load(); }, []);
 
+  const activeFormsCount = useMemo(() => forms.filter((f) => !f.deleted_at).length, [forms]);
+  const maxForms = profile?.max_forms ?? 5;
+
   async function createForm(formType = "step_by_step") {
     if (!hasPermission("create_form")) {
       push("شما مجوز ایجاد فرم ندارید.", "error");
       return;
     }
+
+    if (!isOwner() && activeFormsCount >= maxForms) {
+      setShowTypeModal(false);
+      setShowQuotaModal(true);
+      return;
+    }
+
     setBusy(true);
 
     const isRegistration = formType === "registration";
@@ -150,6 +171,7 @@ export default function FormsList() {
       title: isRegistration ? "فرم ثبت‌نام" : "فرم جدید",
       published: false,
       manager_id: user?.id ?? null,
+      created_by: user?.id ?? null,
       form_type: formType,
     };
 
@@ -185,6 +207,12 @@ export default function FormsList() {
       push("شما مجوز ایجاد فرم ندارید.", "error");
       return;
     }
+
+    if (!isOwner() && activeFormsCount >= maxForms) {
+      setShowQuotaModal(true);
+      return;
+    }
+
     setBusy(true);
     const copy = {
       slug: `form-${randomSlug(6)}`,
@@ -196,6 +224,7 @@ export default function FormsList() {
       exit_message: form.exit_message,
       published: false,
       manager_id: user?.id ?? null,
+      created_by: user?.id ?? null,
       form_type: form.form_type || "step_by_step",
     };
     const { data: newForm, error } = await supabase.from("forms").insert(copy).select().single();
@@ -346,10 +375,57 @@ export default function FormsList() {
             {forms.filter((f) => !f.deleted_at).length} فرم — برای ویرایش روی هر فرم بزنید
           </p>
         </div>
-        <Button variant="indigo" size="sm" onClick={() => setShowTypeModal(true)} disabled={busy} rotate="-rotate-[1deg]">
+        <Button
+          variant="indigo"
+          size="sm"
+          onClick={() => {
+            if (!isOwner() && activeFormsCount >= maxForms) {
+              setShowQuotaModal(true);
+            } else {
+              setShowTypeModal(true);
+            }
+          }}
+          disabled={busy}
+          rotate="-rotate-[1deg]"
+        >
           + فرم جدید
         </Button>
       </div>
+
+      {/* نوار سهمیه برای کاربر عادی */}
+      {!isOwner() && (
+        <div className="bg-white border-2 border-teal/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 -rotate-[0.2deg]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-teal/10 text-teal-text flex items-center justify-center font-black text-sm">
+              {faNum(activeFormsCount)}/{faNum(maxForms)}
+            </div>
+            <div>
+              <div className="text-sm font-black text-navy flex items-center gap-2">
+                <span>سهمیه فرم‌های فعال شما</span>
+                <Badge color={activeFormsCount >= maxForms ? "red" : "green"}>
+                  {activeFormsCount >= maxForms ? "تکمیل شده" : `${faNum(maxForms - activeFormsCount)} فرم باقی‌مانده`}
+                </Badge>
+              </div>
+              <p className="text-xs font-semibold text-ink-subtle mt-0.5">
+                پلن: {profile?.plan === "enterprise" ? "سازمانی" : profile?.plan === "pro" ? "حرفه‌ای" : "رایگان"}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-28 sm:w-36 bg-ink/10 h-2 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all ${activeFormsCount >= maxForms ? "bg-magenta" : "bg-teal"}`}
+                style={{ width: `${Math.min(100, Math.round((activeFormsCount / maxForms) * 100))}%` }}
+              />
+            </div>
+            {activeFormsCount >= maxForms && (
+              <Button as={Link} to="/admin/support" variant="teal" size="sm">
+                افزایش سهمیه 🚀
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Search & Filter */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -519,6 +595,41 @@ export default function FormsList() {
         <div className="flex gap-3 justify-end">
           <Button variant="red" size="sm" onClick={confirmDelete}>بله، حذف کن</Button>
           <Button variant="ghost" size="sm" onClick={() => setDeleting(null)}>انصراف</Button>
+        </div>
+      </Modal>
+
+      {/* ─── Quota Limit Modal ─── */}
+      <Modal
+        open={showQuotaModal}
+        onClose={() => setShowQuotaModal(false)}
+        title="سقف ساخت فرم تکمیل شده است"
+      >
+        <div className="flex flex-col gap-4 text-center items-center py-2">
+          <span className="text-4xl">⚠️</span>
+          <h3 className="text-base font-black text-navy">
+            شما به سقف مجاز فرم‌های فعال ({faNum(maxForms)} فرم) رسیده‌اید
+          </h3>
+          <p className="text-xs sm:text-sm font-semibold text-ink-subtle leading-6">
+            برای ایجاد فرم جدید می‌توانید یکی از فرم‌های قبلی را حذف یا آرشیو کنید، یا از طریق بخش پشتیبانی درخواست افزایش ظرفیت ثبت نمایید.
+          </p>
+          <div className="flex flex-wrap gap-2 justify-center mt-2">
+            <Button
+              as={Link}
+              to="/admin/support"
+              variant="teal"
+              size="sm"
+              onClick={() => setShowQuotaModal(false)}
+            >
+              پیام به پشتیبانی برای ارتقا 🚀
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowQuotaModal(false)}
+            >
+              متوجه شدم
+            </Button>
+          </div>
         </div>
       </Modal>
 

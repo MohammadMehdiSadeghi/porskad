@@ -37,19 +37,24 @@ export function AuthProvider({ children }) {
   const fetchProfile = useCallback(async (uid) => {
     if (!supabase || !uid) return null;
     try {
-      // اول با is_owner سعی کن
+      // اول با is_owner و فیلدهای سهمیه سعی کن
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, email, full_name, avatar_url, is_active, is_owner, created_by")
+        .select("id, email, full_name, avatar_url, is_active, is_owner, created_by, max_forms, max_responses_per_month, plan, can_use_telegram, can_export_excel")
         .eq("id", uid)
         .maybeSingle();
 
       if (!error && data) {
         if (!('is_owner' in data)) data.is_owner = false;
+        data.max_forms = data.is_owner ? 999999 : (data.max_forms ?? 5);
+        data.max_responses_per_month = data.is_owner ? 999999 : (data.max_responses_per_month ?? 100);
+        data.plan = data.is_owner ? 'enterprise' : (data.plan ?? 'free');
+        data.can_use_telegram = data.can_use_telegram ?? true;
+        data.can_export_excel = data.can_export_excel ?? true;
         return data;
       }
 
-      // اگه خطا بود (مثلاً ستون is_owner وجود نداشت)، بدون اون برگردان
+      // اگه خطا بود، فالبک بدون فیلدهای جدید
       const { data: fallbackData, error: fallbackError } = await supabase
         .from("profiles")
         .select("id, email, full_name, avatar_url, is_active, created_by")
@@ -60,7 +65,14 @@ export function AuthProvider({ children }) {
         console.error("Error fetching profile:", fallbackError);
         return null;
       }
-      if (fallbackData) fallbackData.is_owner = false;
+      if (fallbackData) {
+        fallbackData.is_owner = false;
+        fallbackData.max_forms = 5;
+        fallbackData.max_responses_per_month = 100;
+        fallbackData.plan = 'free';
+        fallbackData.can_use_telegram = true;
+        fallbackData.can_export_excel = true;
+      }
       return fallbackData;
     } catch (err) {
       console.error("fetchProfile error:", err);
@@ -187,6 +199,55 @@ export function AuthProvider({ children }) {
     });
     if (error) throw error;
     return data;
+  }
+
+  async function register(email, password, fullName) {
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {
+        data: {
+          full_name: fullName?.trim() || email.split("@")[0],
+        },
+      },
+    });
+    if (error) throw error;
+
+    // ثبت لاگ فعالیت
+    try {
+      if (data?.user) {
+        await supabase.from("profiles").update({
+          full_name: fullName?.trim() || email.split("@")[0],
+          max_forms: 5,
+          max_responses_per_month: 100,
+          plan: 'free',
+        }).eq("id", data.user.id);
+      }
+    } catch {}
+
+    return data;
+  }
+
+  async function updateUserQuota(userId, { maxForms, maxResponses, plan }) {
+    try {
+      const { error } = await supabase.rpc("set_user_quotas", {
+        p_user_id: userId,
+        p_max_forms: maxForms,
+        p_max_responses: maxResponses,
+        p_plan: plan,
+      });
+      if (error) throw error;
+    } catch (rpcErr) {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          max_forms: maxForms,
+          max_responses_per_month: maxResponses,
+          plan: plan,
+        })
+        .eq("id", userId);
+      if (error) throw error;
+    }
   }
 
   async function logout() {
@@ -334,7 +395,7 @@ export function AuthProvider({ children }) {
       try {
         const res = await supabase
           .from("profiles")
-          .select("id, email, full_name, is_active, is_owner, created_at, created_by, hidden_from")
+          .select("id, email, full_name, is_active, is_owner, created_at, created_by, hidden_from, max_forms, max_responses_per_month, plan")
           .order("created_at", { ascending: true });
         profilesData = res.data;
         profilesError = res.error;
@@ -387,6 +448,9 @@ export function AuthProvider({ children }) {
         return {
           ...p,
           is_owner: p.is_owner ?? false,
+          max_forms: p.is_owner ? 999999 : (p.max_forms ?? 5),
+          max_responses_per_month: p.is_owner ? 999999 : (p.max_responses_per_month ?? 100),
+          plan: p.is_owner ? 'enterprise' : (p.plan ?? 'free'),
           role: roleId,
           roleActive: roleData?.active ?? true,
           permissions: effectivePermissions,
@@ -411,6 +475,8 @@ export function AuthProvider({ children }) {
     canManage: () => role === "admin",
     isOwner: () => profile?.is_owner === true,
     login,
+    register,
+    updateUserQuota,
     logout,
     changePassword,
     updateProfile,

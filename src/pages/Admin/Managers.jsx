@@ -8,10 +8,11 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import StickerCard from "../../components/ui/StickerCard";
 import Modal from "../../components/ui/Modal";
-import { Plus, Edit, Trash2, Crown, Users, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings, Eye, EyeOff } from "lucide-react";
+import { Plus, Edit, Trash2, Crown, Users, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings, Eye, EyeOff, Sliders } from "lucide-react";
 import SEO from "../../components/ui/SEO";
 import { supabase } from "../../lib/supabaseClient";
 import { logActivity } from "../../lib/activityLogger";
+import { faNum } from "../../lib/utils";
 
 // ─── دسته‌بندی مجوزها ───
 const PERMISSION_CATEGORIES = [
@@ -162,7 +163,7 @@ function PermissionSummary({ permissions }) {
 
 export default function Managers() {
   const { push } = useToast();
-  const { listManagers, createManager, updateManager, deactivateManager, activateManager, deleteManager, isOwner, user, hasPermission } = useAuth();
+  const { listManagers, createManager, updateManager, deactivateManager, activateManager, deleteManager, isOwner, user, hasPermission, updateUserQuota } = useAuth();
   const canManage = isOwner() || hasPermission("manage_managers");
   const canView = isOwner() || hasPermission("manage_managers") || hasPermission("view_admins");
   const [loading, setLoading] = useState(true);
@@ -171,6 +172,40 @@ export default function Managers() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedManager, setSelectedManager] = useState(null);
   const [busy, setBusy] = useState(false);
+
+  // ─── مدیریت سهمیه ───
+  const [quotaModal, setQuotaModal] = useState(null);
+  const [quotaMaxForms, setQuotaMaxForms] = useState(5);
+  const [quotaMaxResponses, setQuotaMaxResponses] = useState(100);
+  const [quotaPlan, setQuotaPlan] = useState("free");
+  const [quotaSaving, setQuotaSaving] = useState(false);
+
+  function openQuotaModal(m) {
+    setQuotaModal(m);
+    setQuotaMaxForms(m.max_forms ?? 5);
+    setQuotaMaxResponses(m.max_responses_per_month ?? 100);
+    setQuotaPlan(m.plan ?? "free");
+  }
+
+  async function handleSaveQuota(e) {
+    e.preventDefault();
+    if (!quotaModal) return;
+    setQuotaSaving(true);
+    try {
+      await updateUserQuota(quotaModal.id, {
+        maxForms: Number(quotaMaxForms) || 5,
+        maxResponses: Number(quotaMaxResponses) || 100,
+        plan: quotaPlan,
+      });
+      push("سهمیه کاربر با موفقیت به‌روزرسانی شد.", "success");
+      setQuotaModal(null);
+      load();
+    } catch (err) {
+      push("خطا در تغییر سهمیه: " + err.message, "error");
+    } finally {
+      setQuotaSaving(false);
+    }
+  }
 
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -369,6 +404,12 @@ export default function Managers() {
                     </div>
                   )}
 
+                  {/* سهمیه و پلن کاربر */}
+                  <div className="flex items-center justify-between text-[0.7rem] font-bold text-ink-subtle bg-bg-neutral/70 rounded-pill-sm px-2.5 py-1">
+                    <span>سقف فرم: <strong className="text-navy">{m.is_owner ? "نامحدود" : faNum(m.max_forms ?? 5)}</strong></span>
+                    <span>پلن: <strong className="text-teal-text">{m.is_owner ? "سازمانی" : (m.plan === "enterprise" ? "سازمانی" : m.plan === "pro" ? "حرفه‌ای" : "رایگان")}</strong></span>
+                  </div>
+
                   {/* تاریخ */}
                   <div className="text-xs font-semibold text-ink-subtle">
                     📅 {new Date(m.created_at).toLocaleDateString("fa-IR")}
@@ -381,6 +422,11 @@ export default function Managers() {
                         title={m.is_owner ? "فقط نام صاحب اصلی قابل تغییر است" : "ویرایش"}>
                         ویرایش
                       </Button>
+                      {isOwner() && !m.is_owner && (
+                        <Button variant="ghost" size="sm" className="!text-teal-text" onClick={() => openQuotaModal(m)} title="تنظیم سهمیه و پلن">
+                          سهمیه ⚙️
+                        </Button>
+                      )}
                       {!m.is_owner && (
                         <>
                           <Button variant="ghost" size="sm" className="!text-amber-600"
@@ -604,10 +650,58 @@ export default function Managers() {
           مدیر «<span className="font-black text-magenta-text">{deleteTarget?.full_name || deleteTarget?.email}</span>»
           به‌طور کامل حذف خواهد شد.
         </p>
-        <div className="flex gap-3 justify-end">
+        <div className="flex justify-end gap-3">
           <Button variant="red" size="sm" onClick={handleDelete}>بله، حذف شود</Button>
           <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(null)}>انصراف</Button>
         </div>
+      </Modal>
+
+      {/* ─── مودال تنظیم سهمیه کاربر ─── */}
+      <Modal open={!!quotaModal} onClose={() => setQuotaModal(null)} title={`تنظیم سهمیه و پلن: ${quotaModal?.full_name || quotaModal?.email || ""}`}>
+        <form onSubmit={handleSaveQuota} className="flex flex-col gap-4">
+          <div>
+            <label className="block text-sm font-extrabold text-navy mb-1.5">پلن کاربری</label>
+            <select
+              value={quotaPlan}
+              onChange={(e) => setQuotaPlan(e.target.value)}
+              className={inputCls}
+            >
+              <option value="free">رایگان (Free)</option>
+              <option value="pro">حرفه‌ای (Pro)</option>
+              <option value="enterprise">سازمانی (Enterprise)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-extrabold text-navy mb-1.5">حداکثر تعداد فرم‌های فعال</label>
+            <input
+              type="number"
+              min="1"
+              value={quotaMaxForms}
+              onChange={(e) => setQuotaMaxForms(e.target.value)}
+              className={inputCls}
+            />
+            <span className="text-[0.65rem] text-ink-subtle mt-1 block">پیش‌فرض: ۵ فرم. برای نامحدود عدد بالایی مثل ۹۹۹۹ قرار دهید.</span>
+          </div>
+
+          <div>
+            <label className="block text-sm font-extrabold text-navy mb-1.5">حداکثر پاسخ در ماه</label>
+            <input
+              type="number"
+              min="1"
+              value={quotaMaxResponses}
+              onChange={(e) => setQuotaMaxResponses(e.target.value)}
+              className={inputCls}
+            />
+          </div>
+
+          <div className="flex gap-3 justify-end pt-2">
+            <Button variant="teal" size="sm" type="submit" disabled={quotaSaving}>
+              {quotaSaving ? "در حال ذخیره..." : "ذخیره سهمیه"}
+            </Button>
+            <Button variant="ghost" size="sm" type="button" onClick={() => setQuotaModal(null)}>انصراف</Button>
+          </div>
+        </form>
       </Modal>
 
     </div>

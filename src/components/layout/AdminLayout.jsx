@@ -2,30 +2,59 @@ import { NavLink, Navigate, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Spinner from "../ui/Spinner";
 import Button from "../ui/Button";
-import { LayoutDashboard, FileText, Share2, MessageSquare, Bot, Users, User, LogOut } from "lucide-react";
+import {
+  LayoutDashboard,
+  FileText,
+  Share2,
+  MessageSquare,
+  Bot,
+  Users,
+  User,
+  LogOut,
+  Shield,
+  Headphones,
+} from "lucide-react";
 import NotificationBell from "../ui/NotificationBell";
-
-const NAV_ITEMS = [
-  { to: "/admin", label: "داشبورد", icon: LayoutDashboard, end: true },
-  { to: "/admin/forms", label: "فرم‌ها", icon: FileText, end: false },
-  { to: "/admin/embed", label: "اشتراک‌گذاری", icon: Share2, end: false },
-  { to: "/admin/sms", label: "پنل پیامک", icon: MessageSquare, end: false },
-  { to: "/admin/telegram", label: "بات تلگرام", icon: Bot, end: false },
-  { to: "/admin/managers", label: "مدیران", icon: Users, end: false },
-  { to: "/admin/profile", label: "پروفایل", icon: User, end: false },
-];
+import { faNum } from "../../lib/utils";
 
 export default function AdminLayout() {
-  const { user, loading, role, logout, hasPermission, isOwner } = useAuth();
+  const { user, profile, loading, logout, isOwner } = useAuth();
   const navigate = useNavigate();
 
   if (loading) {
-    return <div className="min-h-screen bg-bg-lavender"><Spinner label="چک کردن لاگین..." /></div>;
+    return (
+      <div className="min-h-screen bg-bg-lavender">
+        <Spinner label="چک کردن لاگین..." />
+      </div>
+    );
   }
 
   if (!user) {
     return <Navigate to="/admin/login" replace />;
   }
+
+  const owner = isOwner();
+
+  // گزینه‌های منو برای ادمین کل در مقابل کاربر عادی
+  const navItems = owner
+    ? [
+        { to: "/admin", label: "داشبورد کل", icon: LayoutDashboard, end: true },
+        { to: "/admin/forms", label: "فرم‌ها", icon: FileText, end: false },
+        { to: "/admin/embed", label: "اشتراک‌گذاری", icon: Share2, end: false },
+        { to: "/admin/sms", label: "پنل پیامک", icon: MessageSquare, end: false },
+        { to: "/admin/telegram", label: "بات تلگرام", icon: Bot, end: false },
+        { to: "/admin/managers", label: "مدیریت کاربران", icon: Users, end: false },
+        { to: "/admin/support", label: "تیکت‌های پشتیبانی", icon: Headphones, end: false },
+        { to: "/admin/superadmin", label: "سوپرادمین (God)", icon: Shield, end: false },
+        { to: "/admin/profile", label: "پروفایل", icon: User, end: false },
+      ]
+    : [
+        { to: "/admin/forms", label: "فرم‌های من", icon: FileText, end: false },
+        { to: "/admin/embed", label: "اشتراک و امبد", icon: Share2, end: false },
+        { to: "/admin/telegram", label: "اتصال به تلگرام", icon: Bot, end: false },
+        { to: "/admin/support", label: "پشتیبانی", icon: Headphones, end: false },
+        { to: "/admin/profile", label: "پروفایل و سهمیه", icon: User, end: false },
+      ];
 
   async function handleLogout() {
     await logout();
@@ -35,27 +64,37 @@ export default function AdminLayout() {
   return (
     <div className="h-screen bg-bg-lavender flex flex-col sm:flex-row overflow-hidden">
       {/* سایدبار — ثابت در سمت راست */}
-      <aside className="bg-navy text-white sm:w-56 shrink-0 sm:h-screen flex flex-col overflow-y-auto">
+      <aside className="bg-navy text-white sm:w-60 shrink-0 sm:h-screen flex flex-col overflow-y-auto">
         {/* هدر */}
-        <div className="flex items-center justify-between px-3 py-2.5 border-b border-white/10">
+        <div className="flex items-center justify-between px-3.5 py-3 border-b border-white/10">
           <span className="inline-flex items-baseline gap-0.5 text-base sm:text-lg font-black rotate-[-2deg] select-none">
             <span>پرس</span>
             <span className="text-teal">کاد</span>
           </span>
-          <span className="text-[0.6rem] sm:text-[0.7rem] font-bold bg-teal/25 text-teal rounded-pill-sm px-1.5 py-0.5">
-            پنل ادمین
+          <span className="text-[0.65rem] sm:text-[0.7rem] font-bold bg-teal/25 text-teal rounded-pill-sm px-2 py-0.5">
+            {owner ? "مدیریت کل 👑" : "پنل کاربری"}
           </span>
         </div>
 
-        {/* نав موبایل: افقی اسکرولی — نав دسکتاپ: عمودی */}
-        <nav className="flex sm:flex-col gap-1 px-1.5 sm:px-2 py-1.5 sm:py-2 overflow-x-auto scrollbar-none">
-          {NAV_ITEMS.map((item) => (
+        {/* سهمیه کاربر عادی در بالای منو */}
+        {!owner && profile && (
+          <div className="mx-2 mt-2 p-2.5 rounded-xl bg-white/5 border border-white/10 text-xs">
+            <div className="flex items-center justify-between text-white/70 mb-1 font-bold">
+              <span>پلن: {profile.plan === "enterprise" ? "سازمانی" : profile.plan === "pro" ? "حرفه‌ای" : "رایگان"}</span>
+              <span className="text-teal font-extrabold">{faNum(profile.max_forms ?? 5)} فرم مجاز</span>
+            </div>
+          </div>
+        )}
+
+        {/* منو موبایل: افقی اسکرولی — منو دسکتاپ: عمودی */}
+        <nav className="flex sm:flex-col gap-1 px-1.5 sm:px-2 py-2 overflow-x-auto scrollbar-none">
+          {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
-                `flex items-center gap-1.5 sm:gap-2.5 whitespace-nowrap shrink-0 rounded-pill-sm px-2.5 sm:px-3.5 py-2 sm:py-2.5
+                `flex items-center gap-2 whitespace-nowrap shrink-0 rounded-pill-sm px-3 py-2 sm:py-2.5
                  text-[0.75rem] sm:text-sm font-bold transition-colors ${
                    isActive
                      ? "bg-teal text-white shadow-[2px_2px_0_0_rgba(0,0,0,0.25)]"
@@ -63,21 +102,31 @@ export default function AdminLayout() {
                  }`
               }
             >
-              <item.icon size={15} className="shrink-0" />
+              <item.icon size={16} className="shrink-0" />
               <span className="shrink-0">{item.label}</span>
             </NavLink>
           ))}
         </nav>
 
         {/* فوتر سایدبار */}
-        <div className="sm:mt-auto px-2 py-2 border-t border-white/10 flex sm:flex-col items-center gap-2">
+        <div className="sm:mt-auto px-2 py-2.5 border-t border-white/10 flex sm:flex-col items-center gap-2">
           <div className="flex items-center justify-center">
             <NotificationBell />
           </div>
-          <span className="text-[0.6rem] sm:text-[0.7rem] font-medium text-white/50 truncate sm:w-full text-center" dir="ltr">
-            {user.email}
-          </span>
-          <Button variant="ghost" size="sm" className="!text-white/80 hover:!text-white !border-white/20 text-[0.75rem] sm:text-sm" onClick={handleLogout}>
+          <div className="text-center w-full min-w-0">
+            <div className="text-[0.7rem] font-bold text-white/90 truncate">
+              {profile?.full_name || user.email?.split("@")[0]}
+            </div>
+            <div className="text-[0.6rem] font-medium text-white/40 truncate" dir="ltr">
+              {user.email}
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="!text-white/80 hover:!text-white !border-white/20 text-[0.75rem] sm:text-sm w-full"
+            onClick={handleLogout}
+          >
             <LogOut size={13} className="ml-1" /> خروج
           </Button>
         </div>

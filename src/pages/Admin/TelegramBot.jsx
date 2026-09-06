@@ -25,7 +25,7 @@ const inputCls =
   "w-full bg-white border-2 border-ink/15 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none transition-all";
 
 export default function TelegramBot() {
-  const { hasPermission, isOwner } = useAuth();
+  const { user, isOwner } = useAuth();
   const [tab, setTab] = useState("config");
   const [loading, setLoading] = useState(true);
 
@@ -55,15 +55,22 @@ export default function TelegramBot() {
     setTimeout(() => setToast(null), 3000);
   }
 
-  const canManage = hasPermission("manage_telegram") || isOwner();
-
   // ─── Load Data ───
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
+      let formsQuery = supabase
+        .from("forms")
+        .select("id, title, published")
+        .order("created_at", { ascending: false });
+
+      if (!isOwner() && user?.id) {
+        formsQuery = formsQuery.or(`manager_id.eq.${user.id},created_by.eq.${user.id}`);
+      }
+
       const [configRes, formsRes, linksRes] = await Promise.all([
         supabase.from("telegram_config").select("*").order("created_at", { ascending: false }),
-        supabase.from("forms").select("id, title, published").order("created_at", { ascending: false }),
+        formsQuery,
         supabase
           .from("telegram_form_links")
           .select("id, form_id, config_id, is_active, created_at"),
@@ -75,7 +82,7 @@ export default function TelegramBot() {
       console.error(err);
     }
     setLoading(false);
-  }, []);
+  }, [isOwner, user?.id]);
 
   const loadSendLog = useCallback(async () => {
     setLogLoading(true);

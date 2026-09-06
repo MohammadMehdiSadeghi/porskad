@@ -11,6 +11,7 @@ import EmbedForm from "./pages/Embed";
 import NotFound from "./pages/NotFound";
 import AdminLayout from "./components/layout/AdminLayout";
 import Login from "./pages/Admin/Login";
+import Register from "./pages/Admin/Register";
 import Dashboard from "./pages/Admin/Dashboard";
 import FormsList from "./pages/Admin/Forms/FormsList";
 import FormBuilder from "./pages/Admin/Forms/FormBuilder";
@@ -22,7 +23,18 @@ import TelegramBot from "./pages/Admin/TelegramBot";
 import Managers from "./pages/Admin/Managers";
 import Profile from "./pages/Admin/Profile";
 import SuperAdmin from "./pages/Admin/SuperAdmin";
+import Support from "./pages/Admin/Support";
 import AuthGuard from "./components/guards/AuthGuard";
+import { useAuth } from "./context/AuthContext";
+
+// هدایت هوشمند داشبورد: اگر مالک نبود، مستقیماً به فرم‌ها برود
+function AdminIndex() {
+  const { isOwner } = useAuth();
+  if (!isOwner()) {
+    return <Navigate to="/admin/forms" replace />;
+  }
+  return <Dashboard />;
+}
 
 // Error Boundary
 class ErrorBoundary extends React.Component {
@@ -91,8 +103,11 @@ export default function App() {
             {/* Embed — جاسازی فرم در سایت‌های دیگر */}
             <Route path="/embed/:formId" element={<EmbedForm />} />
 
-            {/* ادمین */}
+            {/* ورود و ثبت‌نام عمومی */}
+            <Route path="/register" element={<Register />} />
             <Route path="/admin/login" element={<Login />} />
+
+            {/* پنل کاربری و ادمین */}
             <Route
               path="/admin"
               element={
@@ -101,17 +116,20 @@ export default function App() {
                 </AuthGuard>
               }
             >
-              <Route index element={<Dashboard />} />
+              <Route index element={<AdminIndex />} />
               <Route path="forms" element={<FormsList />} />
               <Route path="forms/:id" element={<FormBuilder />} />
               <Route path="forms/:id/responses" element={<Responses />} />
               <Route path="forms/:id/share" element={<ShareForm />} />
-              <Route path="managers" element={<Managers />} />
-              <Route path="superadmin" element={<AuthGuard ownerOnly={true}><SuperAdmin /></AuthGuard>} />
               <Route path="embed" element={<EmbedHub />} />
-              <Route path="sms" element={<SmsPanel />} />
               <Route path="telegram" element={<TelegramBot />} />
+              <Route path="support" element={<Support />} />
               <Route path="profile" element={<Profile />} />
+
+              {/* بخش‌های اختصاصی مالک و سوپرادمین */}
+              <Route path="managers" element={<AuthGuard ownerOnly={true}><Managers /></AuthGuard>} />
+              <Route path="sms" element={<AuthGuard ownerOnly={true}><SmsPanel /></AuthGuard>} />
+              <Route path="superadmin" element={<AuthGuard ownerOnly={true}><SuperAdmin /></AuthGuard>} />
             </Route>
 
             {/* هدایت پیش‌فرض */}

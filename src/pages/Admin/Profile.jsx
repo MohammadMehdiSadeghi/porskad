@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../components/ui/Toast";
 import { supabase } from "../../lib/supabaseClient";
@@ -6,6 +7,7 @@ import Button from "../../components/ui/Button";
 import StickerCard from "../../components/ui/StickerCard";
 import Badge from "../../components/ui/Badge";
 import SEO from "../../components/ui/SEO";
+import { faNum } from "../../lib/utils";
 
 const PERMISSION_LABELS = {
   create_form: "ایجاد فرم",
@@ -173,6 +175,57 @@ export default function Profile() {
                 )}
               </div>
             </div>
+
+            <div className="flex items-center justify-between text-xs text-ink/40 pt-2 border-t border-ink/10">
+              <span>عضویت از</span>
+              <span>{new Date(profile?.created_at ?? Date.now()).toLocaleDateString("fa-IR")}</span>
+            </div>
+          </div>
+        </StickerCard>
+      </div>
+
+      {/* سهمیه و پلن اکانت */}
+      <div className="rotate-[0.3deg]">
+        <StickerCard theme="teal" radius="rounded-tl-[1.75rem] rounded-br-[1.75rem] rounded-tr-none rounded-bl-none">
+          <div className="p-5 sm:p-6 flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-extrabold text-navy flex items-center gap-2">
+                وضعیت پلن و سهمیه‌ها
+              </h2>
+              <Badge color={profile?.is_owner ? "orange" : "green"}>
+                {profile?.is_owner ? "سازمانی (نامحدود) 👑" : profile?.plan === "pro" ? "حرفه‌ای" : "رایگان"}
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="bg-white/80 border border-ink/10 rounded-xl p-3 text-center">
+                <span className="text-xs font-semibold text-ink-subtle block">سقف فرم‌های فعال</span>
+                <span className="text-base font-black text-navy mt-1 block">
+                  {profile?.is_owner ? "نامحدود" : `${faNum(profile?.max_forms ?? 5)} فرم`}
+                </span>
+              </div>
+              <div className="bg-white/80 border border-ink/10 rounded-xl p-3 text-center">
+                <span className="text-xs font-semibold text-ink-subtle block">سقف پاسخ در ماه</span>
+                <span className="text-base font-black text-navy mt-1 block">
+                  {profile?.is_owner ? "نامحدود" : `${faNum(profile?.max_responses_per_month ?? 100)} پاسخ`}
+                </span>
+              </div>
+              <div className="bg-white/80 border border-ink/10 rounded-xl p-3 text-center col-span-2 sm:col-span-1">
+                <span className="text-xs font-semibold text-ink-subtle block">ارسال به تلگرام</span>
+                <span className="text-base font-black text-teal mt-1 block">
+                  {profile?.can_use_telegram !== false ? "✓ فعال" : "✕ غیرفعال"}
+                </span>
+              </div>
+            </div>
+
+            {!profile?.is_owner && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-ink/10">
+                <span className="text-xs font-semibold text-ink-subtle">نیاز به ظرفیت بیشتر دارید؟</span>
+                <Button as={Link} to="/admin/support" variant="teal" size="sm">
+                  درخواست افزایش سهمیه 🚀
+                </Button>
+              </div>
+            )}
           </div>
         </StickerCard>
       </div>

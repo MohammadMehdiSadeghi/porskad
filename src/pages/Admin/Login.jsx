@@ -8,7 +8,7 @@ import SEO from "../../components/ui/SEO";
 import { logActivity } from "../../lib/activityLogger";
 
 export default function Login() {
-  const { login, user } = useAuth();
+  const { login, user, isOwner } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,7 +16,7 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
 
   if (user) {
-    return <Navigate to="/admin" replace />;
+    return <Navigate to={isOwner() ? "/admin" : "/admin/forms"} replace />;
   }
 
   async function handleSubmit(e) {
@@ -24,9 +24,9 @@ export default function Login() {
     setBusy(true);
     setError(null);
     try {
-      await login(email.trim(), password);
+      const data = await login(email.trim(), password);
       logActivity("login", "user", null, { email: email.trim() });
-      navigate("/admin", { replace: true });
+      navigate("/admin/forms", { replace: true });
     } catch (err) {
       setError(
         err?.message?.includes("Invalid login")
@@ -41,8 +41,8 @@ export default function Login() {
   return (
     <div className="min-h-screen dot-pattern bg-bg-mint flex items-center justify-center p-4">
       <SEO
-        title="ورود ادمین"
-        description="ورود به پنل مدیریت پرس‌کاد — سیستم اختصاصی فرم و نظرسنجی مؤسسه رکاد"
+        title="ورود به حساب کاربری"
+        description="ورود به پنل کاربری پرس‌کاد — سیستم فرم و نظرسنجی آنلاین"
         url="/admin/login"
         noIndex
       />
@@ -54,11 +54,11 @@ export default function Login() {
           >
             <div className="flex flex-col items-center gap-2 text-center">
               <Badge color="navy" rotate="rotate-[2deg]">
-                پنل مدیریت پرس کاد
+                پرس‌کاد — فرم‌ساز آنلاین
               </Badge>
-              <h1 className="text-xl sm:text-2xl font-black text-navy">ورود ادمین</h1>
-              <p className="text-sm sm:text-base font-semibold text-ink-subtle">
-                فقط مدیران مجاز به ورود به این بخش هستند.
+              <h1 className="text-xl sm:text-2xl font-black text-navy">ورود به حساب</h1>
+              <p className="text-sm font-semibold text-ink-subtle">
+                ایمیل و رمز عبور خود را برای ورود وارد کنید.
               </p>
             </div>
 
@@ -98,23 +98,27 @@ export default function Login() {
               </div>
             )}
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mt-1">
+            <div className="flex flex-col gap-3 mt-1">
               <Button
                 type="submit"
                 variant="teal"
                 size="lg"
                 disabled={busy}
                 rotate="-rotate-[1deg]"
-                className="w-full sm:w-auto justify-center"
+                className="w-full justify-center"
               >
-                {busy ? "در حال ورود..." : "ورود 🚪"}
+                {busy ? "در حال ورود..." : "ورود به پنل 🚪"}
               </Button>
-              <Link
-                to="/"
-                className="text-sm font-bold text-ink-subtle hover:text-navy transition-colors text-center"
-              >
-                برگشت به سایت ↩
-              </Link>
+
+              <div className="flex items-center justify-between text-xs font-bold text-ink-subtle pt-3 border-t border-ink/10">
+                <span>حساب کاربری ندارید؟</span>
+                <Link
+                  to="/register"
+                  className="text-teal hover:underline"
+                >
+                  ثبت‌نام رایگان 👈
+                </Link>
+              </div>
             </div>
           </form>
         </StickerCard>
