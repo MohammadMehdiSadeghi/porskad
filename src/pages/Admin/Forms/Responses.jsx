@@ -499,7 +499,7 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
 export default function Responses() {
   const { id } = useParams();
   const { push } = useToast();
-  const { hasPermission, user, isOwner } = useAuth();
+  const { hasPermission, user, isOwner, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -575,6 +575,7 @@ export default function Responses() {
   }
 
   useEffect(() => {
+    if (authLoading) return;
     load();
     const channel = supabase
       .channel(`responses-${id}`)
@@ -585,7 +586,7 @@ export default function Responses() {
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [id]);
+  }, [id, user?.id, isOwner, authLoading]);
 
   const answersByResponse = useMemo(() => {
     const map = {};

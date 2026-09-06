@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabaseClient";
 import { useToast } from "../../components/ui/Toast";
@@ -23,6 +24,7 @@ import {
 } from "lucide-react";
 
 export default function Support() {
+  const [searchParams] = useSearchParams();
   const { user, profile, isOwner } = useAuth();
   const { push } = useToast();
   const [loading, setLoading] = useState(true);
@@ -34,6 +36,16 @@ export default function Support() {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const subjParam = searchParams.get("subject");
+    const msgParam = searchParams.get("message");
+    if (subjParam) {
+      setSubject(subjParam);
+      if (msgParam) setMessage(msgParam);
+      setNewTicketModal(true);
+    }
+  }, [searchParams]);
 
   // ادمین: پاسخ به تیکت
   const [replyTicket, setReplyTicket] = useState(null);

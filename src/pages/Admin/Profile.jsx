@@ -213,7 +213,7 @@ export default function Profile() {
               <div className="bg-white/80 border border-ink/10 rounded-xl p-3 text-center col-span-2 sm:col-span-1">
                 <span className="text-xs font-semibold text-ink-subtle block">ارسال به تلگرام</span>
                 <span className="text-base font-black text-teal mt-1 block">
-                  {profile?.can_use_telegram !== false ? "✓ فعال" : "✕ غیرفعال"}
+                  {profile?.is_owner || profile?.can_use_telegram === true ? "✓ فعال" : "✕ غیرفعال"}
                 </span>
               </div>
             </div>

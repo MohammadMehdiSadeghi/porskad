@@ -671,7 +671,7 @@ export default function FormBuilder() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { push } = useToast();
-  const { user, isOwner } = useAuth();
+  const { user, isOwner, loading: authLoading } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -682,6 +682,7 @@ export default function FormBuilder() {
   const [slugError, setSlugError] = useState(null);
 
   useEffect(() => {
+    if (authLoading) return;
     async function load() {
       const { data: f, error } = await supabase.from("forms").select("*").eq("id", id).maybeSingle();
       if (error || !f) {
@@ -717,7 +718,7 @@ export default function FormBuilder() {
       setLoading(false);
     }
     load();
-  }, [id]);
+  }, [id, user?.id, isOwner, authLoading]);
 
   useEffect(() => {
     const handler = (e) => {

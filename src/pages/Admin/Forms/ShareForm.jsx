@@ -77,12 +77,13 @@ function CodeBlock({ code, label }) {
 export default function ShareForm() {
   const { id } = useParams();
   const { push } = useToast();
-  const { user, isOwner } = useAuth();
+  const { user, isOwner, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(null);
   const [activeTab, setActiveTab] = useState("inline");
 
   useEffect(() => {
+    if (authLoading) return;
     async function load() {
       const { data, error } = await supabase
         .from("forms")
@@ -104,7 +105,7 @@ export default function ShareForm() {
       setLoading(false);
     }
     load();
-  }, [id, user, isOwner, push]);
+  }, [id, user?.id, isOwner, authLoading, push]);
 
   if (loading) return <Spinner label="در حال بارگذاری..." />;
   if (!form) {

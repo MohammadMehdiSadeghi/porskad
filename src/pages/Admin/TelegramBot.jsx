@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabaseClient";
 import { faNum, faRelative } from "../../lib/utils";
@@ -26,7 +27,7 @@ const inputCls =
 
 export default function TelegramBot() {
   const { user, profile, isOwner, hasPermission } = useAuth();
-  const canManage = (isOwner() || hasPermission("manage_telegram")) && profile?.can_use_telegram !== false;
+  const canManage = isOwner() || (hasPermission("manage_telegram") && profile?.can_use_telegram === true);
   const [tab, setTab] = useState("config");
   const [loading, setLoading] = useState(true);
 
@@ -323,11 +324,33 @@ export default function TelegramBot() {
         </div>
       </div>
 
-      {/* هشدار عدم دسترسی */}
+      {/* هشدار عدم دسترسی و دعوت به ارسال تیکت */}
       {!canManage && (
-        <div className="bg-college-light border-2 border-orange/30 rounded-pill-md px-4 py-3 flex items-center gap-3">
-          <AlertTriangle size={18} className="text-orange shrink-0" />
-          <p className="text-sm font-bold text-orange">شما مجوز مدیریت بات تلگرام را ندارید. فقط مشاهده امکان‌پذیر است.</p>
+        <div className="-rotate-[0.3deg]">
+          <StickerCard theme="orange">
+            <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-3.5">
+                <span className="w-10 h-10 rounded-full bg-orange text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                  <Bot size={22} />
+                </span>
+                <div>
+                  <h3 className="font-black text-navy text-base">قابلیت اتصال به بات تلگرام برای حساب شما فعال نیست</h3>
+                  <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-1 leading-6">
+                    برای اتصال ربات و دریافت لحظه‌ای اطلاعات فرم‌ها در کانال یا گروه تلگرامی خود، می‌توانید درخواست خود را از طریق تیکت برای مدیریت ارسال کنید تا این قابلیت برای حسابتان فعال گردد.
+                  </p>
+                </div>
+              </div>
+              <Button
+                as={Link}
+                to={`/admin/support?subject=${encodeURIComponent("درخواست فعال‌سازی بات تلگرام")}&message=${encodeURIComponent("سلام، لطفاً قابلیت اتصال بات تلگرام را برای حساب کاربری من فعال نمایید.")}`}
+                variant="teal"
+                size="sm"
+                className="whitespace-nowrap shrink-0"
+              >
+                ارسال تیکت فعال‌سازی 🚀
+              </Button>
+            </div>
+          </StickerCard>
         </div>
       )}
 

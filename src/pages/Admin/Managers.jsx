@@ -178,6 +178,7 @@ export default function Managers() {
   const [quotaMaxForms, setQuotaMaxForms] = useState(5);
   const [quotaMaxResponses, setQuotaMaxResponses] = useState(100);
   const [quotaPlan, setQuotaPlan] = useState("free");
+  const [quotaCanUseTelegram, setQuotaCanUseTelegram] = useState(false);
   const [quotaSaving, setQuotaSaving] = useState(false);
 
   function openQuotaModal(m) {
@@ -185,6 +186,7 @@ export default function Managers() {
     setQuotaMaxForms(m.max_forms ?? 5);
     setQuotaMaxResponses(m.max_responses_per_month ?? 100);
     setQuotaPlan(m.plan ?? "free");
+    setQuotaCanUseTelegram(Boolean(m.can_use_telegram));
   }
 
   async function handleSaveQuota(e) {
@@ -196,8 +198,9 @@ export default function Managers() {
         maxForms: Number(quotaMaxForms) || 5,
         maxResponses: Number(quotaMaxResponses) || 100,
         plan: quotaPlan,
+        canUseTelegram: Boolean(quotaCanUseTelegram),
       });
-      push("سهمیه کاربر با موفقیت به‌روزرسانی شد.", "success");
+      push("سهمیه و دسترسی‌های کاربر با موفقیت به‌روزرسانی شد.", "success");
       setQuotaModal(null);
       load();
     } catch (err) {
@@ -405,9 +408,10 @@ export default function Managers() {
                   )}
 
                   {/* سهمیه و پلن کاربر */}
-                  <div className="flex items-center justify-between text-[0.7rem] font-bold text-ink-subtle bg-bg-neutral/70 rounded-pill-sm px-2.5 py-1">
+                  <div className="flex flex-wrap items-center justify-between text-[0.7rem] font-bold text-ink-subtle bg-bg-neutral/70 rounded-pill-sm px-2.5 py-1 gap-1">
                     <span>سقف فرم: <strong className="text-navy">{m.is_owner ? "نامحدود" : faNum(m.max_forms ?? 5)}</strong></span>
                     <span>پلن: <strong className="text-teal-text">{m.is_owner ? "سازمانی" : (m.plan === "enterprise" ? "سازمانی" : m.plan === "pro" ? "حرفه‌ای" : "رایگان")}</strong></span>
+                    <span>تلگرام: <strong className={m.is_owner || m.can_use_telegram ? "text-teal-text" : "text-ink/40"}>{m.is_owner || m.can_use_telegram ? "✓ فعال" : "✕ غیرفعال"}</strong></span>
                   </div>
 
                   {/* تاریخ */}
@@ -693,6 +697,24 @@ export default function Managers() {
               onChange={(e) => setQuotaMaxResponses(e.target.value)}
               className={inputCls}
             />
+          </div>
+
+          <div className="flex items-center justify-between p-3.5 rounded-xl bg-bg-lavender/50 border-2 border-teal/20">
+            <div>
+              <span className="block text-sm font-extrabold text-navy">دسترسی به بات تلگرام</span>
+              <span className="text-[0.65rem] font-semibold text-ink-subtle">
+                امکان اتصال فرم‌ها به بات تلگرام و دریافت ورودی‌ها
+              </span>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={quotaCanUseTelegram}
+                onChange={(e) => setQuotaCanUseTelegram(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-ink/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal"></div>
+            </label>
           </div>
 
           <div className="flex gap-3 justify-end pt-2">

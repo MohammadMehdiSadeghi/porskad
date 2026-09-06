@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
+import { useAuth } from "../../context/AuthContext";
 import StatCard from "../../components/ui/StatCard";
 import StickerCard from "../../components/ui/StickerCard";
 import Button from "../../components/ui/Button";
@@ -13,16 +14,27 @@ import { faNum, faRelative, faDuration, DEVICE_FA } from "../../lib/utils";
 import SEO from "../../components/ui/SEO";
 
 export default function Dashboard() {
+  const { user, isOwner, loading: authLoading } = useAuth();
   const { push } = useToast();
   const [loading, setLoading] = useState(true);
   const [forms, setForms] = useState([]);
   const [recent, setRecent] = useState([]);
   const [stats, setStats] = useState({ forms: 0, responses: 0, complete: 0, avgDuration: null });
 
-  async function loadAll() {
+  const loadAll = useCallback(async () => {
+    if (!user) return;
     setLoading(true);
+    let formsQuery = supabase
+      .from("forms")
+      .select("id, slug, title, published, created_at, manager_id, created_by")
+      .order("created_at", { ascending: false });
+
+    if (!isOwner() && user?.id) {
+      formsQuery = formsQuery.or(`manager_id.eq.${user.id},created_by.eq.${user.id}`);
+    }
+
     const [{ data: formsData }, { data: respData }] = await Promise.all([
-      supabase.from("forms").select("id, slug, title, published, created_at").order("created_at", { ascending: false }),
+      formsQuery,
       supabase
         .from("responses")
         .select("id, form_id, is_complete, submitted_at, duration_seconds, device, created_at")
@@ -31,7 +43,8 @@ export default function Dashboard() {
     ]);
 
     const formList = formsData ?? [];
-    const respList = respData ?? [];
+    const formIdSet = new Set(formList.map((f) => f.id));
+    const respList = (respData ?? []).filter((r) => isOwner() || formIdSet.has(r.form_id));
     const completeList = respList.filter((r) => r.is_complete);
     const durations = completeList.map((r) => r.duration_seconds).filter((d) => d > 0);
 
@@ -46,13 +59,14 @@ export default function Dashboard() {
         : null,
     });
     setLoading(false);
-  }
+  }, [user, isOwner]);
 
   // ref همیشه‌به‌روز از forms — تا callback ریل‌تایم closure قدیمی نگیرد
   const formsRef = useRef(forms);
   useEffect(() => { formsRef.current = forms; }, [forms]);
 
   useEffect(() => {
+    if (authLoading) return;
     loadAll();
     if (!supabase) return;
     const channel = supabase
@@ -62,16 +76,17 @@ export default function Dashboard() {
         { event: "INSERT", schema: "public", table: "responses" },
         (payload) => {
           const form = formsRef.current.find((f) => f.id === payload.new.form_id);
-          push(`پاسخ جدید برای «${form?.title ?? "فرم"}» ثبت شد!`, "info");
-          loadAll();
+          if (form) {
+            push(`پاسخ جدید برای «${form?.title ?? "فرم"}» ثبت شد!`, "info");
+            loadAll();
+          }
         },
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadAll, authLoading, push]);
 
   const formTitleById = useMemo(() => Object.fromEntries(forms.map((f) => [f.id, f.title])), [forms]);
 

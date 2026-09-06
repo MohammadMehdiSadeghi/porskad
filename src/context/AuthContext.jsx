@@ -51,7 +51,7 @@ export function AuthProvider({ children }) {
         data.max_forms = data.is_owner ? 999999 : (data.max_forms ?? 5);
         data.max_responses_per_month = data.is_owner ? 999999 : (data.max_responses_per_month ?? 100);
         data.plan = data.is_owner ? 'enterprise' : (data.plan ?? 'free');
-        data.can_use_telegram = data.can_use_telegram ?? true;
+        data.can_use_telegram = data.is_owner ? true : (data.can_use_telegram === true);
         data.can_export_excel = data.can_export_excel ?? true;
         return data;
       }
@@ -76,7 +76,7 @@ export function AuthProvider({ children }) {
           minData.max_forms = 5;
           minData.max_responses_per_month = 100;
           minData.plan = "free";
-          minData.can_use_telegram = true;
+          minData.can_use_telegram = Boolean(minData.is_owner);
           minData.can_export_excel = true;
           return minData;
         }
@@ -88,7 +88,7 @@ export function AuthProvider({ children }) {
         fallbackData.max_forms = fallbackData.is_owner ? 999999 : 5;
         fallbackData.max_responses_per_month = fallbackData.is_owner ? 999999 : 100;
         fallbackData.plan = fallbackData.is_owner ? "enterprise" : "free";
-        fallbackData.can_use_telegram = true;
+        fallbackData.can_use_telegram = Boolean(fallbackData.is_owner);
         fallbackData.can_export_excel = true;
       }
       return fallbackData;
@@ -247,26 +247,30 @@ export function AuthProvider({ children }) {
     return data;
   }
 
-  async function updateUserQuota(userId, { maxForms, maxResponses, plan }) {
+  async function updateUserQuota(userId, { maxForms, maxResponses, plan, canUseTelegram }) {
     try {
-      const { error } = await supabase.rpc("set_user_quotas", {
+      await supabase.rpc("set_user_quotas", {
         p_user_id: userId,
         p_max_forms: maxForms,
         p_max_responses: maxResponses,
         p_plan: plan,
       });
-      if (error) throw error;
-    } catch (rpcErr) {
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          max_forms: maxForms,
-          max_responses_per_month: maxResponses,
-          plan: plan,
-        })
-        .eq("id", userId);
-      if (error) throw error;
+    } catch {}
+
+    const updatePayload = {
+      max_forms: maxForms,
+      max_responses_per_month: maxResponses,
+      plan: plan,
+    };
+    if (typeof canUseTelegram === "boolean") {
+      updatePayload.can_use_telegram = canUseTelegram;
     }
+
+    const { error } = await supabase
+      .from("profiles")
+      .update(updatePayload)
+      .eq("id", userId);
+    if (error) throw error;
   }
 
   async function logout() {
@@ -414,7 +418,7 @@ export function AuthProvider({ children }) {
       try {
         const res = await supabase
           .from("profiles")
-          .select("id, email, full_name, is_active, is_owner, created_at, created_by, hidden_from, max_forms, max_responses_per_month, plan")
+          .select("id, email, full_name, is_active, is_owner, created_at, created_by, hidden_from, max_forms, max_responses_per_month, plan, can_use_telegram")
           .order("created_at", { ascending: true });
         profilesData = res.data;
         profilesError = res.error;
@@ -470,6 +474,7 @@ export function AuthProvider({ children }) {
           max_forms: p.is_owner ? 999999 : (p.max_forms ?? 5),
           max_responses_per_month: p.is_owner ? 999999 : (p.max_responses_per_month ?? 100),
           plan: p.is_owner ? 'enterprise' : (p.plan ?? 'free'),
+          can_use_telegram: p.is_owner ? true : (p.can_use_telegram === true),
           role: roleId,
           roleActive: roleData?.active ?? true,
           permissions: effectivePermissions,
