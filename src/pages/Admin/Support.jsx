@@ -32,6 +32,7 @@ import {
   User as UserIcon,
   X,
   Layers,
+  Trash2,
 } from "lucide-react";
 
 export default function Support() {
@@ -50,6 +51,15 @@ export default function Support() {
 
   // آکاردئون کاربران برای ادمین (کدام کاربرها باز هستند)
   const [expandedUsers, setExpandedUsers] = useState({});
+
+  // تایید حذف تیکت
+  const [deletingTicket, setDeletingTicket] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // بازگشایی تیکت توسط کاربر
+  const [reopenModalTicket, setReopenModalTicket] = useState(null);
+  const [reopenMessage, setReopenMessage] = useState("");
+  const [reopening, setReopening] = useState(false);
 
   // کاربر: ساخت تیکت جدید
   const [newTicketModal, setNewTicketModal] = useState(false);
@@ -285,6 +295,68 @@ export default function Support() {
       push(nextArchived ? "تیکت به آرشیو شما منتقل شد 📦" : "تیکت از آرشیو شما خارج شد 📤", "success");
     } catch {
       push(nextArchived ? "تیکت به آرشیو شما منتقل شد 📦" : "تیکت از آرشیو شما خارج شد 📤", "success");
+    }
+  }
+
+  // حذف تیکت
+  async function handleDeleteTicket() {
+    if (!deletingTicket) return;
+    const target = deletingTicket;
+    setDeleting(true);
+
+    // به‌روزرسانی سریع در استیت
+    setTickets((prev) => prev.filter((t) => t.id !== target.id));
+    setDeletingTicket(null);
+
+    try {
+      const { error } = await supabase
+        .from("support_tickets")
+        .delete()
+        .eq("id", target.id);
+
+      if (error) throw error;
+      push("تیکت با موفقیت حذف شد 🗑️", "success");
+    } catch (err) {
+      console.error("Delete ticket error:", err);
+      push("خطا در حذف تیکت: " + err.message, "error");
+      loadTickets();
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  // بازگشایی تیکت بسته شده توسط کاربر به همراه پیام جدید
+  async function handleUserReopenTicket(e) {
+    e.preventDefault();
+    if (!reopenModalTicket) return;
+
+    const followUp = reopenMessage.trim();
+    const updatedMessage = followUp
+      ? `${reopenModalTicket.message}\n\n─── 🔄 پیام تکمیلی کاربر (${new Date().toLocaleDateString("fa-IR")}) ───\n${followUp}`
+      : reopenModalTicket.message;
+
+    setReopening(true);
+    try {
+      const { error } = await supabase
+        .from("support_tickets")
+        .update({
+          message: updatedMessage,
+          status: "open",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", reopenModalTicket.id);
+
+      if (error) throw error;
+
+      push("تیکت شما مجدداً بازگشایی شد و به صف پاسخگویی رفت 🔓", "success");
+      setReopenModalTicket(null);
+      setReopenMessage("");
+      loadTickets();
+    } catch (err) {
+      console.error("Reopen ticket error:", err);
+      push("خطا در بازگشایی تیکت: " + err.message, "error");
+    } finally {
+      setReopening(false);
     }
   }
 
@@ -830,6 +902,16 @@ export default function Support() {
                                   )}
                                 </Button>
 
+                                {/* حذف تیکت برای مدیر */}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setDeletingTicket(t)}
+                                  className="text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                                >
+                                  <Trash2 size={14} className="ml-1" /> حذف تیکت
+                                </Button>
+
                                 {/* پاسخ یا ویرایش پاسخ */}
                                 <Button
                                   variant="teal"
@@ -943,16 +1025,37 @@ export default function Support() {
                         </div>
                       )}
 
-                      {/* هشدار وضعیت بسته شده */}
+                      {/* بخش وضعیت بسته شده با امکان بازگشایی و ادامه گفتگو توسط کاربر */}
                       {isClosed && (
-                        <div className="mt-1 p-2.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-medium text-slate-700 flex items-center gap-2">
-                          <Lock size={14} className="shrink-0 text-slate-500" />
-                          <span>این تیکت توسط پشتیبانی بسته شده است. در صورت نیاز می‌توانید تیکت جدیدی ایجاد نمایید.</span>
+                        <div className="mt-1 p-3 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                          <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+                            <Lock size={15} className="shrink-0 text-slate-500" />
+                            <span>این تیکت بسته شده است. در صورت نیاز به ادامه، می‌توانید همین تیکت را مجدداً بازگشایی کنید.</span>
+                          </div>
+                          <Button
+                            variant="teal"
+                            size="sm"
+                            onClick={() => {
+                              setReopenModalTicket(t);
+                              setReopenMessage("");
+                            }}
+                            className="text-xs shrink-0"
+                          >
+                            <Unlock size={13} className="ml-1" /> بازگشایی و ادامه گفتگو 🔓
+                          </Button>
                         </div>
                       )}
 
-                      {/* دکمه آرشیو تیکت برای کاربر */}
-                      <div className="flex justify-end pt-2 border-t border-ink/10">
+                      {/* دکمه‌های آرشیو و حذف برای کاربر */}
+                      <div className="flex items-center justify-end gap-2 pt-2 border-t border-ink/10">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDeletingTicket(t)}
+                          className="text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                        >
+                          <Trash2 size={13} className="ml-1" /> حذف
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -1086,6 +1189,86 @@ export default function Support() {
               disabled={replying}
             >
               {replying ? "در حال ثبت..." : "ارسال پاسخ ✅"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ─── مودال تایید حذف تیکت ─── */}
+      <Modal
+        open={!!deletingTicket}
+        onClose={() => setDeletingTicket(null)}
+        title="حذف تیکت پشتیبانی"
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-sm font-semibold text-ink leading-relaxed">
+            آیا از حذف کامل تیکت <strong>«{deletingTicket?.subject}»</strong> اطمینان دارید؟
+          </p>
+          <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-800 leading-relaxed">
+            ⚠️ این عملیات غیرقابل بازگشت است و تمامی پیام‌ها و پاسخ‌های این تیکت به طور کامل پاک خواهند شد.
+          </div>
+          <div className="flex justify-end gap-2 pt-2 border-t border-ink/10">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setDeletingTicket(null)}
+              disabled={deleting}
+            >
+              انصراف
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleDeleteTicket}
+              disabled={deleting}
+              className="bg-rose-600 hover:bg-rose-700 text-white"
+            >
+              {deleting ? "در حال حذف..." : "بله، حذف شود 🗑️"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ─── مودال بازگشایی تیکت توسط کاربر ─── */}
+      <Modal
+        open={!!reopenModalTicket}
+        onClose={() => setReopenModalTicket(null)}
+        title={`بازگشایی و ادامه تیکت: ${reopenModalTicket?.subject || ""}`}
+      >
+        <form onSubmit={handleUserReopenTicket} className="flex flex-col gap-4">
+          <div className="p-3 rounded-xl bg-teal/5 border border-teal/20 text-xs font-semibold text-ink leading-relaxed">
+            با ارسال پیام تکمیلی، وضعیت این تیکت مجدداً به <strong>«در انتظار پاسخ»</strong> تغییر یافته و در پنل مدیریت اعلان ارسال می‌شود.
+          </div>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-extrabold text-navy">پیام یا توضیح جدید شما</span>
+            <textarea
+              rows={4}
+              required
+              value={reopenMessage}
+              onChange={(e) => setReopenMessage(e.target.value)}
+              placeholder="نکته، سوال یا توضیحات تکمیلی خود را بنویسید..."
+              className="w-full bg-white border-2 border-ink/20 focus:border-teal rounded-pill-md px-3.5 py-2.5 text-sm font-semibold text-ink focus:outline-none resize-y"
+            />
+          </label>
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-ink/10">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setReopenModalTicket(null)}
+              disabled={reopening}
+            >
+              انصراف
+            </Button>
+            <Button
+              type="submit"
+              variant="teal"
+              size="sm"
+              disabled={reopening}
+            >
+              {reopening ? "در حال بازگشایی..." : "بازگشایی و ارسال پیام 🚀"}
             </Button>
           </div>
         </form>
