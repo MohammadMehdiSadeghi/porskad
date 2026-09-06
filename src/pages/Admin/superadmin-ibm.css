@@ -518,6 +518,71 @@
   font-size: 0.85rem;
 }
 
+/* ─── Storage & System ─── */
+.sa-storage-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.sa-storage-card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sa-storage-header {
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fafafa;
+}
+
+.sa-storage-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #161616;
+}
+
+.sa-storage-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.sa-storage-metric {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.sa-storage-num {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #0f62fe;
+  font-family: 'IBM Plex Mono', monospace;
+  line-height: 1;
+}
+
+.sa-storage-desc {
+  font-size: 0.8rem;
+  color: #525252;
+}
+
+@media (max-width: 840px) {
+  .sa-storage-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ─── Responsive ─── */
 @media (max-width: 640px) {
   .sa-root { padding: 0.75rem; }
