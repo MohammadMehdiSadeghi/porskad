@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
 import { supabase } from "../lib/supabaseClient";
-import { useAuth } from "./AuthContext";
+import { useAuth, isPrimaryGodEmail } from "./AuthContext";
 
 const NotificationContext = createContext(null);
 
@@ -10,7 +10,7 @@ function createNotifSound() {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const now = ctx.currentTime;
 
-    // نت اول — فاصله سوم بزرگ (чарming)
+    // نت اول — فاصله سوم بزرگ
     const osc1 = ctx.createOscillator();
     const gain1 = ctx.createGain();
     osc1.type = "sine";
@@ -35,7 +35,7 @@ function createNotifSound() {
     osc2.start(now + 0.1);
     osc2.stop(now + 0.4);
 
-    // نت سوم — اکتاو بالاتر (пік)
+    // نت سوم — اکتاو بالاتر (پیک)
     const osc3 = ctx.createOscillator();
     const gain3 = ctx.createGain();
     osc3.type = "triangle";
@@ -63,14 +63,8 @@ function createNotifSound() {
 
 function NotificationProvider({ children }) {
   const { user, isOwner } = useAuth() || {};
-  const [notifications, setNotifications] = useState(() => {
-    try {
-      const saved = localStorage.getItem("porskad_notifications");
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [notifications, setNotifications] = useState([]);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const [soundEnabled, setSoundEnabled] = useState(() => {
     return localStorage.getItem("notif_sound") !== "false";
@@ -80,12 +74,46 @@ function NotificationProvider({ children }) {
   });
   const [isOpen, setIsOpen] = useState(false);
 
-  // ذخیره اعلان‌ها در localStorage
+  // کلید ذخیره‌سازی محلی مجزا بر اساس هر کاربر
+  const storageKey = user?.id ? `porskad_notifications_${user.id}` : null;
+  const lastCheckKey = user?.id ? `porskad_last_check_${user.id}` : null;
+
+  // بارگذاری اعلان‌های کاربر در هنگام تغییر یا لاگین
   useEffect(() => {
+    if (!storageKey) {
+      setNotifications([]);
+      return;
+    }
     try {
-      localStorage.setItem("porskad_notifications", JSON.stringify(notifications));
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        setNotifications(JSON.parse(saved));
+      } else {
+        // فالبک به نسخه قبل در صورت وجود
+        const legacy = localStorage.getItem("porskad_notifications");
+        if (legacy) {
+          try {
+            const parsed = JSON.parse(legacy);
+            setNotifications(parsed);
+          } catch {
+            setNotifications([]);
+          }
+        } else {
+          setNotifications([]);
+        }
+      }
+    } catch {
+      setNotifications([]);
+    }
+  }, [storageKey]);
+
+  // ذخیره اعلان‌ها در localStorage اختصاصی کاربر
+  useEffect(() => {
+    if (!storageKey) return;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(notifications));
     } catch {}
-  }, [notifications]);
+  }, [notifications, storageKey]);
 
   // پخش صدا
   const playSound = useCallback(() => {
@@ -93,28 +121,39 @@ function NotificationProvider({ children }) {
     createNotifSound();
   }, [soundEnabled]);
 
-  // اضافه کردن نوتیف جدید
+  // اضافه کردن نوتیف جدید با جلوگیری از ایجاد رکورد تکراری
   const addNotification = useCallback((notif) => {
-    setNotifications((prev) => [
-      { id: Date.now() + Math.random(), time: new Date().toISOString(), read: false, ...notif },
-      ...prev,
-    ].slice(0, 50)); // حداکثر ۵۰ نوتیف
+    setNotifications((prev) => {
+      const targetId = notif.id || Date.now() + Math.random();
+      if (prev.some((n) => String(n.id) === String(targetId))) {
+        return prev;
+      }
+      return [
+        {
+          id: targetId,
+          time: new Date().toISOString(),
+          read: false,
+          ...notif,
+        },
+        ...prev,
+      ].slice(0, 60); // حداکثر ۶۰ اعلان
+    });
     playSound();
   }, [playSound]);
 
-  // علامت خوانده شدن
+  // علامت خوانده شدن یک مورد
   const markAsRead = useCallback((id) => {
     setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+      prev.map((n) => (String(n.id) === String(id) ? { ...n, read: true } : n))
     );
   }, []);
 
-  // علامت همه خوانده شدن
+  // علامت همه به عنوان خوانده شده
   const markAllRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   }, []);
 
-  // پاک کردن همه
+  // پاک کردن همه اعلان‌ها
   const clearAll = useCallback(() => {
     setNotifications([]);
   }, []);
@@ -122,52 +161,220 @@ function NotificationProvider({ children }) {
   // تغییر وضعیت صدا
   const toggleSound = useCallback(() => {
     setSoundEnabled((prev) => {
-      localStorage.setItem("notif_sound", String(!prev));
-      return !prev;
+      const next = !prev;
+      localStorage.setItem("notif_sound", String(next));
+      return next;
     });
   }, []);
 
   // تغییر وضعیت نوتیف
   const toggleNotif = useCallback(() => {
     setNotifEnabled((prev) => {
-      localStorage.setItem("notif_enabled", String(!prev));
-      return !prev;
+      const next = !prev;
+      localStorage.setItem("notif_enabled", String(next));
+      return next;
     });
   }, []);
 
-  // اشتراک real-time برای پاسخ‌های فرم و تیکت‌های پشتیبانی
+  // ─── سیستم بررسی و همگام‌سازی آفلاین (Offline Sync / Catch-up) ───
+  // اگر کاربر آفلاین بوده باشد، هنگام ورود اطلاعات را از دیتابیس واکشی می‌کند
+  const syncOfflineActivity = useCallback(async () => {
+    if (!user || !supabase || isSyncing) return;
+    setIsSyncing(true);
+
+    try {
+      const owner = Boolean(isOwner?.());
+      const nowIso = new Date().toISOString();
+      const lastCheckStr = lastCheckKey ? localStorage.getItem(lastCheckKey) : null;
+
+      // بررسی از آخرین زمان یا حداکثر ۷ روز قبل
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const defaultThreeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+
+      let sinceTime = defaultThreeDaysAgo;
+      if (lastCheckStr) {
+        sinceTime = lastCheckStr > sevenDaysAgo ? lastCheckStr : sevenDaysAgo;
+      }
+
+      const newOfflineItems = [];
+
+      // ۱. استعلام فرم‌های کاربر
+      let formsQuery = supabase.from("forms").select("id, title, slug, manager_id, created_by");
+      if (!owner) {
+        formsQuery = formsQuery.or(`manager_id.eq.${user.id},created_by.eq.${user.id}`);
+      }
+      const { data: userForms } = await formsQuery;
+
+      if (userForms && userForms.length > 0) {
+        const formMap = new Map(userForms.map((f) => [f.id, f]));
+        const formIds = userForms.map((f) => f.id);
+
+        // استعلام پاسخ‌های جدیدی که برای این فرم‌ها در غیاب کاربر ثبت شده‌اند
+        const { data: recentResponses } = await supabase
+          .from("responses")
+          .select("id, form_id, created_at")
+          .in("form_id", formIds)
+          .gt("created_at", sinceTime)
+          .order("created_at", { ascending: false })
+          .limit(30);
+
+        if (recentResponses && recentResponses.length > 0) {
+          for (const resp of recentResponses) {
+            const formInfo = formMap.get(resp.form_id);
+            newOfflineItems.push({
+              id: `resp_${resp.id}`,
+              type: "response",
+              title: "پاسخ جدید دریافت شد! 📥",
+              message: `کاربری فرم «${formInfo?.title || "فرم"}» را تکمیل کرد`,
+              formId: resp.form_id,
+              formSlug: formInfo?.slug,
+              link: `/admin/forms/${resp.form_id}/responses`,
+              time: resp.created_at,
+              read: false,
+            });
+          }
+        }
+      }
+
+      // ۲. استعلام تیکت‌های پشتیبانی
+      if (owner) {
+        // مدیر ارشد: تیکت‌های جدید کاربران در زمان آفلاین
+        const { data: newTickets } = await supabase
+          .from("support_tickets")
+          .select("id, subject, created_at, user_id, status, profiles:user_id(full_name, email)")
+          .neq("user_id", user.id)
+          .gt("created_at", sinceTime)
+          .order("created_at", { ascending: false })
+          .limit(20);
+
+        if (newTickets && newTickets.length > 0) {
+          for (const ticket of newTickets) {
+            // انزوای حساب گاد از سوپرادمین‌های ثانویه
+            if (!isPrimaryGodEmail(user.email) && isPrimaryGodEmail(ticket.profiles?.email)) {
+              continue;
+            }
+
+            const senderName =
+              ticket.profiles?.full_name || ticket.profiles?.email?.split("@")[0] || "کاربر";
+
+            newOfflineItems.push({
+              id: `ticket_new_${ticket.id}`,
+              type: "ticket_new",
+              title: "تیکت پشتیبانی جدید 💬",
+              message: `${senderName}: ${ticket.subject || "پیام پشتیبانی"}`,
+              link: "/admin/support",
+              ticketId: ticket.id,
+              time: ticket.created_at,
+              read: false,
+            });
+          }
+        }
+      } else {
+        // کاربر عادی: پاسخ‌های جدید ادمین به تیکت‌های کاربر
+        const { data: answeredTickets } = await supabase
+          .from("support_tickets")
+          .select("id, subject, status, admin_reply, replied_at, updated_at")
+          .eq("user_id", user.id)
+          .not("admin_reply", "is", null)
+          .gt("updated_at", sinceTime)
+          .order("updated_at", { ascending: false })
+          .limit(20);
+
+        if (answeredTickets && answeredTickets.length > 0) {
+          for (const ticket of answeredTickets) {
+            newOfflineItems.push({
+              id: `ticket_reply_${ticket.id}_${ticket.replied_at || ticket.updated_at}`,
+              type: "ticket_reply",
+              title: "پاسخ جدید به تیکت 🎧",
+              message: `پاسخ به تیکت «${ticket.subject || ""}» ثبت شد`,
+              link: "/admin/support",
+              ticketId: ticket.id,
+              time: ticket.replied_at || ticket.updated_at,
+              read: false,
+            });
+          }
+        }
+      }
+
+      // ۳. ادغام و اضافه کردن موارد جدید بدون تکرار
+      if (newOfflineItems.length > 0) {
+        setNotifications((prev) => {
+          const existingIds = new Set(prev.map((n) => String(n.id)));
+          const toAdd = newOfflineItems.filter((item) => !existingIds.has(String(item.id)));
+
+          if (toAdd.length > 0) {
+            playSound();
+            const combined = [...toAdd, ...prev]
+              .sort((a, b) => new Date(b.time) - new Date(a.time))
+              .slice(0, 60);
+            return combined;
+          }
+          return prev;
+        });
+      }
+
+      // به‌روزرسانی تاریخ آخرین بررسی
+      if (lastCheckKey) {
+        localStorage.setItem(lastCheckKey, nowIso);
+      }
+    } catch (err) {
+      console.error("Error in syncOfflineActivity:", err);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [user, isOwner, lastCheckKey, isSyncing, playSound]);
+
+  // اجرای همگام‌سازی آفلاین هنگام بارگذاری و لاگین
   useEffect(() => {
-    if (!notifEnabled || !supabase) return;
+    if (user?.id) {
+      syncOfflineActivity();
+    }
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── اشتراک بلادرنگ (Real-time Supabase Channels) ───
+  useEffect(() => {
+    if (!notifEnabled || !supabase || !user) return;
 
     const channel = supabase
       .channel("app-global-notifications")
-      // ۱. پاسخ جدید فرم
+      // ۱. ثبت بلادرنگ پاسخ جدید فرم
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "responses" },
         async (payload) => {
-          let formTitle = "فرم";
-          let formSlug = null;
-          try {
-            const { data } = await supabase
-              .from("forms")
-              .select("title, slug")
-              .eq("id", payload.new.form_id)
-              .maybeSingle();
-            if (data) {
-              formTitle = data.title;
-              formSlug = data.slug;
-            }
-          } catch {}
+          const newResp = payload.new;
+          if (!newResp) return;
 
-          addNotification({
-            type: "response",
-            title: "پاسخ جدید دریافت شد!",
-            message: `کاربری فرم «${formTitle}» را تکمیل کرد`,
-            formId: payload.new.form_id,
-            formSlug,
-            link: "/admin/forms",
-          });
+          try {
+            // دریافت اطلاعات فرم و بررسی مالکیت
+            const { data: formData } = await supabase
+              .from("forms")
+              .select("id, title, slug, manager_id, created_by")
+              .eq("id", newResp.form_id)
+              .maybeSingle();
+
+            const owner = Boolean(isOwner?.());
+            const isMyForm =
+              owner ||
+              (formData &&
+                (formData.manager_id === user.id || formData.created_by === user.id));
+
+            // فقط در صورتی که کاربر مالک فرم باشد یا مدیر کل باشد اعلان دریافت کند
+            if (isMyForm) {
+              addNotification({
+                id: `resp_${newResp.id}`,
+                type: "response",
+                title: "ثبت پاسخ جدید 📥",
+                message: `کاربری فرم «${formData?.title || "فرم"}» را تکمیل کرد`,
+                formId: newResp.form_id,
+                formSlug: formData?.slug,
+                link: `/admin/forms/${newResp.form_id}/responses`,
+                time: newResp.created_at || new Date().toISOString(),
+              });
+            }
+          } catch (err) {
+            console.error("Error handling response real-time notification:", err);
+          }
         }
       )
       // ۲. تیکت جدید پشتیبانی (ارسال به مدیر)
@@ -178,10 +385,10 @@ function NotificationProvider({ children }) {
           const newTicket = payload.new;
           if (!newTicket) return;
 
-          const owner = isOwner?.();
-          const isMyTicket = newTicket.user_id === user?.id;
+          const owner = Boolean(isOwner?.());
+          const isMyTicket = newTicket.user_id === user.id;
 
-          // اگر مدیر است و تیکت مال خودش نیست
+          // فقط برای ادمین در صورت ایجاد تیکت توسط کاربر دیگر
           if (owner && !isMyTicket) {
             let senderName = "کاربر";
             try {
@@ -190,22 +397,30 @@ function NotificationProvider({ children }) {
                 .select("full_name, email")
                 .eq("id", newTicket.user_id)
                 .maybeSingle();
+
+              // انزوای اکانت گاد از سوپرادمین‌های ثانویه
+              if (!isPrimaryGodEmail(user.email) && isPrimaryGodEmail(prof?.email)) {
+                return;
+              }
+
               if (prof) {
                 senderName = prof.full_name || prof.email?.split("@")[0] || "کاربر";
               }
             } catch {}
 
             addNotification({
+              id: `ticket_new_${newTicket.id}`,
               type: "ticket_new",
               title: "تیکت پشتیبانی جدید 💬",
               message: `${senderName}: ${newTicket.subject || "پیام پشتیبانی جدید"}`,
               link: "/admin/support",
               ticketId: newTicket.id,
+              time: newTicket.created_at || new Date().toISOString(),
             });
           }
         }
       )
-      // ۳. به‌روزرسانی تیکت (پاسخ مدیر یا بستن تیکت)
+      // ۳. به‌روزرسانی تیکت (پاسخ مدیر، بازگشایی یا بستن تیکت)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "support_tickets" },
@@ -214,39 +429,45 @@ function NotificationProvider({ children }) {
           const oldTicket = payload.old;
           if (!updatedTicket) return;
 
-          const isMyTicket = updatedTicket.user_id === user?.id;
-          const owner = isOwner?.();
+          const isMyTicket = updatedTicket.user_id === user.id;
+          const owner = Boolean(isOwner?.());
 
-          // اعلان برای کاربر عادی
+          // رویدادهای کاربر عادی
           if (isMyTicket && !owner) {
             if (updatedTicket.admin_reply && updatedTicket.admin_reply !== oldTicket?.admin_reply) {
               addNotification({
+                id: `ticket_reply_${updatedTicket.id}_${updatedTicket.replied_at || Date.now()}`,
                 type: "ticket_reply",
                 title: "پاسخ جدید به تیکت 🎧",
                 message: `پاسخ به تیکت «${updatedTicket.subject || ""}» ثبت شد`,
                 link: "/admin/support",
                 ticketId: updatedTicket.id,
+                time: updatedTicket.replied_at || updatedTicket.updated_at || new Date().toISOString(),
               });
             } else if (updatedTicket.status === "closed" && oldTicket?.status !== "closed") {
               addNotification({
+                id: `ticket_closed_${updatedTicket.id}`,
                 type: "ticket_closed",
                 title: "تیکت پشتیبانی بسته شد 🔒",
                 message: `تیکت «${updatedTicket.subject || ""}» توسط پشتیبانی بسته شد`,
                 link: "/admin/support",
                 ticketId: updatedTicket.id,
+                time: updatedTicket.updated_at || new Date().toISOString(),
               });
             }
           }
 
-          // اعلان برای مدیر اگر تیکت مجدداً باز شد
+          // رویدادهای مدیر کل (مانند بازگشایی مجدد توسط کاربر)
           if (owner && !isMyTicket) {
             if (updatedTicket.status === "open" && oldTicket?.status === "closed") {
               addNotification({
+                id: `ticket_reopen_${updatedTicket.id}`,
                 type: "ticket_reopen",
-                title: "بازگشایی تیکت 🔓",
+                title: "بازگشایی مجدد تیکت 🔓",
                 message: `تیکت «${updatedTicket.subject || ""}» مجدداً بازگشایی شد`,
                 link: "/admin/support",
                 ticketId: updatedTicket.id,
+                time: updatedTicket.updated_at || new Date().toISOString(),
               });
             }
           }
@@ -267,6 +488,7 @@ function NotificationProvider({ children }) {
     soundEnabled,
     notifEnabled,
     isOpen,
+    isSyncing,
     setIsOpen,
     addNotification,
     markAsRead,
@@ -274,6 +496,7 @@ function NotificationProvider({ children }) {
     clearAll,
     toggleSound,
     toggleNotif,
+    syncOfflineActivity,
   };
 
   return (

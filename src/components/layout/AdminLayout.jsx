@@ -147,9 +147,6 @@ export default function AdminLayout() {
 
         {/* فوتر سایدبار */}
         <div className="sm:mt-auto px-2 py-2.5 border-t border-white/10 flex sm:flex-col items-center gap-2">
-          <div className="flex items-center justify-center">
-            <NotificationBell />
-          </div>
           <div className="text-center w-full min-w-0">
             <div className="text-[0.7rem] font-bold text-white/90 truncate">
               {profile?.full_name || user.email?.split("@")[0]}
@@ -169,10 +166,60 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* محتوا — قابل اسکرول */}
-      <main className="flex-1 min-w-0 p-3 sm:p-5 lg:p-6 overflow-y-auto">
-        <Outlet />
-      </main>
+      {/* بخش اصلی: تاپ‌بار بالا + محتوا */}
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+        {/* هدر بالای صفحه — محل قرارگیری نوتیفیکیشن‌ها و مشخصات سریع */}
+        <header className="bg-white/85 backdrop-blur-md border-b border-navy/10 px-3.5 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between shrink-0 z-20 shadow-xs">
+          {/* سمت راست: مشخصات کاربر و خوش‌آمدگویی */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-teal/10 text-teal flex items-center justify-center font-black text-sm shrink-0 border border-teal/20">
+              {profile?.full_name ? profile.full_name.charAt(0) : "👤"}
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs sm:text-sm font-black text-navy truncate flex items-center gap-2">
+                <span>{profile?.full_name || user.email?.split("@")[0]}</span>
+                {owner ? (
+                  <span className="text-[0.65rem] font-bold bg-teal/20 text-teal px-1.5 py-0.5 rounded-md">
+                    مدیریت کل
+                  </span>
+                ) : null}
+              </div>
+              <div className="text-[0.65rem] sm:text-xs text-ink/40 font-medium truncate flex items-center gap-1.5">
+                <span>{user.email}</span>
+                {!owner && profile?.plan && (
+                  <>
+                    <span>•</span>
+                    <span className="text-teal font-bold">
+                      پلن {profile.plan === "enterprise" ? "سازمانی" : profile.plan === "pro" ? "حرفه‌ای" : "رایگان"}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* سمت چپ: دکمه زنگوله نوتیفیکیشن و دسترسی سریع */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* زنگوله اعلان‌ها در بالا */}
+            <NotificationBell />
+
+            {/* دسترسی سریع به پشتیبانی در دسکتاپ */}
+            <NavLink
+              to="/admin/support"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-navy/5 hover:bg-navy/10 text-navy text-xs font-bold transition-all border border-navy/10"
+              title="پشتیبانی و تیکت‌ها"
+            >
+              <Headphones size={14} className="text-teal" />
+              <span>پشتیبانی</span>
+            </NavLink>
+          </div>
+        </header>
+
+        {/* محتوا — قابل اسکرول */}
+        <main className="flex-1 min-w-0 p-3 sm:p-5 lg:p-6 overflow-y-auto">
+          <Outlet />
+        </main>
+      </div>
 
       {/* مودال الزام ثبت شماره موبایل برای کاربران قبلی بدون شماره */}
       <Modal
