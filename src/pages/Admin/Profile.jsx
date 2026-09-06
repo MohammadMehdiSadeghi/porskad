@@ -212,11 +212,8 @@ export default function Profile() {
           <div className="p-5 sm:p-6 flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-extrabold text-navy flex items-center gap-2">
-                وضعیت پلن و سهمیه‌ها
+                سهمیه و دسترسی‌های حساب
               </h2>
-              <Badge color={profile?.is_owner ? "orange" : "green"}>
-                {profile?.is_owner ? "سازمانی (نامحدود) 👑" : profile?.plan === "pro" ? "حرفه‌ای" : "رایگان"}
-              </Badge>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">

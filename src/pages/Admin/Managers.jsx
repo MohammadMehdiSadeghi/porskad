@@ -173,22 +173,11 @@ export default function Managers() {
   const [selectedManager, setSelectedManager] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  // ─── مشاهده و مدیریت رمز عبور و ربات تلگرام ───
-  const [revealedPasswords, setRevealedPasswords] = useState({});
+  // ─── مدیریت ربات تلگرام ───
   const [newCanUseTelegram, setNewCanUseTelegram] = useState(false);
   const [editCanUseTelegram, setEditCanUseTelegram] = useState(false);
   const [editNewPassword, setEditNewPassword] = useState("");
   const [editPasswordVisible, setEditPasswordVisible] = useState(false);
-
-  function toggleRevealPassword(id) {
-    setRevealedPasswords((prev) => ({ ...prev, [id]: !prev[id] }));
-  }
-
-  function copyPassword(pwd) {
-    if (!pwd) return;
-    navigator.clipboard?.writeText?.(pwd);
-    push("رمز عبور در کلیپ‌بورد کپی شد ✅", "success");
-  }
 
   async function toggleTelegramAccess(m) {
     const newVal = !m.can_use_telegram;
@@ -466,49 +455,10 @@ export default function Managers() {
                     </div>
                   )}
 
-                  {/* رمز عبور کاربر با قابلیت رویت و کپی */}
-                  <div className="flex items-center justify-between bg-bg-neutral/70 border border-ink/10 rounded-pill-sm px-2.5 py-1 text-xs">
-                    <span className="font-bold text-ink-subtle text-[0.7rem]">رمز عبور:</span>
-                    {m.admin_pwd ? (
-                      <div className="flex items-center gap-1.5" dir="ltr">
-                        <span className="font-mono text-[0.75rem] font-black text-navy">
-                          {revealedPasswords[m.id] ? m.admin_pwd : "••••••••"}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => toggleRevealPassword(m.id)}
-                          className="text-ink-subtle hover:text-navy p-0.5"
-                          title={revealedPasswords[m.id] ? "مخفی کردن" : "نمایش رمز"}
-                        >
-                          {revealedPasswords[m.id] ? <EyeOff size={13} className="text-teal" /> : <Eye size={13} />}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => copyPassword(m.admin_pwd)}
-                          className="text-teal hover:text-teal-text p-0.5"
-                          title="کپی رمز"
-                        >
-                          <Copy size={12} />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1">
-                        <span className="text-[0.65rem] text-ink-subtle">هش‌شده (قدیمی)</span>
-                        <button
-                          type="button"
-                          onClick={() => openEdit(m)}
-                          className="text-[0.65rem] text-teal font-bold hover:underline"
-                        >
-                          تعیین
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* سهمیه و پلن کاربر */}
+                  {/* سهمیه کاربر */}
                   <div className="flex flex-wrap items-center justify-between text-[0.7rem] font-bold text-ink-subtle bg-bg-neutral/70 rounded-pill-sm px-2.5 py-1 gap-1">
-                    <span>سقف فرم: <strong className="text-navy">{m.is_owner ? "نامحدود" : faNum(m.max_forms ?? 5)}</strong></span>
-                    <span>پلن: <strong className="text-teal-text">{m.is_owner ? "سازمانی" : (m.plan === "enterprise" ? "سازمانی" : m.plan === "pro" ? "حرفه‌ای" : "رایگان")}</strong></span>
+                    <span>سقف فرم‌های مجاز: <strong className="text-navy">{m.is_owner ? "نامحدود" : faNum(m.max_forms ?? 5)}</strong></span>
+                    <span>سقف پاسخ ماهانه: <strong className="text-teal-text">{m.is_owner ? "نامحدود" : faNum(m.max_responses_per_month ?? 100)}</strong></span>
                   </div>
 
                   {/* تاریخ */}
@@ -754,20 +704,8 @@ export default function Managers() {
       </Modal>
 
       {/* ─── مودال تنظیم سهمیه کاربر ─── */}
-      <Modal open={!!quotaModal} onClose={() => setQuotaModal(null)} title={`تنظیم سهمیه و پلن: ${quotaModal?.full_name || quotaModal?.email || ""}`}>
+      <Modal open={!!quotaModal} onClose={() => setQuotaModal(null)} title={`تنظیم سهمیه و دسترسی: ${quotaModal?.full_name || quotaModal?.email || ""}`}>
         <form onSubmit={handleSaveQuota} className="flex flex-col gap-4">
-          <div>
-            <label className="block text-sm font-extrabold text-navy mb-1.5">پلن کاربری</label>
-            <select
-              value={quotaPlan}
-              onChange={(e) => setQuotaPlan(e.target.value)}
-              className={inputCls}
-            >
-              <option value="free">رایگان (Free)</option>
-              <option value="pro">حرفه‌ای (Pro)</option>
-              <option value="enterprise">سازمانی (Enterprise)</option>
-            </select>
-          </div>
 
           <div>
             <label className="block text-sm font-extrabold text-navy mb-1.5">حداکثر تعداد فرم‌های فعال</label>

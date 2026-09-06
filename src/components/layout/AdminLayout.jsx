@@ -116,8 +116,8 @@ export default function AdminLayout() {
         {/* سهمیه کاربر عادی در بالای منو */}
         {!owner && profile && (
           <div className="mx-2 mt-2 p-2.5 rounded-xl bg-white/5 border border-white/10 text-xs">
-            <div className="flex items-center justify-between text-white/70 mb-1 font-bold">
-              <span>پلن: {profile.plan === "enterprise" ? "سازمانی" : profile.plan === "pro" ? "حرفه‌ای" : "رایگان"}</span>
+            <div className="flex items-center justify-between text-white/70 font-bold">
+              <span>سهمیه ساخت فرم:</span>
               <span className="text-teal font-extrabold">{faNum(profile.max_forms ?? 5)} فرم مجاز</span>
             </div>
           </div>
@@ -186,11 +186,11 @@ export default function AdminLayout() {
               </div>
               <div className="text-[0.65rem] sm:text-xs text-ink/40 font-medium truncate flex items-center gap-1.5">
                 <span>{user.email}</span>
-                {!owner && profile?.plan && (
+                {!owner && profile?.max_forms && (
                   <>
                     <span>•</span>
                     <span className="text-teal font-bold">
-                      پلن {profile.plan === "enterprise" ? "سازمانی" : profile.plan === "pro" ? "حرفه‌ای" : "رایگان"}
+                      {faNum(profile.max_forms)} فرم مجاز
                     </span>
                   </>
                 )}
