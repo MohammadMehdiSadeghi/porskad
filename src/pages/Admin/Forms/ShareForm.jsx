@@ -7,6 +7,7 @@ import EmptyState from "../../../components/ui/EmptyState";
 import StickerCard from "../../../components/ui/StickerCard";
 import Badge from "../../../components/ui/Badge";
 import { useToast } from "../../../components/ui/Toast";
+import { useAuth } from "../../../context/AuthContext";
 import {
   ArrowLeft,
   Copy,
@@ -76,6 +77,7 @@ function CodeBlock({ code, label }) {
 export default function ShareForm() {
   const { id } = useParams();
   const { push } = useToast();
+  const { user, isOwner } = useAuth();
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(null);
   const [activeTab, setActiveTab] = useState("inline");
@@ -84,7 +86,7 @@ export default function ShareForm() {
     async function load() {
       const { data, error } = await supabase
         .from("forms")
-        .select("id, slug, title, public_id, published")
+        .select("id, slug, title, public_id, published, manager_id, created_by")
         .eq("id", id)
         .maybeSingle();
       if (error || !data) {
@@ -92,11 +94,17 @@ export default function ShareForm() {
         setLoading(false);
         return;
       }
+      if (!isOwner() && user?.id && data.manager_id !== user.id && data.created_by !== user.id) {
+        push("شما به این فرم دسترسی ندارید", "error");
+        setForm(null);
+        setLoading(false);
+        return;
+      }
       setForm(data);
       setLoading(false);
     }
     load();
-  }, [id]);
+  }, [id, user, isOwner, push]);
 
   if (loading) return <Spinner label="در حال بارگذاری..." />;
   if (!form) {

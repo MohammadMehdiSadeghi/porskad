@@ -68,16 +68,33 @@ export default function TelegramBot() {
         formsQuery = formsQuery.or(`manager_id.eq.${user.id},created_by.eq.${user.id}`);
       }
 
+      let configQuery = supabase
+        .from("telegram_config")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (!isOwner() && user?.id) {
+        configQuery = configQuery.eq("user_id", user.id);
+      }
+
       const [configRes, formsRes, linksRes] = await Promise.all([
-        supabase.from("telegram_config").select("*").order("created_at", { ascending: false }),
+        configQuery,
         formsQuery,
         supabase
           .from("telegram_form_links")
           .select("id, form_id, config_id, is_active, created_at"),
       ]);
+
+      const userForms = formsRes.data || [];
+      const userFormIds = new Set(userForms.map((f) => f.id));
+
       setConfigs(configRes.data || []);
-      setForms(formsRes.data || []);
-      setLinks(linksRes.data || []);
+      setForms(userForms);
+      setLinks(
+        isOwner()
+          ? linksRes.data || []
+          : (linksRes.data || []).filter((l) => userFormIds.has(l.form_id))
+      );
     } catch (err) {
       console.error(err);
     }
@@ -87,17 +104,27 @@ export default function TelegramBot() {
   const loadSendLog = useCallback(async () => {
     setLogLoading(true);
     try {
-      const { data } = await supabase
+      let logQuery = supabase
         .from("telegram_send_log")
         .select("id, form_id, response_id, chat_id, status, error_message, sent_at")
         .order("sent_at", { ascending: false })
         .limit(100);
+
+      if (!isOwner() && forms.length > 0) {
+        logQuery = logQuery.in("form_id", forms.map((f) => f.id));
+      } else if (!isOwner() && forms.length === 0) {
+        setSendLog([]);
+        setLogLoading(false);
+        return;
+      }
+
+      const { data } = await logQuery;
       setSendLog(data || []);
     } catch (err) {
       console.error(err);
     }
     setLogLoading(false);
-  }, []);
+  }, [isOwner, forms]);
 
   useEffect(() => {
     loadAll();
@@ -128,11 +155,14 @@ export default function TelegramBot() {
         if (error) throw error;
         showToast("تنظیمات بروزرسانی شد ✅");
       } else {
-        const { error } = await supabase.from("telegram_config").insert({
+        const payload = {
           bot_token: configForm.bot_token.trim(),
           chat_id: configForm.chat_id.trim(),
           chat_title: configForm.chat_title.trim(),
-        });
+        };
+        if (user?.id) payload.user_id = user.id;
+
+        const { error } = await supabase.from("telegram_config").insert(payload);
         if (error) throw error;
         showToast("تنظیمات جدید ذخیره شد ✅");
       }

@@ -4,6 +4,7 @@ import StickerCard from "../../components/ui/StickerCard";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import { useAuth } from "../../context/AuthContext";
+import { supabase } from "../../lib/supabaseClient";
 import SEO from "../../components/ui/SEO";
 
 export default function Register() {
@@ -46,7 +47,19 @@ export default function Register() {
       if (data?.session) {
         navigate("/admin/forms", { replace: true });
       } else {
-        // در صورتی که ایمیل کانفرمیشن نیاز باشد
+        // سعی برای ورود خودکار در صورتی که ایمیل کانفرمیشن نیاز نباشد
+        try {
+          const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password,
+          });
+          if (!loginError && loginData?.session) {
+            navigate("/admin/forms", { replace: true });
+            return;
+          }
+        } catch {
+          // اگر تایید ایمیل الزامی باشد
+        }
         setSuccessNotice(true);
       }
     } catch (err) {

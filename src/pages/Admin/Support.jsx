@@ -41,6 +41,7 @@ export default function Support() {
   const [replying, setReplying] = useState(false);
 
   const loadTickets = useCallback(async () => {
+    if (!user) return;
     setLoading(true);
     try {
       let query = supabase

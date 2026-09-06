@@ -499,7 +499,7 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
 export default function Responses() {
   const { id } = useParams();
   const { push } = useToast();
-  const { hasPermission } = useAuth();
+  const { hasPermission, user, isOwner } = useAuth();
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -540,6 +540,13 @@ export default function Responses() {
         ]);
       if (formError) throw formError;
       if (qError) throw qError;
+
+      if (!isOwner() && user?.id && f && f.manager_id !== user.id && f.created_by !== user.id) {
+        push("شما به پاسخ‌های این فرم دسترسی ندارید.", "error");
+        setForm(null);
+        setLoading(false);
+        return;
+      }
 
       setForm(f);
       setQuestions(qs ?? []);

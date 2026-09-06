@@ -6,6 +6,7 @@ import Button from "../../../components/ui/Button";
 import Badge from "../../../components/ui/Badge";
 import Spinner from "../../../components/ui/Spinner";
 import { useToast } from "../../../components/ui/Toast";
+import { useAuth } from "../../../context/AuthContext";
 import { QUESTION_TYPES, QUESTION_TYPE_ORDER, makeQuestion } from "../../../lib/questionTypes";
 import { QUESTION_TYPE_ICONS } from "../../../lib/questionIcons";
 import ConditionBuilder from "../../../components/logic/ConditionBuilder";
@@ -670,6 +671,7 @@ export default function FormBuilder() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { push } = useToast();
+  const { user, isOwner } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -683,6 +685,12 @@ export default function FormBuilder() {
     async function load() {
       const { data: f, error } = await supabase.from("forms").select("*").eq("id", id).maybeSingle();
       if (error || !f) {
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+      if (!isOwner() && user?.id && f.manager_id !== user.id && f.created_by !== user.id) {
+        push("شما به این فرم دسترسی ندارید.", "error");
         setNotFound(true);
         setLoading(false);
         return;

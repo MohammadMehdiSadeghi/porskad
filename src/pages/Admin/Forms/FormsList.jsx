@@ -117,7 +117,8 @@ export default function FormsList() {
   const [undoToast, setUndoToast] = useState(null);
   const undoTimerRef = useRef(null);
 
-  async function load() {
+  const load = useCallback(async () => {
+    if (!user) return;
     setLoading(true);
     try {
       let formsQuery = supabase
@@ -126,7 +127,7 @@ export default function FormsList() {
         .order("created_at", { ascending: false });
 
       // کاربر عادی فقط فرم‌های خودش را دریافت می‌کند
-      if (!isOwner() && user?.id) {
+      if (!isOwner()) {
         formsQuery = formsQuery.or(`manager_id.eq.${user.id},created_by.eq.${user.id}`);
       }
 
@@ -144,9 +145,13 @@ export default function FormsList() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [user, isOwner, push]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (user) {
+      load();
+    }
+  }, [user, load]);
 
   const activeFormsCount = useMemo(() => forms.filter((f) => !f.deleted_at).length, [forms]);
   const maxForms = profile?.max_forms ?? 5;

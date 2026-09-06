@@ -1,5 +1,5 @@
 -- ══════════════════════════════════════════════════════════════
--- مایگریشن ۰۰۴۶: سهمیه‌های داینامیک و سیستم پشتیبانی چندکاربره (SaaS)
+-- مایگریشن ۰۰۴۶: سهمیه‌های داینامیک، سیستم پشتیبانی و انزوای چندکاربره (SaaS)
 -- ══════════════════════════════════════════════════════════════
 
 -- ۱. افزودن ستون‌های سهمیه و پلن به جدول profiles
@@ -25,7 +25,20 @@ SET max_forms = 999999,
     plan = 'enterprise'
 WHERE is_owner = true;
 
--- ۲. به‌روزرسانی تابع handle_new_user برای ثبت کاربر جدید با سهمیه پیش‌فرض
+-- ۲. به‌روزرسانی مجوزهای پیش‌فرض نقش manager
+INSERT INTO public.role_permissions (role_id, permission_id)
+VALUES
+  ('manager', 'create_form'),
+  ('manager', 'edit_form'),
+  ('manager', 'delete_form'),
+  ('manager', 'publish_form'),
+  ('manager', 'view_responses'),
+  ('manager', 'view_analytics'),
+  ('manager', 'export_excel'),
+  ('manager', 'manage_telegram')
+ON CONFLICT DO NOTHING;
+
+-- ۳. به‌روزرسانی تابع handle_new_user برای ثبت کاربر جدید با سهمیه و نقش پیش‌فرض
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -59,14 +72,20 @@ BEGIN
   ON CONFLICT (id) DO UPDATE
   SET email = EXCLUDED.email,
       full_name = COALESCE(EXCLUDED.full_name, profiles.full_name);
+
+  -- انتصاب خودکار نقش manager جهت دسترسی به ابزارهای کاربری
+  INSERT INTO public.user_roles (user_id, role_id, active)
+  VALUES (new.id, 'manager', true)
+  ON CONFLICT DO NOTHING;
+
   RETURN new;
 END;
 $$;
 
--- ۳. ایجاد جدول تیکت‌ها و پیام‌های پشتیبانی (support_tickets)
+-- ۴. ایجاد جدول تیکت‌ها و پیام‌های پشتیبانی (support_tickets)
 CREATE TABLE IF NOT EXISTS public.support_tickets (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   subject text NOT NULL,
   message text NOT NULL,
   status text NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'answered', 'closed')),
@@ -79,10 +98,9 @@ CREATE TABLE IF NOT EXISTS public.support_tickets (
 CREATE INDEX IF NOT EXISTS idx_support_tickets_user_id ON public.support_tickets (user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON public.support_tickets (status);
 
--- ۴. RLS برای support_tickets
+-- ۵. RLS برای support_tickets
 ALTER TABLE public.support_tickets ENABLE ROW LEVEL SECURITY;
 
--- کاربر می‌تواند تیکت‌های خودش را ببیند
 DROP POLICY IF EXISTS "support_tickets_user_select" ON public.support_tickets;
 CREATE POLICY "support_tickets_user_select"
   ON public.support_tickets FOR SELECT
@@ -93,7 +111,6 @@ CREATE POLICY "support_tickets_user_select"
     public.is_admin()
   );
 
--- کاربر می‌تواند تیکت ارسال کند
 DROP POLICY IF EXISTS "support_tickets_user_insert" ON public.support_tickets;
 CREATE POLICY "support_tickets_user_insert"
   ON public.support_tickets FOR INSERT
@@ -102,7 +119,6 @@ CREATE POLICY "support_tickets_user_insert"
     user_id = auth.uid()
   );
 
--- فقط مالک و ادمین می‌توانند پاسخ ثبت کنند (Update)
 DROP POLICY IF EXISTS "support_tickets_admin_update" ON public.support_tickets;
 CREATE POLICY "support_tickets_admin_update"
   ON public.support_tickets FOR UPDATE
@@ -112,7 +128,101 @@ CREATE POLICY "support_tickets_admin_update"
     public.is_admin()
   );
 
--- ۵. تابع RPC برای تغییر سهمیه کاربر توسط مالک
+-- ۶. ستون user_id و پالیسی‌های انزوای تلگرام
+ALTER TABLE public.telegram_config
+  ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE;
+
+-- انتساب رکوردهای قبلی به صاحب سیستم
+UPDATE public.telegram_config
+SET user_id = (SELECT id FROM public.profiles WHERE is_owner = true LIMIT 1)
+WHERE user_id IS NULL;
+
+-- پالیسی‌های telegram_config
+DROP POLICY IF EXISTS "telegram_config_user_select" ON public.telegram_config;
+CREATE POLICY "telegram_config_user_select" ON public.telegram_config
+  FOR SELECT TO authenticated
+  USING (
+    user_id = auth.uid() OR public.is_owner() OR public.is_admin()
+  );
+
+DROP POLICY IF EXISTS "telegram_config_user_insert" ON public.telegram_config;
+CREATE POLICY "telegram_config_user_insert" ON public.telegram_config
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    user_id = auth.uid() OR public.is_owner() OR public.is_admin()
+  );
+
+DROP POLICY IF EXISTS "telegram_config_user_update" ON public.telegram_config;
+CREATE POLICY "telegram_config_user_update" ON public.telegram_config
+  FOR UPDATE TO authenticated
+  USING (
+    user_id = auth.uid() OR public.is_owner() OR public.is_admin()
+  );
+
+DROP POLICY IF EXISTS "telegram_config_user_delete" ON public.telegram_config;
+CREATE POLICY "telegram_config_user_delete" ON public.telegram_config
+  FOR DELETE TO authenticated
+  USING (
+    user_id = auth.uid() OR public.is_owner() OR public.is_admin()
+  );
+
+-- پالیسی‌های telegram_form_links
+DROP POLICY IF EXISTS "telegram_form_links_user_select" ON public.telegram_form_links;
+CREATE POLICY "telegram_form_links_user_select" ON public.telegram_form_links
+  FOR SELECT TO authenticated
+  USING (
+    EXISTS (SELECT 1 FROM public.forms f WHERE f.id = form_id AND (f.manager_id = auth.uid() OR f.created_by = auth.uid()))
+    OR public.is_owner() OR public.is_admin()
+  );
+
+DROP POLICY IF EXISTS "telegram_form_links_user_insert" ON public.telegram_form_links;
+CREATE POLICY "telegram_form_links_user_insert" ON public.telegram_form_links
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    EXISTS (SELECT 1 FROM public.forms f WHERE f.id = form_id AND (f.manager_id = auth.uid() OR f.created_by = auth.uid()))
+    OR public.is_owner() OR public.is_admin()
+  );
+
+DROP POLICY IF EXISTS "telegram_form_links_user_update" ON public.telegram_form_links;
+CREATE POLICY "telegram_form_links_user_update" ON public.telegram_form_links
+  FOR UPDATE TO authenticated
+  USING (
+    EXISTS (SELECT 1 FROM public.forms f WHERE f.id = form_id AND (f.manager_id = auth.uid() OR f.created_by = auth.uid()))
+    OR public.is_owner() OR public.is_admin()
+  );
+
+DROP POLICY IF EXISTS "telegram_form_links_user_delete" ON public.telegram_form_links;
+CREATE POLICY "telegram_form_links_user_delete" ON public.telegram_form_links
+  FOR DELETE TO authenticated
+  USING (
+    EXISTS (SELECT 1 FROM public.forms f WHERE f.id = form_id AND (f.manager_id = auth.uid() OR f.created_by = auth.uid()))
+    OR public.is_owner() OR public.is_admin()
+  );
+
+-- پالیسی telegram_send_log
+DROP POLICY IF EXISTS "telegram_send_log_user_select" ON public.telegram_send_log;
+CREATE POLICY "telegram_send_log_user_select" ON public.telegram_send_log
+  FOR SELECT TO authenticated
+  USING (
+    EXISTS (SELECT 1 FROM public.forms f WHERE f.id = form_id AND (f.manager_id = auth.uid() OR f.created_by = auth.uid()))
+    OR public.is_owner() OR public.is_admin()
+  );
+
+-- ۷. پالیسی‌های حذف پاسخ توسط سازنده فرم
+DROP POLICY IF EXISTS "allow_delete_responses_owner" ON public.responses;
+CREATE POLICY "allow_delete_responses_owner"
+  ON public.responses FOR DELETE
+  TO authenticated
+  USING (
+    public.is_owner()
+    OR public.is_admin()
+    OR EXISTS (
+      SELECT 1 FROM public.forms f
+      WHERE f.id = form_id AND (f.manager_id = auth.uid() OR f.created_by = auth.uid())
+    )
+  );
+
+-- ۸. تابع RPC برای تغییر سهمیه کاربر توسط مالک
 CREATE OR REPLACE FUNCTION public.set_user_quotas(
   p_user_id uuid,
   p_max_forms integer,

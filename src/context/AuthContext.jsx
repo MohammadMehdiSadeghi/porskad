@@ -19,10 +19,12 @@ const ALL_PERMISSIONS = [
 const DEFAULT_MANAGER_PERMISSIONS = [
   "create_form",
   "edit_form",
+  "delete_form",
   "publish_form",
   "view_responses",
   "view_analytics",
   "export_excel",
+  "manage_telegram",
 ];
 
 export function AuthProvider({ children }) {
@@ -123,6 +125,7 @@ export function AuthProvider({ children }) {
       const perms = data?.map((p) => p.permission_id) ?? [];
       // اگه هیچ مجوزی برنگشت ولی نقش admin هست، fallback بده
       if (perms.length === 0 && userRole === "admin") return [...ALL_PERMISSIONS];
+      if (perms.length === 0) return [...DEFAULT_MANAGER_PERMISSIONS];
       return perms;
     } catch (err) {
       console.error("fetchPermissions error:", err);
@@ -471,7 +474,13 @@ export function AuthProvider({ children }) {
     loading,
     error,
     configured: isSupabaseConfigured,
-    hasPermission: (permissionId) => permissions.includes(permissionId),
+    hasPermission: (permissionId) => {
+      if (profile?.is_owner === true || role === "admin") return true;
+      if (permissions && permissions.length > 0) {
+        return permissions.includes(permissionId);
+      }
+      return DEFAULT_MANAGER_PERMISSIONS.includes(permissionId);
+    },
     canManage: () => role === "admin",
     isOwner: () => profile?.is_owner === true,
     login,
