@@ -314,22 +314,23 @@ export default function EmbedHub() {
     async function load() {
       try {
         // فقط فرم‌های فعال (منتشرشده و حذف/آرشیو نشده) در این صفحه نمایش داده می‌شوند
-        let query = supabase
+        const { data, error } = await supabase
           .from("forms")
-          .select("id, slug, title, public_id, published, created_at")
+          .select("id, slug, title, public_id, published, created_at, manager_id, created_by")
           .eq("published", true)
           .eq("archived", false)
           .is("deleted_at", null)
           .order("created_at", { ascending: false });
-
-        if (!isOwner() && user?.id) {
-          query = query.or(`manager_id.eq.${user.id},created_by.eq.${user.id}`);
-        }
-
-        const { data, error } = await query;
         if (error) throw error;
 
-        const formIds = (data ?? []).map((f) => f.id);
+        let activeForms = data ?? [];
+        if (!isOwner() && user?.id) {
+          activeForms = activeForms.filter(
+            (f) => f.manager_id === user.id || f.created_by === user.id
+          );
+        }
+
+        const formIds = activeForms.map((f) => f.id);
         let questionCounts = {};
         if (formIds.length) {
           const { data: qData } = await supabase

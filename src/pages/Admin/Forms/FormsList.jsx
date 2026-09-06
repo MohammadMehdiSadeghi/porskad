@@ -121,23 +121,25 @@ export default function FormsList() {
     if (!user) return;
     setLoading(true);
     try {
-      let formsQuery = supabase
-        .from("forms")
-        .select("*, profiles:manager_id(full_name)")
-        .order("created_at", { ascending: false });
-
-      // کاربر عادی فقط فرم‌های خودش را دریافت می‌کند
-      if (!isOwner()) {
-        formsQuery = formsQuery.or(`manager_id.eq.${user.id},created_by.eq.${user.id}`);
-      }
-
       const [{ data: formsData, error: formsError }, { data: countsData }] =
         await Promise.all([
-          formsQuery,
+          supabase
+            .from("forms")
+            .select("*, profiles:manager_id(full_name)")
+            .order("created_at", { ascending: false }),
           supabase.rpc("get_form_response_counts"),
         ]);
       if (formsError) throw formsError;
-      setForms(formsData ?? []);
+
+      let allForms = formsData ?? [];
+      // کاربر عادی فقط فرم‌های خودش را دریافت می‌کند
+      if (!isOwner()) {
+        allForms = allForms.filter(
+          (f) => f.manager_id === user.id || f.created_by === user.id
+        );
+      }
+
+      setForms(allForms);
       setCounts(countsData || {});
     } catch (err) {
       console.error("load error:", err);

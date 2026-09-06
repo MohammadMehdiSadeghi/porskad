@@ -56,22 +56,38 @@ export function AuthProvider({ children }) {
         return data;
       }
 
-      // اگه خطا بود، فالبک بدون فیلدهای جدید
+      // اگه خطا بود، فالبک با is_owner بدون فیلدهای سهمیه
       const { data: fallbackData, error: fallbackError } = await supabase
         .from("profiles")
-        .select("id, email, full_name, avatar_url, is_active, created_by")
+        .select("id, email, full_name, avatar_url, is_active, is_owner, created_by")
         .eq("id", uid)
         .maybeSingle();
 
       if (fallbackError) {
-        console.error("Error fetching profile:", fallbackError);
+        // فالبک حداقلی اگر حتی is_owner در ستون‌ها نبود
+        const { data: minData } = await supabase
+          .from("profiles")
+          .select("id, email, full_name, avatar_url, is_active, created_by")
+          .eq("id", uid)
+          .maybeSingle();
+
+        if (minData) {
+          minData.is_owner = false;
+          minData.max_forms = 5;
+          minData.max_responses_per_month = 100;
+          minData.plan = "free";
+          minData.can_use_telegram = true;
+          minData.can_export_excel = true;
+          return minData;
+        }
         return null;
       }
+
       if (fallbackData) {
-        fallbackData.is_owner = false;
-        fallbackData.max_forms = 5;
-        fallbackData.max_responses_per_month = 100;
-        fallbackData.plan = 'free';
+        fallbackData.is_owner = Boolean(fallbackData.is_owner);
+        fallbackData.max_forms = fallbackData.is_owner ? 999999 : 5;
+        fallbackData.max_responses_per_month = fallbackData.is_owner ? 999999 : 100;
+        fallbackData.plan = fallbackData.is_owner ? "enterprise" : "free";
         fallbackData.can_use_telegram = true;
         fallbackData.can_export_excel = true;
       }
@@ -482,7 +498,7 @@ export function AuthProvider({ children }) {
       return DEFAULT_MANAGER_PERMISSIONS.includes(permissionId);
     },
     canManage: () => role === "admin",
-    isOwner: () => profile?.is_owner === true,
+    isOwner: () => profile?.is_owner === true || role === "admin",
     login,
     register,
     updateUserQuota,
