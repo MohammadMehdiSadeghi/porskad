@@ -3,40 +3,20 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../components/ui/Toast";
 import { supabase } from "../../lib/supabaseClient";
-import { isValidIranPhone, normalizeIranPhone } from "../../lib/validators";
+import { isValidIranPhone, normalizeIranPhone, isValidEmail } from "../../lib/validators";
 import Button from "../../components/ui/Button";
 import StickerCard from "../../components/ui/StickerCard";
-import Badge from "../../components/ui/Badge";
 import SEO from "../../components/ui/SEO";
 import { faNum } from "../../lib/utils";
-import { Crown, Lock, Key } from "lucide-react";
-
-const PERMISSION_LABELS = {
-  create_form: "ایجاد فرم",
-  edit_form: "ویرایش فرم",
-  delete_form: "حذف فرم",
-  publish_form: "انتشار فرم",
-  view_responses: "مشاهده پاسخ‌ها",
-  view_analytics: "مشاهده تحلیل‌ها",
-  export_excel: "خروجی اکسل",
-  manage_managers: "مدیریت مدیران",
-};
-
-const ROLE_LABELS = {
-  admin: "ادمین اصلی",
-  manager: "مدیر",
-};
-
-const OWNER_BADGE = {
-  label: "صاحب اصلی سایت",
-  color: "bg-amber-100 text-amber-700 border-amber-200",
-};
+import { Crown, Lock, Key, Mail } from "lucide-react";
 
 export default function Profile() {
-  const { user, profile, role, permissions, changePassword, updateProfile } = useAuth();
+  const { user, profile, changePassword, updateProfile } = useAuth();
   const { push } = useToast();
 
+  const currentEmail = user?.email || profile?.email || "";
   const [fullName, setFullName] = useState(profile?.full_name ?? "");
+  const [email, setEmail] = useState(currentEmail);
   const [phone, setPhone] = useState(profile?.phone ?? "");
   const [savingProfile, setSavingProfile] = useState(false);
 
@@ -45,7 +25,10 @@ export default function Profile() {
       setFullName(profile.full_name ?? "");
       setPhone(profile.phone ?? "");
     }
-  }, [profile]);
+    if (user?.email || profile?.email) {
+      setEmail(user?.email || profile?.email || "");
+    }
+  }, [profile, user]);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -58,17 +41,49 @@ export default function Profile() {
       push("نام نمی‌تواند خالی باشد", "error");
       return;
     }
+
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      push("ایمیل نمی‌تواند خالی باشد", "error");
+      return;
+    }
+    if (!isValidEmail(trimmedEmail)) {
+      push("فرمت ایمیل نامعتبر است", "error");
+      return;
+    }
+
     const cleanPhone = phone ? normalizeIranPhone(phone) : "";
     if (phone && !isValidIranPhone(cleanPhone)) {
       push("شماره موبایل نامعتبر است (مثال: ۰۹۱۲۳۴۵۶۷۸۹)", "error");
       return;
     }
+
     setSavingProfile(true);
     try {
-      await updateProfile({ full_name: fullName.trim(), phone: cleanPhone || null });
-      push("پروفایل به‌روزرسانی شد");
+      const emailChanged = trimmedEmail.toLowerCase() !== currentEmail.toLowerCase();
+
+      if (emailChanged) {
+        // تغییر ایمیل در Supabase Auth
+        const { error: authError } = await supabase.auth.updateUser({ email: trimmedEmail });
+        if (authError) {
+          throw authError;
+        }
+      }
+
+      // به‌روزرسانی پروفایل در دیتابیس
+      await updateProfile({
+        full_name: fullName.trim(),
+        phone: cleanPhone || null,
+        email: trimmedEmail,
+      });
+
+      if (emailChanged) {
+        push("پروفایل به‌روزرسانی شد. در صورت نیاز لینک تایید به ایمیل جدید ارسال می‌شود.");
+      } else {
+        push("پروفایل با موفقیت به‌روزرسانی شد");
+      }
     } catch (err) {
-      push("خطا: " + err.message, "error");
+      push("خطا در ذخیره تغییرات: " + (err.message || "مشکلی رخ داد"), "error");
     } finally {
       setSavingProfile(false);
     }
@@ -98,7 +113,7 @@ export default function Profile() {
     try {
       // ابتدا با رمز فعلی لاگین مجدد کن
       const { error: loginError } = await supabase.auth.signInWithPassword({
-        email: user.email,
+        email: user?.email || profile?.email,
         password: currentPassword,
       });
       if (loginError) {
@@ -118,6 +133,11 @@ export default function Profile() {
     }
   }
 
+  const isProfileUnchanged =
+    fullName === (profile?.full_name ?? "") &&
+    phone === (profile?.phone ?? "") &&
+    email.trim().toLowerCase() === currentEmail.toLowerCase();
+
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
       {profile?.is_owner && (
@@ -135,7 +155,8 @@ export default function Profile() {
         url="/admin/profile"
         noIndex
       />
-      <div>         <h1 className="text-xl sm:text-3xl font-black text-navy">پروفایل من</h1>
+      <div>
+        <h1 className="text-xl sm:text-3xl font-black text-navy">پروفایل من</h1>
         <p className="text-sm text-ink/50 mt-0.5">
           اطلاعات حساب کاربری و تنظیمات امنیتی
         </p>
@@ -152,11 +173,11 @@ export default function Profile() {
             {/* آواتار + ایمیل */}
             <div className="flex items-center gap-3 mb-2">
               <div className="w-11 h-11 bg-teal rounded-full flex items-center justify-center text-white font-extrabold text-base rotate-[3deg]">
-                {fullName?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? "A"}
+                {fullName?.[0]?.toUpperCase() ?? currentEmail?.[0]?.toUpperCase() ?? "A"}
               </div>
               <div>
                 <p className="font-bold text-navy">{fullName || "—"}</p>
-                <p className="text-sm text-ink-subtle" dir="ltr">{user?.email}</p>
+                <p className="text-sm text-ink-subtle" dir="ltr">{currentEmail}</p>
               </div>
             </div>
 
@@ -166,43 +187,6 @@ export default function Profile() {
               <span className="text-sm font-mono font-bold text-navy" dir="ltr">
                 {profile?.phone || "ثبت نشده"}
               </span>
-            </div>
-
-            {/* نقش */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-ink-subtle">نقش:</span>
-              <Badge color={role === "admin" ? "navy" : "teal"}>
-                {ROLE_LABELS[role] ?? role}
-              </Badge>
-              {profile?.is_owner && (
-                <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full border ${OWNER_BADGE.color}`}>
-                  {OWNER_BADGE.label}
-                </span>
-              )}
-            </div>
-
-            {/* مجوزها */}
-            <div>
-              <span className="text-sm font-bold text-ink-subtle block mb-2">مجوزها:</span>
-              <div className="flex flex-wrap gap-1.5">
-                {profile?.is_owner ? (
-                  <Badge color="amber" rotate="0" className="flex items-center gap-1">
-                    <Crown size={12} />
-                    <span>دسترسی کامل (صاحب اصلی)</span>
-                  </Badge>
-                ) : permissions && permissions.length > 0 ? (
-                  permissions.map((p) => (
-                    <span
-                      key={p}
-                      className="text-xs font-semibold bg-bg-neutral text-ink px-2.5 py-1 rounded-full border border-ink/10"
-                    >
-                      {PERMISSION_LABELS[p] ?? p}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-xs text-ink-subtle">مجوزی ثبت نشده</span>
-                )}
-              </div>
             </div>
 
             {/* سهمیه و وضعیت امکانات */}
@@ -239,7 +223,7 @@ export default function Profile() {
         </StickerCard>
       </div>
 
-      {/* ویرایش نام و شماره موبایل */}
+      {/* ویرایش نام، ایمیل و شماره موبایل */}
       <div className="rotate-[0.3deg]">
         <StickerCard theme="white" radius="rounded-tl-[1.75rem] rounded-br-[1.75rem] rounded-tr-none rounded-bl-none">
           <div className="p-5 sm:p-6 flex flex-col gap-4">
@@ -248,7 +232,7 @@ export default function Profile() {
             </h2>
 
             <div className="grid sm:grid-cols-2 gap-4">
-              <label className="flex flex-col gap-1.5">
+              <label className="flex flex-col gap-1.5 sm:col-span-2">
                 <span className="text-sm font-extrabold text-navy">نام و نام خانوادگی</span>
                 <input
                   type="text"
@@ -256,6 +240,23 @@ export default function Profile() {
                   onChange={(e) => setFullName(e.target.value)}
                   className="w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink focus:outline-none transition-all"
                   placeholder="نام و نام خانوادگی"
+                />
+              </label>
+
+              <label className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-extrabold text-navy flex items-center gap-1.5">
+                    <Mail size={14} className="text-teal" />
+                    ایمیل / جیمیل
+                  </span>
+                </div>
+                <input
+                  type="email"
+                  dir="ltr"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink text-left focus:outline-none transition-all"
+                  placeholder="name@example.com"
                 />
               </label>
 
@@ -280,7 +281,7 @@ export default function Profile() {
                 variant="teal"
                 size="sm"
                 onClick={handleSaveProfile}
-                disabled={savingProfile || (fullName === (profile?.full_name ?? "") && phone === (profile?.phone ?? ""))}
+                disabled={savingProfile || isProfileUnchanged}
               >
                 {savingProfile ? "در حال ذخیره..." : "ذخیره تغییرات"}
               </Button>
