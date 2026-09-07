@@ -51,6 +51,7 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
   const [scoreResult, setScoreResult] = useState(null);
   const [variables, setVariables] = useState({});
   const formRef = useRef(null);
+  const appliedSigRef = useRef("");
 
   const sortedQuestions = useMemo(() => [...questions].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)), [questions]);
 
@@ -64,11 +65,16 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
   // اعمال تغییرات متغیرها (ADD_TO_VARIABLE)
   useEffect(() => {
     if (flow.variableChanges?.length > 0) {
+      const sig = JSON.stringify(flow.variableChanges);
+      if (appliedSigRef.current === sig) return;
+      appliedSigRef.current = sig;
       setVariables((prev) => {
         const next = { ...prev };
         for (const vc of flow.variableChanges) next[vc.variableKey] = (Number(next[vc.variableKey]) || 0) + vc.amount;
         return next;
       });
+    } else {
+      appliedSigRef.current = "";
     }
   }, [flow.variableChanges]);
 

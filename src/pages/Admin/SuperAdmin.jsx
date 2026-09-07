@@ -171,7 +171,11 @@ export default function SuperAdmin() {
     setStorageLoading(true);
     let projectData = null;
     try {
-      const res = await fetch("/api/system-storage");
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const res = await fetch("/api/system-storage", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       if (res.ok) {
         const data = await res.json();
         if (data?.database?.db_size_bytes > 0) {
@@ -270,7 +274,7 @@ export default function SuperAdmin() {
     try {
       const { data: allProfiles, error: profErr } = await supabase
         .from("profiles")
-        .select("id, email, full_name, phone, is_active, is_owner, created_at, hidden_from, max_forms, max_responses_per_month, can_use_telegram, admin_pwd")
+        .select("id, email, full_name, phone, is_active, is_owner, created_at, hidden_from, max_forms, max_responses_per_month, can_use_telegram")
         .order("created_at", { ascending: false });
       if (profErr) throw profErr;
 
@@ -302,7 +306,7 @@ export default function SuperAdmin() {
     try {
       const { data: allProfiles, error: profErr } = await supabase
         .from("profiles")
-        .select("id, email, full_name, phone, is_active, is_owner, created_at, hidden_from, admin_pwd")
+        .select("id, email, full_name, phone, is_active, is_owner, created_at, hidden_from")
         .order("created_at", { ascending: false });
       if (profErr) throw profErr;
 

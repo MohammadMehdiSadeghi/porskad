@@ -33,18 +33,47 @@ export default function Dashboard() {
       formsQuery = formsQuery.or(`manager_id.eq.${user.id},created_by.eq.${user.id}`);
     }
 
-    const [{ data: formsData }, { data: respData }] = await Promise.all([
-      formsQuery,
-      supabase
-        .from("responses")
-        .select("id, form_id, is_complete, submitted_at, duration_seconds, device, created_at")
-        .order("created_at", { ascending: false })
-        .limit(300),
-    ]);
-
+    const { data: formsData } = await formsQuery;
     const formList = formsData ?? [];
-    const formIdSet = new Set(formList.map((f) => f.id));
-    const respList = (respData ?? []).filter((r) => isOwner() || formIdSet.has(r.form_id));
+    const formIds = formList.map((f) => f.id);
+    const isSuper = isOwner();
+
+    // کوئری شمارش دقیق و لیست آخرین پاسخ‌ها
+    let totalRespQuery = supabase.from("responses").select("*", { count: "exact", head: true });
+    let totalCompQuery = supabase.from("responses").select("*", { count: "exact", head: true }).eq("is_complete", true);
+    let recentQuery = supabase
+      .from("responses")
+      .select("id, form_id, is_complete, submitted_at, duration_seconds, device, created_at")
+      .order("created_at", { ascending: false })
+      .limit(100);
+
+    if (!isSuper) {
+      if (formIds.length > 0) {
+        totalRespQuery = totalRespQuery.in("form_id", formIds);
+        totalCompQuery = totalCompQuery.in("form_id", formIds);
+        recentQuery = recentQuery.in("form_id", formIds);
+      } else {
+        totalRespQuery = null;
+        totalCompQuery = null;
+        recentQuery = null;
+      }
+    }
+
+    let exactResponsesCount = 0;
+    let exactCompleteCount = 0;
+    let respList = [];
+
+    if (isSuper || formIds.length > 0) {
+      const [respCountRes, compCountRes, recentRes] = await Promise.all([
+        totalRespQuery,
+        totalCompQuery,
+        recentQuery,
+      ]);
+      exactResponsesCount = respCountRes?.count ?? 0;
+      exactCompleteCount = compCountRes?.count ?? 0;
+      respList = recentRes?.data ?? [];
+    }
+
     const completeList = respList.filter((r) => r.is_complete);
     const durations = completeList.map((r) => r.duration_seconds).filter((d) => d > 0);
 
@@ -52,8 +81,8 @@ export default function Dashboard() {
     setRecent(respList.slice(0, 8));
     setStats({
       forms: formList.length,
-      responses: respList.length,
-      complete: completeList.length,
+      responses: exactResponsesCount,
+      complete: exactCompleteCount,
       avgDuration: durations.length
         ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
         : null,

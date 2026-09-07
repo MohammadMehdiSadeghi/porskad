@@ -41,6 +41,39 @@ export default async function handler(req, res) {
   }
 
   try {
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const anonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || anonKey;
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ error: "Unauthorized: Missing authorization header" });
+    }
+
+    const token = authHeader.replace("Bearer ", "").trim();
+    if (!token) {
+      return res.status(401).json({ error: "Unauthorized: Missing token" });
+    }
+
+    const userClient = createClient(supabaseUrl, anonKey);
+    const { data: { user }, error: userError } = await userClient.auth.getUser(token);
+
+    if (userError || !user) {
+      return res.status(401).json({ error: "Unauthorized: Invalid token" });
+    }
+
+    // Check if user is superadmin (is_owner)
+    const supabase = createClient(supabaseUrl, serviceKey);
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("is_owner")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile?.is_owner) {
+      return res.status(403).json({ error: "Forbidden: Superadmin access required" });
+    }
+
     const rootDir = process.cwd();
 
     // محاسبه حجم فایل‌های روت پروژه
@@ -67,10 +100,6 @@ export default async function handler(req, res) {
       ],
     };
 
-    // محاسبه حجم دیتابیس Supabase
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-
     let dbStorage = {
       db_size_bytes: 0,
       db_size_pretty: "—",
@@ -79,7 +108,6 @@ export default async function handler(req, res) {
     };
 
     if (supabaseUrl && serviceKey) {
-      const supabase = createClient(supabaseUrl, serviceKey);
 
       // اول از طریق تابع RPC get_database_storage_stats تلاش کن
       try {

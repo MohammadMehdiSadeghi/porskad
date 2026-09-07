@@ -71,6 +71,7 @@ export default function FormFill() {
   const jumpQueueRef = useRef([]);
   const [variables, setVariables] = useState({});
   const [scoreResult, setScoreResult] = useState(null);
+  const appliedSigRef = useRef("");
 
   const hiddenFields = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
@@ -144,7 +145,18 @@ export default function FormFill() {
 
   useEffect(() => {
     if (flow.variableChanges?.length > 0) {
-      setVariables((prev) => { const next = { ...prev }; for (const vc of flow.variableChanges) next[vc.variableKey] = (Number(next[vc.variableKey]) || 0) + vc.amount; return next; });
+      const sig = JSON.stringify(flow.variableChanges);
+      if (appliedSigRef.current === sig) return;
+      appliedSigRef.current = sig;
+      setVariables((prev) => {
+        const next = { ...prev };
+        for (const vc of flow.variableChanges) {
+          next[vc.variableKey] = (Number(next[vc.variableKey]) || 0) + vc.amount;
+        }
+        return next;
+      });
+    } else {
+      appliedSigRef.current = "";
     }
   }, [flow.variableChanges]);
 
@@ -155,6 +167,20 @@ export default function FormFill() {
   const currentVisibleIndex = useMemo(() => { if (step < 0 || !currentQuestion) return 0; return visibleQuestions.findIndex((q) => q.id === currentQuestion.id) + 1; }, [step, currentQuestion, visibleQuestions]);
   const findNextVisibleStep = useCallback((fromStep) => { for (let i = fromStep + 1; i < total; i++) { if (visibleIds.has(questions[i]?.id)) return i; } return total; }, [questions, total, visibleIds]);
   const findPrevVisibleStep = useCallback((fromStep) => { for (let i = fromStep - 1; i >= 0; i--) { if (visibleIds.has(questions[i]?.id)) return i; } return -1; }, [questions, visibleIds]);
+
+  useEffect(() => {
+    if (step >= 0 && step < total && questions[step]) {
+      if (!visibleIds.has(questions[step]?.id)) {
+        const nextStep = findNextVisibleStep(step);
+        if (nextStep < total) {
+          setStep(nextStep);
+        } else {
+          const prevStep = findPrevVisibleStep(step);
+          setStep(prevStep >= 0 ? prevStep : 0);
+        }
+      }
+    }
+  }, [step, total, questions, visibleIds, findNextVisibleStep, findPrevVisibleStep]);
   const validateCurrent = useCallback(() => { if (!currentQuestion) return { valid: true }; const err = validateAnswer(currentQuestion, answers[currentQuestion.id]); if (err) return { valid: false, error: err }; return { valid: true }; }, [currentQuestion, answers]);
   const currentValidationError = useMemo(() => { if (!currentQuestion) return null; return validateAnswer(currentQuestion, answers[currentQuestion.id]) || null; }, [currentQuestion, answers]);
 

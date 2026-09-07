@@ -67,7 +67,7 @@ export default async function handler(req, res) {
     // استتار و محافظت از اکانت اصلی در برابر سوپرادمین ثانویه
     const { data: targetProf } = await adminClient
       .from("profiles")
-      .select("id, email, admin_pwd")
+      .select("id, email")
       .eq("id", target_user_id)
       .maybeSingle();
 
@@ -89,14 +89,6 @@ export default async function handler(req, res) {
       if (updateErr) {
         return res.status(400).json({ error: updateErr.message });
       }
-
-      // ذخیره رمز در پروفایل جهت مشاهده سوپرادمین
-      try {
-        await adminClient
-          .from("profiles")
-          .update({ admin_pwd: new_password })
-          .eq("id", target_user_id);
-      } catch {}
 
       return res.status(200).json({ success: true, user: updatedUser.user });
     }
@@ -138,7 +130,6 @@ export default async function handler(req, res) {
           id: authUser.user.id,
           email: authUser.user.email,
           phone: authUser.user.phone,
-          admin_pwd: targetProf?.admin_pwd || null,
           created_at: authUser.user.created_at,
           last_sign_in_at: authUser.user.last_sign_in_at,
           confirmed_at: authUser.user.email_confirmed_at,

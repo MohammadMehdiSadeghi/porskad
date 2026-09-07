@@ -515,6 +515,7 @@ export default function Responses() {
 
   const PAGE_SIZE = 500;
   const ANSWER_CHUNK = 100;
+  const MAX_RESPONSES = 5000;
 
   async function load() {
     try {
@@ -529,7 +530,7 @@ export default function Responses() {
           .range(from, from + PAGE_SIZE - 1);
         if (error) throw error;
         allResponses = allResponses.concat(data ?? []);
-        if (!data || data.length < PAGE_SIZE) break;
+        if (!data || data.length < PAGE_SIZE || allResponses.length >= MAX_RESPONSES) break;
         from += PAGE_SIZE;
       }
 
@@ -734,6 +735,7 @@ export default function Responses() {
       const dates = {
         firstSubmittedAt: times.length ? times.reduce((a, b) => (a < b ? a : b)).toLocaleDateString("fa-IR") : null,
         lastSubmittedAt: times.length ? times.reduce((a, b) => (a > b ? a : b)).toLocaleDateString("fa-IR") : null,
+        completeCount: filtered.filter((r) => r.is_complete).length,
       };
       downloadExcel(`${form?.slug ?? "form"}-responses.xlsx`, header, rows, dates);
     } else downloadCsv(`${form?.slug ?? "form"}-responses.csv`, [header, ...rows]);

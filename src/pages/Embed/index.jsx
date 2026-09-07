@@ -95,6 +95,12 @@ function Spinner({ label }) {
   );
 }
 
+const isFieldEmpty = (v) =>
+  v === null ||
+  v === undefined ||
+  (typeof v === "string" && v.trim() === "") ||
+  (Array.isArray(v) && v.length === 0);
+
 // ─── نوار پیشرفت ───
 function ProgressBar({ value, max }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0;
@@ -162,7 +168,7 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
     else if (cur.length < maxSelections) { cur.push(opt); }
     const nextVal = cur.length > 0 ? cur : null;
     onChange(nextVal);
-    if (nextVal) setTimeout(onEnter, 250);
+    if (nextVal && cur.length === maxSelections && onEnter) setTimeout(() => onEnter(), 250);
   }
 
   // حالت دراپ‌داون — فقط تک انتخابی
@@ -170,7 +176,7 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
     return (
       <select
         value={value || ""}
-        onChange={(e) => { const v = e.target.value || null; onChange(v); if (v) setTimeout(onEnter, 250); }}
+        onChange={(e) => { const v = e.target.value || null; onChange(v); if (v && onEnter) setTimeout(() => onEnter(), 250); }}
         className="w-full bg-white border-2 border-ink/15 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:px-4 sm:py-3.5 font-bold text-sm sm:text-base text-ink focus:outline-none transition-all duration-200 cursor-pointer text-right"
       >
         <option value="">یک گزینه انتخاب کنید...</option>
@@ -197,7 +203,7 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
             key={i}
             type="button"
             disabled={disabled}
-            onClick={() => isMulti ? handleMultiToggle(opt) : (() => { onChange(opt); setTimeout(onEnter, 250); })()}
+            onClick={() => isMulti ? handleMultiToggle(opt) : (() => { onChange(opt); if (onEnter) setTimeout(() => onEnter(), 250); })()}
             className={`relative flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 transition-all duration-200 cursor-pointer hover:-translate-y-px ${
               disabled ? "opacity-40 cursor-not-allowed hover:translate-y-0" : ""
             } ${
@@ -232,7 +238,7 @@ function YesNoOptions({ value, onChange, onEnter }) {
         <button
           key={o.label}
           type="button"
-          onClick={() => { onChange(o.label); setTimeout(onEnter, 250); }}
+          onClick={() => { onChange(o.label); if (onEnter) setTimeout(() => onEnter(), 250); }}
           className={`flex items-center justify-center gap-1.5 py-3.5 sm:py-4 rounded-pill-md [corner-shape:squircle] border-2 text-base sm:text-lg font-black transition-all duration-200 cursor-pointer ${
             value === o.label
               ? o.theme === "ecosystem"
@@ -293,6 +299,7 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
   const [scoreResult, setScoreResult] = useState(null);
   const [startedAt] = useState(() => Date.now());
   const [variables, setVariables] = useState({});
+  const appliedSigRegRef = useRef("");
 
   // ─── موتور شرطی برای فرم ثبت‌نامی Embed ───
   const sortedQuestions = useMemo(() => [...questions].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)), [questions]);
@@ -304,11 +311,16 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
 
   useEffect(() => {
     if (flow.variableChanges?.length > 0) {
+      const sig = JSON.stringify(flow.variableChanges);
+      if (appliedSigRegRef.current === sig) return;
+      appliedSigRegRef.current = sig;
       setVariables((prev) => {
         const next = { ...prev };
         for (const vc of flow.variableChanges) next[vc.variableKey] = (Number(next[vc.variableKey]) || 0) + vc.amount;
         return next;
       });
+    } else {
+      appliedSigRegRef.current = "";
     }
   }, [flow.variableChanges]);
 
@@ -346,7 +358,7 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
         unfilled.push({ id: q.id, title: `${q.title} (${errors[q.id]})`, typeLabel: QUESTION_TYPES[q.type]?.label || q.type });
       } else if (q.required) {
         const v = answers[q.id];
-        const isEmpty = v === null || v === undefined || (typeof v === "string" && v.trim() === "");
+        const isEmpty = isFieldEmpty(v);
         if (isEmpty) {
           unfilled.push({ id: q.id, title: q.title, typeLabel: QUESTION_TYPES[q.type]?.label || q.type });
         }
@@ -377,7 +389,7 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
         }
       }
       const { data, error: rpcError } = await supabase.rpc("submit_public_response", {
-        p_form_public_id: formId, p_answers: answersObj, p_meta: meta,
+        p_form_public_id: formId, p_answers: answersObj, p_meta: meta, p_times: times || {},
       });
       if (rpcError) throw rpcError;
 
@@ -387,9 +399,8 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
       }
 
       postToParent("pcode:submitted", { formId, responseId: data?.responseId });
-      // مهم: باید UUID واقعی فرم رو بفرستیم نه public_id ("fr_...") —
-      // چون telegram_form_links با UUID کار می‌کنه
-      sendToTelegram(schema?.uuid_id || formId, data?.responseId);
+      // مهم: باید UUID یا public_id فرم رو بفرستیم (telegram-send هر دو رو ساپورت می‌کنه)
+      sendToTelegram(schema?.uuid_id || schema?.id || formId, data?.responseId);
       setSubmitted(true);
     } catch (err) {
       console.error("Submit error:", err);
@@ -547,7 +558,7 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
               onCancel={() => setShowConfirm(false)}
               unfilledFields={confirmUnfilled}
               totalRequired={visibleQuestions.filter((q) => q.required).length}
-              filledCount={visibleQuestions.filter((q) => q.required && answers[q.id] != null && String(answers[q.id]).trim() !== "").length}
+              filledCount={visibleQuestions.filter((q) => q.required && !isFieldEmpty(answers[q.id])).length}
             />
     </div>
   );
@@ -707,6 +718,9 @@ export default function EmbedForm() {
 
       if (jumpResult.type === "end") { setStep(total); return; }
       if (jumpResult.type === "redirect" && jumpResult.url) {
+        if (window.parent && window.parent !== window) {
+          postToParent("pcode:redirect", { url: jumpResult.url });
+        }
         window.open(jumpResult.url, "_blank");
         setStep(total);
         return;
@@ -720,6 +734,12 @@ export default function EmbedForm() {
     setStep((s) => findNextVisibleStep(s));
   }, [step, accrueTime, validateCurrent, findNextVisibleStep, currentQuestion, answers, questions, visibleQuestions, total, formId]);
 
+  const goNextRef = useRef(null);
+  goNextRef.current = goNext;
+  const handleNext = useCallback(() => {
+    goNextRef.current?.();
+  }, []);
+
   const goBack = useCallback(() => {
     if (step <= -1) return;
     accrueTime();
@@ -732,7 +752,7 @@ export default function EmbedForm() {
     for (const q of visibleQuestions) {
       if (q.required) {
         const v = answers[q.id];
-        const isEmpty = v === null || v === undefined || (typeof v === "string" && v.trim() === "") || (Array.isArray(v) && v.length === 0);
+        const isEmpty = isFieldEmpty(v);
         if (isEmpty) {
           unfilled.push({ id: q.id, title: q.title, typeLabel: QUESTION_TYPES[q.type]?.label || q.type });
         }
@@ -767,7 +787,7 @@ export default function EmbedForm() {
       };
 
       const { data, error: rpcError } = await supabase.rpc("submit_public_response", {
-        p_form_public_id: formId, p_answers: answersObj, p_meta: meta,
+        p_form_public_id: formId, p_answers: answersObj, p_meta: meta, p_times: times || {},
       });
 
       if (rpcError) throw rpcError;
@@ -778,9 +798,8 @@ export default function EmbedForm() {
       }
 
       postToParent("pcode:submitted", { formId, responseId: data?.responseId });
-      // مهم: باید UUID واقعی فرم رو بفرستیم نه public_id ("fr_...") —
-      // چون telegram_form_links با UUID کار می‌کنه
-      sendToTelegram(schema?.uuid_id || formId, data?.responseId);
+      // مهم: باید UUID یا public_id فرم رو بفرستیم (telegram-send هر دو رو ساپورت می‌کنه)
+      sendToTelegram(schema?.uuid_id || schema?.id || formId, data?.responseId);
       setDir(1);
       setStep(total);
     } catch (err) {
@@ -886,13 +905,13 @@ export default function EmbedForm() {
                     {currentQuestion.description && <p className="text-xs sm:text-sm text-ink-subtle -mt-1.5">{currentQuestion.description}</p>}
 
                     {(currentQuestion.type === "short_text" || currentQuestion.type === "long_text" || currentQuestion.type === "email" || currentQuestion.type === "number" || currentQuestion.type === "phone_ir" || currentQuestion.type === "telegram_id") && (
-                      <TextInput type={currentQuestion.type} value={answers[currentQuestion.id]} onChange={setAnswer} onEnter={goNext} placeholder={currentQuestion.placeholder} />
+                      <TextInput type={currentQuestion.type} value={answers[currentQuestion.id]} onChange={setAnswer} onEnter={handleNext} placeholder={currentQuestion.placeholder} />
                     )}
                     {currentQuestion.type === "choice" && (
-                      <ChoiceOptions options={currentQuestion.options} value={answers[currentQuestion.id]} onChange={setAnswer} onEnter={goNext} displayMode={currentQuestion.display_mode || "buttons"} maxSelections={currentQuestion.max_selections ?? 1} />
+                      <ChoiceOptions options={currentQuestion.options} value={answers[currentQuestion.id]} onChange={setAnswer} onEnter={handleNext} displayMode={currentQuestion.display_mode || "buttons"} maxSelections={currentQuestion.max_selections ?? 1} />
                     )}
                     {currentQuestion.type === "yes_no" && (
-                      <YesNoOptions value={answers[currentQuestion.id]} onChange={setAnswer} onEnter={goNext} />
+                      <YesNoOptions value={answers[currentQuestion.id]} onChange={setAnswer} onEnter={handleNext} />
                     )}
                     {currentQuestion.type === "rating" && (
                       <RatingStars value={answers[currentQuestion.id]} onChange={setAnswer} />
@@ -970,7 +989,7 @@ export default function EmbedForm() {
         onCancel={() => setShowConfirm(false)}
         unfilledFields={confirmUnfilled}
         totalRequired={visibleQuestions.filter((q) => q.required).length}
-        filledCount={visibleQuestions.filter((q) => q.required && answers[q.id] != null && String(answers[q.id]).trim() !== "").length}
+        filledCount={visibleQuestions.filter((q) => q.required && !isFieldEmpty(answers[q.id])).length}
       />
     </div>
   );

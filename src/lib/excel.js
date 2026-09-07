@@ -17,7 +17,7 @@ export function downloadExcel(filename, header, rows, dates = {}) {
     ["خلاصه پاسخ‌ها"],
     [""],
     ["تعداد کل پاسخ‌ها", rows.length],
-    ["تعداد پاسخ‌های کامل", rows.filter((r) => r[2] === "بله").length],
+    ["تعداد پاسخ‌های کامل", dates?.completeCount ?? rows.filter((r) => r[2] === "بله").length],
     ["تاریخ اولین پاسخ", rows.length ? (dates.firstSubmittedAt ?? new Date().toLocaleDateString("fa-IR")) : "—"],
     ["تاریخ آخرین پاسخ", rows.length ? (dates.lastSubmittedAt ?? new Date().toLocaleDateString("fa-IR")) : "—"],
   ];

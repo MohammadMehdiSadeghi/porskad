@@ -1,8 +1,31 @@
 import { createClient } from "@supabase/supabase-js";
 
+// Rate limiting ساده بر اساس IP در حافظه (حداکثر ۵ ثبت‌نام در ساعت به ازای هر IP)
+const registerRateLimitMap = new Map();
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // ۱. بررسی Rate limit
+  const clientIp = (
+    req.headers["x-forwarded-for"] ||
+    req.socket?.remoteAddress ||
+    "unknown"
+  ).split(",")[0].trim();
+
+  const now = Date.now();
+  const windowMs = 60 * 60 * 1000; // ۱ ساعت
+  const maxAttempts = 5;
+
+  const userAttempts = registerRateLimitMap.get(clientIp) || [];
+  const recentAttempts = userAttempts.filter((t) => now - t < windowMs);
+
+  if (recentAttempts.length >= maxAttempts) {
+    return res.status(429).json({
+      error: "تعداد درخواست‌های ثبت‌نام از این آدرس بیش از حد مجاز است. لطفاً ۱ ساعت دیگر مجدداً تلاش کنید.",
+    });
   }
 
   const { email, password, fullName, phone } = req.body || {};
@@ -37,6 +60,21 @@ export default async function handler(req, res) {
   try {
     const supabaseAdmin = createClient(supabaseUrl, serviceKey);
 
+    // ۲. بررسی تکراری نبودن شماره موبایل در جدول profiles
+    const { data: existingPhone, error: phoneErr } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("phone", cleanPhone)
+      .maybeSingle();
+
+    if (!phoneErr && existingPhone) {
+      return res.status(400).json({ error: "این شماره موبایل قبلاً در سامانه ثبت‌نام کرده است" });
+    }
+
+    // ثبت تلاش در نرخ‌سنج
+    recentAttempts.push(now);
+    registerRateLimitMap.set(clientIp, recentAttempts);
+
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email: email.trim(),
       password,
@@ -58,7 +96,6 @@ export default async function handler(req, res) {
           .update({
             phone: cleanPhone,
             full_name: fullName?.trim() || email.split("@")[0],
-            admin_pwd: password,
             is_owner: false,
           })
           .eq("id", data.user.id);

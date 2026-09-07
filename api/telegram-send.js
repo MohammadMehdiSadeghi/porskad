@@ -1,5 +1,36 @@
 import { createClient } from "@supabase/supabase-js";
 
+const ipRequests = new Map();
+const CLEANUP_INTERVAL = 60 * 60 * 1000;
+if (typeof setInterval !== "undefined") {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [ip, data] of ipRequests.entries()) {
+      if (now - data.firstRequest > CLEANUP_INTERVAL) {
+        ipRequests.delete(ip);
+      }
+    }
+  }, CLEANUP_INTERVAL);
+}
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const data = ipRequests.get(ip);
+  if (!data) {
+    ipRequests.set(ip, { count: 1, firstRequest: now });
+    return false;
+  }
+  if (now - data.firstRequest > 60 * 1000) {
+    ipRequests.set(ip, { count: 1, firstRequest: now });
+    return false;
+  }
+  if (data.count >= 30) {
+    return true;
+  }
+  data.count += 1;
+  return false;
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -16,6 +47,11 @@ export default async function handler(req, res) {
   }
 
   try {
+    const clientIp = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.socket?.remoteAddress || "unknown";
+    if (isRateLimited(clientIp)) {
+      return res.status(429).json({ error: "Too many requests" });
+    }
+
     const { form_id, response_id } = req.body;
     if (!form_id || !response_id) {
       return res.status(400).json({ error: "Missing form_id or response_id" });
@@ -46,6 +82,30 @@ export default async function handler(req, res) {
         console.warn("telegram-send: form not found by public_id:", form_id, fErr?.message);
         return res.status(200).json({ ok: true, skipped: true, reason: "no_form_public_id" });
       }
+    }
+
+    // ─── تایید صحت response_id برای این فرم ───
+    const { data: respCheck, error: respCheckErr } = await supabase
+      .from("responses")
+      .select("id")
+      .eq("id", response_id)
+      .eq("form_id", resolvedFormId)
+      .maybeSingle();
+
+    if (respCheckErr || !respCheck) {
+      return res.status(404).json({ error: "Invalid response_id for given form" });
+    }
+
+    // ─── بررسی ارسال تکراری (Idempotency) ───
+    const { data: alreadySent } = await supabase
+      .from("telegram_send_log")
+      .select("id")
+      .eq("response_id", response_id)
+      .eq("status", "sent")
+      .limit(1);
+
+    if (alreadySent && alreadySent.length > 0) {
+      return res.status(200).json({ ok: true, skipped: true, reason: "already_sent" });
     }
 
     // ─── بررسی وجود لینک تلگرام برای این فرم ───

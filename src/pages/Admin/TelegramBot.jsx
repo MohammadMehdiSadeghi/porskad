@@ -161,20 +161,10 @@ export default function TelegramBot() {
           chat_title: configForm.chat_title.trim(),
         };
 
-        // تلاش برای ذخیره با user_id و فالبک در صورت عدم وجود ستون در دیتابیس
-        let insertErr = null;
-        if (user?.id) {
-          const res = await supabase.from("telegram_config").insert({ ...payload, user_id: user.id });
-          if (res.error && res.error.message?.includes("user_id")) {
-            const fallbackRes = await supabase.from("telegram_config").insert(payload);
-            insertErr = fallbackRes.error;
-          } else {
-            insertErr = res.error;
-          }
-        } else {
-          const res = await supabase.from("telegram_config").insert(payload);
-          insertErr = res.error;
-        }
+        if (!user?.id) throw new Error("کاربر احراز هویت نشده است.");
+        const { error: insertErr } = await supabase
+          .from("telegram_config")
+          .insert({ ...payload, user_id: user.id });
 
         if (insertErr) throw insertErr;
         showToast("تنظیمات جدید ذخیره شد ✅");

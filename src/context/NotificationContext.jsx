@@ -62,7 +62,7 @@ function createNotifSound() {
 }
 
 function NotificationProvider({ children }) {
-  const { user, isOwner } = useAuth() || {};
+  const { user, profile, isOwner } = useAuth() || {};
   const [notifications, setNotifications] = useState([]);
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -103,6 +103,7 @@ function NotificationProvider({ children }) {
           try {
             const parsed = JSON.parse(legacy);
             setNotifications(parsed);
+            localStorage.removeItem("porskad_notifications");
           } catch {
             setNotifications([]);
           }
@@ -125,9 +126,9 @@ function NotificationProvider({ children }) {
 
   // پخش صدا
   const playSound = useCallback(() => {
-    if (!soundEnabled) return;
+    if (!soundEnabled || !notifEnabled) return;
     createNotifSound();
-  }, [soundEnabled]);
+  }, [soundEnabled, notifEnabled]);
 
   // اضافه کردن نوتیف جدید با جلوگیری از ایجاد رکورد تکراری
   const addNotification = useCallback((notif) => {
@@ -337,12 +338,12 @@ function NotificationProvider({ children }) {
     }
   }, [user, isOwner, lastCheckKey, isSyncing, playSound]);
 
-  // اجرای همگام‌سازی آفلاین هنگام بارگذاری و لاگین
+  // اجرای همگام‌سازی آفلاین هنگام بارگذاری و تکمیل پروفایل
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && profile) {
       syncOfflineActivity();
     }
-  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user?.id, profile, syncOfflineActivity]);
 
   // ─── اشتراک بلادرنگ (Real-time Supabase Channels) ───
   useEffect(() => {
@@ -366,13 +367,11 @@ function NotificationProvider({ children }) {
               .eq("id", newResp.form_id)
               .maybeSingle();
 
-            const owner = Boolean(isOwner?.());
             const isMyForm =
-              owner ||
-              (formData &&
-                (formData.manager_id === user.id || formData.created_by === user.id));
+              formData &&
+              (formData.manager_id === user.id || formData.created_by === user.id);
 
-            // فقط در صورتی که کاربر مالک فرم باشد یا مدیر کل باشد اعلان دریافت کند
+            // فقط در صورتی که کاربر مالک یا ایجادکننده فرم باشد اعلان دریافت کند
             if (isMyForm) {
               addNotification({
                 id: `resp_${newResp.id}`,

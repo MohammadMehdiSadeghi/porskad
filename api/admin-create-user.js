@@ -70,7 +70,6 @@ export default async function handler(req, res) {
           .from("profiles")
           .update({
             full_name: fullName?.trim() || email.split("@")[0],
-            admin_pwd: password,
             is_owner: false,
           })
           .eq("id", data.user.id);

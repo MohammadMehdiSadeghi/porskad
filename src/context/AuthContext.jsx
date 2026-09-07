@@ -45,10 +45,10 @@ export function AuthProvider({ children }) {
   const fetchProfile = useCallback(async (uid) => {
     if (!supabase || !uid) return null;
     try {
-      // اول با is_owner و فیلدهای سهمیه و admin_pwd سعی کن
+      // اول با is_owner و فیلدهای سهمیه سعی کن
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, email, full_name, phone, avatar_url, is_active, is_owner, created_by, max_forms, max_responses_per_month, plan, can_use_telegram, can_export_excel, admin_pwd")
+        .select("id, email, full_name, phone, avatar_url, is_active, is_owner, created_by, max_forms, max_responses_per_month, plan, can_use_telegram, can_export_excel")
         .eq("id", uid)
         .maybeSingle();
 
@@ -106,10 +106,13 @@ export function AuthProvider({ children }) {
 
   // ─── Timeout wrapper: جلوگیری از آویزان ماندن فچ‌ها ───
   function withTimeout(promise, ms = 10000) {
-    return Promise.race([
-      promise,
-      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
-    ]);
+    let timer;
+    const timeoutPromise = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error('timeout')), ms);
+    });
+    return Promise.race([promise, timeoutPromise]).finally(() => {
+      if (timer) clearTimeout(timer);
+    });
   }
 
   const fetchRole = useCallback(async (uid) => {
@@ -162,13 +165,18 @@ export function AuthProvider({ children }) {
       return;
     }
 
+    let lastLoadedUid = null;
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       setSession(newSession);
       if (newSession?.user) {
+        const uid = newSession.user.id;
+        if (uid === lastLoadedUid && event === "TOKEN_REFRESHED") {
+          return;
+        }
+        lastLoadedUid = uid;
         try {
-          const uid = newSession.user.id;
           const [profileData, roleData] = await Promise.allSettled([
             withTimeout(fetchProfile(uid), 10000),
             withTimeout(fetchRole(uid), 10000),
@@ -188,6 +196,7 @@ export function AuthProvider({ children }) {
           setLoading(false);
         }
       } else {
+        lastLoadedUid = null;
         setUser(null);
         setRole(null);
         setPermissions([]);
@@ -197,11 +206,9 @@ export function AuthProvider({ children }) {
       }
     });
 
-    // Get initial session
+    // Get initial session fallback
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        setSession(data.session);
-      } else {
+      if (!data.session) {
         setLoading(false);
       }
     }).catch((err) => {
@@ -279,7 +286,6 @@ export function AuthProvider({ children }) {
         await supabase.from("profiles").update({
           full_name: fullName?.trim() || email.split("@")[0],
           phone: cleanPhone,
-          admin_pwd: password,
           max_forms: 5,
           max_responses_per_month: 100,
           plan: 'free',
@@ -398,12 +404,6 @@ export function AuthProvider({ children }) {
       if (permError) throw permError;
     }
 
-    if (userId && password) {
-      try {
-        await supabase.from("profiles").update({ admin_pwd: password }).eq("id", userId);
-      } catch {}
-    }
-
     return userId;
   }
 
@@ -484,20 +484,20 @@ export function AuthProvider({ children }) {
 
   async function listManagers({ includeHidden = false } = {}) {
     try {
-      // سعی کن با is_owner و admin_pwd select کنی، اگه نشد بدون اون
+      // سعی کن با is_owner select کنی، اگه نشد بدون اون
       let profilesData = null;
       let profilesError = null;
       try {
         const res = await supabase
           .from("profiles")
-          .select("id, email, full_name, phone, is_active, is_owner, created_at, created_by, hidden_from, max_forms, max_responses_per_month, plan, can_use_telegram, admin_pwd")
+          .select("id, email, full_name, phone, is_active, is_owner, created_at, created_by, hidden_from, max_forms, max_responses_per_month, plan, can_use_telegram")
           .order("created_at", { ascending: true });
         profilesData = res.data;
         profilesError = res.error;
       } catch {
         const res = await supabase
           .from("profiles")
-          .select("id, email, full_name, phone, is_active, created_at, created_by, admin_pwd")
+          .select("id, email, full_name, phone, is_active, created_at, created_by")
           .order("created_at", { ascending: true });
         profilesData = res.data;
         profilesError = res.error;
@@ -554,7 +554,6 @@ export function AuthProvider({ children }) {
           max_responses_per_month: p.is_owner ? 999999 : (p.max_responses_per_month ?? 100),
           plan: p.is_owner ? 'enterprise' : (p.plan ?? 'free'),
           can_use_telegram: p.is_owner ? true : (p.can_use_telegram === true),
-          admin_pwd: p.admin_pwd || null,
           role: roleId,
           roleActive: roleData?.active ?? true,
           permissions: effectivePermissions,

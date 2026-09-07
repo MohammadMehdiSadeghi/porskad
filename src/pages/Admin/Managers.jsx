@@ -785,40 +785,9 @@ export default function Managers() {
             </div>
           )}
 
-          {/* مشاهده و تنظیم رمز عبور */}
+          {/* تنظیم رمز عبور */}
           <div className="p-3.5 rounded-xl bg-bg-neutral/70 border border-ink/10 flex flex-col gap-2.5">
-            <span className="block text-xs font-extrabold text-navy">رمز عبور کاربر</span>
-            {selectedManager?.admin_pwd ? (
-              <div className="flex items-center justify-between bg-white border border-ink/15 rounded-pill-sm px-3 py-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-ink-subtle">رمز فعلی:</span>
-                  <span className="font-mono text-xs font-black text-navy" dir="ltr">
-                    {editPasswordVisible ? selectedManager.admin_pwd : "••••••••"}
-                  </span>
-                </div>
-                <div className="flex gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setEditPasswordVisible(!editPasswordVisible)}
-                    className="text-ink-subtle hover:text-navy p-1"
-                    title={editPasswordVisible ? "مخفی کردن" : "نمایش رمز"}
-                  >
-                    {editPasswordVisible ? <EyeOff size={14} className="text-teal" /> : <Eye size={14} />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => copyPassword(selectedManager.admin_pwd)}
-                    className="text-teal hover:text-teal-text p-1"
-                    title="کپی رمز"
-                  >
-                    <Copy size={14} />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <span className="text-xs text-ink-subtle">رمز عبور قدیمی (هش‌شده) است. با فیلد زیر می‌توانید رمزی جدید برای او ثبت کنید:</span>
-            )}
-
+            <span className="block text-xs font-extrabold text-navy">تغییر رمز عبور کاربر</span>
             <div>
               <label className="block text-[0.7rem] font-bold text-ink-subtle mb-1">تعیین رمز عبور جدید (اختیاری):</label>
               <input
