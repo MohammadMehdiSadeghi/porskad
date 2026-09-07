@@ -98,7 +98,7 @@ export default function SuperAdmin() {
 
   // ─── System Settings State ───
   const [sysSettings, setSysSettings] = useState({
-    site_title: "پرس‌کاد",
+    site_title: "Porskad",
     telegram_support_id: "porskad_support",
     default_max_active_forms: 5,
     default_max_monthly_responses: 100,
@@ -762,7 +762,7 @@ export default function SuperAdmin() {
   // ─── Admin Permission Editor ───
   async function toggleAdminPermission(userId, permId, currentPerms) {
     if (!isCallerGod) {
-      showToast("فقط مدیر اصلی (God Mode) می‌تواند دسترسی‌های ادمین‌ها را ویرایش کند.", "error");
+      showToast("Only Primary God Owner can modify administrator permissions.", "error");
       return;
     }
     const newPerms = currentPerms.includes(permId)
@@ -774,7 +774,7 @@ export default function SuperAdmin() {
         p_permission_ids: newPerms,
       });
       if (error) throw error;
-      showToast("دسترسی‌های ادمین به‌روزرسانی شد");
+      showToast("Administrator permissions updated successfully");
       loadAdmins();
     } catch (err) {
       showToast("Error: " + err.message, "error");
@@ -1106,7 +1106,7 @@ export default function SuperAdmin() {
                   value={sysSettings.site_title || ""}
                   onChange={(e) => setSysSettings({ ...sysSettings, site_title: e.target.value })}
                   style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #c6c6c6", fontSize: "0.85rem", outline: "none" }}
-                  placeholder="پرس‌کاد"
+                  placeholder="Porskad"
                 />
               </div>
 
@@ -1798,13 +1798,13 @@ export default function SuperAdmin() {
                         setPasswordVisible(true);
                       }}
                     >
-                      ویرایش / تغییر نقش
+                      Edit / Change Role
                     </button>
                     {isCallerGod && !a.is_owner && (
                       <button
                         className="sa-btn sa-btn-danger sa-btn-sm"
                         onClick={async () => {
-                          if (!confirm(`آیا از عزل «${a.email}» از سطح سوپرادمین و بازگرداندن به کاربر عادی اطمینان دارید؟`)) return;
+                          if (!confirm(`Are you sure you want to demote "${a.email}" from SuperAdmin back to regular user?`)) return;
                           try {
                             try {
                               await adminAction("update_role", {
@@ -1820,15 +1820,15 @@ export default function SuperAdmin() {
                                 );
                               if (error) throw error;
                             }
-                            showToast(`کاربر «${a.email}» با موفقیت از سوپرادمین عزل و به کاربر عادی تبدیل شد.`);
+                            showToast(`User "${a.email}" has been demoted to regular user.`);
                             loadAdmins();
                             loadUsers();
                           } catch (err) {
-                            showToast("خطا در عزل ادمین: " + err.message, "error");
+                            showToast("Error demoting admin: " + err.message, "error");
                           }
                         }}
                       >
-                        عزل از ادمین
+                        Demote Admin
                       </button>
                     )}
                   </div>
@@ -1853,7 +1853,7 @@ export default function SuperAdmin() {
                       <button
                         key={perm}
                         disabled={!isCallerGod}
-                        title={!isCallerGod ? "فقط صاحب اصلی سایت مجاز به تغییر دسترسی‌های ادمین است" : undefined}
+                        title={!isCallerGod ? "Only Primary God Owner can modify administrator permissions" : undefined}
                         onClick={() =>
                           toggleAdminPermission(a.id, perm, a.permissions || [])
                         }
@@ -1889,7 +1889,7 @@ export default function SuperAdmin() {
                     onClick={() => setShowVercelToken(!showVercelToken)}
                     className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink/40 hover:text-navy transition-colors p-1 cursor-pointer"
                     tabIndex={-1}
-                    aria-label={showVercelToken ? "مخفی کردن توکن" : "نمایش توکن"}
+                    aria-label={showVercelToken ? "Hide token" : "Show token"}
                   >
                     {showVercelToken ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
@@ -2910,23 +2910,23 @@ export default function SuperAdmin() {
                     }}
                   >
                     <Shield size={14} color="#0f62fe" />
-                    سطح دسترسی سیستم (System Role)
+                    System Role
                   </span>
                   {isCallerGod ? (
                     <span style={{ fontSize: "0.8125rem", color: "#eb6200", fontWeight: 700 }}>
-                      👑 دسترسی انحصاری گاد مُد (God Mode)
+                      👑 Primary God Control
                     </span>
                   ) : (
                     <span style={{ fontSize: "0.8125rem", color: "#6f6f6f", fontWeight: 600 }}>
-                      🔒 ارتقا به سوپرادمین فقط در اختیار مدیر اصلی است
+                      🔒 Role modification restricted to Primary God Owner
                     </span>
                   )}
                 </div>
 
                 <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.6rem", flexWrap: "wrap" }}>
                   {[
-                    { id: "manager", label: "کاربر عادی / مدیر فرم (Manager)", desc: "دسترسی استاندارد به فرم‌های خود" },
-                    { id: "admin", label: "سوپرادمین (SuperAdmin)", desc: "دسترسی به پنل مدیریت کل سیستم" },
+                    { id: "manager", label: "Regular User / Manager", desc: "Standard access to own forms & data" },
+                    { id: "admin", label: "Super Administrator (SuperAdmin)", desc: "Full access to system management panel" },
                   ].map((r) => {
                     const isCurrent = detailModal.role === r.id;
                     return (
@@ -2935,18 +2935,16 @@ export default function SuperAdmin() {
                         disabled={!isCallerGod}
                         onClick={async () => {
                           if (!isCallerGod) {
-                            showToast("فقط صاحب اصلی سایت (God Mode) مجاز به ارتقا یا عزل سوپرادمین است.", "error");
+                            showToast("Only Primary God Owner can promote or demote SuperAdmins.", "error");
                             return;
                           }
                           try {
-                            // ۱. تلاش از طریق API سرورلس با دسترسی Service Role
                             try {
                               await adminAction("update_role", {
                                 target_user_id: detailModal.id,
                                 new_role: r.id,
                               });
                             } catch {
-                              // فال‌بک دیتابیس مستقیم
                               const { error } = await supabase
                                 .from("user_roles")
                                 .upsert(
@@ -2956,12 +2954,12 @@ export default function SuperAdmin() {
                               if (error) throw error;
                             }
 
-                            showToast(r.id === "admin" ? `کاربر «${detailModal.email}» با موفقیت سوپرادمین شد.` : `نقش کاربر به مدیر عادی تغییر یافت.`);
+                            showToast(r.id === "admin" ? `User "${detailModal.email}" promoted to SuperAdmin.` : `User role set to Manager.`);
                             setDetailModal({ ...detailModal, role: r.id });
                             loadUsers();
                             loadAdmins();
                           } catch (err) {
-                            showToast("خطا در تغییر نقش: " + err.message, "error");
+                            showToast("Error updating role: " + err.message, "error");
                           }
                         }}
                         style={{
@@ -2977,14 +2975,14 @@ export default function SuperAdmin() {
                           cursor: isCallerGod ? "pointer" : "not-allowed",
                           opacity: !isCallerGod && !isCurrent ? 0.4 : 1,
                           fontFamily: "'IBM Plex Sans', sans-serif",
-                          textAlign: "right",
+                          textAlign: "left",
                           transition: "all 0.15s",
                         }}
                       >
                         <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
                           {r.id === "admin" ? <Shield size={14} /> : <Users size={14} />}
                           <span>{r.label}</span>
-                          {isCurrent && <span style={{ marginRight: "auto", fontSize: "0.75rem" }}>✓ نقش فعلی</span>}
+                          {isCurrent && <span style={{ marginLeft: "auto", fontSize: "0.75rem" }}>✓ Current Role</span>}
                         </div>
                       </button>
                     );

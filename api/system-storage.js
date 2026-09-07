@@ -62,21 +62,28 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Unauthorized: Invalid token" });
     }
 
-    // Check if user is superadmin (is_owner)
+    // Check if user is superadmin (is_owner or role_id === 'admin')
     const supabase = createClient(supabaseUrl, serviceKey);
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile } = await supabase
       .from("profiles")
       .select("is_owner")
       .eq("id", user.id)
       .single();
 
-    if (profileError || !profile?.is_owner) {
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const isSuperAdmin = Boolean(profile?.is_owner || roleData?.role_id === "admin");
+    if (!isSuperAdmin) {
       return res.status(403).json({ error: "Forbidden: Superadmin access required" });
     }
 
     const rootDir = process.cwd();
 
-    // محاسبه حجم فایل‌های روت پروژه
+    // Calculate project root file sizes
     const sourceStats = getDirSize(rootDir, [".git", "node_modules", ".agents"]);
     const fullStats = getDirSize(rootDir, [".git", ".agents"]);
     const srcStats = getDirSize(path.join(rootDir, "src"));
@@ -92,11 +99,11 @@ export default async function handler(req, res) {
       full_pretty: formatBytes(fullStats.bytes),
       full_files: fullStats.files,
       breakdown: [
-        { name: "src (کدها و کامپوننت‌ها)", bytes: srcStats.bytes, pretty: formatBytes(srcStats.bytes), files: srcStats.files },
-        { name: "public (دارایی‌ها و فونت‌ها)", bytes: publicStats.bytes, pretty: formatBytes(publicStats.bytes), files: publicStats.files },
-        { name: "dist (خروجی بیلد)", bytes: distStats.bytes, pretty: formatBytes(distStats.bytes), files: distStats.files },
-        { name: "api (اندپوینت‌های سرورلس)", bytes: apiStats.bytes, pretty: formatBytes(apiStats.bytes), files: apiStats.files },
-        { name: "node_modules (پکیج‌ها و ماژول‌ها)", bytes: Math.max(0, fullStats.bytes - sourceStats.bytes), pretty: formatBytes(Math.max(0, fullStats.bytes - sourceStats.bytes)), files: Math.max(0, fullStats.files - sourceStats.files) },
+        { name: "Frontend Source (src/)", bytes: srcStats.bytes, pretty: formatBytes(srcStats.bytes), files: srcStats.files },
+        { name: "Static Assets (public/)", bytes: publicStats.bytes, pretty: formatBytes(publicStats.bytes), files: publicStats.files },
+        { name: "Build Output (dist/)", bytes: distStats.bytes, pretty: formatBytes(distStats.bytes), files: distStats.files },
+        { name: "Serverless Endpoints (api/)", bytes: apiStats.bytes, pretty: formatBytes(apiStats.bytes), files: apiStats.files },
+        { name: "Packages & Modules (node_modules/)", bytes: Math.max(0, fullStats.bytes - sourceStats.bytes), pretty: formatBytes(Math.max(0, fullStats.bytes - sourceStats.bytes)), files: Math.max(0, fullStats.files - sourceStats.files) },
       ],
     };
 
