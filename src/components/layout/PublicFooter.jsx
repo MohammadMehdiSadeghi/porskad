@@ -9,7 +9,7 @@ export default function PublicFooter() {
           </span>
         </div>
         <p className="text-sm font-semibold text-white/70 text-center leading-7 max-w-md">
-          سیستم اختصاصی فرم و نظرسنجی مؤسسه رکاد — ساخته‌شده با React + Supabase.
+          سامانه هوشمند ساخت انواع فرم، آزمون و نظرسنجی آنلاین — راهکاری مدرن برای جمع‌آوری و تحلیل هوشمند داده‌ها.
         </p>
         <div className="text-xs font-medium text-white/50">
           © ۱۴۰۵ پرس‌کاد — نسخه ۲.۰

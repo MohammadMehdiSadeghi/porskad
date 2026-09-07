@@ -277,7 +277,7 @@ export default function AdminLayout() {
             {/* لوگو در موبایل */}
             <div className="md:hidden flex items-center gap-1">
               <span className="text-base font-black text-navy rotate-[-2deg] select-none">
-                پرس<span className="text-teal">کاد</span>
+                پرس‌<span className="text-teal">کاد</span>
               </span>
             </div>
 

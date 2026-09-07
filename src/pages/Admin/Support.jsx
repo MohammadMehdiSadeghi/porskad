@@ -852,7 +852,7 @@ export default function Support() {
                                 <div className="mt-2 p-4 rounded-xl bg-ecosystem-light/80 border-2 border-teal/40 flex flex-col gap-2">
                                   <div className="flex items-center justify-between">
                                     <span className="text-xs font-black text-teal-text flex items-center gap-1.5">
-                                      <CheckCircle2 size={14} /> پاسخ پشتیبانی پرسکاد
+                                      <CheckCircle2 size={14} /> پاسخ پشتیبانی پرس‌کاد
                                     </span>
                                     {t.replied_at && (
                                       <span className="text-[0.65rem] font-medium text-ink-subtle">
@@ -1017,7 +1017,7 @@ export default function Support() {
                         <div className="mt-2 p-4 rounded-xl bg-ecosystem-light/80 border-2 border-teal/40 flex flex-col gap-2">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-black text-teal-text flex items-center gap-1.5">
-                              <CheckCircle2 size={14} /> پاسخ پشتیبانی پرسکاد
+                              <CheckCircle2 size={14} /> پاسخ پشتیبانی پرس‌کاد
                             </span>
                             {t.replied_at && (
                               <span className="text-[0.65rem] font-medium text-ink-subtle">

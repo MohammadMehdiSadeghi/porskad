@@ -3,7 +3,7 @@
   "private": true,
   "version": "2.0.0",
   "type": "module",
-  "description": "پرسکاد — سیستم اختصاصی فرم و نظرسنجی مؤسسه رکاد (v2) — React + Vite + Tailwind + Supabase",
+  "description": "پرس‌کاد — سامانه آنلاین و هوشمند ساخت فرم، آزمون و نظرسنجی (v2) — React + Vite + Tailwind + Supabase",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
