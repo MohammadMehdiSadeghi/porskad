@@ -11,7 +11,7 @@ FROM public.profiles p
 WHERE NOT EXISTS (
   SELECT 1 FROM public.user_roles ur WHERE ur.user_id = p.id
 )
-ON CONFLICT (user_id) DO NOTHING;
+ON CONFLICT (user_id, role_id) DO NOTHING;
 
 -- ۲. اصلاح تابع has_permission با فالبک امن برای کاربران بدون نقش خاص
 CREATE OR REPLACE FUNCTION public.has_permission(p_user_id uuid, p_permission_id text)

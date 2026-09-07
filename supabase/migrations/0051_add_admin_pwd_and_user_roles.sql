@@ -23,7 +23,7 @@ BEGIN
   -- ثبت نقش manager به عنوان پیش‌فرض در صورت نبود نقش
   INSERT INTO public.user_roles (user_id, role_id, active)
   VALUES (NEW.id, 'manager', true)
-  ON CONFLICT (user_id) DO NOTHING;
+  ON CONFLICT (user_id, role_id) DO NOTHING;
 
   RETURN NEW;
 END;

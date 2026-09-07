@@ -42,7 +42,7 @@ BEGIN
   -- اختصاص خودکار نقش manager برای کاربران ثبت‌نامی جدید
   INSERT INTO public.user_roles (user_id, role_id, active)
   VALUES (new.id, 'manager', true)
-  ON CONFLICT (user_id) DO NOTHING;
+  ON CONFLICT (user_id, role_id) DO NOTHING;
 
   RETURN new;
 END;
