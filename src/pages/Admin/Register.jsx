@@ -221,9 +221,12 @@ export default function Register() {
                   {busy ? "در حال ساخت حساب..." : "شروع ساخت فرم‌ها (رایگان) ✨"}
                 </Button>
 
-                <div className="flex items-center justify-between text-xs font-bold text-ink-subtle pt-2 border-t border-ink/10">
+                <div className="flex items-center justify-between text-[13px] font-bold text-ink-subtle pt-2 border-t border-ink/10">
                   <span>قبلاً حساب ساخته‌اید؟</span>
-                  <Link to="/admin/login" className="text-teal hover:underline">
+                  <Link
+                    to="/admin/login"
+                    className="text-[13px] font-extrabold text-teal hover:underline inline-flex items-center gap-1 bg-teal/10 hover:bg-teal/20 px-3 py-1.5 rounded-pill-sm transition-all"
+                  >
                     ورود به پنل کاربری 👈
                   </Link>
                 </div>

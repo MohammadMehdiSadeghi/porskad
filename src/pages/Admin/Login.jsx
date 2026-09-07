@@ -110,11 +110,11 @@ export default function Login() {
                 {busy ? "در حال ورود..." : "ورود به پنل 🚪"}
               </Button>
 
-              <div className="flex items-center justify-between text-xs font-bold text-ink-subtle pt-3 border-t border-ink/10">
+              <div className="flex items-center justify-between text-[13px] font-bold text-ink-subtle pt-3 border-t border-ink/10">
                 <span>حساب کاربری ندارید؟</span>
                 <Link
                   to="/register"
-                  className="text-teal hover:underline"
+                  className="text-[13px] font-extrabold text-teal hover:underline inline-flex items-center gap-1 bg-teal/10 hover:bg-teal/20 px-3 py-1.5 rounded-pill-sm transition-all"
                 >
                   ثبت‌نام رایگان 👈
                 </Link>
