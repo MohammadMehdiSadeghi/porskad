@@ -181,6 +181,57 @@ export default function Managers() {
   const [selectedUserModal, setSelectedUserModal] = useState(null);
   const [userFormsCount, setUserFormsCount] = useState({});
 
+  // ─── ویرایش مستقیم سهمیه کاربر در مودال کاربری ───
+  const [userEditMaxForms, setUserEditMaxForms] = useState(5);
+  const [userEditMaxResponses, setUserEditMaxResponses] = useState(100);
+  const [userEditResponsesUsed, setUserEditResponsesUsed] = useState(0);
+  const [userEditSaving, setUserEditSaving] = useState(false);
+
+  useEffect(() => {
+    if (selectedUserModal) {
+      setUserEditMaxForms(selectedUserModal.max_forms ?? 5);
+      setUserEditMaxResponses(selectedUserModal.max_responses_per_month ?? 100);
+      setUserEditResponsesUsed(selectedUserModal.monthly_responses_used ?? 0);
+    }
+  }, [selectedUserModal?.id]);
+
+  async function handleSaveUserQuotaDirect(e) {
+    e?.preventDefault?.();
+    if (!selectedUserModal) return;
+    setUserEditSaving(true);
+    try {
+      const maxF = Math.max(1, Number(userEditMaxForms) || 1);
+      const maxR = Math.max(1, Number(userEditMaxResponses) || 1);
+      const usedR = Math.max(0, Number(userEditResponsesUsed) || 0);
+
+      await updateUserQuota(selectedUserModal.id, {
+        maxForms: maxF,
+        maxResponses: maxR,
+        monthlyResponsesUsed: usedR,
+        plan: selectedUserModal.plan ?? "free",
+        canUseTelegram: selectedUserModal.can_use_telegram,
+      });
+
+      setManagers((prev) =>
+        prev.map((x) =>
+          x.id === selectedUserModal.id
+            ? { ...x, max_forms: maxF, max_responses_per_month: maxR, monthly_responses_used: usedR }
+            : x
+        )
+      );
+      setSelectedUserModal((prev) =>
+        prev
+          ? { ...prev, max_forms: maxF, max_responses_per_month: maxR, monthly_responses_used: usedR }
+          : null
+      );
+      push(`سهمیه کاربر «${selectedUserModal.full_name || selectedUserModal.email}» با موفقیت ذخیره شد.`, "success");
+    } catch (err) {
+      push("خطا در ذخیره سهمیه: " + err.message, "error");
+    } finally {
+      setUserEditSaving(false);
+    }
+  }
+
   // ─── تنظیمات سامانه و محدودیت‌ها ───
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [sysSettings, setSysSettings] = useState({
@@ -621,78 +672,123 @@ export default function Managers() {
               </div>
 
               {/* سهمیه و وضعیت فرم‌های کاربر */}
-              <div className="bg-white border-2 border-ink/10 rounded-2xl p-3.5 flex flex-col gap-2.5">
+              <div className="bg-white border-2 border-ink/10 rounded-2xl p-4 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black text-navy flex items-center gap-1.5">
-                    <BarChart3 size={14} className="text-teal" /> سهمیه و فرم‌های فعال
+                    <BarChart3 size={15} className="text-teal" /> سهمیه، محدودیت‌ها و ظرفیت‌های کاربر
                   </span>
-                  {isOwner() && !m.is_owner && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="!text-teal-text text-xs"
-                      onClick={() => {
-                        setSelectedUserModal(null);
-                        openQuotaModal(m);
-                      }}
-                    >
-                      ویرایش سهمیه ⚙️
-                    </Button>
+                  {m.is_owner ? (
+                    <span className="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                      مالک کل — بدون محدودیت
+                    </span>
+                  ) : (
+                    <span className="text-[0.7rem] font-bold text-teal bg-teal/10 px-2 py-0.5 rounded-full">
+                      قابل ویرایش دستی
+                    </span>
                   )}
                 </div>
 
+                {/* آمار خلاصه وضعیت */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
                   <div className="bg-bg-neutral p-2.5 rounded-xl text-center">
-                    <span className="text-[0.68rem] text-ink-subtle block font-semibold">فرم‌های فعال</span>
+                    <span className="text-[0.68rem] text-ink-subtle block font-semibold">فرم‌های فعال ایجاد شده</span>
                     <strong className="text-navy text-sm font-black">{faNum(createdForms)} فرم</strong>
                   </div>
                   <div className="bg-bg-neutral p-2.5 rounded-xl text-center">
-                    <span className="text-[0.68rem] text-ink-subtle block font-semibold">سقف مجاز</span>
-                    <strong className="text-navy text-sm font-black">{m.is_owner ? "نامحدود" : `${faNum(maxForms)} فرم`}</strong>
+                    <span className="text-[0.68rem] text-ink-subtle block font-semibold">سقف مجاز فعلی</span>
+                    <strong className="text-navy text-sm font-black">{m.is_owner ? "نامحدود" : `${faNum(m.max_forms ?? 5)} فرم`}</strong>
                   </div>
                   <div className="bg-bg-neutral p-2.5 rounded-xl text-center col-span-2 sm:col-span-1">
-                    <span className="text-[0.68rem] text-ink-subtle block font-semibold">باقیمانده سهمیه</span>
+                    <span className="text-[0.68rem] text-ink-subtle block font-semibold">باقیمانده فرم فعال</span>
                     <strong className={`text-sm font-black ${remainingForms === 0 && !m.is_owner ? "text-magenta-text" : "text-teal-text"}`}>
                       {m.is_owner ? "نامحدود" : `${faNum(remainingForms)} فرم`}
                     </strong>
                   </div>
                 </div>
 
-                <div className="text-[0.7rem] text-ink-subtle font-semibold flex items-center justify-between pt-1 border-t border-ink/5">
-                  <span>سقف ورودی‌های ماهانه:</span>
-                  <strong className="text-navy">{m.is_owner ? "نامحدود" : `${faNum(m.max_responses_per_month ?? 100)} ورودی`}</strong>
-                </div>
-
                 {!m.is_owner && (
-                  <>
-                    <div className="text-[0.7rem] text-ink-subtle font-semibold flex items-center justify-between pt-1">
-                      <span>ورودی‌های مصرف‌شده این ماه:</span>
-                      <strong className={`font-black ${(m.monthly_responses_used ?? 0) >= (m.max_responses_per_month ?? 100) ? "text-magenta-text" : "text-teal-text"}`}>
-                        {faNum(m.monthly_responses_used ?? 0)} از {faNum(m.max_responses_per_month ?? 100)}
-                      </strong>
-                    </div>
-
-                    <div className="text-[0.65rem] text-ink-subtle flex items-center justify-between pt-1">
-                      <span>تاریخ ریست بعدی (۳۰ روزه):</span>
-                      <span className="font-semibold text-navy" dir="ltr">
-                        {m.quota_reset_at ? new Date(m.quota_reset_at).toLocaleDateString("fa-IR") : "—"}
+                  <form onSubmit={handleSaveUserQuotaDirect} className="pt-2 border-t border-navy/10 space-y-3">
+                    <div className="text-xs font-black text-navy flex items-center justify-between">
+                      <span>✏️ ویرایش دستی محدودیت‌های این کاربر:</span>
+                      <span className="text-[0.68rem] text-ink-subtle font-semibold">
+                        ریست بعدی: {m.quota_reset_at ? new Date(m.quota_reset_at).toLocaleDateString("fa-IR") : "چرخه ۳۰ روزه"}
                       </span>
                     </div>
 
-                    {canManage && (
-                      <div className="pt-2 flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => handleResetQuota(m)}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold text-teal-text bg-teal/10 hover:bg-teal/20 transition-colors cursor-pointer border border-teal/20"
-                          title="ریست کردن شمارنده ورودی‌های مصرف‌شده به ۰ و تمدید دوره به ۳۰ روز آینده"
-                        >
-                          <RotateCcw size={13} />
-                          <span>ریست سهمیه ماهانه</span>
-                        </button>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      <div>
+                        <label className="block text-[0.68rem] font-bold text-navy mb-1">
+                          سقف فرم‌های همزمان فعال
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="1000"
+                          dir="ltr"
+                          value={userEditMaxForms}
+                          onChange={(e) => setUserEditMaxForms(e.target.value)}
+                          className="w-full px-2.5 py-1.5 rounded-xl border-2 border-ink/15 text-xs font-black font-mono text-center text-navy focus:border-teal outline-none"
+                          required
+                        />
                       </div>
-                    )}
-                  </>
+
+                      <div>
+                        <label className="block text-[0.68rem] font-bold text-navy mb-1">
+                          سقف ورودی ماهانه
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="100000"
+                          step="10"
+                          dir="ltr"
+                          value={userEditMaxResponses}
+                          onChange={(e) => setUserEditMaxResponses(e.target.value)}
+                          className="w-full px-2.5 py-1.5 rounded-xl border-2 border-ink/15 text-xs font-black font-mono text-center text-navy focus:border-teal outline-none"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[0.68rem] font-bold text-navy mb-1">
+                          ورودی‌های مصرف‌شده
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100000"
+                          dir="ltr"
+                          value={userEditResponsesUsed}
+                          onChange={(e) => setUserEditResponsesUsed(e.target.value)}
+                          className="w-full px-2.5 py-1.5 rounded-xl border-2 border-ink/15 text-xs font-black font-mono text-center text-navy focus:border-teal outline-none"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-navy/5">
+                      <button
+                        type="button"
+                        onClick={() => handleResetQuota(m)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-magenta-text bg-magenta/10 hover:bg-magenta/20 transition-colors border border-magenta/20 cursor-pointer"
+                        title="شمارنده ورودی‌های مصرف‌شده را ۰ کرده و دوره ۳۰ روزه را تازه می‌کند"
+                      >
+                        <RotateCcw size={13} />
+                        <span>ریست سهمیه ماهانه</span>
+                      </button>
+
+                      <Button
+                        type="submit"
+                        variant="teal"
+                        size="sm"
+                        disabled={userEditSaving}
+                        className="text-xs font-black"
+                      >
+                        <Save size={13} className="ml-1" />
+                        {userEditSaving ? "در حال ذخیره..." : "ذخیره تغییرات سهمیه"}
+                      </Button>
+                    </div>
+                  </form>
                 )}
               </div>
 

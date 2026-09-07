@@ -24,6 +24,7 @@ import Managers from "./pages/Admin/Managers";
 import Profile from "./pages/Admin/Profile";
 import SuperAdmin from "./pages/Admin/SuperAdmin";
 import Support from "./pages/Admin/Support";
+import Settings from "./pages/Admin/Settings";
 import AuthGuard from "./components/guards/AuthGuard";
 import { useAuth } from "./context/AuthContext";
 
@@ -128,6 +129,7 @@ export default function App() {
 
               {/* بخش‌های اختصاصی مالک و سوپرادمین */}
               <Route path="managers" element={<AuthGuard ownerOnly={true}><Managers /></AuthGuard>} />
+              <Route path="settings" element={<AuthGuard ownerOnly={true}><Settings /></AuthGuard>} />
               <Route path="sms" element={<AuthGuard ownerOnly={true}><SmsPanel /></AuthGuard>} />
               <Route path="superadmin" element={<AuthGuard ownerOnly={true}><SuperAdmin /></AuthGuard>} />
             </Route>

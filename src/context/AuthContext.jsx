@@ -298,7 +298,7 @@ export function AuthProvider({ children }) {
     return data;
   }
 
-  async function updateUserQuota(userId, { maxForms, maxResponses, plan, canUseTelegram }) {
+  async function updateUserQuota(userId, { maxForms, maxResponses, plan, canUseTelegram, monthlyResponsesUsed }) {
     try {
       await supabase.rpc("set_user_quotas", {
         p_user_id: userId,
@@ -309,12 +309,17 @@ export function AuthProvider({ children }) {
     } catch {}
 
     const updatePayload = {
-      max_forms: maxForms,
-      max_responses_per_month: maxResponses,
-      plan: plan,
+      max_forms: Number(maxForms) || 5,
+      max_responses_per_month: Number(maxResponses) || 100,
     };
+    if (plan !== undefined) {
+      updatePayload.plan = plan;
+    }
     if (typeof canUseTelegram === "boolean") {
       updatePayload.can_use_telegram = canUseTelegram;
+    }
+    if (monthlyResponsesUsed !== undefined && !isNaN(Number(monthlyResponsesUsed))) {
+      updatePayload.monthly_responses_used = Math.max(0, Number(monthlyResponsesUsed));
     }
 
     const { error } = await supabase

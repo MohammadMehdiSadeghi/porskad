@@ -116,16 +116,23 @@ export default function SuperAdmin() {
   const [userLogsLoading, setUserLogsLoading] = useState(false);
   const [userLogsSearch, setUserLogsSearch] = useState("");
 
-  // ─── User Detail Password & Email States ───
+  // ─── User Detail Password, Email & Quota States ───
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [newEmail, setNewEmail] = useState("");
+  const [detailMaxForms, setDetailMaxForms] = useState(5);
+  const [detailMaxResponses, setDetailMaxResponses] = useState(100);
+  const [detailResponsesUsed, setDetailResponsesUsed] = useState(0);
+  const [detailQuotaSaving, setDetailQuotaSaving] = useState(false);
 
   useEffect(() => {
     if (detailModal) {
       setNewEmail(detailModal.email || "");
       setNewPassword("");
       setPasswordVisible(false);
+      setDetailMaxForms(detailModal.max_forms ?? 5);
+      setDetailMaxResponses(detailModal.max_responses_per_month ?? 100);
+      setDetailResponsesUsed(detailModal.monthly_responses_used ?? 0);
     }
   }, [detailModal?.id]);
 
@@ -348,6 +355,67 @@ export default function SuperAdmin() {
       await loadUsers();
     } catch (err) {
       showToast("Failed to reset quota: " + err.message, "error");
+    }
+  }
+
+  async function handleSaveDetailQuota() {
+    if (!detailModal) return;
+    setDetailQuotaSaving(true);
+    try {
+      const maxF = Math.max(1, Number(detailMaxForms) || 1);
+      const maxR = Math.max(1, Number(detailMaxResponses) || 1);
+      const usedR = Math.max(0, Number(detailResponsesUsed) || 0);
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          max_forms: maxF,
+          max_responses_per_month: maxR,
+          monthly_responses_used: usedR,
+        })
+        .eq("id", detailModal.id);
+
+      if (error) throw error;
+
+      showToast(`User quotas updated: ${maxF} forms, ${maxR} responses/month`);
+      setDetailModal((prev) =>
+        prev
+          ? {
+              ...prev,
+              max_forms: maxF,
+              max_responses_per_month: maxR,
+              monthly_responses_used: usedR,
+            }
+          : null
+      );
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === detailModal.id
+            ? {
+                ...u,
+                max_forms: maxF,
+                max_responses_per_month: maxR,
+                monthly_responses_used: usedR,
+              }
+            : u
+        )
+      );
+      setAdmins((prev) =>
+        prev.map((a) =>
+          a.id === detailModal.id
+            ? {
+                ...a,
+                max_forms: maxF,
+                max_responses_per_month: maxR,
+                monthly_responses_used: usedR,
+              }
+            : a
+        )
+      );
+    } catch (err) {
+      showToast("Error updating user quota: " + err.message, "error");
+    } finally {
+      setDetailQuotaSaving(false);
     }
   }
 
@@ -2384,53 +2452,195 @@ export default function SuperAdmin() {
               </div>
             </div>
 
-            {/* Monthly Response Quota & Reset */}
+            {/* User Quota & Limits (Forms & Responses) Editor */}
             <div
               style={{
-                border: "1px solid #e0e0e0",
+                border: "1px solid #0f62fe",
                 padding: "0.75rem",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                background: "#fafafa",
+                background: "#fdfefe",
               }}
             >
-              <div>
-                <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#161616" }}>
-                  Monthly Response Quota
-                </div>
-                <div style={{ fontSize: "0.75rem", color: "#525252" }}>
-                  Consumed: <b>{detailModal.monthly_responses_used ?? 0}</b> /{" "}
-                  {detailModal.max_responses_per_month ?? 100} · Reset:{" "}
-                  {detailModal.quota_reset_at
-                    ? new Date(detailModal.quota_reset_at).toLocaleDateString()
-                    : "30-day cycle"}
-                </div>
-              </div>
-              <button
-                className="sa-btn sa-btn-secondary sa-btn-sm"
+              <div
                 style={{
-                  color: "#da1e28",
-                  borderColor: "#da1e28",
-                  display: "inline-flex",
+                  display: "flex",
                   alignItems: "center",
-                  gap: "0.35rem",
-                }}
-                onClick={async () => {
-                  await handleResetUserQuota(
-                    detailModal.id,
-                    detailModal.full_name || detailModal.email
-                  );
-                  setDetailModal({
-                    ...detailModal,
-                    monthly_responses_used: 0,
-                    quota_reset_at: new Date(Date.now() + 30 * 86400000).toISOString(),
-                  });
+                  justifyContent: "space-between",
+                  marginBottom: "0.5rem",
                 }}
               >
-                <RotateCcw size={13} />
-                Reset Quota
-              </button>
+                <span
+                  style={{
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    color: "#0f62fe",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  ⚡ Active Forms & Monthly Quotas (Manual Override)
+                </span>
+                <span className="sa-tag sa-tag-blue" style={{ fontSize: "0.65rem" }}>
+                  SuperAdmin Limit Control
+                </span>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  gap: "0.5rem",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                <div>
+                  <label
+                    style={{
+                      fontSize: "0.68rem",
+                      fontWeight: 700,
+                      color: "#525252",
+                      display: "block",
+                      marginBottom: "0.2rem",
+                    }}
+                  >
+                    Max Active Forms
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="1000"
+                    value={detailMaxForms}
+                    onChange={(e) => setDetailMaxForms(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "0.4rem 0.5rem",
+                      border: "1px solid #c6c6c6",
+                      fontSize: "0.8rem",
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontWeight: 700,
+                      outline: "none",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      fontSize: "0.68rem",
+                      fontWeight: 700,
+                      color: "#525252",
+                      display: "block",
+                      marginBottom: "0.2rem",
+                    }}
+                  >
+                    Max Monthly Responses
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100000"
+                    step="10"
+                    value={detailMaxResponses}
+                    onChange={(e) => setDetailMaxResponses(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "0.4rem 0.5rem",
+                      border: "1px solid #c6c6c6",
+                      fontSize: "0.8rem",
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontWeight: 700,
+                      outline: "none",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      fontSize: "0.68rem",
+                      fontWeight: 700,
+                      color: "#525252",
+                      display: "block",
+                      marginBottom: "0.2rem",
+                    }}
+                  >
+                    Responses Consumed
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100000"
+                    value={detailResponsesUsed}
+                    onChange={(e) => setDetailResponsesUsed(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "0.4rem 0.5rem",
+                      border: "1px solid #c6c6c6",
+                      fontSize: "0.8rem",
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontWeight: 700,
+                      outline: "none",
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  paddingTop: "0.4rem",
+                  borderTop: "1px solid #e0e0e0",
+                }}
+              >
+                <div style={{ fontSize: "0.68rem", color: "#6f6f6f" }}>
+                  Next reset:{" "}
+                  <b>
+                    {detailModal.quota_reset_at
+                      ? new Date(detailModal.quota_reset_at).toLocaleDateString()
+                      : "30-day cycle"}
+                  </b>
+                </div>
+
+                <div style={{ display: "flex", gap: "0.35rem" }}>
+                  <button
+                    type="button"
+                    className="sa-btn sa-btn-secondary sa-btn-sm"
+                    style={{
+                      color: "#da1e28",
+                      borderColor: "#da1e28",
+                      fontSize: "0.72rem",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.25rem",
+                    }}
+                    onClick={async () => {
+                      await handleResetUserQuota(
+                        detailModal.id,
+                        detailModal.full_name || detailModal.email
+                      );
+                      setDetailResponsesUsed(0);
+                      setDetailModal({
+                        ...detailModal,
+                        monthly_responses_used: 0,
+                        quota_reset_at: new Date(Date.now() + 30 * 86400000).toISOString(),
+                      });
+                    }}
+                  >
+                    <RotateCcw size={12} />
+                    Reset to 0
+                  </button>
+
+                  <button
+                    type="button"
+                    className="sa-btn sa-btn-primary sa-btn-sm"
+                    style={{ fontSize: "0.72rem" }}
+                    disabled={detailQuotaSaving}
+                    onClick={handleSaveDetailQuota}
+                  >
+                    {detailQuotaSaving ? "Saving..." : "Save Quotas ✓"}
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Set New Password Form (Without displaying old passwords) */}

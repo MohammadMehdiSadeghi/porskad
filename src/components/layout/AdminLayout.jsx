@@ -20,6 +20,7 @@ import {
   Phone,
   Menu,
   X,
+  Settings,
 } from "lucide-react";
 import NotificationBell from "../ui/NotificationBell";
 import { faNum } from "../../lib/utils";
@@ -57,6 +58,7 @@ export default function AdminLayout() {
         { to: "/admin/sms", label: "پنل پیامک", icon: MessageSquare, end: false },
         { to: "/admin/telegram", label: "بات تلگرام", icon: Bot, end: false },
         { to: "/admin/managers", label: "مدیریت کاربران", icon: Users, end: false },
+        { to: "/admin/settings", label: "تنظیمات سامانه", icon: Settings, end: false },
         { to: "/admin/support", label: "تیکت‌های پشتیبانی", icon: Headphones, end: false },
         { to: "/admin/superadmin", label: "سوپرادمین (God)", icon: Shield, end: false },
         { to: "/admin/profile", label: "پروفایل", icon: User, end: false },
