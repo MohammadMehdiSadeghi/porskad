@@ -5,6 +5,72 @@ import { useNotifications } from "../../context/NotificationContext";
 import { Bell, BellOff, Volume2, VolumeX, Trash2, CheckCheck, X } from "lucide-react";
 import { faDateTime } from "../../lib/utils";
 
+/**
+ * سوییچ روشن / خاموش پایدار با استایل‌های تضمین‌شده و انیمیشن روان
+ */
+function ToggleSwitch({ checked, onChange, label, activeIcon: ActiveIcon, inactiveIcon: InactiveIcon }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={onChange}
+      className={`flex-1 flex items-center justify-between gap-2 px-3 py-2 rounded-xl border transition-all duration-200 cursor-pointer select-none ${
+        checked
+          ? "bg-teal/10 border-teal/30 hover:bg-teal/15 shadow-2xs"
+          : "bg-ink/5 border-ink/10 hover:bg-ink/10"
+      }`}
+      title={checked ? `کلیک برای خاموش کردن ${label}` : `کلیک برای روشن کردن ${label}`}
+    >
+      <div className="flex items-center gap-1.5 min-w-0">
+        {checked ? (
+          <ActiveIcon size={15} className="text-teal shrink-0" />
+        ) : (
+          <InactiveIcon size={15} className="text-ink/40 shrink-0" />
+        )}
+        <span className="text-xs font-black text-navy truncate">{label}</span>
+      </div>
+
+      <div className="flex items-center gap-1.5 shrink-0">
+        <span
+          className={`text-[0.65rem] font-extrabold px-1.5 py-0.5 rounded-md ${
+            checked ? "bg-teal text-white" : "bg-ink/15 text-ink/60"
+          }`}
+        >
+          {checked ? "روشن" : "خاموش"}
+        </span>
+
+        <div
+          style={{
+            width: "36px",
+            height: "20px",
+            borderRadius: "9999px",
+            backgroundColor: checked ? "#0D9488" : "#D1D5DB",
+            position: "relative",
+            transition: "background-color 200ms ease",
+            display: "inline-flex",
+            alignItems: "center",
+            padding: "2px",
+            direction: "ltr",
+          }}
+        >
+          <div
+            style={{
+              width: "16px",
+              height: "16px",
+              borderRadius: "9999px",
+              backgroundColor: "#FFFFFF",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.35)",
+              transform: checked ? "translateX(16px)" : "translateX(0px)",
+              transition: "transform 200ms cubic-bezier(0.4, 0, 0.2, 1)",
+            }}
+          />
+        </div>
+      </div>
+    </button>
+  );
+}
+
 export default function NotificationBell() {
   const navigate = useNavigate();
   const {
@@ -24,7 +90,7 @@ export default function NotificationBell() {
   const bellBtnRef = useRef(null);
   const panelRef = useRef(null);
 
-  // بستن با کلیک بیرون یا دکمه Escape
+  // بستن با کلیک بیرون یا کلید Escape
   useEffect(() => {
     if (!isOpen) return;
 
@@ -42,7 +108,7 @@ export default function NotificationBell() {
     document.addEventListener("mousedown", onMouseDown);
     window.addEventListener("keydown", onKeyDown);
 
-    // قفل اسکرول بدنه صفحه هنگام باز بودن دراور
+    // قفل اسکرول بدنه صفحه هنگام باز بودن کشو
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -55,7 +121,7 @@ export default function NotificationBell() {
 
   return (
     <>
-      {/* دکمه زنگوله در هدر بالا */}
+      {/* دکمه زنگوله در هدر صفحه */}
       <button
         ref={bellBtnRef}
         type="button"
@@ -76,29 +142,56 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {/* پرتال در document.body برای تضمین ارتفاع ۱۰۰٪ کامل صفحه و عدم گیر افتادن در بلور هدر */}
+      {/* پرتال در document.body برای تضمین ۱۰۰٪ ارتفاع فول بدون وابستگی به هیچ کانتینر والد */}
       {typeof document !== "undefined" &&
         createPortal(
-          <div
-            className={`fixed inset-0 z-[99998] transition-opacity duration-300 ${
-              isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-            }`}
-          >
-            {/* اورلی پس‌زمینه با مات‌کننده ملایم */}
+          <>
+            {/* اورلی تمام صفحه */}
             <div
-              className="absolute inset-0 bg-black/40 backdrop-blur-xs transition-opacity duration-300 cursor-pointer"
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: "100vw",
+                height: "100vh",
+                backgroundColor: "rgba(0, 0, 0, 0.45)",
+                backdropFilter: "blur(3px)",
+                WebkitBackdropFilter: "blur(3px)",
+                zIndex: 99998,
+                transition: "opacity 300ms ease",
+                opacity: isOpen ? 1 : 0,
+                pointerEvents: isOpen ? "auto" : "none",
+              }}
               onClick={() => setIsOpen(false)}
             />
 
-            {/* دراور کشویی نوتیفیکیشن‌ها با ارتفاع ۱۰۰٪ کامل واقعی */}
+            {/* دراور کشویی نوتیفیکیشن با ارتفاع ۱۰۰٪ کامل واقعی */}
             <aside
               ref={panelRef}
               dir="rtl"
-              className={`fixed top-0 bottom-0 right-0 h-screen h-[100dvh] w-[400px] max-w-[92vw] flex flex-col
-                bg-white shadow-2xl border-l border-ink/10 z-[99999]
-                transition-transform duration-300 ease-out ${
-                  isOpen ? "translate-x-0" : "translate-x-full"
-                }`}
+              style={{
+                position: "fixed",
+                top: 0,
+                bottom: 0,
+                right: 0,
+                height: "100dvh",
+                maxHeight: "100dvh",
+                minHeight: "100vh",
+                width: "410px",
+                maxWidth: "92vw",
+                zIndex: 99999,
+                display: "flex",
+                flexDirection: "column",
+                backgroundColor: "#FFFFFF",
+                boxShadow: "-8px 0 35px rgba(0,0,0,0.2)",
+                borderLeft: "1px solid rgba(0,0,0,0.1)",
+                transform: isOpen ? "translateX(0)" : "translateX(100%)",
+                transition: "transform 320ms cubic-bezier(0.16, 1, 0.3, 1)",
+                pointerEvents: isOpen ? "auto" : "none",
+                overflow: "hidden",
+              }}
             >
               {/* هدر پنل اعلان‌ها */}
               <div className="relative px-5 py-4 bg-gradient-to-l from-navy via-navy to-slate-800 shrink-0">
@@ -150,70 +243,40 @@ export default function NotificationBell() {
                 </div>
               </div>
 
-              {/* تنظیمات دریافت: سوییچ‌های روشن/خاموش پایدار و خوش‌دست */}
-              <div className="flex flex-wrap items-center justify-between px-4 py-2.5 border-b border-ink/10 bg-slate-50 shrink-0 select-none gap-2">
-                <div className="text-xs font-black text-navy/70">تنظیمات دریافت:</div>
-                <div className="flex items-center gap-3.5">
-                  {/* سوییچ اعلان */}
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={notifEnabled}
-                    onClick={toggleNotif}
-                    className="flex items-center gap-1.5 p-1 rounded-lg hover:bg-black/5 transition-colors cursor-pointer group"
-                    title={notifEnabled ? "کلیک برای خاموش کردن دریافت اعلان" : "کلیک برای روشن کردن دریافت اعلان"}
-                  >
-                    <div
-                      dir="ltr"
-                      className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out ${
-                        notifEnabled ? "bg-teal" : "bg-ink/25"
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
-                          notifEnabled ? "translate-x-4.5" : "translate-x-0.5"
-                        }`}
-                      />
-                    </div>
-                    <span className="flex items-center gap-1 text-[0.72rem] font-bold text-navy">
-                      {notifEnabled ? <Bell size={12} className="text-teal" /> : <BellOff size={12} className="text-ink/40" />}
-                      <span>اعلان: <strong className={notifEnabled ? "text-teal-text font-black" : "text-ink/40 font-bold"}>{notifEnabled ? "روشن" : "خاموش"}</strong></span>
-                    </span>
-                  </button>
-
-                  {/* سوییچ صدا */}
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={soundEnabled}
-                    onClick={toggleSound}
-                    className="flex items-center gap-1.5 p-1 rounded-lg hover:bg-black/5 transition-colors cursor-pointer group"
-                    title={soundEnabled ? "کلیک برای خاموش کردن صدای اعلان" : "کلیک برای روشن کردن صدای اعلان"}
-                  >
-                    <div
-                      dir="ltr"
-                      className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out ${
-                        soundEnabled ? "bg-teal" : "bg-ink/25"
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
-                          soundEnabled ? "translate-x-4.5" : "translate-x-0.5"
-                        }`}
-                      />
-                    </div>
-                    <span className="flex items-center gap-1 text-[0.72rem] font-bold text-navy">
-                      {soundEnabled ? <Volume2 size={12} className="text-teal" /> : <VolumeX size={12} className="text-ink/40" />}
-                      <span>صدا: <strong className={soundEnabled ? "text-teal-text font-black" : "text-ink/40 font-bold"}>{soundEnabled ? "روشن" : "خاموش"}</strong></span>
-                    </span>
-                  </button>
+              {/* نوار سوییچ‌های روشن/خاموش اعلان و صدا با فیدبک لمسی و تصویری واضح */}
+              <div className="p-3 border-b border-ink/10 bg-slate-50 shrink-0 select-none">
+                <div className="text-[0.68rem] font-bold text-ink/60 mb-2">تنظیمات دریافت اعلان:</div>
+                <div className="flex items-center gap-2">
+                  <ToggleSwitch
+                    checked={notifEnabled}
+                    onChange={toggleNotif}
+                    label="اعلان‌ها"
+                    activeIcon={Bell}
+                    inactiveIcon={BellOff}
+                  />
+                  <ToggleSwitch
+                    checked={soundEnabled}
+                    onChange={toggleSound}
+                    label="صدای زنگ"
+                    activeIcon={Volume2}
+                    inactiveIcon={VolumeX}
+                  />
                 </div>
               </div>
 
-              {/* لیست نوتیفیکیشن‌ها با اسکرول کامل مستقل */}
-              <div className="flex-1 overflow-y-auto p-2 space-y-1.5 scrollbar-thin scrollbar-thumb-ink/10 scrollbar-track-transparent">
+              {/* لیست اعلان‌ها با ارتفاع پویا و اسکرول مستقل */}
+              <div
+                style={{
+                  flex: 1,
+                  overflowY: "auto",
+                  padding: "0.625rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.5rem",
+                }}
+              >
                 {notifications.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-24 px-4 text-center gap-3">
+                  <div className="flex flex-col items-center justify-center py-24 px-4 text-center gap-3 my-auto">
                     <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal/10 to-teal/5 border border-teal/10 flex items-center justify-center">
                       <Bell size={28} className="text-teal/40" />
                     </div>
@@ -299,7 +362,7 @@ export default function NotificationBell() {
                 )}
               </div>
             </aside>
-          </div>,
+          </>,
           document.body
         )}
     </>
