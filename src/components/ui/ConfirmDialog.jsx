@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { faNum } from "../../lib/utils";
+import { CheckCircle2, AlertTriangle, Send } from "lucide-react";
 
 export default function ConfirmDialog({
   open,
@@ -36,15 +37,23 @@ export default function ConfirmDialog({
             <div aria-hidden="true" className="absolute top-2 left-2 w-full h-full bg-male-normal rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
 
             <div className="relative z-10 bg-white border-2 border-male-normal rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-4 sm:p-6">
-              <div className="text-center mb-3 sm:mb-4">
-                <motion.span
-                  className="text-3xl sm:text-4xl mb-1.5 block"
+              <div className="text-center mb-3 sm:mb-4 flex flex-col items-center">
+                <motion.div
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center mb-2"
                   initial={{ rotate: -8 }}
                   animate={{ rotate: [0, -5, 5, -2, 2, 0] }}
                   transition={{ duration: 0.5, delay: 0.1 }}
                 >
-                  {allFilled ? "✅" : "⚠️"}
-                </motion.span>
+                  {allFilled ? (
+                    <div className="w-12 h-12 rounded-xl bg-teal/15 text-teal flex items-center justify-center">
+                      <CheckCircle2 size={32} />
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 rounded-xl bg-female-light text-female-normal flex items-center justify-center">
+                      <AlertTriangle size={32} />
+                    </div>
+                  )}
+                </motion.div>
                 <h2 className="text-sm sm:text-base font-black text-male-normal mb-0.5">
                   {allFilled ? "آماده ارسال هستید؟" : "بعضی فیلدها خالی مانده"}
                 </h2>
@@ -66,7 +75,7 @@ export default function ConfirmDialog({
                         <span className="w-5 h-5 shrink-0 flex items-center justify-center rounded-full bg-female-normal/15 text-female-normal text-[0.6rem] font-black">
                           {faNum(i + 1)}
                         </span>
-                        <span className="font-semibold">{f.title}</span>
+                        <span className="font-semibold">{f.title || f}</span>
                       </li>
                     ))}
                   </ul>
@@ -76,14 +85,14 @@ export default function ConfirmDialog({
               <div className="flex flex-col sm:flex-row gap-2">
                 <div className="relative flex-1">
                   <div aria-hidden="true" className="absolute top-[3px] left-[3px] w-full h-full bg-ink rounded-pill-md [corner-shape:squircle]" />
-                  <button onClick={onCancel} className="relative z-10 w-full bg-white border-2 border-ink text-ink font-extrabold py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] hover:bg-bg-neutral transition-colors duration-200 text-sm sm:text-base">
+                  <button onClick={onCancel} className="relative z-10 w-full bg-white border-2 border-ink text-ink font-extrabold py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] hover:bg-bg-neutral transition-colors duration-200 text-sm sm:text-base cursor-pointer">
                     بازگشت و ویرایش
                   </button>
                 </div>
                 <div className="relative flex-1">
                   <div aria-hidden="true" className="absolute top-[3px] left-[3px] w-full h-full bg-ecosystem-dark rounded-pill-md [corner-shape:squircle]" />
-                  <button onClick={onConfirm} className="relative z-10 w-full bg-ecosystem-normal border-2 border-ecosystem-dark text-white font-extrabold py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] hover:bg-ecosystem-dark transition-colors duration-200 text-sm sm:text-base">
-                    {allFilled ? "ارسال کن ✨" : "ارسال با فیلدهای خالی"}
+                  <button onClick={onConfirm} className="relative z-10 w-full bg-ecosystem-normal border-2 border-ecosystem-dark text-white font-extrabold py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] hover:bg-ecosystem-dark transition-colors duration-200 text-sm sm:text-base cursor-pointer">
+                    {allFilled ? "ارسال نهایی" : "ارسال با فیلدهای خالی"}
                   </button>
                 </div>
               </div>

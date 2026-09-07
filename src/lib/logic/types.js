@@ -71,16 +71,16 @@ export const TYPE_VALUE_FIELD = {
 
 // ─── منبع مقدار شرط (بخش ۸ مستند) ───
 export const CONDITION_SOURCES = {
-  answer:   { label: "پاسخ سوال",   icon: "💬" },
-  variable: { label: "متغیر سفارشی", icon: "🔤" },
-  score:    { label: "امتیاز",       icon: "📊" },
+  answer:   { label: "پاسخ سوال",   icon: "" },
+  variable: { label: "متغیر سفارشی", icon: "" },
+  score:    { label: "امتیاز",       icon: "" },
 };
 
 // ─── اکشن‌های jump (legacy — برای jump_actions روی گزینه‌ها) ───
 export const JUMP_ACTION_TYPES = {
-  jump_to_question: { label: "پرش به سوال", icon: "⏭" },
-  end_form:         { label: "پایان فرم",   icon: "🏁" },
-  redirect_url:     { label: "هدایت به لینک", icon: "🔗" },
+  jump_to_question: { label: "پرش به سوال", icon: "" },
+  end_form:         { label: "پایان فرم",   icon: "" },
+  redirect_url:     { label: "هدایت به لینک", icon: "" },
 };
 
 export const JUMP_ACTION_TYPE_ORDER = [
@@ -91,12 +91,12 @@ export const JUMP_ACTION_TYPE_ORDER = [
 
 // ─── انواع Action ───
 export const ACTION_TYPES = {
-  SHOW_QUESTION:    { label: "نمایش سوال",      icon: "👁" },
-  HIDE_QUESTION:    { label: "مخفی کردن سوال",   icon: "🙈" },
-  GO_TO_QUESTION:   { label: "پرش به سوال",     icon: "⏭" },
-  END_FORM:         { label: "پایان فرم",       icon: "🏁" },
-  REDIRECT_URL:     { label: "هدایت به لینک",   icon: "🔗" },
-  ADD_TO_VARIABLE:  { label: "تغییر متغیر",     icon: "➕" },
+  SHOW_QUESTION:    { label: "نمایش سوال",      icon: "" },
+  HIDE_QUESTION:    { label: "مخفی کردن سوال",   icon: "" },
+  GO_TO_QUESTION:   { label: "پرش به سوال",     icon: "" },
+  END_FORM:         { label: "پایان فرم",       icon: "" },
+  REDIRECT_URL:     { label: "هدایت به لینک",   icon: "" },
+  ADD_TO_VARIABLE:  { label: "تغییر متغیر",     icon: "" },
 };
 
 export const ACTION_TYPE_ORDER = [

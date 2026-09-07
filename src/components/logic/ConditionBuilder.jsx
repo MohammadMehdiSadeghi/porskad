@@ -132,7 +132,7 @@ export default function ConditionBuilder({
         </span>
         {isComplete && (
           <span className="text-[0.55rem] font-bold text-teal bg-teal/10 border border-teal/30 rounded-pill-sm px-1.5 py-0.5">
-            ✓ فعال
+            فعال
           </span>
         )}
         {removable && (
@@ -140,7 +140,7 @@ export default function ConditionBuilder({
             onClick={onDelete}
             className="text-[0.65rem] font-bold text-magenta-text hover:underline mr-auto"
           >
-            ✕ حذف شرط
+            حذف شرط
           </button>
         )}
       </div>

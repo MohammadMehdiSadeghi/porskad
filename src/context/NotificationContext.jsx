@@ -4,10 +4,42 @@ import { useAuth, isPrimaryGodEmail } from "./AuthContext";
 
 const NotificationContext = createContext(null);
 
-// ─── صدای نوتیف مدرن با Web Audio API ───
+let sharedAudioCtx = null;
+
+function getAudioContext() {
+  if (typeof window === "undefined") return null;
+  if (!sharedAudioCtx) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass) {
+      sharedAudioCtx = new AudioContextClass();
+    }
+  }
+  if (sharedAudioCtx && sharedAudioCtx.state === "suspended") {
+    sharedAudioCtx.resume().catch(() => {});
+  }
+  return sharedAudioCtx;
+}
+
+if (typeof window !== "undefined") {
+  const unlockAudio = () => {
+    const ctx = getAudioContext();
+    if (ctx && ctx.state === "suspended") {
+      ctx.resume().catch(() => {});
+    }
+  };
+  window.addEventListener("click", unlockAudio, { once: true, passive: true });
+  window.addEventListener("touchstart", unlockAudio, { once: true, passive: true });
+  window.addEventListener("keydown", unlockAudio, { once: true, passive: true });
+}
+
+// ─── صدای نوتیف مدرن و شفاف با Web Audio API ───
 function createNotifSound() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === "suspended") {
+      ctx.resume().catch(() => {});
+    }
     const now = ctx.currentTime;
 
     // نت اول — فاصله سوم بزرگ
@@ -241,7 +273,7 @@ function NotificationProvider({ children }) {
             newOfflineItems.push({
               id: `resp_${resp.id}`,
               type: "response",
-              title: "پاسخ جدید دریافت شد! 📥",
+              title: "پاسخ جدید دریافت شد",
               message: `کاربری فرم «${formInfo?.title || "فرم"}» را تکمیل کرد`,
               formId: resp.form_id,
               formSlug: formInfo?.slug,
@@ -292,7 +324,7 @@ function NotificationProvider({ children }) {
             newOfflineItems.push({
               id: `ticket_new_${ticket.id}`,
               type: "ticket_new",
-              title: "تیکت پشتیبانی جدید 💬",
+              title: "تیکت پشتیبانی جدید",
               message: `${senderName}: ${ticket.subject || "پیام پشتیبانی"}`,
               link: "/admin/support",
               ticketId: ticket.id,
@@ -317,7 +349,7 @@ function NotificationProvider({ children }) {
             newOfflineItems.push({
               id: `ticket_reply_${ticket.id}_${ticket.replied_at || ticket.updated_at}`,
               type: "ticket_reply",
-              title: "پاسخ جدید به تیکت 🎧",
+              title: "پاسخ جدید به تیکت",
               message: `پاسخ به تیکت «${ticket.subject || ""}» ثبت شد`,
               link: "/admin/support",
               ticketId: ticket.id,
@@ -403,7 +435,7 @@ function NotificationProvider({ children }) {
               addNotificationRef.current?.({
                 id: `resp_${newResp.id}`,
                 type: "response",
-                title: "ثبت پاسخ جدید 📥",
+                title: "ثبت پاسخ جدید",
                 message: `کاربری فرم «${formData?.title || "فرم"}» را تکمیل کرد`,
                 formId: newResp.form_id,
                 formSlug: formData?.slug,
@@ -450,7 +482,7 @@ function NotificationProvider({ children }) {
             addNotificationRef.current?.({
               id: `ticket_new_${newTicket.id}`,
               type: "ticket_new",
-              title: "تیکت پشتیبانی جدید 💬",
+              title: "تیکت پشتیبانی جدید",
               message: `${senderName}: ${newTicket.subject || "پیام پشتیبانی جدید"}`,
               link: "/admin/support",
               ticketId: newTicket.id,
@@ -477,7 +509,7 @@ function NotificationProvider({ children }) {
               addNotificationRef.current?.({
                 id: `ticket_reply_${updatedTicket.id}_${updatedTicket.replied_at || Date.now()}`,
                 type: "ticket_reply",
-                title: "پاسخ جدید به تیکت 🎧",
+                title: "پاسخ جدید به تیکت",
                 message: `پاسخ به تیکت «${updatedTicket.subject || ""}» ثبت شد`,
                 link: "/admin/support",
                 ticketId: updatedTicket.id,
@@ -487,7 +519,7 @@ function NotificationProvider({ children }) {
               addNotificationRef.current?.({
                 id: `ticket_closed_${updatedTicket.id}`,
                 type: "ticket_closed",
-                title: "تیکت پشتیبانی بسته شد 🔒",
+                title: "تیکت پشتیبانی بسته شد",
                 message: `تیکت «${updatedTicket.subject || ""}» توسط پشتیبانی بسته شد`,
                 link: "/admin/support",
                 ticketId: updatedTicket.id,
@@ -502,7 +534,7 @@ function NotificationProvider({ children }) {
               addNotificationRef.current?.({
                 id: `ticket_reopen_${updatedTicket.id}`,
                 type: "ticket_reopen",
-                title: "بازگشایی مجدد تیکت 🔓",
+                title: "بازگشایی مجدد تیکت",
                 message: `تیکت «${updatedTicket.subject || ""}» مجدداً بازگشایی شد`,
                 link: "/admin/support",
                 ticketId: updatedTicket.id,

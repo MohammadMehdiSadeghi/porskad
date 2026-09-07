@@ -107,7 +107,7 @@ export default function Login() {
                 rotate="-rotate-[1deg]"
                 className="w-full justify-center"
               >
-                {busy ? "در حال ورود..." : "ورود به پنل 🚪"}
+                {busy ? "در حال ورود..." : "ورود به پنل"}
               </Button>
 
               <div className="flex items-center justify-between text-[13px] font-bold text-ink-subtle pt-3 border-t border-ink/10">
@@ -116,7 +116,7 @@ export default function Login() {
                   to="/register"
                   className="text-[13px] font-extrabold text-teal hover:underline inline-flex items-center gap-1 bg-teal/10 hover:bg-teal/20 px-3 py-1.5 rounded-pill-sm transition-all"
                 >
-                  ثبت‌نام رایگان 👈
+                  ثبت‌نام رایگان
                 </Link>
               </div>
             </div>

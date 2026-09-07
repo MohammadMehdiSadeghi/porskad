@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import clsx from "../../components/ui/clsx";
 import { faNum, faDuration } from "../../lib/utils";
 import { validateAnswer } from "../../lib/validators";
+import { Star, GitFork, Check } from "lucide-react";
 
 function CheckIcon({ className }) {
   return (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>);
@@ -26,7 +27,7 @@ const STEP_THEMES = [
 ];
 function getStepTheme(i) { return STEP_THEMES[i % STEP_THEMES.length]; }
 
-function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, onEnter, placeholder: customPlaceholder }) {
+function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, onEnter, placeholder: customPlaceholder, question }) {
   const ph = (customPlaceholder && customPlaceholder.trim()) || {
     short_text: "پاسخ خود را بنویسید...",
     long_text: "پاسخ خود را بنویسید...",
@@ -42,6 +43,9 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
   const activeDir = hasValue && isLtrType ? "ltr" : "rtl";
   const activeAlign = hasValue && isLtrType ? "text-left" : "text-right";
 
+  const maxLen = type === "short_text" ? 255 : (question?.validation?.maxLength || question?.max_length || undefined);
+  const currentLength = value ? String(value).length : 0;
+
   const shared = clsx(
     "w-full bg-white border-2 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3",
     "font-semibold text-ink text-sm sm:text-base placeholder:text-ink-subtle/60 placeholder:font-medium",
@@ -51,22 +55,30 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
 
   if (type === "long_text") {
     return (
-      <textarea
-        ref={inputRef}
-        dir="rtl"
-        value={value ?? ""}
-        onChange={(e) => onChange(e.target.value)}
-        rows={3}
-        autoFocus={autoFocus}
-        className={clsx(shared, "resize-y min-h-[6rem] leading-8 text-right")}
-        placeholder={ph}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey && onEnter) {
-            e.preventDefault();
-            onEnter();
-          }
-        }}
-      />
+      <div className="flex flex-col gap-1 w-full">
+        <textarea
+          ref={inputRef}
+          dir="rtl"
+          value={value ?? ""}
+          maxLength={maxLen}
+          onChange={(e) => onChange(e.target.value)}
+          rows={3}
+          autoFocus={autoFocus}
+          className={clsx(shared, "resize-y min-h-[6rem] leading-8 text-right")}
+          placeholder={ph}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey && onEnter) {
+              e.preventDefault();
+              onEnter();
+            }
+          }}
+        />
+        {maxLen && (
+          <div className="flex justify-end text-[0.65rem] font-bold text-ink-subtle/60" dir="ltr">
+            {faNum(currentLength)} / {faNum(maxLen)}
+          </div>
+        )}
+      </div>
     );
   }
   if (type === "telegram_id") {
@@ -96,32 +108,40 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
   }
 
   return (
-    <div className="relative">
-      {type === "phone_ir" && (
-        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ink-subtle">
-            <rect width="14" height="20" x="5" y="2" rx="2" ry="2"/>
-            <path d="M12 18h.01"/>
-          </svg>
-        </span>
+    <div className="flex flex-col gap-1 w-full">
+      <div className="relative">
+        {type === "phone_ir" && (
+          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ink-subtle">
+              <rect width="14" height="20" x="5" y="2" rx="2" ry="2"/>
+              <path d="M12 18h.01"/>
+            </svg>
+          </span>
+        )}
+        <input
+          ref={inputRef}
+          type="text"
+          maxLength={maxLen}
+          inputMode={type === "number" ? "numeric" : type === "phone_ir" ? "tel" : type === "email" ? "email" : "text"}
+          dir={activeDir}
+          value={value ?? ""}
+          autoFocus={autoFocus}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && onEnter) {
+              e.preventDefault();
+              onEnter();
+            }
+          }}
+          className={clsx(shared, activeAlign, type === "phone_ir" && "pr-9")}
+          placeholder={ph}
+        />
+      </div>
+      {type === "short_text" && currentLength > 180 && (
+        <div className="flex justify-end text-[0.65rem] font-bold text-ink-subtle/60" dir="ltr">
+          {faNum(currentLength)} / {faNum(255)}
+        </div>
       )}
-      <input
-        ref={inputRef}
-        type="text"
-        inputMode={type === "number" ? "numeric" : type === "phone_ir" ? "tel" : type === "email" ? "email" : "text"}
-        dir={activeDir}
-        value={value ?? ""}
-        autoFocus={autoFocus}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && onEnter) {
-            e.preventDefault();
-            onEnter();
-          }
-        }}
-        className={clsx(shared, activeAlign, type === "phone_ir" && "pr-9")}
-        placeholder={ph}
-      />
     </div>
   );
 }
@@ -180,7 +200,7 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
             {isMulti ? (
               <span className={clsx("relative z-10 w-7 h-7 sm:w-8 sm:h-8 shrink-0 flex items-center justify-center rounded-md border-2 font-black text-xs sm:text-sm transition-colors duration-200",
                 selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal group-hover:border-ecosystem-normal",
-              )}>{selected ? "✓" : ""}</span>
+              )}>{selected ? <Check size={14} className="stroke-[3]" /> : null}</span>
             ) : (
               <span className={clsx("relative z-10 w-8 h-8 sm:w-9 sm:h-9 shrink-0 flex items-center justify-center rounded-full border-2 font-black text-sm sm:text-base transition-colors duration-200",
                 selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal group-hover:border-ecosystem-normal",
@@ -227,11 +247,26 @@ function RatingStars({ value, onChange }) {
   const [hover, setHover] = useState(null);
   const current = hover ?? Number(value ?? 0);
   return (
-    <div className="flex flex-row-reverse justify-center items-center gap-0.5 sm:gap-1 w-full" dir="ltr">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <button key={n} type="button" className={clsx("star-btn text-xl sm:text-2xl lg:text-3xl cursor-pointer transition-all duration-150 leading-none", n <= current ? "grayscale-0" : "grayscale opacity-40")}
-          onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(null)} onClick={() => onChange(n)} aria-label={`${n} ستاره`}>⭐</button>
-      ))}
+    <div className="flex flex-row-reverse justify-center items-center gap-1.5 sm:gap-2.5 w-full py-2" dir="ltr">
+      {[1, 2, 3, 4, 5].map((n) => {
+        const isFilled = n <= current;
+        return (
+          <button
+            key={n}
+            type="button"
+            className="p-1 cursor-pointer transition-transform duration-150 hover:scale-115"
+            onMouseEnter={() => setHover(n)}
+            onMouseLeave={() => setHover(null)}
+            onClick={() => onChange(n)}
+            aria-label={`${n} ستاره`}
+          >
+            <Star
+              size={28}
+              className={isFilled ? "text-amber-400 fill-amber-400 drop-shadow-xs" : "text-ink/20 fill-transparent"}
+            />
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -273,9 +308,13 @@ export default function QuestionStep({ question, index, total, value, timeSpent,
             <FlagIcon className="opacity-50" /> سوال {faNum(index + 1)} از {faNum(total)}
           </span>
           <div className="flex items-center gap-1 mr-auto">
-            {question.conditions && <span className="text-[0.6rem] sm:text-xs font-bold text-male-normal bg-male-light rounded-pill-sm px-1.5 py-0.5"> 🔀 شرطی</span>}
+            {question.conditions && (
+              <span className="text-[0.6rem] sm:text-xs font-bold text-male-normal bg-male-light rounded-pill-sm px-1.5 py-0.5 flex items-center gap-1">
+                <GitFork size={11} /> شرطی
+              </span>
+            )}
             {question.required
-              ? <span className="text-[0.6rem] sm:text-xs font-bold text-female-normal bg-female-light rounded-pill-sm px-1.5 py-0.5 flex items-center gap-0.5"> اجباری</span>
+              ? <span className="text-[0.6rem] sm:text-xs font-bold text-female-normal bg-female-light rounded-pill-sm px-1.5 py-0.5 flex items-center gap-0.5">اجباری</span>
               : <span className="text-[0.6rem] sm:text-xs font-bold text-ink-subtle bg-bg-neutral rounded-pill-sm px-1.5 py-0.5">اختیاری</span>
             }
           </div>
@@ -289,7 +328,7 @@ export default function QuestionStep({ question, index, total, value, timeSpent,
 
         {/* فیلد پاسخ */}
         {(question.type === "short_text" || question.type === "long_text" || question.type === "email" || question.type === "number" || question.type === "phone_ir" || question.type === "telegram_id") && (
-          <TextInput type={question.type} value={value} error={error} onChange={handleChange} onEnter={handleNext} placeholder={question.placeholder} />
+          <TextInput type={question.type} value={value} error={error} onChange={handleChange} onEnter={handleNext} placeholder={question.placeholder} question={question} />
         )}
         {question.type === "choice" && <ChoiceOptions options={question.options} value={value} onChange={handleChange} onEnter={handleNext} displayMode={question.display_mode || "buttons"} maxSelections={question.max_selections ?? 1} />}
         {question.type === "yes_no" && <YesNoOptions value={value} onChange={handleChange} onEnter={handleNext} />}

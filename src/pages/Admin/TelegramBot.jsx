@@ -153,7 +153,7 @@ export default function TelegramBot() {
           })
           .eq("id", editingConfig.id);
         if (error) throw error;
-        showToast("تنظیمات بروزرسانی شد ✅");
+        showToast("تنظیمات بروزرسانی شد");
       } else {
         const payload = {
           bot_token: configForm.bot_token.trim(),
@@ -167,7 +167,7 @@ export default function TelegramBot() {
           .insert({ ...payload, user_id: user.id });
 
         if (insertErr) throw insertErr;
-        showToast("تنظیمات جدید ذخیره شد ✅");
+        showToast("تنظیمات جدید ذخیره شد");
       }
       setConfigForm({ bot_token: "", chat_id: "", chat_title: "" });
       setEditingConfig(null);
@@ -238,7 +238,7 @@ export default function TelegramBot() {
           showToast("این فرم قبلاً لینک شده", "error");
         } else throw error;
       } else {
-        showToast("لینک اضافه شد ✅");
+        showToast("لینک اضافه شد");
       }
       setSelectedFormId("");
       setSelectedConfigId("");
@@ -337,7 +337,7 @@ export default function TelegramBot() {
                 size="sm"
                 className="whitespace-nowrap shrink-0"
               >
-                ارسال تیکت فعال‌سازی 🚀
+                ارسال تیکت فعال‌سازی
               </Button>
             </div>
           </StickerCard>

@@ -263,7 +263,7 @@ export default function FormFill() {
                     <span className="text-3xl sm:text-4xl rotate-[3deg]"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ecosystem-dark"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
                     <h1 className="text-lg sm:text-xl lg:text-2xl font-black text-male-normal leading-snug">{form.welcome_title}</h1>
                     <p className="font-semibold text-ink-soft leading-7 text-sm sm:text-base max-w-sm">{form.welcome_message}</p>
-                    <div className="mt-1.5 sm:mt-2"><Button variant="teal" size="md" rotate="-rotate-[1deg]" disabled={visibleTotal === 0} onClick={goNext} className="text-sm sm:text-base">{visibleTotal === 0 ? "این فرم هنوز سوالی ندارد" : "بزن بریم! 🚀"}</Button></div>
+                    <div className="mt-1.5 sm:mt-2"><Button variant="teal" size="md" rotate="-rotate-[1deg]" disabled={visibleTotal === 0} onClick={goNext} className="text-sm sm:text-base">{visibleTotal === 0 ? "این فرم هنوز سوالی ندارد" : "شروع پاسخ‌دهی"}</Button></div>
                   </motion.div>
                 )}
 
@@ -277,11 +277,11 @@ export default function FormFill() {
                       </motion.div>
                     )}
                     <div className="mt-2.5 sm:mt-3 flex items-center justify-between gap-2">
-                      <Button variant="ghost" size="sm" onClick={goBack} className="text-xs sm:text-sm">↩ برگشت</Button>
+                      <Button variant="ghost" size="sm" onClick={goBack} className="text-xs sm:text-sm">برگشت</Button>
                       {step < total - 1 ? (
-                        <Button variant="navy" onClick={goNext} disabled={!!currentValidationError} className={`text-xs sm:text-sm ${currentValidationError ? "opacity-50 cursor-not-allowed" : ""}`}>سوال بعدی ←</Button>
+                        <Button variant="navy" onClick={goNext} disabled={!!currentValidationError} className={`text-xs sm:text-sm ${currentValidationError ? "opacity-50 cursor-not-allowed" : ""}`}>سوال بعدی</Button>
                       ) : (
-                        <Button variant="magenta" onClick={openConfirm} disabled={submitting || !!currentValidationError} rotate="rotate-[0.5deg]" className={`text-xs sm:text-sm ${currentValidationError && !submitting ? "opacity-50 cursor-not-allowed" : ""}`}>{submitting ? "در حال ثبت..." : "ثبت نهایی ✨"}</Button>
+                        <Button variant="magenta" onClick={openConfirm} disabled={submitting || !!currentValidationError} rotate="rotate-[0.5deg]" className={`text-xs sm:text-sm ${currentValidationError && !submitting ? "opacity-50 cursor-not-allowed" : ""}`}>{submitting ? "در حال ثبت..." : "ثبت نهایی"}</Button>
                       )}
                     </div>
                     {submitError && <div className="mt-2 self-end rotate-[-0.5deg] bg-white border-2 border-female-normal rounded-pill-md px-2.5 py-1.5 text-xs sm:text-sm font-bold text-female-normal">{submitError}</div>}

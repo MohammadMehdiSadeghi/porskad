@@ -134,9 +134,14 @@ export function validateAnswer(question, value) {
       return Number.isInteger(n) && n >= 1 && n <= 5 ? null : "امتیاز بین ۱ تا ۵ انتخاب کن.";
     }
     case "short_text":
-      return String(value).trim().length > 200 ? "جواب خیلی طولانیه؛ کوتاه‌تر بنویس." : null;
-    case "long_text":
-      return String(value).trim().length > 3000 ? "جواب خیلی طولانیه؛ کوتاه‌تر بنویس." : null;
+      return String(value).trim().length > 255 ? "حداکثر ۲۵۵ کاراکتر مجاز است." : null;
+    case "long_text": {
+      const maxL = question.validation?.maxLength || question.max_length;
+      if (maxL && String(value).trim().length > maxL) {
+        return `حداکثر ${maxL} کاراکتر مجاز است.`;
+      }
+      return null;
+    }
     case "telegram_id": {
       const s = String(value).trim();
       if (!s.startsWith("@")) return "آیدی تلگرام باید با @ شروع بشه.";

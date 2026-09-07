@@ -2,7 +2,7 @@ import { useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useNotifications } from "../../context/NotificationContext";
-import { Bell, BellOff, Volume2, VolumeX, Trash2, CheckCheck, X } from "lucide-react";
+import { Bell, BellOff, Volume2, VolumeX, Trash2, CheckCheck, X, Inbox, MessageSquare, Headphones, Lock, Unlock } from "lucide-react";
 import { faDateTime } from "../../lib/utils";
 
 /**
@@ -24,9 +24,9 @@ function ToggleSwitch({ checked, onChange, label, activeIcon: ActiveIcon, inacti
     >
       <div className="flex items-center gap-1.5 min-w-0 pointer-events-none">
         {checked ? (
-          <ActiveIcon size={15} className="text-teal shrink-0" />
+          <ActiveIcon size={14} className="text-teal shrink-0" />
         ) : (
-          <InactiveIcon size={15} className="text-ink/40 shrink-0" />
+          <InactiveIcon size={14} className="text-ink/40 shrink-0" />
         )}
         <span className="text-xs font-black text-navy truncate">{label}</span>
       </div>
@@ -42,8 +42,8 @@ function ToggleSwitch({ checked, onChange, label, activeIcon: ActiveIcon, inacti
 
         <div
           style={{
-            width: "36px",
-            height: "20px",
+            width: "34px",
+            height: "18px",
             borderRadius: "9999px",
             backgroundColor: checked ? "#0D9488" : "#D1D5DB",
             position: "relative",
@@ -56,8 +56,8 @@ function ToggleSwitch({ checked, onChange, label, activeIcon: ActiveIcon, inacti
         >
           <div
             style={{
-              width: "16px",
-              height: "16px",
+              width: "14px",
+              height: "14px",
               borderRadius: "9999px",
               backgroundColor: "#FFFFFF",
               boxShadow: "0 1px 3px rgba(0,0,0,0.35)",
@@ -126,17 +126,17 @@ export default function NotificationBell() {
         ref={bellBtnRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 sm:p-2.5 rounded-xl bg-navy/5 hover:bg-navy/10 text-navy border border-navy/10 active:scale-95 transition-all duration-200 group flex items-center justify-center cursor-pointer"
+        className="relative p-2 rounded-xl bg-navy/5 hover:bg-navy/10 text-navy border border-navy/10 active:scale-95 transition-all duration-200 group flex items-center justify-center cursor-pointer"
         title="اعلان‌ها و رویدادها"
         aria-label="اعلان‌ها"
       >
         {notifEnabled ? (
-          <Bell size={19} className="text-navy/70 group-hover:text-navy transition-colors" />
+          <Bell size={16} className="text-navy/80 group-hover:text-navy transition-colors" />
         ) : (
-          <BellOff size={19} className="text-navy/40" />
+          <BellOff size={16} className="text-navy/40" />
         )}
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[19px] h-[19px] bg-gradient-to-br from-rose-500 to-pink-600 text-white text-[0.6rem] font-black rounded-full flex items-center justify-center shadow-md shadow-rose-500/30 animate-pulse px-1">
+          <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] bg-gradient-to-br from-rose-500 to-pink-600 text-white text-[0.58rem] font-black rounded-full flex items-center justify-center shadow-md shadow-rose-500/30 animate-pulse px-1">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -167,11 +167,11 @@ export default function NotificationBell() {
               onClick={() => setIsOpen(false)}
             />
 
-            {/* دراور کشویی نوتیفیکیشن با ارتفاع ۱۰۰٪ کامل واقعی */}
+            {/* دراور کشویی نوتیفیکیشن با ریسپانسیو و اسکرول استاندارد */}
             <aside
               ref={panelRef}
               dir="rtl"
-              className="fixed inset-y-0 right-0 h-full h-screen w-[410px] max-w-[92vw] flex flex-col bg-white shadow-2xl border-l border-black/10 z-[99999] overflow-hidden"
+              className="fixed inset-y-0 right-0 h-full h-screen w-full sm:w-[390px] max-w-full sm:max-w-[90vw] flex flex-col bg-white shadow-2xl border-l border-black/10 z-[99999] overflow-hidden"
               style={{
                 position: "fixed",
                 top: 0,
@@ -180,8 +180,8 @@ export default function NotificationBell() {
                 height: "100dvh",
                 minHeight: "100%",
                 maxHeight: "100dvh",
-                width: "410px",
-                maxWidth: "92vw",
+                width: "min(390px, 100vw)",
+                maxWidth: "100vw",
                 zIndex: 99999,
                 display: "flex",
                 flexDirection: "column",
@@ -189,19 +189,19 @@ export default function NotificationBell() {
                 boxShadow: "-8px 0 35px rgba(0,0,0,0.2)",
                 borderLeft: "1px solid rgba(0,0,0,0.1)",
                 transform: isOpen ? "translateX(0)" : "translateX(100%)",
-                transition: "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), visibility 320ms",
+                transition: "transform 300ms cubic-bezier(0.16, 1, 0.3, 1), visibility 300ms",
                 pointerEvents: isOpen ? "auto" : "none",
                 visibility: isOpen ? "visible" : "hidden",
                 overflow: "hidden",
               }}
             >
               {/* هدر پنل اعلان‌ها */}
-              <div className="relative px-5 py-4 bg-gradient-to-l from-navy via-navy to-slate-800 shrink-0">
+              <div className="relative px-4 sm:px-5 py-3.5 sm:py-4 bg-gradient-to-l from-navy via-navy to-slate-800 shrink-0">
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMS41IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIi8+PC9zdmc+')] opacity-60 pointer-events-none" />
                 <div className="relative flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-8 h-8 rounded-lg bg-teal/20 text-teal flex items-center justify-center border border-teal/30 shrink-0">
-                      <Bell size={16} />
+                      <Bell size={15} />
                     </div>
                     <div className="min-w-0">
                       <span className="text-sm font-black text-white block leading-tight truncate">اعلان‌ها و رویدادها</span>
@@ -245,7 +245,7 @@ export default function NotificationBell() {
                 </div>
               </div>
 
-              {/* نوار سوییچ‌های روشن/خاموش اعلان و صدا با فیدبک لمسی و تصویری واضح */}
+              {/* نوار سوییچ‌های روشن/خاموش اعلان و صدا */}
               <div className="p-3 border-b border-ink/10 bg-slate-50 shrink-0 select-none">
                 <div className="text-[0.68rem] font-bold text-ink/60 mb-2">تنظیمات دریافت اعلان:</div>
                 <div className="flex items-center gap-2">
@@ -278,41 +278,47 @@ export default function NotificationBell() {
                 }}
               >
                 {notifications.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-24 px-4 text-center gap-3 my-auto">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal/10 to-teal/5 border border-teal/10 flex items-center justify-center">
-                      <Bell size={28} className="text-teal/40" />
+                  <div className="flex flex-col items-center justify-center py-20 px-4 text-center gap-3 my-auto">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal/10 to-teal/5 border border-teal/10 flex items-center justify-center">
+                      <Bell size={24} className="text-teal/40" />
                     </div>
                     <p className="text-sm font-black text-navy/70">اعلانی وجود ندارد</p>
                     <p className="text-xs text-ink/50 leading-relaxed max-w-xs">
-                      به محض اینکه پاسخی برای فرم‌های شما ثبت شود یا پیام پشتیبانی دریافت کنید، به صورت زنده اینجا نمایش داده خواهد شد.
+                      به محض اینکه پاسخی برای فرم‌های شما ثبت شود یا پیام پشتیبانی دریافت کنید، اینجا نمایش داده خواهد شد.
                     </p>
                   </div>
                 ) : (
                   notifications.map((n) => {
                     let badgeLabel = "رویداد";
                     let badgeClass = "bg-ink/5 text-ink/60";
-                    let icon = "🔔";
+                    let IconComponent = Bell;
+                    let iconColorClass = "text-navy/70";
 
                     if (n.type === "response") {
                       badgeLabel = "ثبت فرم";
                       badgeClass = "bg-teal/15 text-teal border border-teal/20";
-                      icon = "📥";
+                      IconComponent = Inbox;
+                      iconColorClass = "text-teal";
                     } else if (n.type === "ticket_new") {
                       badgeLabel = "تیکت جدید";
                       badgeClass = "bg-sky-500/15 text-sky-700 border border-sky-500/20";
-                      icon = "💬";
+                      IconComponent = MessageSquare;
+                      iconColorClass = "text-sky-600";
                     } else if (n.type === "ticket_reply") {
                       badgeLabel = "پاسخ پشتیبانی";
                       badgeClass = "bg-emerald-500/15 text-emerald-700 border border-emerald-500/20";
-                      icon = "🎧";
+                      IconComponent = Headphones;
+                      iconColorClass = "text-emerald-600";
                     } else if (n.type === "ticket_closed") {
                       badgeLabel = "تیکت بسته شد";
                       badgeClass = "bg-amber-500/15 text-amber-700 border border-amber-500/20";
-                      icon = "🔒";
+                      IconComponent = Lock;
+                      iconColorClass = "text-amber-600";
                     } else if (n.type === "ticket_reopen") {
                       badgeLabel = "بازگشایی تیکت";
                       badgeClass = "bg-purple-500/15 text-purple-700 border border-purple-500/20";
-                      icon = "🔓";
+                      IconComponent = Unlock;
+                      iconColorClass = "text-purple-600";
                     }
 
                     return (
@@ -332,11 +338,11 @@ export default function NotificationBell() {
                         }`}
                       >
                         <div
-                          className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-lg shadow-2xs ${
+                          className={`shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shadow-2xs ${
                             n.read ? "bg-ink/5" : "bg-gradient-to-br from-teal/20 to-teal/10 border border-teal/20"
                           }`}
                         >
-                          {icon}
+                          <IconComponent size={16} className={iconColorClass} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-1.5 mb-0.5">

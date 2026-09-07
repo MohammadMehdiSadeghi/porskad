@@ -33,7 +33,7 @@ export const QUESTION_TYPES = {
   },
   choice: {
     label: "چندگزینه‌ای",
-    icon: "☐",
+    icon: "[]",
     color: "orange",
     hint: "حداقل ۲ گزینه، انتخاب ۱ تا N گزینه",
     hasOptions: true,
@@ -67,7 +67,7 @@ export const QUESTION_TYPES = {
   },
   rating: {
     label: "ستاره امتیاز",
-    icon: "★",
+    icon: "*",
     color: "orange",
     hint: "امتیاز ۱ تا ۵ ستاره",
     hasOptions: false,

@@ -5,6 +5,7 @@ import { ToastProvider } from "./components/ui/Toast";
 import { NotificationProvider } from "./context/NotificationContext";
 import SetupNotice from "./components/ui/SetupNotice";
 import { isSupabaseConfigured } from "./lib/supabaseClient";
+import { AlertTriangle } from "lucide-react";
 
 import FormFill from "./pages/Form";
 import EmbedForm from "./pages/Embed";
@@ -59,7 +60,9 @@ class ErrorBoundary extends React.Component {
           <div className="relative w-full max-w-md rotate-[0.5deg]">
             <div aria-hidden="true" className="absolute top-2 left-2 w-full h-full bg-navy rounded-[1.5rem] [corner-shape:squircle]" />
             <div className="relative z-10 bg-white border-2 border-navy rounded-[1.5rem] [corner-shape:squircle] p-8 text-center">
-              <div className="text-4xl mb-4">⚠️</div>
+              <div className="flex justify-center mb-4 text-amber-500">
+                <AlertTriangle size={44} />
+              </div>
               <h1 className="text-xl font-black text-navy mb-2">خطا در بارگذاری</h1>
               <p className="text-sm text-ink/50 mb-4">
                 یک خطا رخ داد. لطفاً صفحه را رفرش کنید.

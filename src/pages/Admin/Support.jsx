@@ -33,6 +33,9 @@ import {
   X,
   Layers,
   Trash2,
+  Crown,
+  AlertTriangle,
+  Edit3,
 } from "lucide-react";
 
 export default function Support() {
@@ -254,7 +257,7 @@ export default function Support() {
         .eq("id", ticket.id);
 
       if (error) throw error;
-      push(nextStatus === "closed" ? "تیکت بسته شد 🔒" : "تیکت مجدداً بازگشایی شد 🔓", "success");
+      push(nextStatus === "closed" ? "تیکت بسته شد" : "تیکت مجدداً بازگشایی شد", "success");
     } catch (err) {
       console.error("Status update error:", err);
       push("خطا در تغییر وضعیت تیکت: " + err.message, "error");
@@ -285,9 +288,9 @@ export default function Support() {
         .eq("id", ticket.id);
 
       if (error) console.warn("Supabase archive error, local used:", error);
-      push(nextArchived ? "تیکت به آرشیو منتقل شد 📦" : "تیکت از آرشیو خارج شد 📤", "success");
+      push(nextArchived ? "تیکت به آرشیو منتقل شد" : "تیکت از آرشیو خارج شد", "success");
     } catch {
-      push(nextArchived ? "تیکت به آرشیو منتقل شد 📦" : "تیکت از آرشیو خارج شد 📤", "success");
+      push(nextArchived ? "تیکت به آرشیو منتقل شد" : "تیکت از آرشیو خارج شد", "success");
     }
   }
 
@@ -313,9 +316,9 @@ export default function Support() {
         .eq("id", ticket.id);
 
       if (error) console.warn("Supabase user archive error, local used:", error);
-      push(nextArchived ? "تیکت به آرشیو شما منتقل شد 📦" : "تیکت از آرشیو شما خارج شد 📤", "success");
+      push(nextArchived ? "تیکت به آرشیو شما منتقل شد" : "تیکت از آرشیو شما خارج شد", "success");
     } catch {
-      push(nextArchived ? "تیکت به آرشیو شما منتقل شد 📦" : "تیکت از آرشیو شما خارج شد 📤", "success");
+      push(nextArchived ? "تیکت به آرشیو شما منتقل شد" : "تیکت از آرشیو شما خارج شد", "success");
     }
   }
 
@@ -336,7 +339,7 @@ export default function Support() {
         .eq("id", target.id);
 
       if (error) throw error;
-      push("تیکت با موفقیت حذف شد 🗑️", "success");
+      push("تیکت با موفقیت حذف شد", "success");
     } catch (err) {
       console.error("Delete ticket error:", err);
       push("خطا در حذف تیکت: " + err.message, "error");
@@ -353,7 +356,7 @@ export default function Support() {
 
     const followUp = reopenMessage.trim();
     const updatedMessage = followUp
-      ? `${reopenModalTicket.message}\n\n─── 🔄 پیام تکمیلی کاربر (${new Date().toLocaleDateString("fa-IR")}) ───\n${followUp}`
+      ? `${reopenModalTicket.message}\n\n─── پیام تکمیلی کاربر (${new Date().toLocaleDateString("fa-IR")}) ───\n${followUp}`
       : reopenModalTicket.message;
 
     setReopening(true);
@@ -369,7 +372,7 @@ export default function Support() {
 
       if (error) throw error;
 
-      push("تیکت شما مجدداً بازگشایی شد و به صف پاسخگویی رفت 🔓", "success");
+      push("تیکت شما مجدداً بازگشایی شد و به صف پاسخگویی رفت", "success");
       setReopenModalTicket(null);
       setReopenMessage("");
       loadTickets();
@@ -692,7 +695,7 @@ export default function Support() {
             }`}
           >
             <Archive size={12} />
-            آرشیو شده‌ها 📦 ({faNum(userCounts.archived)})
+            آرشیو شده‌ها ({faNum(userCounts.archived)})
           </button>
         </div>
       )}
@@ -751,8 +754,9 @@ export default function Support() {
                             {group.profile.full_name || "کاربر بدون نام"}
                           </span>
                           {group.profile.is_owner && (
-                            <span className="text-[0.65rem] font-bold bg-amber-100 text-amber-800 rounded-pill-sm px-2 py-0.5 shrink-0">
-                              مدیر کل 👑
+                            <span className="text-[0.65rem] font-bold bg-amber-100 text-amber-800 rounded-pill-sm px-2 py-0.5 shrink-0 flex items-center gap-1">
+                              <Crown size={10} />
+                              <span>مدیر کل</span>
                             </span>
                           )}
                         </div>
@@ -842,13 +846,13 @@ export default function Support() {
                                       }
                                     >
                                       {isClosed
-                                        ? "بسته شده 🔒"
+                                        ? "بسته شده"
                                         : t.status === "open"
                                         ? "در انتظار پاسخ"
                                         : "پاسخ داده شد"}
                                     </Badge>
                                     {isArchived && (
-                                      <Badge color="purple">آرشیو شده 📦</Badge>
+                                      <Badge color="purple">آرشیو شده</Badge>
                                     )}
                                   </div>
                                 </div>
@@ -943,7 +947,8 @@ export default function Support() {
                                     setCloseOnReply(isClosed);
                                   }}
                                 >
-                                  {t.admin_reply ? "ویرایش پاسخ ✍️" : "پاسخ به تیکت ✍️"}
+                                  <Edit3 size={13} className="ml-1" />
+                                  {t.admin_reply ? "ویرایش پاسخ" : "پاسخ به تیکت"}
                                 </Button>
                               </div>
                             </div>
@@ -1010,12 +1015,12 @@ export default function Support() {
                             }
                           >
                             {isClosed
-                              ? "بسته شده 🔒"
+                              ? "بسته شده"
                               : t.status === "open"
                               ? "در انتظار پاسخ"
                               : "پاسخ داده شد"}
                           </Badge>
-                          {isArchived && <Badge color="purple">آرشیو شده 📦</Badge>}
+                          {isArchived && <Badge color="purple">آرشیو شده</Badge>}
                         </div>
                         <span className="text-xs font-semibold text-ink-subtle" title={faDateTime(t.created_at)}>
                           {faRelative(t.created_at)}
@@ -1062,7 +1067,7 @@ export default function Support() {
                             }}
                             className="text-xs shrink-0"
                           >
-                            <Unlock size={13} className="ml-1" /> بازگشایی و ادامه گفتگو 🔓
+                            <Unlock size={13} className="ml-1" /> بازگشایی و ادامه گفتگو
                           </Button>
                         </div>
                       )}
@@ -1089,7 +1094,7 @@ export default function Support() {
                             </>
                           ) : (
                             <>
-                              <Archive size={13} className="ml-1" /> انتقال به آرشیو 📦
+                              <Archive size={13} className="ml-1" /> انتقال به آرشیو
                             </>
                           )}
                         </Button>
@@ -1149,7 +1154,8 @@ export default function Support() {
               size="sm"
               disabled={submitting}
             >
-              {submitting ? "در حال ارسال..." : "ارسال پیام 🚀"}
+              <Send size={13} className="ml-1" />
+              {submitting ? "در حال ارسال..." : "ارسال پیام"}
             </Button>
           </div>
         </form>
@@ -1209,7 +1215,8 @@ export default function Support() {
               size="sm"
               disabled={replying}
             >
-              {replying ? "در حال ثبت..." : "ارسال پاسخ ✅"}
+              <CheckCircle2 size={13} className="ml-1" />
+              {replying ? "در حال ثبت..." : "ارسال پاسخ"}
             </Button>
           </div>
         </form>
@@ -1225,8 +1232,9 @@ export default function Support() {
           <p className="text-sm font-semibold text-ink leading-relaxed">
             آیا از حذف کامل تیکت <strong>«{deletingTicket?.subject}»</strong> اطمینان دارید؟
           </p>
-          <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-800 leading-relaxed">
-            ⚠️ این عملیات غیرقابل بازگشت است و تمامی پیام‌ها و پاسخ‌های این تیکت به طور کامل پاک خواهند شد.
+          <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-800 leading-relaxed flex items-center gap-1.5">
+            <AlertTriangle size={15} className="shrink-0 text-rose-600" />
+            <span>این عملیات غیرقابل بازگشت است و تمامی پیام‌ها و پاسخ‌های این تیکت به طور کامل پاک خواهند شد.</span>
           </div>
           <div className="flex justify-end gap-2 pt-2 border-t border-ink/10">
             <Button
@@ -1244,7 +1252,7 @@ export default function Support() {
               disabled={deleting}
               className="bg-rose-600 hover:bg-rose-700 text-white"
             >
-              {deleting ? "در حال حذف..." : "بله، حذف شود 🗑️"}
+              {deleting ? "در حال حذف..." : "بله، حذف شود"}
             </Button>
           </div>
         </div>
@@ -1289,7 +1297,8 @@ export default function Support() {
               size="sm"
               disabled={reopening}
             >
-              {reopening ? "در حال بازگشایی..." : "بازگشایی و ارسال پیام 🚀"}
+              <Send size={13} className="ml-1" />
+              {reopening ? "در حال بازگشایی..." : "بازگشایی و ارسال پیام"}
             </Button>
           </div>
         </form>

@@ -8,6 +8,7 @@ import { useState } from "react";
 import { faNum } from "../../lib/utils";
 import { QUESTION_TYPES } from "../../lib/questionTypes";
 import { QUESTION_TYPE_ICONS } from "../../lib/questionIcons";
+import { Star, RotateCcw } from "lucide-react";
 
 const PLACEHOLDER_DEFAULTS = {
   short_text: "پاسخ خود را بنویسید...",
@@ -82,9 +83,9 @@ function MiniYesNo() {
 
 function MiniRating() {
   return (
-    <div className="flex justify-center gap-0.5">
+    <div className="flex justify-center gap-1 py-0.5">
       {[1, 2, 3, 4, 5].map((n) => (
-        <span key={n} className="text-sm text-ink/20">⭐</span>
+        <Star key={n} size={12} className="text-amber-400 fill-amber-400" />
       ))}
     </div>
   );
@@ -141,7 +142,7 @@ function RegistrationPreview({ form, questions }) {
       {/* دکمه ارسال */}
       {questions.length > 0 && (
         <div className="bg-teal text-white text-[0.55rem] font-bold text-center py-1.5 rounded-lg mt-1">
-          ارسال ✨
+          ارسال پاسخ
         </div>
       )}
     </div>
@@ -158,7 +159,6 @@ function StepByStepPreview({ form, questions }) {
       {/* صفحه خوش‌آمد */}
       {step === -1 && (
         <div className="flex flex-col items-center text-center gap-2 py-4">
-          <span className="text-2xl"> </span>
           <h2 className="text-sm font-black text-navy">{form?.welcome_title || "سلام!"}</h2>
           <p className="text-[0.65rem] text-ink/50 leading-5 max-w-[200px]">
             {form?.welcome_message || "ممنون که وقت گذاشتی."}
@@ -185,7 +185,7 @@ function StepByStepPreview({ form, questions }) {
               </button>
             ) : (
               <button onClick={() => setStep(total)} className="text-[0.55rem] font-bold text-magenta-text hover:text-magenta">
-                پایان ✨
+                ثبت نهایی
               </button>
             )}
           </div>
@@ -195,13 +195,12 @@ function StepByStepPreview({ form, questions }) {
       {/* صفحه خروج */}
       {step >= total && total > 0 && (
         <div className="flex flex-col items-center text-center gap-2 py-4">
-          <span className="text-3xl"> </span>
           <h2 className="text-sm font-black text-navy">{form?.exit_title || "تمام شد!"}</h2>
           <p className="text-[0.65rem] text-ink/50 leading-5 max-w-[200px]">
             {form?.exit_message || "ممنون از پاسخ شما."}
           </p>
-          <button onClick={() => setStep(-1)} className="mt-2 text-[0.55rem] font-bold text-ink/30 hover:text-ink/50">
-            ↺ شروع مجدد
+          <button onClick={() => setStep(-1)} className="mt-2 text-[0.55rem] font-bold text-ink/40 hover:text-ink/60 flex items-center gap-1">
+            <RotateCcw size={10} /> شروع مجدد
           </button>
         </div>
       )}

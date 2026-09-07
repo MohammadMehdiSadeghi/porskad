@@ -10,7 +10,7 @@ import Modal from "../../../components/ui/Modal";
 import { useToast } from "../../../components/ui/Toast";
 import { useAuth } from "../../../context/AuthContext";
 import { copyToClipboard, randomSlug, faNum } from "../../../lib/utils";
-import { FileText, Plus, AlignLeft, ClipboardList, Undo2, Trash2, User, Calendar, Link2, Copy, ExternalLink, Settings, BarChart3, Share2, Edit, Archive, ArchiveRestore } from "lucide-react";
+import { FileText, Plus, AlignLeft, ClipboardList, Undo2, Trash2, User, Calendar, Link2, Copy, ExternalLink, Settings, BarChart3, Share2, Edit, Archive, ArchiveRestore, CheckCircle2, AlertTriangle, X } from "lucide-react";
 import SEO from "../../../components/ui/SEO";
 
 const FORM_TYPES = [
@@ -84,7 +84,7 @@ function UndoToast({ message, onUndo, onDismiss, duration = 6000 }) {
           className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-white/35 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
           aria-label="بستن اعلان"
         >
-          ✕
+          <X size={14} />
         </button>
 
         {/* نوار پیشرفت */}
@@ -528,7 +528,7 @@ export default function FormsList() {
             </div>
             {activeFormsCount >= maxForms && (
               <Button as={Link} to="/admin/support" variant="teal" size="sm">
-                افزایش سهمیه 🚀
+                افزایش سهمیه
               </Button>
             )}
           </div>
@@ -746,9 +746,9 @@ export default function FormsList() {
                 {/* آمار و زمان */}
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-ink-subtle pt-2 border-t border-navy/5">
                   <div className="flex items-center gap-2">
-                    <span>📊 {faNum(c.total)} پاسخ دریافتی</span>
+                    <span className="flex items-center gap-1"><BarChart3 size={12} className="text-teal" /> {faNum(c.total)} پاسخ دریافتی</span>
                     <span>·</span>
-                    <span>✓ {faNum(c.complete)} تکمیل</span>
+                    <span className="flex items-center gap-1"><CheckCircle2 size={12} className="text-teal" /> {faNum(c.complete)} تکمیل</span>
                   </div>
                   <div className="flex items-center gap-1 text-[0.7rem]">
                     <Calendar size={12} className="text-teal" />
@@ -974,7 +974,7 @@ export default function FormsList() {
         title="سقف ساخت فرم تکمیل شده است"
       >
         <div className="flex flex-col gap-4 text-center items-center py-2">
-          <span className="text-4xl">⚠️</span>
+          <AlertTriangle size={44} className="text-amber-500" />
           <h3 className="text-base font-black text-navy">
             شما به سقف مجاز فرم‌های فعال ({faNum(maxForms)} فرم) رسیده‌اید
           </h3>
@@ -989,7 +989,7 @@ export default function FormsList() {
               size="sm"
               onClick={() => setShowQuotaModal(false)}
             >
-              پیام به پشتیبانی برای ارتقا 🚀
+              پیام به پشتیبانی برای ارتقا
             </Button>
             <Button
               variant="ghost"

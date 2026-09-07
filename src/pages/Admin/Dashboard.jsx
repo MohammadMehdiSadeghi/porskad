@@ -184,7 +184,7 @@ export default function Dashboard() {
                       <tr key={r.id} className={`${i % 2 ? "bg-bg-lavender/60" : ""} border-b border-ink/5 last:border-0`}>
                         <td className="px-4 py-3 font-bold text-ink">{formTitleById[r.form_id] ?? "—"}</td>
                         <td className="px-4 py-3 font-semibold text-ink-subtle">{faRelative(r.submitted_at ?? r.created_at)}</td>
-                        <td className="px-4 py-3">{r.is_complete ? <Badge color="green">✓ کامل</Badge> : <Badge color="gray">ناقص</Badge>}</td>
+                        <td className="px-4 py-3">{r.is_complete ? <Badge color="green">کامل</Badge> : <Badge color="gray">ناقص</Badge>}</td>
                         <td className="px-4 py-3 font-semibold text-ink-subtle">{r.duration_seconds ? faDuration(r.duration_seconds) : "—"}</td>
                         <td className="px-4 py-3 font-semibold text-ink-subtle">{DEVICE_FA[r.device] ?? r.device ?? "—"}</td>
                       </tr>
@@ -213,7 +213,7 @@ export default function Dashboard() {
                           {faRelative(r.submitted_at ?? r.created_at)}
                         </td>
                         <td className="px-2 py-2 text-center">
-                          {r.is_complete ? <Badge color="green">✓</Badge> : <Badge color="gray">ناقص</Badge>}
+                          {r.is_complete ? <Badge color="green">کامل</Badge> : <Badge color="gray">ناقص</Badge>}
                         </td>
                       </tr>
                     ))}

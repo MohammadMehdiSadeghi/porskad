@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import StickerCard from "./StickerCard";
+import { X } from "lucide-react";
 
 export default function Modal({ open, onClose, title, children, wide = false, closable = true }) {
   useEffect(() => {
@@ -35,10 +36,10 @@ export default function Modal({ open, onClose, title, children, wide = false, cl
                 {closable && onClose && (
                   <button
                     onClick={onClose}
-                    className="w-9 h-9 flex items-center justify-center rounded-pill-md border-2 border-ink bg-white text-ink font-black hover:bg-bg-neutral transition-colors"
+                    className="w-9 h-9 flex items-center justify-center rounded-pill-md border-2 border-ink bg-white text-ink font-black hover:bg-bg-neutral transition-colors cursor-pointer"
                     aria-label="بستن"
                   >
-                    ✕
+                    <X size={16} />
                   </button>
                 )}
               </div>

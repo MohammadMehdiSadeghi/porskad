@@ -9,6 +9,7 @@ import StickerCard from "../../components/ui/StickerCard";
 import Badge from "../../components/ui/Badge";
 import SEO from "../../components/ui/SEO";
 import { faNum } from "../../lib/utils";
+import { Crown, Lock, Key } from "lucide-react";
 
 const PERMISSION_LABELS = {
   create_form: "ایجاد فرم",
@@ -27,7 +28,7 @@ const ROLE_LABELS = {
 };
 
 const OWNER_BADGE = {
-  label: "👑 صاحب اصلی سایت",
+  label: "صاحب اصلی سایت",
   color: "bg-amber-100 text-amber-700 border-amber-200",
 };
 
@@ -121,7 +122,7 @@ export default function Profile() {
     <div className="flex flex-col gap-6 max-w-2xl">
       {profile?.is_owner && (
         <div className="flex items-center gap-3 bg-amber-50 border-2 border-amber-200 rounded-xl px-4 py-3">
-          <span className="text-2xl">👑</span>
+          <Crown size={24} className="text-amber-600 shrink-0" />
           <div>
             <p className="text-sm font-bold text-amber-800">حساب صاحب اصلی سایت</p>
             <p className="text-xs text-amber-600">این حساب غیرقابل حذف و غیرفعال شدن است و به تمام بخش‌های سایت دسترسی کامل دارد.</p>
@@ -184,39 +185,28 @@ export default function Profile() {
             <div>
               <span className="text-sm font-bold text-ink-subtle block mb-2">مجوزها:</span>
               <div className="flex flex-wrap gap-1.5">
-                {permissions.map((p) => (
-                  <span
-                    key={p}
-                    className="text-xs font-bold text-teal-text bg-bg-mint border border-teal/20 rounded-pill-sm px-2 py-0.5"
-                  >
-                    {PERMISSION_LABELS[p] ?? p}
-                  </span>
-                ))}
-                {permissions.length === 0 && (
-                  <span className="text-xs text-ink/40">هیچ مجوزی ندارید</span>
+                {profile?.is_owner ? (
+                  <Badge color="amber" rotate="0" className="flex items-center gap-1">
+                    <Crown size={12} />
+                    <span>دسترسی کامل (صاحب اصلی)</span>
+                  </Badge>
+                ) : permissions && permissions.length > 0 ? (
+                  permissions.map((p) => (
+                    <span
+                      key={p}
+                      className="text-xs font-semibold bg-bg-neutral text-ink px-2.5 py-1 rounded-full border border-ink/10"
+                    >
+                      {PERMISSION_LABELS[p] ?? p}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-xs text-ink-subtle">مجوزی ثبت نشده</span>
                 )}
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-xs text-ink/40 pt-2 border-t border-ink/10">
-              <span>عضویت از</span>
-              <span>{new Date(profile?.created_at ?? Date.now()).toLocaleDateString("fa-IR")}</span>
-            </div>
-          </div>
-        </StickerCard>
-      </div>
-
-      {/* سهمیه و دسترسی‌های حساب */}
-      <div className="rotate-[0.3deg]">
-        <StickerCard theme="teal" radius="rounded-tl-[1.75rem] rounded-br-[1.75rem] rounded-tr-none rounded-bl-none">
-          <div className="p-5 sm:p-6 flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-extrabold text-navy flex items-center gap-2">
-                سهمیه و دسترسی‌های حساب
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {/* سهمیه و وضعیت امکانات */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               <div className="bg-white/80 border border-ink/10 rounded-xl p-3 text-center">
                 <span className="text-xs font-semibold text-ink-subtle block">سقف فرم‌های فعال</span>
                 <span className="text-base font-black text-navy mt-1 block">
@@ -232,7 +222,7 @@ export default function Profile() {
               <div className="bg-white/80 border border-ink/10 rounded-xl p-3 text-center col-span-2 sm:col-span-1">
                 <span className="text-xs font-semibold text-ink-subtle block">ارسال به تلگرام</span>
                 <span className="text-base font-black text-teal mt-1 block">
-                  {profile?.is_owner || profile?.can_use_telegram === true ? "✓ فعال" : "✕ غیرفعال"}
+                  {profile?.is_owner || profile?.can_use_telegram === true ? "فعال" : "غیرفعال"}
                 </span>
               </div>
             </div>
@@ -241,7 +231,7 @@ export default function Profile() {
               <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-ink/10">
                 <span className="text-xs font-semibold text-ink-subtle">نیاز به ظرفیت بیشتر دارید؟</span>
                 <Button as={Link} to="/admin/support" variant="teal" size="sm">
-                  درخواست افزایش سهمیه 🚀
+                  درخواست افزایش سهمیه
                 </Button>
               </div>
             )}
@@ -304,7 +294,7 @@ export default function Profile() {
         <StickerCard theme="magenta" radius="rounded-tl-[1.75rem] rounded-br-[1.75rem] rounded-tr-none rounded-bl-none">
           <div className="p-5 sm:p-6 flex flex-col gap-4">
             <h2 className="text-sm font-extrabold text-navy flex items-center gap-2">
-              🔒 تغییر رمز عبور
+              <Lock size={15} /> تغییر رمز عبور
             </h2>
 
             <label className="flex flex-col gap-1.5">
@@ -362,7 +352,8 @@ export default function Profile() {
                 onClick={handleChangePassword}
                 disabled={savingPassword}
               >
-                {savingPassword ? "در حال تغییر..." : "🔐 تغییر رمز"}
+                <Key size={13} className="ml-1" />
+                {savingPassword ? "در حال تغییر..." : "تغییر رمز"}
               </Button>
             </div>
           </div>

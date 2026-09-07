@@ -51,6 +51,7 @@ import {
   Layers,
   AlertTriangle,
   Filter,
+  X,
 } from "lucide-react";
 import SEO from "../../../components/ui/SEO";
 import {
@@ -118,7 +119,7 @@ function CorrectnessBadge({ question, answer }) {
     <span className={`inline-flex items-center gap-1 text-[0.6rem] font-black px-2 py-0.5 rounded-full ${
       correct ? "bg-teal/15 text-teal-text border border-teal/30" : "bg-magenta/15 text-magenta-text border border-magenta/30"
     }`}>
-      {correct ? "✓ صحیح" : "✕ غلط"}
+      {correct ? "صحیح" : "غلط"}
     </span>
   );
 }
@@ -205,7 +206,7 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
             <span>{QUESTION_TYPES[question.type]?.icon}</span>
             {question.title}
             {question.correct_answer && question.points && (
-              <Badge color="teal" rotate="0">🎯 {faNum(question.points)} نمره</Badge>
+              <Badge color="teal" rotate="0">{faNum(question.points)} نمره</Badge>
             )}
           </h4>
           <p className="text-xs text-ink/40 mt-0.5">
@@ -218,18 +219,18 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
       {/* نوار آمار سریع */}
       <div className="flex flex-wrap gap-2 mb-4">
         <span className="text-[0.65rem] font-bold text-ink/50 bg-bg-neutral px-2 py-1 rounded-full">
-          📊 نرخ پاسخ: {faNum(completionRate)}٪
+          نرخ پاسخ: {faNum(completionRate)}٪
         </span>
         {avgTime !== null && avgTime > 0 && (
           <span className="text-[0.65rem] font-bold text-ink/50 bg-bg-neutral px-2 py-1 rounded-full">
-            ⏱ میانگین: {faDuration(avgTime)}
+            میانگین: {faDuration(avgTime)}
           </span>
         )}
         {correctRate && (
           <span className={`text-[0.65rem] font-bold px-2 py-1 rounded-full ${
             correctRate.pct >= 70 ? "text-teal-text bg-teal/10" : correctRate.pct >= 40 ? "text-orange bg-orange/10" : "text-magenta-text bg-magenta/10"
           }`}>
-            🎯 نرخ صحیح: {faNum(correctRate.pct)}٪ ({faNum(correctRate.correct)}/{faNum(correctRate.total)})
+            نرخ صحیح: {faNum(correctRate.pct)}٪ ({faNum(correctRate.correct)}/{faNum(correctRate.total)})
           </span>
         )}
       </div>
@@ -739,7 +740,7 @@ export default function Responses() {
       };
       downloadExcel(`${form?.slug ?? "form"}-responses.xlsx`, header, rows, dates);
     } else downloadCsv(`${form?.slug ?? "form"}-responses.csv`, [header, ...rows]);
-    push(`فایل ${format === "excel" ? "Excel" : "CSV"} دانلود شد 📥`);
+    push(`فایل ${format === "excel" ? "Excel" : "CSV"} دانلود شد`);
   }
 
   async function deleteResponse(r) {
@@ -862,8 +863,9 @@ export default function Responses() {
           فقط کامل‌ها
         </label>
         {Object.keys(questionFilters).some((k) => questionFilters[k]) && (
-          <button onClick={() => setQuestionFilters({})} className="text-xs font-bold text-magenta-text bg-magenta/10 border border-magenta/20 rounded-lg px-3 py-2 hover:bg-magenta/20 transition-colors">
-            پاک کردن فیلترها ✕
+          <button onClick={() => setQuestionFilters({})} className="text-xs font-bold text-magenta-text bg-magenta/10 border border-magenta/20 rounded-lg px-3 py-2 hover:bg-magenta/20 transition-colors flex items-center gap-1.5">
+            <span>پاک کردن فیلترها</span>
+            <X size={13} />
           </button>
         )}
       </div>
@@ -990,9 +992,10 @@ export default function Responses() {
                             <button
                               type="button"
                               onClick={() => { setQuickQId(null); setQuickBarOpen(false); }}
-                              className="text-[0.65rem] font-bold text-magenta-text bg-magenta/10 border border-magenta/20 rounded-lg px-2.5 py-1.5 hover:bg-magenta/20 transition-colors cursor-pointer"
+                              className="text-[0.65rem] font-bold text-magenta-text bg-magenta/10 border border-magenta/20 rounded-lg px-2.5 py-1.5 hover:bg-magenta/20 transition-colors cursor-pointer flex items-center gap-1"
                             >
-                              بستن نمایش سریع ✕
+                              <span>بستن نمایش سریع</span>
+                              <X size={12} />
                             </button>
                           </div>
                         </td>
@@ -1163,7 +1166,7 @@ export default function Responses() {
               <div className="bg-white max-h-[85vh] flex flex-col">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-ink/10 shrink-0">
                   <h3 className="text-lg font-bold text-navy">جزئیات پاسخ</h3>
-                  <button onClick={() => setDetail(null)} className="w-8 h-8 flex items-center justify-center rounded-lg text-ink/40 hover:text-ink/70 hover:bg-bg-neutral">✕</button>
+                  <button onClick={() => setDetail(null)} className="w-8 h-8 flex items-center justify-center rounded-lg text-ink/40 hover:text-ink/70 hover:bg-bg-neutral"><X size={18} /></button>
                 </div>
                 <div className="flex-1 overflow-y-auto px-6 py-4">
                   <PersonAnalytics
@@ -1395,7 +1398,7 @@ function GroupAnalytics({ questions, answers, responses, form }) {
             onClick={() => { setDateFrom(""); setDateTo(""); }}
             className="text-xs font-bold text-magenta-text bg-magenta/10 border border-magenta/20 rounded-lg px-3 py-2 hover:bg-magenta/20 transition-colors"
           >
-            پاک کردن بازه ✕
+            پاک کردن بازه
           </button>
         )}
         <Button variant="ghost" size="sm" onClick={exportCurrentView} className="mr-auto">
@@ -1619,7 +1622,7 @@ function GroupAnalytics({ questions, answers, responses, form }) {
         invalidRecords.length === 0 ? (
           <EmptyState
             icon={<CheckCircle2 size={40} />}
-            title="رکورد نامعتبری نیست! ✨"
+            title="رکورد نامعتبری وجود ندارد"
             subtitle="همه‌ی پاسخ‌ها در حد مجاز انتخاب داشته‌اند. (پاسخ‌های جدیدی که بیش از حد مجاز تیک بخورند، در دیتابیس رد می‌شوند و اصلاً ثبت نمی‌شوند)"
           />
         ) : (

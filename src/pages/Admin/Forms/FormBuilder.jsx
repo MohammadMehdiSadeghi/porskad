@@ -12,7 +12,7 @@ import { QUESTION_TYPE_ICONS } from "../../../lib/questionIcons";
 import ConditionBuilder from "../../../components/logic/ConditionBuilder";
 import { makeCondition, makeConditionGroup, makeJumpAction, GROUP_OPERATORS } from "../../../lib/logic/types";
 import { faNum, slugify, copyToClipboard } from "../../../lib/utils";
-import { Link2, BarChart3, Share2, Puzzle, Settings, FileText, AlignLeft } from "lucide-react";
+import { Link2, BarChart3, Share2, Puzzle, Settings, FileText, AlignLeft, ArrowRight, Eye, Save, Target, Check, ChevronDown, ChevronUp, LayoutGrid, Trash2, X } from "lucide-react";
 import FormPreview from "../../../components/form/FormPreview";
 import { logActivity } from "../../../lib/activityLogger";
 import SEO from "../../../components/ui/SEO";
@@ -158,25 +158,25 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
               <button
                 onClick={() => onMove(-1)}
                 disabled={index === 0}
-                className="w-8 h-8 rounded-pill-md border-2 border-ink/20 bg-white font-black text-ink hover:bg-bg-neutral disabled:opacity-30 transition-colors"
+                className="w-8 h-8 rounded-pill-md border-2 border-ink/20 bg-white flex items-center justify-center text-ink hover:bg-bg-neutral disabled:opacity-30 transition-colors"
                 title="بالا"
               >
-                ↑
+                <ChevronUp size={15} />
               </button>
               <button
                 onClick={() => onMove(1)}
                 disabled={index === total - 1}
-                className="w-8 h-8 rounded-pill-md border-2 border-ink/20 bg-white font-black text-ink hover:bg-bg-neutral disabled:opacity-30 transition-colors"
+                className="w-8 h-8 rounded-pill-md border-2 border-ink/20 bg-white flex items-center justify-center text-ink hover:bg-bg-neutral disabled:opacity-30 transition-colors"
                 title="پایین"
               >
-                ↓
+                <ChevronDown size={15} />
               </button>
               <button
                 onClick={onDelete}
-                className="w-8 h-8 rounded-pill-md border-2 border-magenta/40 bg-white font-black text-magenta-text hover:bg-magenta/10 transition-colors"
+                className="w-8 h-8 rounded-pill-md border-2 border-magenta/40 bg-white flex items-center justify-center text-magenta-text hover:bg-magenta/10 transition-colors"
                 title="حذف سوال"
               >
-                ✕
+                <Trash2 size={15} />
               </button>
             </div>
           </div>
@@ -232,26 +232,60 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                   </Field>
                 </div>
               )}
-              {(q.type === "short_text" || q.type === "long_text") && (
-                <div className="flex gap-2">
-                  <Field label="حداقل کاراکتر">
-                    <input
-                      type="number"
-                      value={q.validation?.minLength ?? ""}
-                      onChange={(e) => onChange({ validation: { ...q.validation, minLength: e.target.value ? Number(e.target.value) : undefined } })}
-                      placeholder="مثلاً ۲"
-                      className={`${inputCls} !py-1.5 !text-xs`}
-                    />
-                  </Field>
-                  <Field label="حداکثر کاراکتر">
-                    <input
-                      type="number"
-                      value={q.validation?.maxLength ?? ""}
-                      onChange={(e) => onChange({ validation: { ...q.validation, maxLength: e.target.value ? Number(e.target.value) : undefined } })}
-                      placeholder="مثلاً ۱۰۰"
-                      className={`${inputCls} !py-1.5 !text-xs`}
-                    />
-                  </Field>
+              {q.type === "short_text" && (
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[0.7rem] font-bold text-teal-text">سقف مجاز: حداکثر ۲۵۵ کاراکتر</span>
+                  <div className="flex gap-2">
+                    <Field label="حداقل کاراکتر" hint="اختیاری">
+                      <input
+                        type="number"
+                        min="0"
+                        max="255"
+                        value={q.validation?.minLength ?? ""}
+                        onChange={(e) => onChange({ validation: { ...q.validation, minLength: e.target.value ? Number(e.target.value) : undefined } })}
+                        placeholder="مثلاً ۲"
+                        className={`${inputCls} !py-1.5 !text-xs`}
+                      />
+                    </Field>
+                    <Field label="حداکثر کاراکتر (تا ۲۵۵)" hint="پیش‌فرض: ۲۵۵">
+                      <input
+                        type="number"
+                        min="1"
+                        max="255"
+                        value={q.validation?.maxLength ?? ""}
+                        onChange={(e) => onChange({ validation: { ...q.validation, maxLength: e.target.value ? Math.min(255, Number(e.target.value)) : undefined } })}
+                        placeholder="۲۵۵"
+                        className={`${inputCls} !py-1.5 !text-xs`}
+                      />
+                    </Field>
+                  </div>
+                </div>
+              )}
+              {q.type === "long_text" && (
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[0.7rem] font-bold text-teal-text">محدودیت کاراکتر (پیش‌فرض آزاد و نامحدود)</span>
+                  <div className="flex gap-2">
+                    <Field label="حداقل کاراکتر" hint="اختیاری">
+                      <input
+                        type="number"
+                        min="0"
+                        value={q.validation?.minLength ?? ""}
+                        onChange={(e) => onChange({ validation: { ...q.validation, minLength: e.target.value ? Number(e.target.value) : undefined } })}
+                        placeholder="اختیاری"
+                        className={`${inputCls} !py-1.5 !text-xs`}
+                      />
+                    </Field>
+                    <Field label="حداکثر کاراکتر" hint="خالی = بدون سقف و آزاد">
+                      <input
+                        type="number"
+                        min="1"
+                        value={q.validation?.maxLength ?? ""}
+                        onChange={(e) => onChange({ validation: { ...q.validation, maxLength: e.target.value ? Number(e.target.value) : undefined } })}
+                        placeholder="مثلاً ۱۰۰۰ (خالی = آزاد)"
+                        className={`${inputCls} !py-1.5 !text-xs`}
+                      />
+                    </Field>
+                  </div>
                 </div>
               )}
               <Field label="الگو (Regex)
@@ -286,10 +320,10 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                   <button
                     onClick={() => onChange({ options: q.options.filter((_, j) => j !== i) })}
                     disabled={q.options.length <= 2}
-                    className="w-7 h-7 shrink-0 rounded-pill-sm border border-ink/20 text-ink-subtle hover:text-magenta-text hover:border-magenta/40 disabled:opacity-30"
+                    className="w-7 h-7 shrink-0 rounded-pill-sm border border-ink/20 flex items-center justify-center text-ink-subtle hover:text-magenta-text hover:border-magenta/40 disabled:opacity-30"
                     title="حذف گزینه"
                   >
-                    ✕
+                    <X size={13} />
                   </button>
                 </div>
               ))}
@@ -317,7 +351,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                       : "border-ink/15 bg-white text-ink-subtle hover:border-teal/40"
                   }`}
                 >
-                  <span className="text-sm">☐</span> دکمه‌ای
+                  <LayoutGrid size={13} /> دکمه‌ای
                 </button>
                 <button
                   type="button"
@@ -328,7 +362,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                       : "border-ink/15 bg-white text-ink-subtle hover:border-teal/40"
                   }`}
                 >
-                  <span className="text-sm">▾</span> کشویی (دراپ‌داون)
+                  <ChevronDown size={13} /> کشویی (دراپ‌داون)
                 </button>
               </div>
               <span className="text-[0.6rem] font-medium text-ink-subtle">
@@ -386,8 +420,8 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
           {/* ─── گزینه صحیح (Correct Answer) ─── */}
           {isChoice && (
             <div className="flex flex-col gap-2 border-2 border-dashed border-teal/40 rounded-pill-md bg-teal/5 p-3">
-              <span className="text-xs font-extrabold text-teal-text">
-                🎯 گزینه صحیح (برای نمره‌دهی)
+              <span className="text-xs font-extrabold text-teal-text flex items-center gap-1">
+                <Target size={14} /> گزینه صحیح (برای نمره‌دهی)
               </span>
               <span className="text-[0.6rem] font-medium text-ink-subtle">
                 اگه گزینه صحیح مشخص کنید، بعد از ارسال فرم به کاربر نمره نمایش داده می‌شود.
@@ -407,17 +441,18 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                           type="button"
                           onClick={() => {
                             const next = isSelected
-                              ? correctArr.filter((v) => v !== opt)
+                               ? correctArr.filter((v) => v !== opt)
                               : [...correctArr, opt];
                             onChange({ correct_answer: next.length > 0 ? next : null });
                           }}
-                          className={`text-[0.65rem] font-bold px-3 py-1.5 rounded-pill-md border-2 transition-all cursor-pointer ${
+                          className={`text-[0.65rem] font-bold px-3 py-1.5 rounded-pill-md border-2 transition-all cursor-pointer flex items-center gap-1 ${
                             isSelected
                               ? "border-teal bg-teal text-white"
                               : "border-ink/15 bg-white text-ink hover:border-teal/40"
                           }`}
                         >
-                          {isSelected ? "✓ " : ""}{opt}
+                          {isSelected && <Check size={11} />}
+                          <span>{opt}</span>
                         </button>
                       );
                     })}
@@ -433,13 +468,14 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                         key={i}
                         type="button"
                         onClick={() => onChange({ correct_answer: isSelected ? null : opt })}
-                        className={`text-[0.65rem] font-bold px-3 py-1.5 rounded-pill-md border-2 transition-all cursor-pointer ${
+                        className={`text-[0.65rem] font-bold px-3 py-1.5 rounded-pill-md border-2 transition-all cursor-pointer flex items-center gap-1 ${
                           isSelected
                             ? "border-teal bg-teal text-white"
                             : "border-ink/15 bg-white text-ink hover:border-teal/40"
                         }`}
                       >
-                        {isSelected ? "✓ " : ""}{opt}
+                        {isSelected && <Check size={11} />}
+                        <span>{opt}</span>
                       </button>
                     );
                   })}
@@ -480,7 +516,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                     onClick={toggleConditionGroup}
                     className="text-[0.65rem] font-bold text-magenta-text hover:underline mr-auto"
                   >
-                    ✕ حذف شرط
+                    حذف شرط
                   </button>
                 )}
               </div>
@@ -586,9 +622,10 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                       </select>
                       <button
                         onClick={() => removeJumpAction(i)}
-                        className="text-[0.65rem] font-bold text-magenta-text hover:underline shrink-0"
+                        className="text-magenta-text hover:opacity-80 shrink-0 p-1"
+                        title="حذف اکشن"
                       >
-                        ✕
+                        <X size={13} />
                       </button>
                     </div>
 
@@ -633,9 +670,10 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                         disabled={hasAction}
                         className="text-[0.6rem] font-extrabold text-magenta-text hover:text-magenta transition-colors
                           border border-dashed border-magenta/30 rounded-pill-sm px-2 py-1 hover:border-magenta
-                          disabled:opacity-30 disabled:cursor-not-allowed"
+                          disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
                       >
-                        {opt.slice(0, 15)} {hasAction ? "✓" : "→"}
+                        <span>{opt.slice(0, 15)}</span>
+                        {hasAction ? <Check size={10} /> : <ArrowRight size={10} />}
                       </button>
                     );
                   })}
@@ -651,9 +689,10 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                         disabled={hasAction}
                         className="text-[0.6rem] font-extrabold text-magenta-text hover:text-magenta transition-colors
                           border border-dashed border-magenta/30 rounded-pill-sm px-2 py-1 hover:border-magenta
-                          disabled:opacity-30 disabled:cursor-not-allowed"
+                          disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
                       >
-                        {opt} {hasAction ? "✓" : "→"}
+                        <span>{opt}</span>
+                        {hasAction ? <Check size={10} /> : <ArrowRight size={10} />}
                       </button>
                     );
                   })}
@@ -898,7 +937,7 @@ export default function FormBuilder() {
       {/* هدر */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Button as={Link} to="/admin/forms" variant="ghost" size="sm">↩ فرم‌ها</Button>
+          <Button as={Link} to="/admin/forms" variant="ghost" size="sm"><ArrowRight size={14} className="ml-1" /> فرم‌ها</Button>
           <h1 className="text-xl sm:text-2xl font-black text-navy">فرم‌ساز</h1>
           {dirty && <Badge color="orange" rotate="rotate-[2deg]">• تغییرات</Badge>}
         </div>
@@ -910,7 +949,7 @@ export default function FormBuilder() {
                 push(ok ? "لینک کپی شد!" : publicUrl, ok ? "success" : "info");
               }}><Link2 size={14} /> کپی لینک</Button>
               <Button as="a" href={`/f/${form.slug}`} target="_blank" variant="white" size="sm">
-                پیش‌نمایش
+                <Eye size={14} /> پیش‌نمایش
               </Button>
             </>
           )}
@@ -971,8 +1010,8 @@ export default function FormBuilder() {
               <Field label={<><Settings size={14} /> نوع فرم</>}>
                 <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
                   {[
-                    { key: "step_by_step", label: "مرحله به مرحله", icon: "📄", desc: "هر سوال یک صفحه جداگانه" },
-                    { key: "registration", label: "ثبت‌نامی", icon: "reg", desc: "همه فیلدها یکجا در یک صفحه" },
+                    { key: "step_by_step", label: "مرحله به مرحله", desc: "هر سوال یک صفحه جداگانه" },
+                    { key: "registration", label: "ثبت‌نامی", desc: "همه فیلدها یکجا در یک صفحه" },
                   ].map((t) => (
                     <button
                       key={t.key}
@@ -1067,30 +1106,15 @@ export default function FormBuilder() {
       </div>
 
       {/* سوال‌ها */}
-      <div className="flex flex-col gap-4">
-        <h2 className="text-base sm:text-lg font-black text-navy">
-          سوال‌ها ({faNum(questions.length)})
-        </h2>
-
-        {questions.map((q, i) => (
-          <QuestionEditor
-            key={q.localId}
-            q={q}
-            index={i}
-            total={questions.length}
-            allQuestions={questions}
-            onChange={(patch) => updateQuestion(q.localId, patch)}
-            onMove={(dir) => moveQuestion(q.localId, dir)}
-            onDelete={() => deleteQuestion(q.localId)}
-          />
-        ))}
-
-        {/* افزودن سوال جدید */}
-        <div className="rotate-[0.4deg]">
+      <div className="flex flex-col gap-4 pb-20 lg:pb-6">
+        {/* افزودن سوال جدید — ثابت در بالای لیست سوالات */}
+        <div className="rotate-[0.3deg]">
           <StickerCard theme="orange" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
             <div className="p-4 sm:p-5 flex flex-col gap-3">
-              <span className="text-sm font-black text-orange">افزودن سوال جدید — نوعش را انتخاب کن:</span>
-              <div className="flex flex-wrap gap-2">
+              <span className="text-sm font-black text-orange flex items-center gap-2">
+                افزودن سوال جدید — نوع سوال را انتخاب کنید:
+              </span>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5 w-full">
                 {QUESTION_TYPE_ORDER.map((key) => {
                   const t = QUESTION_TYPES[key];
                   return (
@@ -1098,11 +1122,11 @@ export default function FormBuilder() {
                       key={key}
                       onClick={() => addQuestion(key)}
                       title={t.hint}
-                      className="flex items-center gap-1.5 bg-white border-2 border-orange/60 rounded-pill-md px-3 py-2
-                        text-xs font-extrabold text-ink hover:-translate-y-0.5 hover:border-orange hover:rotate-[-1deg] transition-all cursor-pointer"
+                      className="flex items-center justify-start gap-2 bg-white border-2 border-orange/60 rounded-pill-md px-3 py-2.5
+                        text-xs font-extrabold text-ink hover:-translate-y-0.5 hover:border-orange hover:shadow-xs transition-all cursor-pointer w-full text-right"
                     >
-                      {(() => { const Icon = QUESTION_TYPE_ICONS[key]; return Icon ? <Icon size={14} className="text-orange" /> : null; })()}
-                      {t.label}
+                      {(() => { const Icon = QUESTION_TYPE_ICONS[key]; return Icon ? <Icon size={16} className="text-orange shrink-0" /> : null; })()}
+                      <span className="truncate">{t.label}</span>
                     </button>
                   );
                 })}
@@ -1111,19 +1135,61 @@ export default function FormBuilder() {
           </StickerCard>
         </div>
 
-        {/* نوار ذخیره پایین */}
-        <div className="sticky bottom-4 flex justify-end">
-          <Button variant="teal" size="lg" onClick={save} disabled={saving || !dirty} rotate="-rotate-[1deg]">
-            {saving ? "در حال ذخیره..." : "ذخیره‌ی همه‌ی تغییرات"}
-          </Button>
+        <div className="flex items-center justify-between mt-2">
+          <h2 className="text-base sm:text-lg font-black text-navy">
+            سوال‌های فرم ({faNum(questions.length)})
+          </h2>
         </div>
+
+        {questions.length === 0 ? (
+          <div className="p-6 text-center bg-white/70 border-2 border-dashed border-ink/15 rounded-2xl text-xs sm:text-sm font-bold text-ink-subtle">
+            هنوز سوالی به این فرم اضافه نشده است. با انتخاب یکی از انواع بالا، اولین سوال در این بخش قرار می‌گیرد.
+          </div>
+        ) : (
+          questions.map((q, i) => (
+            <QuestionEditor
+              key={q.localId}
+              q={q}
+              index={i}
+              total={questions.length}
+              allQuestions={questions}
+              onChange={(patch) => updateQuestion(q.localId, patch)}
+              onMove={(dir) => moveQuestion(q.localId, dir)}
+              onDelete={() => deleteQuestion(q.localId)}
+            />
+          ))
+        )}
       </div>
       </div>
 
-      {/* ─── ستون پیش‌نمایش (فقط دسکتاپ) ─── */}
-      <div className="hidden lg:block w-[320px] shrink-0 sticky top-20 self-start">
+      {/* ─── ستون پیش‌نمایش و دکمه ذخیره دسکتاپ (سمت چپ) ─── */}
+      <div className="hidden lg:flex flex-col gap-3.5 w-[320px] shrink-0 sticky top-20 self-start">
         <div className="rounded-2xl border-2 border-navy/20 bg-white overflow-hidden shadow-lg">
           <FormPreview form={form} questions={questions} />
+        </div>
+        <Button
+          variant="teal"
+          size="lg"
+          onClick={save}
+          disabled={saving || !dirty}
+          className="w-full justify-center shadow-md text-base"
+        >
+          {saving ? "در حال ذخیره..." : "ذخیره‌ی فرم"}
+        </Button>
+      </div>
+
+      {/* ─── دکمه ذخیره موبایل — فیکس در وسط پایین صفحه ─── */}
+      <div className="fixed lg:hidden bottom-4 inset-x-0 z-40 flex justify-center px-4 pointer-events-none">
+        <div className="pointer-events-auto max-w-sm w-full shadow-2xl rounded-pill-lg bg-navy/95 backdrop-blur-md p-2 border border-white/20">
+          <Button
+            variant="teal"
+            size="md"
+            onClick={save}
+            disabled={saving || !dirty}
+            className="w-full justify-center text-sm font-black shadow-none"
+          >
+            {saving ? "در حال ذخیره..." : "ذخیره‌ی تغییرات فرم"}
+          </Button>
         </div>
       </div>
     </div>

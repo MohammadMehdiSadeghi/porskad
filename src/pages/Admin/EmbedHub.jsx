@@ -20,6 +20,7 @@ import {
   Check,
   Eye,
   FileText,
+  Lightbulb,
 } from "lucide-react";
 
 // ─── توضیحات هر حالت Embed ───
@@ -186,8 +187,9 @@ function EmbedModeCard({ mode, code }) {
             <span className={`text-xs font-black ${mode.textClass}`}>{mode.label}</span>
           </div>
           <p className="text-[0.7rem] text-ink/60 leading-5">{mode.description}</p>
-          <div className={`text-[0.6rem] font-bold ${mode.textClass} ${mode.bgClass} rounded-lg px-2 py-1`}>
-            💡 {mode.example}
+          <div className={`text-[0.6rem] font-bold ${mode.textClass} ${mode.bgClass} rounded-lg px-2 py-1 flex items-center gap-1`}>
+            <Lightbulb size={11} className="shrink-0" />
+            <span>{mode.example}</span>
           </div>
         </div>
       </div>
@@ -233,7 +235,7 @@ function FormEmbedCard({ form, baseUrl, index }) {
                 </a>
               )}
               <Button variant="ghost" size="sm" onClick={() => setExpanded(!expanded)}>
-                {expanded ? "بستن ✕" : "کد Embed"}
+                {expanded ? "بستن" : "کد Embed"}
               </Button>
             </div>
           </div>

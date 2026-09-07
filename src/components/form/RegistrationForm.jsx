@@ -129,14 +129,14 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
     setShowConfirm(false);
     if (submitting) return;
     setSubmitting(true); setError(null);
+    if (honeypot) return;
+    setSubmitting(true);
+    setError(null);
     try {
-      const ua = parseUserAgent();
-      const nowIso = new Date().toISOString();
-      const responseId = crypto.randomUUID();
+      const ua = getDeviceInfo();
+      const responseId = crypto.randomUUID ? crypto.randomUUID() : `r_${Date.now()}`;
       const { error: respError } = await supabase.from("responses").insert({
-        id: responseId,
-        form_id: form.id, is_complete: true, started_at: new Date(startedAt).toISOString(),
-        submitted_at: nowIso, duration_seconds: Math.round((Date.now() - startedAt) / 1000),
+        id: responseId, form_id: form.id, submitted_at: new Date().toISOString(),
         device: ua.device, browser: ua.browser, os: ua.os, user_agent: navigator.userAgent, referer: document.referrer || null,
       });
       if (respError) throw respError;
@@ -147,133 +147,98 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
       sendToTelegram(form.id, responseId);
       if (hasScoring(visibleQuestions)) setScoreResult(calculateScore(visibleQuestions, answers));
       setSubmitted(true);
-    } catch (err) { console.error(err); setError("ثبت ناموفق بود؛ دوباره تلاش کنید."); }
+    } catch (err) { setError("ثبت ناموفق بود؛ دوباره تلاش کنید."); }
     finally { setSubmitting(false); }
   }
 
   function renderQuestion(q) {
     const val = answers[q.id] ?? "";
     const fieldErr = touched[q.id] ? fieldErrors[q.id] : null;
+    const isLtr = q.type === "email" || q.type === "phone_ir" || q.type === "telegram_id";
+    const dir = isLtr ? "ltr" : "rtl";
+    const align = isLtr ? "text-left" : "text-right";
 
     return (
-      <div key={q.id} className="flex flex-col gap-1.5">
-        <label className="flex items-center gap-1.5">
-          <span className="text-sm sm:text-base font-extrabold text-male-normal">{q.title}</span>
-          {q.required && <span className="text-female-normal text-xs">*</span>}
-        </label>
-        {q.description && <span className="text-xs sm:text-sm font-medium text-ink-subtle">{q.description}</span>}
-
-        {(q.type === "short_text" || q.type === "email" || q.type === "phone_ir" || q.type === "telegram_id") && (() => {
-          const valStr = val != null ? String(val).trim() : "";
-          const hasVal = valStr.length > 0;
-          const isLtr = q.type === "email" || q.type === "phone_ir" || q.type === "telegram_id";
-          const dir = hasVal && isLtr ? "ltr" : "rtl";
-          const align = hasVal && isLtr ? "text-left" : "text-right";
-          const defaultPlaceholder = q.type === "email" ? "example@email.com" : q.type === "phone_ir" ? "۰۹۱۲۳۴۵۶۷۸۹" : q.type === "telegram_id" ? "username@" : "پاسخ خود را بنویسید...";
-          return (
-            <input
-              type={q.type === "email" ? "email" : "text"}
-              inputMode={q.type === "phone_ir" ? "tel" : "text"}
-              dir={dir}
-              value={val}
-              onChange={(e) => setAnswer(q.id, e.target.value, q)}
-              onBlur={(e) => handleBlur(q.id, e.target.value, q)}
-              placeholder={(q.placeholder?.trim()) || defaultPlaceholder}
-              className={`${inputCls} ${align} placeholder:text-right ${fieldErr ? "!border-female-normal" : ""}`}
-            />
-          );
-        })()}
+      <div key={q.id} className="flex flex-col gap-2">
+        <label className="text-sm sm:text-base font-black text-ink">{q.title}</label>
+        {q.description && <p className="text-xs text-ink-subtle">{q.description}</p>}
+        {(q.type === "short_text" || q.type === "email" || q.type === "phone_ir" || q.type === "telegram_id") && (
+          <input
+            type={q.type === "email" ? "email" : "text"}
+            inputMode={q.type === "phone_ir" ? "tel" : "text"}
+            dir={dir}
+            value={val}
+            maxLength={q.type === "short_text" ? 255 : undefined}
+            onChange={(e) => setAnswer(q.id, e.target.value, q)}
+            onBlur={(e) => handleBlur(q.id, e.target.value, q)}
+            placeholder={q.placeholder || "پاسخ خود را بنویسید..."}
+            className={`${inputCls} ${align} ${fieldErr ? "!border-female-normal" : ""}`}
+          />
+        )}
         {q.type === "long_text" && (
           <textarea
             dir="rtl"
             rows={2}
             value={val}
+            maxLength={q.validation?.maxLength || q.max_length || undefined}
             onChange={(e) => setAnswer(q.id, e.target.value, q)}
             onBlur={(e) => handleBlur(q.id, e.target.value, q)}
-            placeholder={q.placeholder?.trim() || "پاسخ خود را بنویسید..."}
-            className={`${inputCls} text-right placeholder:text-right resize-y leading-6 ${fieldErr ? "!border-female-normal" : ""}`}
+            placeholder={q.placeholder || "پاسخ خود را بنویسید..."}
+            className={`${inputCls} text-right resize-y leading-6 ${fieldErr ? "!border-female-normal" : ""}`}
           />
         )}
-        {q.type === "number" && (
-          <input
-            type="text"
-            inputMode="numeric"
-            dir="rtl"
-            value={val}
-            onChange={(e) => setAnswer(q.id, e.target.value, q)}
-            onBlur={(e) => handleBlur(q.id, e.target.value, q)}
-            placeholder={q.placeholder?.trim() || "مثلاً: ۱۲۳"}
-            className={`${inputCls} text-right placeholder:text-right ${fieldErr ? "!border-female-normal" : ""}`}
-          />
+        {q.type === "choice" && (
+          <div className="flex flex-col gap-2">
+            {(q.options || []).map((opt, i) => {
+              const isMulti = q.max_selections > 1;
+              const selected = isMulti ? (Array.isArray(val) && val.includes(opt)) : val === opt;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => {
+                    if (isMulti) {
+                      const arr = Array.isArray(val) ? [...val] : [];
+                      const idx = arr.indexOf(opt);
+                      idx >= 0 ? arr.splice(idx, 1) : arr.push(opt);
+                      setAnswer(q.id, arr, q);
+                    } else {
+                      setAnswer(q.id, opt, q);
+                    }
+                    handleBlur(q.id, val, q);
+                  }}
+                  className={`relative flex items-center gap-3 p-3 border-2 rounded-pill-md font-bold transition-all ${selected ? "border-teal bg-teal/5" : "border-ink/10 hover:border-teal/50"}`}
+                >
+                  <div className={`w-6 h-6 flex items-center justify-center rounded-md border-2 ${selected ? "border-teal bg-teal text-white" : "border-ink/20"}`}>
+                    {selected && <Check size={14} className="stroke-[3]" />}
+                  </div>
+                  {opt}
+                </button>
+              );
+            })}
+          </div>
         )}
-
-        {q.type === "choice" && (() => {
-          const maxSel = q.max_selections ?? 1;
-          const isMulti = maxSel > 1;
-          const selectedArr = isMulti ? (Array.isArray(val) ? val : (val != null ? [val] : [])) : [];
-          const atLimit = isMulti && selectedArr.length >= maxSel;
-
-          function handleMultiToggle(opt) {
-            const cur = [...selectedArr];
-            const idx = cur.indexOf(opt);
-            if (idx >= 0) { cur.splice(idx, 1); }
-            else if (cur.length < maxSel) { cur.push(opt); }
-            setAnswer(q.id, cur.length > 0 ? cur : null, q);
-            handleBlur(q.id, cur.length > 0 ? cur : null, q);
-          }
-
-          if (!isMulti && q.display_mode === "dropdown") {
-            return <DropdownChoice options={q.options} value={val} onChange={(opt) => { setAnswer(q.id, opt, q); handleBlur(q.id, opt, q); }} />;
-          }
-
-          return (
-            <div className="flex flex-col gap-2">
-              {isMulti && (
-                <span className="text-xs font-bold text-ink-subtle">
-                  حداکثر {faNum(maxSel)} گزینه انتخاب کنید {selectedArr.length > 0 && `(${faNum(selectedArr.length)} انتخاب شده)`}
-                </span>
-              )}
-              {(q.options || []).map((opt, i) => {
-                const selected = isMulti ? selectedArr.includes(opt) : val === opt;
-                const disabled = !selected && isMulti && atLimit;
-                return (
-                  <button key={i} type="button" disabled={disabled}
-                    onClick={() => isMulti ? handleMultiToggle(opt) : (() => { setAnswer(q.id, opt, q); handleBlur(q.id, opt, q); })()}
-                    className={`relative flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3 py-2 sm:py-2.5 transition-all duration-200 cursor-pointer hover:-translate-y-px ${disabled ? "opacity-40 cursor-not-allowed hover:translate-y-0" : ""} ${selected ? "border-ecosystem-normal bg-ecosystem-light rotate-[-0.5deg]" : "border-ink/10 bg-white hover:border-ecosystem-normal/50"}`}>
-                    {selected && <div aria-hidden="true" className="absolute top-[2px] left-[2px] w-full h-full bg-ecosystem-dark/15 rounded-pill-md [corner-shape:squircle] pointer-events-none" />}
-                    {isMulti ? (
-                      <span className={`relative z-10 w-7 h-7 shrink-0 flex items-center justify-center rounded-md border-2 text-xs font-bold transition-colors duration-200 ${selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal"}`}>{selected ? "✓" : ""}</span>
-                    ) : (
-                      <span className={`relative z-10 w-8 h-8 shrink-0 flex items-center justify-center rounded-full border-2 text-sm font-bold transition-colors duration-200 ${selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal"}`}>{faNum(i + 1)}</span>
-                    )}
-                    <span className={`relative z-10 font-bold text-sm sm:text-base ${selected ? "text-ecosystem-dark" : "text-ink"}`}>{opt}</span>
-                  </button>
-                );
-              })}
-            </div>
-          );
-        })()}
-
-        {q.type === "yes_no" && (
-          <div className="grid grid-cols-2 gap-2">
-            {["بله", "خیر"].map((opt) => (
-              <button key={opt} type="button" onClick={() => { setAnswer(q.id, opt, q); handleBlur(q.id, opt, q); }}
-                className={`flex items-center justify-center gap-1.5 py-2.5 rounded-pill-md [corner-shape:squircle] border-2 cursor-pointer transition-all duration-200 font-bold text-sm sm:text-base ${val === opt ? (opt === "بله" ? "border-ecosystem-normal bg-ecosystem-light text-ecosystem-dark" : "border-female-normal bg-female-light text-female-dark") : "border-ink/10 bg-white text-ink hover:border-ink/25"}`}>{opt}</button>
+        {q.type === "rating" && (
+          <div className="flex gap-1.5 items-center py-1">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => { setAnswer(q.id, String(star), q); handleBlur(q.id, String(star), q); }}
+                className="p-1 transition-transform duration-150 hover:scale-115 cursor-pointer"
+              >
+                <Star
+                  size={24}
+                  className={Number(val) >= star ? "text-amber-400 fill-amber-400 drop-shadow-xs" : "text-ink/20 fill-transparent"}
+                />
+              </button>
             ))}
           </div>
         )}
-
-        {q.type === "rating" && (
-          <div className="flex gap-1">
-            {[1, 2, 3, 4, 5].map((star) => <button key={star} type="button" onClick={() => { setAnswer(q.id, String(star), q); handleBlur(q.id, String(star), q); }} className={`text-lg sm:text-xl transition-transform duration-150 hover:scale-110 ${Number(val) >= star ? "text-college-normal" : "text-ink/20"}`}>★</button>)}
-          </div>
-        )}
-
         {fieldErr && (
-          <motion.div initial={{ opacity: 0, y: -3 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-1.5 bg-female-light border border-female-normal rounded-pill-md px-2.5 py-1">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-female-normal shrink-0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-            <span className="text-xs sm:text-sm font-bold text-female-normal">{fieldErr}</span>
-          </motion.div>
+          <div className="flex items-center gap-1.5 text-female-normal text-xs font-bold">
+            <AlertCircle size={14} /> {fieldErr}
+          </div>
         )}
       </div>
     );
@@ -281,54 +246,43 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
 
   if (submitted) {
     return (
-      <div className="min-h-dvh dot-pattern bg-ecosystem-light flex flex-col overflow-x-hidden">
-        <div className="w-full max-w-[75rem] mx-auto flex items-center justify-between px-3 sm:px-4 py-2">
-          <Logo linked={false} size="sm" />
-        </div>
-        <main className="flex-1 flex items-center justify-center px-3 py-4 sm:py-6">
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md -rotate-[0.5deg]">
-            <StickerCard theme="teal" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
-              <div className="p-5 sm:p-7 flex flex-col items-center text-center gap-3">
-                <motion.span className="text-4xl sm:text-5xl" animate={{ rotate: [0, -6, 6, -3, 3, 0] }}>🎉</motion.span>
-                <h1 className="text-lg sm:text-xl font-black text-male-normal leading-snug">{form.exit_title || "ثبت‌نام با موفقیت انجام شد!"}</h1>
-                <p className="font-semibold text-ink-soft leading-7 text-sm sm:text-base max-w-md">{form.exit_message || "ممنون از ثبت‌نام شما."}</p>
-                {scoreResult && <ScoreResult score={scoreResult.score} total={scoreResult.total} details={scoreResult.details} questions={visibleQuestions} />}
-              </div>
-            </StickerCard>
-          </motion.div>
-        </main>
+      <div className="min-h-dvh flex items-center justify-center p-4">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md">
+          <StickerCard theme="teal" radius="rounded-[1.5rem]">
+            <div className="p-8 flex flex-col items-center text-center gap-4">
+              <CheckCircle2 size={48} className="text-teal" />
+              <h1 className="text-xl font-black text-ink">{form.exit_title || "ثبت‌نام با موفقیت انجام شد!"}</h1>
+              <p className="font-semibold text-ink-subtle">{form.exit_message || "ممنون از همراهی شما."}</p>
+              {scoreResult && <ScoreResult score={scoreResult.score} total={scoreResult.total} />}
+            </div>
+          </StickerCard>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-dvh dot-pattern bg-ecosystem-light flex flex-col overflow-x-hidden">
-      <SEO title={form.title} description={form.description || `فرم ${form.title}`} url={`/f/${slug}`} />
-      <div className="w-full max-w-[75rem] mx-auto flex items-center justify-between px-3 sm:px-4 py-2">
-        <Logo linked={false} size="sm" />
-        <span className="text-xs sm:text-sm font-bold text-ink-subtle truncate max-w-[50vw]">{form.title}</span>
-      </div>
-
-      <main className="flex-1 flex items-start justify-center px-3 sm:px-4 py-3 sm:py-5 lg:py-6">
-        <div className="w-full max-w-lg -rotate-[0.3deg]">
-          <StickerCard theme="white" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
-            <input type="text" name="website" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[9999rem] w-px h-px opacity-0" />
-            <div className="p-4 sm:p-5 lg:p-6">
-              <form ref={formRef} onSubmit={openConfirm} className="flex flex-col gap-4 sm:gap-5">
-                <div className="text-center mb-0.5">
-                  <h1 className="text-base sm:text-lg lg:text-xl font-black text-male-normal leading-snug mb-1">{form.title}</h1>
-                  {form.description && <p className="text-xs sm:text-sm font-semibold text-ink-subtle leading-6">{form.description}</p>}
-                  <Badge color="navy" rotate="rotate-[1.5deg]" className="mt-2">{faNum(visibleQuestions.length)} فیلد</Badge>
-                </div>
-                {visibleQuestions.map((q, i) => <div key={q.id} className={i % 2 ? "rotate-[0.2deg]" : "-rotate-[0.2deg]"}>{renderQuestion(q)}</div>)}
-                {error && <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 bg-female-light border-2 border-female-normal rounded-pill-md px-3 py-2.5"><span className="text-female-normal text-base">⚠️</span><span className="text-xs sm:text-sm font-bold text-female-normal">{error}</span></motion.div>}
-                <Button type="submit" variant="teal" size="md" rotate="-rotate-[1deg]" disabled={submitting} className="w-full text-sm sm:text-base">{submitting ? "در حال ثبت..." : "ارسال و ثبت‌نام ✨"}</Button>
-              </form>
-            </div>
-          </StickerCard>
-        </div>
+    <div className="min-h-dvh bg-ink/5 p-4">
+      <SEO title={form.title} />
+      <main className="max-w-xl mx-auto">
+        <StickerCard theme="white" radius="rounded-[1.5rem]">
+          <div className="p-6">
+            <form ref={formRef} onSubmit={openConfirm} className="flex flex-col gap-6">
+              <div className="text-center">
+                <h1 className="text-xl font-black text-ink">{form.title}</h1>
+                {form.description && <p className="text-sm text-ink-subtle mt-1">{form.description}</p>}
+              </div>
+              <input type="text" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} tabIndex={-1} className="hidden" />
+              {visibleQuestions.map((q) => renderQuestion(q))}
+              {error && <div className="flex items-center gap-2 text-female-normal font-bold bg-female-normal/10 p-3 rounded-pill-md"><AlertCircle size={16} />{error}</div>}
+              <Button type="submit" variant="teal" size="md" disabled={submitting} className="w-full">
+                {submitting ? "در حال ثبت..." : "ارسال و ثبت‌نام"}
+              </Button>
+            </form>
+          </div>
+        </StickerCard>
       </main>
-      <ConfirmDialog open={showConfirm} onConfirm={doSubmit} onCancel={() => setShowConfirm(false)} unfilledFields={confirmUnfilled} totalRequired={visibleQuestions.filter((q) => q.required).length} filledCount={visibleQuestions.filter((q) => q.required && !isFieldEmpty(answers[q.id])).length} />
+      <ConfirmDialog open={showConfirm} onConfirm={doSubmit} onCancel={() => setShowConfirm(false)} unfilledFields={confirmUnfilled} />
     </div>
   );
 }

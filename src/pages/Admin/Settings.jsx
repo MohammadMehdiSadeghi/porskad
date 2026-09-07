@@ -83,7 +83,7 @@ export default function Settings() {
       if (data) {
         setSettings((prev) => ({ ...prev, ...data }));
       }
-      push("تنظیمات و محدودیت‌های سامانه با موفقیت ذخیره و اعمال شد ✓", "success");
+      push("تنظیمات و محدودیت‌های سامانه با موفقیت ذخیره و اعمال شد", "success");
     } catch (err) {
       console.error("Failed to update system settings:", err);
       push("خطا در ذخیره تنظیمات: " + err.message, "error");

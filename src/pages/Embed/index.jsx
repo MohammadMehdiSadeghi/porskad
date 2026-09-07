@@ -10,6 +10,7 @@ import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import { calculateScore, hasScoring } from "../../lib/scoring";
 import ScoreResult from "../../components/ui/ScoreResult";
 import { sendToTelegram } from "../../lib/telegram";
+import { Star, Check, CheckCircle2 } from "lucide-react";
 import "../../index.css";
 
 const inputCls = "w-full bg-white border-2 border-ink/10 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 font-semibold text-ink text-sm sm:text-base placeholder:text-ink/40 placeholder:font-medium focus:outline-none transition-all duration-200";
@@ -112,7 +113,7 @@ function ProgressBar({ value, max }) {
 }
 
 // ─── ورودی متنی — توکن‌های رکاد ───
-function TextInput({ type, value, onChange, autoFocus = true, onEnter, placeholder: customPh }) {
+function TextInput({ type, value, onChange, autoFocus = true, onEnter, placeholder: customPh, maxLength: customMaxLength }) {
   const defaultPh = {
     short_text: "پاسخ خود را بنویسید...",
     email: "example@email.com",
@@ -126,36 +127,53 @@ function TextInput({ type, value, onChange, autoFocus = true, onEnter, placehold
   const isLtrType = type === "email" || type === "phone_ir" || type === "telegram_id";
   const activeDir = hasValue && isLtrType ? "ltr" : "rtl";
   const activeAlign = hasValue && isLtrType ? "text-left" : "text-right";
+  const resolvedMaxLength = type === "short_text" ? 255 : (customMaxLength ? Number(customMaxLength) : undefined);
 
   const shared = "w-full border-2 border-ink/10 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-ink placeholder:text-ink/40 placeholder:text-right placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-ecosystem-normal/15 focus:border-ecosystem-normal transition-all duration-200";
 
   if (type === "long_text") {
     return (
-      <textarea
-        dir="rtl"
-        value={value ?? ""}
-        onChange={(e) => onChange(e.target.value)}
-        rows={4}
-        autoFocus={autoFocus}
-        className={`${shared} resize-y min-h-[7rem] leading-9 text-right`}
-        placeholder={ph}
-        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && onEnter) { e.preventDefault(); onEnter(); } }}
-      />
+      <div className="flex flex-col gap-1 w-full">
+        <textarea
+          dir="rtl"
+          value={value ?? ""}
+          maxLength={resolvedMaxLength}
+          onChange={(e) => onChange(e.target.value)}
+          rows={4}
+          autoFocus={autoFocus}
+          className={`${shared} resize-y min-h-[7rem] leading-9 text-right`}
+          placeholder={ph}
+          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && onEnter) { e.preventDefault(); onEnter(); } }}
+        />
+        {resolvedMaxLength && (
+          <span className="text-[0.65rem] text-ink/40 font-mono text-left">
+            {faNum(String(value ?? "").length)} / {faNum(resolvedMaxLength)}
+          </span>
+        )}
+      </div>
     );
   }
 
   return (
-    <input
-      type="text"
-      inputMode={type === "number" ? "numeric" : type === "phone_ir" ? "tel" : type === "email" ? "email" : "text"}
-      dir={activeDir}
-      value={value ?? ""}
-      autoFocus={autoFocus}
-      onChange={(e) => onChange(e.target.value)}
-      onKeyDown={(e) => { if (e.key === "Enter" && onEnter) { e.preventDefault(); onEnter(); } }}
-      className={`${shared} ${activeAlign}`}
-      placeholder={ph}
-    />
+    <div className="flex flex-col gap-1 w-full">
+      <input
+        type="text"
+        inputMode={type === "number" ? "numeric" : type === "phone_ir" ? "tel" : type === "email" ? "email" : "text"}
+        dir={activeDir}
+        maxLength={resolvedMaxLength}
+        value={value ?? ""}
+        autoFocus={autoFocus}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter" && onEnter) { e.preventDefault(); onEnter(); } }}
+        className={`${shared} ${activeAlign}`}
+        placeholder={ph}
+      />
+      {resolvedMaxLength && type === "short_text" && (
+        <span className="text-[0.65rem] text-ink/40 font-mono text-left">
+          {faNum(String(value ?? "").length)} / {faNum(resolvedMaxLength)}
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -208,10 +226,10 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
             type="button"
             disabled={disabled}
             onClick={() => isMulti ? handleMultiToggle(opt) : (() => { onChange(opt); if (onEnter) setTimeout(() => onEnter(), 250); })()}
-            className={`relative flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 transition-all duration-200 cursor-pointer hover:-translate-y-px ${
-              disabled ? "opacity-40 cursor-not-allowed hover:translate-y-0" : ""
-            } ${
-              selected
+            className={`relative w-full flex items-center gap-3 p-3 sm:p-3.5 rounded-pill-md [corner-shape:squircle] border-2 transition-all duration-200 text-right cursor-pointer select-none ${
+              disabled
+                ? "opacity-40 cursor-not-allowed border-ink/10 bg-black/5"
+                : selected
                 ? "border-ecosystem-normal bg-ecosystem-light rotate-[-0.5deg]"
                 : "border-ink/10 bg-white hover:border-ecosystem-normal/50"
             }`}
@@ -220,7 +238,7 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
             {isMulti ? (
               <span className={`relative z-10 w-7 h-7 sm:w-8 sm:h-8 shrink-0 flex items-center justify-center rounded-md border-2 text-xs font-bold transition-colors duration-200 ${
                 selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal"
-              }`}>{selected ? "✓" : ""}</span>
+              }`}>{selected ? <Check size={14} /> : ""}</span>
             ) : (
               <span className={`relative z-10 w-8 h-8 sm:w-9 sm:h-9 shrink-0 flex items-center justify-center rounded-full border-2 text-sm sm:text-base font-bold transition-colors duration-200 ${
                 selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal"
@@ -424,7 +442,9 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
           className="relative max-w-lg w-full">
           <div aria-hidden="true" className="absolute top-[0.1875rem] left-[0.1875rem] w-full h-full bg-male-normal rounded-tl-[2rem] rounded-br-[2rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
           <div className="relative z-10 bg-white border-2 border-male-normal rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-5 sm:p-6 text-center">
-            <span className="text-5xl sm:text-6xl mb-3 block">🎉</span>
+            <div className="flex justify-center mb-3">
+              <CheckCircle2 size={48} className="text-ecosystem-normal" />
+            </div>
             <h1 className="text-xl sm:text-2xl font-black text-male-normal mb-2">{schema.exit_title || "ثبت‌نام با موفقیت انجام شد!"}</h1>
             <p className="text-sm sm:text-base text-ink-soft leading-7">{schema.exit_message || "ممنون از ثبت‌نام شما."}</p>
             {scoreResult && (
@@ -556,7 +576,7 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
                   <div aria-hidden="true" className="absolute top-[0.125rem] left-[0.125rem] w-full h-full bg-ecosystem-dark rounded-pill-md [corner-shape:squircle]" />
                   <button type="submit" disabled={submitting}
                     className="relative z-10 w-full bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] font-extrabold hover:bg-ecosystem-dark transition-colors duration-200 disabled:opacity-50 text-sm sm:text-base">
-                    {submitting ? "در حال ثبت..." : "ارسال ✨"}
+                    {submitting ? "در حال ثبت..." : "ارسال پاسخ‌ها"}
                   </button>
                 </div>
               </form>
@@ -895,7 +915,7 @@ export default function EmbedForm() {
                       <div aria-hidden="true" className="absolute top-[0.125rem] left-[0.125rem] w-full h-full bg-ecosystem-dark rounded-pill-md [corner-shape:squircle]" />
                       <button onClick={goNext} disabled={visibleTotal === 0}
                         className="relative z-10 bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-6 sm:px-7 py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] font-extrabold hover:bg-ecosystem-dark transition-colors duration-200 disabled:opacity-50 text-sm sm:text-base">
-                        شروع کنید 🚀
+                        شروع
                       </button>
                     </div>
                   </motion.div>
@@ -919,7 +939,14 @@ export default function EmbedForm() {
                     {currentQuestion.description && <p className="text-xs sm:text-sm text-ink-subtle -mt-1.5">{currentQuestion.description}</p>}
 
                     {(currentQuestion.type === "short_text" || currentQuestion.type === "long_text" || currentQuestion.type === "email" || currentQuestion.type === "number" || currentQuestion.type === "phone_ir" || currentQuestion.type === "telegram_id") && (
-                      <TextInput type={currentQuestion.type} value={answers[currentQuestion.id]} onChange={setAnswer} onEnter={handleNext} placeholder={currentQuestion.placeholder} />
+                      <TextInput
+                        type={currentQuestion.type}
+                        value={answers[currentQuestion.id]}
+                        onChange={setAnswer}
+                        onEnter={handleNext}
+                        placeholder={currentQuestion.placeholder}
+                        maxLength={currentQuestion.validation?.maxLength || currentQuestion.max_length}
+                      />
                     )}
                     {currentQuestion.type === "choice" && (
                       <ChoiceOptions options={currentQuestion.options} value={answers[currentQuestion.id]} onChange={setAnswer} onEnter={handleNext} displayMode={currentQuestion.display_mode || "buttons"} maxSelections={currentQuestion.max_selections ?? 1} />
@@ -956,7 +983,7 @@ export default function EmbedForm() {
                           <div aria-hidden="true" className="absolute top-[0.125rem] left-[0.125rem] w-full h-full bg-ecosystem-dark rounded-pill-md [corner-shape:squircle]" />
                           <button onClick={openConfirm} disabled={submitting}
                             className="relative z-10 bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-5 sm:px-6 py-2.5 rounded-pill-md [corner-shape:squircle] font-bold hover:bg-ecosystem-dark transition-colors duration-200 disabled:opacity-50 text-xs sm:text-sm">
-                            {submitting ? "در حال ثبت..." : "ثبت ✨"}
+                            {submitting ? "در حال ثبت..." : "ثبت و ارسال"}
                           </button>
                         </div>
                       )}
@@ -976,7 +1003,9 @@ export default function EmbedForm() {
                     transition={{ duration: 0.3 }}
                     className="flex flex-col items-center text-center gap-3 sm:gap-4 py-6 sm:py-8"
                   >
-                  <span className="text-4xl sm:text-5xl">🎉</span>
+                  <div className="flex justify-center mb-1">
+                    <CheckCircle2 size={48} className="text-ecosystem-normal" />
+                  </div>
                   <h1 className="text-lg sm:text-xl font-black text-male-normal">{schema.exit_title}</h1>
                   <p className="text-sm sm:text-base text-ink-soft leading-7">{schema.exit_message}</p>
                     {scoreResult && (

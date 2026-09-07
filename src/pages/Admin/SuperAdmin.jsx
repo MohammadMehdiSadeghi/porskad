@@ -34,6 +34,14 @@ import {
   Settings,
   RotateCcw,
   Save,
+  AlertTriangle,
+  Crown,
+  Key,
+  Mail,
+  Dices,
+  Zap,
+  Ban,
+  X,
 } from "lucide-react";
 
 const TABS = [
@@ -852,7 +860,9 @@ export default function SuperAdmin() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]" dir="ltr">
         <div className="text-center p-8 rounded-xl border-2 border-ink/10 bg-white max-w-sm">
-          <div className="text-4xl mb-3">🚫</div>
+          <div className="flex justify-center mb-3 text-rose-500">
+            <Ban size={44} />
+          </div>
           <h2 className="text-lg font-extrabold text-navy mb-2">Unauthorized Access</h2>
           <p className="text-sm font-semibold text-ink-subtle">
             Only superadmin accounts have access to this section.
@@ -1490,8 +1500,8 @@ export default function SuperAdmin() {
                               {v === null || v === undefined ? (
                                 <span style={{ color: "#c6c6c6" }}>—</span>
                               ) : typeof v === "boolean" ? (
-                                <span style={{ color: v ? "#24a148" : "#da1e28" }}>
-                                  {v ? "✓" : "✕"}
+                                <span style={{ color: v ? "#24a148" : "#da1e28", display: "inline-flex", alignItems: "center" }}>
+                                  {v ? <Check size={13} /> : <X size={13} />}
                                 </span>
                               ) : typeof v === "object" ? (
                                 <span
@@ -1729,9 +1739,13 @@ export default function SuperAdmin() {
                         {a.full_name || "—"}
                       </span>
                       {isPrimaryGodEmail(a.email) ? (
-                        <span className="sa-tag sa-tag-orange">👑 Primary Owner (God Mode)</span>
+                        <span className="sa-tag sa-tag-orange" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                          <Crown size={11} /> Primary Owner (God Mode)
+                        </span>
                       ) : (
-                        <span className="sa-tag sa-tag-blue">🛡️ Secondary SuperAdmin</span>
+                        <span className="sa-tag sa-tag-blue" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                          <Shield size={11} /> Secondary SuperAdmin
+                        </span>
                       )}
                     </div>
                     <div className="sa-admin-email">{a.email}</div>
@@ -2294,7 +2308,7 @@ export default function SuperAdmin() {
       <Modal
         open={!!detailModal}
         onClose={() => setDetailModal(null)}
-        title={`${detailModal?.is_owner ? "👑 Owner" : "User Details"}: ${
+        title={`${detailModal?.is_owner ? "Owner" : "User Details"}: ${
           detailModal?.full_name || detailModal?.email || ""
         }`}
       >
@@ -2344,7 +2358,7 @@ export default function SuperAdmin() {
                 ["Phone Number", detailModal.phone || "—"],
                 ["System Role", detailModal.role || "manager"],
                 ["Form Quota", `${detailModal.max_forms ?? 5} allowed`],
-                ["SuperAdmin / Owner", detailModal.is_owner ? "Yes 👑" : "No"],
+                ["SuperAdmin / Owner", detailModal.is_owner ? "Yes" : "No"],
                 ["Account Status", detailModal.is_active ? "Active" : "Inactive"],
                 ["Monthly Responses", `${detailModal.monthly_responses_used ?? 0} / ${detailModal.max_responses_per_month ?? 100} used`],
                 ["Quota Reset Date", detailModal.quota_reset_at ? new Date(detailModal.quota_reset_at).toLocaleDateString() : "—"],
@@ -2474,9 +2488,12 @@ export default function SuperAdmin() {
                     fontWeight: 700,
                     color: "#0f62fe",
                     textTransform: "uppercase",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.35rem",
                   }}
                 >
-                  ⚡ Active Forms & Monthly Quotas (Manual Override)
+                  <Zap size={13} /> Active Forms & Monthly Quotas (Manual Override)
                 </span>
                 <span className="sa-tag sa-tag-blue" style={{ fontSize: "0.65rem" }}>
                   SuperAdmin Limit Control
@@ -2637,7 +2654,7 @@ export default function SuperAdmin() {
                     disabled={detailQuotaSaving}
                     onClick={handleSaveDetailQuota}
                   >
-                    {detailQuotaSaving ? "Saving..." : "Save Quotas ✓"}
+                    {detailQuotaSaving ? "Saving..." : "Save Quotas"}
                   </button>
                 </div>
               </div>
@@ -2665,9 +2682,12 @@ export default function SuperAdmin() {
                     fontWeight: 700,
                     color: "#0f62fe",
                     textTransform: "uppercase",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.35rem",
                   }}
                 >
-                  🔑 Set New Password (Admin Override)
+                  <Key size={13} /> Set New Password (Admin Override)
                 </span>
                 <span className="sa-tag sa-tag-blue" style={{ fontSize: "0.65rem" }}>
                   SuperAdmin Control
@@ -2723,7 +2743,7 @@ export default function SuperAdmin() {
                 <button
                   type="button"
                   className="sa-btn sa-btn-secondary"
-                  style={{ fontSize: "0.72rem" }}
+                  style={{ fontSize: "0.72rem", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
                   onClick={() => {
                     const randomPass = "Pk" + Math.floor(100000 + Math.random() * 900000);
                     setNewPassword(randomPass);
@@ -2733,7 +2753,7 @@ export default function SuperAdmin() {
                   }}
                   title="Generate random secure password and copy to clipboard"
                 >
-                  Generate 🎲
+                  <Dices size={13} /> Generate
                 </button>
 
                 <button
@@ -2775,9 +2795,12 @@ export default function SuperAdmin() {
                   fontWeight: 700,
                   color: "#525252",
                   textTransform: "uppercase",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.35rem",
                 }}
               >
-                📧 Change Email Address
+                <Mail size={13} /> Change Email Address
               </span>
               <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
                 <input
@@ -3241,8 +3264,8 @@ export default function SuperAdmin() {
                 {impersonateModal.email}
               </div>
             </div>
-            <p style={{ fontSize: "0.75rem", fontWeight: 600, color: "#da1e28" }}>
-              ⚠ This action will be recorded in the security audit log.
+            <p style={{ fontSize: "0.75rem", fontWeight: 600, color: "#da1e28", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+              <AlertTriangle size={14} /> This action will be recorded in the security audit log.
             </p>
             <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
               <button

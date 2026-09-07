@@ -102,7 +102,7 @@ export default function Register() {
           {successNotice ? (
             <div className="p-7 sm:p-9 flex flex-col items-center text-center gap-4">
               <Badge color="green" rotate="rotate-[1deg]">
-                ثبت‌نام انجام شد 🎉
+                ثبت‌نام انجام شد
               </Badge>
               <h2 className="text-xl font-black text-navy">خوش آمدید!</h2>
               <p className="text-sm font-semibold text-ink-subtle leading-6">
@@ -115,7 +115,7 @@ export default function Register() {
                 size="md"
                 className="mt-2"
               >
-                ورود به پنل کاربری 🚀
+                ورود به پنل کاربری
               </Button>
             </div>
           ) : (
@@ -218,7 +218,7 @@ export default function Register() {
                   rotate="-rotate-[1deg]"
                   className="w-full justify-center"
                 >
-                  {busy ? "در حال ساخت حساب..." : "شروع ساخت فرم‌ها (رایگان) ✨"}
+                  {busy ? "در حال ساخت حساب..." : "شروع ساخت فرم‌ها (رایگان)"}
                 </Button>
 
                 <div className="flex items-center justify-between text-[13px] font-bold text-ink-subtle pt-2 border-t border-ink/10">
@@ -227,7 +227,7 @@ export default function Register() {
                     to="/admin/login"
                     className="text-[13px] font-extrabold text-teal hover:underline inline-flex items-center gap-1 bg-teal/10 hover:bg-teal/20 px-3 py-1.5 rounded-pill-sm transition-all"
                   >
-                    ورود به پنل کاربری 👈
+                    ورود به پنل کاربری
                   </Link>
                 </div>
               </div>

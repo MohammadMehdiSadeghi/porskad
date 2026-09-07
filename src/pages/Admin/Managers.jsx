@@ -8,7 +8,7 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import StickerCard from "../../components/ui/StickerCard";
 import Modal from "../../components/ui/Modal";
-import { Plus, Edit, Trash2, Crown, Users, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings, Eye, EyeOff, Sliders, Bot, Copy, Calendar, CheckCircle, XCircle, Phone, Mail, RotateCcw } from "lucide-react";
+import { Plus, Edit, Edit3, Trash2, Crown, Users, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings, Eye, EyeOff, Sliders, Bot, Copy, Calendar, CheckCircle, XCircle, Phone, Mail, RotateCcw, Save } from "lucide-react";
 import SEO from "../../components/ui/SEO";
 import { supabase } from "../../lib/supabaseClient";
 import { logActivity } from "../../lib/activityLogger";
@@ -286,7 +286,7 @@ export default function Managers() {
       });
       setManagers((prev) => prev.map((x) => x.id === m.id ? { ...x, can_use_telegram: newVal } : x));
       setSelectedUserModal((prev) => (prev && prev.id === m.id ? { ...prev, can_use_telegram: newVal } : prev));
-      push(`دسترسی به ربات تلگرام برای «${m.full_name || m.email}» ${newVal ? "فعال شد ✓" : "قطع شد ✕"}`, "success");
+      push(`دسترسی به ربات تلگرام برای «${m.full_name || m.email}» ${newVal ? "فعال شد" : "قطع شد"}`, "success");
     } catch (err) {
       push("خطا در تغییر دسترسی تلگرام: " + err.message, "error");
     }
@@ -400,7 +400,7 @@ export default function Managers() {
           });
         } catch {}
       }
-      push("کاربر جدید با موفقیت ایجاد شد! ✅");
+      push("کاربر جدید با موفقیت ایجاد شد!");
       setShowCreateModal(false);
       setNewEmail("");
       setNewPassword("");
@@ -431,7 +431,7 @@ export default function Managers() {
       if (activating) {
         await activateManager(managerId);
         logActivity("activate_manager", "user", managerId, { name: manager?.full_name });
-        push("مدیر فعال شد ✅");
+        push("مدیر فعال شد");
       } else {
         await deactivateManager(managerId);
         logActivity("deactivate_manager", "user", managerId, { name: manager?.full_name });
@@ -586,7 +586,7 @@ export default function Managers() {
                           باقیمانده سهمیه:
                         </span>
                         <span className={`text-[0.7rem] font-black ${remainingForms === 0 && !m.is_owner ? "text-magenta-text" : "text-teal-text"}`}>
-                          {m.is_owner ? "نامحدود 👑" : `${faNum(remainingForms)} از ${faNum(maxForms)} فرم`}
+                          {m.is_owner ? "نامحدود" : `${faNum(remainingForms)} از ${faNum(maxForms)} فرم`}
                         </span>
                       </div>
                     </div>
@@ -645,8 +645,9 @@ export default function Managers() {
                       <div className="flex items-center gap-2">
                         <h3 className="text-base font-black text-navy">{m.full_name || "کاربر بدون نام"}</h3>
                         {m.is_owner ? (
-                          <span className="text-[0.65rem] font-black text-amber-800 bg-amber-100 border border-amber-300 rounded-full px-2 py-0.5">
-                            👑 صاحب اصلی
+                          <span className="text-[0.65rem] font-black text-amber-800 bg-amber-100 border border-amber-300 rounded-full px-2 py-0.5 flex items-center gap-1">
+                            <Crown size={10} />
+                            <span>صاحب اصلی</span>
                           </span>
                         ) : (
                           <span className="text-[0.65rem] font-bold text-navy bg-navy/10 rounded-full px-2 py-0.5">
@@ -656,7 +657,9 @@ export default function Managers() {
                       </div>
                       <p className="text-xs font-semibold text-ink-subtle mt-0.5" dir="ltr">{m.email}</p>
                       {m.phone && (
-                        <p className="text-xs font-bold text-teal-text mt-0.5" dir="ltr">📱 {m.phone}</p>
+                        <p className="text-xs font-bold text-teal-text mt-0.5 flex items-center gap-1" dir="ltr">
+                          <Phone size={11} /> {m.phone}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -666,7 +669,7 @@ export default function Managers() {
                 </div>
 
                 <div className="flex items-center justify-between text-xs font-semibold text-ink-subtle pt-2 border-t border-navy/5">
-                  <span>📅 تاریخ عضویت: <strong className="text-navy">{new Date(m.created_at).toLocaleDateString("fa-IR")}</strong></span>
+                  <span className="flex items-center gap-1"><Calendar size={12} className="text-ink/40" /> تاریخ عضویت: <strong className="text-navy">{new Date(m.created_at).toLocaleDateString("fa-IR")}</strong></span>
                   <span>کد شناسه: <code className="text-[0.65rem] text-navy font-mono" dir="ltr">{m.id.slice(0, 8)}</code></span>
                 </div>
               </div>
@@ -709,7 +712,7 @@ export default function Managers() {
                 {!m.is_owner && (
                   <form onSubmit={handleSaveUserQuotaDirect} className="pt-2 border-t border-navy/10 space-y-3">
                     <div className="text-xs font-black text-navy flex items-center justify-between">
-                      <span>✏️ ویرایش دستی محدودیت‌های این کاربر:</span>
+                      <span className="flex items-center gap-1"><Edit3 size={12} className="text-teal" /> ویرایش دستی محدودیت‌های این کاربر:</span>
                       <span className="text-[0.68rem] text-ink-subtle font-semibold">
                         ریست بعدی: {m.quota_reset_at ? new Date(m.quota_reset_at).toLocaleDateString("fa-IR") : "چرخه ۳۰ روزه"}
                       </span>
@@ -802,7 +805,7 @@ export default function Managers() {
                     <div>
                       <span className="text-xs font-black text-navy block">اتصال به ربات تلگرام</span>
                       <span className="text-[0.68rem] font-semibold text-ink-subtle">
-                        وضعیت: {m.can_use_telegram ? <strong className="text-teal-text">فعال ✓</strong> : <strong className="text-amber-700">قطع ✕</strong>}
+                        وضعیت: {m.can_use_telegram ? <strong className="text-teal-text">فعال</strong> : <strong className="text-amber-700">قطع</strong>}
                       </span>
                     </div>
                   </div>
@@ -1022,7 +1025,7 @@ export default function Managers() {
                   }
                 }
                 logActivity("edit_manager", "user", selectedManager.id, { name: editName });
-                push("تغییرات با موفقیت ذخیره شد! ✅");
+                push("تغییرات با موفقیت ذخیره شد!");
                 setShowEditModal(false);
                 load();
               } catch (err) {

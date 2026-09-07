@@ -21,6 +21,7 @@ import {
   Menu,
   X,
   Settings,
+  Crown,
 } from "lucide-react";
 import NotificationBell from "../ui/NotificationBell";
 import { faNum } from "../../lib/utils";
@@ -113,8 +114,15 @@ export default function AdminLayout() {
             <span>پرس</span>
             <span className="text-teal">کاد</span>
           </span>
-          <span className="text-[0.65rem] lg:text-[0.7rem] font-bold bg-teal/25 text-teal rounded-pill-sm px-2 py-0.5">
-            {owner ? "مدیریت کل 👑" : "پنل کاربری"}
+          <span className="text-[0.65rem] lg:text-[0.7rem] font-bold bg-teal/25 text-teal rounded-pill-sm px-2 py-0.5 flex items-center gap-1">
+            {owner ? (
+              <>
+                <Crown size={11} className="text-teal" />
+                <span>مدیریت کل</span>
+              </>
+            ) : (
+              "پنل کاربری"
+            )}
           </span>
         </div>
 
@@ -191,8 +199,15 @@ export default function AdminLayout() {
               <span>پرس</span>
               <span className="text-teal">کاد</span>
             </span>
-            <span className="text-[0.65rem] font-bold bg-teal/25 text-teal rounded-pill-sm px-2 py-0.5">
-              {owner ? "مدیریت کل 👑" : "پنل کاربری"}
+            <span className="text-[0.65rem] font-bold bg-teal/25 text-teal rounded-pill-sm px-2 py-0.5 flex items-center gap-1">
+              {owner ? (
+                <>
+                  <Crown size={11} className="text-teal" />
+                  <span>مدیریت کل</span>
+                </>
+              ) : (
+                "پنل کاربری"
+              )}
             </span>
           </div>
           <button
@@ -286,14 +301,15 @@ export default function AdminLayout() {
             {/* مشخصات کاربر در دسکتاپ */}
             <div className="hidden md:flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-xl bg-teal/10 text-teal flex items-center justify-center font-black text-sm shrink-0 border border-teal/20">
-                {profile?.full_name ? profile.full_name.charAt(0) : "👤"}
+                {profile?.full_name ? profile.full_name.charAt(0) : <User size={15} />}
               </div>
               <div className="min-w-0">
                 <div className="text-xs sm:text-sm font-black text-navy truncate flex items-center gap-2">
                   <span>{profile?.full_name || user.email?.split("@")[0]}</span>
                   {owner ? (
-                    <span className="text-[0.65rem] font-bold bg-teal/20 text-teal px-1.5 py-0.5 rounded-md">
-                      مدیریت کل
+                    <span className="text-[0.65rem] font-bold bg-teal/20 text-teal px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                      <Crown size={10} />
+                      <span>مدیریت کل</span>
                     </span>
                   ) : null}
                 </div>
@@ -338,7 +354,7 @@ export default function AdminLayout() {
       {/* مودال الزام ثبت شماره موبایل برای کاربران قبلی بدون شماره */}
       <Modal
         open={needsPhone}
-        title="📱 تکمیل شماره تلفن همراه"
+        title="تکمیل شماره تلفن همراه"
         closable={false}
       >
         <form onSubmit={handleSavePhone} className="space-y-4">

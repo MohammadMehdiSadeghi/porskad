@@ -1,5 +1,6 @@
 import StickerCard from "./StickerCard";
 import Button from "./Button";
+import { Plug, RotateCcw } from "lucide-react";
 
 export default function SetupNotice() {
   return (
@@ -7,7 +8,9 @@ export default function SetupNotice() {
       <div className="w-full max-w-2xl -rotate-[0.5deg]">
         <StickerCard theme="white">
           <div className="p-7 sm:p-10 flex flex-col gap-4">
-            <div className="text-5xl rotate-[2deg] self-start">🔌</div>
+            <div className="w-14 h-14 rounded-2xl bg-teal/15 text-teal flex items-center justify-center rotate-[2deg] self-start shadow-xs">
+              <Plug size={32} />
+            </div>
             <h1 className="text-xl sm:text-3xl font-black text-navy">
               پرس‌کاد هنوز به دیتابیس وصل نشده!
             </h1>
@@ -20,8 +23,8 @@ export default function SetupNotice() {
               <li>فایل <span className="font-black">.env.example</span> را به <span className="font-black">.env</span> تغییر نام دهید و کلیدها را قرار دهید.</li>
             </ol>
             <div className="mt-2">
-              <Button variant="navy" onClick={() => window.location.reload()}>
-                بعد از تنظیم .env دوباره امتحان کن 🔄
+              <Button variant="navy" onClick={() => window.location.reload()} className="flex items-center gap-1.5">
+                <RotateCcw size={15} /> بعد از تنظیم .env دوباره امتحان کن
               </Button>
             </div>
           </div>
