@@ -331,6 +331,7 @@ export default function Managers() {
 
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [createPasswordVisible, setCreatePasswordVisible] = useState(false);
   const [newName, setNewName] = useState("");
   const [editName, setEditName] = useState("");
   const [createError, setCreateError] = useState(null);
@@ -889,8 +890,25 @@ export default function Managers() {
           </div>
           <div>
             <label className="block text-sm font-extrabold text-navy mb-1.5">رمز عبور</label>
-            <input type="text" dir="ltr" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
-              className={inputCls} placeholder="حداقل ۶ کاراکتر شامل حروف و اعداد" />
+            <div className="relative">
+              <input
+                type={createPasswordVisible ? "text" : "password"}
+                dir="ltr"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className={`${inputCls} pl-10`}
+                placeholder="حداقل ۶ کاراکتر شامل حروف و اعداد"
+              />
+              <button
+                type="button"
+                onClick={() => setCreatePasswordVisible(!createPasswordVisible)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-navy transition-colors p-1 cursor-pointer"
+                tabIndex={-1}
+                aria-label={createPasswordVisible ? "مخفی کردن رمز عبور" : "نمایش رمز عبور"}
+              >
+                {createPasswordVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
           </div>
           <div>
             <label className="block text-sm font-extrabold text-navy mb-1.5">نام نمایشی</label>
@@ -978,14 +996,25 @@ export default function Managers() {
             <span className="block text-xs font-extrabold text-navy">تغییر رمز عبور کاربر</span>
             <div>
               <label className="block text-xs font-bold text-ink-subtle mb-1">تعیین رمز عبور جدید (اختیاری):</label>
-              <input
-                type="text"
-                dir="ltr"
-                value={editNewPassword}
-                onChange={(e) => setEditNewPassword(e.target.value)}
-                placeholder="حداقل ۶ کاراکتر جهت تغییر رمز"
-                className={inputCls}
-              />
+              <div className="relative">
+                <input
+                  type={editPasswordVisible ? "text" : "password"}
+                  dir="ltr"
+                  value={editNewPassword}
+                  onChange={(e) => setEditNewPassword(e.target.value)}
+                  placeholder="حداقل ۶ کاراکتر جهت تغییر رمز"
+                  className={`${inputCls} pl-10`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setEditPasswordVisible(!editPasswordVisible)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-navy transition-colors p-1 cursor-pointer"
+                  tabIndex={-1}
+                  aria-label={editPasswordVisible ? "مخفی کردن رمز عبور" : "نمایش رمز عبور"}
+                >
+                  {editPasswordVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
           </div>
 

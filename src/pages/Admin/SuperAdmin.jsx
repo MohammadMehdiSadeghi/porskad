@@ -90,6 +90,7 @@ export default function SuperAdmin() {
   const [activityLog, setActivityLog] = useState([]);
   const [errorLog, setErrorLog] = useState([]);
   const [vercelToken, setVercelToken] = useState(() => localStorage.getItem("sa_vxt") || "");
+  const [showVercelToken, setShowVercelToken] = useState(false);
   const [vercelData, setVercelData] = useState({ deployments: [], projects: [] });
   const [vercelLoading, setVercelLoading] = useState(false);
   const [storageData, setStorageData] = useState(null);
@@ -1838,13 +1839,24 @@ export default function SuperAdmin() {
           <div className="sa-card">
             <div className="sa-card-body">
               <div className="flex gap-2">
-                <input
-                  type="password"
-                  value={vercelToken}
-                  onChange={(e) => setVercelToken(e.target.value)}
-                  placeholder="Vercel API Token"
-                  className="flex-1 bg-white border-2 border-ink/15 rounded-pill-md px-3 py-2 text-xs font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
-                />
+                <div className="relative flex-1">
+                  <input
+                    type={showVercelToken ? "text" : "password"}
+                    value={vercelToken}
+                    onChange={(e) => setVercelToken(e.target.value)}
+                    placeholder="Vercel API Token"
+                    className="w-full bg-white border-2 border-ink/15 rounded-pill-md px-3 py-2 pl-9 text-xs font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowVercelToken(!showVercelToken)}
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink/40 hover:text-navy transition-colors p-1 cursor-pointer"
+                    tabIndex={-1}
+                    aria-label={showVercelToken ? "مخفی کردن توکن" : "نمایش توکن"}
+                  >
+                    {showVercelToken ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
                 <button
                   className="sa-btn sa-btn-primary"
                   onClick={loadVercel}

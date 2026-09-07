@@ -8,7 +8,7 @@ import Button from "../../components/ui/Button";
 import StickerCard from "../../components/ui/StickerCard";
 import SEO from "../../components/ui/SEO";
 import { faNum } from "../../lib/utils";
-import { Crown, Lock, Key, Mail } from "lucide-react";
+import { Crown, Lock, Key, Mail, Eye, EyeOff } from "lucide-react";
 
 export default function Profile() {
   const { user, profile, changePassword, updateProfile } = useAuth();
@@ -33,6 +33,9 @@ export default function Profile() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPass, setShowCurrentPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState(null);
 
@@ -300,38 +303,71 @@ export default function Profile() {
 
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-extrabold text-navy">رمز فعلی</span>
-              <input
-                type="password"
-                dir="ltr"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink focus:outline-none transition-all text-left"
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <input
+                  type={showCurrentPass ? "text" : "password"}
+                  dir="ltr"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 pl-10 font-semibold text-ink focus:outline-none transition-all text-left"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPass(!showCurrentPass)}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink/40 hover:text-navy transition-colors p-1 cursor-pointer"
+                  tabIndex={-1}
+                  aria-label={showCurrentPass ? "مخفی کردن رمز فعلی" : "نمایش رمز فعلی"}
+                >
+                  {showCurrentPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </label>
 
             <div className="grid sm:grid-cols-2 gap-4">
               <label className="flex flex-col gap-1.5">
                 <span className="text-sm font-extrabold text-navy">رمز جدید</span>
-                <input
-                  type="password"
-                  dir="ltr"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink focus:outline-none transition-all text-left"
-                  placeholder="حداقل ۶ کاراکتر"
-                />
+                <div className="relative">
+                  <input
+                    type={showNewPass ? "text" : "password"}
+                    dir="ltr"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 pl-10 font-semibold text-ink focus:outline-none transition-all text-left"
+                    placeholder="حداقل ۶ کاراکتر"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPass(!showNewPass)}
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink/40 hover:text-navy transition-colors p-1 cursor-pointer"
+                    tabIndex={-1}
+                    aria-label={showNewPass ? "مخفی کردن رمز جدید" : "نمایش رمز جدید"}
+                  >
+                    {showNewPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </label>
               <label className="flex flex-col gap-1.5">
                 <span className="text-sm font-extrabold text-navy">تکرار رمز جدید</span>
-                <input
-                  type="password"
-                  dir="ltr"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink focus:outline-none transition-all text-left"
-                  placeholder="تکرار رمز جدید"
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPass ? "text" : "password"}
+                    dir="ltr"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 pl-10 font-semibold text-ink focus:outline-none transition-all text-left"
+                    placeholder="تکرار رمز جدید"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPass(!showConfirmPass)}
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink/40 hover:text-navy transition-colors p-1 cursor-pointer"
+                    tabIndex={-1}
+                    aria-label={showConfirmPass ? "مخفی کردن تکرار رمز جدید" : "نمایش تکرار رمز جدید"}
+                  >
+                    {showConfirmPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </label>
             </div>
 
