@@ -41,6 +41,21 @@ export default function Support() {
   const { push } = useToast();
   const [loading, setLoading] = useState(true);
   const [tickets, setTickets] = useState([]);
+  const [telegramSupportId, setTelegramSupportId] = useState("porskad_support");
+
+  useEffect(() => {
+    async function loadTelegramSupport() {
+      try {
+        const { data } = await supabase.rpc("get_system_settings");
+        if (data?.telegram_support_id) {
+          setTelegramSupportId(data.telegram_support_id.replace(/^@/, ""));
+        }
+      } catch (e) {
+        console.error("Failed to load telegram support id:", e);
+      }
+    }
+    loadTelegramSupport();
+  }, []);
 
   // فیلترها
   // ادمین: 'all' | 'open' | 'answered' | 'closed' | 'archived'
@@ -530,7 +545,7 @@ export default function Support() {
                 </div>
               </div>
               <a
-                href="https://t.me/porskad_support"
+                href={`https://t.me/${telegramSupportId || "porskad_support"}`}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-1.5 bg-white border-2 border-teal rounded-pill-sm px-3 py-1.5 text-xs font-bold text-teal-text hover:bg-teal hover:text-white transition-all"

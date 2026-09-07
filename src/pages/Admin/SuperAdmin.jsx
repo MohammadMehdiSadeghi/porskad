@@ -31,10 +31,14 @@ import {
   Search,
   Download,
   ListOrdered,
+  Settings,
+  RotateCcw,
+  Save,
 } from "lucide-react";
 
 const TABS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "settings", label: "Settings", icon: Settings },
   { id: "storage", label: "Storage", icon: HardDrive },
   { id: "database", label: "Database", icon: Database },
   { id: "users", label: "Users", icon: Users },
@@ -83,6 +87,17 @@ export default function SuperAdmin() {
   const [storageData, setStorageData] = useState(null);
   const [storageLoading, setStorageLoading] = useState(false);
 
+  // ─── System Settings State ───
+  const [sysSettings, setSysSettings] = useState({
+    site_title: "پرس‌کاد",
+    telegram_support_id: "porskad_support",
+    default_max_active_forms: 5,
+    default_max_monthly_responses: 100,
+    registration_enabled: true,
+  });
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [settingsSaving, setSettingsSaving] = useState(false);
+
   // ─── Modals ───
   const [editModal, setEditModal] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -114,6 +129,7 @@ export default function SuperAdmin() {
     try {
       await Promise.all([
         loadDbStats(),
+        loadSystemSettings(),
         loadUsers(),
         loadAdmins(),
         loadActivity(),
@@ -269,12 +285,65 @@ export default function SuperAdmin() {
     setStorageLoading(false);
   }
 
+  // ─── System Settings ───
+  async function loadSystemSettings() {
+    setSettingsLoading(true);
+    try {
+      const { data, error } = await supabase.rpc("get_system_settings");
+      if (!error && data) {
+        setSysSettings((prev) => ({ ...prev, ...data }));
+      }
+    } catch (err) {
+      console.error("Failed to load system settings:", err);
+    } finally {
+      setSettingsLoading(false);
+    }
+  }
+
+  async function saveSystemSettings(e) {
+    if (e) e.preventDefault();
+    setSettingsSaving(true);
+    try {
+      const { data, error } = await supabase.rpc("update_system_settings", {
+        p_settings: sysSettings,
+      });
+      if (error) throw error;
+      if (data) setSysSettings(data);
+      showToast("System settings saved successfully");
+    } catch (err) {
+      showToast("Error saving settings: " + err.message, "error");
+    } finally {
+      setSettingsSaving(false);
+    }
+  }
+
+  async function handleResetUserQuota(targetUserId, targetUserName) {
+    if (
+      !confirm(
+        `Reset monthly response quota for ${
+          targetUserName || targetUserId
+        }? Consumed tokens will reset to 0 and cycle will reset to 30 days.`
+      )
+    )
+      return;
+    try {
+      const { error } = await supabase.rpc("reset_user_monthly_quota", {
+        p_user_id: targetUserId,
+      });
+      if (error) throw error;
+      showToast("User quota reset successfully");
+      await loadUsers();
+    } catch (err) {
+      showToast("Failed to reset quota: " + err.message, "error");
+    }
+  }
+
   // ─── Users (Non-admins only) ───
   async function loadUsers() {
     try {
       const { data: allProfiles, error: profErr } = await supabase
         .from("profiles")
-        .select("id, email, full_name, phone, is_active, is_owner, created_at, hidden_from, max_forms, max_responses_per_month, can_use_telegram")
+        .select("id, email, full_name, phone, is_active, is_owner, created_at, hidden_from, max_forms, max_responses_per_month, monthly_responses_used, quota_reset_at, can_use_telegram")
         .order("created_at", { ascending: false });
       if (profErr) throw profErr;
 
@@ -899,6 +968,142 @@ export default function SuperAdmin() {
         </div>
       )}
 
+      {/* ═══════════ System Settings & Global Limits ═══════════ */}
+      {tab === "settings" && (
+        <div style={{ maxWidth: 840, display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "0.75rem",
+            }}
+          >
+            <div>
+              <div className="sa-section-title" style={{ margin: 0, fontSize: "1.1rem" }}>
+                System Settings & Global Limits
+              </div>
+              <div style={{ fontSize: "0.8rem", color: "#525252" }}>
+                Configure platform defaults, Telegram support username, and quota caps.
+              </div>
+            </div>
+            <button
+              className="sa-btn sa-btn-primary"
+              onClick={saveSystemSettings}
+              disabled={settingsSaving}
+              style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+            >
+              <Save size={14} />
+              {settingsSaving ? "Saving..." : "Save Settings"}
+            </button>
+          </div>
+
+          <div className="sa-card" style={{ padding: "1.25rem" }}>
+            <form onSubmit={saveSystemSettings} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#161616", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                  Platform Title / Brand Name
+                </label>
+                <input
+                  type="text"
+                  value={sysSettings.site_title || ""}
+                  onChange={(e) => setSysSettings({ ...sysSettings, site_title: e.target.value })}
+                  style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #c6c6c6", fontSize: "0.85rem", outline: "none" }}
+                  placeholder="پرس‌کاد"
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#161616", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                  Telegram Support Username
+                </label>
+                <input
+                  type="text"
+                  value={sysSettings.telegram_support_id || ""}
+                  onChange={(e) => setSysSettings({ ...sysSettings, telegram_support_id: e.target.value })}
+                  style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #c6c6c6", fontSize: "0.85rem", fontFamily: "'IBM Plex Mono', monospace", outline: "none" }}
+                  placeholder="porskad_support"
+                />
+                <div style={{ fontSize: "0.7rem", color: "#6f6f6f", marginTop: "0.25rem" }}>
+                  Used across the app to redirect client questions to your Telegram support.
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#161616", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                    Default Max Active Forms
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={sysSettings.default_max_active_forms ?? 5}
+                    onChange={(e) => setSysSettings({ ...sysSettings, default_max_active_forms: parseInt(e.target.value) || 5 })}
+                    style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #c6c6c6", fontSize: "0.85rem", outline: "none" }}
+                  />
+                  <div style={{ fontSize: "0.7rem", color: "#6f6f6f", marginTop: "0.25rem" }}>
+                    Global cap: max 5 active (published) forms per user at the same time.
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#161616", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                    Default Monthly Responses Limit
+                  </label>
+                  <input
+                    type="number"
+                    min={10}
+                    max={50000}
+                    value={sysSettings.default_max_monthly_responses ?? 100}
+                    onChange={(e) => setSysSettings({ ...sysSettings, default_max_monthly_responses: parseInt(e.target.value) || 100 })}
+                    style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #c6c6c6", fontSize: "0.85rem", outline: "none" }}
+                  />
+                  <div style={{ fontSize: "0.7rem", color: "#6f6f6f", marginTop: "0.25rem" }}>
+                    100 responses per month per user. Consumed tokens are permanent upon delete.
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ padding: "0.75rem", background: "#f4f4f4", border: "1px solid #e0e0e0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#161616" }}>
+                    Allow Public User Registrations
+                  </div>
+                  <div style={{ fontSize: "0.7rem", color: "#6f6f6f" }}>
+                    When disabled, only admins can register new users.
+                  </div>
+                </div>
+                <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={sysSettings.registration_enabled !== false}
+                    onChange={(e) => setSysSettings({ ...sysSettings, registration_enabled: e.target.checked })}
+                    style={{ width: 18, height: 18 }}
+                  />
+                  <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>
+                    {sysSettings.registration_enabled !== false ? "Enabled" : "Disabled"}
+                  </span>
+                </label>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.5rem" }}>
+                <button
+                  type="submit"
+                  className="sa-btn sa-btn-primary"
+                  disabled={settingsSaving}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+                >
+                  <Save size={14} />
+                  {settingsSaving ? "Saving..." : "Save Settings"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* ═══════════ Storage & System ═══════════ */}
       {tab === "storage" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -1287,6 +1492,8 @@ export default function SuperAdmin() {
                   <th>Phone</th>
                   <th>Role</th>
                   <th>Status</th>
+                  <th>Monthly Quota</th>
+                  <th>Reset Date</th>
                   <th>Created Date</th>
                   <th>Actions</th>
                 </tr>
@@ -1328,6 +1535,24 @@ export default function SuperAdmin() {
                           {r.is_active ? "Active" : "Inactive"}
                         </span>
                       </td>
+                      <td>
+                        <span
+                          style={{
+                            fontFamily: "'IBM Plex Mono', monospace",
+                            fontSize: "0.75rem",
+                            fontWeight: 700,
+                            color:
+                              (r.monthly_responses_used || 0) >= (r.max_responses_per_month || 100)
+                                ? "#da1e28"
+                                : "#161616",
+                          }}
+                        >
+                          {r.monthly_responses_used || 0} / {r.max_responses_per_month || 100}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: "0.75rem", color: "#525252", fontFamily: "'IBM Plex Mono', monospace" }}>
+                        {r.quota_reset_at ? new Date(r.quota_reset_at).toLocaleDateString("en-US") : "30 days"}
+                      </td>
                       <td style={{ fontSize: "0.75rem", color: "#6f6f6f" }}>
                         {r.created_at ? new Date(r.created_at).toLocaleDateString("en-US") : "—"}
                       </td>
@@ -1360,6 +1585,18 @@ export default function SuperAdmin() {
                           >
                             <FileText size={12} />
                             Logs
+                          </button>
+                          <button
+                            className="sa-btn sa-btn-ghost sa-btn-sm"
+                            style={{ color: "#da1e28", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleResetUserQuota(r.id, r.full_name || r.email);
+                            }}
+                            title="Reset consumed response quota to 0 and start new 30-day cycle"
+                          >
+                            <RotateCcw size={12} />
+                            Reset Quota
                           </button>
                           <button
                             className="sa-btn sa-btn-ghost sa-btn-sm"
@@ -2028,6 +2265,8 @@ export default function SuperAdmin() {
                 ["Form Quota", `${detailModal.max_forms ?? 5} allowed`],
                 ["SuperAdmin / Owner", detailModal.is_owner ? "Yes 👑" : "No"],
                 ["Account Status", detailModal.is_active ? "Active" : "Inactive"],
+                ["Monthly Responses", `${detailModal.monthly_responses_used ?? 0} / ${detailModal.max_responses_per_month ?? 100} used`],
+                ["Quota Reset Date", detailModal.quota_reset_at ? new Date(detailModal.quota_reset_at).toLocaleDateString() : "—"],
                 [
                   "Joined Date",
                   detailModal.created_at
@@ -2130,6 +2369,55 @@ export default function SuperAdmin() {
                   Save
                 </button>
               </div>
+            </div>
+
+            {/* Monthly Response Quota & Reset */}
+            <div
+              style={{
+                border: "1px solid #e0e0e0",
+                padding: "0.75rem",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "#fafafa",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#161616" }}>
+                  Monthly Response Quota
+                </div>
+                <div style={{ fontSize: "0.75rem", color: "#525252" }}>
+                  Consumed: <b>{detailModal.monthly_responses_used ?? 0}</b> /{" "}
+                  {detailModal.max_responses_per_month ?? 100} · Reset:{" "}
+                  {detailModal.quota_reset_at
+                    ? new Date(detailModal.quota_reset_at).toLocaleDateString()
+                    : "30-day cycle"}
+                </div>
+              </div>
+              <button
+                className="sa-btn sa-btn-secondary sa-btn-sm"
+                style={{
+                  color: "#da1e28",
+                  borderColor: "#da1e28",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.35rem",
+                }}
+                onClick={async () => {
+                  await handleResetUserQuota(
+                    detailModal.id,
+                    detailModal.full_name || detailModal.email
+                  );
+                  setDetailModal({
+                    ...detailModal,
+                    monthly_responses_used: 0,
+                    quota_reset_at: new Date(Date.now() + 30 * 86400000).toISOString(),
+                  });
+                }}
+              >
+                <RotateCcw size={13} />
+                Reset Quota
+              </button>
             </div>
 
             {/* Set New Password Form (Without displaying old passwords) */}

@@ -201,9 +201,22 @@ export default function FormsList() {
       push("شما مجوز انتشار فرم ندارید.", "error");
       return;
     }
+
+    // اگر فرم قرار است فعال/منتشر شود، سقف ۵ فرم همزمان فعال بررسی شود
+    if (!form.published && !isOwner()) {
+      const activePublishedCount = forms.filter(
+        (f) => f.published && !f.archived && !f.deleted_at && f.id !== form.id
+      ).length;
+      const allowedMax = profile?.max_forms ?? 5;
+      if (activePublishedCount >= allowedMax) {
+        push(`سقف فرم‌های همزمان فعال (حداکثر ${allowedMax} فرم) تکمیل شده است. لطفاً ابتدا یکی از فرم‌های فعال را غیرفعال یا بایگانی کنید.`, "error");
+        return;
+      }
+    }
+
     const { error } = await supabase.from("forms").update({ published: !form.published }).eq("id", form.id);
     if (error) {
-      push("تغییر وضعیت ناموفق بود", "error");
+      push(error.message || "تغییر وضعیت ناموفق بود", "error");
       return;
     }
     push(form.published ? "فرم از انتشار خارج شد" : "فرم منتشر شد!");

@@ -345,12 +345,18 @@ function NotificationProvider({ children }) {
     }
   }, [user?.id, profile, syncOfflineActivity]);
 
-  // ─── اشتراک بلادرنگ (Real-time Supabase Channels) ───
+  const addNotificationRef = useRef(addNotification);
   useEffect(() => {
-    if (!notifEnabled || !supabase || !user) return;
+    addNotificationRef.current = addNotification;
+  }, [addNotification]);
 
+  // ─── اشتراک بلادرنگ پایدار (Real-time Supabase Channels) ───
+  useEffect(() => {
+    if (!supabase || !user?.id) return;
+
+    const channelName = `user-notifications-${user.id}`;
     const channel = supabase
-      .channel("app-global-notifications")
+      .channel(channelName)
       // ۱. ثبت بلادرنگ پاسخ جدید فرم
       .on(
         "postgres_changes",
@@ -367,13 +373,14 @@ function NotificationProvider({ children }) {
               .eq("id", newResp.form_id)
               .maybeSingle();
 
+            const owner = Boolean(isOwner?.() || profile?.is_owner);
             const isMyForm =
-              formData &&
-              (formData.manager_id === user.id || formData.created_by === user.id);
+              (formData &&
+                (formData.manager_id === user.id || formData.created_by === user.id)) ||
+              (owner && (!formData?.created_by || formData?.created_by === user.id || formData?.manager_id === user.id || owner));
 
-            // فقط در صورتی که کاربر مالک یا ایجادکننده فرم باشد اعلان دریافت کند
             if (isMyForm) {
-              addNotification({
+              addNotificationRef.current?.({
                 id: `resp_${newResp.id}`,
                 type: "response",
                 title: "ثبت پاسخ جدید 📥",
@@ -397,7 +404,7 @@ function NotificationProvider({ children }) {
           const newTicket = payload.new;
           if (!newTicket) return;
 
-          const owner = Boolean(isOwner?.());
+          const owner = Boolean(isOwner?.() || profile?.is_owner);
           const isMyTicket = newTicket.user_id === user.id;
 
           // فقط برای ادمین در صورت ایجاد تیکت توسط کاربر دیگر
@@ -420,7 +427,7 @@ function NotificationProvider({ children }) {
               }
             } catch {}
 
-            addNotification({
+            addNotificationRef.current?.({
               id: `ticket_new_${newTicket.id}`,
               type: "ticket_new",
               title: "تیکت پشتیبانی جدید 💬",
@@ -442,12 +449,12 @@ function NotificationProvider({ children }) {
           if (!updatedTicket) return;
 
           const isMyTicket = updatedTicket.user_id === user.id;
-          const owner = Boolean(isOwner?.());
+          const owner = Boolean(isOwner?.() || profile?.is_owner);
 
           // رویدادهای کاربر عادی
           if (isMyTicket && !owner) {
             if (updatedTicket.admin_reply && updatedTicket.admin_reply !== oldTicket?.admin_reply) {
-              addNotification({
+              addNotificationRef.current?.({
                 id: `ticket_reply_${updatedTicket.id}_${updatedTicket.replied_at || Date.now()}`,
                 type: "ticket_reply",
                 title: "پاسخ جدید به تیکت 🎧",
@@ -457,7 +464,7 @@ function NotificationProvider({ children }) {
                 time: updatedTicket.replied_at || updatedTicket.updated_at || new Date().toISOString(),
               });
             } else if (updatedTicket.status === "closed" && oldTicket?.status !== "closed") {
-              addNotification({
+              addNotificationRef.current?.({
                 id: `ticket_closed_${updatedTicket.id}`,
                 type: "ticket_closed",
                 title: "تیکت پشتیبانی بسته شد 🔒",
@@ -472,7 +479,7 @@ function NotificationProvider({ children }) {
           // رویدادهای مدیر کل (مانند بازگشایی مجدد توسط کاربر)
           if (owner && !isMyTicket) {
             if (updatedTicket.status === "open" && oldTicket?.status === "closed") {
-              addNotification({
+              addNotificationRef.current?.({
                 id: `ticket_reopen_${updatedTicket.id}`,
                 type: "ticket_reopen",
                 title: "بازگشایی مجدد تیکت 🔓",
@@ -490,7 +497,7 @@ function NotificationProvider({ children }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [notifEnabled, addNotification, user, isOwner]);
+  }, [user?.id, isOwner, profile?.is_owner]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 

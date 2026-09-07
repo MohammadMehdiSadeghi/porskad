@@ -48,7 +48,7 @@ export function AuthProvider({ children }) {
       // اول با is_owner و فیلدهای سهمیه سعی کن
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, email, full_name, phone, avatar_url, is_active, is_owner, created_by, max_forms, max_responses_per_month, plan, can_use_telegram, can_export_excel")
+        .select("id, email, full_name, phone, avatar_url, is_active, is_owner, created_by, max_forms, max_responses_per_month, monthly_responses_used, quota_reset_at, plan, can_use_telegram, can_export_excel")
         .eq("id", uid)
         .maybeSingle();
 
@@ -56,6 +56,8 @@ export function AuthProvider({ children }) {
         if (!('is_owner' in data)) data.is_owner = false;
         data.max_forms = data.is_owner ? 999999 : (data.max_forms ?? 5);
         data.max_responses_per_month = data.is_owner ? 999999 : (data.max_responses_per_month ?? 100);
+        data.monthly_responses_used = data.is_owner ? 0 : (data.monthly_responses_used ?? 0);
+        data.quota_reset_at = data.quota_reset_at ?? null;
         data.plan = data.is_owner ? 'enterprise' : (data.plan ?? 'free');
         data.can_use_telegram = data.is_owner ? true : (data.can_use_telegram === true);
         data.can_export_excel = data.can_export_excel ?? true;
@@ -490,7 +492,7 @@ export function AuthProvider({ children }) {
       try {
         const res = await supabase
           .from("profiles")
-          .select("id, email, full_name, phone, is_active, is_owner, created_at, created_by, hidden_from, max_forms, max_responses_per_month, plan, can_use_telegram")
+          .select("id, email, full_name, phone, is_active, is_owner, created_at, created_by, hidden_from, max_forms, max_responses_per_month, monthly_responses_used, quota_reset_at, plan, can_use_telegram")
           .order("created_at", { ascending: true });
         profilesData = res.data;
         profilesError = res.error;
@@ -552,6 +554,8 @@ export function AuthProvider({ children }) {
           is_owner: p.is_owner ?? false,
           max_forms: p.is_owner ? 999999 : (p.max_forms ?? 5),
           max_responses_per_month: p.is_owner ? 999999 : (p.max_responses_per_month ?? 100),
+          monthly_responses_used: p.is_owner ? 0 : (p.monthly_responses_used ?? 0),
+          quota_reset_at: p.quota_reset_at || null,
           plan: p.is_owner ? 'enterprise' : (p.plan ?? 'free'),
           can_use_telegram: p.is_owner ? true : (p.can_use_telegram === true),
           role: roleId,
@@ -565,9 +569,19 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function resetUserQuota(userId) {
+    if (!userId) return null;
+    const { data, error } = await supabase.rpc("reset_user_monthly_quota", {
+      p_user_id: userId,
+    });
+    if (error) throw error;
+    return data;
+  }
+
   const value = {
     session,
     user,
+    resetUserQuota,
     role,
     permissions,
     profile,

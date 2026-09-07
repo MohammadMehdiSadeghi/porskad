@@ -8,7 +8,7 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import StickerCard from "../../components/ui/StickerCard";
 import Modal from "../../components/ui/Modal";
-import { Plus, Edit, Trash2, Crown, Users, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings, Eye, EyeOff, Sliders, Bot, Copy, Calendar, CheckCircle, XCircle, Phone, Mail } from "lucide-react";
+import { Plus, Edit, Trash2, Crown, Users, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings, Eye, EyeOff, Sliders, Bot, Copy, Calendar, CheckCircle, XCircle, Phone, Mail, RotateCcw } from "lucide-react";
 import SEO from "../../components/ui/SEO";
 import { supabase } from "../../lib/supabaseClient";
 import { logActivity } from "../../lib/activityLogger";
@@ -163,7 +163,7 @@ function PermissionSummary({ permissions }) {
 
 export default function Managers() {
   const { push } = useToast();
-  const { listManagers, createManager, updateManager, deactivateManager, activateManager, deleteManager, isOwner, user, session, hasPermission, updateUserQuota } = useAuth();
+  const { listManagers, createManager, updateManager, deactivateManager, activateManager, deleteManager, isOwner, user, session, hasPermission, updateUserQuota, resetUserQuota } = useAuth();
   const canManage = isOwner() || hasPermission("manage_managers");
   const canView = isOwner() || hasPermission("manage_managers") || hasPermission("view_admins");
   const [loading, setLoading] = useState(true);
@@ -180,6 +180,49 @@ export default function Managers() {
   const [editPasswordVisible, setEditPasswordVisible] = useState(false);
   const [selectedUserModal, setSelectedUserModal] = useState(null);
   const [userFormsCount, setUserFormsCount] = useState({});
+
+  // ─── تنظیمات سامانه و محدودیت‌ها ───
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [sysSettings, setSysSettings] = useState({
+    site_title: "پرس‌کاد",
+    telegram_support_id: "porskad_support",
+    default_max_active_forms: 5,
+    default_max_monthly_responses: 100,
+    registration_enabled: true,
+  });
+  const [settingsSaving, setSettingsSaving] = useState(false);
+
+  useEffect(() => {
+    async function loadSysSettings() {
+      try {
+        const { data, error } = await supabase.rpc("get_system_settings");
+        if (!error && data) {
+          setSysSettings((prev) => ({ ...prev, ...data }));
+        }
+      } catch (e) {
+        console.error("Failed to fetch system settings:", e);
+      }
+    }
+    loadSysSettings();
+  }, []);
+
+  async function handleSaveSettings(e) {
+    e.preventDefault();
+    setSettingsSaving(true);
+    try {
+      const { data, error } = await supabase.rpc("update_system_settings", {
+        p_settings: sysSettings,
+      });
+      if (error) throw error;
+      if (data) setSysSettings(data);
+      push("تنظیمات سامانه و محدودیت‌ها با موفقیت ذخیره شد.", "success");
+      setShowSettingsModal(false);
+    } catch (err) {
+      push("خطا در ذخیره تنظیمات: " + err.message, "error");
+    } finally {
+      setSettingsSaving(false);
+    }
+  }
 
   async function toggleTelegramAccess(m) {
     const newVal = !m.can_use_telegram;
@@ -390,11 +433,24 @@ export default function Managers() {
             {managers.filter((m) => m.is_active).length} کاربر فعال — دسترسی به سایر کاربران برای تمامی کاربران عادی مسدود است
           </p>
         </div>
-        {canManage && (
-          <Button variant="teal" size="sm" onClick={() => setShowCreateModal(true)} rotate="-rotate-[1deg]">
-            <Plus size={14} className="ml-1" /> کاربر جدید
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {isOwner() && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSettingsModal(true)}
+              className="gap-1.5"
+            >
+              <Settings size={14} className="text-navy" />
+              <span>تنظیمات و محدودیت‌های سامانه</span>
+            </Button>
+          )}
+          {canManage && (
+            <Button variant="teal" size="sm" onClick={() => setShowCreateModal(true)} rotate="-rotate-[1deg]">
+              <Plus size={14} className="ml-1" /> کاربر جدید
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* لیست کاربران */}
@@ -603,9 +659,41 @@ export default function Managers() {
                 </div>
 
                 <div className="text-[0.7rem] text-ink-subtle font-semibold flex items-center justify-between pt-1 border-t border-ink/5">
-                  <span>سقف پاسخ‌های ماهانه:</span>
-                  <strong className="text-navy">{m.is_owner ? "نامحدود" : `${faNum(m.max_responses_per_month ?? 100)} پاسخ`}</strong>
+                  <span>سقف ورودی‌های ماهانه:</span>
+                  <strong className="text-navy">{m.is_owner ? "نامحدود" : `${faNum(m.max_responses_per_month ?? 100)} ورودی`}</strong>
                 </div>
+
+                {!m.is_owner && (
+                  <>
+                    <div className="text-[0.7rem] text-ink-subtle font-semibold flex items-center justify-between pt-1">
+                      <span>ورودی‌های مصرف‌شده این ماه:</span>
+                      <strong className={`font-black ${(m.monthly_responses_used ?? 0) >= (m.max_responses_per_month ?? 100) ? "text-magenta-text" : "text-teal-text"}`}>
+                        {faNum(m.monthly_responses_used ?? 0)} از {faNum(m.max_responses_per_month ?? 100)}
+                      </strong>
+                    </div>
+
+                    <div className="text-[0.65rem] text-ink-subtle flex items-center justify-between pt-1">
+                      <span>تاریخ ریست بعدی (۳۰ روزه):</span>
+                      <span className="font-semibold text-navy" dir="ltr">
+                        {m.quota_reset_at ? new Date(m.quota_reset_at).toLocaleDateString("fa-IR") : "—"}
+                      </span>
+                    </div>
+
+                    {canManage && (
+                      <div className="pt-2 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => handleResetQuota(m)}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold text-teal-text bg-teal/10 hover:bg-teal/20 transition-colors cursor-pointer border border-teal/20"
+                          title="ریست کردن شمارنده ورودی‌های مصرف‌شده به ۰ و تمدید دوره به ۳۰ روز آینده"
+                        >
+                          <RotateCcw size={13} />
+                          <span>ریست سهمیه ماهانه</span>
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               {/* دسترسی به ربات تلگرام */}
@@ -907,11 +995,147 @@ export default function Managers() {
             </label>
           </div>
 
+          {/* وضعیت مصرف سهمیه در مودال */}
+          <div className="p-3 bg-bg-neutral/70 rounded-xl border border-ink/10 flex flex-col gap-1.5 text-xs">
+            <div className="flex justify-between items-center">
+              <span className="text-ink-subtle">ورودی‌های مصرف‌شده ماه جاری:</span>
+              <span className="font-black text-navy">{quotaModal?.monthly_responses_used ?? 0} از {quotaModal?.max_responses_per_month ?? 100}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-ink-subtle">تاریخ پایان دوره و ریست بعدی:</span>
+              <span className="font-mono text-navy" dir="ltr">{quotaModal?.quota_reset_at ? new Date(quotaModal.quota_reset_at).toLocaleDateString("fa-IR") : "—"}</span>
+            </div>
+            {canManage && (
+              <div className="pt-1.5 flex justify-end">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="!text-teal-text border border-teal/30 hover:bg-teal/10 text-xs py-1 gap-1"
+                  onClick={async () => {
+                    await handleResetQuota(quotaModal);
+                    setQuotaModal(null);
+                  }}
+                >
+                  <RotateCcw size={12} />
+                  <span>ریست سهمیه همین الان</span>
+                </Button>
+              </div>
+            )}
+          </div>
+
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="teal" size="sm" type="submit" disabled={quotaSaving}>
               {quotaSaving ? "در حال ذخیره..." : "ذخیره سهمیه"}
             </Button>
             <Button variant="ghost" size="sm" type="button" onClick={() => setQuotaModal(null)}>انصراف</Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* مودال تنظیمات سامانه و محدودیت‌ها */}
+      <Modal
+        open={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        title="تنظیمات سامانه و محدودیت‌ها"
+        size="md"
+      >
+        <form onSubmit={handleSaveSettings} className="flex flex-col gap-4">
+          <p className="text-xs text-ink-subtle font-medium leading-relaxed">
+            تنظیمات عمومی سامانه، آیدی تلگرام پشتیبانی و محدودیت‌های سهمیه پیش‌فرض برای کاربران در این بخش قابل مدیریت است.
+          </p>
+
+          <div>
+            <label className="block text-xs font-bold text-navy mb-1.5">
+              نام / عنوان سامانه
+            </label>
+            <input
+              type="text"
+              value={sysSettings.site_title || ""}
+              onChange={(e) => setSysSettings({ ...sysSettings, site_title: e.target.value })}
+              placeholder="پرس‌کاد"
+              className={inputCls}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-navy mb-1.5">
+              آیدی پشتیبانی در تلگرام (بدون @ یا با @)
+            </label>
+            <input
+              type="text"
+              dir="ltr"
+              value={sysSettings.telegram_support_id || ""}
+              onChange={(e) => setSysSettings({ ...sysSettings, telegram_support_id: e.target.value })}
+              placeholder="porskad_support"
+              className={inputCls}
+            />
+            <span className="text-[0.7rem] text-ink-subtle mt-1 block">
+              این آیدی در بخش پشتیبانی برای ارتباط سریع با تلگرام قرار می‌گیرد.
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-navy mb-1.5">
+                سقف فرم‌های فعال همزمان (پیش‌فرض)
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={50}
+                value={sysSettings.default_max_active_forms ?? 5}
+                onChange={(e) => setSysSettings({ ...sysSettings, default_max_active_forms: parseInt(e.target.value) || 5 })}
+                className={inputCls}
+              />
+              <span className="text-[0.7rem] text-ink-subtle mt-1 block">
+                محدودیت پیش‌فرض: ۵ فرم فعال همزمان
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-navy mb-1.5">
+                سقف ورودی ماهانه پیش‌فرض هر کاربر
+              </label>
+              <input
+                type="number"
+                min={10}
+                max={10000}
+                value={sysSettings.default_max_monthly_responses ?? 100}
+                onChange={(e) => setSysSettings({ ...sysSettings, default_max_monthly_responses: parseInt(e.target.value) || 100 })}
+                className={inputCls}
+              />
+              <span className="text-[0.7rem] text-ink-subtle mt-1 block">
+                محدودیت پیش‌فرض: ۱۰۰ ورودی در ماه (با چرخه ۳۰ روزه)
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-bg-lavender/50 rounded-xl border border-navy/10">
+            <div>
+              <div className="text-xs font-bold text-navy">امکان ثبت‌نام مستقیم کاربران</div>
+              <div className="text-[0.7rem] text-ink-subtle">
+                در صورت غیرفعال بودن، کاربران جدید فقط توسط ادمین قابل ثبت خواهند بود.
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={sysSettings.registration_enabled !== false}
+                onChange={(e) => setSysSettings({ ...sysSettings, registration_enabled: e.target.checked })}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-ink/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal"></div>
+            </label>
+          </div>
+
+          <div className="flex gap-3 justify-end pt-3 border-t border-ink/10">
+            <Button variant="teal" size="sm" type="submit" disabled={settingsSaving}>
+              {settingsSaving ? "در حال ذخیره..." : "ذخیره تنظیمات سامانه"}
+            </Button>
+            <Button variant="ghost" size="sm" type="button" onClick={() => setShowSettingsModal(false)}>
+              انصراف
+            </Button>
           </div>
         </form>
       </Modal>
