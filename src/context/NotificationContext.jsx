@@ -65,6 +65,8 @@ function NotificationProvider({ children }) {
   const { user, profile, isOwner } = useAuth() || {};
   const [notifications, setNotifications] = useState([]);
   const [isSyncing, setIsSyncing] = useState(false);
+  const isSyncingRef = useRef(false);
+  const syncedUserIdRef = useRef(null);
 
   const [soundEnabled, setSoundEnabled] = useState(() => {
     try {
@@ -193,7 +195,8 @@ function NotificationProvider({ children }) {
   // ─── سیستم بررسی و همگام‌سازی آفلاین (Offline Sync / Catch-up) ───
   // اگر کاربر آفلاین بوده باشد، هنگام ورود اطلاعات را از دیتابیس واکشی می‌کند
   const syncOfflineActivity = useCallback(async () => {
-    if (!user || !supabase || isSyncing) return;
+    if (!user || !supabase || isSyncingRef.current) return;
+    isSyncingRef.current = true;
     setIsSyncing(true);
 
     try {
@@ -255,21 +258,36 @@ function NotificationProvider({ children }) {
         // مدیر ارشد: تیکت‌های جدید کاربران در زمان آفلاین
         const { data: newTickets } = await supabase
           .from("support_tickets")
-          .select("id, subject, created_at, user_id, status, profiles:user_id(full_name, email)")
+          .select("id, subject, created_at, user_id, status")
           .neq("user_id", user.id)
           .gt("created_at", sinceTime)
           .order("created_at", { ascending: false })
           .limit(20);
 
         if (newTickets && newTickets.length > 0) {
+          const userIds = [...new Set(newTickets.map((t) => t.user_id).filter(Boolean))];
+          let profilesMap = {};
+          if (userIds.length > 0) {
+            try {
+              const { data: userProfiles } = await supabase
+                .from("profiles")
+                .select("id, full_name, email")
+                .in("id", userIds);
+              profilesMap = Object.fromEntries((userProfiles || []).map((p) => [p.id, p]));
+            } catch {
+              // نادیده گرفتن خطا
+            }
+          }
+
           for (const ticket of newTickets) {
+            const ticketProfile = profilesMap[ticket.user_id];
             // انزوای حساب گاد از سوپرادمین‌های ثانویه
-            if (!isPrimaryGodEmail(user.email) && isPrimaryGodEmail(ticket.profiles?.email)) {
+            if (!isPrimaryGodEmail(user.email) && isPrimaryGodEmail(ticketProfile?.email)) {
               continue;
             }
 
             const senderName =
-              ticket.profiles?.full_name || ticket.profiles?.email?.split("@")[0] || "کاربر";
+              ticketProfile?.full_name || ticketProfile?.email?.split("@")[0] || "کاربر";
 
             newOfflineItems.push({
               id: `ticket_new_${ticket.id}`,
@@ -334,13 +352,15 @@ function NotificationProvider({ children }) {
     } catch (err) {
       console.error("Error in syncOfflineActivity:", err);
     } finally {
+      isSyncingRef.current = false;
       setIsSyncing(false);
     }
-  }, [user, isOwner, lastCheckKey, isSyncing, playSound]);
+  }, [user?.id, user?.email, isOwner, lastCheckKey, playSound]);
 
-  // اجرای همگام‌سازی آفلاین هنگام بارگذاری و تکمیل پروفایل
+  // اجرای همگام‌سازی آفلاین هنگام بارگذاری و ورود کاربر
   useEffect(() => {
-    if (user?.id && profile) {
+    if (user?.id && profile && syncedUserIdRef.current !== user.id) {
+      syncedUserIdRef.current = user.id;
       syncOfflineActivity();
     }
   }, [user?.id, profile, syncOfflineActivity]);

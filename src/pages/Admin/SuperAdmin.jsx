@@ -116,6 +116,19 @@ export default function SuperAdmin() {
   const [userLogsLoading, setUserLogsLoading] = useState(false);
   const [userLogsSearch, setUserLogsSearch] = useState("");
 
+  // ─── User Detail Password & Email States ───
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+
+  useEffect(() => {
+    if (detailModal) {
+      setNewEmail(detailModal.email || "");
+      setNewPassword("");
+      setPasswordVisible(false);
+    }
+  }, [detailModal?.id]);
+
   // ─── Init ───
   useEffect(() => {
     loadAll();
