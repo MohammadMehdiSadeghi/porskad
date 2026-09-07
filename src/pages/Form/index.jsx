@@ -40,7 +40,7 @@ function NotAvailable({ message }) {
           <div className="p-5 sm:p-6 flex flex-col items-center text-center gap-3">
             <span className="text-3xl sm:text-4xl rotate-[2deg]"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-female-normal"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
             <h1 className="text-lg sm:text-xl font-black text-male-normal">این فرم در دسترس نیست</h1>
-            <p className="text-[0.65rem] sm:text-xs font-semibold text-ink-subtle leading-6">{message}</p>
+            <p className="text-sm font-semibold text-ink-subtle leading-6">{message}</p>
           </div>
         </StickerCard>
       </div>

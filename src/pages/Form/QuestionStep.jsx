@@ -74,7 +74,7 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
           }}
         />
         {maxLen && (
-          <div className="flex justify-end text-[0.65rem] font-bold text-ink-subtle/60" dir="ltr">
+          <div className="flex justify-end text-xs font-bold text-ink-subtle/70 mt-1" dir="ltr">
             {faNum(currentLength)} / {faNum(maxLen)}
           </div>
         )}
@@ -138,7 +138,7 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
         />
       </div>
       {type === "short_text" && currentLength > 180 && (
-        <div className="flex justify-end text-[0.65rem] font-bold text-ink-subtle/60" dir="ltr">
+        <div className="flex justify-end text-xs font-bold text-ink-subtle/70 mt-1" dir="ltr">
           {faNum(currentLength)} / {faNum(255)}
         </div>
       )}
@@ -309,13 +309,13 @@ export default function QuestionStep({ question, index, total, value, timeSpent,
           </span>
           <div className="flex items-center gap-1 mr-auto">
             {question.conditions && (
-              <span className="text-[0.6rem] sm:text-xs font-bold text-male-normal bg-male-light rounded-pill-sm px-1.5 py-0.5 flex items-center gap-1">
-                <GitFork size={11} /> شرطی
+              <span className="text-xs font-bold text-male-normal bg-male-light rounded-pill-sm px-2 py-0.5 flex items-center gap-1">
+                <GitFork size={12} /> شرطی
               </span>
             )}
             {question.required
-              ? <span className="text-[0.6rem] sm:text-xs font-bold text-female-normal bg-female-light rounded-pill-sm px-1.5 py-0.5 flex items-center gap-0.5">اجباری</span>
-              : <span className="text-[0.6rem] sm:text-xs font-bold text-ink-subtle bg-bg-neutral rounded-pill-sm px-1.5 py-0.5">اختیاری</span>
+              ? <span className="text-xs font-bold text-female-normal bg-female-light rounded-pill-sm px-2 py-0.5 flex items-center gap-0.5">اجباری</span>
+              : <span className="text-xs font-bold text-ink-subtle bg-bg-neutral rounded-pill-sm px-2 py-0.5">اختیاری</span>
             }
           </div>
         </div>

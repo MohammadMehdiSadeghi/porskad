@@ -754,8 +754,8 @@ export default function Support() {
                             {group.profile.full_name || "کاربر بدون نام"}
                           </span>
                           {group.profile.is_owner && (
-                            <span className="text-[0.65rem] font-bold bg-amber-100 text-amber-800 rounded-pill-sm px-2 py-0.5 shrink-0 flex items-center gap-1">
-                              <Crown size={10} />
+                            <span className="text-xs font-bold bg-amber-100 text-amber-800 rounded-pill-sm px-2 py-0.5 shrink-0 flex items-center gap-1">
+                              <Crown size={11} />
                               <span>مدیر کل</span>
                             </span>
                           )}
@@ -768,7 +768,7 @@ export default function Support() {
                               <Phone size={11} /> {group.profile.phone}
                             </span>
                           )}
-                          <span className="text-[0.7rem] text-ink/30">• آخرین فعالیت: {faRelative(group.latestDate)}</span>
+                          <span className="text-xs text-ink/40">• آخرین فعالیت: {faRelative(group.latestDate)}</span>
                         </div>
                       </div>
                     </div>
@@ -874,7 +874,7 @@ export default function Support() {
                                       <CheckCircle2 size={14} /> پاسخ پشتیبانی پرس‌کاد
                                     </span>
                                     {t.replied_at && (
-                                      <span className="text-[0.65rem] font-medium text-ink-subtle">
+                                      <span className="text-xs font-medium text-ink-subtle">
                                         {faRelative(t.replied_at)}
                                       </span>
                                     )}
@@ -1040,7 +1040,7 @@ export default function Support() {
                               <CheckCircle2 size={14} /> پاسخ پشتیبانی پرس‌کاد
                             </span>
                             {t.replied_at && (
-                              <span className="text-[0.65rem] font-medium text-ink-subtle">
+                              <span className="text-xs font-medium text-ink-subtle">
                                 {faRelative(t.replied_at)}
                               </span>
                             )}

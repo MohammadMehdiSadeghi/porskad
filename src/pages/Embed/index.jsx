@@ -146,7 +146,7 @@ function TextInput({ type, value, onChange, autoFocus = true, onEnter, placehold
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && onEnter) { e.preventDefault(); onEnter(); } }}
         />
         {resolvedMaxLength && (
-          <span className="text-[0.65rem] text-ink/40 font-mono text-left">
+          <span className="text-xs text-ink/50 font-mono text-left mt-0.5">
             {faNum(String(value ?? "").length)} / {faNum(resolvedMaxLength)}
           </span>
         )}
@@ -169,7 +169,7 @@ function TextInput({ type, value, onChange, autoFocus = true, onEnter, placehold
         placeholder={ph}
       />
       {resolvedMaxLength && type === "short_text" && (
-        <span className="text-[0.65rem] text-ink/40 font-mono text-left">
+        <span className="text-xs text-ink/50 font-mono text-left mt-0.5">
           {faNum(String(value ?? "").length)} / {faNum(resolvedMaxLength)}
         </span>
       )}
@@ -279,16 +279,21 @@ function RatingStars({ value, onChange }) {
   const [hover, setHover] = useState(null);
   const current = hover ?? Number(value ?? 0);
   return (
-    <div className="flex justify-center gap-2 sm:gap-3" dir="ltr">
+    <div className="flex justify-center gap-2 sm:gap-3 py-1" dir="ltr">
       {[1, 2, 3, 4, 5].map((n) => (
         <button
           key={n}
           type="button"
-          className={`star-btn text-4xl sm:text-5xl cursor-pointer ${n <= current ? "" : "opacity-30 grayscale"}`}
+          className="cursor-pointer p-1 transition-transform hover:scale-110 focus:outline-none"
           onMouseEnter={() => setHover(n)}
           onMouseLeave={() => setHover(null)}
           onClick={() => onChange(n)}
-        >⭐</button>
+        >
+          <Star
+            size={32}
+            className={n <= current ? "fill-college-normal text-college-normal" : "text-ink/20"}
+          />
+        </button>
       ))}
     </div>
   );
@@ -298,7 +303,7 @@ function RatingStars({ value, onChange }) {
 function BrandingBadge({ formId }) {
   return (
     <div className="text-center py-3 border-t border-ink/10 mt-4">
-      <span className="inline-flex items-baseline gap-0.5 text-[0.6rem] sm:text-xs text-ink/30">
+      <span className="inline-flex items-baseline gap-1 text-xs text-ink/40">
         ساخته‌شده با
         <span className="font-extrabold text-male-normal">پرس‌<span className="text-ecosystem-dark">کاد</span></span>
       </span>
@@ -464,7 +469,7 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
           <span className="text-male-normal">پرس</span>
           <span className="text-ecosystem-dark">کاد</span>
         </span>
-        <span className="block text-[0.6rem] sm:text-xs font-bold text-ink/30 mt-0.5">{schema.title}</span>
+        <span className="block text-xs font-bold text-ink/40 mt-0.5">{schema.title}</span>
       </div>
 
       <main className="flex-1 flex items-start justify-center px-4 sm:px-5 py-4 sm:py-6">
@@ -475,7 +480,7 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
                 <div className="text-center mb-0.5">
                   <h1 className="text-lg sm:text-xl font-black text-male-normal mb-0.5">{schema.title}</h1>
                   {schema.description && <p className="text-xs sm:text-sm text-ink-subtle">{schema.description}</p>}
-                  <span className="text-[0.6rem] sm:text-xs font-bold text-ink/40 bg-bg-neutral rounded-pill-sm px-1.5 py-0.5 mt-1.5 inline-block">{faNum(visibleQuestions.length)} فیلد</span>
+                  <span className="text-xs font-bold text-ink/50 bg-bg-neutral rounded-pill-sm px-2 py-0.5 mt-1.5 inline-block">{faNum(visibleQuestions.length)} فیلد</span>
                                   </div>
 
                                   {visibleQuestions.map((q, i) => {
@@ -884,7 +889,7 @@ export default function EmbedForm() {
           <span className="text-male-normal">پرس</span>
           <span className="text-ecosystem-dark">کاد</span>
         </span>
-        <span className="block text-[0.6rem] sm:text-xs font-bold text-ink/30 mt-0.5">{schema.title}</span>
+        <span className="block text-xs font-bold text-ink/40 mt-0.5">{schema.title}</span>
       </div>
 
       {/* نوار پیشرفت */}
@@ -911,7 +916,7 @@ export default function EmbedForm() {
                   >
                     <h1 className="text-lg sm:text-xl font-black text-male-normal">{schema.welcome_title}</h1>
                     <p className="text-sm sm:text-base text-ink-soft leading-7">{schema.welcome_message}</p>
-                    {visibleTotal > 0 && <span className="text-[0.6rem] sm:text-xs text-ink/30 font-bold">{faNum(visibleTotal)} سوال</span>}                      <div className="relative mt-3 sm:mt-4">
+                    {visibleTotal > 0 && <span className="text-xs text-ink/40 font-bold">{faNum(visibleTotal)} سوال</span>}                      <div className="relative mt-3 sm:mt-4">
                       <div aria-hidden="true" className="absolute top-[0.125rem] left-[0.125rem] w-full h-full bg-ecosystem-dark rounded-pill-md [corner-shape:squircle]" />
                       <button onClick={goNext} disabled={visibleTotal === 0}
                         className="relative z-10 bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-6 sm:px-7 py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] font-extrabold hover:bg-ecosystem-dark transition-colors duration-200 disabled:opacity-50 text-sm sm:text-base">
@@ -933,7 +938,7 @@ export default function EmbedForm() {
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-xs sm:text-sm font-black text-male-normal">سوال {faNum(currentVisibleIndex)} از {faNum(visibleTotal)}</span>
-                      {currentQuestion.required && <span className="text-[0.6rem] sm:text-xs font-bold text-female-normal">اجباری *</span>}
+                      {currentQuestion.required && <span className="text-xs font-bold text-female-normal">اجباری *</span>}
                     </div>
                     <h2 className="text-[17px] leading-[26px] sm:text-[20px] sm:leading-[30px] font-black text-male-normal">{currentQuestion.title}</h2>
                     {currentQuestion.description && <p className="text-xs sm:text-sm text-ink-subtle -mt-1.5">{currentQuestion.description}</p>}

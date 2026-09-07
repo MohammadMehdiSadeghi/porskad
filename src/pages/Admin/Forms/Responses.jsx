@@ -116,7 +116,7 @@ function CorrectnessBadge({ question, answer }) {
   if (!question.correct_answer || !question.points) return null;
   const correct = isCorrectAnswer(question, answer);
   return (
-    <span className={`inline-flex items-center gap-1 text-[0.6rem] font-black px-2 py-0.5 rounded-full ${
+    <span className={`inline-flex items-center gap-1 text-xs font-black px-2 py-0.5 rounded-full ${
       correct ? "bg-teal/15 text-teal-text border border-teal/30" : "bg-magenta/15 text-magenta-text border border-magenta/30"
     }`}>
       {correct ? "صحیح" : "غلط"}
@@ -218,16 +218,16 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
 
       {/* نوار آمار سریع */}
       <div className="flex flex-wrap gap-2 mb-4">
-        <span className="text-[0.65rem] font-bold text-ink/50 bg-bg-neutral px-2 py-1 rounded-full">
+        <span className="text-xs font-bold text-ink/60 bg-bg-neutral px-2.5 py-1 rounded-full">
           نرخ پاسخ: {faNum(completionRate)}٪
         </span>
         {avgTime !== null && avgTime > 0 && (
-          <span className="text-[0.65rem] font-bold text-ink/50 bg-bg-neutral px-2 py-1 rounded-full">
+          <span className="text-xs font-bold text-ink/60 bg-bg-neutral px-2.5 py-1 rounded-full">
             میانگین: {faDuration(avgTime)}
           </span>
         )}
         {correctRate && (
-          <span className={`text-[0.65rem] font-bold px-2 py-1 rounded-full ${
+          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
             correctRate.pct >= 70 ? "text-teal-text bg-teal/10" : correctRate.pct >= 40 ? "text-orange bg-orange/10" : "text-magenta-text bg-magenta/10"
           }`}>
             نرخ صحیح: {faNum(correctRate.pct)}٪ ({faNum(correctRate.correct)}/{faNum(correctRate.total)})
@@ -246,7 +246,7 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
             {dist.map((d, i) => (
               <div key={String(d.key)} className="flex items-center gap-2">
                 <span className="w-24 shrink-0 text-xs font-medium text-ink/70 truncate" title={String(d.key)}>
-                  {question.type === "rating" ? "⭐".repeat(Number(d.key)) : String(d.key).slice(0, 15)}
+                  {question.type === "rating" ? `${faNum(d.key)} ستاره` : String(d.key).slice(0, 15)}
                 </span>
                 <div className="flex-1 h-6 bg-bg-neutral rounded-full overflow-hidden relative">
                   <div
@@ -279,7 +279,7 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
                 <Tooltip formatter={(v) => [`${v} پاسخ`, ""]} />
               </PieChart>
             </ResponsiveContainer>
-            <p className="text-[0.6rem] text-ink/40">توزیع پاسخ‌ها</p>
+            <p className="text-xs font-semibold text-ink/40">توزیع پاسخ‌ها</p>
           </div>
         </div>
       )}
@@ -306,7 +306,7 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
             </div>
           ))}
           {values.length > 20 && (
-            <span className="text-[0.6rem] text-ink/40 text-center">+ {faNum(values.length - 20)} پاسخ دیگر</span>
+            <span className="text-xs font-semibold text-ink/50 text-center">+ {faNum(values.length - 20)} پاسخ دیگر</span>
           )}
         </div>
       )}
@@ -317,7 +317,7 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
 function MiniStat({ label, value }) {
   return (
     <div className="bg-bg-neutral rounded-lg px-2 py-1.5 text-center">
-      <p className="text-[0.6rem] text-ink/40">{label}</p>
+      <p className="text-xs font-semibold text-ink/50 mb-0.5">{label}</p>
       <p className="text-xs font-bold text-navy">{value}</p>
     </div>
   );

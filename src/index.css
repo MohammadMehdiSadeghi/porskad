@@ -10,18 +10,6 @@
         font-size: 16px;
         overflow-x: hidden;
     }
-    /* Tablet & Small Laptop: 15px (+1px) */
-    @media (min-width: 768px) {
-        html { font-size: 15px; }
-    }
-    /* Standard Laptop & Desktop Monitor: 14.5px (+1px) */
-    @media (min-width: 1024px) {
-        html { font-size: 14.5px; }
-    }
-    /* Large Widescreen Displays: 15px (+1px) */
-    @media (min-width: 1440px) {
-        html { font-size: 15px; }
-    }
     body {
         @apply font-sans text-ink bg-white antialiased;
         direction: rtl;
