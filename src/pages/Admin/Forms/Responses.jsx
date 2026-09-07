@@ -412,7 +412,7 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
       {/* ─── ناوبری سریع بین سوالات ─── */}
       <div className="bg-white border border-ink/10 rounded-xl p-2.5">
         <div className="flex items-center gap-1.5 mb-1.5">
-          <span className="text-[0.6rem] font-extrabold text-ink-subtle">پرش به سوال:</span>
+          <span className="text-xs font-extrabold text-ink-subtle">پرش به سوال:</span>
         </div>
         <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto scrollbar-none">
           {questions.map((q, i) => {
@@ -421,7 +421,7 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
             return (
               <button key={q.id}
                 onClick={() => scrollToQ(q.id)}
-                className={`text-[0.6rem] font-bold px-2 py-1 rounded-pill-sm border transition-all cursor-pointer
+                className={`text-xs font-bold px-2.5 py-1 rounded-pill-sm border transition-all cursor-pointer
                   ${activeQ === q.id ? "border-navy bg-navy text-white" : answered ? "border-teal/40 bg-teal/5 text-teal-text" : "border-ink/15 bg-white text-ink-subtle hover:border-teal/30"}
                 `}
                 title={q.title}
@@ -453,14 +453,14 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
             >
               <div className="flex items-start justify-between gap-2 mb-1.5">
                 <span className="text-xs font-bold text-navy flex items-center gap-1.5">
-                  <span className="w-5 h-5 shrink-0 flex items-center justify-center rounded-full bg-navy/10 text-[0.6rem] font-black">
+                  <span className="w-5 h-5 shrink-0 flex items-center justify-center rounded-full bg-navy/10 text-xs font-black">
                     {i + 1}
                   </span>
                   {q.title}
                 </span>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {q.points > 0 && (
-                    <span className="text-[0.6rem] font-bold text-ink/40">{faNum(q.points)} نمره</span>
+                    <span className="text-xs font-bold text-ink/50">{faNum(q.points)} نمره</span>
                   )}
                   <CorrectnessBadge question={q} answer={a?.value} />
                 </div>
@@ -471,19 +471,19 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
                   {answered ? (
                     <AnswerValue question={q} value={a?.value} />
                   ) : (
-                    <span className="text-ink/30 text-xs">پاسخی داده نشده</span>
+                    <span className="text-ink/40 text-xs">پاسخی داده نشده</span>
                   )}
                 </div>
 
                 {correct === false && q.correct_answer && (
-                  <span className="text-[0.6rem] font-bold text-teal-text bg-teal/10 px-2 py-0.5 rounded-full shrink-0">
+                  <span className="text-xs font-bold text-teal-text bg-teal/10 px-2 py-0.5 rounded-full shrink-0">
                     پاسخ صحیح: {Array.isArray(q.correct_answer) ? q.correct_answer.join("، ") : String(q.correct_answer)}
                   </span>
                 )}
               </div>
 
               {a?.time_spent_seconds > 0 && (
-                <span className="text-[0.6rem] text-ink/30 mt-1 block">
+                <span className="text-xs text-ink/40 mt-1 block">
                   ⏱ {faDuration(a.time_spent_seconds)}
                 </span>
               )}
@@ -779,7 +779,7 @@ export default function Responses() {
           </Button>
           <div>
             <h1 className="text-base sm:text-lg font-extrabold text-navy">{form.title}</h1>
-            <p className="text-[0.65rem] text-ink/40 mt-0.5">
+            <p className="text-xs text-ink/60 mt-0.5">
               {faNum(questions.length)} سوال • {faNum(stats.total)} پاسخ
             </p>
           </div>
@@ -953,7 +953,7 @@ export default function Responses() {
                         >
                           <span>{activeQuickQ ? "پاسخ سوال" : "پاسخ"}</span>
                           {activeQuickQ && activeQIdx >= 0 && (
-                            <span className="shrink-0 min-w-5 h-5 px-1 flex items-center justify-center rounded-full bg-navy text-white text-[0.6rem] font-black">
+                            <span className="shrink-0 min-w-5 h-5 px-1 flex items-center justify-center rounded-full bg-navy text-white text-xs font-black">
                               {faNum(activeQIdx + 1)}
                             </span>
                           )}
@@ -971,10 +971,10 @@ export default function Responses() {
                       <tr className="bg-teal/5 border-b border-teal/15">
                         <td colSpan={scored ? 8 : 7} className="px-3 py-2.5">
                           <div className="flex flex-wrap items-center gap-2.5">
-                            <span className="inline-flex items-center gap-1.5 text-[0.7rem] font-extrabold text-teal-text">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-teal-text">
                               <Zap size={13} /> نمایش سریع پاسخ‌ها
                             </span>
-                            <span className="text-[0.65rem] font-semibold text-ink/50">
+                            <span className="text-xs font-semibold text-ink/60">
                               پاسخِ سوالِ انتخابی برای همهٔ {faNum(filtered.length)} ردیفِ این لیست نمایش داده می‌شود:
                             </span>
                             <select
@@ -992,7 +992,7 @@ export default function Responses() {
                             <button
                               type="button"
                               onClick={() => { setQuickQId(null); setQuickBarOpen(false); }}
-                              className="text-[0.65rem] font-bold text-magenta-text bg-magenta/10 border border-magenta/20 rounded-lg px-2.5 py-1.5 hover:bg-magenta/20 transition-colors cursor-pointer flex items-center gap-1"
+                              className="text-xs font-bold text-magenta-text bg-magenta/10 border border-magenta/20 rounded-lg px-2.5 py-1.5 hover:bg-magenta/20 transition-colors cursor-pointer flex items-center gap-1"
                             >
                               <span>بستن نمایش سریع</span>
                               <X size={12} />
@@ -1029,16 +1029,16 @@ export default function Responses() {
                           className="border-b border-ink/5 last:border-0 transition-colors cursor-pointer hover:bg-bg-neutral/50"
                           onClick={() => setDetail(r)}
                         >
-                            <td className="px-3 py-2 font-mono text-ink/40 text-[0.65rem]">{i + 1}</td>
+                            <td className="px-3 py-2 font-mono text-ink/50 text-xs">{i + 1}</td>
                             <td className="px-3 py-2 font-medium text-navy text-xs hidden sm:table-cell">{faDateTime(r.submitted_at || r.created_at)}</td>
                             <td className="px-3 py-2">
                               {r.is_complete ? (
-                                <span className="inline-flex items-center gap-0.5 text-[0.65rem] font-semibold text-teal-text bg-bg-mint px-1.5 py-0.5 rounded-full">
-                                  <CheckCircle2 size={10} /> کامل
+                                <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-teal-text bg-bg-mint px-2 py-0.5 rounded-full">
+                                  <CheckCircle2 size={11} /> کامل
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-0.5 text-[0.65rem] font-semibold text-ink/50 bg-bg-neutral px-1.5 py-0.5 rounded-full">
-                                  <AlertCircle size={10} /> ناقص
+                                <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-ink/60 bg-bg-neutral px-2 py-0.5 rounded-full">
+                                  <AlertCircle size={11} /> ناقص
                                 </span>
                               )}
                             </td>
@@ -1467,7 +1467,7 @@ function GroupAnalytics({ questions, answers, responses, form }) {
                   <tbody>
                     {memberViewRows.map((r, i) => (
                       <tr key={`${r.response_id}-${r.field_id}`} className={`border-b border-ink/5 last:border-0 ${r.is_invalid ? "bg-magenta/5" : ""}`}>
-                        <td className="px-3 py-2 font-mono text-ink/40 text-[0.65rem]">{faNum(i + 1)}</td>
+                        <td className="px-3 py-2 font-mono text-ink/50 text-xs">{faNum(i + 1)}</td>
                         <td className="px-3 py-2 text-ink/60 text-xs whitespace-nowrap">{faDateTime(r.submitted_at)}</td>
                         {r.identifiers.map((id) => (
                           <td key={id.level} className="px-3 py-2 font-bold text-navy">{id.value}</td>
@@ -1476,12 +1476,12 @@ function GroupAnalytics({ questions, answers, responses, form }) {
                         <td className="px-3 py-2 font-black text-navy">{faNum(r.selected_count)}</td>
                         <td className="px-3 py-2">
                           {r.is_invalid ? (
-                            <span className="inline-flex items-center gap-0.5 text-[0.65rem] font-semibold text-magenta-text bg-magenta/10 px-1.5 py-0.5 rounded-full">
-                              <AlertTriangle size={10} /> نامعتبر
+                            <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-magenta-text bg-magenta/10 px-2 py-0.5 rounded-full">
+                              <AlertTriangle size={11} /> نامعتبر
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-0.5 text-[0.65rem] font-semibold text-teal-text bg-bg-mint px-1.5 py-0.5 rounded-full">
-                              <CheckCircle2 size={10} /> معتبر
+                            <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-teal-text bg-bg-mint px-2 py-0.5 rounded-full">
+                              <CheckCircle2 size={11} /> معتبر
                             </span>
                           )}
                         </td>
@@ -1606,7 +1606,7 @@ function GroupAnalytics({ questions, answers, responses, form }) {
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {u.selected_options_union.map((opt) => (
-                    <span key={opt} className="text-[0.7rem] font-bold text-navy bg-bg-lavender/60 border border-navy/10 rounded-pill-sm px-2 py-1">
+                    <span key={opt} className="text-xs font-bold text-navy bg-bg-lavender/60 border border-navy/10 rounded-pill-sm px-2.5 py-1">
                       {opt}
                     </span>
                   ))}
@@ -1641,7 +1641,7 @@ function GroupAnalytics({ questions, answers, responses, form }) {
                 <tbody>
                   {invalidRecords.map((r, i) => (
                     <tr key={`${r.response_id}-${r.question_id}-${i}`} className="border-b border-ink/5 last:border-0 bg-magenta/5">
-                      <td className="px-3 py-2 font-mono text-ink/40 text-[0.65rem]">{faNum(i + 1)}</td>
+                      <td className="px-3 py-2 font-mono text-ink/50 text-xs">{faNum(i + 1)}</td>
                       <td className="px-3 py-2 font-bold text-navy">{r.question_title}</td>
                       <td className="px-3 py-2 text-ink/70">{formatOptionsForExport(r.selected_options)}</td>
                       <td className="px-3 py-2 font-black text-magenta-text whitespace-nowrap">{faNum(r.selected_count)} / {faNum(r.max_selectable)}</td>
@@ -1672,9 +1672,9 @@ function SummaryCard({ icon: Icon, label, value, sub, color }) {
           <Icon size={14} />
         </div>
         <div>
-          <p className="text-[0.65rem] font-bold text-ink-subtle">{label}</p>
+          <p className="text-xs font-bold text-ink-subtle">{label}</p>
           <p className="text-lg font-extrabold text-navy">{value}</p>
-          {sub && <p className="text-[0.65rem] font-semibold text-ink-subtle">{sub}</p>}
+          {sub && <p className="text-xs font-semibold text-ink-subtle">{sub}</p>}
         </div>
       </div>
     </div>

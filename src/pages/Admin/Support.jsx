@@ -658,7 +658,7 @@ export default function Support() {
               <div className="flex items-center gap-1 bg-white border-2 border-ink/15 rounded-pill-md p-0.5">
                 <button
                   onClick={() => expandAllGroups(userGroups)}
-                  className="px-2 py-1 text-[0.7rem] font-bold text-ink-subtle hover:text-navy rounded-pill-sm hover:bg-bg-neutral transition-colors"
+                  className="px-2.5 py-1 text-xs font-bold text-ink-subtle hover:text-navy rounded-pill-sm hover:bg-bg-neutral transition-colors"
                   title="باز کردن تیکت‌های تمام کاربران"
                 >
                   باز کردن همه
@@ -666,7 +666,7 @@ export default function Support() {
                 <span className="text-ink/20">|</span>
                 <button
                   onClick={collapseAllGroups}
-                  className="px-2 py-1 text-[0.7rem] font-bold text-ink-subtle hover:text-navy rounded-pill-sm hover:bg-bg-neutral transition-colors"
+                  className="px-2.5 py-1 text-xs font-bold text-ink-subtle hover:text-navy rounded-pill-sm hover:bg-bg-neutral transition-colors"
                   title="بستن همه"
                 >
                   بستن همه

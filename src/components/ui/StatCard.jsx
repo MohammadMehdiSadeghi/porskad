@@ -82,7 +82,7 @@ export default function StatCard({ theme = "teal", label, value, caption }) {
             className={`relative z-20 inline-block -mt-1 mb-1.5 xs:mb-2 lg:-mt-1.5 lg:mb-4
               bg-white border-[0.0625rem] rounded-xl [corner-shape:squircle]
               px-1.5 py-0.5 lg:px-3 lg:py-1 whitespace-nowrap
-              text-[0.65rem] xs:text-[0.7rem] lg:text-[0.8rem] font-bold shadow-sm
+              text-xs xs:text-xs lg:text-[0.8rem] font-bold shadow-sm
               ${t.badgeRotate} ${t.badge}`}
           >
             {label}
@@ -98,7 +98,7 @@ export default function StatCard({ theme = "teal", label, value, caption }) {
 
         {caption && (
           <div className={`relative z-20 ${t.text} mt-auto`}>
-            <strong className="block text-[0.65rem] xs:text-[0.7rem] lg:text-[0.8rem] font-bold">
+            <strong className="block text-xs xs:text-xs lg:text-[0.8rem] font-bold">
               {caption}
             </strong>
           </div>

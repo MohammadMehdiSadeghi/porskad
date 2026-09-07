@@ -237,7 +237,7 @@ export default function SmsPanel() {
                     dir="ltr"
                     disabled
                   />
-                  <p className="text-[0.65rem] font-semibold text-ink-subtle mt-0.5">
+                  <p className="text-xs font-semibold text-ink-subtle mt-0.5">
                     ورود شماره‌ها در حال حاضر غیرفعال است.
                   </p>
                 </div>

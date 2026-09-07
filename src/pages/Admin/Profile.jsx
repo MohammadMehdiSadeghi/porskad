@@ -263,7 +263,7 @@ export default function Profile() {
               <label className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-extrabold text-navy">شماره موبایل</span>
-                  <span className="text-[0.65rem] font-bold text-teal">ایران</span>
+                  <span className="text-xs font-bold text-teal">ایران</span>
                 </div>
                 <input
                   type="tel"

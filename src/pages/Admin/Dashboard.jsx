@@ -194,7 +194,7 @@ export default function Dashboard() {
               </div>
               {/* موبایل: ردیف‌های فشرده — اسکرول عمودی */}
               <div className="md:hidden max-h-[24rem] overflow-y-auto">
-                <table className="w-full text-[0.7rem]">
+                <table className="w-full text-xs">
                   <thead className="sticky top-0 bg-white z-10">
                     <tr className="text-navy border-b-2 border-ink/10">
                       <th className="text-right font-black px-2.5 py-2">فرم</th>

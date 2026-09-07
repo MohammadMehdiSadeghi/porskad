@@ -575,17 +575,17 @@ export default function Managers() {
                           <Calendar size={12} className="text-teal shrink-0" />
                           تاریخ عضویت:
                         </span>
-                        <strong className="text-navy text-[0.7rem]">
+                        <strong className="text-navy text-xs">
                           {new Date(m.created_at).toLocaleDateString("fa-IR")}
                         </strong>
                       </div>
 
                       <div className="flex items-center justify-between text-ink-subtle pt-1 border-t border-navy/5">
-                        <span className="flex items-center gap-1 text-[0.7rem]">
+                        <span className="flex items-center gap-1 text-xs">
                           <BarChart3 size={12} className="text-orange shrink-0" />
                           باقیمانده سهمیه:
                         </span>
-                        <span className={`text-[0.7rem] font-black ${remainingForms === 0 && !m.is_owner ? "text-magenta-text" : "text-teal-text"}`}>
+                        <span className={`text-xs font-black ${remainingForms === 0 && !m.is_owner ? "text-magenta-text" : "text-teal-text"}`}>
                           {m.is_owner ? "نامحدود" : `${faNum(remainingForms)} از ${faNum(maxForms)} فرم`}
                         </span>
                       </div>
@@ -605,7 +605,7 @@ export default function Managers() {
                           <Settings size={13} className="text-teal group-hover:text-white transition-colors" />
                           <span>مشاهده و عملیات کاربر</span>
                         </span>
-                        <span className="text-[0.7rem] font-bold text-ink/40 group-hover:text-white/90">مشاهده ←</span>
+                        <span className="text-xs font-bold text-ink/40 group-hover:text-white/90">مشاهده ←</span>
                       </button>
                     </div>
                   </div>
@@ -1170,7 +1170,7 @@ export default function Managers() {
               placeholder="porskad_support"
               className={inputCls}
             />
-            <span className="text-[0.7rem] text-ink-subtle mt-1 block">
+            <span className="text-xs text-ink-subtle mt-1 block">
               این آیدی در بخش پشتیبانی برای ارتباط سریع با تلگرام قرار می‌گیرد.
             </span>
           </div>
@@ -1188,7 +1188,7 @@ export default function Managers() {
                 onChange={(e) => setSysSettings({ ...sysSettings, default_max_active_forms: parseInt(e.target.value) || 5 })}
                 className={inputCls}
               />
-              <span className="text-[0.7rem] text-ink-subtle mt-1 block">
+              <span className="text-xs text-ink-subtle mt-1 block">
                 محدودیت پیش‌فرض: ۵ فرم فعال همزمان
               </span>
             </div>
@@ -1205,7 +1205,7 @@ export default function Managers() {
                 onChange={(e) => setSysSettings({ ...sysSettings, default_max_monthly_responses: parseInt(e.target.value) || 100 })}
                 className={inputCls}
               />
-              <span className="text-[0.7rem] text-ink-subtle mt-1 block">
+              <span className="text-xs text-ink-subtle mt-1 block">
                 محدودیت پیش‌فرض: ۱۰۰ ورودی در ماه (با چرخه ۳۰ روزه)
               </span>
             </div>
@@ -1214,7 +1214,7 @@ export default function Managers() {
           <div className="flex items-center justify-between p-3 bg-bg-lavender/50 rounded-xl border border-navy/10">
             <div>
               <div className="text-xs font-bold text-navy">امکان ثبت‌نام مستقیم کاربران</div>
-              <div className="text-[0.7rem] text-ink-subtle">
+              <div className="text-xs text-ink-subtle">
                 در صورت غیرفعال بودن، کاربران جدید فقط توسط ادمین قابل ثبت خواهند بود.
               </div>
             </div>

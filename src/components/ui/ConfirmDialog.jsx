@@ -72,7 +72,7 @@ export default function ConfirmDialog({
                   <ul className="flex flex-col gap-1">
                     {unfilledFields.map((f, i) => (
                       <li key={f.id || i} className="flex items-center gap-1.5 text-xs sm:text-sm text-ink">
-                        <span className="w-5 h-5 shrink-0 flex items-center justify-center rounded-full bg-female-normal/15 text-female-normal text-[0.6rem] font-black">
+                        <span className="w-5 h-5 shrink-0 flex items-center justify-center rounded-full bg-female-normal/15 text-female-normal text-xs font-black">
                           {faNum(i + 1)}
                         </span>
                         <span className="font-semibold">{f.title || f}</span>

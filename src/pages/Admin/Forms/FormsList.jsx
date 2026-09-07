@@ -604,7 +604,7 @@ export default function FormsList() {
                           {f.title}
                         </h3>
                         {/* Creator (سازنده فرم) */}
-                        <div className="flex items-center gap-1.5 mt-1 text-[0.7rem] font-bold text-ink-subtle">
+                        <div className="flex items-center gap-1.5 mt-1 text-xs font-bold text-ink-subtle">
                           <User size={12} className="text-teal shrink-0" />
                           <span>سازنده: <strong className="text-navy">{creatorName}</strong></span>
                         </div>
@@ -631,13 +631,13 @@ export default function FormsList() {
                             <span>·</span>
                             <span>{faNum(c.complete)} تکمیل</span>
                           </div>
-                          <div className="flex items-center gap-1 text-[0.7rem]">
+                          <div className="flex items-center gap-1 text-xs">
                             <Calendar size={12} className="text-ink-subtle/70" />
                             <span>ساخت: {new Date(f.created_at).toLocaleDateString("fa-IR")}</span>
                           </div>
                         </>
                       ) : (
-                        <div className="text-[0.7rem] font-semibold text-ink-subtle">
+                        <div className="text-xs font-semibold text-ink-subtle">
                           حذف شده در {new Date(f.deleted_at).toLocaleDateString("fa-IR")}
                         </div>
                       )}
@@ -656,7 +656,7 @@ export default function FormsList() {
                             e.stopPropagation();
                             share(f);
                           }}
-                          className="inline-flex items-center gap-1 text-[0.7rem] font-bold text-teal hover:text-teal/80 shrink-0"
+                          className="inline-flex items-center gap-1 text-xs font-bold text-teal hover:text-teal/80 shrink-0"
                           title="کپی لینک"
                         >
                           <Copy size={11} />
@@ -691,7 +691,7 @@ export default function FormsList() {
                           <Settings size={14} className="text-teal group-hover:text-white transition-colors" />
                           <span>مدیریت و عملیات فرم</span>
                         </span>
-                        <span className="text-[0.7rem] font-bold text-ink/40 group-hover:text-white/90">
+                        <span className="text-xs font-bold text-ink/40 group-hover:text-white/90">
                           گزینه‌ها ←
                         </span>
                       </button>
@@ -750,7 +750,7 @@ export default function FormsList() {
                     <span>·</span>
                     <span className="flex items-center gap-1"><CheckCircle2 size={12} className="text-teal" /> {faNum(c.complete)} تکمیل</span>
                   </div>
-                  <div className="flex items-center gap-1 text-[0.7rem]">
+                  <div className="flex items-center gap-1 text-xs">
                     <Calendar size={12} className="text-teal" />
                     <span>ساخت: {new Date(f.created_at).toLocaleDateString("fa-IR")}</span>
                   </div>
@@ -766,7 +766,7 @@ export default function FormsList() {
                     <button
                       type="button"
                       onClick={() => share(f)}
-                      className="inline-flex items-center gap-1 text-[0.7rem] font-bold text-teal hover:text-teal/80 shrink-0 cursor-pointer"
+                      className="inline-flex items-center gap-1 text-xs font-bold text-teal hover:text-teal/80 shrink-0 cursor-pointer"
                     >
                       <Copy size={11} /> کپی
                     </button>

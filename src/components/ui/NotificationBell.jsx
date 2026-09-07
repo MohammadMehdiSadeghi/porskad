@@ -33,7 +33,7 @@ function ToggleSwitch({ checked, onChange, label, activeIcon: ActiveIcon, inacti
 
       <div className="flex items-center gap-1.5 shrink-0 pointer-events-none">
         <span
-          className={`text-[0.65rem] font-extrabold px-1.5 py-0.5 rounded-md transition-colors ${
+          className={`text-xs font-extrabold px-1.5 py-0.5 rounded-md transition-colors ${
             checked ? "bg-teal text-white" : "bg-ink/15 text-ink/60"
           }`}
         >
@@ -136,7 +136,7 @@ export default function NotificationBell() {
           <BellOff size={16} className="text-navy/40" />
         )}
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] bg-gradient-to-br from-rose-500 to-pink-600 text-white text-[0.58rem] font-black rounded-full flex items-center justify-center shadow-md shadow-rose-500/30 animate-pulse px-1">
+          <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] bg-gradient-to-br from-rose-500 to-pink-600 text-white text-xs font-black rounded-full flex items-center justify-center shadow-md shadow-rose-500/30 animate-pulse px-1">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -205,7 +205,7 @@ export default function NotificationBell() {
                     </div>
                     <div className="min-w-0">
                       <span className="text-sm font-black text-white block leading-tight truncate">اعلان‌ها و رویدادها</span>
-                      <span className="text-[0.62rem] text-teal font-semibold block truncate">
+                      <span className="text-xs text-teal font-semibold block truncate">
                         {unreadCount > 0 ? `${unreadCount} اعلان جدید و خوانده‌نشده` : "تمامی اعلان‌ها خوانده شده‌اند"}
                       </span>
                     </div>
@@ -215,7 +215,7 @@ export default function NotificationBell() {
                       <button
                         type="button"
                         onClick={markAllRead}
-                        className="text-[0.65rem] px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all font-bold flex items-center gap-1 cursor-pointer"
+                        className="text-xs px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all font-bold flex items-center gap-1 cursor-pointer"
                         title="علامت‌گذاری همه به عنوان خوانده شده"
                       >
                         <CheckCheck size={12} />
@@ -226,7 +226,7 @@ export default function NotificationBell() {
                       <button
                         type="button"
                         onClick={clearAll}
-                        className="text-[0.65rem] px-2 py-1 rounded-lg bg-white/10 text-white/70 hover:bg-rose-500/20 hover:text-rose-300 transition-all font-bold flex items-center gap-1 cursor-pointer"
+                        className="text-xs px-2 py-1 rounded-lg bg-white/10 text-white/70 hover:bg-rose-500/20 hover:text-rose-300 transition-all font-bold flex items-center gap-1 cursor-pointer"
                         title="پاک‌سازی تمامی اعلان‌ها"
                       >
                         <Trash2 size={12} />
@@ -247,7 +247,7 @@ export default function NotificationBell() {
 
               {/* نوار سوییچ‌های روشن/خاموش اعلان و صدا */}
               <div className="p-3 border-b border-ink/10 bg-slate-50 shrink-0 select-none">
-                <div className="text-[0.68rem] font-bold text-ink/60 mb-2">تنظیمات دریافت اعلان:</div>
+                <div className="text-xs font-bold text-ink/60 mb-2">تنظیمات دریافت اعلان:</div>
                 <div className="flex items-center gap-2">
                   <ToggleSwitch
                     checked={notifEnabled}
@@ -346,18 +346,18 @@ export default function NotificationBell() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-1.5 mb-0.5">
-                            <span className="text-[0.78rem] font-black text-navy truncate">{n.title}</span>
-                            <span className={`text-[0.58rem] font-bold px-1.5 py-0.5 rounded-md shrink-0 ${badgeClass}`}>
+                            <span className="text-xs font-black text-navy truncate">{n.title}</span>
+                            <span className={`text-xs font-bold px-1.5 py-0.5 rounded-md shrink-0 ${badgeClass}`}>
                               {badgeLabel}
                             </span>
                           </div>
                           <p className="text-xs text-ink/70 line-clamp-2 leading-relaxed">{n.message}</p>
                           <div className="flex items-center justify-between mt-1.5">
-                            <span className="text-[0.62rem] text-ink/40 font-medium" dir="ltr">
+                            <span className="text-xs text-ink/40 font-medium" dir="ltr">
                               {faDateTime(n.time)}
                             </span>
                             {!n.read && (
-                              <span className="inline-flex items-center gap-1 text-[0.6rem] text-teal font-extrabold">
+                              <span className="inline-flex items-center gap-1 text-xs text-teal font-extrabold">
                                 <span className="w-1.5 h-1.5 rounded-full bg-teal animate-ping" />
                                 جدید
                               </span>

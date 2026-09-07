@@ -51,7 +51,7 @@ export default function ScoreResult({ score, total, details = [], questions = []
             const q = questions.find((q) => q.id === d.questionId);
             return (
               <div key={i} className={`flex items-center gap-2 text-xs sm:text-sm px-2.5 py-1.5 rounded-pill-md border ${d.correct ? "border-ecosystem-normal/40 bg-ecosystem-light/60" : "border-female-normal/40 bg-female-light/60"}`}>
-                <span className={`w-5 h-5 sm:w-6 sm:h-6 shrink-0 flex items-center justify-center rounded-full text-[0.6rem] sm:text-xs font-black ${d.correct ? "bg-ecosystem-normal text-white" : "bg-female-normal text-white"}`}>
+                <span className={`w-5 h-5 sm:w-6 sm:h-6 shrink-0 flex items-center justify-center rounded-full text-xs sm:text-xs font-black ${d.correct ? "bg-ecosystem-normal text-white" : "bg-female-normal text-white"}`}>
                   {d.correct ? <Check size={12} className="stroke-[3]" /> : <X size={12} className="stroke-[3]" />}
                 </span>
                 <span className="font-semibold text-ink flex-1 truncate">{q?.title || `سوال ${faNum(i + 1)}`}</span>

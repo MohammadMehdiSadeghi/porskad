@@ -160,7 +160,7 @@ export default function Settings() {
                   className="w-full px-3.5 py-2.5 rounded-xl border-2 border-ink/15 text-sm font-bold text-navy focus:border-teal outline-none transition-colors"
                   required
                 />
-                <span className="text-[0.7rem] text-ink-subtle mt-1 block">
+                <span className="text-xs text-ink-subtle mt-1 block">
                   این عنوان در سربرگ صفحات، پیام‌ها و ایمیل‌های ارسالی قرار می‌گیرد.
                 </span>
               </div>
@@ -189,7 +189,7 @@ export default function Settings() {
                     @
                   </span>
                 </div>
-                <div className="flex items-center justify-between mt-1 text-[0.7rem]">
+                <div className="flex items-center justify-between mt-1 text-xs">
                   <span className="text-ink-subtle">
                     لینک ارتباط کاربران در بخش تیکت‌ها به این آیدی هدایت خواهد شد.
                   </span>
@@ -200,7 +200,7 @@ export default function Settings() {
                       rel="noopener noreferrer"
                       className="text-teal font-bold hover:underline inline-flex items-center gap-0.5"
                     >
-                      تست لینک <ExternalLink size={10} />
+                      تست لینک <ExternalLink size={12} />
                     </a>
                   )}
                 </div>
@@ -236,7 +236,7 @@ export default function Settings() {
                       پیش‌فرض: ۵ فرم
                     </span>
                   </div>
-                  <p className="text-[0.75rem] text-ink-subtle leading-relaxed mb-3">
+                  <p className="text-xs text-ink-subtle leading-relaxed mb-3">
                     حداکثر تعداد فرم‌هایی که کاربر می‌تواند به طور همزمان در وضعیت «منتشر شده» داشته باشد. تلاش برای انتشار فرم‌های بیشتر به طور خودکار مسدود می‌شود.
                   </p>
                 </div>
@@ -272,7 +272,7 @@ export default function Settings() {
                       پیش‌فرض: ۱۰۰ ورودی
                     </span>
                   </div>
-                  <p className="text-[0.75rem] text-ink-subtle leading-relaxed mb-3">
+                  <p className="text-xs text-ink-subtle leading-relaxed mb-3">
                     حجم ورودی‌های دریافتی مجاز در هر چرخه ۳۰ روزه. با ثبت هر پاسخ، شمارنده افزایش می‌یابد و با حذف ورودی توسط کاربر سهمیه باز نمی‌گردد (سوخت قطعی توکن).
                   </p>
                 </div>

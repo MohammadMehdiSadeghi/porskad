@@ -188,8 +188,8 @@ function EmbedModeCard({ mode, code }) {
             <Icon size={14} className={mode.textClass} />
             <span className={`text-xs font-black ${mode.textClass}`}>{mode.label}</span>
           </div>
-          <p className="text-[0.7rem] text-ink/60 leading-5">{mode.description}</p>
-          <div className={`text-[0.6rem] font-bold ${mode.textClass} ${mode.bgClass} rounded-lg px-2 py-1 flex items-center gap-1`}>
+          <p className="text-xs text-ink/60 leading-5">{mode.description}</p>
+          <div className={`text-xs font-bold ${mode.textClass} ${mode.bgClass} rounded-lg px-2 py-1 flex items-center gap-1`}>
             <Lightbulb size={11} className="shrink-0" />
             <span>{mode.example}</span>
           </div>
@@ -227,7 +227,7 @@ function FormEmbedCard({ form, baseUrl, index }) {
                 <Badge color={form.published ? "green" : "gray"}>
                   {form.published ? "منتشر" : "پیش‌نویس"}
                 </Badge>
-                <span className="text-[0.65rem] font-mono text-ink/40" dir="ltr">{publicId}</span>
+                <span className="text-xs font-mono text-ink/40" dir="ltr">{publicId}</span>
               </div>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
@@ -413,7 +413,7 @@ export default function EmbedHub() {
         <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-1">
           روی فرم کلیک کن، حالت Embed رو انتخاب کن و کدش رو کپی کن
         </p>
-        <p className="text-[0.65rem] font-bold text-ink-subtle/70 mt-1.5 inline-flex items-center gap-1">
+        <p className="text-xs font-bold text-ink-subtle/70 mt-1.5 inline-flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full bg-teal" />
           فقط فرم‌های منتشرشده اینجا نمایش داده می‌شوند
         </p>

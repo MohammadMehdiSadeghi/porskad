@@ -114,7 +114,7 @@ export default function AdminLayout() {
             <span>پرس</span>
             <span className="text-teal">کاد</span>
           </span>
-          <span className="text-[0.65rem] lg:text-[0.7rem] font-bold bg-teal/25 text-teal rounded-pill-sm px-2 py-0.5 flex items-center gap-1">
+          <span className="text-xs lg:text-xs font-bold bg-teal/25 text-teal rounded-pill-sm px-2 py-0.5 flex items-center gap-1">
             {owner ? (
               <>
                 <Crown size={11} className="text-teal" />
@@ -145,7 +145,7 @@ export default function AdminLayout() {
               end={item.end}
               className={({ isActive }) =>
                 `flex items-center gap-2 whitespace-nowrap shrink-0 rounded-pill-sm px-3 py-2.5
-                 text-[0.78rem] lg:text-sm font-bold transition-colors ${
+                 text-xs lg:text-sm font-bold transition-colors ${
                    isActive
                      ? "bg-teal text-white shadow-[2px_2px_0_0_rgba(0,0,0,0.25)]"
                      : "text-white/70 hover:text-white hover:bg-white/10"
@@ -161,17 +161,17 @@ export default function AdminLayout() {
         {/* فوتر سایدبار دسکتاپ */}
         <div className="mt-auto px-2 py-2.5 border-t border-white/10 flex flex-col items-center gap-2">
           <div className="text-center w-full min-w-0">
-            <div className="text-[0.7rem] font-bold text-white/90 truncate">
+            <div className="text-xs font-bold text-white/90 truncate">
               {profile?.full_name || user.email?.split("@")[0]}
             </div>
-            <div className="text-[0.6rem] font-medium text-white/40 truncate" dir="ltr">
+            <div className="text-xs font-medium text-white/40 truncate" dir="ltr">
               {user.email}
             </div>
           </div>
           <Button
             variant="ghost"
             size="sm"
-            className="!text-white/80 hover:!text-white !border-white/20 text-[0.75rem] w-full"
+            className="!text-white/80 hover:!text-white !border-white/20 text-xs w-full"
             onClick={handleLogout}
           >
             <LogOut size={13} className="ml-1" /> خروج
@@ -199,7 +199,7 @@ export default function AdminLayout() {
               <span>پرس</span>
               <span className="text-teal">کاد</span>
             </span>
-            <span className="text-[0.65rem] font-bold bg-teal/25 text-teal rounded-pill-sm px-2 py-0.5 flex items-center gap-1">
+            <span className="text-xs font-bold bg-teal/25 text-teal rounded-pill-sm px-2 py-0.5 flex items-center gap-1">
               {owner ? (
                 <>
                   <Crown size={11} className="text-teal" />
@@ -257,7 +257,7 @@ export default function AdminLayout() {
             <div className="text-xs font-bold text-white/90 truncate">
               {profile?.full_name || user.email?.split("@")[0]}
             </div>
-            <div className="text-[0.65rem] font-medium text-white/40 truncate" dir="ltr">
+            <div className="text-xs font-medium text-white/40 truncate" dir="ltr">
               {user.email}
             </div>
           </div>
@@ -307,13 +307,13 @@ export default function AdminLayout() {
                 <div className="text-xs sm:text-sm font-black text-navy truncate flex items-center gap-2">
                   <span>{profile?.full_name || user.email?.split("@")[0]}</span>
                   {owner ? (
-                    <span className="text-[0.65rem] font-bold bg-teal/20 text-teal px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                    <span className="text-xs font-bold bg-teal/20 text-teal px-1.5 py-0.5 rounded-md flex items-center gap-1">
                       <Crown size={10} />
                       <span>مدیریت کل</span>
                     </span>
                   ) : null}
                 </div>
-                <div className="text-[0.65rem] sm:text-xs text-ink/40 font-medium truncate flex items-center gap-1.5">
+                <div className="text-xs sm:text-xs text-ink/40 font-medium truncate flex items-center gap-1.5">
                   <span>{user.email}</span>
                   {!owner && profile?.max_forms && (
                     <>

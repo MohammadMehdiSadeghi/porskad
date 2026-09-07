@@ -127,18 +127,18 @@ export default function ConditionBuilder({
     <div className={`flex flex-col gap-2 border-2 border-dashed rounded-pill-md p-3 transition-colors ${isComplete ? "border-teal/40 bg-teal/5" : "border-ink/15 bg-white/80"}`}>
       {/* هدر شرط */}
       <div className="flex items-center gap-2">
-        <span className="text-[0.65rem] font-extrabold text-ink-subtle shrink-0">
+        <span className="text-xs font-extrabold text-ink-subtle shrink-0">
           شرط {index + 1}
         </span>
         {isComplete && (
-          <span className="text-[0.55rem] font-bold text-teal bg-teal/10 border border-teal/30 rounded-pill-sm px-1.5 py-0.5">
+          <span className="text-xs font-bold text-teal bg-teal/10 border border-teal/30 rounded-pill-sm px-1.5 py-0.5">
             فعال
           </span>
         )}
         {removable && (
           <button
             onClick={onDelete}
-            className="text-[0.65rem] font-bold text-magenta-text hover:underline mr-auto"
+            className="text-xs font-bold text-magenta-text hover:underline mr-auto"
           >
             حذف شرط
           </button>
@@ -147,7 +147,7 @@ export default function ConditionBuilder({
 
       {/* انتخاب منبع */}
       <div className="flex flex-col gap-1">
-        <span className="text-[0.6rem] font-bold text-ink-subtle">منبع:</span>
+        <span className="text-xs font-bold text-ink-subtle">منبع:</span>
         <div className="flex gap-1.5">
           {Object.entries(CONDITION_SOURCES).map(([key, meta]) => (
             <button
@@ -158,7 +158,7 @@ export default function ConditionBuilder({
                 if (key === "variable" || key === "score") { patch.variableKey = key === "score" ? "score" : null; }
                 onChange({ ...condition, ...patch });
               }}
-              className={`text-[0.6rem] font-bold px-2 py-1 rounded-pill-sm border transition-colors ${
+              className={`text-xs font-bold px-2 py-1 rounded-pill-sm border transition-colors ${
                 source === key
                   ? "bg-teal/10 border-teal/40 text-teal"
                   : "bg-white border-ink/15 text-ink-subtle hover:border-teal/30"
@@ -174,7 +174,7 @@ export default function ConditionBuilder({
       <div className="flex flex-col gap-2">
         {source === "answer" && (
           <div className="flex flex-col gap-1">
-            <span className="text-[0.6rem] font-bold text-ink-subtle">سوال:</span>
+            <span className="text-xs font-bold text-ink-subtle">سوال:</span>
             <select
               value={condition.questionId ?? ""}
               onChange={(e) => onChange({ ...condition, questionId: e.target.value || null })}
@@ -192,7 +192,7 @@ export default function ConditionBuilder({
 
         {source === "variable" && (
           <div className="flex flex-col gap-1">
-            <span className="text-[0.6rem] font-bold text-ink-subtle">متغیر:</span>
+            <span className="text-xs font-bold text-ink-subtle">متغیر:</span>
             <select
               value={condition.variableKey ?? ""}
               onChange={(e) => onChange({ ...condition, variableKey: e.target.value || null })}
@@ -207,7 +207,7 @@ export default function ConditionBuilder({
         )}
 
         <div className="flex flex-col gap-1">
-          <span className="text-[0.6rem] font-bold text-ink-subtle">عملگر:</span>
+          <span className="text-xs font-bold text-ink-subtle">عملگر:</span>
           <select
             value={condition.operator}
             onChange={(e) => {
@@ -227,7 +227,7 @@ export default function ConditionBuilder({
       </div>
 
       {/* پیش‌نمایش متنی */}
-      <div className="text-[0.6rem] font-medium text-navy/70 bg-bg-lavender/60 rounded-pill-sm px-2.5 py-1.5 leading-5">
+      <div className="text-xs font-medium text-navy/70 bg-bg-lavender/60 rounded-pill-sm px-2.5 py-1.5 leading-5">
         {source === "answer" && sourceQ ? (
           <>اگر «{sourceQ.title?.slice(0, 30)}» {opMeta.label}
             {needsValue && condition.value

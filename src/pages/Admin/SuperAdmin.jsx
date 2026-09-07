@@ -897,7 +897,7 @@ export default function SuperAdmin() {
         </div>
         <div className="sa-header-right">
           <span className="sa-badge-online">Online</span>
-          <span style={{ fontSize: "0.75rem", color: "#6f6f6f" }}>Auto-refresh: 30s</span>
+          <span style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>Auto-refresh: 30s</span>
           <div className="sa-avatar">{profile?.full_name?.[0]?.toUpperCase() || "G"}</div>
         </div>
       </div>
@@ -1033,7 +1033,7 @@ export default function SuperAdmin() {
                       style={{
                         color: "#da1e28",
                         fontFamily: "'IBM Plex Mono', monospace",
-                        fontSize: "0.7rem",
+                        fontSize: "0.85rem",
                       }}
                     >
                       {e.source}
@@ -1048,7 +1048,7 @@ export default function SuperAdmin() {
                     >
                       {e.message}
                     </span>
-                    <span style={{ color: "#6f6f6f", fontSize: "0.7rem" }}>
+                    <span style={{ color: "#6f6f6f", fontSize: "0.85rem" }}>
                       {e.created_at ? new Date(e.created_at).toLocaleTimeString() : ""}
                     </span>
                   </div>
@@ -1093,7 +1093,7 @@ export default function SuperAdmin() {
           <div className="sa-card" style={{ padding: "1.25rem" }}>
             <form onSubmit={saveSystemSettings} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
               <div>
-                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#161616", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#161616", marginBottom: "0.35rem", textTransform: "uppercase" }}>
                   Platform Title / Brand Name
                 </label>
                 <input
@@ -1106,7 +1106,7 @@ export default function SuperAdmin() {
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#161616", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#161616", marginBottom: "0.35rem", textTransform: "uppercase" }}>
                   Telegram Support Username
                 </label>
                 <input
@@ -1116,14 +1116,14 @@ export default function SuperAdmin() {
                   style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #c6c6c6", fontSize: "0.85rem", fontFamily: "'IBM Plex Mono', monospace", outline: "none" }}
                   placeholder="porskad_support"
                 />
-                <div style={{ fontSize: "0.7rem", color: "#6f6f6f", marginTop: "0.25rem" }}>
+                <div style={{ fontSize: "0.85rem", color: "#6f6f6f", marginTop: "0.25rem" }}>
                   Used across the app to redirect client questions to your Telegram support.
                 </div>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div>
-                  <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#161616", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#161616", marginBottom: "0.35rem", textTransform: "uppercase" }}>
                     Default Max Active Forms
                   </label>
                   <input
@@ -1134,13 +1134,13 @@ export default function SuperAdmin() {
                     onChange={(e) => setSysSettings({ ...sysSettings, default_max_active_forms: parseInt(e.target.value) || 5 })}
                     style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #c6c6c6", fontSize: "0.85rem", outline: "none" }}
                   />
-                  <div style={{ fontSize: "0.7rem", color: "#6f6f6f", marginTop: "0.25rem" }}>
+                  <div style={{ fontSize: "0.85rem", color: "#6f6f6f", marginTop: "0.25rem" }}>
                     Global cap: max 5 active (published) forms per user at the same time.
                   </div>
                 </div>
 
                 <div>
-                  <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#161616", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#161616", marginBottom: "0.35rem", textTransform: "uppercase" }}>
                     Default Monthly Responses Limit
                   </label>
                   <input
@@ -1151,7 +1151,7 @@ export default function SuperAdmin() {
                     onChange={(e) => setSysSettings({ ...sysSettings, default_max_monthly_responses: parseInt(e.target.value) || 100 })}
                     style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #c6c6c6", fontSize: "0.85rem", outline: "none" }}
                   />
-                  <div style={{ fontSize: "0.7rem", color: "#6f6f6f", marginTop: "0.25rem" }}>
+                  <div style={{ fontSize: "0.85rem", color: "#6f6f6f", marginTop: "0.25rem" }}>
                     100 responses per month per user. Consumed tokens are permanent upon delete.
                   </div>
                 </div>
@@ -1162,7 +1162,7 @@ export default function SuperAdmin() {
                   <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#161616" }}>
                     Allow Public User Registrations
                   </div>
-                  <div style={{ fontSize: "0.7rem", color: "#6f6f6f" }}>
+                  <div style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>
                     When disabled, only admins can register new users.
                   </div>
                 </div>
@@ -1265,7 +1265,7 @@ export default function SuperAdmin() {
                 <div>
                   <div
                     style={{
-                      fontSize: "0.75rem",
+                      fontSize: "0.85rem",
                       fontWeight: 700,
                       color: "#525252",
                       textTransform: "uppercase",
@@ -1358,12 +1358,12 @@ export default function SuperAdmin() {
                       marginBottom: "0.25rem",
                     }}
                   >
-                    <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#161616" }}>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#161616" }}>
                       Source code & assets (excluding node_modules):
                     </span>
                     <span
                       style={{
-                        fontSize: "0.75rem",
+                        fontSize: "0.85rem",
                         fontWeight: 700,
                         color: "#0f62fe",
                         fontFamily: "'IBM Plex Mono', monospace",
@@ -1372,7 +1372,7 @@ export default function SuperAdmin() {
                       {storageData?.project?.source_pretty || "—"}
                     </span>
                   </div>
-                  <div style={{ fontSize: "0.75rem", color: "#6f6f6f" }}>
+                  <div style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>
                     Contains pages, components, stylesheets, media assets, and API routes (
                     {(storageData?.project?.source_files || 0).toLocaleString()} files)
                   </div>
@@ -1381,7 +1381,7 @@ export default function SuperAdmin() {
                 <div>
                   <div
                     style={{
-                      fontSize: "0.75rem",
+                      fontSize: "0.85rem",
                       fontWeight: 700,
                       color: "#525252",
                       textTransform: "uppercase",
@@ -1423,7 +1423,7 @@ export default function SuperAdmin() {
                           </span>
                         </div>
                         {item.files !== undefined && (
-                          <div style={{ fontSize: "0.7rem", color: "#6f6f6f" }}>
+                          <div style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>
                             {item.files.toLocaleString()} files
                           </div>
                         )}
@@ -1506,7 +1506,7 @@ export default function SuperAdmin() {
                               ) : typeof v === "object" ? (
                                 <span
                                   style={{
-                                    fontSize: "0.7rem",
+                                    fontSize: "0.85rem",
                                     fontFamily: "'IBM Plex Mono', monospace",
                                     maxWidth: 120,
                                     overflow: "hidden",
@@ -1570,7 +1570,7 @@ export default function SuperAdmin() {
             <div className="sa-section-title" style={{ margin: 0 }}>
               System Users ({users.length.toLocaleString()})
             </div>
-            <div style={{ fontSize: "0.75rem", color: "#6f6f6f" }}>
+            <div style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>
               Standard system users and managers. Permissions restricted from accessing peer records.
             </div>
           </div>
@@ -1602,14 +1602,14 @@ export default function SuperAdmin() {
                     <tr key={r.id} onClick={() => setDetailModal(r)} style={{ cursor: "pointer" }}>
                       <td style={{ fontWeight: 700 }}>{r.full_name || "—"}</td>
                       <td
-                        style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "0.75rem" }}
+                        style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "0.85rem" }}
                       >
                         {r.email}
                       </td>
                       <td
                         style={{
                           fontFamily: "'IBM Plex Mono', monospace",
-                          fontSize: "0.75rem",
+                          fontSize: "0.85rem",
                           color: "#0f62fe",
                           fontWeight: 600,
                         }}
@@ -1630,7 +1630,7 @@ export default function SuperAdmin() {
                         <span
                           style={{
                             fontFamily: "'IBM Plex Mono', monospace",
-                            fontSize: "0.75rem",
+                            fontSize: "0.85rem",
                             fontWeight: 700,
                             color:
                               (r.monthly_responses_used || 0) >= (r.max_responses_per_month || 100)
@@ -1641,10 +1641,10 @@ export default function SuperAdmin() {
                           {r.monthly_responses_used || 0} / {r.max_responses_per_month || 100}
                         </span>
                       </td>
-                      <td style={{ fontSize: "0.75rem", color: "#525252", fontFamily: "'IBM Plex Mono', monospace" }}>
+                      <td style={{ fontSize: "0.85rem", color: "#525252", fontFamily: "'IBM Plex Mono', monospace" }}>
                         {r.quota_reset_at ? new Date(r.quota_reset_at).toLocaleDateString("en-US") : "30 days"}
                       </td>
-                      <td style={{ fontSize: "0.75rem", color: "#6f6f6f" }}>
+                      <td style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>
                         {r.created_at ? new Date(r.created_at).toLocaleDateString("en-US") : "—"}
                       </td>
                       <td>
@@ -1722,7 +1722,7 @@ export default function SuperAdmin() {
             <div className="sa-section-title" style={{ margin: 0 }}>
               Super Administrators ({admins.length.toLocaleString()})
             </div>
-            <div style={{ fontSize: "0.75rem", color: "#6f6f6f" }}>
+            <div style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>
               Administrators with full platform privileges. Primary god account is stealth-isolated.
             </div>
           </div>
@@ -1752,7 +1752,7 @@ export default function SuperAdmin() {
                     {a.phone && (
                       <div
                         style={{
-                          fontSize: "0.75rem",
+                          fontSize: "0.85rem",
                           color: "#0f62fe",
                           fontWeight: 600,
                           marginTop: "0.15rem",
@@ -1882,16 +1882,16 @@ export default function SuperAdmin() {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="bg-bg-lavender border-b-2 border-ink/10">
-                    <th className="text-left py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">
+                    <th className="text-left py-2 px-3 text-xs font-extrabold text-navy uppercase">
                       Project
                     </th>
-                    <th className="text-left py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">
+                    <th className="text-left py-2 px-3 text-xs font-extrabold text-navy uppercase">
                       Status
                     </th>
-                    <th className="text-left py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">
+                    <th className="text-left py-2 px-3 text-xs font-extrabold text-navy uppercase">
                       Time
                     </th>
-                    <th className="text-left py-2 px-3 text-[0.6rem] font-extrabold text-navy uppercase">
+                    <th className="text-left py-2 px-3 text-xs font-extrabold text-navy uppercase">
                       URL
                     </th>
                   </tr>
@@ -1910,7 +1910,7 @@ export default function SuperAdmin() {
                           {r.state}
                         </Badge>
                       </td>
-                      <td className="py-2 px-3 text-[0.6rem] font-semibold text-ink-subtle">
+                      <td className="py-2 px-3 text-xs font-semibold text-ink-subtle">
                         {new Date(r.created).toLocaleString()}
                       </td>
                       <td className="py-2 px-3">
@@ -1918,7 +1918,7 @@ export default function SuperAdmin() {
                           href={`https://${r.url}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-[0.6rem] font-bold text-teal-text hover:underline"
+                          className="text-xs font-bold text-teal-text hover:underline"
                         >
                           {r.url}
                         </a>
@@ -2003,7 +2003,7 @@ export default function SuperAdmin() {
                         <td
                           style={{
                             fontFamily: "'IBM Plex Mono', monospace",
-                            fontSize: "0.7rem",
+                            fontSize: "0.85rem",
                             maxWidth: 200,
                             overflow: "hidden",
                             textOverflow: "ellipsis",
@@ -2012,7 +2012,7 @@ export default function SuperAdmin() {
                         >
                           {r.details ? JSON.stringify(r.details).slice(0, 50) : "—"}
                         </td>
-                        <td style={{ fontSize: "0.75rem", color: "#6f6f6f" }}>
+                        <td style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>
                           {r.created_at ? new Date(r.created_at).toLocaleString() : "—"}
                         </td>
                       </tr>
@@ -2050,7 +2050,7 @@ export default function SuperAdmin() {
                         <td
                           style={{
                             fontFamily: "'IBM Plex Mono', monospace",
-                            fontSize: "0.75rem",
+                            fontSize: "0.85rem",
                             fontWeight: 600,
                             color: "#da1e28",
                           }}
@@ -2060,7 +2060,7 @@ export default function SuperAdmin() {
                         <td style={{ fontWeight: 600 }}>{r.message}</td>
                         <td
                           style={{
-                            fontSize: "0.75rem",
+                            fontSize: "0.85rem",
                             color: "#6f6f6f",
                             maxWidth: 150,
                             overflow: "hidden",
@@ -2070,7 +2070,7 @@ export default function SuperAdmin() {
                         >
                           {r.url || "—"}
                         </td>
-                        <td style={{ fontSize: "0.75rem", color: "#6f6f6f" }}>
+                        <td style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>
                           {r.created_at ? new Date(r.created_at).toLocaleString() : "—"}
                         </td>
                       </tr>
@@ -2170,7 +2170,7 @@ export default function SuperAdmin() {
                             ) : typeof v === "object" ? (
                               <span
                                 style={{
-                                  fontSize: "0.7rem",
+                                  fontSize: "0.85rem",
                                   fontFamily: "'IBM Plex Mono', monospace",
                                   maxWidth: 120,
                                   overflow: "hidden",
@@ -2233,7 +2233,7 @@ export default function SuperAdmin() {
                 <label
                   style={{
                     display: "block",
-                    fontSize: "0.7rem",
+                    fontSize: "0.85rem",
                     fontWeight: 700,
                     color: "#525252",
                     marginBottom: "0.25rem",
@@ -2332,7 +2332,7 @@ export default function SuperAdmin() {
                 border: "1px solid #e0e0e0",
               }}
             >
-              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#161616" }}>
+              <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#161616" }}>
                 User Audit & Diagnostics:
               </span>
               <button
@@ -2371,7 +2371,7 @@ export default function SuperAdmin() {
                 ["Hidden From", `${detailModal.hidden_from?.length || 0} admins`],
               ].map(([label, value]) => (
                 <div key={label}>
-                  <span style={{ fontSize: "0.7rem", fontWeight: 600, color: "#6f6f6f" }}>
+                  <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#6f6f6f" }}>
                     {label}
                   </span>
                   <div
@@ -2391,7 +2391,7 @@ export default function SuperAdmin() {
             <div style={{ border: "1px solid #e0e0e0", padding: "0.75rem" }}>
               <span
                 style={{
-                  fontSize: "0.7rem",
+                  fontSize: "0.85rem",
                   fontWeight: 700,
                   color: "#525252",
                   textTransform: "uppercase",
@@ -2484,7 +2484,7 @@ export default function SuperAdmin() {
               >
                 <span
                   style={{
-                    fontSize: "0.75rem",
+                    fontSize: "0.85rem",
                     fontWeight: 700,
                     color: "#0f62fe",
                     textTransform: "uppercase",
@@ -2495,7 +2495,7 @@ export default function SuperAdmin() {
                 >
                   <Zap size={13} /> Active Forms & Monthly Quotas (Manual Override)
                 </span>
-                <span className="sa-tag sa-tag-blue" style={{ fontSize: "0.65rem" }}>
+                <span className="sa-tag sa-tag-blue" style={{ fontSize: "0.85rem" }}>
                   SuperAdmin Limit Control
                 </span>
               </div>
@@ -2511,7 +2511,7 @@ export default function SuperAdmin() {
                 <div>
                   <label
                     style={{
-                      fontSize: "0.68rem",
+                      fontSize: "0.85rem",
                       fontWeight: 700,
                       color: "#525252",
                       display: "block",
@@ -2541,7 +2541,7 @@ export default function SuperAdmin() {
                 <div>
                   <label
                     style={{
-                      fontSize: "0.68rem",
+                      fontSize: "0.85rem",
                       fontWeight: 700,
                       color: "#525252",
                       display: "block",
@@ -2572,7 +2572,7 @@ export default function SuperAdmin() {
                 <div>
                   <label
                     style={{
-                      fontSize: "0.68rem",
+                      fontSize: "0.85rem",
                       fontWeight: 700,
                       color: "#525252",
                       display: "block",
@@ -2609,7 +2609,7 @@ export default function SuperAdmin() {
                   borderTop: "1px solid #e0e0e0",
                 }}
               >
-                <div style={{ fontSize: "0.68rem", color: "#6f6f6f" }}>
+                <div style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>
                   Next reset:{" "}
                   <b>
                     {detailModal.quota_reset_at
@@ -2625,7 +2625,7 @@ export default function SuperAdmin() {
                     style={{
                       color: "#da1e28",
                       borderColor: "#da1e28",
-                      fontSize: "0.72rem",
+                      fontSize: "0.85rem",
                       display: "inline-flex",
                       alignItems: "center",
                       gap: "0.25rem",
@@ -2650,7 +2650,7 @@ export default function SuperAdmin() {
                   <button
                     type="button"
                     className="sa-btn sa-btn-primary sa-btn-sm"
-                    style={{ fontSize: "0.72rem" }}
+                    style={{ fontSize: "0.85rem" }}
                     disabled={detailQuotaSaving}
                     onClick={handleSaveDetailQuota}
                   >
@@ -2678,7 +2678,7 @@ export default function SuperAdmin() {
               >
                 <span
                   style={{
-                    fontSize: "0.75rem",
+                    fontSize: "0.85rem",
                     fontWeight: 700,
                     color: "#0f62fe",
                     textTransform: "uppercase",
@@ -2689,12 +2689,12 @@ export default function SuperAdmin() {
                 >
                   <Key size={13} /> Set New Password (Admin Override)
                 </span>
-                <span className="sa-tag sa-tag-blue" style={{ fontSize: "0.65rem" }}>
+                <span className="sa-tag sa-tag-blue" style={{ fontSize: "0.85rem" }}>
                   SuperAdmin Control
                 </span>
               </div>
 
-              <p style={{ fontSize: "0.72rem", color: "#525252", margin: "0 0 0.5rem 0" }}>
+              <p style={{ fontSize: "0.85rem", color: "#525252", margin: "0 0 0.5rem 0" }}>
                 Enter a new password below to immediately overwrite and update the user's password.
               </p>
 
@@ -2743,7 +2743,7 @@ export default function SuperAdmin() {
                 <button
                   type="button"
                   className="sa-btn sa-btn-secondary"
-                  style={{ fontSize: "0.72rem", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                  style={{ fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
                   onClick={() => {
                     const randomPass = "Pk" + Math.floor(100000 + Math.random() * 900000);
                     setNewPassword(randomPass);
@@ -2791,7 +2791,7 @@ export default function SuperAdmin() {
             <div style={{ border: "1px solid #e0e0e0", padding: "0.75rem" }}>
               <span
                 style={{
-                  fontSize: "0.7rem",
+                  fontSize: "0.85rem",
                   fontWeight: 700,
                   color: "#525252",
                   textTransform: "uppercase",
@@ -2850,7 +2850,7 @@ export default function SuperAdmin() {
               <div style={{ border: "1px solid #e0e0e0", padding: "0.75rem" }}>
                 <span
                   style={{
-                    fontSize: "0.7rem",
+                    fontSize: "0.85rem",
                     fontWeight: 700,
                     color: "#525252",
                     textTransform: "uppercase",
@@ -2880,7 +2880,7 @@ export default function SuperAdmin() {
                       }}
                       style={{
                         padding: "0.25rem 0.75rem",
-                        fontSize: "0.75rem",
+                        fontSize: "0.85rem",
                         fontWeight: 600,
                         border: "1px solid",
                         borderColor: detailModal.role === r ? "#0f62fe" : "#c6c6c6",
@@ -2902,7 +2902,7 @@ export default function SuperAdmin() {
               <div style={{ border: "1px solid #e0e0e0", padding: "0.75rem" }}>
                 <span
                   style={{
-                    fontSize: "0.7rem",
+                    fontSize: "0.85rem",
                     fontWeight: 700,
                     color: "#525252",
                     textTransform: "uppercase",
@@ -2958,7 +2958,7 @@ export default function SuperAdmin() {
               >
                 <span
                   style={{
-                    fontSize: "0.7rem",
+                    fontSize: "0.85rem",
                     fontWeight: 700,
                     color: "#525252",
                     textTransform: "uppercase",
@@ -2966,7 +2966,7 @@ export default function SuperAdmin() {
                 >
                   Assigned Permissions
                 </span>
-                <span style={{ fontSize: "0.7rem", fontWeight: 600, color: "#0f62fe" }}>
+                <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#0f62fe" }}>
                   {detailModal.permissions?.length || 0} active
                 </span>
               </div>
@@ -3024,7 +3024,7 @@ export default function SuperAdmin() {
               >
                 <span
                   style={{
-                    fontSize: "0.7rem",
+                    fontSize: "0.85rem",
                     fontWeight: 700,
                     color: "#525252",
                     textTransform: "uppercase",
@@ -3032,11 +3032,11 @@ export default function SuperAdmin() {
                 >
                   Visibility Restrictions
                 </span>
-                <span style={{ fontSize: "0.7rem", color: "#6f6f6f" }}>
+                <span style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>
                   Hidden from {detailModal.hidden_from?.length || 0} administrators
                 </span>
               </div>
-              <p style={{ fontSize: "0.7rem", color: "#6f6f6f", marginBottom: "0.5rem" }}>
+              <p style={{ fontSize: "0.85rem", color: "#6f6f6f", marginBottom: "0.5rem" }}>
                 Select administrators to hide this user profile from:
               </p>
               <div className="sa-perms">
@@ -3115,7 +3115,7 @@ export default function SuperAdmin() {
                 </div>
                 <div
                   style={{
-                    fontSize: "0.7rem",
+                    fontSize: "0.85rem",
                     fontFamily: "'IBM Plex Mono', monospace",
                     color: "#525252",
                   }}
@@ -3183,7 +3183,7 @@ export default function SuperAdmin() {
                 <p style={{ margin: 0, fontWeight: 700, fontSize: "0.85rem", color: "#525252" }}>
                   No activity logs found
                 </p>
-                <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.72rem", color: "#8d8d8d" }}>
+                <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.85rem", color: "#8d8d8d" }}>
                   No actions or events have been logged for this specific user yet.
                 </p>
               </div>
@@ -3208,7 +3208,7 @@ export default function SuperAdmin() {
                         </td>
                         <td
                           style={{
-                            fontSize: "0.75rem",
+                            fontSize: "0.85rem",
                             fontFamily: "'IBM Plex Mono', monospace",
                           }}
                         >
@@ -3218,7 +3218,7 @@ export default function SuperAdmin() {
                         <td
                           style={{
                             fontFamily: "'IBM Plex Mono', monospace",
-                            fontSize: "0.7rem",
+                            fontSize: "0.85rem",
                             maxWidth: "240px",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
@@ -3230,7 +3230,7 @@ export default function SuperAdmin() {
                         </td>
                         <td
                           style={{
-                            fontSize: "0.72rem",
+                            fontSize: "0.85rem",
                             color: "#525252",
                             whiteSpace: "nowrap",
                           }}
@@ -3264,7 +3264,7 @@ export default function SuperAdmin() {
                 {impersonateModal.email}
               </div>
             </div>
-            <p style={{ fontSize: "0.75rem", fontWeight: 600, color: "#da1e28", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+            <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "#da1e28", display: "flex", alignItems: "center", gap: "0.35rem" }}>
               <AlertTriangle size={14} /> This action will be recorded in the security audit log.
             </p>
             <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>

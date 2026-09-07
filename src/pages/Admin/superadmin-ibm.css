@@ -50,7 +50,7 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #24a148;
 }
@@ -70,7 +70,7 @@
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   background: #393939;
 }
@@ -127,7 +127,7 @@
   padding: 0.5rem 0.75rem;
   border: 1px solid #c6c6c6;
   background: #fff;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   color: #161616;
   font-family: 'IBM Plex Sans', sans-serif;
   outline: none;
@@ -146,8 +146,8 @@
 
 /* ─── Carbon Buttons ─── */
 .sa-btn {
-  padding: 0.4rem 1rem;
-  font-size: 0.8rem;
+  padding: 0.45rem 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   font-family: 'IBM Plex Sans', sans-serif;
@@ -194,8 +194,8 @@
 }
 
 .sa-btn-sm {
-  padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8125rem;
 }
 
 /* ─── Carbon Cards ─── */
@@ -232,7 +232,7 @@
 }
 
 .sa-stat-label {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: #525252;
   margin-bottom: 0.35rem;
 }
@@ -244,7 +244,7 @@
 }
 
 .sa-stat-sub {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #6f6f6f;
 }
 
@@ -272,7 +272,7 @@
 }
 
 .sa-tile-name {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: #525252;
   text-transform: uppercase;
@@ -296,13 +296,13 @@
 .sa-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
 }
 
 .sa-table th {
   text-align: right;
   padding: 0.6rem 0.75rem;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #525252;
   text-transform: uppercase;
@@ -328,8 +328,8 @@
 /* ─── Tags (Carbon-style badges) ─── */
 .sa-tag {
   display: inline-block;
-  padding: 0.15rem 0.5rem;
-  font-size: 0.7rem;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   border: 1px solid;
 }
@@ -366,7 +366,7 @@
 
 /* ─── Section titles ─── */
 .sa-section-title {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: #161616;
   margin-bottom: 0.75rem;
@@ -377,8 +377,8 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.4rem 0.5rem;
-  font-size: 0.8rem;
+  padding: 0.45rem 0.5rem;
+  font-size: 0.875rem;
   border-bottom: 1px solid #e0e0e0;
 }
 
@@ -417,7 +417,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   color: #fff;
 }
@@ -431,7 +431,7 @@
 }
 
 .sa-admin-email {
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   color: #6f6f6f;
 }
 
@@ -444,9 +444,9 @@
 }
 
 .sa-perm {
-  font-size: 0.65rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  padding: 0.2rem 0.5rem;
+  padding: 0.25rem 0.55rem;
   border: 1px solid;
   cursor: pointer;
   transition: all 0.15s;
@@ -475,7 +475,7 @@
   padding: 0.75rem;
   border: 1px solid #c6c6c6;
   background: #fff;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   font-family: 'IBM Plex Mono', monospace;
   color: #161616;
   outline: none;
@@ -494,7 +494,7 @@
   right: 1rem;
   z-index: 9999;
   padding: 0.6rem 1rem;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #fff;
   font-family: 'IBM Plex Sans', sans-serif;
@@ -515,7 +515,7 @@
   padding: 3rem;
   text-align: center;
   color: #6f6f6f;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
 }
 
 /* ─── Storage & System ─── */
@@ -573,7 +573,7 @@
 }
 
 .sa-storage-desc {
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   color: #525252;
 }
 
@@ -588,6 +588,6 @@
   .sa-root { padding: 0.75rem; }
   .sa-stats { grid-template-columns: repeat(2, 1fr); }
   .sa-tiles { grid-template-columns: repeat(2, 1fr); }
-  .sa-table { font-size: 0.7rem; }
+  .sa-table { font-size: 0.8125rem; }
   .sa-table th, .sa-table td { padding: 0.4rem 0.5rem; }
 }

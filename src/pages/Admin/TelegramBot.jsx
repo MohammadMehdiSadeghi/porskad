@@ -499,7 +499,7 @@ export default function TelegramBot() {
                         <div className="text-xs font-mono text-ink-subtle truncate" dir="ltr">
                           Chat: {cfg.chat_id}
                         </div>
-                        <div className="text-[0.65rem] font-mono text-ink-subtle/60 truncate" dir="ltr">
+                        <div className="text-xs font-mono text-ink-subtle truncate" dir="ltr">
                           Token: {cfg.bot_token.slice(0, 20)}...
                         </div>
                       </div>

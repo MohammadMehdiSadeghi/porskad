@@ -159,7 +159,7 @@ export default function Register() {
               <label className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
                   <span className="text-xs sm:text-sm font-extrabold text-navy">شماره موبایل</span>
-                  <span className="text-[0.65rem] font-bold text-teal">اجباری</span>
+                  <span className="text-xs font-bold text-teal">اجباری</span>
                 </div>
                 <input
                   type="tel"

@@ -25,7 +25,7 @@ function Field({ label, children, hint }) {
     <label className="flex flex-col gap-1.5">
       <span className="text-sm font-extrabold text-navy">{label}</span>
       {children}
-      {hint && <span className="text-[0.7rem] font-medium text-ink-subtle">{hint}</span>}
+      {hint && <span className="text-xs font-medium text-ink-subtle">{hint}</span>}
     </label>
   );
 }
@@ -234,7 +234,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
               )}
               {q.type === "short_text" && (
                 <div className="flex flex-col gap-1.5">
-                  <span className="text-[0.7rem] font-bold text-teal-text">سقف مجاز: حداکثر ۲۵۵ کاراکتر</span>
+                  <span className="text-xs font-bold text-teal-text">سقف مجاز: حداکثر ۲۵۵ کاراکتر</span>
                   <div className="flex gap-2">
                     <Field label="حداقل کاراکتر" hint="اختیاری">
                       <input
@@ -263,7 +263,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
               )}
               {q.type === "long_text" && (
                 <div className="flex flex-col gap-1.5">
-                  <span className="text-[0.7rem] font-bold text-teal-text">محدودیت کاراکتر (پیش‌فرض آزاد و نامحدود)</span>
+                  <span className="text-xs font-bold text-teal-text">محدودیت کاراکتر (پیش‌فرض آزاد و نامحدود)</span>
                   <div className="flex gap-2">
                     <Field label="حداقل کاراکتر" hint="اختیاری">
                       <input
@@ -365,7 +365,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                   <ChevronDown size={13} /> کشویی (دراپ‌داون)
                 </button>
               </div>
-              <span className="text-[0.6rem] font-medium text-ink-subtle">
+              <span className="text-xs font-medium text-ink-subtle">
                 {(q.display_mode || "buttons") === "buttons" 
                   ? "گزینه‌ها به‌صورت دکمه‌های جداگانه نمایش داده می‌شوند"
                   : "گزینه‌ها در یک لیست کشویی نمایش داده می‌شوند"}
@@ -379,12 +379,12 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
               <div className="flex items-center gap-2">
                 <span className="text-xs font-extrabold text-orange">تعداد انتخاب مجاز</span>
                 {(q.max_selections ?? 1) > 1 && (
-                  <span className="text-[0.55rem] font-bold text-teal bg-teal/10 border border-teal/30 rounded-pill-sm px-1.5 py-0.5">
+                  <span className="text-xs font-bold text-teal bg-teal/10 border border-teal/30 rounded-pill-sm px-1.5 py-0.5">
                     چند انتخابی
                   </span>
                 )}
               </div>
-              <span className="text-[0.6rem] font-medium text-ink-subtle">
+              <span className="text-xs font-medium text-ink-subtle">
                 کاربر چند گزینه می‌تواند انتخاب کند؟ ۱ = تک‌انتخابی، بیشتر از ۱ = چند انتخابی
               </span>
               <div className="flex items-center gap-3">
@@ -408,7 +408,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                   {faNum(q.max_selections ?? 1)}
                 </span>
               </div>
-              <span className="text-[0.55rem] font-medium text-ink-subtle">
+              <span className="text-xs font-medium text-ink-subtle">
                 {(q.max_selections ?? 1) === 1
                   ? "کاربر فقط یک گزینه می‌تواند انتخاب کند (حالت رادیویی)"
                   : `کاربر حداکثر ${faNum(q.max_selections)} گزینه می‌تواند انتخاب کند`
@@ -423,14 +423,14 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
               <span className="text-xs font-extrabold text-teal-text flex items-center gap-1">
                 <Target size={14} /> گزینه صحیح (برای نمره‌دهی)
               </span>
-              <span className="text-[0.6rem] font-medium text-ink-subtle">
+              <span className="text-xs font-medium text-ink-subtle">
                 اگه گزینه صحیح مشخص کنید، بعد از ارسال فرم به کاربر نمره نمایش داده می‌شود.
               </span>
 
               {/* choice با max_selections > 1 → چند انتخابی */}
               {q.type === "choice" && (q.max_selections ?? 1) > 1 ? (
                 <div className="flex flex-col gap-1.5">
-                  <span className="text-[0.6rem] font-medium text-ink-subtle">چند گزینه صحیح انتخاب کنید:</span>
+                  <span className="text-xs font-medium text-ink-subtle">چند گزینه صحیح انتخاب کنید:</span>
                   <div className="flex flex-wrap gap-1.5">
                     {q.options.map((opt, i) => {
                       const correctArr = Array.isArray(q.correct_answer) ? q.correct_answer : [];
@@ -445,7 +445,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                               : [...correctArr, opt];
                             onChange({ correct_answer: next.length > 0 ? next : null });
                           }}
-                          className={`text-[0.65rem] font-bold px-3 py-1.5 rounded-pill-md border-2 transition-all cursor-pointer flex items-center gap-1 ${
+                          className={`text-xs font-bold px-3 py-1.5 rounded-pill-md border-2 transition-all cursor-pointer flex items-center gap-1 ${
                             isSelected
                               ? "border-teal bg-teal text-white"
                               : "border-ink/15 bg-white text-ink hover:border-teal/40"
@@ -468,7 +468,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                         key={i}
                         type="button"
                         onClick={() => onChange({ correct_answer: isSelected ? null : opt })}
-                        className={`text-[0.65rem] font-bold px-3 py-1.5 rounded-pill-md border-2 transition-all cursor-pointer flex items-center gap-1 ${
+                        className={`text-xs font-bold px-3 py-1.5 rounded-pill-md border-2 transition-all cursor-pointer flex items-center gap-1 ${
                           isSelected
                             ? "border-teal bg-teal text-white"
                             : "border-ink/15 bg-white text-ink hover:border-teal/40"
@@ -503,18 +503,18 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                 <span className="text-sm"></span>
                 <span className="text-xs font-extrabold text-navy">شرط نمایش</span>
                 {conditions ? (
-                  <span className="text-[0.6rem] font-bold text-teal bg-teal/10 border border-teal/30 rounded-pill-sm px-2 py-0.5">
+                  <span className="text-xs font-bold text-teal bg-teal/10 border border-teal/30 rounded-pill-sm px-2 py-0.5">
                     فعال
                   </span>
                 ) : (
-                  <span className="text-[0.6rem] font-bold text-ink-subtle bg-ink/5 border border-ink/10 rounded-pill-sm px-2 py-0.5">
+                  <span className="text-xs font-bold text-ink-subtle bg-ink/5 border border-ink/10 rounded-pill-sm px-2 py-0.5">
                     بدون شرط
                   </span>
                 )}
                 {conditions && (
                   <button
                     onClick={toggleConditionGroup}
-                    className="text-[0.65rem] font-bold text-magenta-text hover:underline mr-auto"
+                    className="text-xs font-bold text-magenta-text hover:underline mr-auto"
                   >
                     حذف شرط
                   </button>
@@ -526,11 +526,11 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                   {/* سوییچ AND/OR */}
                   {conditions.conditions?.length > 1 && (
                     <div className="flex items-center gap-2">
-                      <span className="text-[0.6rem] font-bold text-ink-subtle">ترکیب:</span>
+                      <span className="text-xs font-bold text-ink-subtle">ترکیب:</span>
                       <select
                         value={conditions.group_operator}
                         onChange={(e) => updateConditionGroup({ group_operator: e.target.value })}
-                        className={`${inputCls} !py-1 !text-[0.65rem] !w-auto`}
+                        className={`${inputCls} !py-1 !text-xs !w-auto`}
                       >
                         <option value="AND">{GROUP_OPERATORS.AND.label}</option>
                         <option value="OR">{GROUP_OPERATORS.OR.label}</option>
@@ -544,7 +544,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                     return (
                       <div key={cond.id || i} className="flex items-start gap-2">
                         {i > 0 && (
-                          <span className="text-[0.6rem] font-black text-navy mt-3 shrink-0 px-1.5 py-0.5 bg-bg-lavender rounded-pill-sm">
+                          <span className="text-xs font-black text-navy mt-3 shrink-0 px-1.5 py-0.5 bg-bg-lavender rounded-pill-sm">
                             {conditions.group_operator}
                           </span>
                         )}
@@ -564,7 +564,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
 
                   <button
                     onClick={addConditionToGroup}
-                    className="self-start text-[0.65rem] font-extrabold text-teal hover:text-teal-text transition-colors"
+                    className="self-start text-xs font-extrabold text-teal hover:text-teal-text transition-colors"
                   >
                     + افزودن شرط
                   </button>
@@ -572,7 +572,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
               ) : (
                 <button
                   onClick={toggleConditionGroup}
-                  className="self-start text-[0.7rem] font-extrabold text-teal hover:text-teal-text transition-colors
+                  className="self-start text-xs font-extrabold text-teal hover:text-teal-text transition-colors
                     border-2 border-dashed border-teal/40 rounded-pill-md px-3 py-2 hover:border-teal"
                 >
                   + افزودن شرط نمایش
@@ -588,13 +588,13 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                 <span className="text-sm"></span>
                 <span className="text-xs font-extrabold text-navy">اکشن پرش (Jump)</span>
                 {jumpActions.length > 0 && (
-                  <span className="text-[0.6rem] font-bold text-magenta-text bg-magenta/10 border border-magenta/30 rounded-pill-sm px-2 py-0.5">
+                  <span className="text-xs font-bold text-magenta-text bg-magenta/10 border border-magenta/30 rounded-pill-sm px-2 py-0.5">
                     {faNum(jumpActions.length)} اکشن
                   </span>
                 )}
               </div>
 
-              <span className="text-[0.6rem] font-medium text-ink-subtle leading-5">
+              <span className="text-xs font-medium text-ink-subtle leading-5">
                 اگر گزینه خاصی انتخاب شد، به سوال مشخصی پرش کن یا فرم تمام شود.
               </span>
 
@@ -606,13 +606,13 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                 return (
                   <div key={ja.id || i} className="flex flex-col gap-1.5 bg-white rounded-pill-md border border-ink/10 p-2.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-[0.6rem] font-extrabold text-magenta-text shrink-0">
+                      <span className="text-xs font-extrabold text-magenta-text shrink-0">
                         {jaLabel}:
                       </span>
                       <select
                         value={ja.action_type}
                         onChange={(e) => updateJumpAction(i, { action_type: e.target.value, target_id: null, target_url: null })}
-                        className={`${inputCls} !py-1 !text-[0.65rem] !w-auto flex-1`}
+                        className={`${inputCls} !py-1 !text-xs !w-auto flex-1`}
                       >
                         {JUMP_ACTION_TYPE_ORDER.map((t) => (
                           <option key={t} value={t}>
@@ -668,7 +668,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                         key={optIdx}
                         onClick={() => addJumpAction(optIdx)}
                         disabled={hasAction}
-                        className="text-[0.6rem] font-extrabold text-magenta-text hover:text-magenta transition-colors
+                        className="text-xs font-extrabold text-magenta-text hover:text-magenta transition-colors
                           border border-dashed border-magenta/30 rounded-pill-sm px-2 py-1 hover:border-magenta
                           disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
                       >
@@ -687,7 +687,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                         key={optIdx}
                         onClick={() => addJumpAction(optIdx)}
                         disabled={hasAction}
-                        className="text-[0.6rem] font-extrabold text-magenta-text hover:text-magenta transition-colors
+                        className="text-xs font-extrabold text-magenta-text hover:text-magenta transition-colors
                           border border-dashed border-magenta/30 rounded-pill-sm px-2 py-1 hover:border-magenta
                           disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
                       >
@@ -1028,7 +1028,7 @@ export default function FormBuilder() {
                         <span className={`text-sm font-black block ${form.form_type === t.key ? "text-teal-text" : "text-navy"}`}>
                           {t.label}
                         </span>
-                        <span className="text-[0.65rem] text-ink/50">{t.desc}</span>
+                        <span className="text-xs text-ink/50">{t.desc}</span>
                       </div>
                     </button>
                   ))}

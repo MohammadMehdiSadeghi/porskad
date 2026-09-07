@@ -133,15 +133,15 @@ export default {
                 ...md.borderRadius,
             },
             fontSize: {
-                // ── Design System Typography Scale (Standard & Legible) ──
-                xs: ["0.75rem", { lineHeight: "1.125rem" }], // 12px
-                sm: ["0.875rem", { lineHeight: "1.3125rem" }], // 14px
-                base: ["1rem", { lineHeight: "1.5rem" }], // 16px
-                md: ["1.125rem", { lineHeight: "1.6875rem" }], // 18px
-                lg: ["1.3125rem", { lineHeight: "1.875rem" }], // 21px
-                xl: ["1.625rem", { lineHeight: "2.25rem" }], // 26px
-                "2xl": ["2.125rem", { lineHeight: "2.75rem" }], // 34px
-                "3xl": ["2.875rem", { lineHeight: "3.5rem" }], // 46px
+                // ── Design System Typography Scale (Standard & Highly Legible) ──
+                xs: ["0.8125rem", { lineHeight: "1.25rem" }], // 13px — crisp, clear captions & badges
+                sm: ["0.925rem", { lineHeight: "1.45rem" }], // 14.8px — comfortable subtitles & inputs
+                base: ["1.025rem", { lineHeight: "1.6rem" }], // 16.4px — standard body text
+                md: ["1.15rem", { lineHeight: "1.75rem" }], // 18.4px — subheadings & emphasis
+                lg: ["1.35rem", { lineHeight: "1.95rem" }], // 21.6px — section titles
+                xl: ["1.65rem", { lineHeight: "2.35rem" }], // 26.4px — hero subheaders
+                "2xl": ["2.15rem", { lineHeight: "2.85rem" }], // 34.4px — major headings
+                "3xl": ["2.9rem", { lineHeight: "3.6rem" }], // 46.4px — hero titles
 
                 // ── Legacy aliases (backward compat) ──
                 "2xs": "0.81875rem",
