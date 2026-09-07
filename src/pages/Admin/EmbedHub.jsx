@@ -21,6 +21,8 @@ import {
   Eye,
   FileText,
   Lightbulb,
+  Share2,
+  Info,
 } from "lucide-react";
 
 // ─── توضیحات هر حالت Embed ───
@@ -228,32 +230,38 @@ function FormEmbedCard({ form, baseUrl, index }) {
                 <span className="text-[0.65rem] font-mono text-ink/40" dir="ltr">{publicId}</span>
               </div>
             </div>
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-1.5 shrink-0">
               {form.published && (
                 <a href={`/f/${form.slug}`} target="_blank" rel="noopener noreferrer">
-                  <Button variant="ghost" size="sm"><Eye size={14} /></Button>
+                  <Button variant="ghost" size="sm" title="مشاهده زنده فرم"><Eye size={14} /></Button>
                 </a>
               )}
-              <Button variant="ghost" size="sm" onClick={() => setExpanded(!expanded)}>
-                {expanded ? "بستن" : "کد Embed"}
+              <Button
+                variant={expanded ? "teal" : "ghost"}
+                size="sm"
+                onClick={() => setExpanded(!expanded)}
+                className="flex items-center gap-1.5"
+              >
+                <Share2 size={14} />
+                <span>{expanded ? "بستن" : "اشتراک‌گذاری"}</span>
               </Button>
             </div>
           </div>
 
           {/* لینک سریع */}
           {form.published && (
-            <div className="flex items-center gap-2 bg-bg-neutral rounded-lg px-3 py-2">
-              <Link2 size={12} className="text-ink/40 shrink-0" />
-              <span className="text-xs font-mono text-ink/60 truncate flex-1" dir="ltr">
+            <div className="flex items-center gap-2 bg-bg-neutral rounded-lg px-3 py-2 border border-ink/5">
+              <Link2 size={13} className="text-ink/40 shrink-0" />
+              <span className="text-xs font-mono font-semibold text-navy truncate flex-1" dir="ltr">
                 {baseUrl}/f/{form.slug}
               </span>
               <CopyButton text={`${baseUrl}/f/${form.slug}`} />
             </div>
           )}
 
-          {/* حالت‌های Embed — فقط وقتی expand شد */}
+          {/* حالت‌های Embed و اشتراک‌گذاری — فقط وقتی expand شد */}
           {expanded && (
-            <div className="flex flex-col gap-2.5 sm:gap-3 mt-1">
+            <div className="flex flex-col gap-3 mt-1 pt-2 border-t border-navy/5">
               {/* ۵ کارت حالت — ریسپانسیو */}
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
                 {EMBED_MODES.map((mode) => (
@@ -268,33 +276,43 @@ function FormEmbedCard({ form, baseUrl, index }) {
                       }
                     `}
                   >
-                    <mode.icon size={14} className={selectedMode === mode.key ? mode.textClass : "text-ink/40"} />
-                    <span className={`text-[0.6rem] sm:text-[0.65rem] font-bold leading-tight ${selectedMode === mode.key ? mode.textClass : "text-ink/50"}`}>
+                    <mode.icon size={15} className={selectedMode === mode.key ? mode.textClass : "text-ink/40"} />
+                    <span className={`text-xs font-black leading-tight ${selectedMode === mode.key ? mode.textClass : "text-ink/60"}`}>
                       {mode.label}
                     </span>
                   </button>
                 ))}
               </div>
 
-              {/* توضیح حالت انتخاب شده */}
+              {/* توضیح و راهنمای حالت انتخاب شده */}
               {(() => {
                 const active = EMBED_MODES.find((m) => m.key === selectedMode);
                 if (!active) return null;
                 return (
-                  <div className={`rounded-xl border ${active.borderClass} ${active.bgClass} px-2.5 sm:px-3 py-2 flex items-start gap-1.5 sm:gap-2`}>
-                    <active.icon size={13} className={`${active.textClass} shrink-0 mt-0.5`} />
-                    <p className="text-[0.6rem] sm:text-[0.7rem] text-ink/60 leading-4 sm:leading-5">{active.description}</p>
+                  <div className={`rounded-xl border ${active.borderClass} ${active.bgClass} p-3 flex flex-col gap-1.5`}>
+                    <div className="flex items-center gap-1.5">
+                      <active.icon size={14} className={active.textClass} />
+                      <span className={`text-xs font-black ${active.textClass}`}>توضیحات و کاربرد حالت {active.label}:</span>
+                    </div>
+                    <p className="text-xs text-navy/80 font-medium leading-5">{active.description}</p>
+                    <div className="flex items-center gap-1.5 text-xs text-ink-subtle mt-0.5">
+                      <Lightbulb size={12} className={active.textClass} />
+                      <span>مثال: {active.example}</span>
+                    </div>
                   </div>
                 );
               })()}
 
-              {/* کد */}
-              <div className="bg-gray-900 text-gray-100 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-[0.65rem] sm:text-xs font-mono" dir="ltr">
-                <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-                  <span className="text-gray-500 text-[0.6rem] sm:text-[0.65rem]">{EMBED_MODES.find((m) => m.key === selectedMode)?.label}</span>
+              {/* کد آماده کپی */}
+              <div className="bg-gray-900 text-gray-100 rounded-xl px-3.5 sm:px-4 py-3 text-xs font-mono" dir="ltr">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-gray-400 text-xs font-sans font-bold flex items-center gap-1">
+                    <Code size={13} className="text-teal" />
+                    کد آماده: {EMBED_MODES.find((m) => m.key === selectedMode)?.label}
+                  </span>
                   <CopyButton text={codes[selectedMode]} />
                 </div>
-                <pre className="whitespace-pre-wrap break-all leading-4 sm:leading-5 max-h-[12rem] overflow-y-auto">{codes[selectedMode]}</pre>
+                <pre className="whitespace-pre-wrap break-all leading-5 max-h-[12rem] overflow-y-auto text-teal-light">{codes[selectedMode]}</pre>
               </div>
             </div>
           )}

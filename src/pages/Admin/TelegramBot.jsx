@@ -6,6 +6,7 @@ import { faNum, faRelative } from "../../lib/utils";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import StickerCard from "../../components/ui/StickerCard";
+import Modal from "../../components/ui/Modal";
 import EmptyState from "../../components/ui/EmptyState";
 import Spinner from "../../components/ui/Spinner";
 import SEO from "../../components/ui/SEO";
@@ -20,6 +21,7 @@ import {
   Trash2,
   Plus,
   Bot,
+  HelpCircle,
 } from "lucide-react";
 
 const inputCls =
@@ -30,6 +32,7 @@ export default function TelegramBot() {
   const canManage = isOwner() || (hasPermission("manage_telegram") && profile?.can_use_telegram === true);
   const [tab, setTab] = useState("config");
   const [loading, setLoading] = useState(true);
+  const [showHelpModal, setShowHelpModal] = useState(false);
 
   // ─── Config ───
   const [configs, setConfigs] = useState([]);
@@ -302,16 +305,26 @@ export default function TelegramBot() {
       />
 
       {/* هدر */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-3xl font-black text-navy flex items-center gap-2">
-            <Bot size={22} className="text-teal" />
+            <Bot size={24} className="text-teal" />
             بات تلگرام
           </h1>
           <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-0.5">
             ارسال خودکار ورودی‌های فرم به تلگرام
           </p>
         </div>
+
+        <Button
+          variant="teal"
+          size="sm"
+          className="flex items-center gap-1.5 shadow-sm"
+          onClick={() => setShowHelpModal(true)}
+        >
+          <HelpCircle size={15} />
+          <span>راهنمای راه‌اندازی</span>
+        </Button>
       </div>
 
       {/* هشدار عدم دسترسی و دعوت به ارسال تیکت */}
@@ -747,6 +760,58 @@ export default function TelegramBot() {
           )}
         </div>
       )}
+
+      {/* ─── مودال راهنمای بات تلگرام ─── */}
+      <Modal
+        open={showHelpModal}
+        onClose={() => setShowHelpModal(false)}
+        title="راهنمای سریع راه‌اندازی بات تلگرام"
+      >
+        <div className="flex flex-col gap-3.5 text-sm leading-7">
+          <div className="flex items-start gap-3 p-3.5 bg-bg-neutral rounded-xl border border-ink/10">
+            <span className="w-6 h-6 rounded-full bg-teal text-white flex items-center justify-center font-black text-xs shrink-0 mt-0.5">
+              ۱
+            </span>
+            <div>
+              <strong className="text-navy block text-sm">دریافت توکن از BotFather:</strong>
+              <p className="text-xs text-ink-subtle mt-0.5">
+                در تلگرام به ربات رسمی <code className="text-teal font-bold bg-white px-1.5 py-0.5 rounded border border-ink/10" dir="ltr">@BotFather</code> بروید، دستور <code className="text-teal font-bold bg-white px-1.5 py-0.5 rounded border border-ink/10" dir="ltr">/newbot</code> را ارسال کرده و نام و یوزرنیم بات را وارد کنید تا <strong>توکن اختصاصی</strong> دریافت شود.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 p-3.5 bg-bg-neutral rounded-xl border border-ink/10">
+            <span className="w-6 h-6 rounded-full bg-teal text-white flex items-center justify-center font-black text-xs shrink-0 mt-0.5">
+              ۲
+            </span>
+            <div>
+              <strong className="text-navy block text-sm">دریافت چت‌آیدی (Chat ID):</strong>
+              <p className="text-xs text-ink-subtle mt-0.5">
+                برای پیوی شخصی، به یک ربات مانند <code className="text-teal font-bold bg-white px-1.5 py-0.5 rounded border border-ink/10" dir="ltr">@userinfobot</code> پیام دهید تا Chat ID عددی شما را بدهد.<br />
+                برای کانال یا گروه، ربات ساخته‌شده را در کانال/گروه <strong>ادمین</strong> کنید و آیدی یا چت‌آیدی آن را وارد کنید.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 p-3.5 bg-bg-neutral rounded-xl border border-ink/10">
+            <span className="w-6 h-6 rounded-full bg-teal text-white flex items-center justify-center font-black text-xs shrink-0 mt-0.5">
+              ۳
+            </span>
+            <div>
+              <strong className="text-navy block text-sm">انتخاب و لینک کردن فرم:</strong>
+              <p className="text-xs text-ink-subtle mt-0.5">
+                اطلاعات ربات را در تب «تنظیمات ربات» ذخیره کنید. سپس در تب «لینک فرم‌ها»، فرم مورد نظرتان را انتخاب کرده تا از این پس پاسخ‌های ثبت‌شده فوراً به تلگرام ارسال گردند.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <Button variant="teal" size="sm" onClick={() => setShowHelpModal(false)}>
+              متوجه شدم
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
