@@ -8,7 +8,7 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import StickerCard from "../../components/ui/StickerCard";
 import Modal from "../../components/ui/Modal";
-import { Plus, Edit, Trash2, Crown, Users, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings, Eye, EyeOff, Sliders, Bot, Copy } from "lucide-react";
+import { Plus, Edit, Trash2, Crown, Users, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings, Eye, EyeOff, Sliders, Bot, Copy, Calendar, CheckCircle, XCircle, Phone, Mail } from "lucide-react";
 import SEO from "../../components/ui/SEO";
 import { supabase } from "../../lib/supabaseClient";
 import { logActivity } from "../../lib/activityLogger";
@@ -178,6 +178,8 @@ export default function Managers() {
   const [editCanUseTelegram, setEditCanUseTelegram] = useState(false);
   const [editNewPassword, setEditNewPassword] = useState("");
   const [editPasswordVisible, setEditPasswordVisible] = useState(false);
+  const [selectedUserModal, setSelectedUserModal] = useState(null);
+  const [userFormsCount, setUserFormsCount] = useState({});
 
   async function toggleTelegramAccess(m) {
     const newVal = !m.can_use_telegram;
@@ -189,6 +191,7 @@ export default function Managers() {
         canUseTelegram: newVal,
       });
       setManagers((prev) => prev.map((x) => x.id === m.id ? { ...x, can_use_telegram: newVal } : x));
+      setSelectedUserModal((prev) => (prev && prev.id === m.id ? { ...prev, can_use_telegram: newVal } : prev));
       push(`دسترسی به ربات تلگرام برای «${m.full_name || m.email}» ${newVal ? "فعال شد ✓" : "قطع شد ✕"}`, "success");
     } catch (err) {
       push("خطا در تغییر دسترسی تلگرام: " + err.message, "error");
@@ -242,7 +245,19 @@ export default function Managers() {
   async function load() {
     setLoading(true);
     try {
-      const data = await listManagers({ includeHidden: isOwner() });
+      const [data, formsRes] = await Promise.all([
+        listManagers({ includeHidden: isOwner() }),
+        supabase.from("forms").select("manager_id").is("deleted_at", null),
+      ]);
+
+      const formCountMap = {};
+      (formsRes?.data || []).forEach((f) => {
+        if (f.manager_id) {
+          formCountMap[f.manager_id] = (formCountMap[f.manager_id] || 0) + 1;
+        }
+      });
+      setUserFormsCount(formCountMap);
+
       const callerIsGod = isPrimaryGodEmail(user?.email);
       let filtered = data || [];
       // استتار: سوپرادمین ثانویه نباید از وجود اکانت اصلی superadmin@gmailc.com مطلع شود
@@ -329,6 +344,7 @@ export default function Managers() {
         push("مدیر غیرفعال شد");
       }
       load();
+      setSelectedUserModal((prev) => (prev && prev.id === managerId ? { ...prev, is_active: activating } : prev));
     } catch (err) {
       push("خطا: " + err.message, "error");
     }
@@ -391,116 +407,290 @@ export default function Managers() {
         />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 lg:gap-5">
-          {managers.map((m, i) => (
-            <div key={m.id} className={i % 2 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"}>
-              <StickerCard theme={m.is_owner ? "orange" : "white"}>
-                <div className="p-3.5 flex flex-col gap-2.5">
-                  {/* هدر کارت */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-9 h-9 rounded-full flex items-center justify-center font-extrabold text-sm rotate-[3deg] ${
-                        m.is_owner ? "bg-orange/20 text-orange" :
-                        m.is_active ? "bg-bg-mint text-teal-text" :
-                        "bg-bg-neutral text-ink-subtle"
-                      }`}>
-                        {m.full_name?.[0]?.toUpperCase() ?? m.email?.[0]?.toUpperCase() ?? "U"}
-                      </div>
-                      <div className="flex flex-col gap-0.5">
-                        <div className="flex items-center gap-1">
-                          <span className="font-extrabold text-navy leading-5 line-clamp-1 text-sm">
-                            {m.full_name || "—"}
-                          </span>
-                          {m.is_owner ? (
-                            <span className="inline-flex items-center gap-0.5 text-[0.6rem] font-bold text-amber-700 bg-amber-100 border border-amber-200 rounded-full px-1.5 py-0.5">
-                              <Crown size={10} /> صاحب
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center text-[0.6rem] font-bold text-navy bg-bg-lavender rounded-full px-1.5 py-0.5">
-                              کاربر
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-[0.65rem] font-medium text-ink-subtle" dir="ltr">{m.email}</span>
-                        {m.phone && <span className="text-[0.65rem] font-bold text-teal-text" dir="ltr">{m.phone}</span>}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      {m.is_active ? <Badge color="green">فعال</Badge> : <Badge color="gray">غیرفعال</Badge>}
-                    </div>
-                  </div>
+          {managers.map((m, i) => {
+            const createdForms = userFormsCount[m.id] || 0;
+            const maxForms = m.max_forms ?? 5;
+            const remainingForms = Math.max(0, maxForms - createdForms);
 
-                  {/* دسترسی به ربات تلگرام — تنها دسترسی قابل قطع و وصل */}
-                  {!m.is_owner && (
-                    <div className="flex items-center justify-between bg-bg-lavender/40 border border-ink/10 rounded-pill-sm px-2.5 py-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <Bot size={14} className={m.can_use_telegram ? "text-teal" : "text-ink/40"} />
-                        <span className="text-xs font-bold text-navy">ربات تلگرام:</span>
-                        <span className={`text-[0.65rem] font-black ${m.can_use_telegram ? "text-teal-text" : "text-ink-subtle"}`}>
-                          {m.can_use_telegram ? "✓ فعال" : "✕ قطع"}
-                        </span>
-                      </div>
-                      {canManage && (
-                        <button
-                          type="button"
-                          onClick={() => toggleTelegramAccess(m)}
-                          className={`text-[0.65rem] font-bold px-2 py-0.5 rounded-full border transition-all ${
-                            m.can_use_telegram
-                              ? "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100"
-                              : "bg-teal text-white border-teal hover:bg-teal-text"
+            return (
+              <div
+                key={m.id}
+                className={`${i % 2 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"} transition-all duration-200`}
+              >
+                <StickerCard theme={m.is_owner ? "orange" : "white"}>
+                  <div
+                    className="p-3.5 sm:p-4 flex flex-col gap-3 cursor-pointer select-none"
+                    onClick={(e) => {
+                      if (e.target.closest("button, a, input")) return;
+                      setSelectedUserModal(m);
+                    }}
+                  >
+                    {/* هدر کارت: آواتار، نام، ایمیل، وضعیت */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div
+                          className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs sm:text-sm shrink-0 shadow-xs ${
+                            m.is_owner
+                              ? "bg-orange text-white"
+                              : m.is_active
+                              ? "bg-teal/15 text-teal-text border border-teal/30"
+                              : "bg-bg-neutral text-ink-subtle"
                           }`}
                         >
-                          {m.can_use_telegram ? "قطع دسترسی" : "وصل دسترسی"}
-                        </button>
-                      )}
+                          {m.full_name?.[0]?.toUpperCase() ?? m.email?.[0]?.toUpperCase() ?? "U"}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-black text-navy text-xs sm:text-sm truncate">
+                              {m.full_name || "کاربر بدون نام"}
+                            </span>
+                            {m.is_owner && (
+                              <span className="inline-flex items-center gap-0.5 text-[0.6rem] font-black text-amber-800 bg-amber-100 border border-amber-300 rounded-full px-1.5 py-0.5 shrink-0">
+                                <Crown size={10} /> صاحب
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[0.65rem] font-medium text-ink-subtle truncate block" dir="ltr">
+                            {m.email}
+                          </span>
+                        </div>
+                      </div>
+
+                      <Badge color={m.is_active ? "green" : "gray"}>
+                        {m.is_active ? "فعال" : "غیرفعال"}
+                      </Badge>
                     </div>
-                  )}
 
-                  {/* سهمیه کاربر */}
-                  <div className="flex flex-wrap items-center justify-between text-[0.7rem] font-bold text-ink-subtle bg-bg-neutral/70 rounded-pill-sm px-2.5 py-1 gap-1">
-                    <span>سقف فرم‌های مجاز: <strong className="text-navy">{m.is_owner ? "نامحدود" : faNum(m.max_forms ?? 5)}</strong></span>
-                    <span>سقف پاسخ ماهانه: <strong className="text-teal-text">{m.is_owner ? "نامحدود" : faNum(m.max_responses_per_month ?? 100)}</strong></span>
-                  </div>
+                    {/* اطلاعات فشرده: تاریخ عضویت و باقیمانده سهمیه */}
+                    <div className="bg-bg-lavender/50 rounded-xl p-2.5 flex flex-col gap-1.5 border border-navy/5 text-xs font-semibold">
+                      <div className="flex items-center justify-between text-ink-subtle">
+                        <span className="flex items-center gap-1 text-[0.7rem]">
+                          <Calendar size={12} className="text-teal shrink-0" />
+                          تاریخ عضویت:
+                        </span>
+                        <strong className="text-navy text-[0.7rem]">
+                          {new Date(m.created_at).toLocaleDateString("fa-IR")}
+                        </strong>
+                      </div>
 
-                  {/* تاریخ */}
-                  <div className="text-[0.65rem] font-semibold text-ink-subtle flex items-center justify-between">
-                    <span>📅 {new Date(m.created_at).toLocaleDateString("fa-IR")}</span>
-                    <span className="text-[0.6rem] text-teal-text font-bold bg-bg-mint/40 rounded px-1.5 py-0.5">
-                      مجوزهای فرم، پاسخ و تحلیل: ثابت
-                    </span>
-                  </div>
-
-                  {/* دکمه‌های عملیات */}
-                  {canManage && (
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(m)}
-                        title={m.is_owner ? "فقط نام صاحب اصلی قابل تغییر است" : "ویرایش مشخصات و رمز"}>
-                        ویرایش
-                      </Button>
-                      {isOwner() && !m.is_owner && (
-                        <Button variant="ghost" size="sm" className="!text-teal-text" onClick={() => openQuotaModal(m)} title="تنظیم سهمیه و فرم‌ها">
-                          سهمیه ⚙️
-                        </Button>
-                      )}
-                      {!m.is_owner && (
-                        <>
-                          <Button variant="ghost" size="sm" className="!text-amber-600"
-                            onClick={() => handleDeactivate(m.id)}>
-                            {m.is_active ? "غیرفعال" : "فعال"}
-                          </Button>
-                          <Button variant="ghost" size="sm" className="!text-magenta-text"
-                            onClick={() => setDeleteTarget(m)}>
-                            حذف
-                          </Button>
-                        </>
-                      )}
+                      <div className="flex items-center justify-between text-ink-subtle pt-1 border-t border-navy/5">
+                        <span className="flex items-center gap-1 text-[0.7rem]">
+                          <BarChart3 size={12} className="text-orange shrink-0" />
+                          باقیمانده سهمیه:
+                        </span>
+                        <span className={`text-[0.7rem] font-black ${remainingForms === 0 && !m.is_owner ? "text-magenta-text" : "text-teal-text"}`}>
+                          {m.is_owner ? "نامحدود 👑" : `${faNum(remainingForms)} از ${faNum(maxForms)} فرم`}
+                        </span>
+                      </div>
                     </div>
-                  )}
-                </div>
-              </StickerCard>
-            </div>
-          ))}
+
+                    {/* دکمه پاپ‌آپ مدیریت */}
+                    <div className="pt-0.5 mt-auto">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedUserModal(m);
+                        }}
+                        className="w-full py-2 px-3 rounded-pill-sm text-xs font-bold transition-all flex items-center justify-between bg-navy/5 hover:bg-teal hover:text-white text-navy border border-navy/10 group cursor-pointer"
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <Settings size={13} className="text-teal group-hover:text-white transition-colors" />
+                          مشاهده و عملیات کاربر...
+                        </span>
+                        <span className="text-[0.65rem] opacity-70 group-hover:opacity-100 font-medium">پاپ‌آپ ⚙️</span>
+                      </button>
+                    </div>
+                  </div>
+                </StickerCard>
+              </div>
+            );
+          })}
         </div>
       )}
+
+      {/* ─── مودال پاپ‌آپ مدیریت کاربر ─── */}
+      <Modal
+        open={Boolean(selectedUserModal)}
+        onClose={() => setSelectedUserModal(null)}
+        title="مدیریت و مشخصات کاربر"
+      >
+        {selectedUserModal && (() => {
+          const m = selectedUserModal;
+          const createdForms = userFormsCount[m.id] || 0;
+          const maxForms = m.max_forms ?? 5;
+          const remainingForms = Math.max(0, maxForms - createdForms);
+
+          return (
+            <div className="flex flex-col gap-4 text-right">
+              {/* خلاصه اطلاعات هویتی کاربر */}
+              <div className="bg-bg-lavender/60 border border-navy/10 rounded-2xl p-4 flex flex-col gap-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-base shadow-sm ${
+                        m.is_owner ? "bg-orange text-white" : "bg-teal text-white"
+                      }`}
+                    >
+                      {m.full_name?.[0]?.toUpperCase() ?? m.email?.[0]?.toUpperCase() ?? "U"}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-base font-black text-navy">{m.full_name || "کاربر بدون نام"}</h3>
+                        {m.is_owner ? (
+                          <span className="text-[0.65rem] font-black text-amber-800 bg-amber-100 border border-amber-300 rounded-full px-2 py-0.5">
+                            👑 صاحب اصلی
+                          </span>
+                        ) : (
+                          <span className="text-[0.65rem] font-bold text-navy bg-navy/10 rounded-full px-2 py-0.5">
+                            کاربر سیستم
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs font-semibold text-ink-subtle mt-0.5" dir="ltr">{m.email}</p>
+                      {m.phone && (
+                        <p className="text-xs font-bold text-teal-text mt-0.5" dir="ltr">📱 {m.phone}</p>
+                      )}
+                    </div>
+                  </div>
+                  <Badge color={m.is_active ? "green" : "gray"}>
+                    {m.is_active ? "فعال" : "غیرفعال"}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center justify-between text-xs font-semibold text-ink-subtle pt-2 border-t border-navy/5">
+                  <span>📅 تاریخ عضویت: <strong className="text-navy">{new Date(m.created_at).toLocaleDateString("fa-IR")}</strong></span>
+                  <span>کد شناسه: <code className="text-[0.65rem] text-navy font-mono" dir="ltr">{m.id.slice(0, 8)}</code></span>
+                </div>
+              </div>
+
+              {/* سهمیه و وضعیت فرم‌های کاربر */}
+              <div className="bg-white border-2 border-ink/10 rounded-2xl p-3.5 flex flex-col gap-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-navy flex items-center gap-1.5">
+                    <BarChart3 size={14} className="text-teal" /> سهمیه و فرم‌های فعال
+                  </span>
+                  {isOwner() && !m.is_owner && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="!text-teal-text text-xs"
+                      onClick={() => {
+                        setSelectedUserModal(null);
+                        openQuotaModal(m);
+                      }}
+                    >
+                      ویرایش سهمیه ⚙️
+                    </Button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                  <div className="bg-bg-neutral p-2.5 rounded-xl text-center">
+                    <span className="text-[0.68rem] text-ink-subtle block font-semibold">فرم‌های فعال</span>
+                    <strong className="text-navy text-sm font-black">{faNum(createdForms)} فرم</strong>
+                  </div>
+                  <div className="bg-bg-neutral p-2.5 rounded-xl text-center">
+                    <span className="text-[0.68rem] text-ink-subtle block font-semibold">سقف مجاز</span>
+                    <strong className="text-navy text-sm font-black">{m.is_owner ? "نامحدود" : `${faNum(maxForms)} فرم`}</strong>
+                  </div>
+                  <div className="bg-bg-neutral p-2.5 rounded-xl text-center col-span-2 sm:col-span-1">
+                    <span className="text-[0.68rem] text-ink-subtle block font-semibold">باقیمانده سهمیه</span>
+                    <strong className={`text-sm font-black ${remainingForms === 0 && !m.is_owner ? "text-magenta-text" : "text-teal-text"}`}>
+                      {m.is_owner ? "نامحدود" : `${faNum(remainingForms)} فرم`}
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="text-[0.7rem] text-ink-subtle font-semibold flex items-center justify-between pt-1 border-t border-ink/5">
+                  <span>سقف پاسخ‌های ماهانه:</span>
+                  <strong className="text-navy">{m.is_owner ? "نامحدود" : `${faNum(m.max_responses_per_month ?? 100)} پاسخ`}</strong>
+                </div>
+              </div>
+
+              {/* دسترسی به ربات تلگرام */}
+              {!m.is_owner && (
+                <div className="bg-white border-2 border-ink/10 rounded-2xl p-3.5 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${m.can_use_telegram ? "bg-teal/15 text-teal" : "bg-ink/10 text-ink-subtle"}`}>
+                      <Bot size={16} />
+                    </div>
+                    <div>
+                      <span className="text-xs font-black text-navy block">اتصال به ربات تلگرام</span>
+                      <span className="text-[0.68rem] font-semibold text-ink-subtle">
+                        وضعیت: {m.can_use_telegram ? <strong className="text-teal-text">فعال ✓</strong> : <strong className="text-amber-700">قطع ✕</strong>}
+                      </span>
+                    </div>
+                  </div>
+
+                  {canManage && (
+                    <Button
+                      variant={m.can_use_telegram ? "ghost" : "teal"}
+                      size="sm"
+                      className={m.can_use_telegram ? "!text-amber-700 border-amber-300 hover:bg-amber-50 text-xs" : "text-xs"}
+                      onClick={() => toggleTelegramAccess(m)}
+                    >
+                      {m.can_use_telegram ? "قطع دسترسی" : "وصل دسترسی"}
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {/* دکمه‌های عملیات کاربر */}
+              <div className="border-t border-ink/10 pt-3 flex flex-wrap items-center gap-2">
+                {canManage && (
+                  <>
+                    <Button
+                      variant="teal"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedUserModal(null);
+                        openEdit(m);
+                      }}
+                    >
+                      <Edit size={13} className="ml-1" /> ویرایش مشخصات
+                    </Button>
+
+                    {!m.is_owner && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={m.is_active ? "!text-amber-700 hover:bg-amber-50" : "!text-teal-text hover:bg-teal/10"}
+                        onClick={() => handleDeactivate(m.id)}
+                      >
+                        {m.is_active ? "غیرفعال‌سازی کاربر" : "فعال‌سازی کاربر"}
+                      </Button>
+                    )}
+
+                    {!m.is_owner && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="!text-magenta-text hover:bg-magenta/10 mr-auto"
+                        onClick={() => {
+                          setSelectedUserModal(null);
+                          setDeleteTarget(m);
+                        }}
+                      >
+                        <Trash2 size={13} className="ml-1" /> حذف کاربر
+                      </Button>
+                    )}
+                  </>
+                )}
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mr-auto"
+                  onClick={() => setSelectedUserModal(null)}
+                >
+                  بستن
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
+      </Modal>
 
       {/* ─── مودال ایجاد کاربر ─── */}
       <Modal open={showCreateModal} onClose={() => { setShowCreateModal(false); setCreateError(null); }} title="ایجاد کاربر جدید">

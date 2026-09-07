@@ -10,7 +10,7 @@ import Modal from "../../../components/ui/Modal";
 import { useToast } from "../../../components/ui/Toast";
 import { useAuth } from "../../../context/AuthContext";
 import { copyToClipboard, randomSlug, faNum } from "../../../lib/utils";
-import { FileText, Plus, AlignLeft, ClipboardList, Undo2, Trash2, User, Calendar, Link2, Copy, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
+import { FileText, Plus, AlignLeft, ClipboardList, Undo2, Trash2, User, Calendar, Link2, Copy, ExternalLink, Settings, BarChart3, Share2, Edit } from "lucide-react";
 import SEO from "../../../components/ui/SEO";
 
 const FORM_TYPES = [
@@ -112,19 +112,7 @@ export default function FormsList() {
   const [busy, setBusy] = useState(false);
   const [showTypeModal, setShowTypeModal] = useState(false);
   const [showQuotaModal, setShowQuotaModal] = useState(false);
-  const [expandedIds, setExpandedIds] = useState(new Set());
-
-  const toggleFormExpand = (formId) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(formId)) {
-        next.delete(formId);
-      } else {
-        next.add(formId);
-      }
-      return next;
-    });
-  };
+  const [actionModalForm, setActionModalForm] = useState(null);
 
   // ─── Undo state ───
   const [undoToast, setUndoToast] = useState(null);
@@ -220,6 +208,7 @@ export default function FormsList() {
     }
     push(form.published ? "فرم از انتشار خارج شد" : "فرم منتشر شد!");
     setForms((fs) => fs.map((f) => (f.id === form.id ? { ...f, published: !form.published } : f)));
+    setActionModalForm((prev) => (prev && prev.id === form.id ? { ...prev, published: !form.published } : prev));
   }
 
   async function duplicate(form) {
@@ -349,6 +338,7 @@ export default function FormsList() {
     }
     push(form.archived ? "فرم از آرشیو بازیابی شد" : "فرم آرشیو شد");
     setForms((fs) => fs.map((f) => (f.id === form.id ? { ...f, ...update } : f)));
+    setActionModalForm((prev) => (prev && prev.id === form.id ? { ...prev, ...update } : prev));
   }
 
   // ─── فیلتر ───
@@ -476,21 +466,6 @@ export default function FormsList() {
             </button>
           ))}
         </div>
-        {isOwner() && filtered.length > 0 && (
-          <button
-            type="button"
-            onClick={() => {
-              if (expandedIds.size === filtered.length) {
-                setExpandedIds(new Set());
-              } else {
-                setExpandedIds(new Set(filtered.map((f) => f.id)));
-              }
-            }}
-            className="px-3 py-2 text-xs font-bold rounded-pill-md bg-white border-2 border-ink/15 hover:border-teal text-ink transition-colors whitespace-nowrap"
-          >
-            {expandedIds.size === filtered.length ? "بستن همه دکمه‌ها ✕" : "نمایش همه دکمه‌ها ▾"}
-          </button>
-        )}
       </div>
 
       {/* Forms Grid */}
@@ -508,8 +483,7 @@ export default function FormsList() {
             const isReg = f.form_type === "registration";
             const isTrashed = filter === "trash";
             const creatorName = f.profiles?.full_name || f.profiles?.email || (f.manager_id ? "کاربر سیستم" : "مدیر کل");
-            const isExpanded = isOwner() ? expandedIds.has(f.id) : true;
-            const formUrl = `${window.location.origin}/f/${f.slug}`;
+            const isOwnerUser = isOwner();
 
             return (
               <div
@@ -519,10 +493,10 @@ export default function FormsList() {
               >
                 <StickerCard theme={isTrashed ? "orange" : "white"}>
                   <div
-                    className={`p-5 sm:p-6 flex flex-col gap-3.5 ${isTrashed ? "opacity-75" : ""} ${isOwner() ? "cursor-pointer select-none" : ""}`}
+                    className={`p-4 sm:p-5 flex flex-col gap-3 ${isTrashed ? "opacity-75" : ""} ${isOwnerUser ? "cursor-pointer select-none" : ""}`}
                     onClick={(e) => {
                       if (e.target.closest("button, a, input")) return;
-                      if (isOwner()) toggleFormExpand(f.id);
+                      if (isOwnerUser) setActionModalForm(f);
                     }}
                   >
                     {/* Header: Title + Badges */}
@@ -605,57 +579,53 @@ export default function FormsList() {
                       </div>
                     )}
 
-                    {/* Expand Toggle Bar (دکمه باز/بستن برای سوپرادمین) */}
-                    {isOwner() && (
-                      <div className="pt-0.5">
+                    {/* دکمه عملیات: برای سوپرادمین پاپ‌آپ، برای کاربر عادی دکمه‌های مستقیم */}
+                    {isOwnerUser ? (
+                      <div className="pt-0.5 mt-auto">
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleFormExpand(f.id);
+                            setActionModalForm(f);
                           }}
-                          className={`w-full py-1.5 px-3 rounded-pill-sm text-xs font-bold transition-all flex items-center justify-between ${
-                            isExpanded
-                              ? "bg-navy text-white shadow-sm"
-                              : "bg-teal/10 text-teal hover:bg-teal hover:text-white"
-                          }`}
+                          className="w-full py-2 px-3 rounded-pill-sm text-xs font-bold transition-all flex items-center justify-between bg-navy/5 hover:bg-teal hover:text-white text-navy border border-navy/10 group cursor-pointer"
                         >
-                          <span>{isExpanded ? "بستن دکمه‌های عملیات ✕" : "مدیریت و دکمه‌های عملیات فرم..."}</span>
-                          {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          <span className="flex items-center gap-1.5">
+                            <Settings size={14} className="text-teal group-hover:text-white transition-colors" />
+                            مدیریت و عملیات فرم...
+                          </span>
+                          <span className="text-[0.65rem] opacity-70 group-hover:opacity-100 font-medium">پاپ‌آپ ⚙️</span>
                         </button>
                       </div>
-                    )}
-
-                    {/* Action Buttons (دکمه‌های عملیات — فقط در صورت باز بودن) */}
-                    {isExpanded && (
-                      <div className="flex flex-wrap gap-2 pt-2 border-t border-ink/10 mt-1">
+                    ) : (
+                      <div className="flex flex-wrap gap-2 pt-2 border-t border-ink/10 mt-auto">
                         {isTrashed ? (
                           <>
-                            <Button variant="teal" size="md" onClick={() => restoreForm(f)} rotate="rotate-[1deg]">بازیابی</Button>
-                            <Button variant="red" size="md" onClick={() => permanentDelete(f)} rotate="-rotate-[1deg]">حذف دائمی</Button>
+                            <Button variant="teal" size="sm" onClick={() => restoreForm(f)} rotate="rotate-[1deg]">بازیابی</Button>
+                            <Button variant="red" size="sm" onClick={() => permanentDelete(f)} rotate="-rotate-[1deg]">حذف دائمی</Button>
                           </>
                         ) : (
                           <>
-                            <Button as={Link} to={`/admin/forms/${f.id}`} variant="glass" size="md" rotate="rotate-[1deg]">ویرایش</Button>
-                            <Button as={Link} to={`/admin/forms/${f.id}/responses`} variant="glass" size="md" rotate="-rotate-[1deg]">پاسخ‌ها</Button>
-                            <Button as={Link} to={`/admin/forms/${f.id}/share`} variant="glass" size="md" rotate="rotate-[1deg]">اشتراک</Button>
+                            <Button as={Link} to={`/admin/forms/${f.id}`} variant="glass" size="sm" rotate="rotate-[1deg]">ویرایش</Button>
+                            <Button as={Link} to={`/admin/forms/${f.id}/responses`} variant="glass" size="sm" rotate="-rotate-[1deg]">پاسخ‌ها</Button>
+                            <Button as={Link} to={`/admin/forms/${f.id}/share`} variant="glass" size="sm" rotate="rotate-[1deg]">اشتراک</Button>
                             {f.published && (
                               <>
-                                <Button variant="glass" size="md" onClick={() => share(f)} rotate="-rotate-[1deg]">کپی لینک</Button>
-                                <Button as="a" href={`/f/${f.slug}`} target="_blank" variant="glass" size="md" rotate="rotate-[1deg]">مشاهده</Button>
+                                <Button variant="glass" size="sm" onClick={() => share(f)} rotate="-rotate-[1deg]">کپی لینک</Button>
+                                <Button as="a" href={`/f/${f.slug}`} target="_blank" variant="glass" size="sm" rotate="rotate-[1deg]">مشاهده</Button>
                               </>
                             )}
                             {hasPermission("publish_form") && (
-                              <Button variant="glass" size="md" onClick={() => togglePublish(f)} rotate="-rotate-[1deg]">
+                              <Button variant="glass" size="sm" onClick={() => togglePublish(f)} rotate="-rotate-[1deg]">
                                 {f.published ? "لغو انتشار" : "انتشار"}
                               </Button>
                             )}
-                            <Button variant="glass" size="md" onClick={() => duplicate(f)} disabled={busy} rotate="rotate-[1deg]">کپی</Button>
-                            <Button variant="glass" size="md" onClick={() => archiveForm(f)} rotate="-rotate-[1deg]">
+                            <Button variant="glass" size="sm" onClick={() => duplicate(f)} disabled={busy} rotate="rotate-[1deg]">کپی</Button>
+                            <Button variant="glass" size="sm" onClick={() => archiveForm(f)} rotate="-rotate-[1deg]">
                               {f.archived ? "بازیابی" : "آرشیو"}
                             </Button>
                             {hasPermission("delete_form") && (
-                              <Button variant="glass" size="md" className="!text-magenta-text" onClick={() => setDeleting(f)} rotate="rotate-[1deg]">حذف</Button>
+                              <Button variant="glass" size="sm" className="!text-magenta-text" onClick={() => setDeleting(f)} rotate="rotate-[1deg]">حذف</Button>
                             )}
                           </>
                         )}
@@ -668,6 +638,231 @@ export default function FormsList() {
           })}
         </div>
       )}
+
+      {/* ─── مودال پاپ‌آپ عملیات فرم مخصوص سوپرادمین ─── */}
+      <Modal
+        open={Boolean(actionModalForm)}
+        onClose={() => setActionModalForm(null)}
+        title="مدیریت و عملیات فرم"
+      >
+        {actionModalForm && (() => {
+          const f = actionModalForm;
+          const c = counts[f.id] ?? { total: 0, complete: 0 };
+          const isReg = f.form_type === "registration";
+          const isTrashed = Boolean(f.deleted_at);
+          const creatorName = f.profiles?.full_name || f.profiles?.email || (f.manager_id ? "کاربر سیستم" : "مدیر کل");
+
+          return (
+            <div className="flex flex-col gap-4 text-right">
+              {/* مشخصات کلی فرم در پاپ‌آپ */}
+              <div className="bg-bg-lavender/60 border border-navy/10 rounded-2xl p-4 flex flex-col gap-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-black text-navy text-base leading-6">
+                      {f.title}
+                    </h3>
+                    <div className="flex items-center gap-1.5 mt-1 text-xs font-bold text-ink-subtle">
+                      <User size={13} className="text-teal shrink-0" />
+                      <span>سازنده: <strong className="text-navy">{creatorName}</strong></span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+                    {isTrashed && <Badge color="red">حذف شده</Badge>}
+                    {!isTrashed && f.archived && <Badge color="gray">آرشیو</Badge>}
+                    {!isTrashed && isReg && !f.archived && <Badge color="orange">ثبت‌نامی</Badge>}
+                    {!isTrashed && !f.archived && (f.published ? (
+                      <Badge color="green">منتشر</Badge>
+                    ) : (
+                      <Badge color="gray">پیش‌نویس</Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* آمار و زمان */}
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-ink-subtle pt-2 border-t border-navy/5">
+                  <div className="flex items-center gap-2">
+                    <span>📊 {faNum(c.total)} پاسخ دریافتی</span>
+                    <span>·</span>
+                    <span>✓ {faNum(c.complete)} تکمیل</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-[0.7rem]">
+                    <Calendar size={12} className="text-teal" />
+                    <span>ساخت: {new Date(f.created_at).toLocaleDateString("fa-IR")}</span>
+                  </div>
+                </div>
+
+                {/* لینک سریع با کپی */}
+                {!isTrashed && (
+                  <div className="flex items-center gap-2 bg-white rounded-pill-sm px-3 py-1.5 border border-ink/15 text-xs mt-1">
+                    <Link2 size={13} className="text-teal shrink-0" />
+                    <span className="font-mono text-ink-subtle truncate flex-1" dir="ltr">
+                      /f/{f.slug}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => share(f)}
+                      className="inline-flex items-center gap-1 text-[0.7rem] font-bold text-teal hover:text-teal/80 shrink-0 cursor-pointer"
+                    >
+                      <Copy size={11} /> کپی
+                    </button>
+                    {f.published && (
+                      <a
+                        href={`/f/${f.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center text-ink-subtle hover:text-navy shrink-0"
+                      >
+                        <ExternalLink size={12} />
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* گزینه‌ها و دکمه‌های عملیات */}
+              <div className="flex flex-col gap-2.5">
+                <span className="text-xs font-black text-navy">گزینه‌های دسترسی و عملیات:</span>
+
+                {isTrashed ? (
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button
+                      variant="teal"
+                      size="sm"
+                      className="flex-1 justify-center"
+                      onClick={() => {
+                        setActionModalForm(null);
+                        restoreForm(f);
+                      }}
+                    >
+                      <Undo2 size={14} className="ml-1" /> بازیابی فرم
+                    </Button>
+                    <Button
+                      variant="red"
+                      size="sm"
+                      className="flex-1 justify-center"
+                      onClick={() => {
+                        setActionModalForm(null);
+                        permanentDelete(f);
+                      }}
+                    >
+                      <Trash2 size={14} className="ml-1" /> حذف دائمی فرم
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    {/* دکمه‌های ناوبری اصلی */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <Button
+                        as={Link}
+                        to={`/admin/forms/${f.id}`}
+                        variant="teal"
+                        size="sm"
+                        className="justify-center"
+                        onClick={() => setActionModalForm(null)}
+                      >
+                        <Edit size={14} className="ml-1.5" /> ویرایش در فرم‌ساز
+                      </Button>
+                      <Button
+                        as={Link}
+                        to={`/admin/forms/${f.id}/responses`}
+                        variant="navy"
+                        size="sm"
+                        className="justify-center"
+                        onClick={() => setActionModalForm(null)}
+                      >
+                        <BarChart3 size={14} className="ml-1.5" /> پاسخ‌ها ({faNum(c.total)})
+                      </Button>
+                      <Button
+                        as={Link}
+                        to={`/admin/forms/${f.id}/share`}
+                        variant="white"
+                        size="sm"
+                        className="justify-center"
+                        onClick={() => setActionModalForm(null)}
+                      >
+                        <Share2 size={14} className="ml-1.5" /> اشتراک‌گذاری و امبد
+                      </Button>
+                      {f.published ? (
+                        <Button
+                          as="a"
+                          href={`/f/${f.slug}`}
+                          target="_blank"
+                          variant="white"
+                          size="sm"
+                          className="justify-center"
+                        >
+                          <ExternalLink size={14} className="ml-1.5" /> مشاهده فرم زنده
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="justify-center !text-ink-subtle"
+                          disabled
+                        >
+                          فرم هنوز پیش‌نویس است
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* دکمه‌های تغییر وضعیت */}
+                    <div className="border-t border-ink/10 pt-2.5 flex flex-wrap gap-2">
+                      {hasPermission("publish_form") && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => togglePublish(f)}
+                          className={f.published ? "!text-amber-700 hover:!bg-amber-50" : "!text-teal-text hover:!bg-teal/10"}
+                        >
+                          {f.published ? "⏸ لغو انتشار فرم" : "▶ انتشار فرم"}
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setActionModalForm(null);
+                          duplicate(f);
+                        }}
+                        disabled={busy}
+                      >
+                        <Copy size={13} className="ml-1" /> تکثیر (کپی)
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => archiveForm(f)}
+                      >
+                        {f.archived ? "📂 خروج از آرشیو" : "📁 آرشیو کردن"}
+                      </Button>
+                      {hasPermission("delete_form") && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="!text-magenta-text hover:!bg-magenta/10 mr-auto"
+                          onClick={() => {
+                            setActionModalForm(null);
+                            setDeleting(f);
+                          }}
+                        >
+                          <Trash2 size={13} className="ml-1" /> سطل زباله
+                        </Button>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* دکمه بستن */}
+              <div className="pt-2 border-t border-ink/10 flex justify-end">
+                <Button variant="ghost" size="sm" onClick={() => setActionModalForm(null)}>
+                  بستن
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
+      </Modal>
 
       {/* ─── Type Selection Modal ─── */}
       <Modal
