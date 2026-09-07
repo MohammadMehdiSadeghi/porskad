@@ -1781,7 +1781,7 @@ export default function SuperAdmin() {
                   >
                     {a.is_active ? "Active" : "Inactive"}
                   </span>
-                  <div style={{ display: "flex", gap: "0.3rem" }}>
+                  <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
                     <button
                       className="sa-btn sa-btn-secondary sa-btn-sm"
                       style={{ color: "#0f62fe" }}
@@ -1798,8 +1798,39 @@ export default function SuperAdmin() {
                         setPasswordVisible(true);
                       }}
                     >
-                      Set Password / Edit
+                      ویرایش / تغییر نقش
                     </button>
+                    {isCallerGod && !a.is_owner && (
+                      <button
+                        className="sa-btn sa-btn-danger sa-btn-sm"
+                        onClick={async () => {
+                          if (!confirm(`آیا از عزل «${a.email}» از سطح سوپرادمین و بازگرداندن به کاربر عادی اطمینان دارید؟`)) return;
+                          try {
+                            try {
+                              await adminAction("update_role", {
+                                target_user_id: a.id,
+                                new_role: "manager",
+                              });
+                            } catch {
+                              const { error } = await supabase
+                                .from("user_roles")
+                                .upsert(
+                                  { user_id: a.id, role_id: "manager", active: true },
+                                  { onConflict: "user_id" }
+                                );
+                              if (error) throw error;
+                            }
+                            showToast(`کاربر «${a.email}» با موفقیت از سوپرادمین عزل و به کاربر عادی تبدیل شد.`);
+                            loadAdmins();
+                            loadUsers();
+                          } catch (err) {
+                            showToast("خطا در عزل ادمین: " + err.message, "error");
+                          }
+                        }}
+                      >
+                        عزل از ادمین
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
