@@ -114,16 +114,20 @@ function ProgressBar({ value, max }) {
 // ─── ورودی متنی — توکن‌های رکاد ───
 function TextInput({ type, value, onChange, autoFocus = true, onEnter, placeholder: customPh }) {
   const defaultPh = {
-    short_text: "جوابت رو اینجا بنویس...",
-    email: "name@example.com",
-    phone_ir: "09123456789",
-    number: "مثلاً 42",
-    long_text: "بنویس...",
+    short_text: "پاسخ خود را بنویسید...",
+    email: "example@email.com",
+    phone_ir: "۰۹۱۲۳۴۵۶۷۸۹",
+    number: "مثلاً: ۱۲۳",
+    long_text: "پاسخ خود را بنویسید...",
+    telegram_id: "username@",
   };
-  const ph = (customPh && customPh.trim()) || defaultPh[type] || "";
-  const isLtr = type === "email" || type === "phone_ir";
+  const ph = (customPh && customPh.trim()) || defaultPh[type] || "پاسخ خود را بنویسید...";
+  const hasValue = Boolean(value != null && String(value).trim().length > 0);
+  const isLtrType = type === "email" || type === "phone_ir" || type === "telegram_id";
+  const activeDir = hasValue && isLtrType ? "ltr" : "rtl";
+  const activeAlign = hasValue && isLtrType ? "text-left" : "text-right";
 
-  const shared = "w-full border-2 border-ink/10 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-ink placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-ecosystem-normal/15 focus:border-ecosystem-normal transition-all duration-200";
+  const shared = "w-full border-2 border-ink/10 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-ink placeholder:text-ink/40 placeholder:text-right placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-ecosystem-normal/15 focus:border-ecosystem-normal transition-all duration-200";
 
   if (type === "long_text") {
     return (
@@ -133,7 +137,7 @@ function TextInput({ type, value, onChange, autoFocus = true, onEnter, placehold
         onChange={(e) => onChange(e.target.value)}
         rows={4}
         autoFocus={autoFocus}
-        className={`${shared} resize-y min-h-[7rem] leading-9`}
+        className={`${shared} resize-y min-h-[7rem] leading-9 text-right`}
         placeholder={ph}
         onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && onEnter) { e.preventDefault(); onEnter(); } }}
       />
@@ -144,12 +148,12 @@ function TextInput({ type, value, onChange, autoFocus = true, onEnter, placehold
     <input
       type="text"
       inputMode={type === "number" ? "numeric" : type === "phone_ir" ? "tel" : type === "email" ? "email" : "text"}
-      dir={isLtr ? "ltr" : "rtl"}
+      dir={activeDir}
       value={value ?? ""}
       autoFocus={autoFocus}
       onChange={(e) => onChange(e.target.value)}
       onKeyDown={(e) => { if (e.key === "Enter" && onEnter) { e.preventDefault(); onEnter(); } }}
-      className={`${shared} ${isLtr ? "text-left" : "text-right"}`}
+      className={`${shared} ${activeAlign}`}
       placeholder={ph}
     />
   );
@@ -465,23 +469,33 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
                       </label>
                       {q.description && <span className="text-xs sm:text-sm font-medium text-ink-subtle">{q.description}</span>}
 
-                      {(q.type === "short_text" || q.type === "email" || q.type === "phone_ir" || q.type === "telegram_id") && (
-                        <input type={q.type === "email" ? "email" : "text"} inputMode={q.type === "phone_ir" ? "tel" : "text"}
-                          dir={q.type === "email" || q.type === "phone_ir" ? "ltr" : "rtl"}
-                          value={val}
-                          onChange={(e) => setAnswer(q.id, e.target.value, q)}
-                          onBlur={(e) => handleBlur(q.id, e.target.value, q)}
-                          placeholder={(q.placeholder && q.placeholder.trim()) || (q.type === "email" ? "name@example.com" : q.type === "phone_ir" ? "09123456789" : q.type === "telegram_id" ? "@username" : "پاسخ خود را بنویسید...")}
-                          className={`${inputCls} ${fieldErr ? "!border-female-normal" : ""}`}
-                        />
-                      )}
+                      {(q.type === "short_text" || q.type === "email" || q.type === "phone_ir" || q.type === "telegram_id") && (() => {
+                        const valStr = val != null ? String(val).trim() : "";
+                        const hasVal = valStr.length > 0;
+                        const isLtr = q.type === "email" || q.type === "phone_ir" || q.type === "telegram_id";
+                        const dir = hasVal && isLtr ? "ltr" : "rtl";
+                        const align = hasVal && isLtr ? "text-left" : "text-right";
+                        const defaultPlaceholder = q.type === "email" ? "example@email.com" : q.type === "phone_ir" ? "۰۹۱۲۳۴۵۶۷۸۹" : q.type === "telegram_id" ? "username@" : "پاسخ خود را بنویسید...";
+                        return (
+                          <input
+                            type={q.type === "email" ? "email" : "text"}
+                            inputMode={q.type === "phone_ir" ? "tel" : "text"}
+                            dir={dir}
+                            value={val}
+                            onChange={(e) => setAnswer(q.id, e.target.value, q)}
+                            onBlur={(e) => handleBlur(q.id, e.target.value, q)}
+                            placeholder={(q.placeholder && q.placeholder.trim()) || defaultPlaceholder}
+                            className={`${inputCls} ${align} placeholder:text-right ${fieldErr ? "!border-female-normal" : ""}`}
+                          />
+                        );
+                      })()}
 
                       {q.type === "long_text" && (
                         <textarea dir="rtl" rows={3} value={val}
                           onChange={(e) => setAnswer(q.id, e.target.value, q)}
                           onBlur={(e) => handleBlur(q.id, e.target.value, q)}
-                          placeholder={q.placeholder?.trim() || "بنویس..."}
-                          className={`${inputCls} resize-y min-h-[4rem] leading-6 ${fieldErr ? "!border-female-normal" : ""}`}
+                          placeholder={q.placeholder?.trim() || "پاسخ خود را بنویسید..."}
+                          className={`${inputCls} text-right placeholder:text-right resize-y min-h-[4rem] leading-6 ${fieldErr ? "!border-female-normal" : ""}`}
                         />
                       )}
 
@@ -489,8 +503,8 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
                         <input type="text" inputMode="numeric" dir="rtl" value={val}
                           onChange={(e) => setAnswer(q.id, e.target.value, q)}
                           onBlur={(e) => handleBlur(q.id, e.target.value, q)}
-                          placeholder={q.placeholder?.trim() || "مثلاً 42"}
-                          className={`${inputCls} ${fieldErr ? "!border-female-normal" : ""}`}
+                          placeholder={q.placeholder?.trim() || "مثلاً: ۱۲۳"}
+                          className={`${inputCls} text-right placeholder:text-right ${fieldErr ? "!border-female-normal" : ""}`}
                         />
                       )}
 

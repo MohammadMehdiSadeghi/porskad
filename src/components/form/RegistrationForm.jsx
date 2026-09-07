@@ -163,14 +163,49 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
         </label>
         {q.description && <span className="text-xs sm:text-sm font-medium text-ink-subtle">{q.description}</span>}
 
-        {(q.type === "short_text" || q.type === "email" || q.type === "phone_ir" || q.type === "telegram_id") && (
-          <input type={q.type === "email" ? "email" : "text"} inputMode={q.type === "phone_ir" ? "tel" : "text"} dir={q.type === "email" || q.type === "phone_ir" ? "ltr" : "rtl"} value={val}
-            onChange={(e) => setAnswer(q.id, e.target.value, q)} onBlur={(e) => handleBlur(q.id, e.target.value, q)}
-            placeholder={(q.placeholder?.trim()) || (q.type === "email" ? "example@email.com" : q.type === "phone_ir" ? "09xxxxxxxxx" : q.type === "telegram_id" ? "@username" : "پاسخ خود را بنویسید...")}
-            className={`${inputCls} ${fieldErr ? "!border-female-normal" : ""}`} />
+        {(q.type === "short_text" || q.type === "email" || q.type === "phone_ir" || q.type === "telegram_id") && (() => {
+          const valStr = val != null ? String(val).trim() : "";
+          const hasVal = valStr.length > 0;
+          const isLtr = q.type === "email" || q.type === "phone_ir" || q.type === "telegram_id";
+          const dir = hasVal && isLtr ? "ltr" : "rtl";
+          const align = hasVal && isLtr ? "text-left" : "text-right";
+          const defaultPlaceholder = q.type === "email" ? "example@email.com" : q.type === "phone_ir" ? "۰۹۱۲۳۴۵۶۷۸۹" : q.type === "telegram_id" ? "username@" : "پاسخ خود را بنویسید...";
+          return (
+            <input
+              type={q.type === "email" ? "email" : "text"}
+              inputMode={q.type === "phone_ir" ? "tel" : "text"}
+              dir={dir}
+              value={val}
+              onChange={(e) => setAnswer(q.id, e.target.value, q)}
+              onBlur={(e) => handleBlur(q.id, e.target.value, q)}
+              placeholder={(q.placeholder?.trim()) || defaultPlaceholder}
+              className={`${inputCls} ${align} placeholder:text-right ${fieldErr ? "!border-female-normal" : ""}`}
+            />
+          );
+        })()}
+        {q.type === "long_text" && (
+          <textarea
+            dir="rtl"
+            rows={2}
+            value={val}
+            onChange={(e) => setAnswer(q.id, e.target.value, q)}
+            onBlur={(e) => handleBlur(q.id, e.target.value, q)}
+            placeholder={q.placeholder?.trim() || "پاسخ خود را بنویسید..."}
+            className={`${inputCls} text-right placeholder:text-right resize-y leading-6 ${fieldErr ? "!border-female-normal" : ""}`}
+          />
         )}
-        {q.type === "long_text" && <textarea dir="rtl" rows={2} value={val} onChange={(e) => setAnswer(q.id, e.target.value, q)} onBlur={(e) => handleBlur(q.id, e.target.value, q)} placeholder={q.placeholder?.trim() || "بنویس..."} className={`${inputCls} resize-y leading-6 ${fieldErr ? "!border-female-normal" : ""}`} />}
-        {q.type === "number" && <input type="text" inputMode="numeric" dir="rtl" value={val} onChange={(e) => setAnswer(q.id, e.target.value, q)} onBlur={(e) => handleBlur(q.id, e.target.value, q)} placeholder={q.placeholder?.trim() || "عدد را وارد کنید..."} className={`${inputCls} ${fieldErr ? "!border-female-normal" : ""}`} />}
+        {q.type === "number" && (
+          <input
+            type="text"
+            inputMode="numeric"
+            dir="rtl"
+            value={val}
+            onChange={(e) => setAnswer(q.id, e.target.value, q)}
+            onBlur={(e) => handleBlur(q.id, e.target.value, q)}
+            placeholder={q.placeholder?.trim() || "مثلاً: ۱۲۳"}
+            className={`${inputCls} text-right placeholder:text-right ${fieldErr ? "!border-female-normal" : ""}`}
+          />
+        )}
 
         {q.type === "choice" && (() => {
           const maxSel = q.max_selections ?? 1;

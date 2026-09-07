@@ -27,27 +27,101 @@ const STEP_THEMES = [
 function getStepTheme(i) { return STEP_THEMES[i % STEP_THEMES.length]; }
 
 function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, onEnter, placeholder: customPlaceholder }) {
-  const ph = (customPlaceholder && customPlaceholder.trim()) || { short_text: "جوابت رو اینجا بنویس...", long_text: "بنویس...", email: "name@example.com", phone_ir: "09123456789", number: "مثلاً 42", telegram_id: "@username" }[type] || "";
-  const isLtr = type === "email" || type === "phone_ir";
+  const ph = (customPlaceholder && customPlaceholder.trim()) || {
+    short_text: "پاسخ خود را بنویسید...",
+    long_text: "پاسخ خود را بنویسید...",
+    email: "example@email.com",
+    phone_ir: "۰۹۱۲۳۴۵۶۷۸۹",
+    number: "مثلاً: ۱۲۳",
+    telegram_id: "username@",
+  }[type] || "پاسخ خود را بنویسید...";
+
+  const hasValue = Boolean(value != null && String(value).trim().length > 0);
+  const isLtrType = type === "email" || type === "phone_ir" || type === "telegram_id";
+  // در حالت خالی، همگی راست‌چین و هماهنگ هستند؛ هنگام تایپ مقدار فیلدهای لاتین چپ‌چین می‌شوند
+  const activeDir = hasValue && isLtrType ? "ltr" : "rtl";
+  const activeAlign = hasValue && isLtrType ? "text-left" : "text-right";
 
   const shared = clsx(
     "w-full bg-white border-2 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3",
     "font-semibold text-ink text-sm sm:text-base placeholder:text-ink-subtle/60 placeholder:font-medium",
-    "focus:outline-none focus:ring-2 focus:ring-ecosystem-normal/15 transition-all duration-200",
+    "placeholder:text-right placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-ecosystem-normal/15 transition-all duration-200",
     error ? "border-female-normal" : "border-ink/15 focus:border-ecosystem-normal",
   );
 
   if (type === "long_text") {
-    return <textarea ref={inputRef} dir="rtl" value={value ?? ""} onChange={(e) => onChange(e.target.value)} rows={3} autoFocus={autoFocus} className={clsx(shared, "resize-y min-h-[6rem] leading-8")} placeholder={ph} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && onEnter) { e.preventDefault(); onEnter(); } }} />;
+    return (
+      <textarea
+        ref={inputRef}
+        dir="rtl"
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        rows={3}
+        autoFocus={autoFocus}
+        className={clsx(shared, "resize-y min-h-[6rem] leading-8 text-right")}
+        placeholder={ph}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey && onEnter) {
+            e.preventDefault();
+            onEnter();
+          }
+        }}
+      />
+    );
   }
   if (type === "telegram_id") {
-    return (<div className="relative"><span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"><TelegramIcon className="text-ecosystem-dark" /></span><input ref={inputRef} type="text" dir="ltr" value={value ?? ""} autoFocus={autoFocus} onChange={(e) => onChange(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && onEnter) { e.preventDefault(); onEnter(); } }} className={clsx(shared, "text-left pr-9")} placeholder={ph} /></div>);
+    return (
+      <div className="relative">
+        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+          <TelegramIcon className="text-ecosystem-dark" />
+        </span>
+        <input
+          ref={inputRef}
+          type="text"
+          dir={activeDir}
+          value={value ?? ""}
+          autoFocus={autoFocus}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && onEnter) {
+              e.preventDefault();
+              onEnter();
+            }
+          }}
+          className={clsx(shared, activeAlign, "pr-9")}
+          placeholder={ph}
+        />
+      </div>
+    );
   }
 
   return (
     <div className="relative">
-      {type === "phone_ir" && (<span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ink-subtle"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg></span>)}
-      <input ref={inputRef} type="text" inputMode={type === "number" ? "numeric" : type === "phone_ir" ? "tel" : type === "email" ? "email" : "text"} dir={isLtr ? "ltr" : "rtl"} value={value ?? ""} autoFocus={autoFocus} onChange={(e) => onChange(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && onEnter) { e.preventDefault(); onEnter(); } }} className={clsx(shared, isLtr && "text-left", type === "phone_ir" && "pr-9")} placeholder={ph} />
+      {type === "phone_ir" && (
+        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ink-subtle">
+            <rect width="14" height="20" x="5" y="2" rx="2" ry="2"/>
+            <path d="M12 18h.01"/>
+          </svg>
+        </span>
+      )}
+      <input
+        ref={inputRef}
+        type="text"
+        inputMode={type === "number" ? "numeric" : type === "phone_ir" ? "tel" : type === "email" ? "email" : "text"}
+        dir={activeDir}
+        value={value ?? ""}
+        autoFocus={autoFocus}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && onEnter) {
+            e.preventDefault();
+            onEnter();
+          }
+        }}
+        className={clsx(shared, activeAlign, type === "phone_ir" && "pr-9")}
+        placeholder={ph}
+      />
     </div>
   );
 }

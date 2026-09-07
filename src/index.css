@@ -40,11 +40,26 @@
     }
 }
 
-/* ─── placeholder راست‌چین برای فیلدهای فارسی ─── */
-input[dir="rtl"]::placeholder,
-textarea[dir="rtl"]::placeholder {
+/* ─── یکپارچه‌سازی و راست‌چین بودن placeholder تمام فرم‌ها ─── */
+input::placeholder,
+textarea::placeholder {
     text-align: right !important;
     direction: rtl !important;
+    unicode-bidi: plaintext !important;
+    font-family: inherit;
+}
+
+/* زمان نمایش placeholder، فیلدها در قالب فارسی راست‌چین باشند */
+input:placeholder-shown,
+textarea:placeholder-shown {
+    text-align: right;
+    direction: rtl;
+}
+
+/* وقتی کاربر در فیلدهای انگلیسی/شماره تایپ کرد، LTR شود */
+input[dir="ltr"]:not(:placeholder-shown) {
+    text-align: left;
+    direction: ltr;
 }
 
 @media (prefers-reduced-motion: reduce) {

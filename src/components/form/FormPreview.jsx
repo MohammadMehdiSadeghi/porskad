@@ -10,28 +10,27 @@ import { QUESTION_TYPES } from "../../lib/questionTypes";
 import { QUESTION_TYPE_ICONS } from "../../lib/questionIcons";
 
 const PLACEHOLDER_DEFAULTS = {
-  short_text: "جوابت رو این‌جا بنویس...",
-  long_text: "بنویس...",
-  email: "name@example.com",
-  phone_ir: "09123456789",
-  number: "مثلاً 42",
-  telegram_id: "@username",
+  short_text: "پاسخ خود را بنویسید...",
+  long_text: "پاسخ خود را بنویسید...",
+  email: "example@email.com",
+  phone_ir: "۰۹۱۲۳۴۵۶۷۸۹",
+  number: "مثلاً: ۱۲۳",
+  telegram_id: "username@",
 };
 
 function getPlaceholder(q) {
-  return (q.placeholder && q.placeholder.trim()) || PLACEHOLDER_DEFAULTS[q.type] || "";
+  return (q.placeholder && q.placeholder.trim()) || PLACEHOLDER_DEFAULTS[q.type] || "پاسخ خود را بنویسید...";
 }
 
 // ─── فیلد متنی کوچک ───
 function MiniTextInput({ q }) {
-  const isLtr = q.type === "email" || q.type === "phone_ir";
   return (
     <input
       type="text"
-      dir={isLtr ? "ltr" : "rtl"}
+      dir="rtl"
       readOnly
       placeholder={getPlaceholder(q)}
-      className="w-full bg-white border border-ink/20 rounded-lg px-2.5 py-1.5 text-[0.65rem] font-semibold text-ink/40 placeholder:text-ink/30"
+      className="w-full bg-white border border-ink/20 rounded-lg px-2.5 py-1.5 text-[0.65rem] font-semibold text-ink/40 placeholder:text-ink/30 text-right placeholder:text-right"
     />
   );
 }
@@ -39,10 +38,11 @@ function MiniTextInput({ q }) {
 function MiniLongTextInput({ q }) {
   return (
     <textarea
+      dir="rtl"
       readOnly
       rows={2}
       placeholder={getPlaceholder(q)}
-      className="w-full bg-white border border-ink/20 rounded-lg px-2.5 py-1.5 text-[0.65rem] font-semibold text-ink/40 placeholder:text-ink/30 resize-none"
+      className="w-full bg-white border border-ink/20 rounded-lg px-2.5 py-1.5 text-[0.65rem] font-semibold text-ink/40 placeholder:text-ink/30 resize-none text-right placeholder:text-right"
     />
   );
 }
