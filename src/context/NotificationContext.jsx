@@ -123,6 +123,7 @@ function NotificationProvider({ children }) {
 
   // اضافه کردن نوتیف جدید با جلوگیری از ایجاد رکورد تکراری
   const addNotification = useCallback((notif) => {
+    if (!notifEnabled) return;
     setNotifications((prev) => {
       const targetId = notif.id || Date.now() + Math.random();
       if (prev.some((n) => String(n.id) === String(targetId))) {
@@ -139,7 +140,7 @@ function NotificationProvider({ children }) {
       ].slice(0, 60); // حداکثر ۶۰ اعلان
     });
     playSound();
-  }, [playSound]);
+  }, [playSound, notifEnabled]);
 
   // علامت خوانده شدن یک مورد
   const markAsRead = useCallback((id) => {
