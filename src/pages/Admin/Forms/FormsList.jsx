@@ -724,11 +724,10 @@ export default function FormsList() {
                 <span className="text-xs font-black text-navy">گزینه‌های دسترسی و عملیات:</span>
 
                 {isTrashed ? (
-                  <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Button
                       variant="teal"
                       size="sm"
-                      className="flex-1 justify-center"
                       onClick={() => {
                         setActionModalForm(null);
                         restoreForm(f);
@@ -739,7 +738,6 @@ export default function FormsList() {
                     <Button
                       variant="red"
                       size="sm"
-                      className="flex-1 justify-center"
                       onClick={() => {
                         setActionModalForm(null);
                         permanentDelete(f);
@@ -751,13 +749,12 @@ export default function FormsList() {
                 ) : (
                   <>
                     {/* دکمه‌های ناوبری اصلی */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Button
                         as={Link}
                         to={`/admin/forms/${f.id}`}
                         variant="teal"
                         size="sm"
-                        className="justify-center"
                         onClick={() => setActionModalForm(null)}
                       >
                         <Edit size={14} className="ml-1.5" /> ویرایش در فرم‌ساز
@@ -767,7 +764,6 @@ export default function FormsList() {
                         to={`/admin/forms/${f.id}/responses`}
                         variant="navy"
                         size="sm"
-                        className="justify-center"
                         onClick={() => setActionModalForm(null)}
                       >
                         <BarChart3 size={14} className="ml-1.5" /> پاسخ‌ها ({faNum(c.total)})
@@ -777,30 +773,19 @@ export default function FormsList() {
                         to={`/admin/forms/${f.id}/share`}
                         variant="white"
                         size="sm"
-                        className="justify-center"
                         onClick={() => setActionModalForm(null)}
                       >
                         <Share2 size={14} className="ml-1.5" /> اشتراک‌گذاری و امبد
                       </Button>
-                      {f.published ? (
+                      {f.published && (
                         <Button
                           as="a"
                           href={`/f/${f.slug}`}
                           target="_blank"
                           variant="white"
                           size="sm"
-                          className="justify-center"
                         >
                           <ExternalLink size={14} className="ml-1.5" /> مشاهده فرم زنده
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="justify-center !text-ink-subtle"
-                          disabled
-                        >
-                          فرم هنوز پیش‌نویس است
                         </Button>
                       )}
                     </div>
