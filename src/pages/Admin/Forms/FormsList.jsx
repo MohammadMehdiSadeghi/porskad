@@ -101,7 +101,7 @@ function UndoToast({ message, onUndo, onDismiss, duration = 6000 }) {
 
 export default function FormsList() {
   const { push } = useToast();
-  const { hasPermission, canManage, user, profile, isOwner } = useAuth();
+  const { hasPermission, canManage, user, profile, isOwner, session } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [forms, setForms] = useState([]);
@@ -156,7 +156,10 @@ export default function FormsList() {
     }
   }, [user, load]);
 
-  const activeFormsCount = useMemo(() => forms.filter((f) => !f.deleted_at).length, [forms]);
+  const activeFormsCount = useMemo(
+    () => forms.filter((f) => f.published && !f.archived && !f.deleted_at).length,
+    [forms]
+  );
   const maxForms = profile?.max_forms ?? 5;
 
   async function createForm(formType = "step_by_step") {
@@ -165,35 +168,70 @@ export default function FormsList() {
       return;
     }
 
-    if (!isOwner() && activeFormsCount >= maxForms) {
-      setShowTypeModal(false);
-      setShowQuotaModal(true);
-      return;
-    }
-
     setBusy(true);
 
     const isRegistration = formType === "registration";
-    const base = {
-      slug: `form-${randomSlug(6)}`,
-      title: isRegistration ? "فرم ثبت‌نام" : "فرم جدید",
-      published: false,
-      manager_id: user?.id ?? null,
-      created_by: user?.id ?? null,
-      form_type: formType,
-    };
+    const title = isRegistration ? "فرم ثبت‌نام" : "فرم جدید";
+    const slug = `form-${randomSlug(6)}`;
 
-    const { data, error } = await supabase.from("forms").insert(base).select().single();
-    if (error) {
+    const currentUserId = user?.id || (await supabase.auth.getUser()).data?.user?.id;
+    if (!currentUserId) {
       setBusy(false);
-      push("ساخت فرم ناموفق بود: " + error.message, "error");
+      push("لطفاً ابتدا وارد حساب کاربری خود شوید.", "error");
       return;
+    }
+
+    let createdFormData = null;
+
+    // ۱. ابتدا تلاش از طریق API سرورلس اختصاصی جهت دور زدن محدودیت‌های RLS و اطمینان از ثبت نقش
+    try {
+      const apiRes = await fetch("/api/create-form", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: session?.access_token ? `Bearer ${session.access_token}` : "",
+        },
+        body: JSON.stringify({
+          title,
+          form_type: formType,
+          slug,
+        }),
+      });
+      if (apiRes.ok) {
+        const resJson = await apiRes.json();
+        if (resJson.form) {
+          createdFormData = resJson.form;
+        }
+      }
+    } catch (e) {
+      console.warn("create-form api fallback:", e);
+    }
+
+    // ۲. فالبک مستقیم با supabase client
+    if (!createdFormData) {
+      const base = {
+        slug,
+        title,
+        published: false,
+        manager_id: currentUserId,
+        created_by: currentUserId,
+        form_type: formType,
+      };
+
+      const { data, error } = await supabase.from("forms").insert(base).select().single();
+      if (error) {
+        setBusy(false);
+        console.error("createForm error:", error);
+        push("ساخت فرم ناموفق بود: " + (error.message || "خطای پایگاه‌داده"), "error");
+        return;
+      }
+      createdFormData = data;
     }
 
     setBusy(false);
     setShowTypeModal(false);
     push(isRegistration ? "فرم ثبت‌نامی ساخته شد!" : "فرم جدید ساخته شد!");
-    navigate(`/admin/forms/${data.id}`);
+    navigate(`/admin/forms/${createdFormData.id}`);
   }
 
   async function togglePublish(form) {
@@ -209,7 +247,8 @@ export default function FormsList() {
       ).length;
       const allowedMax = profile?.max_forms ?? 5;
       if (activePublishedCount >= allowedMax) {
-        push(`سقف فرم‌های همزمان فعال (حداکثر ${allowedMax} فرم) تکمیل شده است. لطفاً ابتدا یکی از فرم‌های فعال را غیرفعال یا بایگانی کنید.`, "error");
+        setShowQuotaModal(true);
+        push(`سقف فرم‌های همزمان فعال (حداکثر ${faNum(allowedMax)} فرم) تکمیل شده است. لطفاً ابتدا یکی از فرم‌های فعال را غیرفعال یا بایگانی کنید.`, "error");
         return;
       }
     }
@@ -230,31 +269,83 @@ export default function FormsList() {
       return;
     }
 
-    if (!isOwner() && activeFormsCount >= maxForms) {
-      setShowQuotaModal(true);
+    setBusy(true);
+    const slug = `form-${randomSlug(6)}`;
+    const copyTitle = `${form.title} (کپی)`;
+
+    const currentUserId = user?.id || (await supabase.auth.getUser()).data?.user?.id;
+    if (!currentUserId) {
+      setBusy(false);
+      push("لطفاً ابتدا وارد حساب کاربری خود شوید.", "error");
       return;
     }
 
-    setBusy(true);
-    const copy = {
-      slug: `form-${randomSlug(6)}`,
-      title: `${form.title} (کپی)`,
-      description: form.description,
-      welcome_title: form.welcome_title,
-      welcome_message: form.welcome_message,
-      exit_title: form.exit_title,
-      exit_message: form.exit_message,
-      published: false,
-      manager_id: user?.id ?? null,
-      created_by: user?.id ?? null,
-      form_type: form.form_type || "step_by_step",
-    };
-    const { data: newForm, error } = await supabase.from("forms").insert(copy).select().single();
-    if (!error) {
+    let newForm = null;
+
+    // ۱. تلاش از طریق API سرورلس
+    try {
+      const apiRes = await fetch("/api/create-form", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: session?.access_token ? `Bearer ${session.access_token}` : "",
+        },
+        body: JSON.stringify({
+          title: copyTitle,
+          description: form.description || "",
+          welcome_title: form.welcome_title || "سلام!",
+          welcome_message: form.welcome_message || "ممنون که وقت گذاشتی؛ چند سوال کوتاه داریم.",
+          exit_title: form.exit_title || "تمام شد!",
+          exit_message: form.exit_message || "از اینکه جواب دادی خیلی ممنونیم. نظراتت برای ما طلاست!",
+          slug,
+          form_type: form.form_type || "step_by_step",
+        }),
+      });
+      if (apiRes.ok) {
+        const resJson = await apiRes.json();
+        if (resJson.form) {
+          newForm = resJson.form;
+        }
+      }
+    } catch (e) {
+      console.warn("duplicate api fallback:", e);
+    }
+
+    // ۲. فالبک مستقیم supabase
+    if (!newForm) {
+      const copy = {
+        slug,
+        title: copyTitle,
+        description: form.description,
+        welcome_title: form.welcome_title,
+        welcome_message: form.welcome_message,
+        exit_title: form.exit_title,
+        exit_message: form.exit_message,
+        published: false,
+        manager_id: currentUserId,
+        created_by: currentUserId,
+        form_type: form.form_type || "step_by_step",
+      };
+      const { data, error } = await supabase.from("forms").insert(copy).select().single();
+      if (error) {
+        setBusy(false);
+        console.error("duplicate error:", error);
+        push("کپی ناموفق بود: " + (error.message || "خطای پایگاه‌داده"), "error");
+        return;
+      }
+      newForm = data;
+    }
+
+    if (newForm) {
       const { data: qs } = await supabase.from("questions").select("*").eq("form_id", form.id).order("position");
       const rows = (qs ?? []).map((q, i) => ({
-        form_id: newForm.id, type: q.type, title: q.title, description: q.description,
-        required: q.required, options: q.options, position: i,
+        form_id: newForm.id,
+        type: q.type,
+        title: q.title,
+        description: q.description,
+        required: q.required,
+        options: q.options,
+        position: i,
         placeholder: q.placeholder ?? "",
         validation: q.validation ?? null,
         conditions: q.conditions ?? null,
@@ -270,8 +361,6 @@ export default function FormsList() {
       }
       push("کپی ساخته شد");
       load();
-    } else {
-      push("کپی ناموفق بود", "error");
     }
     setBusy(false);
   }
@@ -402,11 +491,7 @@ export default function FormsList() {
           variant="indigo"
           size="sm"
           onClick={() => {
-            if (!isOwner() && activeFormsCount >= maxForms) {
-              setShowQuotaModal(true);
-            } else {
-              setShowTypeModal(true);
-            }
+            setShowTypeModal(true);
           }}
           disabled={busy}
           rotate="-rotate-[1deg]"
@@ -430,7 +515,7 @@ export default function FormsList() {
                 </Badge>
               </div>
               <p className="text-xs font-semibold text-ink-subtle mt-0.5">
-                مدیریت و پایش فرم‌های فعال شما
+                تعداد فرم‌های همزمان فعال (منتشر شده) در سامانه
               </p>
             </div>
           </div>
