@@ -67,10 +67,18 @@ function NotificationProvider({ children }) {
   const [isSyncing, setIsSyncing] = useState(false);
 
   const [soundEnabled, setSoundEnabled] = useState(() => {
-    return localStorage.getItem("notif_sound") !== "false";
+    try {
+      return localStorage.getItem("notif_sound") !== "false";
+    } catch {
+      return true;
+    }
   });
   const [notifEnabled, setNotifEnabled] = useState(() => {
-    return localStorage.getItem("notif_enabled") !== "false";
+    try {
+      return localStorage.getItem("notif_enabled") !== "false";
+    } catch {
+      return true;
+    }
   });
   const [isOpen, setIsOpen] = useState(false);
 
@@ -163,7 +171,9 @@ function NotificationProvider({ children }) {
   const toggleSound = useCallback(() => {
     setSoundEnabled((prev) => {
       const next = !prev;
-      localStorage.setItem("notif_sound", String(next));
+      try {
+        localStorage.setItem("notif_sound", String(next));
+      } catch {}
       return next;
     });
   }, []);
@@ -172,7 +182,9 @@ function NotificationProvider({ children }) {
   const toggleNotif = useCallback(() => {
     setNotifEnabled((prev) => {
       const next = !prev;
-      localStorage.setItem("notif_enabled", String(next));
+      try {
+        localStorage.setItem("notif_enabled", String(next));
+      } catch {}
       return next;
     });
   }, []);

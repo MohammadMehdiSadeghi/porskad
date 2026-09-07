@@ -22,7 +22,7 @@ function ToggleSwitch({ checked, onChange, label, activeIcon: ActiveIcon, inacti
       }`}
       title={checked ? `کلیک برای خاموش کردن ${label}` : `کلیک برای روشن کردن ${label}`}
     >
-      <div className="flex items-center gap-1.5 min-w-0">
+      <div className="flex items-center gap-1.5 min-w-0 pointer-events-none">
         {checked ? (
           <ActiveIcon size={15} className="text-teal shrink-0" />
         ) : (
@@ -31,9 +31,9 @@ function ToggleSwitch({ checked, onChange, label, activeIcon: ActiveIcon, inacti
         <span className="text-xs font-black text-navy truncate">{label}</span>
       </div>
 
-      <div className="flex items-center gap-1.5 shrink-0">
+      <div className="flex items-center gap-1.5 shrink-0 pointer-events-none">
         <span
-          className={`text-[0.65rem] font-extrabold px-1.5 py-0.5 rounded-md ${
+          className={`text-[0.65rem] font-extrabold px-1.5 py-0.5 rounded-md transition-colors ${
             checked ? "bg-teal text-white" : "bg-ink/15 text-ink/60"
           }`}
         >
@@ -171,14 +171,15 @@ export default function NotificationBell() {
             <aside
               ref={panelRef}
               dir="rtl"
+              className="fixed inset-y-0 right-0 h-full h-screen w-[410px] max-w-[92vw] flex flex-col bg-white shadow-2xl border-l border-black/10 z-[99999] overflow-hidden"
               style={{
                 position: "fixed",
                 top: 0,
                 bottom: 0,
                 right: 0,
                 height: "100dvh",
+                minHeight: "100%",
                 maxHeight: "100dvh",
-                minHeight: "100vh",
                 width: "410px",
                 maxWidth: "92vw",
                 zIndex: 99999,
@@ -188,8 +189,9 @@ export default function NotificationBell() {
                 boxShadow: "-8px 0 35px rgba(0,0,0,0.2)",
                 borderLeft: "1px solid rgba(0,0,0,0.1)",
                 transform: isOpen ? "translateX(0)" : "translateX(100%)",
-                transition: "transform 320ms cubic-bezier(0.16, 1, 0.3, 1)",
+                transition: "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), visibility 320ms",
                 pointerEvents: isOpen ? "auto" : "none",
+                visibility: isOpen ? "visible" : "hidden",
                 overflow: "hidden",
               }}
             >
