@@ -704,8 +704,9 @@ export default function Support() {
       {isOwner() ? (
         userGroups.length === 0 ? (
           <EmptyState
-            icon={<MessageSquare size={48} />}
+            icon={<MessageSquare size={44} />}
             title="هیچ تیکتی با این فیلتر یافت نشد"
+            titleClassName="whitespace-nowrap text-sm sm:text-base font-black"
             subtitle={
               searchQuery
                 ? "عبارت جستجوی دیگری را امتحان کنید یا فیلتر را تغییر دهید."
