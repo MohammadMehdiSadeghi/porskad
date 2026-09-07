@@ -761,6 +761,10 @@ export default function SuperAdmin() {
 
   // ─── Admin Permission Editor ───
   async function toggleAdminPermission(userId, permId, currentPerms) {
+    if (!isCallerGod) {
+      showToast("فقط مدیر اصلی (God Mode) می‌تواند دسترسی‌های ادمین‌ها را ویرایش کند.", "error");
+      return;
+    }
     const newPerms = currentPerms.includes(permId)
       ? currentPerms.filter((p) => p !== permId)
       : [...currentPerms, permId];
@@ -770,7 +774,7 @@ export default function SuperAdmin() {
         p_permission_ids: newPerms,
       });
       if (error) throw error;
-      showToast("Permissions updated");
+      showToast("دسترسی‌های ادمین به‌روزرسانی شد");
       loadAdmins();
     } catch (err) {
       showToast("Error: " + err.message, "error");
@@ -1817,10 +1821,12 @@ export default function SuperAdmin() {
                     return (
                       <button
                         key={perm}
+                        disabled={!isCallerGod}
+                        title={!isCallerGod ? "فقط صاحب اصلی سایت مجاز به تغییر دسترسی‌های ادمین است" : undefined}
                         onClick={() =>
                           toggleAdminPermission(a.id, perm, a.permissions || [])
                         }
-                        className={`sa-perm ${has ? "active" : "inactive"}`}
+                        className={`sa-perm ${has ? "active" : "inactive"} ${!isCallerGod ? "opacity-60 cursor-not-allowed" : ""}`}
                       >
                         {perm.replace(/_/g, " ")}
                       </button>
@@ -2857,54 +2863,101 @@ export default function SuperAdmin() {
               </div>
             </div>
 
-            {/* Role Management */}
+            {/* Role Management (Promote / Demote SuperAdmin — God Only) */}
             {!detailModal.is_owner && (
-              <div style={{ border: "1px solid #e0e0e0", padding: "0.75rem" }}>
-                <span
-                  style={{
-                    fontSize: "0.85rem",
-                    fontWeight: 700,
-                    color: "#525252",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  System Role
-                </span>
-                <div style={{ display: "flex", gap: "0.25rem", marginTop: "0.5rem" }}>
-                  {["manager", "admin"].map((r) => (
-                    <button
-                      key={r}
-                      onClick={async () => {
-                        try {
-                          const { error } = await supabase
-                            .from("user_roles")
-                            .upsert(
-                              { user_id: detailModal.id, role_id: r, active: true },
-                              { onConflict: "user_id" }
-                            );
-                          if (error) throw error;
-                          showToast(`Role changed to ${r}`);
-                          setDetailModal({ ...detailModal, role: r });
-                          loadUsers();
-                        } catch (err) {
-                          showToast("Error: " + err.message, "error");
-                        }
-                      }}
-                      style={{
-                        padding: "0.25rem 0.75rem",
-                        fontSize: "0.85rem",
-                        fontWeight: 600,
-                        border: "1px solid",
-                        borderColor: detailModal.role === r ? "#0f62fe" : "#c6c6c6",
-                        background: detailModal.role === r ? "#0f62fe" : "#f4f4f4",
-                        color: detailModal.role === r ? "#fff" : "#161616",
-                        cursor: "pointer",
-                        fontFamily: "'IBM Plex Sans', sans-serif",
-                      }}
-                    >
-                      {r === "admin" ? "Admin" : "Manager"}
-                    </button>
-                  ))}
+              <div style={{ border: "1px solid #e0e0e0", padding: "0.75rem", background: "#fafafa" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
+                  <span
+                    style={{
+                      fontSize: "0.85rem",
+                      fontWeight: 700,
+                      color: "#161616",
+                      textTransform: "uppercase",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.35rem",
+                    }}
+                  >
+                    <Shield size={14} color="#0f62fe" />
+                    سطح دسترسی سیستم (System Role)
+                  </span>
+                  {isCallerGod ? (
+                    <span style={{ fontSize: "0.8125rem", color: "#eb6200", fontWeight: 700 }}>
+                      👑 دسترسی انحصاری گاد مُد (God Mode)
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: "0.8125rem", color: "#6f6f6f", fontWeight: 600 }}>
+                      🔒 ارتقا به سوپرادمین فقط در اختیار مدیر اصلی است
+                    </span>
+                  )}
+                </div>
+
+                <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.6rem", flexWrap: "wrap" }}>
+                  {[
+                    { id: "manager", label: "کاربر عادی / مدیر فرم (Manager)", desc: "دسترسی استاندارد به فرم‌های خود" },
+                    { id: "admin", label: "سوپرادمین (SuperAdmin)", desc: "دسترسی به پنل مدیریت کل سیستم" },
+                  ].map((r) => {
+                    const isCurrent = detailModal.role === r.id;
+                    return (
+                      <button
+                        key={r.id}
+                        disabled={!isCallerGod}
+                        onClick={async () => {
+                          if (!isCallerGod) {
+                            showToast("فقط صاحب اصلی سایت (God Mode) مجاز به ارتقا یا عزل سوپرادمین است.", "error");
+                            return;
+                          }
+                          try {
+                            // ۱. تلاش از طریق API سرورلس با دسترسی Service Role
+                            try {
+                              await adminAction("update_role", {
+                                target_user_id: detailModal.id,
+                                new_role: r.id,
+                              });
+                            } catch {
+                              // فال‌بک دیتابیس مستقیم
+                              const { error } = await supabase
+                                .from("user_roles")
+                                .upsert(
+                                  { user_id: detailModal.id, role_id: r.id, active: true },
+                                  { onConflict: "user_id" }
+                                );
+                              if (error) throw error;
+                            }
+
+                            showToast(r.id === "admin" ? `کاربر «${detailModal.email}» با موفقیت سوپرادمین شد.` : `نقش کاربر به مدیر عادی تغییر یافت.`);
+                            setDetailModal({ ...detailModal, role: r.id });
+                            loadUsers();
+                            loadAdmins();
+                          } catch (err) {
+                            showToast("خطا در تغییر نقش: " + err.message, "error");
+                          }
+                        }}
+                        style={{
+                          flex: 1,
+                          minWidth: "160px",
+                          padding: "0.5rem 0.85rem",
+                          fontSize: "0.85rem",
+                          fontWeight: 700,
+                          border: "2px solid",
+                          borderColor: isCurrent ? (r.id === "admin" ? "#0f62fe" : "#198038") : "#c6c6c6",
+                          background: isCurrent ? (r.id === "admin" ? "#d0e2ff" : "#defbe6") : "#fff",
+                          color: isCurrent ? (r.id === "admin" ? "#0043ce" : "#0e6027") : "#525252",
+                          cursor: isCallerGod ? "pointer" : "not-allowed",
+                          opacity: !isCallerGod && !isCurrent ? 0.4 : 1,
+                          fontFamily: "'IBM Plex Sans', sans-serif",
+                          textAlign: "right",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                          {r.id === "admin" ? <Shield size={14} /> : <Users size={14} />}
+                          <span>{r.label}</span>
+                          {isCurrent && <span style={{ marginRight: "auto", fontSize: "0.75rem" }}>✓ نقش فعلی</span>}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

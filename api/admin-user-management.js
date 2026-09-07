@@ -139,6 +139,31 @@ export default async function handler(req, res) {
       });
     }
 
+    // ۶. ارتقا یا تنزل نقش کاربر (فقط صاحب اصلی / گاد مُد مجاز است)
+    if (action === "update_role") {
+      if (!isCallerPrimaryGod) {
+        return res.status(403).json({ error: "فقط صاحب اصلی (God Mode) مجاز به ارتقای کاربران به سوپرادمین است" });
+      }
+      const { new_role } = req.body || {};
+      if (!["manager", "admin", "superadmin"].includes(new_role)) {
+        return res.status(400).json({ error: "نقش ارسالی نامعتبر است" });
+      }
+
+      const roleToSet = new_role === "superadmin" ? "admin" : new_role;
+      const { error: roleErr } = await adminClient
+        .from("user_roles")
+        .upsert(
+          { user_id: target_user_id, role_id: roleToSet, active: true },
+          { onConflict: "user_id" }
+        );
+
+      if (roleErr) {
+        return res.status(400).json({ error: roleErr.message });
+      }
+
+      return res.status(200).json({ success: true, role: roleToSet });
+    }
+
     return res.status(400).json({ error: `عملیات ناشناخته: ${action}` });
   } catch (err) {
     console.error("Admin user management error:", err);
