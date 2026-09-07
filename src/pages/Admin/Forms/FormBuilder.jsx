@@ -959,9 +959,6 @@ export default function FormBuilder() {
           <Button as={Link} to={`/admin/forms/${id}/share`} variant="white" size="sm">
             <Share2 size={14} /> اشتراک
           </Button>
-          <Button variant="teal" size="sm" onClick={save} disabled={saving || !dirty}>
-            {saving ? "در حال ذخیره..." : "ذخیره"}
-          </Button>
         </div>
       </div>
 
@@ -1159,11 +1156,24 @@ export default function FormBuilder() {
             />
           ))
         )}
+
+        {/* دکمه ذخیره انتهای فرم مخصوص موبایل */}
+        <div className="lg:hidden mt-3">
+          <Button
+            variant="teal"
+            size="lg"
+            onClick={save}
+            disabled={saving || !dirty}
+            className="w-full justify-center text-base font-black shadow-md py-3"
+          >
+            {saving ? "در حال ذخیره..." : "ذخیره‌ی فرم"}
+          </Button>
+        </div>
       </div>
       </div>
 
       {/* ─── ستون پیش‌نمایش و دکمه ذخیره دسکتاپ (سمت چپ) ─── */}
-      <div className="hidden lg:flex flex-col gap-3.5 w-[320px] shrink-0 sticky top-20 self-start">
+      <div className="hidden lg:flex flex-col gap-3.5 w-[330px] shrink-0 sticky top-20 self-start">
         <div className="rounded-2xl border-2 border-navy/20 bg-white overflow-hidden shadow-lg">
           <FormPreview form={form} questions={questions} />
         </div>
@@ -1172,25 +1182,10 @@ export default function FormBuilder() {
           size="lg"
           onClick={save}
           disabled={saving || !dirty}
-          className="w-full justify-center shadow-md text-base"
+          className="w-full justify-center shadow-md text-base font-black py-3.5 hover:scale-[1.01] transition-all"
         >
           {saving ? "در حال ذخیره..." : "ذخیره‌ی فرم"}
         </Button>
-      </div>
-
-      {/* ─── دکمه ذخیره موبایل — فیکس در وسط پایین صفحه ─── */}
-      <div className="fixed lg:hidden bottom-4 inset-x-0 z-40 flex justify-center px-4 pointer-events-none">
-        <div className="pointer-events-auto max-w-sm w-full shadow-2xl rounded-pill-lg bg-navy/95 backdrop-blur-md p-2 border border-white/20">
-          <Button
-            variant="teal"
-            size="md"
-            onClick={save}
-            disabled={saving || !dirty}
-            className="w-full justify-center text-sm font-black shadow-none"
-          >
-            {saving ? "در حال ذخیره..." : "ذخیره‌ی تغییرات فرم"}
-          </Button>
-        </div>
       </div>
     </div>
   );
