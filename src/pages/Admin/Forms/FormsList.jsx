@@ -943,7 +943,7 @@ export default function FormsList() {
               className="text-right p-5 rounded-pill-md border-2 border-ink/15 bg-white hover:border-teal hover:shadow-md transition-all group disabled:opacity-50"
             >
               <span className="block mb-3 group-hover:scale-110 transition-transform text-navy">{ft.key === "step_by_step" ? <ClipboardList size={36} /> : <AlignLeft size={36} />}</span>
-              <h3 className="text-lg font-black text-navy mb-1">{ft.title}</h3>
+              <h3 className="text-base sm:text-lg font-black text-navy mb-1">{ft.title}</h3>
               <p className="text-xs font-medium text-ink-subtle leading-5">{ft.description}</p>
             </button>
           ))}

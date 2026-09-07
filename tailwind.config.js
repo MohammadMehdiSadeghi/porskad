@@ -133,15 +133,15 @@ export default {
                 ...md.borderRadius,
             },
             fontSize: {
-                // ── Design System Typography Scale (DESIGN_SYSTEM.md) ──
-                xs: ["11px", "16.5px"],
-                sm: ["14px", "21px"],
-                base: ["17px", "25.5px"],
-                md: ["21px", "31.5px"],
-                lg: ["26px", "38.5px"],
-                xl: ["39px", "58.5px"],
-                "2xl": ["49px", "73.5px"],
-                "3xl": ["61px", "91.5px"],
+                // ── Design System Typography Scale (Mobile-First Base) ──
+                xs: ["10.5px", "15px"],
+                sm: ["12px", "18px"],
+                base: ["14px", "21px"],
+                md: ["16px", "24px"],
+                lg: ["18px", "26px"],
+                xl: ["21px", "29px"],
+                "2xl": ["25px", "34px"],
+                "3xl": ["30px", "40px"],
 
                 // ── Legacy aliases (backward compat) ──
                 "2xs": "0.81875rem",

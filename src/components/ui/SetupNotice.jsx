@@ -8,7 +8,7 @@ export default function SetupNotice() {
         <StickerCard theme="white">
           <div className="p-7 sm:p-10 flex flex-col gap-4">
             <div className="text-5xl rotate-[2deg] self-start">🔌</div>
-            <h1 className="text-2xl sm:text-3xl font-black text-navy">
+            <h1 className="text-xl sm:text-3xl font-black text-navy">
               پرس‌کاد هنوز به دیتابیس وصل نشده!
             </h1>
             <p className="font-semibold text-ink-soft leading-8">

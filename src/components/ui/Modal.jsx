@@ -31,7 +31,7 @@ export default function Modal({ open, onClose, title, children, wide = false, cl
           <div className="max-h-[80vh] overflow-y-auto p-4 sm:p-5">
             {title && (
               <div className="flex items-center justify-between gap-3 mb-4">
-                <h3 className="text-xl font-black text-navy">{title}</h3>
+                <h3 className="text-lg sm:text-xl font-black text-navy">{title}</h3>
                 {closable && onClose && (
                   <button
                     onClick={onClose}

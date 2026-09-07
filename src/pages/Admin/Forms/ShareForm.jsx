@@ -218,7 +218,7 @@ export default function ShareForm() {
             ویرایش فرم
           </Button>
           <div>
-            <h1 className="text-xl font-black text-navy">اشتراک‌گذاری فرم</h1>
+            <h1 className="text-lg sm:text-xl font-black text-navy">اشتراک‌گذاری فرم</h1>
             <p className="text-xs text-ink/40 mt-0.5">{form.title}</p>
           </div>
         </div>
@@ -271,7 +271,7 @@ export default function ShareForm() {
         <StickerCard theme="white" radius="rounded-tl-[1.5rem] rounded-br-[1.5rem] rounded-tr-none rounded-bl-none">
           <div className="p-5 sm:p-6 flex flex-col gap-4">
             <div>
-              <h2 className="text-lg font-black text-navy flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-black text-navy flex items-center gap-2">
                 {active.label}
               </h2>
               <p className="text-sm text-ink/50 mt-1">{active.description}</p>
@@ -285,7 +285,7 @@ export default function ShareForm() {
       <div className="rotate-[-0.2deg]">
         <StickerCard theme="white" radius="rounded-tl-[1.5rem] rounded-br-[1.5rem] rounded-tr-none rounded-bl-none">
           <div className="p-5 sm:p-6 flex flex-col gap-4">
-            <h2 className="text-lg font-black text-navy">پیش‌نمایش زنده — {active.label}</h2>
+            <h2 className="text-base sm:text-lg font-black text-navy">پیش‌نمایش زنده — {active.label}</h2>
             <div className="border-2 border-dashed border-ink/15 rounded-xl overflow-hidden bg-bg-mint/30" style={{ minHeight: "400px" }}>
               {!form.published ? (
                 <div className="flex items-center justify-center h-[400px] text-ink/40 text-sm">

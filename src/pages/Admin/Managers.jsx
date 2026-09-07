@@ -466,7 +466,7 @@ export default function Managers() {
   if (!canView) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <h2 className="text-xl font-black text-navy">دسترسی غیرمجاز</h2>
+        <h2 className="text-lg sm:text-xl font-black text-navy">دسترسی غیرمجاز</h2>
         <p className="text-sm font-semibold text-ink-subtle">شما مجوز مشاهده مدیران را ندارید.</p>
       </div>
     );

@@ -200,7 +200,7 @@ export default function SmsPanel() {
 
           {/* وضعیت سرویس */}
           <div>
-            <h2 className="text-lg font-extrabold text-navy mb-3">وضعیت سرویس پیامک</h2>
+            <h2 className="text-base sm:text-lg font-extrabold text-navy mb-3">وضعیت سرویس پیامک</h2>
             <div className="rotate-[0.3deg]">
               <StickerCard theme="white">
                 <div className="p-5 flex items-center justify-between">
@@ -266,7 +266,7 @@ export default function SmsPanel() {
       {tab === "history" && (
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-extrabold text-navy">تاریخچه ارسال‌ها</h2>
+            <h2 className="text-base sm:text-lg font-extrabold text-navy">تاریخچه ارسال‌ها</h2>
             <Button variant="ghost" size="sm" onClick={loadHistory}>
               <RefreshCw size={14} />
             </Button>
@@ -316,7 +316,7 @@ export default function SmsPanel() {
       {tab === "inbox" && (
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-extrabold text-navy">پیامک‌های دریافتی</h2>
+            <h2 className="text-base sm:text-lg font-extrabold text-navy">پیامک‌های دریافتی</h2>
             <Button variant="ghost" size="sm" onClick={loadHistory}>
               <RefreshCw size={14} />
             </Button>
@@ -350,7 +350,7 @@ export default function SmsPanel() {
             <StickerCard theme="white">
               <form onSubmit={(e) => { e.preventDefault(); showToast("تنظیمات پیامک در حال حاضر غیرفعال است", "error"); }} className="p-5 flex flex-col gap-4">
                 <div>
-                  <h2 className="text-lg font-black text-navy mb-1">تنظیمات درگاه پیامک</h2>
+                  <h2 className="text-base sm:text-lg font-black text-navy mb-1">تنظیمات درگاه پیامک</h2>
                   <p className="text-xs font-semibold text-ink-subtle">
                     تنظیمات وب‌سرویس و خطوط ارسال پیامک در حال حاضر در دست بازطراحی است.
                   </p>

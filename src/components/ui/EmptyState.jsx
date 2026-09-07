@@ -9,7 +9,7 @@ export default function EmptyState({ icon = "🗂️", title = "این‌جا خ
           <div className={`${isComponent ? "text-navy/30" : "text-5xl rotate-[3deg]"}`}> 
             {isComponent ? icon : icon}
           </div>
-          <h3 className="text-xl font-black text-navy">{title}</h3>
+          <h3 className="text-lg sm:text-xl font-black text-navy">{title}</h3>
           {subtitle && <p className="text-sm font-semibold text-ink-subtle leading-7">{subtitle}</p>}
           {action && <div className="mt-2">{action}</div>}
         </div>

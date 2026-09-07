@@ -383,7 +383,7 @@ export default function TelegramBot() {
             <StickerCard theme="white">
               <form onSubmit={saveConfig} className="p-5 flex flex-col gap-4">
                 <div>
-                  <h2 className="text-lg font-black text-navy mb-1">
+                  <h2 className="text-base sm:text-lg font-black text-navy mb-1">
                     {editingConfig ? "ویرایش تنظیمات" : "افزودن تنظیمات جدید"}
                   </h2>
                   <p className="text-xs font-semibold text-ink-subtle">
@@ -467,7 +467,7 @@ export default function TelegramBot() {
           {/* لیست تنظیمات */}
           {configs.length > 0 && (
             <div>
-              <h2 className="text-lg font-extrabold text-navy mb-3">
+              <h2 className="text-base sm:text-lg font-extrabold text-navy mb-3">
                 تنظیمات ذخیره‌شده ({faNum(configs.length)})
               </h2>
               <div className="flex flex-col gap-3">
@@ -541,7 +541,7 @@ export default function TelegramBot() {
               <div className="-rotate-[0.3deg]">
                 <StickerCard theme="white">
                   <div className="p-5 flex flex-col gap-3">
-                    <h2 className="text-lg font-black text-navy">افزودن لینک جدید</h2>
+                    <h2 className="text-base sm:text-lg font-black text-navy">افزودن لینک جدید</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
                         <label className="block text-xs font-bold text-navy mb-1">
@@ -599,7 +599,7 @@ export default function TelegramBot() {
               {/* لیست لینک‌ها */}
               {links.length > 0 ? (
                 <div>
-                  <h2 className="text-lg font-extrabold text-navy mb-3">
+                  <h2 className="text-base sm:text-lg font-extrabold text-navy mb-3">
                     لینک‌های فعال ({faNum(links.length)})
                   </h2>
                   <div className="rotate-[0.3deg]">
@@ -678,7 +678,7 @@ export default function TelegramBot() {
       {tab === "log" && (
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-extrabold text-navy">
+            <h2 className="text-base sm:text-lg font-extrabold text-navy">
               تاریخچه ارسال‌ها
             </h2>
             <Button variant="ghost" size="sm" onClick={loadSendLog}>

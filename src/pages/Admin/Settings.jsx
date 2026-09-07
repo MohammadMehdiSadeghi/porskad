@@ -97,7 +97,7 @@ export default function Settings() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center p-8 bg-white border-2 border-navy rounded-2xl max-w-md">
           <Shield size={48} className="text-magenta mx-auto mb-3" />
-          <h2 className="text-lg font-black text-navy mb-2">دسترسی غیرمجاز</h2>
+          <h2 className="text-base sm:text-lg font-black text-navy mb-2">دسترسی غیرمجاز</h2>
           <p className="text-xs text-ink-subtle">
             تنها صاحب اصلی (سوپرادمین) به بخش تنظیمات و محدودیت‌های سامانه دسترسی دارد.
           </p>
