@@ -10,7 +10,7 @@ import Modal from "../../../components/ui/Modal";
 import { useToast } from "../../../components/ui/Toast";
 import { useAuth } from "../../../context/AuthContext";
 import { copyToClipboard, randomSlug, faNum } from "../../../lib/utils";
-import { FileText, Plus, AlignLeft, ClipboardList, Undo2, Trash2, User, Calendar, Link2, Copy, ExternalLink, Settings, BarChart3, Share2, Edit } from "lucide-react";
+import { FileText, Plus, AlignLeft, ClipboardList, Undo2, Trash2, User, Calendar, Link2, Copy, ExternalLink, Settings, BarChart3, Share2, Edit, Archive, ArchiveRestore } from "lucide-react";
 import SEO from "../../../components/ui/SEO";
 
 const FORM_TYPES = [
@@ -493,10 +493,10 @@ export default function FormsList() {
               >
                 <StickerCard theme={isTrashed ? "orange" : "white"}>
                   <div
-                    className={`p-4 sm:p-5 flex flex-col gap-3 ${isTrashed ? "opacity-75" : ""} ${isOwnerUser ? "cursor-pointer select-none" : ""}`}
+                    className={`p-4 sm:p-5 flex flex-col gap-3 ${isTrashed ? "opacity-75" : ""} cursor-pointer select-none`}
                     onClick={(e) => {
                       if (e.target.closest("button, a, input")) return;
-                      if (isOwnerUser) setActionModalForm(f);
+                      setActionModalForm(f);
                     }}
                   >
                     {/* Header: Title + Badges */}
@@ -579,58 +579,25 @@ export default function FormsList() {
                       </div>
                     )}
 
-                    {/* دکمه عملیات: برای سوپرادمین پاپ‌آپ، برای کاربر عادی دکمه‌های مستقیم */}
-                    {isOwnerUser ? (
-                      <div className="pt-0.5 mt-auto">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActionModalForm(f);
-                          }}
-                          className="w-full py-2 px-3 rounded-pill-sm text-xs font-bold transition-all flex items-center justify-between bg-navy/5 hover:bg-teal hover:text-white text-navy border border-navy/10 group cursor-pointer"
-                        >
-                          <span className="flex items-center gap-1.5">
-                            <Settings size={14} className="text-teal group-hover:text-white transition-colors" />
-                            مدیریت و عملیات فرم...
-                          </span>
-                          <span className="text-[0.65rem] opacity-70 group-hover:opacity-100 font-medium">پاپ‌آپ ⚙️</span>
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex flex-wrap gap-2 pt-2 border-t border-ink/10 mt-auto">
-                        {isTrashed ? (
-                          <>
-                            <Button variant="teal" size="sm" onClick={() => restoreForm(f)} rotate="rotate-[1deg]">بازیابی</Button>
-                            <Button variant="red" size="sm" onClick={() => permanentDelete(f)} rotate="-rotate-[1deg]">حذف دائمی</Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button as={Link} to={`/admin/forms/${f.id}`} variant="glass" size="sm" rotate="rotate-[1deg]">ویرایش</Button>
-                            <Button as={Link} to={`/admin/forms/${f.id}/responses`} variant="glass" size="sm" rotate="-rotate-[1deg]">پاسخ‌ها</Button>
-                            <Button as={Link} to={`/admin/forms/${f.id}/share`} variant="glass" size="sm" rotate="rotate-[1deg]">اشتراک</Button>
-                            {f.published && (
-                              <>
-                                <Button variant="glass" size="sm" onClick={() => share(f)} rotate="-rotate-[1deg]">کپی لینک</Button>
-                                <Button as="a" href={`/f/${f.slug}`} target="_blank" variant="glass" size="sm" rotate="rotate-[1deg]">مشاهده</Button>
-                              </>
-                            )}
-                            {hasPermission("publish_form") && (
-                              <Button variant="glass" size="sm" onClick={() => togglePublish(f)} rotate="-rotate-[1deg]">
-                                {f.published ? "لغو انتشار" : "انتشار"}
-                              </Button>
-                            )}
-                            <Button variant="glass" size="sm" onClick={() => duplicate(f)} disabled={busy} rotate="rotate-[1deg]">کپی</Button>
-                            <Button variant="glass" size="sm" onClick={() => archiveForm(f)} rotate="-rotate-[1deg]">
-                              {f.archived ? "بازیابی" : "آرشیو"}
-                            </Button>
-                            {hasPermission("delete_form") && (
-                              <Button variant="glass" size="sm" className="!text-magenta-text" onClick={() => setDeleting(f)} rotate="rotate-[1deg]">حذف</Button>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    )}
+                    {/* دکمه عملیات و مدیریت فرم */}
+                    <div className="pt-0.5 mt-auto">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActionModalForm(f);
+                        }}
+                        className="w-full py-2 px-3 rounded-pill-sm text-xs font-bold transition-all flex items-center justify-between bg-navy/5 hover:bg-teal hover:text-white text-navy border border-navy/10 group cursor-pointer"
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <Settings size={14} className="text-teal group-hover:text-white transition-colors" />
+                          <span>مدیریت و عملیات فرم</span>
+                        </span>
+                        <span className="text-[0.7rem] font-bold text-ink/40 group-hover:text-white/90">
+                          گزینه‌ها ←
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 </StickerCard>
               </div>
@@ -817,8 +784,19 @@ export default function FormsList() {
                         variant="ghost"
                         size="sm"
                         onClick={() => archiveForm(f)}
+                        className="text-navy hover:bg-navy/5"
                       >
-                        {f.archived ? "📂 خروج از آرشیو" : "📁 آرشیو کردن"}
+                        {f.archived ? (
+                          <>
+                            <ArchiveRestore size={14} className="ml-1.5 text-navy" />
+                            <span>خروج از آرشیو</span>
+                          </>
+                        ) : (
+                          <>
+                            <Archive size={14} className="ml-1.5 text-navy" />
+                            <span>آرشیو کردن فرم</span>
+                          </>
+                        )}
                       </Button>
                       {hasPermission("delete_form") && (
                         <Button

@@ -7,11 +7,11 @@ const VARIANTS = {
     btn: "bg-teal border-teal-text text-white hover:bg-teal-text",
   },
   navy: {
-    layer: "bg-navy",
+    layer: "bg-[#0B0F1F]",
     btn: "bg-navy border-navy text-white hover:bg-navy-hover",
   },
   indigo: {
-    layer: "bg-navy",
+    layer: "bg-teal",
     btn: "bg-navy border-navy text-white hover:bg-navy-hover",
   },
   magenta: {
@@ -27,7 +27,7 @@ const VARIANTS = {
     btn: "bg-teal border-teal-text text-white hover:bg-teal-text",
   },
   orange: {
-    layer: "bg-orange",
+    layer: "bg-[#C57A07]",
     btn: "bg-orange border-orange text-white hover:bg-orange-alt",
   },
   white: {
@@ -56,6 +56,7 @@ export default function Button({
   rotate = "",
   as: Tag = "button",
   className = "",
+  layerClassName = "",
   children,
   ...rest
 }) {
@@ -66,7 +67,7 @@ export default function Button({
         aria-hidden="true"
         className={clsx(
           "absolute top-[0.125rem] left-[0.125rem] w-full h-full rounded-pill-md [corner-shape:squircle]",
-          v.layer,
+          layerClassName || v.layer,
         )}
       />
       <Tag

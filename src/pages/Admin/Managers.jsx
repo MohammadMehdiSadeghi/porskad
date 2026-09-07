@@ -484,7 +484,7 @@ export default function Managers() {
                       </div>
                     </div>
 
-                    {/* دکمه پاپ‌آپ مدیریت */}
+                    {/* دکمه مشاهده و مدیریت کاربر */}
                     <div className="pt-0.5 mt-auto">
                       <button
                         type="button"
@@ -496,9 +496,9 @@ export default function Managers() {
                       >
                         <span className="flex items-center gap-1.5">
                           <Settings size={13} className="text-teal group-hover:text-white transition-colors" />
-                          مشاهده و عملیات کاربر...
+                          <span>مشاهده و عملیات کاربر</span>
                         </span>
-                        <span className="text-[0.65rem] opacity-70 group-hover:opacity-100 font-medium">پاپ‌آپ ⚙️</span>
+                        <span className="text-[0.7rem] font-bold text-ink/40 group-hover:text-white/90">مشاهده ←</span>
                       </button>
                     </div>
                   </div>
