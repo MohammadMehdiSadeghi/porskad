@@ -23,6 +23,22 @@ export function faDateTime(isoString) {
   }
 }
 
+// ─── فقط تاریخ شمسی (بدون ساعت) ───
+// مثل: ۱۴ مرداد ۱۴۰۴
+export function faDate(isoString) {
+  if (!isoString) return "—";
+  try {
+    const d = new Date(isoString);
+    return new Intl.DateTimeFormat("fa-IR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(d);
+  } catch {
+    return "—";
+  }
+}
+
 export function faRelative(isoString) {
   if (!isoString) return "—";
   const diff = (Date.now() - new Date(isoString).getTime()) / 1000;

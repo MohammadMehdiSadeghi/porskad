@@ -6,12 +6,13 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../components/ui/Toast";
 import { PLANS, PLAN_ORDER, getPlan, upgradeUserSubscription } from "../../lib/plans";
-import { faNum } from "../../lib/utils";
+import { faNum, faDate } from "../../lib/utils";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import StickerCard from "../../components/ui/StickerCard";
 import Modal from "../../components/ui/Modal";
 import SEO from "../../components/ui/SEO";
+import { PlansSkeleton } from "../../components/ui/Skeleton";
 import {
   Check,
   X,
@@ -30,7 +31,7 @@ import {
 } from "lucide-react";
 
 export default function Plans() {
-  const { user, profile, isOwner, updateProfile } = useAuth();
+  const { user, profile, isOwner, updateProfile, loading } = useAuth();
   const { push } = useToast();
 
   const [billingCycle, setBillingCycle] = useState("monthly"); // "monthly" | "yearly"
@@ -41,8 +42,12 @@ export default function Plans() {
   const [studentForm, setStudentForm] = useState({ university: "", studentId: "", field: "", description: "" });
   const [studentSubmitting, setStudentSubmitting] = useState(false);
 
+  if (loading && !profile) {
+    return <PlansSkeleton />;
+  }
+
   const currentPlan = getPlan(profile?.plan);
-  const isGod = Boolean(isOwner() || profile?.is_owner);
+  const isGod = Boolean(typeof isOwner === "function" ? isOwner() : isOwner || profile?.is_owner);
 
   const consumedResponses = profile?.monthly_responses_used ?? 0;
   const maxResponses = isGod || profile?.max_responses_per_month >= 999999 ? "نامحدود ✨" : profile?.max_responses_per_month ?? 100;

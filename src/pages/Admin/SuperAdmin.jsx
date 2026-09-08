@@ -59,6 +59,9 @@ import {
   Edit3,
   Power,
   Layers,
+  UploadCloud,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import {
   QUESTION_TYPES,
@@ -71,6 +74,12 @@ import {
   getEffectiveQuestionType,
 } from "../../lib/questionTypes";
 import { QUESTION_TYPE_ICONS } from "../../lib/questionIcons";
+import {
+  getGlobalFileUploadPolicy,
+  saveGlobalFileUploadPolicy,
+  FILE_TYPE_PRESETS,
+  DEFAULT_FILE_UPLOAD_POLICY,
+} from "../../lib/validators";
 
 
 const TABS = [
@@ -158,6 +167,12 @@ export default function SuperAdmin() {
   const [qEditModal, setQEditModal] = useState(null);
   const [qEditForm, setQEditForm] = useState({ label: "", hint: "", category: "choice", enabled: true, hidden: false });
   const [qSaving, setQSaving] = useState(false);
+
+  // ─── Global File Upload Policy State ───
+  const [filePolicy, setFilePolicy] = useState(() => getGlobalFileUploadPolicy());
+  const [filePolicySaving, setFilePolicySaving] = useState(false);
+  const [customExtInput, setCustomExtInput] = useState("");
+  const [newBlockExtInput, setNewBlockExtInput] = useState("");
 
   // ─── Modals ───
   const [editModal, setEditModal] = useState(null);
@@ -495,6 +510,88 @@ export default function SuperAdmin() {
     await resetQuestionTypesConfig();
     setQConfig({});
     showToast("All question types reset to factory defaults");
+  }
+
+  // ─── Global File Upload Policy Handlers ───
+  async function handleSaveFilePolicy() {
+    setFilePolicySaving(true);
+    try {
+      saveGlobalFileUploadPolicy(filePolicy);
+      try {
+        await supabase
+          .from("system_settings")
+          .upsert(
+            { key: "file_upload_policy", value: filePolicy, updated_at: new Date().toISOString() },
+            { onConflict: "key" }
+          );
+      } catch (dbErr) {
+        console.warn("Could not sync file policy to database:", dbErr);
+      }
+      showToast("Global file upload rules & extension constraints saved successfully");
+    } catch (err) {
+      showToast("Error saving file upload policy: " + err.message, "error");
+    } finally {
+      setFilePolicySaving(false);
+    }
+  }
+
+  async function handleResetFilePolicy() {
+    if (!confirm("Reset all file upload rules & extension constraints to platform defaults?")) return;
+    setFilePolicy(DEFAULT_FILE_UPLOAD_POLICY);
+    saveGlobalFileUploadPolicy(DEFAULT_FILE_UPLOAD_POLICY);
+    showToast("File upload policy reset to defaults");
+  }
+
+  function handleToggleCategory(catKey) {
+    setFilePolicy((prev) => {
+      const allowed = prev.allowedCategories || [];
+      const updated = allowed.includes(catKey)
+        ? allowed.filter((c) => c !== catKey)
+        : [...allowed, catKey];
+      return { ...prev, allowedCategories: updated };
+    });
+  }
+
+  function handleAddCustomExt() {
+    const ext = customExtInput.trim().toLowerCase().replace(/^\./, "");
+    if (!ext) return;
+    if (filePolicy.customAllowedExtensions?.includes(ext)) {
+      showToast(`Extension .${ext} is already allowed`, "info");
+      return;
+    }
+    setFilePolicy((prev) => ({
+      ...prev,
+      customAllowedExtensions: [...(prev.customAllowedExtensions || []), ext],
+    }));
+    setCustomExtInput("");
+  }
+
+  function handleRemoveCustomExt(ext) {
+    setFilePolicy((prev) => ({
+      ...prev,
+      customAllowedExtensions: (prev.customAllowedExtensions || []).filter((e) => e !== ext),
+    }));
+  }
+
+  function handleAddBlockedExt() {
+    const ext = newBlockExtInput.trim().toLowerCase().replace(/^\./, "");
+    if (!ext) return;
+    if (filePolicy.blockedExtensions?.includes(ext)) {
+      showToast(`Extension .${ext} is already blocked`, "info");
+      return;
+    }
+    setFilePolicy((prev) => ({
+      ...prev,
+      blockedExtensions: [...(prev.blockedExtensions || []), ext],
+    }));
+    setNewBlockExtInput("");
+  }
+
+  function handleRemoveBlockedExt(ext) {
+    setFilePolicy((prev) => ({
+      ...prev,
+      blockedExtensions: (prev.blockedExtensions || []).filter((e) => e !== ext),
+    }));
   }
 
   async function handleResetUserQuota(targetUserId, targetUserName) {
@@ -1990,6 +2087,392 @@ export default function SuperAdmin() {
               </div>
             );
           })()}
+
+          {/* ═══════════ Global File Upload Limits & Extension Controls ═══════════ */}
+          <div className="sa-card" style={{ padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                <div style={{ padding: "0.5rem", borderRadius: "0.5rem", backgroundColor: "#0f62fe15", color: "#0f62fe" }}>
+                  <UploadCloud size={20} />
+                </div>
+                <div>
+                  <div className="sa-section-title" style={{ margin: 0, fontSize: "1.05rem" }}>
+                    Global File Upload Limits & Extension Constraints
+                  </div>
+                  <div style={{ fontSize: "0.8rem", color: "#525252" }}>
+                    Configure maximum upload file sizes, permitted file categories, whitelist extensions, and blocked dangerous executables.
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <button
+                  type="button"
+                  className="sa-btn sa-btn-secondary"
+                  onClick={handleResetFilePolicy}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+                  title="Reset file upload rules to defaults"
+                >
+                  <RotateCcw size={14} />
+                  Reset Defaults
+                </button>
+                <button
+                  type="button"
+                  className="sa-btn sa-btn-primary"
+                  onClick={handleSaveFilePolicy}
+                  disabled={filePolicySaving}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+                >
+                  <Save size={14} />
+                  {filePolicySaving ? "Saving Policy..." : "Save Upload Policy"}
+                </button>
+              </div>
+            </div>
+
+            {/* Upper Grid: Size & File Count limits */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: "1rem",
+                padding: "1rem",
+                backgroundColor: "#f4f4f4",
+                borderRadius: "0.5rem",
+                border: "1px solid #e0e0e0",
+              }}
+            >
+              {/* Max Size in MB */}
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#161616", marginBottom: "0.35rem" }}>
+                  Maximum File Size (MB)
+                </label>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                  <input
+                    type="range"
+                    min="1"
+                    max="100"
+                    step="1"
+                    value={filePolicy.maxFileSizeMb || 10}
+                    onChange={(e) => setFilePolicy((prev) => ({ ...prev, maxFileSizeMb: Number(e.target.value) }))}
+                    style={{ flex: 1 }}
+                  />
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                    <input
+                      type="number"
+                      min="1"
+                      max="200"
+                      value={filePolicy.maxFileSizeMb || 10}
+                      onChange={(e) => setFilePolicy((prev) => ({ ...prev, maxFileSizeMb: Math.max(1, Number(e.target.value)) }))}
+                      style={{
+                        width: 70,
+                        padding: "0.35rem 0.5rem",
+                        borderRadius: "0.35rem",
+                        border: "1px solid #8d8d8d",
+                        fontWeight: 700,
+                        textAlign: "center",
+                      }}
+                    />
+                    <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#525252" }}>MB</span>
+                  </div>
+                </div>
+                <div style={{ fontSize: "0.75rem", color: "#6f6f6f", marginTop: "0.35rem" }}>
+                  Current size limit: {filePolicy.maxFileSizeMb || 10} Megabytes ({((filePolicy.maxFileSizeMb || 10) * 1024 * 1024).toLocaleString()} bytes).
+                </div>
+              </div>
+
+              {/* Max Files Count */}
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#161616", marginBottom: "0.35rem" }}>
+                  Max Files Allowed Per Question
+                </label>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                  <input
+                    type="range"
+                    min="1"
+                    max="20"
+                    step="1"
+                    value={filePolicy.maxFilesCount || 5}
+                    onChange={(e) => setFilePolicy((prev) => ({ ...prev, maxFilesCount: Number(e.target.value) }))}
+                    style={{ flex: 1 }}
+                  />
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                    <input
+                      type="number"
+                      min="1"
+                      max="50"
+                      value={filePolicy.maxFilesCount || 5}
+                      onChange={(e) => setFilePolicy((prev) => ({ ...prev, maxFilesCount: Math.max(1, Number(e.target.value)) }))}
+                      style={{
+                        width: 70,
+                        padding: "0.35rem 0.5rem",
+                        borderRadius: "0.35rem",
+                        border: "1px solid #8d8d8d",
+                        fontWeight: 700,
+                        textAlign: "center",
+                      }}
+                    />
+                    <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#525252" }}>files</span>
+                  </div>
+                </div>
+                <div style={{ fontSize: "0.75rem", color: "#6f6f6f", marginTop: "0.35rem" }}>
+                  User can upload up to {filePolicy.maxFilesCount || 5} file(s) per file upload field.
+                </div>
+              </div>
+            </div>
+
+            {/* Allowed Categories Presets */}
+            <div>
+              <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#161616", marginBottom: "0.5rem" }}>
+                Allowed File Categories (Presets)
+              </div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                  gap: "0.75rem",
+                }}
+              >
+                {Object.entries(FILE_TYPE_PRESETS).map(([catKey, preset]) => {
+                  const isChecked = (filePolicy.allowedCategories || []).includes(catKey);
+                  return (
+                    <div
+                      key={catKey}
+                      onClick={() => handleToggleCategory(catKey)}
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: "0.6rem",
+                        padding: "0.75rem",
+                        borderRadius: "0.5rem",
+                        border: `1.5px solid ${isChecked ? "#0f62fe" : "#e0e0e0"}`,
+                        backgroundColor: isChecked ? "#edf5ff" : "#ffffff",
+                        cursor: "pointer",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => {}} // handled by parent div
+                        style={{ marginTop: "0.2rem", cursor: "pointer" }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <span style={{ fontSize: "0.85rem", fontWeight: 700, color: isChecked ? "#0043ce" : "#161616" }}>
+                            {preset.label}
+                          </span>
+                          <span style={{ fontSize: "0.75rem", color: "#6f6f6f", direction: "ltr" }}>
+                            ({preset.extensions.length} ext)
+                          </span>
+                        </div>
+                        <div style={{ fontSize: "0.75rem", color: "#525252", marginTop: "0.2rem" }}>
+                          {preset.description}
+                        </div>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem", marginTop: "0.35rem" }}>
+                          {preset.extensions.slice(0, 6).map((ext) => (
+                            <span
+                              key={ext}
+                              style={{
+                                fontSize: "0.7rem",
+                                padding: "0.1rem 0.35rem",
+                                borderRadius: "0.25rem",
+                                backgroundColor: isChecked ? "#d0e2ff" : "#f4f4f4",
+                                color: isChecked ? "#0043ce" : "#525252",
+                                fontFamily: "monospace",
+                              }}
+                            >
+                              .{ext}
+                            </span>
+                          ))}
+                          {preset.extensions.length > 6 && (
+                            <span style={{ fontSize: "0.7rem", color: "#6f6f6f", alignSelf: "center" }}>
+                              +{preset.extensions.length - 6} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Whitelist: Custom Allowed Extensions */}
+            <div style={{ padding: "0.85rem 1rem", backgroundColor: "#f9f9f9", borderRadius: "0.5rem", border: "1px solid #e0e0e0" }}>
+              <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#161616", marginBottom: "0.35rem" }}>
+                Custom Allowed Extensions (Whitelist)
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "#6f6f6f", marginBottom: "0.6rem" }}>
+                Add custom formats not included in the presets above (e.g. psd, heic, ai, blend, dwg).
+              </div>
+              <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.6rem", flexWrap: "wrap" }}>
+                <input
+                  type="text"
+                  placeholder="e.g. psd, heic, dwg"
+                  value={customExtInput}
+                  onChange={(e) => setCustomExtInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddCustomExt();
+                    }
+                  }}
+                  style={{
+                    padding: "0.4rem 0.6rem",
+                    borderRadius: "0.35rem",
+                    border: "1px solid #8d8d8d",
+                    fontSize: "0.85rem",
+                    width: 220,
+                  }}
+                />
+                <button
+                  type="button"
+                  className="sa-btn sa-btn-secondary"
+                  onClick={handleAddCustomExt}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", padding: "0.4rem 0.75rem" }}
+                >
+                  <Plus size={14} />
+                  Add Extension
+                </button>
+              </div>
+
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
+                {(filePolicy.customAllowedExtensions || []).map((ext) => (
+                  <span
+                    key={ext}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.3rem",
+                      padding: "0.2rem 0.5rem",
+                      borderRadius: "0.35rem",
+                      backgroundColor: "#e8daff",
+                      color: "#6929c4",
+                      fontSize: "0.8rem",
+                      fontFamily: "monospace",
+                      fontWeight: 600,
+                    }}
+                  >
+                    .{ext}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveCustomExt(ext)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#6929c4",
+                        cursor: "pointer",
+                        padding: 0,
+                        fontSize: "0.9rem",
+                        lineHeight: 1,
+                        display: "inline-flex",
+                        alignItems: "center",
+                      }}
+                      title={`Remove .${ext}`}
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+                {(filePolicy.customAllowedExtensions || []).length === 0 && (
+                  <span style={{ fontSize: "0.75rem", color: "#8d8d8d", fontStyle: "italic" }}>
+                    No custom extensions added yet. Preset categories will be used.
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Blacklist: Blocked & Dangerous Extensions */}
+            <div
+              style={{
+                padding: "0.85rem 1rem",
+                backgroundColor: "#fff1f1",
+                borderRadius: "0.5rem",
+                border: "1px solid #ffd7d9",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "0.25rem" }}>
+                <AlertTriangle size={15} color="#da1e28" />
+                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#da1e28" }}>
+                  Blocked & Dangerous Executables (Strict Blacklist)
+                </span>
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "#752227", marginBottom: "0.6rem" }}>
+                For security, files with these extensions are strictly rejected by the server and client validators even if their MIME type mimics safe documents.
+              </div>
+
+              <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.6rem", flexWrap: "wrap" }}>
+                <input
+                  type="text"
+                  placeholder="e.g. vbs, reg, com"
+                  value={newBlockExtInput}
+                  onChange={(e) => setNewBlockExtInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddBlockedExt();
+                    }
+                  }}
+                  style={{
+                    padding: "0.4rem 0.6rem",
+                    borderRadius: "0.35rem",
+                    border: "1px solid #ff8389",
+                    fontSize: "0.85rem",
+                    width: 220,
+                  }}
+                />
+                <button
+                  type="button"
+                  className="sa-btn sa-btn-danger"
+                  onClick={handleAddBlockedExt}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", padding: "0.4rem 0.75rem" }}
+                >
+                  <Plus size={14} />
+                  Block Extension
+                </button>
+              </div>
+
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
+                {(filePolicy.blockedExtensions || []).map((ext) => (
+                  <span
+                    key={ext}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.3rem",
+                      padding: "0.2rem 0.5rem",
+                      borderRadius: "0.35rem",
+                      backgroundColor: "#ffd7d9",
+                      color: "#a2191f",
+                      fontSize: "0.8rem",
+                      fontFamily: "monospace",
+                      fontWeight: 700,
+                    }}
+                  >
+                    .{ext}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveBlockedExt(ext)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#a2191f",
+                        cursor: "pointer",
+                        padding: 0,
+                        fontSize: "0.9rem",
+                        lineHeight: 1,
+                        display: "inline-flex",
+                        alignItems: "center",
+                      }}
+                      title={`Unblock .${ext}`}
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

@@ -266,12 +266,57 @@ export function validateAnswer(question, value) {
 // ══════════════════════════════════════════════════════════════
 // تنظیمات و اعتبارسنجی آپلود فایل
 // ══════════════════════════════════════════════════════════════
+export const DEFAULT_FILE_UPLOAD_POLICY = {
+  max_file_size_mb: 50,
+  allowed_categories: {
+    image: true,
+    document: true,
+    archive: true,
+    media: true,
+    custom: true,
+  },
+  disallowed_extensions: ["exe", "bat", "cmd", "sh", "php", "phtml", "vbs", "msi", "dll", "scr", "jar", "com"],
+  custom_allowed_extensions: "",
+};
+
+const FILE_POLICY_STORAGE_KEY = "porskad_file_upload_policy";
+
+export function getGlobalFileUploadPolicy() {
+  try {
+    if (typeof localStorage !== "undefined") {
+      const raw = localStorage.getItem(FILE_POLICY_STORAGE_KEY);
+      if (raw) {
+        return { ...DEFAULT_FILE_UPLOAD_POLICY, ...JSON.parse(raw) };
+      }
+    }
+  } catch (err) {
+    console.error("Error reading global file upload policy:", err);
+  }
+  return { ...DEFAULT_FILE_UPLOAD_POLICY };
+}
+
+export async function saveGlobalFileUploadPolicy(policy) {
+  try {
+    const merged = { ...DEFAULT_FILE_UPLOAD_POLICY, ...policy };
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(FILE_POLICY_STORAGE_KEY, JSON.stringify(merged));
+    }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("porskad:file_policy_updated", { detail: merged }));
+    }
+    return merged;
+  } catch (err) {
+    console.error("Error saving global file upload policy:", err);
+    throw err;
+  }
+}
+
 export const FILE_TYPE_PRESETS = {
   all: { label: "همه فرمت‌ها (آزاد)", extensions: [] },
-  image: { label: "تصاویر (JPG, PNG, WebP, GIF, SVG)", extensions: ["jpg", "jpeg", "png", "webp", "gif", "svg", "bmp"] },
-  document: { label: "اسناد و آفیس (PDF, Word, Excel, PowerPoint, Text)", extensions: ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "rtf", "csv"] },
-  archive: { label: "فایل‌های فشرده (ZIP, RAR, 7Z, TAR)", extensions: ["zip", "rar", "7z", "tar", "gz"] },
-  media: { label: "صوتی و تصویری (MP3, MP4, WAV, MOV)", extensions: ["mp3", "wav", "ogg", "mp4", "mkv", "mov", "avi", "webm"] },
+  image: { label: "تصاویر (JPG, PNG, WebP, GIF, SVG, BMP, HEIC)", extensions: ["jpg", "jpeg", "png", "webp", "gif", "svg", "bmp", "heic"] },
+  document: { label: "اسناد و آفیس (PDF, Word, Excel, PowerPoint, Text, CSV)", extensions: ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "rtf", "csv"] },
+  archive: { label: "فایل‌های فشرده (ZIP, RAR, 7Z, TAR, GZ)", extensions: ["zip", "rar", "7z", "tar", "gz"] },
+  media: { label: "صوتی و تصویری (MP3, MP4, WAV, MOV, MKV, WebM)", extensions: ["mp3", "wav", "ogg", "mp4", "mkv", "mov", "avi", "webm", "aac", "m4a"] },
   custom: { label: "پسوندهای سفارشی و دلخواه", extensions: [] },
 };
 
@@ -301,29 +346,51 @@ export function getAllowedExtensions(question) {
 /**
  * اعتبارسنجی فایل آپلود شده از نظر حجم و پسوند مجاز
  */
-export function validateUploadedFile(file, question) {
+export function validateUploadedFile(file, question = {}) {
   if (!file) {
     return { isValid: false, error: "فایلی انتخاب نشده است." };
   }
 
   const fileName = file.name || "";
   const fileSize = file.size || 0;
-  const maxMb = Number(question.validation?.max_file_size_mb || question.max_file_size_mb || 10);
-  const maxBytes = maxMb * 1024 * 1024;
+  const ext = fileName.split(".").pop()?.toLowerCase() || "";
+
+  // ۰. بررسی سیاست‌های امنیتی سراسری سوپر ادمین (Global Super Admin Policy)
+  const globalPolicy = getGlobalFileUploadPolicy();
+  const disallowed = globalPolicy.disallowed_extensions || DEFAULT_FILE_UPLOAD_POLICY.disallowed_extensions;
+  if (disallowed.includes(ext)) {
+    return {
+      isValid: false,
+      error: `بارگذاری فایل‌های اجرایی و با پسوند .${ext} به دلایل امنیتی مسدود است.`,
+    };
+  }
+
+  const globalMaxMb = Number(globalPolicy.max_file_size_mb || 50);
+  const questionMaxMb = Number(question.validation?.max_file_size_mb || question.max_file_size_mb || 10);
+  const effectiveMaxMb = Math.min(globalMaxMb, questionMaxMb);
+  const maxBytes = effectiveMaxMb * 1024 * 1024;
 
   // ۱. بررسی حجم فایل
   if (fileSize > maxBytes) {
     const sizeInMb = (fileSize / (1024 * 1024)).toFixed(1);
     return {
       isValid: false,
-      error: `حجم فایل انتخابی (${sizeInMb} مگابایت) بیشتر از سقف مجاز (${maxMb} مگابایت) است.`,
+      error: `حجم فایل انتخابی (${sizeInMb} مگابایت) بیشتر از سقف مجاز (${effectiveMaxMb} مگابایت) است.`,
     };
   }
 
-  // ۲. بررسی پسوند فایل
+  // ۲. بررسی دسته‌بندی مجاز سوپر ادمین
+  const allowedType = question.validation?.allowed_file_types || question.allowed_file_types || "all";
+  if (allowedType !== "all" && globalPolicy.allowed_categories && globalPolicy.allowed_categories[allowedType] === false) {
+    return {
+      isValid: false,
+      error: `آپلود دسته فایل ${FILE_TYPE_PRESETS[allowedType]?.label || allowedType} توسط مدیریت سیستم غیرفعال شده است.`,
+    };
+  }
+
+  // ۳. بررسی پسوند سوال
   const allowedExtensions = getAllowedExtensions(question);
   if (allowedExtensions.length > 0) {
-    const ext = fileName.split(".").pop()?.toLowerCase() || "";
     if (!ext || !allowedExtensions.includes(ext)) {
       return {
         isValid: false,
