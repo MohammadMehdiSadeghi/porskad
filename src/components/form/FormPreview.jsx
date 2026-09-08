@@ -253,8 +253,10 @@ export default function FormPreview({ form, questions }) {
     window.matchMedia("(prefers-color-scheme: dark)").matches
   );
 
+  const previewTheme = isDark ? "dark" : "light";
+
   return (
-    <div className="flex flex-col items-center">
+    <div className="form-preview-container flex flex-col items-center w-full" data-preview-theme={previewTheme}>
       {/* هدر */}
       <div className={`w-full text-center py-1.5 rounded-t-2xl transition-colors ${
         isDark ? "bg-slate-900 border-b border-slate-700 text-teal-400" : "bg-navy text-white"
@@ -271,7 +273,7 @@ export default function FormPreview({ form, questions }) {
 
       {/* بدنه */}
       <div className={`w-full border-x-2 border-b-2 rounded-b-2xl overflow-hidden transition-colors ${
-        isDark ? "bg-[#0F172A] border-slate-700" : "bg-bg-mint/40 border-navy/20"
+        isDark ? "bg-[#0F172A] border-slate-700" : "bg-[#F2FAF9] border-navy/20"
       }`}>
         {isRegistration ? (
           <RegistrationPreview form={form} questions={questions} isDark={isDark} />

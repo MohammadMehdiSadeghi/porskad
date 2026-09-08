@@ -508,13 +508,13 @@ export default function Support() {
       {/* هدر صفحه */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-3xl font-black text-navy flex items-center gap-2">
+          <h1 className="text-xl sm:text-3xl font-black text-navy dark:text-white flex items-center gap-2">
             <span>{isOwner() ? "مرکز تیکت‌های پشتیبانی و کاربران" : "پشتیبانی و ارتباط با ما"}</span>
             {isOwner() && adminCounts.open > 0 && (
               <span className="w-3 h-3 rounded-full bg-orange animate-ping" title="تیکت در انتظار پاسخ" />
             )}
           </h1>
-          <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-1">
+          <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 mt-1">
             {isOwner()
               ? `نمایش بر اساس کاربر • ${faNum(adminCounts.all)} پیام فعال (${faNum(adminCounts.open)} در انتظار پاسخ)`
               : "سوالی دارید یا به سهمیه و امکانات بیشتری نیاز دارید؟ تیکت بفرستید."}
@@ -526,7 +526,6 @@ export default function Support() {
             variant="teal"
             size="sm"
             onClick={() => setNewTicketModal(true)}
-            rotate="-rotate-[1deg]"
           >
             + ارسال تیکت جدید
           </Button>
@@ -535,7 +534,7 @@ export default function Support() {
 
       {/* بخش راه‌های ارتباطی سریع برای کاربران عادی */}
       {!isOwner() && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 -rotate-[0.3deg]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <StickerCard theme="teal">
             <div className="p-4 sm:p-5 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -543,15 +542,15 @@ export default function Support() {
                   <Bot size={20} />
                 </span>
                 <div>
-                  <h3 className="font-black text-navy text-sm sm:text-base">ارتباط در تلگرام</h3>
-                  <p className="text-xs font-semibold text-ink-subtle mt-0.5">پاسخ‌دهی سریع در ساعات کاری</p>
+                  <h3 className="font-black text-navy dark:text-white text-sm sm:text-base">ارتباط در تلگرام</h3>
+                  <p className="text-xs font-semibold text-ink-subtle dark:text-slate-400 mt-0.5">پاسخ‌دهی سریع در ساعات کاری</p>
                 </div>
               </div>
               <a
                 href={`https://t.me/${telegramSupportId || "porskad_support"}`}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-1.5 bg-white border-2 border-teal rounded-pill-sm px-3 py-1.5 text-xs font-bold text-teal-text hover:bg-teal hover:text-white transition-all"
+                className="flex items-center gap-1.5 bg-white dark:bg-slate-800 border-2 border-teal rounded-pill-sm px-3 py-1.5 text-xs font-bold text-teal-text dark:text-teal-300 hover:bg-teal hover:text-white transition-all"
               >
                 ارسال پیام <ExternalLink size={12} />
               </a>
@@ -565,8 +564,8 @@ export default function Support() {
                   <Headphones size={20} />
                 </span>
                 <div>
-                  <h3 className="font-black text-navy text-sm sm:text-base">افزایش سهمیه فرم‌ها</h3>
-                  <p className="text-xs font-semibold text-ink-subtle mt-0.5">سفارشی‌سازی سقف فرم‌ها و پاسخ‌ها</p>
+                  <h3 className="font-black text-navy dark:text-white text-sm sm:text-base">افزایش سهمیه فرم‌ها</h3>
+                  <p className="text-xs font-semibold text-ink-subtle dark:text-slate-400 mt-0.5">سفارشی‌سازی سقف فرم‌ها و پاسخ‌ها</p>
                 </div>
               </div>
               <button
@@ -576,7 +575,7 @@ export default function Support() {
                   setMessage("سلام، تمایل دارم سقف تعداد فرم‌ها یا پاسخ‌های حسابم افزایش پیدا کند.");
                   setNewTicketModal(true);
                 }}
-                className="bg-white border-2 border-orange rounded-pill-sm px-3 py-1.5 text-xs font-bold text-orange hover:bg-orange hover:text-white transition-all cursor-pointer"
+                className="bg-white dark:bg-slate-800 border-2 border-orange rounded-pill-sm px-3 py-1.5 text-xs font-bold text-orange dark:text-orange-400 hover:bg-orange hover:text-white transition-all cursor-pointer"
               >
                 ثبت درخواست
               </button>
@@ -589,11 +588,11 @@ export default function Support() {
       {isOwner() && (
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           {/* تب‌های فیلتر */}
-          <div className="flex items-center gap-1 bg-white border-2 border-ink/15 rounded-pill-md p-1 shadow-sm overflow-x-auto scrollbar-none max-w-full">
+          <div className="flex items-center gap-1 bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 rounded-pill-md p-1 shadow-sm overflow-x-auto scrollbar-none max-w-full">
             <button
               onClick={() => setAdminFilter("all")}
               className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors ${
-                adminFilter === "all" ? "bg-navy text-white" : "text-ink-subtle hover:text-ink"
+                adminFilter === "all" ? "bg-navy text-white dark:bg-teal dark:text-white" : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white"
               }`}
             >
               همه فعال‌ها ({faNum(adminCounts.all)})
@@ -601,7 +600,7 @@ export default function Support() {
             <button
               onClick={() => setAdminFilter("open")}
               className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors ${
-                adminFilter === "open" ? "bg-orange text-white" : "text-ink-subtle hover:text-ink"
+                adminFilter === "open" ? "bg-orange text-white" : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white"
               }`}
             >
               در انتظار پاسخ ({faNum(adminCounts.open)})
@@ -609,7 +608,7 @@ export default function Support() {
             <button
               onClick={() => setAdminFilter("answered")}
               className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors ${
-                adminFilter === "answered" ? "bg-teal text-white" : "text-ink-subtle hover:text-ink"
+                adminFilter === "answered" ? "bg-teal text-white" : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white"
               }`}
             >
               پاسخ داده شده ({faNum(adminCounts.answered)})
@@ -617,7 +616,7 @@ export default function Support() {
             <button
               onClick={() => setAdminFilter("closed")}
               className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors ${
-                adminFilter === "closed" ? "bg-slate-700 text-white" : "text-ink-subtle hover:text-ink"
+                adminFilter === "closed" ? "bg-slate-700 text-white dark:bg-slate-600" : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white"
               }`}
             >
               بسته شده ({faNum(adminCounts.closed)})
@@ -625,7 +624,7 @@ export default function Support() {
             <button
               onClick={() => setAdminFilter("archived")}
               className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors flex items-center gap-1 ${
-                adminFilter === "archived" ? "bg-purple-700 text-white" : "text-ink-subtle hover:text-ink"
+                adminFilter === "archived" ? "bg-purple-700 text-white" : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white"
               }`}
             >
               <Archive size={12} />
@@ -641,13 +640,13 @@ export default function Support() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="جستجو در کاربر یا پیام..."
-                className="w-full bg-white border-2 border-ink/20 focus:border-teal rounded-pill-md pl-8 pr-8 py-1.5 text-xs font-semibold text-ink focus:outline-none transition-all"
+                className="w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 focus:border-teal rounded-pill-md pl-8 pr-8 py-1.5 text-xs font-semibold text-ink dark:text-slate-100 focus:outline-none transition-all"
               />
-              <Search size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink/40 pointer-events-none" />
+              <Search size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink/40 dark:text-slate-500 pointer-events-none" />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink"
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink/40 dark:text-slate-400 hover:text-ink dark:hover:text-white"
                 >
                   <X size={12} />
                 </button>
@@ -655,18 +654,18 @@ export default function Support() {
             </div>
 
             {userGroups.length > 0 && (
-              <div className="flex items-center gap-1 bg-white border-2 border-ink/15 rounded-pill-md p-0.5">
+              <div className="flex items-center gap-1 bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 rounded-pill-md p-0.5">
                 <button
                   onClick={() => expandAllGroups(userGroups)}
-                  className="px-2.5 py-1 text-xs font-bold text-ink-subtle hover:text-navy rounded-pill-sm hover:bg-bg-neutral transition-colors"
+                  className="px-2.5 py-1 text-xs font-bold text-ink-subtle dark:text-slate-400 hover:text-navy dark:hover:text-white rounded-pill-sm hover:bg-bg-neutral dark:hover:bg-slate-700 transition-colors"
                   title="باز کردن تیکت‌های تمام کاربران"
                 >
                   باز کردن همه
                 </button>
-                <span className="text-ink/20">|</span>
+                <span className="text-ink/20 dark:text-slate-600">|</span>
                 <button
                   onClick={collapseAllGroups}
-                  className="px-2.5 py-1 text-xs font-bold text-ink-subtle hover:text-navy rounded-pill-sm hover:bg-bg-neutral transition-colors"
+                  className="px-2.5 py-1 text-xs font-bold text-ink-subtle dark:text-slate-400 hover:text-navy dark:hover:text-white rounded-pill-sm hover:bg-bg-neutral dark:hover:bg-slate-700 transition-colors"
                   title="بستن همه"
                 >
                   بستن همه
@@ -679,11 +678,11 @@ export default function Support() {
 
       {/* ─── تب‌های فیلتر برای کاربر عادی (فعال / آرشیو) ─── */}
       {!isOwner() && tickets.length > 0 && (
-        <div className="flex items-center gap-1 bg-white border-2 border-ink/15 rounded-pill-md p-1 w-fit shadow-sm">
+        <div className="flex items-center gap-1 bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 rounded-pill-md p-1 w-fit shadow-sm">
           <button
             onClick={() => setUserFilter("active")}
             className={`px-3.5 py-1 text-xs font-bold rounded-pill-sm transition-colors ${
-              userFilter === "active" ? "bg-navy text-white" : "text-ink-subtle hover:text-ink"
+              userFilter === "active" ? "bg-navy text-white dark:bg-teal dark:text-white" : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white"
             }`}
           >
             تیکت‌های من ({faNum(userCounts.active)})
@@ -691,7 +690,7 @@ export default function Support() {
           <button
             onClick={() => setUserFilter("archived")}
             className={`px-3.5 py-1 text-xs font-bold rounded-pill-sm transition-colors flex items-center gap-1 ${
-              userFilter === "archived" ? "bg-purple-700 text-white" : "text-ink-subtle hover:text-ink"
+              userFilter === "archived" ? "bg-purple-700 text-white" : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white"
             }`}
           >
             <Archive size={12} />
@@ -724,10 +723,10 @@ export default function Support() {
               return (
                 <div
                   key={group.userId}
-                  className={`bg-white border-2 transition-all duration-200 rounded-2xl p-4 sm:p-5 shadow-sm ${
+                  className={`bg-white dark:bg-slate-900 border-2 transition-all duration-200 rounded-2xl p-4 sm:p-5 shadow-sm ${
                     group.openCount > 0
-                      ? "border-orange/60 hover:border-orange bg-orange/5"
-                      : "border-ink/15 hover:border-teal"
+                      ? "border-orange/60 hover:border-orange bg-orange/5 dark:bg-orange-950/20"
+                      : "border-ink/15 dark:border-slate-800 hover:border-teal"
                   }`}
                 >
                   {/* نوار بالایی کاربر — کلیک جهت باز و بسته شدن */}
@@ -743,7 +742,7 @@ export default function Support() {
                         className={`w-11 h-11 shrink-0 rounded-2xl flex items-center justify-center font-black text-base shadow-sm ${
                           group.openCount > 0
                             ? "bg-orange text-white ring-2 ring-orange/30 animate-pulse"
-                            : "bg-navy text-white"
+                            : "bg-navy text-white dark:bg-slate-800 dark:border dark:border-slate-700"
                         }`}
                       >
                         {initialLetter}
@@ -751,25 +750,25 @@ export default function Support() {
 
                       <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-black text-navy text-sm sm:text-base truncate">
+                          <span className="font-black text-navy dark:text-white text-sm sm:text-base truncate">
                             {group.profile.full_name || "کاربر بدون نام"}
                           </span>
                           {group.profile.is_owner && (
-                            <span className="text-xs font-bold bg-amber-100 text-amber-800 rounded-pill-sm px-2 py-0.5 shrink-0 flex items-center gap-1">
+                            <span className="text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 rounded-pill-sm px-2 py-0.5 shrink-0 flex items-center gap-1">
                               <Crown size={11} />
                               <span>مدیر کل</span>
                             </span>
                           )}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-ink-subtle mt-0.5">
+                        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-ink-subtle dark:text-slate-400 mt-0.5">
                           <span dir="ltr" className="truncate">{group.profile.email}</span>
                           {group.profile.phone && (
                             <span className="text-teal font-mono font-bold flex items-center gap-1" dir="ltr">
                               <Phone size={11} /> {group.profile.phone}
                             </span>
                           )}
-                          <span className="text-xs text-ink/40">• آخرین فعالیت: {faRelative(group.latestDate)}</span>
+                          <span className="text-xs text-ink/40 dark:text-slate-500">• آخرین فعالیت: {faRelative(group.latestDate)}</span>
                         </div>
                       </div>
                     </div>
@@ -801,8 +800,8 @@ export default function Support() {
                       </Badge>
 
                       <span
-                        className={`w-8 h-8 rounded-xl bg-ink/5 hover:bg-ink/10 flex items-center justify-center text-navy transition-transform duration-200 ${
-                          isExpanded ? "rotate-180 bg-teal/15 text-teal" : ""
+                        className={`w-8 h-8 rounded-xl bg-ink/5 dark:bg-slate-800 hover:bg-ink/10 dark:hover:bg-slate-700 flex items-center justify-center text-navy dark:text-slate-300 transition-transform duration-200 ${
+                          isExpanded ? "rotate-180 bg-teal/15 text-teal dark:bg-teal-900/40 dark:text-teal-400" : ""
                         }`}
                         aria-label="باز و بستن تیکت‌ها"
                       >
@@ -813,7 +812,7 @@ export default function Support() {
 
                   {/* ─── تیکت‌های این کاربر (با کلیک باز می‌شود) ─── */}
                   {isExpanded && (
-                    <div className="mt-4 pt-4 border-t-2 border-dashed border-ink/10 flex flex-col gap-4">
+                    <div className="mt-4 pt-4 border-t-2 border-dashed border-ink/10 dark:border-slate-800 flex flex-col gap-4">
                       {group.tickets.map((t) => {
                         const isClosed = t.status === "closed";
                         const isArchived = isArchivedByAdmin(t);
@@ -823,20 +822,20 @@ export default function Support() {
                             key={t.id}
                             className={`rounded-xl p-4 sm:p-5 border-2 transition-all duration-200 ${
                               isArchived
-                                ? "bg-purple-50/40 border-purple-200"
+                                ? "bg-purple-50/40 dark:bg-purple-950/25 border-purple-200 dark:border-purple-800/40"
                                 : isClosed
-                                ? "bg-slate-50 border-slate-200 opacity-90"
+                                ? "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 opacity-90"
                                 : t.status === "open"
-                                ? "bg-amber-50/50 border-amber-300"
-                                : "bg-white border-ink/15"
+                                ? "bg-amber-50/50 dark:bg-amber-950/25 border-amber-300 dark:border-amber-700/50"
+                                : "bg-white dark:bg-slate-800/90 border-ink/15 dark:border-slate-700"
                             }`}
                           >
                             <div className="flex flex-col gap-3">
                               {/* سربرگ تیکت */}
-                              <div className="flex flex-wrap items-start justify-between gap-2 border-b border-ink/10 pb-3">
+                              <div className="flex flex-wrap items-start justify-between gap-2 border-b border-ink/10 dark:border-slate-700 pb-3">
                                 <div className="flex flex-col gap-1">
                                   <div className="flex items-center gap-2 flex-wrap">
-                                    <h4 className="font-black text-navy text-base">{t.subject}</h4>
+                                    <h4 className="font-black text-navy dark:text-white text-base">{t.subject}</h4>
                                     <Badge
                                       color={
                                         isClosed
@@ -857,37 +856,37 @@ export default function Support() {
                                     )}
                                   </div>
                                 </div>
-                                <span className="text-xs font-semibold text-ink-subtle" title={faDateTime(t.created_at)}>
+                                <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400" title={faDateTime(t.created_at)}>
                                   {faRelative(t.created_at)}
                                 </span>
                               </div>
 
                               {/* متن پیام کاربر */}
-                              <p className="text-sm font-semibold text-ink leading-7 whitespace-pre-wrap">
+                              <p className="text-sm font-semibold text-ink dark:text-slate-200 leading-7 whitespace-pre-wrap">
                                 {t.message}
                               </p>
 
                               {/* پاسخ مدیر در صورت وجود */}
                               {t.admin_reply && (
-                                <div className="mt-2 p-4 rounded-xl bg-ecosystem-light/80 border-2 border-teal/40 flex flex-col gap-2">
+                                <div className="mt-2 p-4 rounded-xl bg-ecosystem-light/80 dark:bg-teal-950/40 border-2 border-teal/40 dark:border-teal-700/50 flex flex-col gap-2">
                                   <div className="flex items-center justify-between">
-                                    <span className="text-xs font-black text-teal-text flex items-center gap-1.5">
+                                    <span className="text-xs font-black text-teal-text dark:text-teal-400 flex items-center gap-1.5">
                                       <CheckCircle2 size={14} /> پاسخ پشتیبانی پرس‌کاد
                                     </span>
                                     {t.replied_at && (
-                                      <span className="text-xs font-medium text-ink-subtle">
+                                      <span className="text-xs font-medium text-ink-subtle dark:text-slate-400">
                                         {faRelative(t.replied_at)}
                                       </span>
                                     )}
                                   </div>
-                                  <p className="text-sm font-semibold text-navy leading-7 whitespace-pre-wrap">
+                                  <p className="text-sm font-semibold text-navy dark:text-teal-100 leading-7 whitespace-pre-wrap">
                                     {t.admin_reply}
                                   </p>
                                 </div>
                               )}
 
                               {/* نوار ابزار اقدامات برای مدیر */}
-                              <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-ink/10 mt-1">
+                              <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-ink/10 dark:border-slate-700 mt-1">
                                 {/* بستن / بازگشایی تیکت */}
                                 <Button
                                   variant="ghost"
@@ -895,8 +894,8 @@ export default function Support() {
                                   onClick={() => handleToggleStatus(t)}
                                   className={`text-xs ${
                                     isClosed
-                                      ? "text-teal hover:bg-teal/10"
-                                      : "text-slate-600 hover:bg-slate-100"
+                                      ? "text-teal dark:text-teal-400 hover:bg-teal/10"
+                                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
                                   }`}
                                 >
                                   {isClosed ? (
@@ -915,7 +914,7 @@ export default function Support() {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleToggleAdminArchive(t)}
-                                  className="text-xs text-purple-700 hover:bg-purple-100/60"
+                                  className="text-xs text-purple-700 dark:text-purple-400 hover:bg-purple-100/60 dark:hover:bg-purple-900/40"
                                 >
                                   {isArchived ? (
                                     <>
@@ -933,7 +932,7 @@ export default function Support() {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => setDeletingTicket(t)}
-                                  className="text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                                  className="text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-700"
                                 >
                                   <Trash2 size={14} className="ml-1" /> حذف تیکت
                                 </Button>
@@ -984,12 +983,12 @@ export default function Support() {
           />
         ) : (
           <div className="flex flex-col gap-4">
-            {userFilteredTickets.map((t, idx) => {
+            {userFilteredTickets.map((t) => {
               const isClosed = t.status === "closed";
               const isArchived = isArchivedByUser(t);
 
               return (
-                <div key={t.id} className={idx % 2 ? "rotate-[0.3deg]" : "-rotate-[0.3deg]"}>
+                <div key={t.id}>
                   <StickerCard
                     theme={
                       isArchived
@@ -1003,9 +1002,9 @@ export default function Support() {
                   >
                     <div className="p-5 flex flex-col gap-3">
                       {/* سربرگ تیکت کاربر */}
-                      <div className="flex flex-wrap items-start justify-between gap-2 border-b border-ink/10 pb-3">
+                      <div className="flex flex-wrap items-start justify-between gap-2 border-b border-ink/10 dark:border-slate-700 pb-3">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-black text-navy text-base">{t.subject}</h3>
+                          <h3 className="font-black text-navy dark:text-white text-base">{t.subject}</h3>
                           <Badge
                             color={
                               isClosed
@@ -1023,30 +1022,30 @@ export default function Support() {
                           </Badge>
                           {isArchived && <Badge color="purple">آرشیو شده</Badge>}
                         </div>
-                        <span className="text-xs font-semibold text-ink-subtle" title={faDateTime(t.created_at)}>
+                        <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400" title={faDateTime(t.created_at)}>
                           {faRelative(t.created_at)}
                         </span>
                       </div>
 
                       {/* متن پیام */}
-                      <p className="text-sm font-semibold text-ink leading-7 whitespace-pre-wrap">
+                      <p className="text-sm font-semibold text-ink dark:text-slate-200 leading-7 whitespace-pre-wrap">
                         {t.message}
                       </p>
 
                       {/* پاسخ پشتیبانی */}
                       {t.admin_reply && (
-                        <div className="mt-2 p-4 rounded-xl bg-ecosystem-light/80 border-2 border-teal/40 flex flex-col gap-2">
+                        <div className="mt-2 p-4 rounded-xl bg-ecosystem-light/80 dark:bg-teal-950/40 border-2 border-teal/40 dark:border-teal-700/50 flex flex-col gap-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-black text-teal-text flex items-center gap-1.5">
+                            <span className="text-xs font-black text-teal-text dark:text-teal-400 flex items-center gap-1.5">
                               <CheckCircle2 size={14} /> پاسخ پشتیبانی پرس‌کاد
                             </span>
                             {t.replied_at && (
-                              <span className="text-xs font-medium text-ink-subtle">
+                              <span className="text-xs font-medium text-ink-subtle dark:text-slate-400">
                                 {faRelative(t.replied_at)}
                               </span>
                             )}
                           </div>
-                          <p className="text-sm font-semibold text-navy leading-7 whitespace-pre-wrap">
+                          <p className="text-sm font-semibold text-navy dark:text-teal-100 leading-7 whitespace-pre-wrap">
                             {t.admin_reply}
                           </p>
                         </div>
@@ -1054,8 +1053,8 @@ export default function Support() {
 
                       {/* بخش وضعیت بسته شده با امکان بازگشایی و ادامه گفتگو توسط کاربر */}
                       {isClosed && (
-                        <div className="mt-1 p-3 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                          <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+                        <div className="mt-1 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                          <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
                             <Lock size={15} className="shrink-0 text-slate-500" />
                             <span>این تیکت بسته شده است. در صورت نیاز به ادامه، می‌توانید همین تیکت را مجدداً بازگشایی کنید.</span>
                           </div>
@@ -1074,12 +1073,12 @@ export default function Support() {
                       )}
 
                       {/* دکمه‌های آرشیو و حذف برای کاربر */}
-                      <div className="flex items-center justify-end gap-2 pt-2 border-t border-ink/10">
+                      <div className="flex items-center justify-end gap-2 pt-2 border-t border-ink/10 dark:border-slate-700">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => setDeletingTicket(t)}
-                          className="text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                          className="text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-700"
                         >
                           <Trash2 size={13} className="ml-1" /> حذف
                         </Button>
@@ -1087,7 +1086,7 @@ export default function Support() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleToggleUserArchive(t)}
-                          className="text-xs text-purple-700 hover:bg-purple-50"
+                          className="text-xs text-purple-700 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40"
                         >
                           {isArchived ? (
                             <>
@@ -1117,26 +1116,26 @@ export default function Support() {
       >
         <form onSubmit={handleCreateTicket} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-extrabold text-navy">موضوع تیکت</span>
+            <span className="text-sm font-extrabold text-navy dark:text-slate-200">موضوع تیکت</span>
             <input
               type="text"
               required
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="مثلاً: سوال در مورد خروجی اکسل یا افزایش سهمیه"
-              className="w-full bg-white border-2 border-ink/20 focus:border-teal rounded-pill-md px-3.5 py-2 text-sm font-semibold text-ink focus:outline-none"
+              className="w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 focus:border-teal rounded-pill-md px-3.5 py-2 text-sm font-semibold text-ink dark:text-slate-100 focus:outline-none"
             />
           </label>
 
           <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-extrabold text-navy">متن پیام</span>
+            <span className="text-sm font-extrabold text-navy dark:text-slate-200">متن پیام</span>
             <textarea
               rows={4}
               required
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="توضیحات خود را کامل بنویسید..."
-              className="w-full bg-white border-2 border-ink/20 focus:border-teal rounded-pill-md px-3.5 py-2.5 text-sm font-semibold text-ink focus:outline-none resize-y"
+              className="w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 focus:border-teal rounded-pill-md px-3.5 py-2.5 text-sm font-semibold text-ink dark:text-slate-100 focus:outline-none resize-y"
             />
           </label>
 
@@ -1169,27 +1168,27 @@ export default function Support() {
         title={`پاسخ به تیکت: ${replyTicket?.subject || ""}`}
       >
         <form onSubmit={handleSendReply} className="flex flex-col gap-4">
-          <div className="bg-bg-lavender/50 p-3 rounded-lg text-xs font-semibold text-ink leading-5 max-h-36 overflow-y-auto border border-ink/10">
-            <span className="font-black block text-navy mb-1">
+          <div className="bg-bg-lavender/50 dark:bg-slate-800/90 p-3 rounded-lg text-xs font-semibold text-ink dark:text-slate-200 leading-5 max-h-36 overflow-y-auto border border-ink/10 dark:border-slate-700">
+            <span className="font-black block text-navy dark:text-teal-300 mb-1">
               پیام کاربر ({replyTicket?.profiles?.full_name || replyTicket?.profiles?.email || "کاربر"}):
             </span>
             {replyTicket?.message}
           </div>
 
           <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-extrabold text-navy">متن پاسخ شما</span>
+            <span className="text-sm font-extrabold text-navy dark:text-slate-200">متن پاسخ شما</span>
             <textarea
               rows={5}
               required
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               placeholder="پاسخ خود را برای کاربر بنویسید..."
-              className="w-full bg-white border-2 border-ink/20 focus:border-teal rounded-pill-md px-3.5 py-2.5 text-sm font-semibold text-ink focus:outline-none resize-y"
+              className="w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 focus:border-teal rounded-pill-md px-3.5 py-2.5 text-sm font-semibold text-ink dark:text-slate-100 focus:outline-none resize-y"
             />
           </label>
 
           {/* گزینه بستن همزمان تیکت */}
-          <label className="flex items-center gap-2 text-xs font-bold text-navy cursor-pointer select-none bg-slate-50 p-2.5 rounded-xl border border-ink/10">
+          <label className="flex items-center gap-2 text-xs font-bold text-navy dark:text-slate-200 cursor-pointer select-none bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl border border-ink/10 dark:border-slate-700">
             <input
               type="checkbox"
               checked={closeOnReply}
@@ -1197,7 +1196,7 @@ export default function Support() {
               className="w-4 h-4 rounded text-teal focus:ring-teal cursor-pointer"
             />
             <span className="flex items-center gap-1.5">
-              <Lock size={13} className="text-slate-600" /> ارسال پاسخ و بستن تیکت (Close Ticket)
+              <Lock size={13} className="text-slate-600 dark:text-slate-400" /> ارسال پاسخ و بستن تیکت (Close Ticket)
             </span>
           </label>
 
@@ -1230,14 +1229,14 @@ export default function Support() {
         title="حذف تیکت پشتیبانی"
       >
         <div className="flex flex-col gap-4">
-          <p className="text-sm font-semibold text-ink leading-relaxed">
+          <p className="text-sm font-semibold text-ink dark:text-slate-200 leading-relaxed">
             آیا از حذف کامل تیکت <strong>«{deletingTicket?.subject}»</strong> اطمینان دارید؟
           </p>
-          <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-800 leading-relaxed flex items-center gap-1.5">
-            <AlertTriangle size={15} className="shrink-0 text-rose-600" />
+          <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/40 text-xs font-bold text-rose-800 dark:text-rose-200 leading-relaxed flex items-center gap-1.5">
+            <AlertTriangle size={15} className="shrink-0 text-rose-600 dark:text-rose-400" />
             <span>این عملیات غیرقابل بازگشت است و تمامی پیام‌ها و پاسخ‌های این تیکت به طور کامل پاک خواهند شد.</span>
           </div>
-          <div className="flex justify-end gap-2 pt-2 border-t border-ink/10">
+          <div className="flex justify-end gap-2 pt-2 border-t border-ink/10 dark:border-slate-700">
             <Button
               variant="ghost"
               size="sm"
@@ -1266,23 +1265,23 @@ export default function Support() {
         title={`بازگشایی و ادامه تیکت: ${reopenModalTicket?.subject || ""}`}
       >
         <form onSubmit={handleUserReopenTicket} className="flex flex-col gap-4">
-          <div className="p-3 rounded-xl bg-teal/5 border border-teal/20 text-xs font-semibold text-ink leading-relaxed">
+          <div className="p-3 rounded-xl bg-teal/5 dark:bg-teal-950/40 border border-teal/20 dark:border-teal-800/40 text-xs font-semibold text-ink dark:text-teal-200 leading-relaxed">
             با ارسال پیام تکمیلی، وضعیت این تیکت مجدداً به <strong>«در انتظار پاسخ»</strong> تغییر یافته و در پنل مدیریت اعلان ارسال می‌شود.
           </div>
 
           <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-extrabold text-navy">پیام یا توضیح جدید شما</span>
+            <span className="text-sm font-extrabold text-navy dark:text-slate-200">پیام یا توضیح جدید شما</span>
             <textarea
               rows={4}
               required
               value={reopenMessage}
               onChange={(e) => setReopenMessage(e.target.value)}
               placeholder="نکته، سوال یا توضیحات تکمیلی خود را بنویسید..."
-              className="w-full bg-white border-2 border-ink/20 focus:border-teal rounded-pill-md px-3.5 py-2.5 text-sm font-semibold text-ink focus:outline-none resize-y"
+              className="w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 focus:border-teal rounded-pill-md px-3.5 py-2.5 text-sm font-semibold text-ink dark:text-slate-100 focus:outline-none resize-y"
             />
           </label>
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-ink/10">
+          <div className="flex justify-end gap-2 pt-2 border-t border-ink/10 dark:border-slate-700">
             <Button
               type="button"
               variant="ghost"

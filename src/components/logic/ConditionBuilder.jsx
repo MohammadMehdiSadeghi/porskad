@@ -227,7 +227,7 @@ export default function ConditionBuilder({
       </div>
 
       {/* پیش‌نمایش متنی */}
-      <div className="text-xs font-medium text-navy/70 bg-bg-lavender/60 rounded-pill-sm px-2.5 py-1.5 leading-5">
+      <div className="text-xs font-medium text-navy/70 dark:text-slate-200 bg-bg-lavender/60 dark:bg-slate-800/90 rounded-pill-sm px-2.5 py-1.5 leading-5 border border-transparent dark:border-slate-700/60">
         {source === "answer" && sourceQ ? (
           <>اگر «{sourceQ.title?.slice(0, 30)}» {opMeta.label}
             {needsValue && condition.value

@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 
 const inputCls =
-  "w-full bg-white border-2 border-ink/15 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none transition-all";
+  "w-full bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy dark:text-slate-100 placeholder:text-ink-subtle/50 dark:placeholder:text-slate-500 focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none transition-all";
 
 export default function TelegramBot() {
   const { user, profile, isOwner, hasPermission } = useAuth();
@@ -307,11 +307,11 @@ export default function TelegramBot() {
       {/* هدر */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-3xl font-black text-navy flex items-center gap-2">
+          <h1 className="text-xl sm:text-3xl font-black text-navy dark:text-slate-100 flex items-center gap-2">
             <Bot size={24} className="text-teal" />
             بات تلگرام
           </h1>
-          <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-0.5">
+          <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 mt-0.5">
             ارسال خودکار ورودی‌های فرم به تلگرام
           </p>
         </div>
@@ -329,7 +329,7 @@ export default function TelegramBot() {
 
       {/* هشدار عدم دسترسی و دعوت به ارسال تیکت */}
       {!canManage && (
-        <div className="-rotate-[0.3deg]">
+        <div>
           <StickerCard theme="orange">
             <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-start gap-3.5">
@@ -337,8 +337,8 @@ export default function TelegramBot() {
                   <Bot size={22} />
                 </span>
                 <div>
-                  <h3 className="font-black text-navy text-base">قابلیت اتصال به بات تلگرام برای حساب شما فعال نیست</h3>
-                  <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-1 leading-6">
+                  <h3 className="font-black text-navy dark:text-slate-100 text-base">قابلیت اتصال به بات تلگرام برای حساب شما فعال نیست</h3>
+                  <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-300 mt-1 leading-6">
                     برای اتصال ربات و دریافت لحظه‌ای اطلاعات فرم‌ها در کانال یا گروه تلگرامی خود، می‌توانید درخواست خود را از طریق تیکت برای مدیریت ارسال کنید تا این قابلیت برای حسابتان فعال گردد.
                   </p>
                 </div>
@@ -358,7 +358,7 @@ export default function TelegramBot() {
       )}
 
       {/* تب‌ها */}
-      <div className="flex gap-1 bg-white border-2 border-ink/10 rounded-pill-md p-1 overflow-x-auto scrollbar-none max-w-full">
+      <div className="flex gap-1 bg-white dark:bg-slate-900 border-2 border-ink/10 dark:border-slate-800 rounded-pill-md p-1 overflow-x-auto scrollbar-none max-w-full">
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -366,7 +366,7 @@ export default function TelegramBot() {
             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-pill-sm text-sm font-bold transition-all whitespace-nowrap ${
               tab === t.id
                 ? "bg-teal text-white shadow-[2px_2px_0_0_rgba(0,0,0,0.15)]"
-                : "text-ink-subtle hover:text-ink hover:bg-bg-lavender"
+                : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-slate-200 hover:bg-bg-lavender dark:hover:bg-slate-800"
             }`}
           >
             <t.icon size={14} />
@@ -392,37 +392,38 @@ export default function TelegramBot() {
       {tab === "config" && (
         <div className="flex flex-col gap-6">
           {/* فرم افزودن/ویرایش */}
-          <div className="-rotate-[0.3deg]">
+          <div>
             <StickerCard theme="white">
               <form onSubmit={saveConfig} className="p-5 flex flex-col gap-4">
                 <div>
-                  <h2 className="text-base sm:text-lg font-black text-navy mb-1">
+                  <h2 className="text-base sm:text-lg font-black text-navy dark:text-slate-100 mb-1">
                     {editingConfig ? "ویرایش تنظیمات" : "افزودن تنظیمات جدید"}
                   </h2>
-                  <p className="text-xs font-semibold text-ink-subtle">
+                  <p className="text-xs font-semibold text-ink-subtle dark:text-slate-400">
                     توکن ربات تلگرام و شناسه چت گروه/کانال را وارد کنید.
                   </p>
                 </div>
 
                 <div className="flex flex-col gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-navy mb-1">
+                    <label className="block text-xs font-bold text-navy dark:text-slate-200 mb-1">
                       توکن ربات تلگرام *
-                    </label>                      <input
-                        type="text"
-                        value={configForm.bot_token}
-                        onChange={(e) =>
-                          setConfigForm((p) => ({ ...p, bot_token: e.target.value }))
-                        }
-                        className={inputCls}
-                        placeholder="123456:ABC-DEF..."
-                        dir="ltr"
-                        disabled={!canManage}
-                      />
+                    </label>
+                    <input
+                      type="text"
+                      value={configForm.bot_token}
+                      onChange={(e) =>
+                        setConfigForm((p) => ({ ...p, bot_token: e.target.value }))
+                      }
+                      className={inputCls}
+                      placeholder="123456:ABC-DEF..."
+                      dir="ltr"
+                      disabled={!canManage}
+                    />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-navy mb-1">
+                      <label className="block text-xs font-bold text-navy dark:text-slate-200 mb-1">
                         شناسه چت (Chat ID) *
                       </label>
                       <input
@@ -438,7 +439,7 @@ export default function TelegramBot() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-navy mb-1">
+                      <label className="block text-xs font-bold text-navy dark:text-slate-200 mb-1">
                         عنوان (اختیاری)
                       </label>
                       <input
@@ -469,7 +470,7 @@ export default function TelegramBot() {
                       انصراف
                     </Button>
                   )}
-                  <Button variant="teal" size="sm" type="submit" rotate="-rotate-[1deg]" disabled={!canManage}>
+                  <Button variant="teal" size="sm" type="submit" disabled={!canManage}>
                     {editingConfig ? "بروزرسانی" : "ذخیره"}
                   </Button>
                 </div>
@@ -480,7 +481,7 @@ export default function TelegramBot() {
           {/* لیست تنظیمات */}
           {configs.length > 0 && (
             <div>
-              <h2 className="text-base sm:text-lg font-extrabold text-navy mb-3">
+              <h2 className="text-base sm:text-lg font-extrabold text-navy dark:text-slate-100 mb-3">
                 تنظیمات ذخیره‌شده ({faNum(configs.length)})
               </h2>
               <div className="flex flex-col gap-3">
@@ -489,17 +490,17 @@ export default function TelegramBot() {
                     <div className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-black text-sm text-navy truncate">
+                          <span className="font-black text-sm text-navy dark:text-slate-100 truncate">
                             {cfg.chat_title || "بدون عنوان"}
                           </span>
                           <Badge color={cfg.is_active ? "green" : "gray"}>
                             {cfg.is_active ? "فعال" : "غیرفعال"}
                           </Badge>
                         </div>
-                        <div className="text-xs font-mono text-ink-subtle truncate" dir="ltr">
+                        <div className="text-xs font-mono text-ink-subtle dark:text-slate-400 truncate" dir="ltr">
                           Chat: {cfg.chat_id}
                         </div>
-                        <div className="text-xs font-mono text-ink-subtle truncate" dir="ltr">
+                        <div className="text-xs font-mono text-ink-subtle dark:text-slate-400 truncate" dir="ltr">
                           Token: {cfg.bot_token.slice(0, 20)}...
                         </div>
                       </div>
@@ -551,13 +552,13 @@ export default function TelegramBot() {
           ) : (
             <>
               {/* فرم لینک جدید */}
-              <div className="-rotate-[0.3deg]">
+              <div>
                 <StickerCard theme="white">
                   <div className="p-5 flex flex-col gap-3">
-                    <h2 className="text-base sm:text-lg font-black text-navy">افزودن لینک جدید</h2>
+                    <h2 className="text-base sm:text-lg font-black text-navy dark:text-slate-100">افزودن لینک جدید</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-xs font-bold text-navy mb-1">
+                        <label className="block text-xs font-bold text-navy dark:text-slate-200 mb-1">
                           فرم
                         </label>
                         <select
@@ -574,7 +575,7 @@ export default function TelegramBot() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-navy mb-1">
+                        <label className="block text-xs font-bold text-navy dark:text-slate-200 mb-1">
                           چت تلگرام
                         </label>
                         <select
@@ -592,11 +593,11 @@ export default function TelegramBot() {
                             ))}
                         </select>
                       </div>
-                      <div className="flex items-end">                          <Button
+                      <div className="flex items-end">
+                        <Button
                           variant="teal"
                           size="sm"
                           onClick={addLink}
-                          rotate="-rotate-[1deg]"
                           className="w-full"
                           disabled={!canManage}
                         >
@@ -612,15 +613,15 @@ export default function TelegramBot() {
               {/* لیست لینک‌ها */}
               {links.length > 0 ? (
                 <div>
-                  <h2 className="text-base sm:text-lg font-extrabold text-navy mb-3">
+                  <h2 className="text-base sm:text-lg font-extrabold text-navy dark:text-slate-100 mb-3">
                     لینک‌های فعال ({faNum(links.length)})
                   </h2>
-                  <div className="rotate-[0.3deg]">
+                  <div>
                     <StickerCard theme="white">
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
-                            <tr className="text-navy border-b-2 border-ink/10">
+                            <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-700">
                               <th className="text-right font-black px-4 py-3">فرم</th>
                               <th className="text-right font-black px-4 py-3">چت تلگرام</th>
                               <th className="text-center font-black px-4 py-3">وضعیت</th>
@@ -632,13 +633,13 @@ export default function TelegramBot() {
                               <tr
                                 key={link.id}
                                 className={`${
-                                  i % 2 ? "bg-bg-lavender/60" : ""
-                                } border-b border-ink/5 last:border-0`}
+                                  i % 2 ? "bg-bg-lavender/60 dark:bg-slate-800/40" : ""
+                                } border-b border-ink/5 dark:border-slate-800 last:border-0`}
                               >
-                                <td className="px-4 py-3 font-bold text-ink">
+                                <td className="px-4 py-3 font-bold text-ink dark:text-slate-200">
                                   {formTitleById[link.form_id] || "—"}
                                 </td>
-                                <td className="px-4 py-3 font-semibold text-ink-subtle">
+                                <td className="px-4 py-3 font-semibold text-ink-subtle dark:text-slate-400">
                                   {configLabelById[link.config_id] || "—"}
                                 </td>
                                 <td className="px-4 py-3 text-center">
@@ -691,7 +692,7 @@ export default function TelegramBot() {
       {tab === "log" && (
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base sm:text-lg font-extrabold text-navy">
+            <h2 className="text-base sm:text-lg font-extrabold text-navy dark:text-slate-100">
               تاریخچه ارسال‌ها
             </h2>
             <Button variant="ghost" size="sm" onClick={loadSendLog}>
@@ -702,12 +703,12 @@ export default function TelegramBot() {
           {logLoading ? (
             <Spinner label="بارگذاری تاریخچه..." />
           ) : sendLog.length > 0 ? (
-            <div className="rotate-[0.3deg]">
+            <div>
               <StickerCard theme="white">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-navy border-b-2 border-ink/10">
+                      <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-700">
                         <th className="text-right font-black px-4 py-3">فرم</th>
                         <th className="text-right font-black px-4 py-3">چت</th>
                         <th className="text-center font-black px-4 py-3">وضعیت</th>
@@ -719,13 +720,13 @@ export default function TelegramBot() {
                         <tr
                           key={log.id}
                           className={`${
-                            i % 2 ? "bg-bg-lavender/60" : ""
-                          } border-b border-ink/5 last:border-0`}
+                            i % 2 ? "bg-bg-lavender/60 dark:bg-slate-800/40" : ""
+                          } border-b border-ink/5 dark:border-slate-800 last:border-0`}
                         >
-                          <td className="px-4 py-3 font-bold text-ink">
+                          <td className="px-4 py-3 font-bold text-ink dark:text-slate-200">
                             {formTitleById[log.form_id] || "—"}
                           </td>
-                          <td className="px-4 py-3 font-semibold text-ink-subtle truncate max-w-[150px]">
+                          <td className="px-4 py-3 font-semibold text-ink-subtle dark:text-slate-400 truncate max-w-[150px]">
                             {log.chat_id}
                           </td>
                           <td className="px-4 py-3 text-center">
@@ -741,7 +742,7 @@ export default function TelegramBot() {
                               </Badge>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-xs font-semibold text-ink-subtle">
+                          <td className="px-4 py-3 text-xs font-semibold text-ink-subtle dark:text-slate-400">
                             {log.sent_at ? faRelative(log.sent_at) : "—"}
                           </td>
                         </tr>
@@ -768,38 +769,38 @@ export default function TelegramBot() {
         title="راهنمای سریع راه‌اندازی بات تلگرام"
       >
         <div className="flex flex-col gap-3.5 text-sm leading-7">
-          <div className="flex items-start gap-3 p-3.5 bg-bg-neutral rounded-xl border border-ink/10">
+          <div className="flex items-start gap-3 p-3.5 bg-bg-neutral dark:bg-slate-800 rounded-xl border border-ink/10 dark:border-slate-700">
             <span className="w-6 h-6 rounded-full bg-teal text-white flex items-center justify-center font-black text-xs shrink-0 mt-0.5">
               ۱
             </span>
             <div>
-              <strong className="text-navy block text-sm">دریافت توکن از BotFather:</strong>
-              <p className="text-xs text-ink-subtle mt-0.5">
-                در تلگرام به ربات رسمی <code className="text-teal font-bold bg-white px-1.5 py-0.5 rounded border border-ink/10" dir="ltr">@BotFather</code> بروید، دستور <code className="text-teal font-bold bg-white px-1.5 py-0.5 rounded border border-ink/10" dir="ltr">/newbot</code> را ارسال کرده و نام و یوزرنیم بات را وارد کنید تا <strong>توکن اختصاصی</strong> دریافت شود.
+              <strong className="text-navy dark:text-slate-100 block text-sm">دریافت توکن از BotFather:</strong>
+              <p className="text-xs text-ink-subtle dark:text-slate-300 mt-0.5">
+                در تلگرام به ربات رسمی <code className="text-teal font-bold bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-ink/10 dark:border-slate-700" dir="ltr">@BotFather</code> بروید، دستور <code className="text-teal font-bold bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-ink/10 dark:border-slate-700" dir="ltr">/newbot</code> را ارسال کرده و نام و یوزرنیم بات را وارد کنید تا <strong>توکن اختصاصی</strong> دریافت شود.
               </p>
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-3.5 bg-bg-neutral rounded-xl border border-ink/10">
+          <div className="flex items-start gap-3 p-3.5 bg-bg-neutral dark:bg-slate-800 rounded-xl border border-ink/10 dark:border-slate-700">
             <span className="w-6 h-6 rounded-full bg-teal text-white flex items-center justify-center font-black text-xs shrink-0 mt-0.5">
               ۲
             </span>
             <div>
-              <strong className="text-navy block text-sm">دریافت چت‌آیدی (Chat ID):</strong>
-              <p className="text-xs text-ink-subtle mt-0.5">
-                برای پیوی شخصی، به یک ربات مانند <code className="text-teal font-bold bg-white px-1.5 py-0.5 rounded border border-ink/10" dir="ltr">@userinfobot</code> پیام دهید تا Chat ID عددی شما را بدهد.<br />
+              <strong className="text-navy dark:text-slate-100 block text-sm">دریافت چت‌آیدی (Chat ID):</strong>
+              <p className="text-xs text-ink-subtle dark:text-slate-300 mt-0.5">
+                برای پیوی شخصی، به یک ربات مانند <code className="text-teal font-bold bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-ink/10 dark:border-slate-700" dir="ltr">@userinfobot</code> پیام دهید تا Chat ID عددی شما را بدهد.<br />
                 برای کانال یا گروه، ربات ساخته‌شده را در کانال/گروه <strong>ادمین</strong> کنید و آیدی یا چت‌آیدی آن را وارد کنید.
               </p>
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-3.5 bg-bg-neutral rounded-xl border border-ink/10">
+          <div className="flex items-start gap-3 p-3.5 bg-bg-neutral dark:bg-slate-800 rounded-xl border border-ink/10 dark:border-slate-700">
             <span className="w-6 h-6 rounded-full bg-teal text-white flex items-center justify-center font-black text-xs shrink-0 mt-0.5">
               ۳
             </span>
             <div>
-              <strong className="text-navy block text-sm">انتخاب و لینک کردن فرم:</strong>
-              <p className="text-xs text-ink-subtle mt-0.5">
+              <strong className="text-navy dark:text-slate-100 block text-sm">انتخاب و لینک کردن فرم:</strong>
+              <p className="text-xs text-ink-subtle dark:text-slate-300 mt-0.5">
                 اطلاعات ربات را در تب «تنظیمات ربات» ذخیره کنید. سپس در تب «لینک فرم‌ها»، فرم مورد نظرتان را انتخاب کرده تا از این پس پاسخ‌های ثبت‌شده فوراً به تلگرام ارسال گردند.
               </p>
             </div>

@@ -302,13 +302,13 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
 
           {/* ─── گزینه‌ها (چندگزینه‌ای) ─── */}
           {meta.hasOptions && (
-            <div className="flex flex-col gap-2 border-2 border-dashed border-orange/50 rounded-pill-md bg-[#FEF7EC]/60 p-3">
-              <span className="text-xs font-extrabold text-orange">
+            <div className="flex flex-col gap-2 border-2 border-dashed border-orange/50 dark:border-amber-500/40 rounded-pill-md bg-[#FEF7EC]/60 dark:bg-amber-950/20 p-3">
+              <span className="text-xs font-extrabold text-orange dark:text-amber-300">
                 گزینه‌ها ({faNum(q.options.length)} — حداقل ۲)
               </span>
               {q.options.map((opt, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <span className="w-7 h-7 shrink-0 flex items-center justify-center rounded-full border-2 border-orange/50 text-orange text-xs font-black">
+                  <span className="w-7 h-7 shrink-0 flex items-center justify-center rounded-full border-2 border-orange/50 dark:border-amber-500/40 text-orange dark:text-amber-300 text-xs font-black">
                     {faNum(i + 1)}
                   </span>
                   <input
@@ -319,7 +319,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                   <button
                     onClick={() => onChange({ options: q.options.filter((_, j) => j !== i) })}
                     disabled={q.options.length <= 2}
-                    className="w-7 h-7 shrink-0 rounded-pill-sm border border-ink/20 flex items-center justify-center text-ink-subtle hover:text-magenta-text hover:border-magenta/40 disabled:opacity-30"
+                    className="w-7 h-7 shrink-0 rounded-pill-sm border border-ink/20 dark:border-slate-700 flex items-center justify-center text-ink-subtle dark:text-slate-400 hover:text-magenta-text hover:border-magenta/40 disabled:opacity-30 cursor-pointer"
                     title="حذف گزینه"
                   >
                     <X size={13} />
@@ -329,7 +329,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
               <button
                 onClick={() => onChange({ options: [...q.options, `گزینه ${faNum(q.options.length + 1)}`] })}
                 disabled={false}
-                className="self-start text-xs font-extrabold text-orange hover:text-orange-alt disabled:opacity-40 transition-opacity"
+                className="self-start text-xs font-extrabold text-orange dark:text-amber-300 hover:text-orange-alt disabled:opacity-40 transition-opacity cursor-pointer"
               >
                 + افزودن گزینه
               </button>
@@ -339,15 +339,15 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
           {/* ─── حالت نمایش گزینه‌ها (فقط choice) ─── */}
           {meta.hasDisplayMode && (
             <div className="flex flex-col gap-2">
-              <span className="text-xs font-extrabold text-navy">حالت نمایش</span>
+              <span className="text-xs font-extrabold text-navy dark:text-slate-200">حالت نمایش</span>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => onChange({ display_mode: "buttons" })}
-                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-pill-md border-2 text-xs font-bold transition-all ${
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-pill-md border-2 text-xs font-bold transition-all cursor-pointer ${
                     (q.display_mode || "buttons") === "buttons"
-                      ? "border-teal bg-teal/10 text-teal-text"
-                      : "border-ink/15 bg-white text-ink-subtle hover:border-teal/40"
+                      ? "border-teal bg-teal/10 dark:bg-teal-500/20 text-teal-text dark:text-teal"
+                      : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink-subtle dark:text-slate-300 hover:border-teal/40"
                   }`}
                 >
                   <LayoutGrid size={13} /> دکمه‌ای
@@ -355,16 +355,16 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                 <button
                   type="button"
                   onClick={() => onChange({ display_mode: "dropdown" })}
-                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-pill-md border-2 text-xs font-bold transition-all ${
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-pill-md border-2 text-xs font-bold transition-all cursor-pointer ${
                     q.display_mode === "dropdown"
-                      ? "border-teal bg-teal/10 text-teal-text"
-                      : "border-ink/15 bg-white text-ink-subtle hover:border-teal/40"
+                      ? "border-teal bg-teal/10 dark:bg-teal-500/20 text-teal-text dark:text-teal"
+                      : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink-subtle dark:text-slate-300 hover:border-teal/40"
                   }`}
                 >
                   <ChevronDown size={13} /> کشویی (دراپ‌داون)
                 </button>
               </div>
-              <span className="text-xs font-medium text-ink-subtle">
+              <span className="text-xs font-medium text-ink-subtle dark:text-slate-400">
                 {(q.display_mode || "buttons") === "buttons" 
                   ? "گزینه‌ها به‌صورت دکمه‌های جداگانه نمایش داده می‌شوند"
                   : "گزینه‌ها در یک لیست کشویی نمایش داده می‌شوند"}
@@ -374,16 +374,16 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
 
           {/* ─── تعداد انتخاب مجاز (فقط choice) ─── */}
           {meta.hasMaxSelections && (
-            <div className="flex flex-col gap-2 border-2 border-dashed border-orange/40 rounded-pill-md bg-[#FEF7EC]/40 p-3">
+            <div className="flex flex-col gap-2 border-2 border-dashed border-orange/40 dark:border-amber-500/40 rounded-pill-md bg-[#FEF7EC]/40 dark:bg-amber-950/20 p-3">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-extrabold text-orange">تعداد انتخاب مجاز</span>
+                <span className="text-xs font-extrabold text-orange dark:text-amber-300">تعداد انتخاب مجاز</span>
                 {(q.max_selections ?? 1) > 1 && (
                   <span className="text-xs font-bold text-teal bg-teal/10 border border-teal/30 rounded-pill-sm px-1.5 py-0.5">
                     چند انتخابی
                   </span>
                 )}
               </div>
-              <span className="text-xs font-medium text-ink-subtle">
+              <span className="text-xs font-medium text-ink-subtle dark:text-slate-400">
                 کاربر چند گزینه می‌تواند انتخاب کند؟ ۱ = تک‌انتخابی، بیشتر از ۱ = چند انتخابی
               </span>
               <div className="flex items-center gap-3">
@@ -403,11 +403,11 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                   }}
                   className="flex-1 accent-orange h-1.5 cursor-pointer"
                 />
-                <span className="min-w-[2rem] text-center text-sm font-black text-orange bg-white border-2 border-orange/30 rounded-pill-sm px-2 py-1">
+                <span className="min-w-[2rem] text-center text-sm font-black text-orange dark:text-amber-300 bg-white dark:bg-slate-800 border-2 border-orange/30 dark:border-amber-500/40 rounded-pill-sm px-2 py-1">
                   {faNum(q.max_selections ?? 1)}
                 </span>
               </div>
-              <span className="text-xs font-medium text-ink-subtle">
+              <span className="text-xs font-medium text-ink-subtle dark:text-slate-400">
                 {(q.max_selections ?? 1) === 1
                   ? "کاربر فقط یک گزینه می‌تواند انتخاب کند (حالت رادیویی)"
                   : `کاربر حداکثر ${faNum(q.max_selections)} گزینه می‌تواند انتخاب کند`
@@ -418,18 +418,18 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
 
           {/* ─── گزینه صحیح (Correct Answer) ─── */}
           {isChoice && (
-            <div className="flex flex-col gap-2 border-2 border-dashed border-teal/40 rounded-pill-md bg-teal/5 p-3">
-              <span className="text-xs font-extrabold text-teal-text flex items-center gap-1">
+            <div className="flex flex-col gap-2 border-2 border-dashed border-teal/40 dark:border-teal-500/40 rounded-pill-md bg-teal/5 dark:bg-teal-950/20 p-3">
+              <span className="text-xs font-extrabold text-teal-text dark:text-teal flex items-center gap-1">
                 <Target size={14} /> گزینه صحیح (برای نمره‌دهی)
               </span>
-              <span className="text-xs font-medium text-ink-subtle">
+              <span className="text-xs font-medium text-ink-subtle dark:text-slate-400">
                 اگه گزینه صحیح مشخص کنید، بعد از ارسال فرم به کاربر نمره نمایش داده می‌شود.
               </span>
 
               {/* choice با max_selections > 1 → چند انتخابی */}
               {q.type === "choice" && (q.max_selections ?? 1) > 1 ? (
                 <div className="flex flex-col gap-1.5">
-                  <span className="text-xs font-medium text-ink-subtle">چند گزینه صحیح انتخاب کنید:</span>
+                  <span className="text-xs font-medium text-ink-subtle dark:text-slate-400">چند گزینه صحیح انتخاب کنید:</span>
                   <div className="flex flex-wrap gap-1.5">
                     {q.options.map((opt, i) => {
                       const correctArr = Array.isArray(q.correct_answer) ? q.correct_answer : [];
@@ -447,7 +447,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                           className={`text-xs font-bold px-3 py-1.5 rounded-pill-md border-2 transition-all cursor-pointer flex items-center gap-1 ${
                             isSelected
                               ? "border-teal bg-teal text-white"
-                              : "border-ink/15 bg-white text-ink hover:border-teal/40"
+                              : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink dark:text-slate-200 hover:border-teal/40"
                           }`}
                         >
                           {isSelected && <Check size={11} />}
@@ -470,7 +470,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                         className={`text-xs font-bold px-3 py-1.5 rounded-pill-md border-2 transition-all cursor-pointer flex items-center gap-1 ${
                           isSelected
                             ? "border-teal bg-teal text-white"
-                            : "border-ink/15 bg-white text-ink hover:border-teal/40"
+                            : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink dark:text-slate-200 hover:border-teal/40"
                         }`}
                       >
                         {isSelected && <Check size={11} />}
@@ -497,23 +497,23 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
 
           {/* ─── شرط نمایش (Visibility Condition) ─── */}
           {index > 0 && (
-            <div className="flex flex-col gap-2 border-2 border-dashed border-navy/20 rounded-pill-md bg-bg-lavender/40 p-3">
+            <div className="flex flex-col gap-2 border-2 border-dashed border-navy/20 dark:border-slate-700 rounded-pill-md bg-bg-lavender/40 dark:bg-slate-800/60 p-3">
               <div className="flex items-center gap-2">
                 <span className="text-sm"></span>
-                <span className="text-xs font-extrabold text-navy">شرط نمایش</span>
+                <span className="text-xs font-extrabold text-navy dark:text-slate-200">شرط نمایش</span>
                 {conditions ? (
                   <span className="text-xs font-bold text-teal bg-teal/10 border border-teal/30 rounded-pill-sm px-2 py-0.5">
                     فعال
                   </span>
                 ) : (
-                  <span className="text-xs font-bold text-ink-subtle bg-ink/5 border border-ink/10 rounded-pill-sm px-2 py-0.5">
+                  <span className="text-xs font-bold text-ink-subtle dark:text-slate-400 bg-ink/5 dark:bg-slate-700/60 border border-ink/10 dark:border-slate-700 rounded-pill-sm px-2 py-0.5">
                     بدون شرط
                   </span>
                 )}
                 {conditions && (
                   <button
                     onClick={toggleConditionGroup}
-                    className="text-xs font-bold text-magenta-text hover:underline mr-auto"
+                    className="text-xs font-bold text-magenta-text hover:underline mr-auto cursor-pointer"
                   >
                     حذف شرط
                   </button>
@@ -525,7 +525,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                   {/* سوییچ AND/OR */}
                   {conditions.conditions?.length > 1 && (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-ink-subtle">ترکیب:</span>
+                      <span className="text-xs font-bold text-ink-subtle dark:text-slate-400">ترکیب:</span>
                       <select
                         value={conditions.group_operator}
                         onChange={(e) => updateConditionGroup({ group_operator: e.target.value })}
@@ -543,7 +543,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                     return (
                       <div key={cond.id || i} className="flex items-start gap-2">
                         {i > 0 && (
-                          <span className="text-xs font-black text-navy mt-3 shrink-0 px-1.5 py-0.5 bg-bg-lavender rounded-pill-sm">
+                          <span className="text-xs font-black text-navy dark:text-slate-200 mt-3 shrink-0 px-1.5 py-0.5 bg-bg-lavender dark:bg-slate-700 rounded-pill-sm">
                             {conditions.group_operator}
                           </span>
                         )}

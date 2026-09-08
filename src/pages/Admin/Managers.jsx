@@ -64,7 +64,7 @@ const CATEGORY_COLORS = {
 };
 
 const inputCls =
-  "w-full bg-white border-2 border-ink/15 focus:border-teal focus:ring-2 focus:ring-teal/20 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy focus:outline-none transition-all";
+  "w-full bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 focus:border-teal focus:ring-2 focus:ring-teal/20 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy dark:text-slate-100 placeholder:text-ink-subtle/50 dark:placeholder:text-slate-500 focus:outline-none transition-all";
 
 // ─── کامپوننت دسته مجوزها (قابل باز شدن) ───
 function PermissionCategory({ category, selected, onToggle, disabled = false }) {
@@ -572,8 +572,8 @@ export default function Managers() {
       {/* هدر */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-xl sm:text-3xl font-black text-navy">مدیریت کاربران</h1>
-          <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-0.5">
+          <h1 className="text-xl sm:text-3xl font-black text-navy dark:text-slate-100">مدیریت کاربران</h1>
+          <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 mt-0.5">
             {managers.filter((m) => m.is_active).length} کاربر فعال — دسترسی به سایر کاربران برای تمامی کاربران عادی مسدود است
           </p>
         </div>
@@ -585,12 +585,12 @@ export default function Managers() {
               onClick={() => setShowSettingsModal(true)}
               className="gap-1.5"
             >
-              <Settings size={14} className="text-navy" />
+              <Settings size={14} className="text-navy dark:text-slate-200" />
               <span>تنظیمات و محدودیت‌های سامانه</span>
             </Button>
           )}
           {canManage && (
-            <Button variant="teal" size="sm" onClick={() => setShowCreateModal(true)} rotate="-rotate-[1deg]">
+            <Button variant="teal" size="sm" onClick={() => setShowCreateModal(true)}>
               <Plus size={14} className="ml-1" /> کاربر جدید
             </Button>
           )}
@@ -598,14 +598,14 @@ export default function Managers() {
       </div>
 
       {/* تب‌های تفکیک ادمین‌ها و کاربران */}
-      <div className="flex items-center gap-2 border-b-2 border-ink/10 pb-3 flex-wrap">
+      <div className="flex items-center gap-2 border-b-2 border-ink/10 dark:border-slate-800 pb-3 flex-wrap">
         <button
           type="button"
           onClick={() => setRoleTab("all")}
           className={`px-3.5 py-1.5 rounded-pill-md text-xs sm:text-sm font-black transition-all flex items-center gap-2 cursor-pointer ${
             roleTab === "all"
-              ? "bg-navy text-white shadow-xs"
-              : "bg-white hover:bg-bg-lavender text-navy/70 border border-navy/10"
+              ? "bg-navy dark:bg-slate-700 text-white shadow-xs"
+              : "bg-white dark:bg-slate-800 hover:bg-bg-lavender dark:hover:bg-slate-700 text-navy/70 dark:text-slate-300 border border-navy/10 dark:border-slate-700"
           }`}
         >
           <span>همه اعضا</span>
@@ -618,7 +618,7 @@ export default function Managers() {
           className={`px-3.5 py-1.5 rounded-pill-md text-xs sm:text-sm font-black transition-all flex items-center gap-2 cursor-pointer ${
             roleTab === "admins"
               ? "bg-amber-600 text-white shadow-xs"
-              : "bg-white hover:bg-bg-lavender text-amber-900 border border-amber-300"
+              : "bg-white dark:bg-slate-800 hover:bg-bg-lavender dark:hover:bg-slate-700 text-amber-900 dark:text-amber-400 border border-amber-300 dark:border-amber-700/50"
           }`}
         >
           <Shield size={14} />
@@ -634,7 +634,7 @@ export default function Managers() {
           className={`px-3.5 py-1.5 rounded-pill-md text-xs sm:text-sm font-black transition-all flex items-center gap-2 cursor-pointer ${
             roleTab === "users"
               ? "bg-teal text-white shadow-xs"
-              : "bg-white hover:bg-bg-lavender text-teal-text border border-teal/30"
+              : "bg-white dark:bg-slate-800 hover:bg-bg-lavender dark:hover:bg-slate-700 text-teal-text dark:text-teal-400 border border-teal/30 dark:border-teal-700/50"
           }`}
         >
           <Users size={14} />
@@ -666,7 +666,7 @@ export default function Managers() {
 
         return (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 lg:gap-5">
-            {displayedManagers.map((m, i) => {
+            {displayedManagers.map((m) => {
               const isSuperAdmin = m.role === "admin";
               const isSuperAdminOrOwner = m.is_owner || isSuperAdmin;
               const createdForms = userFormsCount[m.id] || 0;
@@ -676,7 +676,7 @@ export default function Managers() {
               return (
                 <div
                   key={m.id}
-                  className={`${i % 2 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"} transition-all duration-200 h-full flex flex-col`}
+                  className="transition-all duration-200 h-full flex flex-col"
                 >
                   <StickerCard theme={isSuperAdminOrOwner ? "orange" : "white"} className="h-full flex flex-col">
                     <div
@@ -694,21 +694,21 @@ export default function Managers() {
                               isSuperAdminOrOwner
                                 ? "bg-orange text-white"
                                 : m.is_active
-                                ? "bg-teal/15 text-teal-text border border-teal/30"
-                                : "bg-bg-neutral text-ink-subtle"
+                                ? "bg-teal/15 dark:bg-teal-950/50 text-teal-text dark:text-teal-300 border border-teal/30 dark:border-teal-700/50"
+                                : "bg-bg-neutral dark:bg-slate-800 text-ink-subtle dark:text-slate-400"
                             }`}
                           >
                             {m.full_name?.[0]?.toUpperCase() ?? m.email?.[0]?.toUpperCase() ?? "U"}
                           </div>
                           <div className="min-w-0 flex-1">
                             <span
-                              className="font-black text-navy text-xs sm:text-sm truncate block leading-snug"
+                              className="font-black text-navy dark:text-slate-100 text-xs sm:text-sm truncate block leading-snug"
                               title={m.full_name || "کاربر بدون نام"}
                             >
                               {m.full_name || "کاربر بدون نام"}
                             </span>
                             <span
-                              className="text-xs font-medium text-ink-subtle truncate block mt-0.5"
+                              className="text-xs font-medium text-ink-subtle dark:text-slate-400 truncate block mt-0.5"
                               dir="ltr"
                               title={m.email}
                             >
@@ -723,15 +723,15 @@ export default function Managers() {
                             {m.is_active ? "فعال" : "غیرفعال"}
                           </Badge>
                           {m.is_owner ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-900 bg-amber-200 border border-amber-400 rounded-full px-1.5 py-0.5 shrink-0">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-900 dark:text-amber-300 bg-amber-200 dark:bg-amber-950/60 border border-amber-400 dark:border-amber-700 rounded-full px-1.5 py-0.5 shrink-0">
                               <Crown size={10} /> صاحب
                             </span>
                           ) : isSuperAdmin ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-900 bg-amber-200 border border-amber-400 rounded-full px-1.5 py-0.5 shrink-0">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-900 dark:text-amber-300 bg-amber-200 dark:bg-amber-950/60 border border-amber-400 dark:border-amber-700 rounded-full px-1.5 py-0.5 shrink-0">
                               <Shield size={10} /> سوپرادمین
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-ink-subtle bg-navy/5 border border-navy/10 rounded-full px-1.5 py-0.5 shrink-0">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-ink-subtle dark:text-slate-300 bg-navy/5 dark:bg-slate-800 border border-navy/10 dark:border-slate-700 rounded-full px-1.5 py-0.5 shrink-0">
                               <User size={10} /> عضو عادی
                             </span>
                           )}
@@ -739,23 +739,23 @@ export default function Managers() {
                       </div>
 
                       {/* اطلاعات فشرده: تاریخ عضویت و باقیمانده سهمیه */}
-                      <div className="bg-bg-lavender/50 rounded-xl p-2.5 flex flex-col gap-1.5 border border-navy/5 text-xs font-semibold">
-                        <div className="flex items-center justify-between text-ink-subtle">
+                      <div className="bg-bg-lavender/50 dark:bg-slate-800/80 rounded-xl p-2.5 flex flex-col gap-1.5 border border-navy/5 dark:border-slate-700 text-xs font-semibold">
+                        <div className="flex items-center justify-between text-ink-subtle dark:text-slate-400">
                           <span className="flex items-center gap-1 text-xs">
                             <Calendar size={12} className="text-teal shrink-0" />
                             تاریخ عضویت:
                           </span>
-                          <strong className="text-navy text-xs">
+                          <strong className="text-navy dark:text-slate-200 text-xs">
                             {new Date(m.created_at).toLocaleDateString("fa-IR")}
                           </strong>
                         </div>
 
-                        <div className="flex items-center justify-between text-ink-subtle pt-1 border-t border-navy/5">
+                        <div className="flex items-center justify-between text-ink-subtle dark:text-slate-400 pt-1 border-t border-navy/5 dark:border-slate-700/80">
                           <span className="flex items-center gap-1 text-xs">
                             <BarChart3 size={12} className="text-orange shrink-0" />
                             باقیمانده سهمیه:
                           </span>
-                          <span className={`text-xs font-black ${remainingForms === 0 && !isSuperAdminOrOwner ? "text-magenta-text" : "text-teal-text"}`}>
+                          <span className={`text-xs font-black ${remainingForms === 0 && !isSuperAdminOrOwner ? "text-magenta-text dark:text-pink-400" : "text-teal-text dark:text-teal-300"}`}>
                             {isSuperAdminOrOwner ? "نامحدود" : `${faNum(remainingForms)} از ${faNum(maxForms)} فرم`}
                           </span>
                         </div>
@@ -769,13 +769,13 @@ export default function Managers() {
                             e.stopPropagation();
                             setSelectedUserModal(m);
                           }}
-                          className="w-full py-2 px-3 rounded-pill-sm text-xs font-bold transition-all flex items-center justify-between bg-navy/5 hover:bg-teal hover:text-white text-navy border border-navy/10 group cursor-pointer"
+                          className="w-full py-2 px-3 rounded-pill-sm text-xs font-bold transition-all flex items-center justify-between bg-navy/5 dark:bg-slate-800 hover:bg-teal dark:hover:bg-teal hover:text-white dark:hover:text-white text-navy dark:text-slate-200 border border-navy/10 dark:border-slate-700 group cursor-pointer"
                         >
                           <span className="flex items-center gap-1.5">
                             <Settings size={13} className="text-teal group-hover:text-white transition-colors" />
                             <span>مشاهده و عملیات کاربر</span>
                           </span>
-                          <span className="text-xs font-bold text-ink/40 group-hover:text-white/90">مشاهده ←</span>
+                          <span className="text-xs font-bold text-ink/40 dark:text-slate-400 group-hover:text-white/90">مشاهده ←</span>
                         </button>
                       </div>
                     </div>
@@ -804,7 +804,7 @@ export default function Managers() {
           return (
             <div className="flex flex-col gap-4 text-right">
               {/* خلاصه اطلاعات هویتی کاربر */}
-              <div className="bg-bg-lavender/60 border border-navy/10 rounded-2xl p-4 flex flex-col gap-3">
+              <div className="bg-bg-lavender/60 dark:bg-slate-800/80 border border-navy/10 dark:border-slate-700 rounded-2xl p-4 flex flex-col gap-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div
@@ -816,26 +816,26 @@ export default function Managers() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-base font-black text-navy">{m.full_name || "کاربر بدون نام"}</h3>
+                        <h3 className="text-base font-black text-navy dark:text-slate-100">{m.full_name || "کاربر بدون نام"}</h3>
                         {m.is_owner ? (
-                          <span className="text-xs font-black text-amber-900 bg-amber-200 border border-amber-400 rounded-full px-2.5 py-0.5 flex items-center gap-1">
+                          <span className="text-xs font-black text-amber-900 dark:text-amber-300 bg-amber-200 dark:bg-amber-950/60 border border-amber-400 dark:border-amber-700 rounded-full px-2.5 py-0.5 flex items-center gap-1">
                             <Crown size={11} />
                             <span>صاحب اصلی</span>
                           </span>
                         ) : isSuperAdmin ? (
-                          <span className="text-xs font-black text-amber-900 bg-amber-200 border border-amber-400 rounded-full px-2.5 py-0.5 flex items-center gap-1">
+                          <span className="text-xs font-black text-amber-900 dark:text-amber-300 bg-amber-200 dark:bg-amber-950/60 border border-amber-400 dark:border-amber-700 rounded-full px-2.5 py-0.5 flex items-center gap-1">
                             <Shield size={11} />
                             <span>سوپر ادمین (مدیر ارشد)</span>
                           </span>
                         ) : (
-                          <span className="text-xs font-bold text-navy bg-navy/10 rounded-full px-2.5 py-0.5">
+                          <span className="text-xs font-bold text-navy dark:text-slate-200 bg-navy/10 dark:bg-slate-700 rounded-full px-2.5 py-0.5">
                             کاربر عادی سیستم
                           </span>
                         )}
                       </div>
-                      <p className="text-xs font-semibold text-ink-subtle mt-0.5" dir="ltr">{m.email}</p>
+                      <p className="text-xs font-semibold text-ink-subtle dark:text-slate-400 mt-0.5" dir="ltr">{m.email}</p>
                       {m.phone && (
-                        <p className="text-xs font-bold text-teal-text mt-0.5 flex items-center gap-1" dir="ltr">
+                        <p className="text-xs font-bold text-teal-text dark:text-teal-300 mt-0.5 flex items-center gap-1" dir="ltr">
                           <Phone size={11} /> {m.phone}
                         </p>
                       )}
@@ -846,24 +846,24 @@ export default function Managers() {
                   </Badge>
                 </div>
 
-                <div className="flex items-center justify-between text-xs font-semibold text-ink-subtle pt-2 border-t border-navy/5">
-                  <span className="flex items-center gap-1"><Calendar size={12} className="text-ink/40" /> تاریخ عضویت: <strong className="text-navy">{new Date(m.created_at).toLocaleDateString("fa-IR")}</strong></span>
-                  <span>کد شناسه: <code className="text-xs text-navy font-mono" dir="ltr">{m.id.slice(0, 8)}</code></span>
+                <div className="flex items-center justify-between text-xs font-semibold text-ink-subtle dark:text-slate-400 pt-2 border-t border-navy/5 dark:border-slate-700">
+                  <span className="flex items-center gap-1"><Calendar size={12} className="text-ink/40 dark:text-slate-400" /> تاریخ عضویت: <strong className="text-navy dark:text-slate-200">{new Date(m.created_at).toLocaleDateString("fa-IR")}</strong></span>
+                  <span>کد شناسه: <code className="text-xs text-navy dark:text-slate-300 bg-white dark:bg-slate-900 px-1 py-0.5 rounded border border-ink/10 dark:border-slate-700 font-mono" dir="ltr">{m.id.slice(0, 8)}</code></span>
                 </div>
               </div>
 
               {/* سهمیه و وضعیت فرم‌های کاربر */}
-              <div className="bg-white border-2 border-ink/10 rounded-2xl p-4 flex flex-col gap-3">
+              <div className="bg-white dark:bg-slate-900 border-2 border-ink/10 dark:border-slate-700 rounded-2xl p-4 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-navy flex items-center gap-1.5">
+                  <span className="text-xs font-black text-navy dark:text-slate-100 flex items-center gap-1.5">
                     <BarChart3 size={15} className="text-teal" /> سهمیه، محدودیت‌ها و ظرفیت‌های کاربر
                   </span>
                   {m.is_owner ? (
-                    <span className="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/50 px-2 py-0.5 rounded-full">
                       مالک کل — بدون محدودیت
                     </span>
                   ) : (
-                    <span className="text-xs font-bold text-teal bg-teal/10 px-2.5 py-0.5 rounded-full">
+                    <span className="text-xs font-bold text-teal dark:text-teal-300 bg-teal/10 dark:bg-teal-950/50 px-2.5 py-0.5 rounded-full">
                       قابل ویرایش دستی
                     </span>
                   )}
@@ -871,19 +871,19 @@ export default function Managers() {
 
                 {/* آمار خلاصه وضعیت */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-                  <div className="bg-bg-neutral p-2.5 rounded-xl text-center">
-                    <span className="text-xs text-ink-subtle block font-semibold mb-0.5">فرم‌های فعال ایجاد شده</span>
-                    <strong className="text-navy text-sm font-black">{faNum(createdForms)} فرم</strong>
+                  <div className="bg-bg-neutral dark:bg-slate-800 p-2.5 rounded-xl text-center">
+                    <span className="text-xs text-ink-subtle dark:text-slate-400 block font-semibold mb-0.5">فرم‌های فعال ایجاد شده</span>
+                    <strong className="text-navy dark:text-slate-100 text-sm font-black">{faNum(createdForms)} فرم</strong>
                   </div>
-                  <div className="bg-bg-neutral p-2.5 rounded-xl text-center">
-                    <span className="text-xs text-ink-subtle block font-semibold mb-0.5">سقف مجاز فعلی</span>
-                    <strong className="text-navy text-sm font-black">
+                  <div className="bg-bg-neutral dark:bg-slate-800 p-2.5 rounded-xl text-center">
+                    <span className="text-xs text-ink-subtle dark:text-slate-400 block font-semibold mb-0.5">سقف مجاز فعلی</span>
+                    <strong className="text-navy dark:text-slate-100 text-sm font-black">
                       {m.is_owner || m.max_forms >= 999999 || m.plan === "unlimited" ? "نامحدود ✨" : `${faNum(m.max_forms ?? 5)} فرم`}
                     </strong>
                   </div>
-                  <div className="bg-bg-neutral p-2.5 rounded-xl text-center col-span-2 sm:col-span-1">
-                    <span className="text-xs text-ink-subtle block font-semibold mb-0.5">باقیمانده فرم فعال</span>
-                    <strong className={`text-sm font-black ${remainingForms === 0 && !m.is_owner && m.max_forms < 999999 ? "text-magenta-text" : "text-teal-text"}`}>
+                  <div className="bg-bg-neutral dark:bg-slate-800 p-2.5 rounded-xl text-center col-span-2 sm:col-span-1">
+                    <span className="text-xs text-ink-subtle dark:text-slate-400 block font-semibold mb-0.5">باقیمانده فرم فعال</span>
+                    <strong className={`text-sm font-black ${remainingForms === 0 && !m.is_owner && m.max_forms < 999999 ? "text-magenta-text dark:text-pink-400" : "text-teal-text dark:text-teal-300"}`}>
                       {m.is_owner || m.max_forms >= 999999 || m.plan === "unlimited" ? "نامحدود ✨" : `${faNum(remainingForms)} فرم`}
                     </strong>
                   </div>
@@ -893,18 +893,18 @@ export default function Managers() {
                 {!m.is_owner && (
                   <div className={`p-3 rounded-xl border-2 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 ${
                     (m.max_forms >= 999999 && m.max_responses_per_month >= 999999) || m.plan === "unlimited"
-                      ? "bg-teal/10 border-teal/40"
-                      : "bg-navy/5 border-navy/10"
+                      ? "bg-teal/10 dark:bg-teal-950/30 border-teal/40 dark:border-teal-700"
+                      : "bg-navy/5 dark:bg-slate-800 border-navy/10 dark:border-slate-700"
                   }`}>
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-xl">⚡</span>
                       <div>
-                        <span className="block text-xs font-black text-navy">
+                        <span className="block text-xs font-black text-navy dark:text-slate-100">
                           {(m.max_forms >= 999999 && m.max_responses_per_month >= 999999) || m.plan === "unlimited"
                             ? "پلن سهمیه نامحدود فعال است"
                             : "سهمیه نامحدود فرم و ثبت‌نام"}
                         </span>
-                        <span className="text-xs text-ink-subtle leading-5">
+                        <span className="text-xs text-ink-subtle dark:text-slate-400 leading-5">
                           {(m.max_forms >= 999999 && m.max_responses_per_month >= 999999) || m.plan === "unlimited"
                             ? "بدون محدودیت تعداد فرم فعال و تعداد پاسخ (بدون دسترسی سوپرادمین)"
                             : "نامحدود کردن فرم‌های فعال و ورودی‌ها برای این کاربر"}
@@ -926,17 +926,17 @@ export default function Managers() {
                 )}
 
                 {!m.is_owner && (
-                  <form onSubmit={handleSaveUserQuotaDirect} className="pt-2 border-t border-navy/10 space-y-3">
-                    <div className="text-xs font-black text-navy flex items-center justify-between">
+                  <form onSubmit={handleSaveUserQuotaDirect} className="pt-2 border-t border-navy/10 dark:border-slate-700 space-y-3">
+                    <div className="text-xs font-black text-navy dark:text-slate-100 flex items-center justify-between">
                       <span className="flex items-center gap-1"><Edit3 size={12} className="text-teal" /> ویرایش دستی محدودیت‌های این کاربر:</span>
-                      <span className="text-xs text-ink-subtle font-semibold">
+                      <span className="text-xs text-ink-subtle dark:text-slate-400 font-semibold">
                         ریست بعدی: {m.quota_reset_at ? new Date(m.quota_reset_at).toLocaleDateString("fa-IR") : "چرخه ۳۰ روزه"}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                       <div>
-                        <label className="block text-xs font-bold text-navy mb-1">
+                        <label className="block text-xs font-bold text-navy dark:text-slate-200 mb-1">
                           سقف فرم‌های همزمان فعال
                         </label>
                         <input
@@ -946,13 +946,13 @@ export default function Managers() {
                           dir="ltr"
                           value={userEditMaxForms}
                           onChange={(e) => setUserEditMaxForms(e.target.value)}
-                          className="w-full px-2.5 py-1.5 rounded-xl border-2 border-ink/15 text-xs font-black font-mono text-center text-navy focus:border-teal outline-none"
+                          className="w-full px-2.5 py-1.5 rounded-xl border-2 border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-black font-mono text-center text-navy dark:text-slate-100 focus:border-teal outline-none"
                           required
                         />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-bold text-navy mb-1">
+                        <label className="block text-xs font-bold text-navy dark:text-slate-200 mb-1">
                           سقف ورودی ماهانه
                         </label>
                         <input
@@ -963,13 +963,13 @@ export default function Managers() {
                           dir="ltr"
                           value={userEditMaxResponses}
                           onChange={(e) => setUserEditMaxResponses(e.target.value)}
-                          className="w-full px-2.5 py-1.5 rounded-xl border-2 border-ink/15 text-xs font-black font-mono text-center text-navy focus:border-teal outline-none"
+                          className="w-full px-2.5 py-1.5 rounded-xl border-2 border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-black font-mono text-center text-navy dark:text-slate-100 focus:border-teal outline-none"
                           required
                         />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-bold text-navy mb-1">
+                        <label className="block text-xs font-bold text-navy dark:text-slate-200 mb-1">
                           ورودی‌های مصرف‌شده
                         </label>
                         <input
@@ -979,17 +979,17 @@ export default function Managers() {
                           dir="ltr"
                           value={userEditResponsesUsed}
                           onChange={(e) => setUserEditResponsesUsed(e.target.value)}
-                          className="w-full px-2.5 py-1.5 rounded-xl border-2 border-ink/15 text-xs font-black font-mono text-center text-navy focus:border-teal outline-none"
+                          className="w-full px-2.5 py-1.5 rounded-xl border-2 border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-black font-mono text-center text-navy dark:text-slate-100 focus:border-teal outline-none"
                           required
                         />
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-navy/5">
+                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-navy/5 dark:border-slate-700">
                       <button
                         type="button"
                         onClick={() => handleResetQuota(m)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-magenta-text bg-magenta/10 hover:bg-magenta/20 transition-colors border border-magenta/20 cursor-pointer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-magenta-text dark:text-pink-400 bg-magenta/10 dark:bg-pink-950/30 hover:bg-magenta/20 transition-colors border border-magenta/20 dark:border-pink-800/40 cursor-pointer"
                         title="شمارنده ورودی‌های مصرف‌شده را ۰ کرده و دوره ۳۰ روزه را تازه می‌کند"
                       >
                         <RotateCcw size={13} />
@@ -1013,15 +1013,15 @@ export default function Managers() {
 
               {/* دسترسی به ربات تلگرام */}
               {!m.is_owner && (
-                <div className="bg-white border-2 border-ink/10 rounded-2xl p-3.5 flex items-center justify-between gap-3">
+                <div className="bg-white dark:bg-slate-900 border-2 border-ink/10 dark:border-slate-700 rounded-2xl p-3.5 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${m.can_use_telegram ? "bg-teal/15 text-teal" : "bg-ink/10 text-ink-subtle"}`}>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${m.can_use_telegram ? "bg-teal/15 dark:bg-teal-950/50 text-teal dark:text-teal-300" : "bg-ink/10 dark:bg-slate-800 text-ink-subtle dark:text-slate-400"}`}>
                       <Bot size={16} />
                     </div>
                     <div>
-                      <span className="text-xs font-black text-navy block">اتصال به ربات تلگرام</span>
-                      <span className="text-xs font-semibold text-ink-subtle">
-                        وضعیت: {m.can_use_telegram ? <strong className="text-teal-text">فعال</strong> : <strong className="text-amber-700">قطع</strong>}
+                      <span className="text-xs font-black text-navy dark:text-slate-100 block">اتصال به ربات تلگرام</span>
+                      <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400">
+                        وضعیت: {m.can_use_telegram ? <strong className="text-teal-text dark:text-teal-300">فعال</strong> : <strong className="text-amber-700 dark:text-amber-400">قطع</strong>}
                       </span>
                     </div>
                   </div>
@@ -1030,7 +1030,7 @@ export default function Managers() {
                     <Button
                       variant={m.can_use_telegram ? "ghost" : "teal"}
                       size="sm"
-                      className={m.can_use_telegram ? "!text-amber-700 border-amber-300 hover:bg-amber-50 text-xs" : "text-xs"}
+                      className={m.can_use_telegram ? "!text-amber-700 dark:!text-amber-400 border-amber-300 dark:border-amber-700/50 hover:bg-amber-50 dark:hover:bg-amber-950/30 text-xs" : "text-xs"}
                       onClick={() => toggleTelegramAccess(m)}
                     >
                       {m.can_use_telegram ? "قطع دسترسی" : "وصل دسترسی"}
@@ -1041,12 +1041,12 @@ export default function Managers() {
 
               {/* تعیین نقش و سطح دسترسی کاربر */}
               {!m.is_owner && isOwner() && (
-                <div className="bg-white border-2 border-ink/10 rounded-2xl p-3.5 flex flex-col gap-2.5">
+                <div className="bg-white dark:bg-slate-900 border-2 border-ink/10 dark:border-slate-700 rounded-2xl p-3.5 flex flex-col gap-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-navy flex items-center gap-1.5">
+                    <span className="text-xs font-black text-navy dark:text-slate-100 flex items-center gap-1.5">
                       <Shield size={15} className="text-teal" /> تعیین نقش و سطح دسترسی کاربر
                     </span>
-                    <span className="text-[11px] font-bold text-ink-subtle">فقط توسط مدیر ارشد</span>
+                    <span className="text-[11px] font-bold text-ink-subtle dark:text-slate-400">فقط توسط مدیر ارشد</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1055,15 +1055,15 @@ export default function Managers() {
                       onClick={() => handleChangeUserRole(m, "manager")}
                       className={`p-2.5 rounded-xl border-2 text-right transition-all cursor-pointer ${
                         m.role !== "admin"
-                          ? "border-teal bg-teal/10 text-teal-text shadow-xs"
-                          : "border-ink/15 bg-white text-navy/70 hover:border-ink/30"
+                          ? "border-teal bg-teal/10 dark:bg-teal-950/30 text-teal-text dark:text-teal-300 shadow-xs"
+                          : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy/70 dark:text-slate-300 hover:border-ink/30"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs font-black">کاربر عادی (Manager)</span>
                         {m.role !== "admin" && <Badge color="green">نقش فعلی</Badge>}
                       </div>
-                      <p className="text-[11px] text-ink-subtle leading-4">دسترسی استاندارد به فرم‌ها و پاسخ‌های خود</p>
+                      <p className="text-[11px] text-ink-subtle dark:text-slate-400 leading-4">دسترسی استاندارد به فرم‌ها و پاسخ‌های خود</p>
                     </button>
 
                     <button
@@ -1071,8 +1071,8 @@ export default function Managers() {
                       onClick={() => handleChangeUserRole(m, "admin")}
                       className={`p-2.5 rounded-xl border-2 text-right transition-all cursor-pointer ${
                         m.role === "admin"
-                          ? "border-amber-500 bg-amber-50 text-amber-900 shadow-xs"
-                          : "border-ink/15 bg-white text-navy/70 hover:border-amber-300"
+                          ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-300 shadow-xs"
+                          : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy/70 dark:text-slate-300 hover:border-amber-300"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
@@ -1082,14 +1082,14 @@ export default function Managers() {
                         </span>
                         {m.role === "admin" && <Badge color="yellow">نقش فعلی</Badge>}
                       </div>
-                      <p className="text-[11px] text-ink-subtle leading-4">دسترسی کامل به پنل مدیریت کل و نظارت بر سیستم</p>
+                      <p className="text-[11px] text-ink-subtle dark:text-slate-400 leading-4">دسترسی کامل به پنل مدیریت کل و نظارت بر سیستم</p>
                     </button>
                   </div>
                 </div>
               )}
 
               {/* دکمه‌های عملیات کاربر */}
-              <div className="border-t border-ink/10 pt-3 flex flex-wrap items-center gap-2">
+              <div className="border-t border-ink/10 dark:border-slate-700 pt-3 flex flex-wrap items-center gap-2">
                 {canManage && (
                   <>
                     <Button
@@ -1107,7 +1107,7 @@ export default function Managers() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className={m.is_active ? "!text-amber-700 hover:bg-amber-50" : "!text-teal-text hover:bg-teal/10"}
+                        className={m.is_active ? "!text-amber-700 dark:!text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30" : "!text-teal-text dark:!text-teal-300 hover:bg-teal/10"}
                         onClick={() => handleDeactivate(m.id)}
                       >
                         {m.is_active ? "غیرفعال‌سازی کاربر" : "فعال‌سازی کاربر"}
@@ -1118,7 +1118,7 @@ export default function Managers() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="!text-magenta-text hover:bg-magenta/10 mr-auto"
+                        className="!text-magenta-text dark:!text-pink-400 hover:bg-magenta/10 mr-auto"
                         onClick={() => {
                           setSelectedUserModal(null);
                           setDeleteTarget(m);
@@ -1146,14 +1146,14 @@ export default function Managers() {
 
       {/* ─── مودال ایجاد کاربر ─── */}
       <Modal open={showCreateModal} onClose={() => { setShowCreateModal(false); setCreateError(null); }} title="ایجاد کاربر جدید">
-        <div className="flex flex-col gap-4 max-h-[80vh] overflow-y-auto pr-1">
+        <div className="flex flex-col gap-4">
           <div>
-            <label className="block text-sm font-extrabold text-navy mb-1.5">ایمیل کاربر</label>
+            <label className="block text-sm font-extrabold text-navy dark:text-slate-100 mb-1.5">ایمیل کاربر</label>
             <input type="email" dir="ltr" value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
               className={inputCls} placeholder="user@example.com" />
           </div>
           <div>
-            <label className="block text-sm font-extrabold text-navy mb-1.5">رمز عبور</label>
+            <label className="block text-sm font-extrabold text-navy dark:text-slate-100 mb-1.5">رمز عبور</label>
             <div className="relative">
               <input
                 type={createPasswordVisible ? "text" : "password"}
@@ -1166,7 +1166,7 @@ export default function Managers() {
               <button
                 type="button"
                 onClick={() => setCreatePasswordVisible(!createPasswordVisible)}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-navy transition-colors p-1 cursor-pointer"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40 dark:text-slate-400 hover:text-navy dark:hover:text-slate-200 transition-colors p-1 cursor-pointer"
                 tabIndex={-1}
                 aria-label={createPasswordVisible ? "مخفی کردن رمز عبور" : "نمایش رمز عبور"}
               >
@@ -1175,16 +1175,16 @@ export default function Managers() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-extrabold text-navy mb-1.5">نام نمایشی</label>
+            <label className="block text-sm font-extrabold text-navy dark:text-slate-100 mb-1.5">نام نمایشی</label>
             <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)}
               className={inputCls} placeholder="نام و نام خانوادگی" />
           </div>
 
           {/* دسترسی به ربات تلگرام */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-bg-lavender/50 border-2 border-teal/20">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-bg-lavender/50 dark:bg-slate-800/80 border-2 border-teal/20 dark:border-teal-700/40">
             <div>
-              <span className="block text-sm font-extrabold text-navy">دسترسی به ربات تلگرام</span>
-              <span className="text-xs font-semibold text-ink-subtle">
+              <span className="block text-sm font-extrabold text-navy dark:text-slate-100">دسترسی به ربات تلگرام</span>
+              <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400">
                 امکان اتصال فرم‌های این کاربر به ربات تلگرام
               </span>
             </div>
@@ -1199,13 +1199,13 @@ export default function Managers() {
             </label>
           </div>
 
-          <div className="p-3 bg-bg-neutral/70 rounded-pill-sm text-xs text-ink-subtle leading-5 flex items-start gap-1.5">
+          <div className="p-3 bg-bg-neutral/70 dark:bg-slate-800 rounded-pill-sm text-xs text-ink-subtle dark:text-slate-400 leading-5 flex items-start gap-1.5">
             <Info size={16} className="text-teal shrink-0 mt-0.5" />
             <span><strong>پرمیشن‌های یکسان و ثابت:</strong> تمامی کاربران دارای دسترسی‌های پایه (ایجاد، ویرایش، حذف، مشاهده پاسخ‌ها و خروجی اکسل) هستند. مشاهده سایر کاربران برای تمامی کاربران عادی کاملاً مسدود می‌باشد.</span>
           </div>
 
           {createError && (
-            <div className="text-sm font-bold text-magenta-text bg-magenta/10 border-2 border-magenta rounded-pill-md px-3 py-2">
+            <div className="text-sm font-bold text-magenta-text dark:text-pink-400 bg-magenta/10 dark:bg-pink-950/30 border-2 border-magenta rounded-pill-md px-3 py-2">
               {createError}
             </div>
           )}
@@ -1222,7 +1222,7 @@ export default function Managers() {
       {/* ─── مودال ویرایش کاربر ─── */}
       <Modal open={showEditModal} onClose={() => setShowEditModal(false)}
         title={selectedManager?.is_owner ? "ویرایش صاحب اصلی" : "ویرایش کاربر و تنظیم رمز"}>
-        <div className="flex flex-col gap-4 max-h-[80vh] overflow-y-auto pr-1">
+        <div className="flex flex-col gap-4">
           {selectedManager?.is_owner && (
             <div className="flex items-center gap-2 bg-college-light border-2 border-orange/30 rounded-pill-md px-3 py-2 text-sm font-bold text-orange">
               <Crown size={16} /> صاحب اصلی سایت — فقط نام قابل تغییر است
@@ -1230,16 +1230,16 @@ export default function Managers() {
           )}
 
           <div>
-            <label className="block text-sm font-extrabold text-navy mb-1.5">نام نمایشی</label>
+            <label className="block text-sm font-extrabold text-navy dark:text-slate-100 mb-1.5">نام نمایشی</label>
             <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className={inputCls} />
           </div>
 
           {/* دسترسی به بات تلگرام */}
           {!selectedManager?.is_owner && (
-            <div className="flex items-center justify-between p-3.5 rounded-xl bg-bg-lavender/50 border-2 border-teal/20">
+            <div className="flex items-center justify-between p-3.5 rounded-xl bg-bg-lavender/50 dark:bg-slate-800/80 border-2 border-teal/20 dark:border-teal-700/40">
               <div>
-                <span className="block text-sm font-extrabold text-navy">دسترسی به بات تلگرام</span>
-                <span className="text-xs font-semibold text-ink-subtle">
+                <span className="block text-sm font-extrabold text-navy dark:text-slate-100">دسترسی به بات تلگرام</span>
+                <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400">
                   تنها دسترسی متغیر کاربر — امکان اتصال فرم‌ها به بات تلگرام
                 </span>
               </div>
@@ -1256,10 +1256,10 @@ export default function Managers() {
           )}
 
           {/* تنظیم رمز عبور */}
-          <div className="p-3.5 rounded-xl bg-bg-neutral/70 border border-ink/10 flex flex-col gap-2.5">
-            <span className="block text-xs font-extrabold text-navy">تغییر رمز عبور کاربر</span>
+          <div className="p-3.5 rounded-xl bg-bg-neutral/70 dark:bg-slate-800 border border-ink/10 dark:border-slate-700 flex flex-col gap-2.5">
+            <span className="block text-xs font-extrabold text-navy dark:text-slate-100">تغییر رمز عبور کاربر</span>
             <div>
-              <label className="block text-xs font-bold text-ink-subtle mb-1">تعیین رمز عبور جدید (اختیاری):</label>
+              <label className="block text-xs font-bold text-ink-subtle dark:text-slate-400 mb-1">تعیین رمز عبور جدید (اختیاری):</label>
               <div className="relative">
                 <input
                   type={editPasswordVisible ? "text" : "password"}
@@ -1272,7 +1272,7 @@ export default function Managers() {
                 <button
                   type="button"
                   onClick={() => setEditPasswordVisible(!editPasswordVisible)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-navy transition-colors p-1 cursor-pointer"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40 dark:text-slate-400 hover:text-navy dark:hover:text-slate-200 transition-colors p-1 cursor-pointer"
                   tabIndex={-1}
                   aria-label={editPasswordVisible ? "مخفی کردن رمز عبور" : "نمایش رمز عبور"}
                 >

@@ -738,15 +738,15 @@ export default function FormsList() {
           return (
             <div className="flex flex-col gap-4 text-right">
               {/* مشخصات کلی فرم در پاپ‌آپ */}
-              <div className="bg-bg-lavender/60 border border-navy/10 rounded-2xl p-4 flex flex-col gap-2.5">
+              <div className="bg-bg-lavender/60 dark:bg-slate-800/80 border border-navy/10 dark:border-slate-700 rounded-2xl p-4 flex flex-col gap-2.5">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-black text-navy text-base leading-6">
+                    <h3 className="font-black text-navy dark:text-white text-base leading-6">
                       {f.title}
                     </h3>
-                    <div className="flex items-center gap-1.5 mt-1 text-xs font-bold text-ink-subtle">
+                    <div className="flex items-center gap-1.5 mt-1 text-xs font-bold text-ink-subtle dark:text-slate-400">
                       <User size={13} className="text-teal shrink-0" />
-                      <span>سازنده: <strong className="text-navy">{creatorName}</strong></span>
+                      <span>سازنده: <strong className="text-navy dark:text-slate-200">{creatorName}</strong></span>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
@@ -762,7 +762,7 @@ export default function FormsList() {
                 </div>
 
                 {/* آمار و زمان */}
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-ink-subtle pt-2 border-t border-navy/5">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-ink-subtle dark:text-slate-400 pt-2 border-t border-navy/5 dark:border-slate-700/60">
                   <div className="flex items-center gap-2">
                     <span className="flex items-center gap-1"><BarChart3 size={12} className="text-teal" /> {faNum(c.total)} پاسخ دریافتی</span>
                     <span>·</span>
@@ -776,9 +776,9 @@ export default function FormsList() {
 
                 {/* لینک سریع با کپی */}
                 {!isTrashed && (
-                  <div className="flex items-center gap-2 bg-white rounded-pill-sm px-3 py-1.5 border border-ink/15 text-xs mt-1">
+                  <div className="flex items-center gap-2 bg-white dark:bg-slate-900/90 rounded-pill-sm px-3 py-1.5 border border-ink/15 dark:border-slate-700 text-xs mt-1">
                     <Link2 size={13} className="text-teal shrink-0" />
-                    <span className="font-mono text-ink-subtle truncate flex-1" dir="ltr">
+                    <span className="font-mono text-ink-subtle dark:text-slate-300 truncate flex-1" dir="ltr">
                       /f/{f.slug}
                     </span>
                     <button
@@ -793,7 +793,7 @@ export default function FormsList() {
                         href={`/f/${f.slug}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center text-ink-subtle hover:text-navy shrink-0"
+                        className="inline-flex items-center text-ink-subtle dark:text-slate-400 hover:text-navy dark:hover:text-white shrink-0"
                       >
                         <ExternalLink size={12} />
                       </a>
@@ -804,7 +804,7 @@ export default function FormsList() {
 
               {/* گزینه‌ها و دکمه‌های عملیات */}
               <div className="flex flex-col gap-2.5">
-                <span className="text-xs font-black text-navy">گزینه‌های دسترسی و عملیات:</span>
+                <span className="text-xs font-black text-navy dark:text-slate-200">گزینه‌های دسترسی و عملیات:</span>
 
                 {isTrashed ? (
                   <div className="flex flex-wrap items-center gap-2">
@@ -874,13 +874,13 @@ export default function FormsList() {
                     </div>
 
                     {/* دکمه‌های تغییر وضعیت */}
-                    <div className="border-t border-ink/10 pt-2.5 flex flex-wrap gap-2">
+                    <div className="border-t border-ink/10 dark:border-slate-800 pt-2.5 flex flex-wrap gap-2">
                       {hasPermission("publish_form") && (
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => togglePublish(f)}
-                          className={f.published ? "!text-amber-700 hover:!bg-amber-50" : "!text-teal-text hover:!bg-teal/10"}
+                          className={f.published ? "!text-amber-600 dark:!text-amber-400 hover:!bg-amber-50 dark:hover:!bg-amber-950/40" : "!text-teal-text dark:!text-teal hover:!bg-teal/10"}
                         >
                           {f.published ? "⏸ لغو انتشار فرم" : "▶ انتشار فرم"}
                         </Button>
@@ -900,16 +900,16 @@ export default function FormsList() {
                         variant="ghost"
                         size="sm"
                         onClick={() => archiveForm(f)}
-                        className="text-navy hover:bg-navy/5"
+                        className="text-navy dark:text-slate-200 hover:bg-navy/5 dark:hover:bg-white/5"
                       >
                         {f.archived ? (
                           <>
-                            <ArchiveRestore size={14} className="ml-1.5 text-navy" />
+                            <ArchiveRestore size={14} className="ml-1.5 text-teal" />
                             <span>خروج از آرشیو</span>
                           </>
                         ) : (
                           <>
-                            <Archive size={14} className="ml-1.5 text-navy" />
+                            <Archive size={14} className="ml-1.5 text-navy dark:text-slate-300" />
                             <span>آرشیو کردن فرم</span>
                           </>
                         )}
@@ -918,7 +918,7 @@ export default function FormsList() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="!text-magenta-text hover:!bg-magenta/10 mr-auto"
+                          className="!text-magenta-text dark:!text-rose-400 hover:!bg-magenta/10 dark:hover:!bg-rose-950/40 mr-auto"
                           onClick={() => {
                             setActionModalForm(null);
                             setDeleting(f);
@@ -933,7 +933,7 @@ export default function FormsList() {
               </div>
 
               {/* دکمه بستن */}
-              <div className="pt-2 border-t border-ink/10 flex justify-end">
+              <div className="pt-2 border-t border-ink/10 dark:border-slate-800 flex justify-end">
                 <Button variant="ghost" size="sm" onClick={() => setActionModalForm(null)}>
                   بستن
                 </Button>

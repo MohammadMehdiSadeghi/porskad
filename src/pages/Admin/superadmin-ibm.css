@@ -665,8 +665,50 @@ html.dark .sa-table th {
   background: #1e1e1e;
   color: #c6c6c6;
 }
-html.dark .sa-table tr:hover td {
+html.dark .sa-stat {
+  background: #262626;
+  color: #f4f4f4;
+}
+html.dark .sa-stats {
+  background: #393939;
+}
+html.dark .sa-stat-value {
+  color: #f4f4f4;
+}
+html.dark .sa-stat-label,
+html.dark .sa-stat-sub {
+  color: #c6c6c6;
+}
+html.dark .sa-section-title {
+  color: #f4f4f4;
+}
+html.dark .sa-admin-card {
+  background: #262626;
+  border-color: #393939;
+  color: #f4f4f4;
+}
+html.dark .sa-admin-email {
+  color: #c6c6c6;
+}
+html.dark .sa-btn-secondary {
+  color: #f4f4f4;
+  border-color: #525252;
+}
+html.dark .sa-btn-secondary:hover {
   background: #353535;
+}
+html.dark .sa-btn-ghost:hover {
+  background: #353535;
+}
+html.dark .sa-search input {
+  background: #161616;
+  border-color: #393939;
+  color: #f4f4f4;
+}
+html.dark .sa-perm.inactive {
+  background: #1e1e1e;
+  border-color: #393939;
+  color: #8d8d8d;
 }
 html.dark .sa-input,
 html.dark .sa-select,
