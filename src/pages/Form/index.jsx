@@ -10,7 +10,7 @@ import Logo from "../../components/ui/Logo";
 import { supabase } from "../../lib/supabaseClient";
 import { normalizeAnswerValue, validateAnswer } from "../../lib/validators";
 import { calculateFlow, evaluateNextStep } from "../../lib/logic/flowEngine";
-import { faNum, faDuration, parseUserAgent } from "../../lib/utils";
+import { faNum, faDuration, parseUserAgent, generateUuid } from "../../lib/utils";
 import { QUESTION_TYPES } from "../../lib/questionTypes";
 import QuestionStep from "./QuestionStep";
 import RegistrationForm from "../../components/form/RegistrationForm";
@@ -224,7 +224,7 @@ export default function FormFill() {
     setSubmitting(true); setSubmitError(null);
     try {
       const ua = parseUserAgent(); const nowIso = new Date().toISOString();
-      const responseId = crypto.randomUUID();
+      const responseId = generateUuid();
       const { error: respError } = await supabase.from("responses").insert({
         id: responseId,
         form_id: form.id, is_complete: true, started_at: new Date(startedAt ?? Date.now()).toISOString(), submitted_at: nowIso,

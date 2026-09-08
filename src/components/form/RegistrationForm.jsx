@@ -5,7 +5,7 @@ import Button from "../ui/Button";
 import Badge from "../ui/Badge";
 import Logo from "../ui/Logo";
 import { normalizeAnswerValue, validateAnswer } from "../../lib/validators";
-import { faNum, parseUserAgent } from "../../lib/utils";
+import { faNum, parseUserAgent, generateUuid } from "../../lib/utils";
 import { QUESTION_TYPES } from "../../lib/questionTypes";
 import { supabase } from "../../lib/supabaseClient";
 import ConfirmDialog from "../ui/ConfirmDialog";
@@ -133,7 +133,7 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
     setError(null);
     try {
       const ua = parseUserAgent();
-      const responseId = crypto.randomUUID ? crypto.randomUUID() : `r_${Date.now()}`;
+      const responseId = generateUuid();
       const { error: respError } = await supabase.from("responses").insert({
         id: responseId,
         form_id: form.id,
