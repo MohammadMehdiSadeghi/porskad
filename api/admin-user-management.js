@@ -175,6 +175,12 @@ export default async function handler(req, res) {
             can_export_excel: true,
           })
           .eq("id", target_user_id);
+
+        // حذف محدودیت‌های پیشین جهت اعمال کامل کلیه مجوزهای نقشی سوپرادمین
+        await adminClient
+          .from("user_permissions")
+          .delete()
+          .eq("user_id", target_user_id);
       } else {
         await adminClient
           .from("profiles")

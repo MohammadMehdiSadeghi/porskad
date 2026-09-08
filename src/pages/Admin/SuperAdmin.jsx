@@ -1858,14 +1858,20 @@ export default function SuperAdmin() {
                     "manage_sms",
                     "manage_telegram",
                   ].map((perm) => {
-                    const has = a.permissions?.includes(perm);
+                    const has = a.role === "admin"
+                      ? (!a.permissions || a.permissions.length === 0 || a.permissions.includes(perm))
+                      : a.permissions?.includes(perm);
                     return (
                       <button
                         key={perm}
                         disabled={!isCallerGod}
                         title={!isCallerGod ? "Only Primary God Owner can modify administrator permissions" : undefined}
                         onClick={() =>
-                          toggleAdminPermission(a.id, perm, a.permissions || [])
+                          toggleAdminPermission(a.id, perm, a.permissions && a.permissions.length > 0 ? a.permissions : [
+                            "create_form", "edit_form", "delete_form", "publish_form",
+                            "view_responses", "view_analytics", "export_excel",
+                            "manage_managers", "manage_sms", "manage_telegram"
+                          ])
                         }
                         className={`sa-perm ${has ? "active" : "inactive"} ${!isCallerGod ? "opacity-60 cursor-not-allowed" : ""}`}
                       >

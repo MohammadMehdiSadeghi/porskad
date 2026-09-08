@@ -19,8 +19,11 @@ const ALL_PERMISSIONS = [
   "view_analytics",
   "export_excel",
   "manage_managers",
+  "view_admins",
   "manage_sms",
   "manage_telegram",
+  "manage_settings",
+  "view_logs",
 ];
 
 const DEFAULT_MANAGER_PERMISSIONS = [
@@ -139,6 +142,7 @@ export function AuthProvider({ children }) {
 
   const fetchPermissions = useCallback(async (uid, userRole) => {
     if (!supabase || !uid) return [];
+    if (userRole === "admin") return [...ALL_PERMISSIONS];
     try {
       const { data, error } = await supabase.rpc("get_user_permissions", {
         p_user_id: uid,
@@ -185,10 +189,21 @@ export function AuthProvider({ children }) {
           ]);
           const pProfile = profileData.status === 'fulfilled' ? profileData.value : null;
           const pRole = roleData.status === 'fulfilled' ? roleData.value : null;
-          const permsData = await fetchPermissions(uid, pRole);
+          const isSuperAdmin = pRole === 'admin' || pProfile?.is_owner === true || isPrimaryGodEmail(newSession.user.email);
+
+          if (isSuperAdmin && pProfile) {
+            pProfile.is_owner = true;
+            pProfile.can_use_telegram = true;
+            pProfile.can_export_excel = true;
+            pProfile.max_forms = 999999;
+            pProfile.max_responses_per_month = 999999;
+            pProfile.plan = "enterprise";
+          }
+
+          const permsData = isSuperAdmin ? [...ALL_PERMISSIONS] : await fetchPermissions(uid, pRole);
           setUser({ id: uid, email: newSession.user.email });
           setProfile(pProfile);
-          setRole(pRole);
+          setRole(isSuperAdmin ? "admin" : pRole);
           setPermissions(permsData);
           setError(null);
         } catch (err) {
