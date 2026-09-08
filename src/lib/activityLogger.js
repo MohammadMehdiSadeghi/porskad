@@ -1,5 +1,51 @@
-// ─── Activity Logger — ثبت فعالیت‌ها، ورودها و لاگ IP برای سوپرادمین ───
+// ─── Activity & Auth Security Logger — ثبت فعالیت‌ها، ورودها و لاگ IP برای سوپرادمین ───
 import { supabase } from "./supabaseClient";
+
+let cachedClientIp = null;
+let cachedGeo = null;
+
+/**
+ * دریافت سریع آدرس IP و موقعیت تقریبی از کلاینت (با کَش در حافظه و sessionStorage)
+ */
+export async function getClientPublicIp() {
+  if (cachedClientIp) return { ip: cachedClientIp, geo: cachedGeo };
+  if (typeof window !== "undefined") {
+    const saved = sessionStorage.getItem("porskad_client_ip");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed?.ip) {
+          cachedClientIp = parsed.ip;
+          cachedGeo = parsed.geo || null;
+          return { ip: cachedClientIp, geo: cachedGeo };
+        }
+      } catch {}
+    }
+  }
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2000);
+
+    const res = await fetch("https://api.ipify.org?format=json", {
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.ip) {
+        cachedClientIp = data.ip;
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("porskad_client_ip", JSON.stringify({ ip: data.ip, geo: null }));
+        }
+        return { ip: data.ip, geo: null };
+      }
+    }
+  } catch {}
+
+  return { ip: null, geo: null };
+}
 
 /**
  * تشخیص مرورگر، سیستم‌عامل و نوع دستگاه
@@ -42,35 +88,64 @@ export async function logAuthEvent({ userId = null, email = null, action = "logi
   try {
     const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
     const { browser, os, device } = parseUserAgent(ua);
+    const { ip: clientIp } = await getClientPublicIp().catch(() => ({ ip: null }));
 
-    // ۱. ارسال به اندپوینت سرورلس برای ثبت مطمئن IP واقعی
-    fetch("/api/log-auth", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId,
-        email,
-        action,
-        browser,
-        os,
-        device,
-        details,
-      }),
-    }).catch(() => {
-      // فالبک از طریق Supabase مستقیم در صورت عدم دسترسی به API
-      if (supabase && userId) {
-        supabase.rpc("log_auth_event", {
+    const payload = {
+      userId,
+      email,
+      action,
+      browser,
+      os,
+      device,
+      ip: clientIp,
+      details: details ? { ...details, client_ip: clientIp } : { client_ip: clientIp },
+    };
+
+    let serverSuccess = false;
+
+    // ۱. ارسال به سرورلس API
+    try {
+      const res = await fetch("/api/log-auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        serverSuccess = true;
+      }
+    } catch {}
+
+    // ۲. فالبک مستقیم Supabase RPC در صورت عدم موفقیت API سرورلس (مثلاً در حالت لوکال dev)
+    if (!serverSuccess && supabase) {
+      try {
+        await supabase.rpc("log_auth_event", {
           p_user_id: userId,
           p_email: email,
+          p_ip_address: clientIp || "127.0.0.1",
           p_action: action,
           p_device: device,
           p_browser: browser,
           p_os: os,
           p_user_agent: ua,
           p_details: details || {},
-        }).catch(() => {});
+        });
+      } catch {
+        // فالبک درج مستقیم در جدول
+        try {
+          await supabase.from("auth_logs").insert({
+            user_id: userId,
+            email,
+            ip_address: clientIp || "127.0.0.1",
+            action,
+            device,
+            browser,
+            os,
+            user_agent: ua,
+            details: details || {},
+          });
+        } catch {}
       }
-    });
+    }
   } catch (err) {
     // خطاهای لاگ نباید هرگز مانع جریان کاربر شوند
   }
@@ -78,16 +153,13 @@ export async function logAuthEvent({ userId = null, email = null, action = "logi
 
 /**
  * ثبت یک فعالیت در activity_log
- * @param {string} action - نوع عمل (login, create_form, edit_form, ...)
- * @param {string} targetType - نوع هدف (form, response, user, ...)
- * @param {string} targetId - آیدی هدف
- * @param {object} details - جزئیات اضافی
  */
 export async function logActivity(action, targetType = null, targetId = null, details = null) {
   if (!supabase) return;
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
+    const { ip } = await getClientPublicIp().catch(() => ({ ip: null }));
 
     await supabase.from("activity_log").insert({
       user_id: user.id,
@@ -95,11 +167,11 @@ export async function logActivity(action, targetType = null, targetId = null, de
       target_type: targetType,
       target_id: targetId ? String(targetId) : null,
       details: details || null,
+      ip_address: ip,
       user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
     });
   } catch (err) {
-    // silently fail — logging should never break the app
-    console.warn("Activity log failed:", err.message);
+    // silently fail
   }
 }
 
@@ -117,16 +189,16 @@ export async function logError(message, source = "client", url = null) {
       url: url || (typeof window !== "undefined" ? window.location.href : null),
       user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
     });
-  } catch {
-    // silently fail
-  }
+  } catch {}
 }
 
 // ─── نام‌های خوانا برای اکشن‌ها ───
 export const ACTION_LABELS = {
   login: "ورود به حساب کاربری",
+  login_after_register: "ورود خودکار پس از ثبت‌نام",
   register: "ثبت‌نام کاربر جدید",
   logout: "خروج از حساب کاربری",
+  failed_login: "تلاش ناموفق برای ورود",
   create_form: "ایجاد فرم",
   edit_form: "ویرایش فرم",
   delete_form: "حذف فرم",

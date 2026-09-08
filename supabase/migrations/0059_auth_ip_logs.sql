@@ -45,6 +45,7 @@ CREATE POLICY "superadmin read auth_logs"
   USING (
     public.is_admin(auth.uid())
     OR public.is_owner(auth.uid())
+    OR EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.is_owner = true)
     OR (auth.jwt() ->> 'email') IN ('superadmin@gmailc.com', 'superadmin@gmail.com')
   );
 
@@ -122,7 +123,71 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$;
 
--- ۴. تابع RPC برای دریافت خلاصه آدرس‌های IP و تاریخچه ورود یک کاربر خاص
+-- ۴. تابع RPC حرفه‌ای دریافت تمام لاگ‌های احراز هویت همراه با مشخصات کاربر برای پنل سوپرادمین
+CREATE OR REPLACE FUNCTION public.get_all_auth_logs(
+  p_limit INT DEFAULT 250,
+  p_search TEXT DEFAULT NULL
+)
+RETURNS TABLE (
+  id UUID,
+  user_id UUID,
+  email TEXT,
+  full_name TEXT,
+  phone TEXT,
+  ip_address TEXT,
+  action TEXT,
+  device TEXT,
+  browser TEXT,
+  os TEXT,
+  user_agent TEXT,
+  details JSONB,
+  created_at TIMESTAMPTZ
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NOT (
+    public.is_admin(auth.uid())
+    OR public.is_owner(auth.uid())
+    OR EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.is_owner = true)
+    OR (auth.jwt() ->> 'email') IN ('superadmin@gmailc.com', 'superadmin@gmail.com')
+  ) THEN
+    RAISE EXCEPTION 'Access denied';
+  END IF;
+
+  RETURN QUERY
+  SELECT 
+    al.id,
+    al.user_id,
+    COALESCE(al.email, p.email) AS email,
+    p.full_name,
+    p.phone,
+    al.ip_address,
+    al.action,
+    al.device,
+    al.browser,
+    al.os,
+    al.user_agent,
+    al.details,
+    al.created_at
+  FROM public.auth_logs al
+  LEFT JOIN public.profiles p ON p.id = al.user_id
+  WHERE (
+    p_search IS NULL OR p_search = '' OR
+    al.email ILIKE '%' || p_search || '%' OR
+    al.ip_address ILIKE '%' || p_search || '%' OR
+    al.action ILIKE '%' || p_search || '%' OR
+    p.full_name ILIKE '%' || p_search || '%' OR
+    p.phone ILIKE '%' || p_search || '%'
+  )
+  ORDER BY al.created_at DESC
+  LIMIT p_limit;
+END;
+$$;
+
+-- ۵. تابع RPC برای دریافت خلاصه آدرس‌های IP و تاریخچه ورود یک کاربر خاص
 CREATE OR REPLACE FUNCTION public.get_user_ip_history(p_user_id UUID)
 RETURNS TABLE (
   ip_address TEXT,
@@ -137,10 +202,10 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  -- فقط سوپرادمین حق دسترسی دارد
   IF NOT (
     public.is_admin(auth.uid())
     OR public.is_owner(auth.uid())
+    OR EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.is_owner = true)
     OR (auth.jwt() ->> 'email') IN ('superadmin@gmailc.com', 'superadmin@gmail.com')
   ) THEN
     RAISE EXCEPTION 'Access denied';
@@ -163,4 +228,5 @@ $$;
 
 -- مجوزهای فراخوانی تابع‌ها
 GRANT EXECUTE ON FUNCTION public.log_auth_event TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.get_all_auth_logs TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.get_user_ip_history TO authenticated, service_role;

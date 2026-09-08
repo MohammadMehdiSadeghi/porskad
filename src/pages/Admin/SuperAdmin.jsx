@@ -116,6 +116,9 @@ export default function SuperAdmin() {
   const [authLogsLoading, setAuthLogsLoading] = useState(false);
   const [authLogsSearch, setAuthLogsSearch] = useState("");
   const [authLogsFilter, setAuthLogsFilter] = useState("all");
+  const [authLogsTimeframe, setAuthLogsTimeframe] = useState("all");
+  const [authLogsViewMode, setAuthLogsViewMode] = useState("stream");
+  const [ipInspectModal, setIpInspectModal] = useState(null);
   const [userIpHistory, setUserIpHistory] = useState([]);
   const [userIpHistoryLoading, setUserIpHistoryLoading] = useState(false);
   const [userLogsTab, setUserLogsTab] = useState("all");
@@ -551,28 +554,58 @@ export default function SuperAdmin() {
   async function loadAuthLogs() {
     setAuthLogsLoading(true);
     try {
-      let q = supabase
-        .from("auth_logs")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(200);
+      let data = null;
 
-      if (!isCallerGod) {
-        const { data: godUsers } = await supabase
-          .from("profiles")
-          .select("id, email")
-          .in("email", PRIMARY_GOD_EMAILS);
-        const godIds = godUsers?.map((u) => u.id) || [];
-        if (godIds.length > 0) {
-          godIds.forEach((gid) => {
-            q = q.neq("user_id", gid);
-          });
+      // ۱. تلاش برای دریافت از طریق RPC بهینه‌شده get_all_auth_logs
+      try {
+        const { data: rpcData, error: rpcErr } = await supabase.rpc("get_all_auth_logs", { p_limit: 350 });
+        if (!rpcErr && rpcData && Array.isArray(rpcData)) {
+          data = rpcData;
+        }
+      } catch {}
+
+      // ۲. فالبک به کوئری مستقیم جدول auth_logs
+      if (!data || data.length === 0) {
+        const { data: tableData, error: tableErr } = await supabase
+          .from("auth_logs")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(300);
+        if (!tableErr && tableData) {
+          data = tableData;
         }
       }
 
-      const { data, error } = await q;
-      if (error) throw error;
-      setAuthLogs(data || []);
+      // ۳. فالبک استخراج لاگ‌های احراز هویت از activity_log در صورت نیاز
+      if (!data || data.length === 0) {
+        const { data: actLogs } = await supabase
+          .from("activity_log")
+          .select("*")
+          .eq("target_type", "auth")
+          .order("created_at", { ascending: false })
+          .limit(100);
+        if (actLogs && actLogs.length > 0) {
+          data = actLogs.map((a) => ({
+            id: String(a.id),
+            user_id: a.user_id,
+            email: a.details?.email,
+            ip_address: a.ip_address || a.details?.ip,
+            action: a.action,
+            device: a.details?.device || "Desktop",
+            browser: a.details?.browser || "Browser",
+            os: a.details?.os || "OS",
+            created_at: a.created_at,
+            details: a.details,
+          }));
+        }
+      }
+
+      let finalLogs = data || [];
+      if (!isCallerGod) {
+        finalLogs = finalLogs.filter((l) => !isPrimaryGodEmail(l.email));
+      }
+
+      setAuthLogs(finalLogs);
     } catch (err) {
       console.error("loadAuthLogs error:", err);
     } finally {
@@ -947,13 +980,112 @@ export default function SuperAdmin() {
     }
   }
 
-  // ─── Stats ───
+  // ─── Stats & Metrics ───
   const uniqueAuthIpsCount = useMemo(() => {
     const set = new Set();
     authLogs.forEach((l) => {
       if (l.ip_address) set.add(l.ip_address);
     });
     return set.size;
+  }, [authLogs]);
+
+  // ─── Grouped by IP Address (تفکیک و شناسایی حساب‌های اشتراکی بر اساس IP) ───
+  const authLogsGroupedByIp = useMemo(() => {
+    const map = {};
+    authLogs.forEach((l) => {
+      const ip = l.ip_address || "unknown";
+      if (!map[ip]) {
+        map[ip] = {
+          ip,
+          count: 0,
+          users: new Map(),
+          first_seen: l.created_at,
+          last_seen: l.created_at,
+          devices: new Set(),
+          browsers: new Set(),
+          actions: new Set(),
+          city: l.details?.city || null,
+          country: l.details?.country || null,
+        };
+      }
+      map[ip].count += 1;
+      if (new Date(l.created_at) < new Date(map[ip].first_seen)) map[ip].first_seen = l.created_at;
+      if (new Date(l.created_at) > new Date(map[ip].last_seen)) map[ip].last_seen = l.created_at;
+      if (l.device) map[ip].devices.add(l.device);
+      if (l.browser) map[ip].browsers.add(l.browser);
+      if (l.action) map[ip].actions.add(l.action);
+      const userKey = l.email || l.user_id || "Anonymous";
+      const uObj = {
+        key: userKey,
+        fullName: l.full_name,
+        phone: l.phone || l.details?.phone,
+      };
+      map[ip].users.set(userKey, { hits: ((map[ip].users.get(userKey)?.hits) || 0) + 1, ...uObj });
+    });
+
+    return Object.values(map)
+      .map((item) => ({
+        ...item,
+        uniqueUsersCount: item.users.size,
+        usersList: Array.from(item.users.values()),
+        devicesList: Array.from(item.devices),
+        browsersList: Array.from(item.browsers),
+        actionsList: Array.from(item.actions),
+      }))
+      .sort((a, b) => new Date(b.last_seen) - new Date(a.last_seen));
+  }, [authLogs]);
+
+  // ─── Grouped by User (تفکیک تمام IPهای هر کاربر به صورت یکپارچه) ───
+  const authLogsGroupedByUser = useMemo(() => {
+    const map = {};
+    authLogs.forEach((l) => {
+      const userKey = l.email || l.user_id || "Anonymous";
+      if (!map[userKey]) {
+        map[userKey] = {
+          userKey,
+          userId: l.user_id,
+          email: l.email,
+          fullName: l.full_name,
+          phone: l.phone || l.details?.phone,
+          count: 0,
+          ips: new Map(),
+          first_seen: l.created_at,
+          last_seen: l.created_at,
+          devices: new Set(),
+          browsers: new Set(),
+          actions: new Set(),
+        };
+      }
+      map[userKey].count += 1;
+      if (new Date(l.created_at) < new Date(map[userKey].first_seen)) map[userKey].first_seen = l.created_at;
+      if (new Date(l.created_at) > new Date(map[userKey].last_seen)) map[userKey].last_seen = l.created_at;
+      if (l.device) map[userKey].devices.add(l.device);
+      if (l.browser) map[userKey].browsers.add(l.browser);
+      if (l.action) map[userKey].actions.add(l.action);
+      if (l.ip_address) {
+        map[userKey].ips.set(l.ip_address, (map[userKey].ips.get(l.ip_address) || 0) + 1);
+      }
+    });
+
+    return Object.values(map)
+      .map((item) => ({
+        ...item,
+        uniqueIpsCount: item.ips.size,
+        ipsList: Array.from(item.ips.entries()).map(([ip, hits]) => ({ ip, hits })),
+        devicesList: Array.from(item.devices),
+        browsersList: Array.from(item.browsers),
+        actionsList: Array.from(item.actions),
+      }))
+      .sort((a, b) => new Date(b.last_seen) - new Date(a.last_seen));
+  }, [authLogs]);
+
+  const multiIpUsersCount = useMemo(() => {
+    return authLogsGroupedByUser.filter((u) => u.uniqueIpsCount > 1).length;
+  }, [authLogsGroupedByUser]);
+
+  const activeLast24hCount = useMemo(() => {
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    return authLogs.filter((l) => new Date(l.created_at).getTime() >= cutoff).length;
   }, [authLogs]);
 
   const stats = useMemo(
@@ -969,22 +1101,29 @@ export default function SuperAdmin() {
       activities: activityLog.length,
       authEvents: authLogs.length,
       uniqueIps: uniqueAuthIpsCount,
+      multiIpUsers: multiIpUsersCount,
+      active24h: activeLast24hCount,
     }),
-    [dbStats, users, admins, errorLog, activityLog, authLogs, uniqueAuthIpsCount]
+    [dbStats, users, admins, errorLog, activityLog, authLogs, uniqueAuthIpsCount, multiIpUsersCount, activeLast24hCount]
   );
-
-  // ─── Filter ───
-  const filteredData = useMemo(() => {
-    if (!search || !tableData.length) return tableData;
-    const q = search.toLowerCase();
-    return tableData.filter((row) =>
-      Object.values(row).some((v) => String(v).toLowerCase().includes(q))
-    );
-  }, [tableData, search]);
 
   // ─── Filtered Auth Logs (Global) ───
   const filteredAuthLogs = useMemo(() => {
     let list = authLogs;
+
+    // فیلتر بازه زمانی
+    if (authLogsTimeframe !== "all") {
+      const now = Date.now();
+      const cutoffMap = {
+        "24h": now - 24 * 60 * 60 * 1000,
+        "7d": now - 7 * 24 * 60 * 60 * 1000,
+        "30d": now - 30 * 24 * 60 * 60 * 1000,
+      };
+      const cutoff = cutoffMap[authLogsTimeframe] || 0;
+      list = list.filter((l) => new Date(l.created_at).getTime() >= cutoff);
+    }
+
+    // فیلتر عملیات
     if (authLogsFilter !== "all") {
       if (authLogsFilter === "login") {
         list = list.filter((l) => l.action?.includes("login"));
@@ -994,18 +1133,23 @@ export default function SuperAdmin() {
         list = list.filter((l) => l.action === "logout");
       }
     }
+
     if (!authLogsSearch) return list;
     const q = authLogsSearch.toLowerCase();
     return list.filter((l) =>
       (l.email && l.email.toLowerCase().includes(q)) ||
+      (l.full_name && l.full_name.toLowerCase().includes(q)) ||
+      (l.phone && l.phone.toLowerCase().includes(q)) ||
       (l.ip_address && l.ip_address.toLowerCase().includes(q)) ||
       (l.action && l.action.toLowerCase().includes(q)) ||
       (l.browser && l.browser.toLowerCase().includes(q)) ||
       (l.os && l.os.toLowerCase().includes(q)) ||
       (l.device && l.device.toLowerCase().includes(q)) ||
+      (l.details?.city && String(l.details.city).toLowerCase().includes(q)) ||
+      (l.details?.country && String(l.details.country).toLowerCase().includes(q)) ||
       JSON.stringify(l.details || {}).toLowerCase().includes(q)
     );
-  }, [authLogs, authLogsFilter, authLogsSearch]);
+  }, [authLogs, authLogsTimeframe, authLogsFilter, authLogsSearch]);
 
   // ─── Filtered User Logs Modal (Per User) ───
   const filteredUserLogs = useMemo(() => {
@@ -2086,7 +2230,7 @@ export default function SuperAdmin() {
                 IP Address & Authentication Audit Trail ({filteredAuthLogs.length.toLocaleString()})
               </div>
               <div style={{ fontSize: "0.8rem", color: "#525252", marginTop: "0.2rem" }}>
-                Track every user login, registration, and logout with exact IP address, device, and browser.
+                Comprehensive security monitor: Track client IP addresses, identify shared networks, multi-accounting, and device footprints.
               </div>
             </div>
 
@@ -2101,8 +2245,48 @@ export default function SuperAdmin() {
                 {authLogsLoading ? "Refreshing..." : "Refresh"}
               </button>
 
+              {/* CSV Export */}
               <button
                 className="sa-btn sa-btn-secondary"
+                onClick={() => {
+                  try {
+                    const headers = ["ID", "Email", "Full Name", "Phone", "Action", "IP Address", "Device", "OS", "Browser", "Country", "City", "Timestamp"];
+                    const rows = filteredAuthLogs.map((l) => [
+                      `"${l.id || ""}"`,
+                      `"${l.email || ""}"`,
+                      `"${l.full_name || ""}"`,
+                      `"${l.phone || l.details?.phone || ""}"`,
+                      `"${l.action || ""}"`,
+                      `"${l.ip_address || ""}"`,
+                      `"${l.device || ""}"`,
+                      `"${l.os || ""}"`,
+                      `"${l.browser || ""}"`,
+                      `"${l.details?.country || ""}"`,
+                      `"${l.details?.city || ""}"`,
+                      `"${l.created_at ? new Date(l.created_at).toISOString() : ""}"`,
+                    ]);
+                    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+                    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `auth_ip_logs_${new Date().toISOString().slice(0, 10)}.csv`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    showToast("Exported auth logs CSV");
+                  } catch (err) {
+                    showToast("Export CSV error: " + err.message, "error");
+                  }
+                }}
+                style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+              >
+                <Download size={12} />
+                Export CSV
+              </button>
+
+              {/* JSON Export */}
+              <button
+                className="sa-btn sa-btn-ghost"
                 onClick={() => {
                   try {
                     const blob = new Blob([JSON.stringify(filteredAuthLogs, null, 2)], { type: "application/json" });
@@ -2114,7 +2298,7 @@ export default function SuperAdmin() {
                     URL.revokeObjectURL(url);
                     showToast("Exported auth logs JSON");
                   } catch (err) {
-                    showToast("Export error: " + err.message, "error");
+                    showToast("Export JSON error: " + err.message, "error");
                   }
                 }}
                 style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
@@ -2129,7 +2313,7 @@ export default function SuperAdmin() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
               gap: "0.75rem",
             }}
           >
@@ -2140,6 +2324,9 @@ export default function SuperAdmin() {
               <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "#161616", marginTop: "0.2rem" }}>
                 {authLogs.length.toLocaleString()}
               </div>
+              <div style={{ fontSize: "0.7rem", color: "#6f6f6f", marginTop: "0.15rem" }}>
+                All auth sessions captured
+              </div>
             </div>
 
             <div className="sa-card" style={{ padding: "0.75rem 1rem", borderTop: "3px solid #8a3ffc" }}>
@@ -2149,235 +2336,679 @@ export default function SuperAdmin() {
               <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "#8a3ffc", marginTop: "0.2rem" }}>
                 {uniqueAuthIpsCount.toLocaleString()}
               </div>
+              <div style={{ fontSize: "0.7rem", color: "#6f6f6f", marginTop: "0.15rem" }}>
+                Distinct network nodes
+              </div>
+            </div>
+
+            <div className="sa-card" style={{ padding: "0.75rem 1rem", borderTop: "3px solid #1192e8" }}>
+              <div style={{ fontSize: "0.75rem", color: "#525252", fontWeight: 700, textTransform: "uppercase" }}>
+                Active in 24 Hours
+              </div>
+              <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "#1192e8", marginTop: "0.2rem" }}>
+                {activeLast24hCount.toLocaleString()}
+              </div>
+              <div style={{ fontSize: "0.7rem", color: "#6f6f6f", marginTop: "0.15rem" }}>
+                Recent authentications
+              </div>
+            </div>
+
+            <div className="sa-card" style={{ padding: "0.75rem 1rem", borderTop: "3px solid #ff832b" }}>
+              <div style={{ fontSize: "0.75rem", color: "#525252", fontWeight: 700, textTransform: "uppercase" }}>
+                Multi-IP Users
+              </div>
+              <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "#ff832b", marginTop: "0.2rem" }}>
+                {multiIpUsersCount.toLocaleString()}
+              </div>
+              <div style={{ fontSize: "0.7rem", color: "#6f6f6f", marginTop: "0.15rem" }}>
+                Users roaming across &gt;1 IP
+              </div>
             </div>
 
             <div className="sa-card" style={{ padding: "0.75rem 1rem", borderTop: "3px solid #198038" }}>
               <div style={{ fontSize: "0.75rem", color: "#525252", fontWeight: 700, textTransform: "uppercase" }}>
-                Logins
+                Total Logins
               </div>
               <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "#198038", marginTop: "0.2rem" }}>
                 {authLogs.filter((l) => l.action?.includes("login")).length.toLocaleString()}
               </div>
+              <div style={{ fontSize: "0.7rem", color: "#6f6f6f", marginTop: "0.15rem" }}>
+                Successful logins
+              </div>
             </div>
 
-            <div className="sa-card" style={{ padding: "0.75rem 1rem", borderTop: "3px solid #eb6200" }}>
+            <div className="sa-card" style={{ padding: "0.75rem 1rem", borderTop: "3px solid #da1e28" }}>
               <div style={{ fontSize: "0.75rem", color: "#525252", fontWeight: 700, textTransform: "uppercase" }}>
-                New Registrations
+                Registrations
               </div>
-              <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "#eb6200", marginTop: "0.2rem" }}>
+              <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "#da1e28", marginTop: "0.2rem" }}>
                 {authLogs.filter((l) => l.action === "register").length.toLocaleString()}
               </div>
+              <div style={{ fontSize: "0.7rem", color: "#6f6f6f", marginTop: "0.15rem" }}>
+                New account signups
+              </div>
             </div>
           </div>
 
-          {/* Action Filter Buttons & Search */}
+          {/* View Mode Tabs & Filter Controls */}
           <div className="sa-card" style={{ padding: "0.75rem 1rem" }}>
-            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
-              <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
-                {[
-                  { id: "all", label: "All Logs" },
-                  { id: "login", label: "Logins Only" },
-                  { id: "register", label: "Registrations Only" },
-                  { id: "logout", label: "Logouts" },
-                ].map((f) => (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              {/* Row 1: View Mode Switcher */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
+                <div style={{ display: "flex", gap: "0.35rem", background: "#f4f4f4", padding: "0.25rem", border: "1px solid #e0e0e0" }}>
                   <button
-                    key={f.id}
-                    onClick={() => setAuthLogsFilter(f.id)}
-                    className={`sa-perm ${authLogsFilter === f.id ? "active" : "inactive"}`}
-                    style={{ fontSize: "0.8rem", padding: "0.35rem 0.65rem" }}
+                    onClick={() => setAuthLogsViewMode("stream")}
+                    style={{
+                      padding: "0.4rem 0.75rem",
+                      fontSize: "0.8rem",
+                      fontWeight: 700,
+                      border: "none",
+                      cursor: "pointer",
+                      background: authLogsViewMode === "stream" ? "#0f62fe" : "transparent",
+                      color: authLogsViewMode === "stream" ? "#ffffff" : "#525252",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.35rem",
+                    }}
                   >
-                    {f.label}
+                    <ListOrdered size={13} />
+                    Live Stream ({filteredAuthLogs.length})
                   </button>
-                ))}
+                  <button
+                    onClick={() => setAuthLogsViewMode("ip_grouped")}
+                    style={{
+                      padding: "0.4rem 0.75rem",
+                      fontSize: "0.8rem",
+                      fontWeight: 700,
+                      border: "none",
+                      cursor: "pointer",
+                      background: authLogsViewMode === "ip_grouped" ? "#0f62fe" : "transparent",
+                      color: authLogsViewMode === "ip_grouped" ? "#ffffff" : "#525252",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.35rem",
+                    }}
+                  >
+                    <Globe size={13} />
+                    Grouped by IP ({authLogsGroupedByIp.length})
+                  </button>
+                  <button
+                    onClick={() => setAuthLogsViewMode("user_grouped")}
+                    style={{
+                      padding: "0.4rem 0.75rem",
+                      fontSize: "0.8rem",
+                      fontWeight: 700,
+                      border: "none",
+                      cursor: "pointer",
+                      background: authLogsViewMode === "user_grouped" ? "#0f62fe" : "transparent",
+                      color: authLogsViewMode === "user_grouped" ? "#ffffff" : "#525252",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.35rem",
+                    }}
+                  >
+                    <Users size={13} />
+                    Grouped by User ({authLogsGroupedByUser.length})
+                  </button>
+                </div>
+
+                {/* Timeframe selector */}
+                <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#525252" }}>Timeframe:</span>
+                  {[
+                    { id: "all", label: "All Time" },
+                    { id: "24h", label: "Last 24h" },
+                    { id: "7d", label: "Last 7 Days" },
+                    { id: "30d", label: "Last 30 Days" },
+                  ].map((tf) => (
+                    <button
+                      key={tf.id}
+                      onClick={() => setAuthLogsTimeframe(tf.id)}
+                      className={`sa-perm ${authLogsTimeframe === tf.id ? "active" : "inactive"}`}
+                      style={{ fontSize: "0.75rem", padding: "0.25rem 0.5rem" }}
+                    >
+                      {tf.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div style={{ flex: 1, minWidth: "220px", marginLeft: "auto" }}>
-                <input
-                  type="text"
-                  placeholder="Filter by Email, IP address, OS, Browser..."
-                  value={authLogsSearch}
-                  onChange={(e) => setAuthLogsSearch(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "0.4rem 0.65rem",
-                    border: "1px solid #c6c6c6",
-                    fontSize: "0.8rem",
-                    fontFamily: "'IBM Plex Sans', sans-serif",
-                    outline: "none",
-                  }}
-                />
+              {/* Row 2: Action Filters & Search Box */}
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+                <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
+                  {[
+                    { id: "all", label: "All Actions" },
+                    { id: "login", label: "Logins Only" },
+                    { id: "register", label: "Registrations Only" },
+                    { id: "logout", label: "Logouts" },
+                  ].map((f) => (
+                    <button
+                      key={f.id}
+                      onClick={() => setAuthLogsFilter(f.id)}
+                      className={`sa-perm ${authLogsFilter === f.id ? "active" : "inactive"}`}
+                      style={{ fontSize: "0.78rem", padding: "0.3rem 0.55rem" }}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div style={{ flex: 1, minWidth: "240px", marginLeft: "auto" }}>
+                  <div style={{ position: "relative" }}>
+                    <Search size={13} color="#8d8d8d" style={{ position: "absolute", left: "0.6rem", top: "50%", transform: "translateY(-50%)" }} />
+                    <input
+                      type="text"
+                      placeholder="Filter by Email, Name, IP, Browser, OS, City..."
+                      value={authLogsSearch}
+                      onChange={(e) => setAuthLogsSearch(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "0.4rem 0.65rem 0.4rem 1.8rem",
+                        border: "1px solid #c6c6c6",
+                        fontSize: "0.8rem",
+                        fontFamily: "'IBM Plex Sans', sans-serif",
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Auth & IP Logs Table */}
-          <div className="sa-card">
-            <div className="sa-card-header">
-              <span className="sa-section-title" style={{ margin: 0 }}>
-                Authentication & Access Records ({filteredAuthLogs.length})
-              </span>
-              <span style={{ fontSize: "0.8rem", color: "#6f6f6f" }}>
-                Click user name or IP to inspect individual activity
-              </span>
-            </div>
-            <div className="sa-card-body">
-              {filteredAuthLogs.length === 0 ? (
-                <div style={{ padding: "2.5rem 1rem", textAlign: "center", color: "#6f6f6f" }}>
-                  <Globe size={28} color="#a8a8a8" style={{ margin: "0 auto 0.5rem auto" }} />
-                  <p style={{ margin: 0, fontWeight: 700, fontSize: "0.9rem" }}>No auth or IP records found</p>
-                  <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem" }}>
-                    Logins and registrations will appear here automatically with their IP address and device details.
-                  </p>
-                </div>
-              ) : (
-                <div className="sa-table-wrap">
-                  <table className="sa-table">
-                    <thead>
-                      <tr>
-                        <th>User / Account</th>
-                        <th>Action</th>
-                        <th>Client IP Address</th>
-                        <th>Device & OS</th>
-                        <th>Browser</th>
-                        <th>Timestamp</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredAuthLogs.map((r, i) => {
-                        const isReg = r.action === "register";
-                        const isLogin = r.action?.includes("login");
-                        const isLogout = r.action === "logout";
-                        const isPhone = r.details?.phone;
+          {/* VIEW 1: Stream View (Timeline Table) */}
+          {authLogsViewMode === "stream" && (
+            <div className="sa-card">
+              <div className="sa-card-header">
+                <span className="sa-section-title" style={{ margin: 0 }}>
+                  Authentication Stream ({filteredAuthLogs.length})
+                </span>
+                <span style={{ fontSize: "0.8rem", color: "#6f6f6f" }}>
+                  Click IP or User to inspect deep logs and multi-account connections
+                </span>
+              </div>
+              <div className="sa-card-body">
+                {filteredAuthLogs.length === 0 ? (
+                  <div style={{ padding: "2.5rem 1rem", textAlign: "center", color: "#6f6f6f" }}>
+                    <Globe size={28} color="#a8a8a8" style={{ margin: "0 auto 0.5rem auto" }} />
+                    <p style={{ margin: 0, fontWeight: 700, fontSize: "0.9rem" }}>No auth or IP records match the criteria</p>
+                    <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem" }}>
+                      Logins and registrations will appear here automatically with their IP address and device details.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="sa-table-wrap">
+                    <table className="sa-table">
+                      <thead>
+                        <tr>
+                          <th>User / Account</th>
+                          <th>Action</th>
+                          <th>Client IP Address</th>
+                          <th>Device & OS</th>
+                          <th>Browser</th>
+                          <th>Location</th>
+                          <th>Timestamp</th>
+                          <th>Inspect</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredAuthLogs.map((r, i) => {
+                          const isReg = r.action === "register";
+                          const isLogin = r.action?.includes("login");
+                          const isLogout = r.action === "logout";
+                          const isPhone = r.phone || r.details?.phone;
+                          const hasGeo = r.details?.city || r.details?.country;
 
-                        return (
-                          <tr key={r.id || i}>
-                            {/* User */}
-                            <td>
-                              <div>
-                                <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#161616" }}>
-                                  {r.email || (r.user_id ? `User: ${String(r.user_id).slice(0, 8)}...` : "Anonymous")}
-                                </div>
-                                {isPhone && (
-                                  <div style={{ fontSize: "0.75rem", color: "#0f62fe", fontWeight: 600 }}>
-                                    {isPhone}
+                          return (
+                            <tr key={r.id || i}>
+                              {/* User */}
+                              <td>
+                                <div>
+                                  <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#161616" }}>
+                                    {r.email || (r.user_id ? `User: ${String(r.user_id).slice(0, 8)}...` : "Anonymous")}
                                   </div>
-                                )}
-                              </div>
-                            </td>
+                                  {r.full_name && (
+                                    <div style={{ fontSize: "0.75rem", color: "#525252" }}>
+                                      {r.full_name}
+                                    </div>
+                                  )}
+                                  {isPhone && (
+                                    <div style={{ fontSize: "0.72rem", color: "#0f62fe", fontWeight: 600 }}>
+                                      {isPhone}
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
 
-                            {/* Action Badge */}
-                            <td>
-                              <span
-                                className={`sa-tag ${
-                                  isReg
-                                    ? "sa-tag-purple"
-                                    : isLogin
-                                    ? "sa-tag-green"
-                                    : isLogout
-                                    ? "sa-tag-gray"
-                                    : "sa-tag-blue"
-                                }`}
-                                style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "0.25rem",
-                                  fontWeight: 700,
-                                }}
-                              >
-                                {isReg && <UserPlus size={11} />}
-                                {isLogin && <LogIn size={11} />}
-                                {isLogout && <LogOut size={11} />}
-                                {r.action}
-                              </span>
-                            </td>
-
-                            {/* IP Address */}
-                            <td>
-                              <div style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
+                              {/* Action Badge */}
+                              <td>
                                 <span
+                                  className={`sa-tag ${
+                                    isReg
+                                      ? "sa-tag-purple"
+                                      : isLogin
+                                      ? "sa-tag-green"
+                                      : isLogout
+                                      ? "sa-tag-gray"
+                                      : "sa-tag-blue"
+                                  }`}
                                   style={{
-                                    fontFamily: "'IBM Plex Mono', monospace",
-                                    fontSize: "0.85rem",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "0.25rem",
                                     fontWeight: 700,
-                                    color: "#0f62fe",
-                                    background: "#edf5ff",
-                                    padding: "0.15rem 0.4rem",
-                                    border: "1px solid #d0e2ff",
                                   }}
                                 >
-                                  {r.ip_address || "unknown"}
+                                  {isReg && <UserPlus size={11} />}
+                                  {isLogin && <LogIn size={11} />}
+                                  {isLogout && <LogOut size={11} />}
+                                  {r.action}
                                 </span>
-                                {r.ip_address && r.ip_address !== "unknown" && (
+                              </td>
+
+                              {/* IP Address */}
+                              <td>
+                                <div style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
                                   <button
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(r.ip_address);
-                                      showToast(`IP ${r.ip_address} copied`);
+                                    onClick={() => setIpInspectModal(r.ip_address)}
+                                    style={{
+                                      background: "none",
+                                      border: "none",
+                                      padding: 0,
+                                      cursor: "pointer",
+                                      textAlign: "left",
                                     }}
-                                    className="sa-btn sa-btn-ghost sa-btn-sm"
-                                    style={{ padding: "0.15rem 0.3rem" }}
-                                    title="Copy IP Address"
+                                    title="Click to inspect this IP"
                                   >
-                                    <Copy size={11} />
+                                    <span
+                                      style={{
+                                        fontFamily: "'IBM Plex Mono', monospace",
+                                        fontSize: "0.85rem",
+                                        fontWeight: 700,
+                                        color: "#0f62fe",
+                                        background: "#edf5ff",
+                                        padding: "0.15rem 0.4rem",
+                                        border: "1px solid #d0e2ff",
+                                        textDecoration: "underline",
+                                        textDecorationColor: "#a6c8ff",
+                                      }}
+                                    >
+                                      {r.ip_address || "unknown"}
+                                    </span>
                                   </button>
-                                )}
-                              </div>
-                            </td>
+                                  {r.ip_address && r.ip_address !== "unknown" && (
+                                    <button
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(r.ip_address);
+                                        showToast(`IP ${r.ip_address} copied`);
+                                      }}
+                                      className="sa-btn sa-btn-ghost sa-btn-sm"
+                                      style={{ padding: "0.15rem 0.3rem" }}
+                                      title="Copy IP Address"
+                                    >
+                                      <Copy size={11} />
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
 
-                            {/* Device & OS */}
-                            <td>
-                              <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.85rem" }}>
-                                {r.device === "Mobile" ? (
-                                  <Smartphone size={13} color="#525252" />
-                                ) : r.device === "Tablet" ? (
-                                  <Tablet size={13} color="#525252" />
+                              {/* Device & OS */}
+                              <td>
+                                <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.85rem" }}>
+                                  {r.device === "Mobile" ? (
+                                    <Smartphone size={13} color="#525252" />
+                                  ) : r.device === "Tablet" ? (
+                                    <Tablet size={13} color="#525252" />
+                                  ) : (
+                                    <Monitor size={13} color="#525252" />
+                                  )}
+                                  <span style={{ fontWeight: 600 }}>{r.device || "Desktop"}</span>
+                                  <span style={{ color: "#8d8d8d" }}>•</span>
+                                  <span style={{ color: "#525252" }}>{r.os || "—"}</span>
+                                </div>
+                              </td>
+
+                              {/* Browser */}
+                              <td style={{ fontSize: "0.85rem", color: "#161616", fontWeight: 600 }}>
+                                {r.browser || "—"}
+                              </td>
+
+                              {/* Location */}
+                              <td>
+                                {hasGeo ? (
+                                  <span style={{ fontSize: "0.8rem", color: "#161616", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                                    <MapPin size={11} color="#0f62fe" />
+                                    {[r.details.city, r.details.country].filter(Boolean).join(", ")}
+                                  </span>
                                 ) : (
-                                  <Monitor size={13} color="#525252" />
+                                  <span style={{ color: "#c6c6c6", fontSize: "0.8rem" }}>—</span>
                                 )}
-                                <span style={{ fontWeight: 600 }}>{r.device || "Desktop"}</span>
-                                <span style={{ color: "#8d8d8d" }}>•</span>
-                                <span style={{ color: "#525252" }}>{r.os || "—"}</span>
-                              </div>
-                            </td>
+                              </td>
 
-                            {/* Browser */}
-                            <td style={{ fontSize: "0.85rem", color: "#161616", fontWeight: 600 }}>
-                              {r.browser || "—"}
-                            </td>
+                              {/* Timestamp */}
+                              <td style={{ fontSize: "0.82rem", color: "#525252", whiteSpace: "nowrap" }}>
+                                {r.created_at ? new Date(r.created_at).toLocaleString("en-US") : "—"}
+                              </td>
 
-                            {/* Timestamp */}
-                            <td style={{ fontSize: "0.85rem", color: "#525252", whiteSpace: "nowrap" }}>
-                              {r.created_at ? new Date(r.created_at).toLocaleString("en-US") : "—"}
-                            </td>
+                              {/* Actions */}
+                              <td>
+                                <div style={{ display: "flex", gap: "0.25rem" }}>
+                                  <button
+                                    className="sa-btn sa-btn-ghost sa-btn-sm"
+                                    style={{ color: "#0f62fe", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                                    onClick={() => {
+                                      const matchingUser = users.find((u) => u.id === r.user_id || u.email === r.email) ||
+                                        admins.find((a) => a.id === r.user_id || a.email === r.email) ||
+                                        { id: r.user_id, email: r.email, full_name: r.full_name || r.email?.split("@")[0] };
+                                      openUserLogs(matchingUser);
+                                    }}
+                                    title="View complete user IP history and actions"
+                                  >
+                                    <History size={12} />
+                                    User IPs
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
-                            {/* Actions */}
-                            <td>
-                              <div style={{ display: "flex", gap: "0.25rem" }}>
+          {/* VIEW 2: Grouped by IP Address (Detect shared IPs & multi-accounting) */}
+          {authLogsViewMode === "ip_grouped" && (
+            <div className="sa-card">
+              <div className="sa-card-header">
+                <div>
+                  <span className="sa-section-title" style={{ margin: 0 }}>
+                    IP Intelligence & Network Breakdown ({authLogsGroupedByIp.length} Unique IPs)
+                  </span>
+                  <div style={{ fontSize: "0.8rem", color: "#6f6f6f", marginTop: "0.15rem" }}>
+                    Identify accounts sharing the same network or logging in from the same physical machine.
+                  </div>
+                </div>
+              </div>
+              <div className="sa-card-body">
+                {authLogsGroupedByIp.length === 0 ? (
+                  <div style={{ padding: "2.5rem 1rem", textAlign: "center", color: "#6f6f6f" }}>
+                    No IP data available.
+                  </div>
+                ) : (
+                  <div className="sa-table-wrap">
+                    <table className="sa-table">
+                      <thead>
+                        <tr>
+                          <th>Client IP Address</th>
+                          <th>Accounts on this IP</th>
+                          <th>Total Hits</th>
+                          <th>Devices & Browsers</th>
+                          <th>First Seen</th>
+                          <th>Last Seen</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {authLogsGroupedByIp.map((item) => {
+                          const isShared = item.uniqueUsersCount > 1;
+                          return (
+                            <tr key={item.ip} style={{ background: isShared ? "#fff8e1" : undefined }}>
+                              {/* IP */}
+                              <td>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                                  <div style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
+                                    <span
+                                      style={{
+                                        fontFamily: "'IBM Plex Mono', monospace",
+                                        fontSize: "0.88rem",
+                                        fontWeight: 800,
+                                        color: "#0f62fe",
+                                        background: "#edf5ff",
+                                        padding: "0.15rem 0.45rem",
+                                        border: "1px solid #d0e2ff",
+                                      }}
+                                    >
+                                      {item.ip}
+                                    </span>
+                                    <button
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(item.ip);
+                                        showToast(`IP ${item.ip} copied`);
+                                      }}
+                                      className="sa-btn sa-btn-ghost sa-btn-sm"
+                                      style={{ padding: "0.15rem 0.3rem" }}
+                                      title="Copy IP"
+                                    >
+                                      <Copy size={11} />
+                                    </button>
+                                  </div>
+                                  {(item.city || item.country) && (
+                                    <div style={{ fontSize: "0.72rem", color: "#525252", display: "inline-flex", alignItems: "center", gap: "0.2rem" }}>
+                                      <MapPin size={10} color="#0f62fe" />
+                                      {[item.city, item.country].filter(Boolean).join(", ")}
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+
+                              {/* Accounts connected */}
+                              <td>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                                    <span
+                                      className={`sa-tag ${isShared ? "sa-tag-orange" : "sa-tag-blue"}`}
+                                      style={{ fontWeight: 700, fontSize: "0.75rem" }}
+                                    >
+                                      {item.uniqueUsersCount} {item.uniqueUsersCount === 1 ? "Account" : "Accounts (Shared IP!)"}
+                                    </span>
+                                  </div>
+                                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem", maxWidth: "340px" }}>
+                                    {item.usersList.map((u, idx) => (
+                                      <span
+                                        key={idx}
+                                        style={{
+                                          fontSize: "0.75rem",
+                                          background: "#f4f4f4",
+                                          border: "1px solid #e0e0e0",
+                                          padding: "0.1rem 0.35rem",
+                                          fontWeight: 600,
+                                          color: "#161616",
+                                        }}
+                                        title={`${u.key} (${u.hits} hits)`}
+                                      >
+                                        {u.key} <span style={{ color: "#0f62fe" }}>({u.hits})</span>
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* Total Hits */}
+                              <td>
+                                <span style={{ fontWeight: 800, fontSize: "0.95rem", color: "#161616" }}>
+                                  {item.count.toLocaleString()}
+                                </span>
+                              </td>
+
+                              {/* Devices & Browsers */}
+                              <td>
+                                <div style={{ fontSize: "0.78rem", color: "#525252" }}>
+                                  <div>{item.devicesList.join(", ") || "Desktop"}</div>
+                                  <div style={{ color: "#8d8d8d" }}>{item.browsersList.join(", ") || "—"}</div>
+                                </div>
+                              </td>
+
+                              {/* First Seen */}
+                              <td style={{ fontSize: "0.78rem", color: "#525252", whiteSpace: "nowrap" }}>
+                                {new Date(item.first_seen).toLocaleString("en-US")}
+                              </td>
+
+                              {/* Last Seen */}
+                              <td style={{ fontSize: "0.78rem", color: "#161616", fontWeight: 600, whiteSpace: "nowrap" }}>
+                                {new Date(item.last_seen).toLocaleString("en-US")}
+                              </td>
+
+                              {/* Inspect Action */}
+                              <td>
+                                <button
+                                  className="sa-btn sa-btn-primary sa-btn-sm"
+                                  onClick={() => setIpInspectModal(item.ip)}
+                                  style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.75rem" }}
+                                >
+                                  <Eye size={12} />
+                                  Inspect IP
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* VIEW 3: Grouped by User (List all IPs per user account) */}
+          {authLogsViewMode === "user_grouped" && (
+            <div className="sa-card">
+              <div className="sa-card-header">
+                <div>
+                  <span className="sa-section-title" style={{ margin: 0 }}>
+                    User Account IP Profiles ({authLogsGroupedByUser.length} Users)
+                  </span>
+                  <div style={{ fontSize: "0.8rem", color: "#6f6f6f", marginTop: "0.15rem" }}>
+                    Track all unique IP addresses used by each user account.
+                  </div>
+                </div>
+              </div>
+              <div className="sa-card-body">
+                {authLogsGroupedByUser.length === 0 ? (
+                  <div style={{ padding: "2.5rem 1rem", textAlign: "center", color: "#6f6f6f" }}>
+                    No user auth data available.
+                  </div>
+                ) : (
+                  <div className="sa-table-wrap">
+                    <table className="sa-table">
+                      <thead>
+                        <tr>
+                          <th>User Account</th>
+                          <th>Unique IPs Used</th>
+                          <th>Distinct IP Addresses</th>
+                          <th>Total Activity Hits</th>
+                          <th>Devices</th>
+                          <th>Last Active</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {authLogsGroupedByUser.map((u) => {
+                          const isMultiIp = u.uniqueIpsCount > 1;
+                          const matchingUser = users.find((usr) => usr.id === u.userId || usr.email === u.email) ||
+                            admins.find((adm) => adm.id === u.userId || adm.email === u.email) ||
+                            { id: u.userId, email: u.email, full_name: u.fullName || u.email?.split("@")[0] };
+
+                          return (
+                            <tr key={u.userKey}>
+                              {/* User Info */}
+                              <td>
+                                <div>
+                                  <div style={{ fontWeight: 700, fontSize: "0.88rem", color: "#161616" }}>
+                                    {u.email || u.userKey}
+                                  </div>
+                                  {u.fullName && (
+                                    <div style={{ fontSize: "0.75rem", color: "#525252" }}>
+                                      {u.fullName}
+                                    </div>
+                                  )}
+                                  {u.phone && (
+                                    <div style={{ fontSize: "0.72rem", color: "#0f62fe", fontWeight: 600 }}>
+                                      {u.phone}
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+
+                              {/* IP Count Badge */}
+                              <td>
+                                <span
+                                  className={`sa-tag ${isMultiIp ? "sa-tag-purple" : "sa-tag-green"}`}
+                                  style={{ fontWeight: 700, fontSize: "0.78rem" }}
+                                >
+                                  {u.uniqueIpsCount} {u.uniqueIpsCount === 1 ? "IP Address" : "Distinct IPs"}
+                                </span>
+                              </td>
+
+                              {/* List of IPs */}
+                              <td>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem", maxWidth: "340px" }}>
+                                  {u.ipsList.map((ipObj, idx) => (
+                                    <button
+                                      key={idx}
+                                      onClick={() => setIpInspectModal(ipObj.ip)}
+                                      style={{
+                                        fontFamily: "'IBM Plex Mono', monospace",
+                                        fontSize: "0.75rem",
+                                        fontWeight: 700,
+                                        color: "#0f62fe",
+                                        background: "#edf5ff",
+                                        border: "1px solid #d0e2ff",
+                                        padding: "0.1rem 0.35rem",
+                                        cursor: "pointer",
+                                      }}
+                                      title={`Inspect ${ipObj.ip} (${ipObj.hits} sessions)`}
+                                    >
+                                      {ipObj.ip} <span style={{ color: "#6f6f6f", fontWeight: 500 }}>({ipObj.hits})</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              </td>
+
+                              {/* Total hits */}
+                              <td>
+                                <span style={{ fontWeight: 800, fontSize: "0.92rem", color: "#161616" }}>
+                                  {u.count.toLocaleString()}
+                                </span>
+                              </td>
+
+                              {/* Devices */}
+                              <td>
+                                <div style={{ fontSize: "0.78rem", color: "#525252" }}>
+                                  {u.devicesList.join(", ") || "Desktop"}
+                                </div>
+                              </td>
+
+                              {/* Last Active */}
+                              <td style={{ fontSize: "0.8rem", color: "#161616", fontWeight: 600, whiteSpace: "nowrap" }}>
+                                {new Date(u.last_seen).toLocaleString("en-US")}
+                              </td>
+
+                              {/* Actions */}
+                              <td>
                                 <button
                                   className="sa-btn sa-btn-ghost sa-btn-sm"
-                                  style={{ color: "#0f62fe", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
-                                  onClick={() => {
-                                    const matchingUser = users.find((u) => u.id === r.user_id || u.email === r.email) ||
-                                      admins.find((a) => a.id === r.user_id || a.email === r.email) ||
-                                      { id: r.user_id, email: r.email, full_name: r.email?.split("@")[0] };
-                                    openUserLogs(matchingUser);
-                                  }}
-                                  title="View complete user IP history and actions"
+                                  onClick={() => openUserLogs(matchingUser)}
+                                  style={{ color: "#0f62fe", display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.75rem" }}
                                 >
                                   <History size={12} />
-                                  User IPs
+                                  User Timeline
                                 </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -4131,6 +4762,221 @@ export default function SuperAdmin() {
             </div>
           </div>
         )}
+      </Modal>
+      {/* ═══════════ IP Deep Inspector Modal (God Mode) ═══════════ */}
+      <Modal
+        open={!!ipInspectModal}
+        onClose={() => setIpInspectModal(null)}
+        title="Deep IP Network Inspector"
+      >
+        {ipInspectModal && (() => {
+          const matchingLogs = authLogs.filter((l) => l.ip_address === ipInspectModal);
+          const uniqueAccounts = Array.from(
+            new Set(matchingLogs.map((l) => l.email || l.user_id || "Anonymous"))
+          );
+          const isMultiAccount = uniqueAccounts.length > 1;
+          const firstSeen = matchingLogs.length > 0 ? matchingLogs[matchingLogs.length - 1].created_at : null;
+          const lastSeen = matchingLogs.length > 0 ? matchingLogs[0].created_at : null;
+          const geoCity = matchingLogs.find((l) => l.details?.city)?.details?.city;
+          const geoCountry = matchingLogs.find((l) => l.details?.country)?.details?.country;
+
+          return (
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: "320px", maxWidth: "700px" }}>
+              {/* Header Box */}
+              <div
+                style={{
+                  background: "#edf5ff",
+                  border: "1px solid #d0e2ff",
+                  padding: "0.85rem 1rem",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "0.5rem",
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#0f62fe", textTransform: "uppercase" }}>
+                    Target Client IP Address
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontSize: "1.25rem",
+                      fontWeight: 800,
+                      color: "#161616",
+                      marginTop: "0.15rem",
+                    }}
+                  >
+                    {ipInspectModal}
+                  </div>
+                  {(geoCity || geoCountry) && (
+                    <div style={{ fontSize: "0.8rem", color: "#525252", display: "inline-flex", alignItems: "center", gap: "0.25rem", marginTop: "0.2rem" }}>
+                      <MapPin size={12} color="#0f62fe" />
+                      {[geoCity, geoCountry].filter(Boolean).join(", ")}
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: "flex", gap: "0.35rem" }}>
+                  <button
+                    className="sa-btn sa-btn-secondary sa-btn-sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(ipInspectModal);
+                      showToast(`IP ${ipInspectModal} copied`);
+                    }}
+                    style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                  >
+                    <Copy size={11} />
+                    Copy IP
+                  </button>
+
+                  <a
+                    href={`https://ipinfo.io/${ipInspectModal}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="sa-btn sa-btn-primary sa-btn-sm"
+                    style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", textDecoration: "none" }}
+                  >
+                    <ExternalLink size={11} />
+                    WHOIS / IPInfo
+                  </a>
+                </div>
+              </div>
+
+              {/* Security Summary Cards */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "0.5rem" }}>
+                <div style={{ background: "#f4f4f4", padding: "0.5rem 0.75rem", border: "1px solid #e0e0e0" }}>
+                  <div style={{ fontSize: "0.7rem", color: "#6f6f6f", fontWeight: 700 }}>TOTAL HITS</div>
+                  <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#161616" }}>
+                    {matchingLogs.length}
+                  </div>
+                </div>
+
+                <div style={{ background: isMultiAccount ? "#fff8e1" : "#f4f4f4", padding: "0.5rem 0.75rem", border: isMultiAccount ? "1px solid #fdd835" : "1px solid #e0e0e0" }}>
+                  <div style={{ fontSize: "0.7rem", color: isMultiAccount ? "#b78103" : "#6f6f6f", fontWeight: 700 }}>
+                    ACCOUNTS USED
+                  </div>
+                  <div style={{ fontSize: "1.1rem", fontWeight: 800, color: isMultiAccount ? "#b78103" : "#161616" }}>
+                    {uniqueAccounts.length} {isMultiAccount && "⚠️"}
+                  </div>
+                </div>
+
+                <div style={{ background: "#f4f4f4", padding: "0.5rem 0.75rem", border: "1px solid #e0e0e0" }}>
+                  <div style={{ fontSize: "0.7rem", color: "#6f6f6f", fontWeight: 700 }}>FIRST RECORDED</div>
+                  <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "#161616" }}>
+                    {firstSeen ? new Date(firstSeen).toLocaleDateString("en-US") : "—"}
+                  </div>
+                </div>
+
+                <div style={{ background: "#f4f4f4", padding: "0.5rem 0.75rem", border: "1px solid #e0e0e0" }}>
+                  <div style={{ fontSize: "0.7rem", color: "#6f6f6f", fontWeight: 700 }}>LAST ACTIVE</div>
+                  <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "#161616" }}>
+                    {lastSeen ? new Date(lastSeen).toLocaleDateString("en-US") : "—"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Multi-Account Alert Warning */}
+              {isMultiAccount && (
+                <div
+                  style={{
+                    background: "#fff8e1",
+                    borderLeft: "4px solid #ff832b",
+                    padding: "0.6rem 0.8rem",
+                    fontSize: "0.8rem",
+                    color: "#525252",
+                  }}
+                >
+                  <strong style={{ color: "#b78103" }}>Shared IP / Multi-Accounting Alert:</strong> Multiple distinct accounts have logged in or registered from this same IP address.
+                </div>
+              )}
+
+              {/* Associated Accounts */}
+              <div>
+                <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#161616", marginBottom: "0.35rem" }}>
+                  Associated Accounts ({uniqueAccounts.length}):
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
+                  {uniqueAccounts.map((acc, idx) => {
+                    const matchingUsr = users.find((u) => u.email === acc || u.id === acc) ||
+                      admins.find((a) => a.email === acc || a.id === acc) ||
+                      { email: acc, full_name: acc.split("@")[0] };
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setIpInspectModal(null);
+                          openUserLogs(matchingUsr);
+                        }}
+                        style={{
+                          fontSize: "0.78rem",
+                          background: "#ffffff",
+                          border: "1px solid #c6c6c6",
+                          padding: "0.25rem 0.5rem",
+                          fontWeight: 700,
+                          color: "#0f62fe",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.25rem",
+                        }}
+                        title="Click to view full user activity"
+                      >
+                        <Users size={11} />
+                        {acc}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Detailed Activity Logs for this IP */}
+              <div>
+                <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#161616", marginBottom: "0.35rem" }}>
+                  Activity History from {ipInspectModal} ({matchingLogs.length} events):
+                </div>
+                <div style={{ maxHeight: "240px", overflowY: "auto", border: "1px solid #e0e0e0" }}>
+                  <table className="sa-table" style={{ margin: 0, fontSize: "0.78rem" }}>
+                    <thead>
+                      <tr>
+                        <th>Account</th>
+                        <th>Action</th>
+                        <th>Device & OS</th>
+                        <th>Browser</th>
+                        <th>Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {matchingLogs.map((log, idx) => (
+                        <tr key={log.id || idx}>
+                          <td style={{ fontWeight: 600 }}>{log.email || log.user_id || "Anonymous"}</td>
+                          <td>
+                            <span className={`sa-tag ${log.action === "register" ? "sa-tag-purple" : log.action?.includes("login") ? "sa-tag-green" : "sa-tag-blue"}`}>
+                              {log.action}
+                            </span>
+                          </td>
+                          <td>{log.device || "Desktop"} · {log.os || "—"}</td>
+                          <td>{log.browser || "—"}</td>
+                          <td style={{ whiteSpace: "nowrap", color: "#6f6f6f" }}>
+                            {log.created_at ? new Date(log.created_at).toLocaleString("en-US") : "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Close Button */}
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <button className="sa-btn sa-btn-secondary" onClick={() => setIpInspectModal(null)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          );
+        })()}
       </Modal>
     </div>
   );

@@ -38,12 +38,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // استخراج آدرس IP کلاینت
-  const forwarded = req.headers["x-forwarded-for"];
-  const rawIp = forwarded ? forwarded.split(",")[0].trim() : (req.headers["x-real-ip"] || req.socket?.remoteAddress || "127.0.0.1");
-  // پاکسازی پیشوندهای IPv6 مثل ::ffff:
-  const clientIp = rawIp.replace(/^::ffff:/i, "");
-
   const uaString = req.headers["user-agent"] || "";
   const { browser: autoBrowser, os: autoOs, device: autoDevice } = parseUserAgent(uaString);
 
@@ -56,7 +50,30 @@ export default async function handler(req, res) {
     browser = autoBrowser,
     os = autoOs,
     device = autoDevice,
+    ip: passedIp,
   } = req.body || {};
+
+  // ۱. استخراج آدرس IP کلاینت از هدرهای پراکسی، Vercel یا کلاینت
+  const forwarded = req.headers["x-forwarded-for"];
+  let rawIp = forwarded ? forwarded.split(",")[0].trim() : (req.headers["x-real-ip"] || req.socket?.remoteAddress || "");
+  rawIp = rawIp.replace(/^::ffff:/i, "");
+
+  // اگر IP لوکال بود و کلاینت IP عمومی فرستاده بود، از IP عمومی استفاده کن
+  let clientIp = rawIp;
+  if ((!clientIp || clientIp === "127.0.0.1" || clientIp === "::1" || clientIp === "localhost") && passedIp) {
+    clientIp = String(passedIp).trim();
+  }
+  if (!clientIp) clientIp = "127.0.0.1";
+
+  // ۲. استخراج موقعیت مکانی از هدرهای شبکه
+  const country = req.headers["x-vercel-ip-country"] || req.headers["cf-ipcountry"] || details?.country || null;
+  const city = req.headers["x-vercel-ip-city"] ? decodeURIComponent(req.headers["x-vercel-ip-city"]) : details?.city || null;
+
+  const enrichedDetails = {
+    ...(typeof details === "object" ? details : { raw: details }),
+    country,
+    city,
+  };
 
   const effectiveUserId = userId || user_id || null;
   const effectiveEmail = email ? String(email).trim().toLowerCase() : null;
@@ -78,7 +95,7 @@ export default async function handler(req, res) {
         browser,
         os,
         user_agent: uaString,
-        details: typeof details === "object" ? details : { raw: details },
+        details: enrichedDetails,
       });
 
       // ۲. درج در activity_log جهت سازگاری
@@ -88,7 +105,7 @@ export default async function handler(req, res) {
           action,
           target_type: "auth",
           target_id: effectiveUserId ? String(effectiveUserId) : null,
-          details: { email: effectiveEmail, ip: clientIp, browser, os, device },
+          details: { email: effectiveEmail, ip: clientIp, browser, os, device, country, city },
           ip_address: clientIp,
           user_agent: uaString,
         });
@@ -101,6 +118,8 @@ export default async function handler(req, res) {
   return res.status(200).json({
     ok: true,
     ip: clientIp,
+    country,
+    city,
     device,
     browser,
     os,
