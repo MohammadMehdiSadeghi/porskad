@@ -23,10 +23,13 @@ import {
   X,
   Settings,
   Crown,
+  Sparkles,
+  Zap,
 } from "lucide-react";
 import NotificationBell from "../ui/NotificationBell";
 import ThemeToggle from "../ui/ThemeToggle";
 import { faNum } from "../../lib/utils";
+import { getPlan } from "../../lib/plans";
 
 export default function AdminLayout() {
   const { user, profile, loading, logout, isOwner, updateProfile } = useAuth();
@@ -63,6 +66,7 @@ export default function AdminLayout() {
         { to: "/admin/managers", label: "مدیریت کاربران", icon: Users, end: false },
         { to: "/admin/settings", label: "تنظیمات سامانه", icon: Settings, end: false },
         { to: "/admin/support", label: "تیکت‌های پشتیبانی", icon: Headphones, end: false },
+        { to: "/admin/plans", label: "طرح‌ها و ارتقا", icon: Sparkles, end: false },
         { to: "/admin/superadmin", label: "سوپرادمین (God)", icon: Shield, end: false },
         { to: "/admin/profile", label: "پروفایل", icon: User, end: false },
       ]
@@ -70,9 +74,11 @@ export default function AdminLayout() {
         { to: "/admin/forms", label: "فرم‌های من", icon: FileText, end: false },
         { to: "/admin/embed", label: "اشتراک‌گذاری", icon: Share2, end: false },
         { to: "/admin/telegram", label: "اتصال به تلگرام", icon: Bot, end: false },
+        { to: "/admin/plans", label: "طرح‌ها و ارتقا", icon: Sparkles, end: false },
         { to: "/admin/support", label: "پشتیبانی", icon: Headphones, end: false },
         { to: "/admin/profile", label: "پروفایل و سهمیه", icon: User, end: false },
       ];
+
 
   const isSuperAdmin = owner || profile?.is_owner;
   const needsPhone = Boolean(!isSuperAdmin && profile && !profile.phone);
@@ -128,19 +134,36 @@ export default function AdminLayout() {
           </span>
         </div>
 
-        {/* سهمیه ساخت فرم برای کاربر عادی */}
-        {!owner && profile && (
-          <div className="mx-2 mt-2 p-2.5 rounded-xl bg-white/5 border border-white/10 text-xs">
+        {/* وضعیت طرح و سهمیه */}
+        {profile && (
+          <div className="mx-2 mt-2 p-2.5 rounded-xl bg-white/5 border border-white/10 text-xs flex flex-col gap-1.5">
             <div className="flex items-center justify-between text-white/70 font-bold">
-              <span>سهمیه فرم:</span>
-              <span className="text-teal font-extrabold">
-                {(profile.max_forms >= 999999 || profile.plan === "unlimited")
-                  ? "نامحدود ✨"
-                  : `${faNum(profile.max_forms ?? 5)} فرم مجاز`}
+              <span>طرح اشتراک:</span>
+              <span className="text-teal font-extrabold flex items-center gap-1">
+                {owner || profile.is_owner ? "مدیریت کل" : getPlan(profile.plan).name}
               </span>
             </div>
+            {!owner && (
+              <div className="flex items-center justify-between pt-1 border-t border-white/10 text-[11px]">
+                <span className="text-white/50">سهمیه فرم:</span>
+                <span className="text-white font-mono font-bold">
+                  {profile.max_forms >= 999999 || profile.plan === "unlimited"
+                    ? "نامحدود"
+                    : `${faNum(profile.max_forms ?? 5)} فرم`}
+                </span>
+              </div>
+            )}
+            {!owner && getPlan(profile.plan).id === "free" && (
+              <NavLink
+                to="/admin/plans"
+                className="mt-1 py-1 rounded-lg bg-teal hover:bg-teal-alt text-white text-center font-black text-[10px] transition-all flex items-center justify-center gap-1 shadow-xs"
+              >
+                <Sparkles size={11} /> ارتقای حساب
+              </NavLink>
+            )}
           </div>
         )}
+
 
         {/* منو عمودی دسکتاپ */}
         <nav className="flex flex-col gap-1 px-1.5 lg:px-2 py-2 overflow-y-auto flex-1">

@@ -1,5 +1,5 @@
 // متادیتای انواع سوال — منبع واحد برای فرم‌ساز، صفحه پر کردن و گزارش‌ها
-import { supabase } from "./supabaseClient";
+import { supabase } from "./supabaseClient.js";
 
 export const QUESTION_TYPES = {
   // ─── گزینه‌ای و انتخابی ───

@@ -13,7 +13,7 @@ import { QUESTION_TYPE_ICONS } from "../../../lib/questionIcons";
 import ConditionBuilder from "../../../components/logic/ConditionBuilder";
 import { makeCondition, makeConditionGroup, makeJumpAction, GROUP_OPERATORS } from "../../../lib/logic/types";
 import { faNum, slugify, copyToClipboard } from "../../../lib/utils";
-import { Link2, BarChart3, Share2, Puzzle, Settings, FileText, AlignLeft, ArrowRight, Eye, Save, Target, Check, ChevronDown, ChevronUp, LayoutGrid, Trash2, X, Sun, Moon, Monitor, Image, Sliders, Gauge, Grid, ListOrdered, Info, Layers, Upload, CreditCard } from "lucide-react";
+import { Link2, BarChart3, Share2, Puzzle, Settings, FileText, AlignLeft, ArrowRight, Eye, Save, Target, Check, ChevronDown, ChevronUp, LayoutGrid, Trash2, X, Sun, Moon, Monitor, Image, Sliders, Gauge, Grid, ListOrdered, Info, Layers, Upload, CreditCard, Globe, Lock, MapPin, Send, MessageCircle, Clock, ShieldCheck, Zap, Sparkles } from "lucide-react";
 import FormPreview from "../../../components/form/FormPreview";
 import { logActivity } from "../../../lib/activityLogger";
 import SEO from "../../../components/ui/SEO";
@@ -1083,7 +1083,18 @@ export default function FormBuilder() {
         .select("*")
         .eq("form_id", id)
         .order("position");
-      setForm(f);
+      setForm({
+        ...f,
+        redirect_url: f.redirect_url || f.settings?.redirect_url || "",
+        webhook_url: f.webhook_url || f.settings?.webhook_url || "",
+        whatsapp_number: f.whatsapp_number || f.settings?.whatsapp_number || "",
+        max_responses_limit: f.max_responses_limit || f.settings?.max_responses_limit || "",
+        prevent_duplicate: f.prevent_duplicate ?? f.settings?.prevent_duplicate ?? false,
+        auth_mode: f.auth_mode || f.settings?.auth_mode || "none",
+        geotagging: f.geotagging ?? f.settings?.geotagging ?? false,
+        time_limit_seconds: f.time_limit_seconds || f.settings?.time_limit_seconds || "",
+      });
+
       setQuestions((qs ?? []).map((q) => {
         const resolved = resolveQuestion(q);
         return {
@@ -1179,6 +1190,17 @@ export default function FormBuilder() {
     setSaving(true);
     setSlugError(null);
     try {
+      const advancedSettings = {
+        redirect_url: form.redirect_url || "",
+        webhook_url: form.webhook_url || "",
+        whatsapp_number: form.whatsapp_number || "",
+        max_responses_limit: form.max_responses_limit ? Number(form.max_responses_limit) : null,
+        prevent_duplicate: !!form.prevent_duplicate,
+        auth_mode: form.auth_mode || "none",
+        geotagging: !!form.geotagging,
+        time_limit_seconds: form.time_limit_seconds ? Number(form.time_limit_seconds) : null,
+      };
+
       const pForm = {
         title: form.title.trim(),
         description: form.description ?? "",
@@ -1191,6 +1213,7 @@ export default function FormBuilder() {
         form_type: form.form_type || "step_by_step",
         identifier_mapping: form.identifier_mapping ?? null,
         default_theme: form.default_theme || "light",
+        settings: advancedSettings,
       };
 
       const pQuestions = questions.map((q, i) => {
@@ -1241,7 +1264,6 @@ export default function FormBuilder() {
           validationToSave.custom_extensions = q.custom_extensions || q.validation?.custom_extensions || "";
           validationToSave.max_file_size_mb = q.max_file_size_mb || q.validation?.max_file_size_mb || 10;
         }
-
 
         if (q.type === "payment") {
           validationToSave.amount = q.amount || q.validation?.amount || 100000;
@@ -1299,16 +1321,22 @@ export default function FormBuilder() {
         console.warn("RPC save_form call failed, attempting direct fallback:", err);
       }
 
-      // به‌روزرسانی مستقیم جدول forms برای تضمین ذخیره default_theme و سایر فیلدها در هر شرایطی
+      // به‌روزرسانی مستقیم جدول forms برای تضمین ذخیره default_theme، settings و سایر فیلدها در هر شرایطی
+      let updatePayload = { ...pForm };
       let { error: formUpdateErr } = await supabase
         .from("forms")
-        .update(pForm)
+        .update(updatePayload)
         .eq("id", id);
 
-      if (formUpdateErr && formUpdateErr.message?.includes("default_theme")) {
-        const copyPForm = { ...pForm };
-        delete copyPForm.default_theme;
-        const retry = await supabase.from("forms").update(copyPForm).eq("id", id);
+      // فالبک برای فیلدهایی که ممکن است در اسکیمای پایگاه داده به صورت ستون مجزا نباشند
+      if (formUpdateErr && formUpdateErr.message) {
+        if (formUpdateErr.message.includes("default_theme")) {
+          delete updatePayload.default_theme;
+        }
+        if (formUpdateErr.message.includes("settings")) {
+          delete updatePayload.settings;
+        }
+        const retry = await supabase.from("forms").update(updatePayload).eq("id", id);
         formUpdateErr = retry.error;
       }
 
@@ -1664,6 +1692,124 @@ export default function FormBuilder() {
               <Field label="متن پیام خروج">
                 <textarea rows={2} value={form.exit_message} onChange={(e) => setFormField({ exit_message: e.target.value })} className={`${inputCls} resize-y`} />
               </Field>
+            </div>
+
+            {/* ─── امکانات و قابلیت‌های پیشرفته طرح‌ها ─── */}
+            <div className="border-t-2 border-dashed border-navy/15 pt-4">
+              <div className="bg-bg-lavender/30 dark:bg-slate-800/50 border-2 border-dashed border-teal/40 rounded-2xl p-4 sm:p-5 flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Zap size={18} className="text-teal" />
+                    <span className="text-sm font-black text-navy dark:text-white">امکانات و قابلیت‌های پیشرفته فرم</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-teal bg-teal/10 px-2.5 py-1 rounded-full border border-teal/20">طرح‌های حرفه‌ای و سازمانی</span>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {/* هدایت بعد از ثبت (Redirect URL) */}
+                  <Field label={<><Globe size={13} className="text-teal" /> انتقال به آدرس اینترنتی دیگر (Redirect URL)</>} hint="پس از ثبت موفق، کاربر به این آدرس منتقل می‌شود.">
+                    <input
+                      type="url"
+                      dir="ltr"
+                      value={form.redirect_url || ""}
+                      onChange={(e) => setFormField({ redirect_url: e.target.value })}
+                      placeholder="https://mysite.com/thank-you"
+                      className={`${inputCls} !py-2 !text-xs text-left`}
+                    />
+                  </Field>
+
+                  {/* وب‌هوک (Webhook URL) */}
+                  <Field label={<><Send size={13} className="text-teal" /> وب‌هوک (ارسال لحظه‌ای پاسخ به سامانه شما)</>} hint="اطلاعات پاسخ به‌صورت JSON POST ارسال می‌شود.">
+                    <input
+                      type="url"
+                      dir="ltr"
+                      value={form.webhook_url || ""}
+                      onChange={(e) => setFormField({ webhook_url: e.target.value })}
+                      placeholder="https://api.mysite.com/webhooks/porskad"
+                      className={`${inputCls} !py-2 !text-xs text-left`}
+                    />
+                  </Field>
+
+                  {/* دکمه چت واتس‌اپ روی فرم */}
+                  <Field label={<><MessageCircle size={13} className="text-teal" /> چت واتس‌اپ روی فرم (پشتیبانی زنده)</>} hint="شماره موبایل همراه با پیش‌شماره کشور (مثلاً: 989123456789)">
+                    <input
+                      type="text"
+                      dir="ltr"
+                      value={form.whatsapp_number || ""}
+                      onChange={(e) => setFormField({ whatsapp_number: e.target.value })}
+                      placeholder="989123456789"
+                      className={`${inputCls} !py-2 !text-xs text-left`}
+                    />
+                  </Field>
+
+                  {/* سقف تعداد پاسخ (نوبت‌دهی و ظرفیت) */}
+                  <Field label={<><ShieldCheck size={13} className="text-teal" /> سقف تعداد پاسخ (نوبت‌دهی و ظرفیت)</>} hint="پس از رسیدن به این تعداد، فرم به طور خودکار غیرفعال می‌شود (خالی = نامحدود).">
+                    <input
+                      type="number"
+                      min="1"
+                      value={form.max_responses_limit || ""}
+                      onChange={(e) => setFormField({ max_responses_limit: e.target.value ? Number(e.target.value) : "" })}
+                      placeholder="مثلاً: ۵۰"
+                      className={`${inputCls} !py-2 !text-xs`}
+                    />
+                  </Field>
+
+                  {/* شیوه احراز هویت پاسخ‌دهندگان */}
+                  <Field label={<><Lock size={13} className="text-teal" /> احراز هویت پاسخ‌دهندگان</>} hint="الزام پاسخ‌دهنده به احراز هویت قبل از ورود به فرم">
+                    <select
+                      value={form.auth_mode || "none"}
+                      onChange={(e) => setFormField({ auth_mode: e.target.value })}
+                      className={`${inputCls} !py-2 !text-xs cursor-pointer`}
+                    >
+                      <option value="none">بدون احراز هویت (عمومی و آزاد)</option>
+                      <option value="national_id">ثبت و اعتبارسنجی کد ملی</option>
+                      <option value="sms_otp">کد تایید پیامکی (OTP)</option>
+                      <option value="email">تایید آدرس ایمیل</option>
+                    </select>
+                  </Field>
+
+                  {/* محدودیت زمانی کل فرم (آزمون‌ساز) */}
+                  <Field label={<><Clock size={13} className="text-teal" /> زمان‌سنج کل آزمون / فرم (ثانیه)</>} hint="ثانیه‌شمار برای تکمیل کل فرم (مثلاً: ۱۸۰۰ ثانیه = ۳۰ دقیقه)">
+                    <input
+                      type="number"
+                      min="10"
+                      value={form.time_limit_seconds || ""}
+                      onChange={(e) => setFormField({ time_limit_seconds: e.target.value ? Number(e.target.value) : "" })}
+                      placeholder="مثلاً: ۱۸۰۰ (خالی = نامحدود)"
+                      className={`${inputCls} !py-2 !text-xs`}
+                    />
+                  </Field>
+                </div>
+
+                {/* چک‌باکس‌های قابلیت‌های تکمیلی */}
+                <div className="grid sm:grid-cols-2 gap-3 pt-2 border-t border-ink/10 dark:border-slate-700">
+                  <label className="flex items-center gap-2.5 cursor-pointer select-none bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-ink/10 dark:border-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={!!form.prevent_duplicate}
+                      onChange={(e) => setFormField({ prevent_duplicate: e.target.checked })}
+                      className="w-4 h-4 text-teal rounded border-ink/30 focus:ring-teal cursor-pointer"
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-xs font-black text-navy dark:text-slate-100">جلوگیری از ثبت پاسخ تکراری</span>
+                      <span className="text-[10px] text-ink/50 dark:text-slate-400">یک پاسخ به ازای هر کاربر</span>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center gap-2.5 cursor-pointer select-none bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-ink/10 dark:border-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={!!form.geotagging}
+                      onChange={(e) => setFormField({ geotagging: e.target.checked })}
+                      className="w-4 h-4 text-teal rounded border-ink/30 focus:ring-teal cursor-pointer"
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-xs font-black text-navy dark:text-slate-100">ثبت موقعیت مکانی (GPS)</span>
+                      <span className="text-[10px] text-ink/50 dark:text-slate-400">درخواست و ذخیره مختصات جغرافیایی پاسخ‌دهنده</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
         </StickerCard>

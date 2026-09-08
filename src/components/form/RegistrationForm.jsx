@@ -56,6 +56,7 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmUnfilled, setConfirmUnfilled] = useState([]);
   const [scoreResult, setScoreResult] = useState(null);
+  const [redirectCountdown, setRedirectCountdown] = useState(null);
   const formRef = useRef(null);
 
   const resolvedQuestions = useMemo(() => (questions || []).map(resolveQuestion), [questions]);
@@ -153,10 +154,49 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
         sendToTelegram(form.id, responseId);
       }
 
+      localStorage.setItem(`porskad_submitted_${form.id}`, new Date().toISOString());
+
+      // ارسال به وب‌هوک
+      const webhookUrl = form.webhook_url || form.settings?.webhook_url;
+      if (webhookUrl) {
+        try {
+          fetch(webhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              event: "registration.submitted",
+              form_id: form.id,
+              form_title: form.title,
+              response_id: responseId,
+              submitted_at: new Date().toISOString(),
+              answers: finalAnswers,
+            }),
+            mode: "no-cors",
+          }).catch((e) => console.warn("Webhook dispatch error:", e));
+        } catch (e) {
+          console.warn("Webhook error:", e);
+        }
+      }
+
       if (hasScoring(visibleQuestions)) {
         setScoreResult(calculateScore(visibleQuestions, answers));
       }
       setSubmitted(true);
+
+      // انتقال خودکار (Redirect URL)
+      const redirectUrl = form.redirect_url || form.settings?.redirect_url;
+      if (redirectUrl) {
+        setRedirectCountdown(3);
+        let count = 3;
+        const interval = setInterval(() => {
+          count -= 1;
+          setRedirectCountdown(count);
+          if (count <= 0) {
+            clearInterval(interval);
+            window.location.href = redirectUrl;
+          }
+        }, 1000);
+      }
     } catch (err) {
       console.error("Registration form submit error:", err);
       setError(err.message || "ثبت ناموفق بود؛ دوباره تلاش کنید.");
@@ -633,6 +673,12 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
               <h1 className="text-xl font-black text-ink dark:text-white">{form.exit_title || "ثبت‌نام با موفقیت انجام شد!"}</h1>
               <p className="font-semibold text-ink-subtle dark:text-slate-300">{form.exit_message || "ممنون از همراهی شما."}</p>
               {scoreResult && <ScoreResult score={scoreResult.score} total={scoreResult.total} details={scoreResult.details} questions={questions} />}
+              {redirectCountdown !== null && (
+                <div className="mt-2 bg-teal/10 border border-teal/30 rounded-xl p-3 text-xs font-bold text-teal flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-teal animate-ping" />
+                  <span>در حال انتقال به صفحه مقصد در {faNum(redirectCountdown)} ثانیه...</span>
+                </div>
+              )}
             </div>
           </StickerCard>
         </motion.div>
@@ -640,8 +686,10 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
     );
   }
 
+  const whatsappNum = form?.whatsapp_number || form?.settings?.whatsapp_number;
+
   return (
-    <div className="min-h-dvh dot-pattern bg-ecosystem-light dark:bg-[#0B0F19] text-ink dark:text-slate-100 p-4 transition-colors duration-200">
+    <div className="min-h-dvh dot-pattern bg-ecosystem-light dark:bg-[#0B0F19] text-ink dark:text-slate-100 p-4 transition-colors duration-200 relative">
       <SEO title={form.title} />
       <main className="max-w-xl mx-auto">
         <StickerCard theme="white" radius="rounded-[1.5rem]">
@@ -661,6 +709,22 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
           </div>
         </StickerCard>
       </main>
+
+      {/* دکمه شناور چت واتس‌اپ */}
+      {whatsappNum && (
+        <a
+          href={`https://wa.me/${whatsappNum.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`سلام، درباره فرم ${form.title} سوال داشتم.`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-4 left-4 z-50 bg-[#25D366] text-white p-3.5 rounded-full shadow-lg hover:scale-110 transition-all flex items-center justify-center cursor-pointer"
+          title="پشتیبانی واتس‌اپ"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.97.529 1.771.821 2.796.821 3.183 0 5.768-2.586 5.769-5.766.001-3.182-2.585-5.769-5.769-5.769zm10.005 5.868c-.012 5.548-4.512 10.051-10.061 10.051-1.761 0-3.415-.461-4.88-1.267l-5.626 1.475 1.503-5.485c-.88-1.521-1.385-3.279-1.385-5.148.012-5.549 4.513-10.052 10.062-10.052 5.549 0 10.063 4.503 10.063 10.052z"/>
+          </svg>
+        </a>
+      )}
+
       <ConfirmDialog open={showConfirm} onConfirm={doSubmit} onCancel={() => setShowConfirm(false)} unfilledFields={confirmUnfilled} />
     </div>
   );

@@ -87,6 +87,29 @@ export default function FormFill() {
       const { data: formData, error: formError } = await supabase.from("forms").select("*").eq("slug", slug).eq("published", true).eq("archived", false).maybeSingle();
       if (cancelled) return;
       if (formError || !formData) { setUnavailable("This form has been deleted, unpublished, archived, or the link is incorrect."); setLoading(false); return; }
+
+      // بررسی سقف ظرفیت و تعداد پاسخ‌های مجاز (نوبت‌دهی)
+      const maxLimit = formData.max_responses_limit || formData.settings?.max_responses_limit;
+      if (maxLimit && Number(maxLimit) > 0) {
+        const { count } = await supabase.from("responses").select("*", { count: "exact", head: true }).eq("form_id", formData.id).eq("is_complete", true);
+        if (count !== null && count >= Number(maxLimit)) {
+          setUnavailable(`ظرفیت ثبت پاسخ برای این فرم تکمیل شده است (حداکثر ${faNum(maxLimit)} پاسخ).`);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // بررسی جلوگیری از ثبت پاسخ تکراری
+      const preventDuplicate = formData.prevent_duplicate ?? formData.settings?.prevent_duplicate;
+      if (preventDuplicate) {
+        const alreadySubmitted = localStorage.getItem(`porskad_submitted_${formData.id}`);
+        if (alreadySubmitted) {
+          setUnavailable("شما قبلاً به این فرم پاسخ داده‌اید و امکان ثبت مجدد وجود ندارد.");
+          setLoading(false);
+          return;
+        }
+      }
+
       const { data: qData, error: qError } = await supabase.from("questions").select("*").eq("form_id", formData.id).order("position", { ascending: true });
       if (cancelled) return;
       if (qError) { setUnavailable("خطا در بارگذاری سوال‌ها."); setLoading(false); return; }
@@ -255,6 +278,23 @@ export default function FormFill() {
 
   const goBack = useCallback(() => { if (step <= -1) return; accrueTime(); setDir(-1); setStep((s) => findPrevVisibleStep(s)); }, [step, accrueTime, findPrevVisibleStep]);
 
+  const [redirectCountdown, setRedirectCountdown] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+
+  // دریافت اختیاری موقعیت مکانی در صورت فعال بودن Geotagging
+  useEffect(() => {
+    const isGeotagging = form?.geotagging ?? form?.settings?.geotagging;
+    if (isGeotagging && typeof navigator !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy });
+        },
+        (err) => console.warn("Geolocation permission error:", err),
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+  }, [form]);
+
   const doSubmit = useCallback(async () => {
     setShowConfirm(false);
     if (submitting || honeypot.trim() !== "") return;
@@ -271,18 +311,62 @@ export default function FormFill() {
       if (respError) throw respError;
       const rows = visibleQuestions.filter((q) => { const v = answers[q.id]; return !(v === undefined || v === null || String(v ?? "").trim() === ""); }).map((q) => ({ response_id: responseId, question_id: q.id, value: normalizeAnswerValue(q, answers[q.id]), time_spent_seconds: Math.round(times[q.id] ?? 0) }));
       if (rows.length) { const { error: ansError } = await supabase.from("answers").insert(rows); if (ansError) throw ansError; }
+      
       localStorage.removeItem(draftKey(slug));
+      localStorage.setItem(`porskad_submitted_${form.id}`, new Date().toISOString());
+
+      // ارسال به تلگرام
       sendToTelegram(form.id, responseId);
+
+      // وب‌هوک (ارسال لحظه‌ای داده به سرور خارجی کاربر)
+      const webhookUrl = form.webhook_url || form.settings?.webhook_url;
+      if (webhookUrl) {
+        try {
+          fetch(webhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              event: "response.submitted",
+              form_id: form.id,
+              form_title: form.title,
+              response_id: responseId,
+              submitted_at: nowIso,
+              answers: rows,
+              location: userLocation,
+            }),
+            mode: "no-cors",
+          }).catch((e) => console.warn("Webhook dispatch error:", e));
+        } catch (e) {
+          console.warn("Webhook error:", e);
+        }
+      }
+
       if (hasScoring(questions)) setScoreResult(calculateScore(visibleQuestions, answers));
       setDir(1); setStep(total);
+
+      // انتقال خودکار به آدرس دیگر (Redirect URL)
+      const redirectUrl = form.redirect_url || form.settings?.redirect_url;
+      if (redirectUrl) {
+        setRedirectCountdown(3);
+        let count = 3;
+        const interval = setInterval(() => {
+          count -= 1;
+          setRedirectCountdown(count);
+          if (count <= 0) {
+            clearInterval(interval);
+            window.location.href = redirectUrl;
+          }
+        }, 1000);
+      }
     } catch (err) { console.error(err); setSubmitError("ثبت جواب ناموفق بود؛ دوباره تلاش کن."); }
     finally { setSubmitting(false); }
-  }, [submitting, honeypot, form, visibleQuestions, questions, answers, times, startedAt, slug, total]);
+  }, [submitting, honeypot, form, visibleQuestions, questions, answers, times, startedAt, slug, total, userLocation]);
 
   useEffect(() => { if (formEnded && step >= 0 && step < total) { accrueTime(); setDir(1); setStep(total); } }, [formEnded]);
 
   const progressValue = step < 0 ? 0 : currentVisibleIndex;
   const approxMinutes = useMemo(() => Math.max(1, Math.round(visibleTotal * 0.4)), [visibleTotal]);
+  const whatsappNum = form?.whatsapp_number || form?.settings?.whatsapp_number;
 
   if (loading) return <FormFillSkeleton />;
   if (unavailable) return <NotAvailable message={unavailable} />;
@@ -290,7 +374,7 @@ export default function FormFill() {
   if (formType === "registration") return <RegistrationForm form={form} questions={questions} logicRules={logicRules} hiddenFields={hiddenFields} slug={slug} />;
 
   return (
-    <div className="min-h-dvh dot-pattern bg-ecosystem-light dark:bg-[#0B0F19] text-ink dark:text-slate-100 flex flex-col overflow-x-hidden transition-colors duration-200">
+    <div className="min-h-dvh dot-pattern bg-ecosystem-light dark:bg-[#0B0F19] text-ink dark:text-slate-100 flex flex-col overflow-x-hidden transition-colors duration-200 relative">
       <SEO title={form.title} description={form.description || `فرم ${form.title}`} url={`/f/${slug}`} />
       <div className="w-full max-w-[75rem] mx-auto flex items-center justify-between px-3 sm:px-4 py-2">
         <Logo linked={false} size="sm" />
@@ -344,6 +428,14 @@ export default function FormFill() {
                     <p className="font-semibold text-ink-soft dark:text-slate-300 leading-7 text-sm sm:text-base max-w-sm">{form.exit_message}</p>
                     {scoreResult && <ScoreResult score={scoreResult.score} total={scoreResult.total} details={scoreResult.details} questions={questions} />}
                     {startedAt && <span className="text-xs sm:text-sm font-medium text-ink-subtle dark:text-slate-400">این پاسخ در {faDuration(Math.round((Date.now() - startedAt) / 1000))} ثبت شد</span>}
+
+                    {/* هدایت خودکار (Redirect URL) */}
+                    {redirectCountdown !== null && (
+                      <div className="mt-3 bg-teal/10 border border-teal/30 rounded-xl p-3 text-xs font-bold text-teal flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-teal animate-ping" />
+                        <span>در حال انتقال به صفحه مقصد در {faNum(redirectCountdown)} ثانیه...</span>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -351,6 +443,22 @@ export default function FormFill() {
           </StickerCard>
         </div>
       </main>
+
+      {/* دکمه شناور چت واتس‌اپ */}
+      {whatsappNum && (
+        <a
+          href={`https://wa.me/${whatsappNum.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`سلام، درباره فرم ${form.title} سوال داشتم.`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-4 left-4 z-50 bg-[#25D366] text-white p-3.5 rounded-full shadow-lg hover:scale-110 transition-all flex items-center justify-center cursor-pointer"
+          title="پشتیبانی واتس‌اپ"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.97.529 1.771.821 2.796.821 3.183 0 5.768-2.586 5.769-5.766.001-3.182-2.585-5.769-5.769-5.769zm10.005 5.868c-.012 5.548-4.512 10.051-10.061 10.051-1.761 0-3.415-.461-4.88-1.267l-5.626 1.475 1.503-5.485c-.88-1.521-1.385-3.279-1.385-5.148.012-5.549 4.513-10.052 10.062-10.052 5.549 0 10.063 4.503 10.063 10.052z"/>
+          </svg>
+        </a>
+      )}
+
       <ConfirmDialog open={showConfirm} onConfirm={doSubmit} onCancel={() => setShowConfirm(false)} unfilledFields={confirmUnfilled} totalRequired={visibleQuestions.filter((q) => q.required).length} filledCount={visibleQuestions.filter((q) => q.required && answers[q.id] != null && String(answers[q.id]).trim() !== "").length} />
     </div>
   );

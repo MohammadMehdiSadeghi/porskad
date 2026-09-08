@@ -43,6 +43,22 @@ export function isValidUrl(raw) {
   }
 }
 
+// ─── کد ملی ایران ───
+export function isValidIranNationalId(raw) {
+  const code = toEnDigits(String(raw || "")).replace(/\D/g, "");
+  if (code.length !== 10) return false;
+  if (/^(\d)\1{9}$/.test(code)) return false; // تمام ارقام یکسان نامعتبر است
+
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += Number(code[i]) * (10 - i);
+  }
+  const remainder = sum % 11;
+  const lastDigit = Number(code[9]);
+
+  return remainder < 2 ? lastDigit === remainder : lastDigit === 11 - remainder;
+}
+
 // ─── رمز عبور ───
 export const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
 
@@ -125,6 +141,9 @@ export function validateAnswer(question, value) {
   switch (question.type) {
     case "phone_ir":
       return isValidIranPhone(value) ? null : "شماره موبایل معتبر نیست؛ مثل: 09123456789";
+
+    case "national_id":
+      return isValidIranNationalId(value) ? null : "کد ملی ۱۰ رقمی معتبر نیست.";
 
     case "email":
       return isValidEmail(value) ? null : "فرمت ایمیل درست نیست؛ مثل: name@example.com";
