@@ -7,12 +7,12 @@ import Badge from "../../../components/ui/Badge";
 import Spinner from "../../../components/ui/Spinner";
 import { useToast } from "../../../components/ui/Toast";
 import { useAuth } from "../../../context/AuthContext";
-import { QUESTION_TYPES, QUESTION_TYPE_ORDER, makeQuestion } from "../../../lib/questionTypes";
+import { QUESTION_TYPES, QUESTION_TYPE_ORDER, QUESTION_CATEGORIES, makeQuestion } from "../../../lib/questionTypes";
 import { QUESTION_TYPE_ICONS } from "../../../lib/questionIcons";
 import ConditionBuilder from "../../../components/logic/ConditionBuilder";
 import { makeCondition, makeConditionGroup, makeJumpAction, GROUP_OPERATORS } from "../../../lib/logic/types";
 import { faNum, slugify, copyToClipboard } from "../../../lib/utils";
-import { Link2, BarChart3, Share2, Puzzle, Settings, FileText, AlignLeft, ArrowRight, Eye, Save, Target, Check, ChevronDown, ChevronUp, LayoutGrid, Trash2, X, Sun, Moon, Monitor } from "lucide-react";
+import { Link2, BarChart3, Share2, Puzzle, Settings, FileText, AlignLeft, ArrowRight, Eye, Save, Target, Check, ChevronDown, ChevronUp, LayoutGrid, Trash2, X, Sun, Moon, Monitor, Image, Sliders, Gauge, Grid, ListOrdered, Info, Layers, Upload, CreditCard } from "lucide-react";
 import FormPreview from "../../../components/form/FormPreview";
 import { logActivity } from "../../../lib/activityLogger";
 import SEO from "../../../components/ui/SEO";
@@ -300,32 +300,35 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
             </div>
           )}
 
-          {/* ─── گزینه‌ها (چندگزینه‌ای) ─── */}
-          {meta.hasOptions && (
+          {/* ─── گزینه‌ها (چندگزینه‌ای، دراپ‌داون، لیکرت، اولویت‌دهی) ─── */}
+          {meta.hasOptions && q.type !== "picture_choice" && q.type !== "matrix" && (
             <div className="flex flex-col gap-2 border-2 border-dashed border-orange/50 dark:border-amber-500/40 rounded-pill-md bg-[#FEF7EC]/60 dark:bg-amber-950/20 p-3">
               <span className="text-xs font-extrabold text-orange dark:text-amber-300">
                 گزینه‌ها ({faNum(q.options.length)} — حداقل ۲)
               </span>
-              {q.options.map((opt, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <span className="w-7 h-7 shrink-0 flex items-center justify-center rounded-full border-2 border-orange/50 dark:border-amber-500/40 text-orange dark:text-amber-300 text-xs font-black">
-                    {faNum(i + 1)}
-                  </span>
-                  <input
-                    value={opt}
-                    onChange={(e) => setOpt(i, e.target.value)}
-                    className={`${inputCls} !py-2 !text-sm`}
-                  />
-                  <button
-                    onClick={() => onChange({ options: q.options.filter((_, j) => j !== i) })}
-                    disabled={q.options.length <= 2}
-                    className="w-7 h-7 shrink-0 rounded-pill-sm border border-ink/20 dark:border-slate-700 flex items-center justify-center text-ink-subtle dark:text-slate-400 hover:text-magenta-text hover:border-magenta/40 disabled:opacity-30 cursor-pointer"
-                    title="حذف گزینه"
-                  >
-                    <X size={13} />
-                  </button>
-                </div>
-              ))}
+              {q.options.map((opt, i) => {
+                const optText = typeof opt === "object" ? opt.text : opt;
+                return (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="w-7 h-7 shrink-0 flex items-center justify-center rounded-full border-2 border-orange/50 dark:border-amber-500/40 text-orange dark:text-amber-300 text-xs font-black">
+                      {faNum(i + 1)}
+                    </span>
+                    <input
+                      value={optText}
+                      onChange={(e) => setOpt(i, e.target.value)}
+                      className={`${inputCls} !py-2 !text-sm`}
+                    />
+                    <button
+                      onClick={() => onChange({ options: q.options.filter((_, j) => j !== i) })}
+                      disabled={q.options.length <= 2}
+                      className="w-7 h-7 shrink-0 rounded-pill-sm border border-ink/20 dark:border-slate-700 flex items-center justify-center text-ink-subtle dark:text-slate-400 hover:text-magenta-text hover:border-magenta/40 disabled:opacity-30 cursor-pointer"
+                      title="حذف گزینه"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                );
+              })}
               <button
                 onClick={() => onChange({ options: [...q.options, `گزینه ${faNum(q.options.length + 1)}`] })}
                 disabled={false}
@@ -333,6 +336,265 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
               >
                 + افزودن گزینه
               </button>
+            </div>
+          )}
+
+          {/* ─── گزینه‌های تصویری (Picture Choice) ─── */}
+          {q.type === "picture_choice" && (
+            <div className="flex flex-col gap-2.5 border-2 border-dashed border-magenta/40 dark:border-pink-500/40 rounded-pill-md bg-magenta/5 dark:bg-pink-950/20 p-3">
+              <span className="text-xs font-extrabold text-magenta-text dark:text-pink-300 flex items-center gap-1">
+                <Image size={14} /> گزینه‌های تصویری ({faNum((q.options || []).length)})
+              </span>
+              {(q.options || []).map((opt, i) => {
+                const optText = typeof opt === "object" ? opt.text : String(opt);
+                const optImage = typeof opt === "object" ? opt.image : "";
+                return (
+                  <div key={i} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-2.5 bg-white dark:bg-slate-800 rounded-xl border border-ink/10 dark:border-slate-700">
+                    <span className="w-6 h-6 shrink-0 flex items-center justify-center rounded-full bg-magenta/10 text-magenta-text text-xs font-black">
+                      {faNum(i + 1)}
+                    </span>
+                    <input
+                      value={optText}
+                      onChange={(e) => {
+                        const next = [...(q.options || [])];
+                        next[i] = { text: e.target.value, image: optImage };
+                        onChange({ options: next });
+                      }}
+                      placeholder="عنوان گزینه..."
+                      className={`${inputCls} !py-1.5 !text-xs flex-1`}
+                    />
+                    <input
+                      value={optImage}
+                      onChange={(e) => {
+                        const next = [...(q.options || [])];
+                        next[i] = { text: optText, image: e.target.value };
+                        onChange({ options: next });
+                      }}
+                      placeholder="لینک عکس (URL)..."
+                      dir="ltr"
+                      className={`${inputCls} !py-1.5 !text-xs flex-1 text-left`}
+                    />
+                    {optImage && (
+                      <img src={optImage} alt="" className="w-8 h-8 rounded object-cover border shrink-0" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => onChange({ options: (q.options || []).filter((_, j) => j !== i) })}
+                      disabled={(q.options || []).length <= 2}
+                      className="w-7 h-7 shrink-0 rounded border border-ink/20 flex items-center justify-center text-magenta-text hover:bg-magenta/10 disabled:opacity-30 cursor-pointer self-end sm:self-auto"
+                      title="حذف گزینه"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => onChange({ options: [...(q.options || []), { text: `طرح ${faNum((q.options || []).length + 1)}`, image: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=300&auto=format&fit=crop&q=60" }] })}
+                className="self-start text-xs font-extrabold text-magenta-text dark:text-pink-300 hover:underline cursor-pointer"
+              >
+                + افزودن گزینه تصویری جدید
+              </button>
+            </div>
+          )}
+
+          {/* ─── الگوهای آماده طیف لیکرت ─── */}
+          {q.type === "likert" && (
+            <div className="flex flex-col gap-2 border-2 border-dashed border-teal/40 rounded-pill-md bg-teal/5 dark:bg-teal-950/20 p-3">
+              <span className="text-xs font-extrabold text-teal-text dark:text-teal flex items-center gap-1">
+                <Sliders size={14} /> الگوهای پیش‌فرض طیف لیکرت
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { label: "موافقت (۵ تایی)", opts: ["کاملاً مخالفم", "مخالفم", "نظری ندارم", "موافقم", "کاملاً موافقم"] },
+                  { label: "رضایت (۵ تایی)", opts: ["خیلی ناراضی", "ناراضی", "متوسط", "راضی", "خیلی راضی"] },
+                  { label: "کیفیت (۵ تایی)", opts: ["خیلی ضعیف", "ضعیف", "متوسط", "خوب", "عالی"] },
+                  { label: "تناوب (۵ تایی)", opts: ["هیچ‌وقت", "به‌ندرت", "گاهی", "اغلب", "همیشه"] },
+                ].map((p, pi) => (
+                  <button
+                    key={pi}
+                    type="button"
+                    onClick={() => onChange({ options: p.opts })}
+                    className="text-xs font-bold px-2.5 py-1 rounded-pill-sm border border-teal/30 bg-white dark:bg-slate-800 text-teal-text dark:text-teal hover:bg-teal/10 cursor-pointer"
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ─── برچسب‌های وفاداری NPS ─── */}
+          {q.type === "nps" && (
+            <div className="flex flex-col sm:flex-row gap-2 border-2 border-dashed border-orange/40 rounded-pill-md bg-orange/5 dark:bg-amber-950/20 p-3">
+              <Field label="برچسب حداقل (امتیاز ۰)" hint="مثلاً: اصلاً احتمال ندارد">
+                <input
+                  value={q.validation?.min_label || q.min_label || "اصلاً احتمال ندارد"}
+                  onChange={(e) => onChange({ validation: { ...q.validation, min_label: e.target.value }, min_label: e.target.value })}
+                  className={`${inputCls} !py-1.5 !text-xs`}
+                />
+              </Field>
+              <Field label="برچسب حداکثر (امتیاز ۱۰)" hint="مثلاً: بسیار زیاد">
+                <input
+                  value={q.validation?.max_label || q.max_label || "بسیار زیاد"}
+                  onChange={(e) => onChange({ validation: { ...q.validation, max_label: e.target.value }, max_label: e.target.value })}
+                  className={`${inputCls} !py-1.5 !text-xs`}
+                />
+              </Field>
+            </div>
+          )}
+
+          {/* ─── ماتریسی (جدول سطرهای سوال و ستون‌های گزینه‌ها) ─── */}
+          {q.type === "matrix" && (
+            <div className="flex flex-col gap-3 border-2 border-dashed border-navy/20 dark:border-slate-700 rounded-pill-md bg-navy/5 dark:bg-slate-800/40 p-3">
+              {/* سطرها */}
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-extrabold text-navy dark:text-slate-200 flex items-center gap-1">
+                  <Grid size={14} /> سطرهای سوال (موضوعات ارزیابی):
+                </span>
+                {(q.validation?.rows || q.rows || ["کیفیت خدمات", "سرعت پاسخگویی", "سهولت استفاده"]).map((r, ri, arr) => (
+                  <div key={ri} className="flex items-center gap-2">
+                    <span className="text-xs font-mono text-ink-subtle">{faNum(ri + 1)}.</span>
+                    <input
+                      value={r}
+                      onChange={(e) => {
+                        const copy = [...arr]; copy[ri] = e.target.value;
+                        onChange({ validation: { ...q.validation, rows: copy }, rows: copy });
+                      }}
+                      className={`${inputCls} !py-1.5 !text-xs`}
+                    />
+                    <button
+                      type="button"
+                      disabled={arr.length <= 1}
+                      onClick={() => {
+                        const copy = arr.filter((_, j) => j !== ri);
+                        onChange({ validation: { ...q.validation, rows: copy }, rows: copy });
+                      }}
+                      className="text-magenta-text p-1 hover:opacity-80 disabled:opacity-20 cursor-pointer"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const arr = q.validation?.rows || q.rows || ["کیفیت خدمات", "سرعت پاسخگویی", "سهولت استفاده"];
+                    const copy = [...arr, `موضوع ${faNum(arr.length + 1)}`];
+                    onChange({ validation: { ...q.validation, rows: copy }, rows: copy });
+                  }}
+                  className="self-start text-xs font-extrabold text-teal hover:underline cursor-pointer"
+                >
+                  + افزودن سطر جدید
+                </button>
+              </div>
+
+              {/* ستون‌ها */}
+              <div className="flex flex-col gap-1.5 pt-2 border-t border-ink/10 dark:border-slate-700">
+                <span className="text-xs font-extrabold text-navy dark:text-slate-200">
+                  ستون‌های پاسخ (گزینه‌ها):
+                </span>
+                {(q.validation?.columns || q.columns || ["خیلی ضعیف", "ضعیف", "متوسط", "خوب", "عالی"]).map((c, ci, arr) => (
+                  <div key={ci} className="flex items-center gap-2">
+                    <span className="text-xs font-mono text-ink-subtle">ستون {faNum(ci + 1)}:</span>
+                    <input
+                      value={c}
+                      onChange={(e) => {
+                        const copy = [...arr]; copy[ci] = e.target.value;
+                        onChange({ validation: { ...q.validation, columns: copy }, columns: copy });
+                      }}
+                      className={`${inputCls} !py-1.5 !text-xs`}
+                    />
+                    <button
+                      type="button"
+                      disabled={arr.length <= 2}
+                      onClick={() => {
+                        const copy = arr.filter((_, j) => j !== ci);
+                        onChange({ validation: { ...q.validation, columns: copy }, columns: copy });
+                      }}
+                      className="text-magenta-text p-1 hover:opacity-80 disabled:opacity-20 cursor-pointer"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const arr = q.validation?.columns || q.columns || ["خیلی ضعیف", "ضعیف", "متوسط", "خوب", "عالی"];
+                    const copy = [...arr, `گزینه ${faNum(arr.length + 1)}`];
+                    onChange({ validation: { ...q.validation, columns: copy }, columns: copy });
+                  }}
+                  className="self-start text-xs font-extrabold text-teal hover:underline cursor-pointer"
+                >
+                  + افزودن ستون جدید
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ─── تنظیمات آپلود فایل ─── */}
+          {q.type === "file_upload" && (
+            <div className="flex flex-col gap-2.5 border-2 border-dashed border-magenta/40 rounded-pill-md bg-magenta/5 dark:bg-pink-950/20 p-3">
+              <span className="text-xs font-extrabold text-magenta-text dark:text-pink-300 flex items-center gap-1">
+                <Upload size={14} /> تنظیمات بارگذاری فایل
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <Field label="نوع فایل‌های مجاز" hint="محدود کردن پسوند">
+                  <select
+                    value={q.validation?.allowed_file_types || q.allowed_file_types || "all"}
+                    onChange={(e) => onChange({ validation: { ...q.validation, allowed_file_types: e.target.value }, allowed_file_types: e.target.value })}
+                    className={`${inputCls} !py-1.5 !text-xs`}
+                  >
+                    <option value="all">همه فرمت‌ها (آزاد)</option>
+                    <option value="image">فقط تصاویر (JPG, PNG, WebP)</option>
+                    <option value="pdf">فقط اسناد PDF</option>
+                    <option value="document">اسناد و فایل‌ها (PDF, Word, Excel, ZIP)</option>
+                  </select>
+                </Field>
+                <Field label="حداکثر حجم مجاز (مگابایت)" hint="حداکثر تا ۵۰ مگابایت">
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={q.validation?.max_file_size_mb || q.max_file_size_mb || 10}
+                    onChange={(e) => onChange({ validation: { ...q.validation, max_file_size_mb: Number(e.target.value) }, max_file_size_mb: Number(e.target.value) })}
+                    className={`${inputCls} !py-1.5 !text-xs`}
+                  />
+                </Field>
+              </div>
+            </div>
+          )}
+
+          {/* ─── تنظیمات درگاه پرداخت ─── */}
+          {q.type === "payment" && (
+            <div className="flex flex-col gap-2.5 border-2 border-dashed border-orange/40 rounded-pill-md bg-orange/5 dark:bg-amber-950/20 p-3">
+              <span className="text-xs font-extrabold text-orange dark:text-amber-300 flex items-center gap-1">
+                <CreditCard size={14} /> تنظیمات پرداخت آنلاین
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <Field label="مبلغ پرداختی" hint="مبلغ به عدد">
+                  <input
+                    type="number"
+                    min="1000"
+                    step="1000"
+                    value={q.validation?.amount || q.amount || 100000}
+                    onChange={(e) => onChange({ validation: { ...q.validation, amount: Number(e.target.value) }, amount: Number(e.target.value) })}
+                    className={`${inputCls} !py-1.5 !text-xs`}
+                  />
+                </Field>
+                <Field label="واحد پولی" hint="تومان یا ریال">
+                  <select
+                    value={q.validation?.currency || q.currency || "تومان"}
+                    onChange={(e) => onChange({ validation: { ...q.validation, currency: e.target.value }, currency: e.target.value })}
+                    className={`${inputCls} !py-1.5 !text-xs`}
+                  >
+                    <option value="تومان">تومان</option>
+                    <option value="ریال">ریال</option>
+                  </select>
+                </Field>
+              </div>
             </div>
           )}
 
@@ -740,18 +1002,37 @@ export default function FormBuilder() {
         .eq("form_id", id)
         .order("position");
       setForm(f);
-      setQuestions((qs ?? []).map((q) => ({
-        ...q,
-        localId: q.id,
-        placeholder: q.placeholder ?? "",
-        validation: q.validation ?? null,
-        correct_answer: q.correct_answer ?? null,
-        points: q.points ?? undefined,
-        max_selections: q.max_selections ?? 1,
-        // مهاجرت: اگه conditions وجود نداشت از condition قدیمی بساز
-        conditions: normalizeConditionGroup(q.conditions ?? (q.condition ? { group_operator: "AND", conditions: [q.condition] } : null)),
-        jump_actions: q.jump_actions ?? [],
-      })));
+      setQuestions((qs ?? []).map((q) => {
+        let rows = q.validation?.rows || ["کیفیت خدمات", "سرعت پاسخگویی", "سهولت استفاده"];
+        let columns = q.validation?.columns || ["خیلی ضعیف", "ضعیف", "متوسط", "خوب", "عالی"];
+        let min_label = q.validation?.min_label || "اصلاً احتمال ندارد";
+        let max_label = q.validation?.max_label || "بسیار زیاد";
+        let allowed_file_types = q.validation?.allowed_file_types || "all";
+        let max_file_size_mb = q.validation?.max_file_size_mb || 10;
+        let amount = q.validation?.amount || 100000;
+        let currency = q.validation?.currency || "تومان";
+
+        return {
+          ...q,
+          localId: q.id,
+          placeholder: q.placeholder ?? "",
+          validation: q.validation ?? null,
+          correct_answer: q.correct_answer ?? null,
+          points: q.points ?? undefined,
+          max_selections: q.max_selections ?? 1,
+          rows,
+          columns,
+          min_label,
+          max_label,
+          allowed_file_types,
+          max_file_size_mb,
+          amount,
+          currency,
+          // مهاجرت: اگه conditions وجود نداشت از condition قدیمی بساز
+          conditions: normalizeConditionGroup(q.conditions ?? (q.condition ? { group_operator: "AND", conditions: [q.condition] } : null)),
+          jump_actions: q.jump_actions ?? [],
+        };
+      }));
 
       setLoading(false);
     }
@@ -858,15 +1139,50 @@ export default function FormBuilder() {
           ? Math.max(1, Number(q.max_selections))
           : 1;
 
+        let optionsToSave = [];
+        let validationToSave = q.validation ? { ...q.validation } : {};
+
+        if (q.type === "choice" || q.type === "dropdown" || q.type === "likert" || q.type === "ranking") {
+          optionsToSave = (q.options || []).map((o) => (typeof o === "string" ? o.trim() : o));
+        } else if (q.type === "picture_choice") {
+          optionsToSave = (q.options || []).map((o, idx) => {
+            if (typeof o === "object") {
+              return { text: o.text || `طرح ${idx + 1}`, image: o.image || "" };
+            }
+            return { text: String(o), image: "" };
+          });
+        } else if (q.type === "yes_no") {
+          optionsToSave = ["بله", "خیر"];
+        } else if (q.type === "matrix") {
+          optionsToSave = q.options || [];
+          validationToSave.rows = q.rows || q.validation?.rows || ["کیفیت خدمات", "سرعت پاسخگویی", "سهولت استفاده"];
+          validationToSave.columns = q.columns || q.validation?.columns || ["خیلی ضعیف", "ضعیف", "متوسط", "خوب", "عالی"];
+        }
+
+        if (q.type === "nps") {
+          validationToSave.min_label = q.min_label || q.validation?.min_label || "اصلاً احتمال ندارد";
+          validationToSave.max_label = q.max_label || q.validation?.max_label || "بسیار زیاد";
+        }
+
+        if (q.type === "file_upload") {
+          validationToSave.allowed_file_types = q.allowed_file_types || q.validation?.allowed_file_types || "all";
+          validationToSave.max_file_size_mb = q.max_file_size_mb || q.validation?.max_file_size_mb || 10;
+        }
+
+        if (q.type === "payment") {
+          validationToSave.amount = q.amount || q.validation?.amount || 100000;
+          validationToSave.currency = q.currency || q.validation?.currency || "تومان";
+        }
+
         return {
           id: isRealUuid ? q.id : null,
           type: q.type,
           title: (q.title || "").trim(),
           description: q.description ?? "",
           placeholder: q.placeholder ?? "",
-          validation: q.validation ?? null,
-          required: !!q.required,
-          options: q.type === "choice" ? (q.options || []).map((o) => (o || "").trim()) : q.type === "yes_no" ? ["بله", "خیر"] : [],
+          validation: Object.keys(validationToSave).length > 0 ? validationToSave : null,
+          required: (q.type === "statement" || q.type === "group") ? false : !!q.required,
+          options: optionsToSave,
           position: i,
           conditions: q.conditions ?? null,
           jump_actions: Array.isArray(q.jump_actions) ? q.jump_actions : [],
@@ -1254,29 +1570,40 @@ export default function FormBuilder() {
 
       {/* سوال‌ها */}
       <div className="flex flex-col gap-4 pb-20 lg:pb-6">
-        {/* افزودن سوال جدید — ثابت در بالای لیست سوالات */}
+        {/* افزودن سوال جدید — دسته‌بندی شده و شیک */}
         <div className="rotate-[0.3deg]">
           <StickerCard theme="orange" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
-            <div className="p-4 sm:p-5 flex flex-col gap-3">
+            <div className="p-4 sm:p-5 flex flex-col gap-4">
               <span className="text-sm font-black text-orange flex items-center gap-2">
                 افزودن سوال جدید — نوع سوال را انتخاب کنید:
               </span>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5 w-full">
-                {QUESTION_TYPE_ORDER.map((key) => {
-                  const t = QUESTION_TYPES[key];
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => addQuestion(key)}
-                      title={t.hint}
-                      className="flex items-center justify-start gap-2 bg-white border-2 border-orange/60 rounded-pill-md px-3 py-2.5
-                        text-xs font-extrabold text-ink hover:-translate-y-0.5 hover:border-orange hover:shadow-xs transition-all cursor-pointer w-full text-right"
-                    >
-                      {(() => { const Icon = QUESTION_TYPE_ICONS[key]; return Icon ? <Icon size={16} className="text-orange shrink-0" /> : null; })()}
-                      <span className="truncate">{t.label}</span>
-                    </button>
-                  );
-                })}
+
+              <div className="flex flex-col gap-3.5">
+                {QUESTION_CATEGORIES.map((cat) => (
+                  <div key={cat.key} className="flex flex-col gap-1.5">
+                    <span className="text-xs font-black text-navy dark:text-slate-200">
+                      {cat.title}
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                      {cat.types.map((key) => {
+                        const t = QUESTION_TYPES[key];
+                        if (!t) return null;
+                        const Icon = QUESTION_TYPE_ICONS[key];
+                        return (
+                          <button
+                            key={key}
+                            onClick={() => addQuestion(key)}
+                            title={t.hint}
+                            className="flex items-center justify-start gap-2 bg-white dark:bg-slate-800 border-2 border-orange/40 hover:border-orange rounded-pill-md px-2.5 py-2 text-xs font-extrabold text-ink dark:text-slate-100 hover:-translate-y-0.5 hover:shadow-xs transition-all cursor-pointer w-full text-right"
+                          >
+                            {Icon && <Icon size={14} className="text-orange shrink-0" />}
+                            <span className="truncate">{t.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </StickerCard>

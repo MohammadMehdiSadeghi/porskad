@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import clsx from "../../components/ui/clsx";
 import { faNum, faDuration } from "../../lib/utils";
 import { validateAnswer } from "../../lib/validators";
-import { Star, GitFork, Check } from "lucide-react";
+import { Star, GitFork, Check, ArrowUp, ArrowDown, Upload, FileCheck, CreditCard, ChevronDown, Image, Info, Layers, ExternalLink } from "lucide-react";
 
 function CheckIcon({ className }) {
   return (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>);
@@ -27,6 +27,7 @@ const STEP_THEMES = [
 ];
 function getStepTheme(i) { return STEP_THEMES[i % STEP_THEMES.length]; }
 
+// ─── ورودی‌های متنی (متن کوتاه، بلند، ایمیل، تلفن، عدد، لینک، تلگرام) ───
 function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, onEnter, placeholder: customPlaceholder, question }) {
   const ph = (customPlaceholder && customPlaceholder.trim()) || {
     short_text: "پاسخ خود را بنویسید...",
@@ -34,12 +35,12 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
     email: "example@email.com",
     phone_ir: "۰۹۱۲۳۴۵۶۷۸۹",
     number: "مثلاً: ۱۲۳",
+    link: "https://example.com",
     telegram_id: "username@",
   }[type] || "پاسخ خود را بنویسید...";
 
   const hasValue = Boolean(value != null && String(value).trim().length > 0);
-  const isLtrType = type === "email" || type === "phone_ir" || type === "telegram_id";
-  // در حالت خالی، همگی راست‌چین و هماهنگ هستند؛ هنگام تایپ مقدار فیلدهای لاتین چپ‌چین می‌شوند
+  const isLtrType = type === "email" || type === "phone_ir" || type === "telegram_id" || type === "link";
   const activeDir = hasValue && isLtrType ? "ltr" : "rtl";
   const activeAlign = hasValue && isLtrType ? "text-left" : "text-right";
 
@@ -81,6 +82,7 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
       </div>
     );
   }
+
   if (type === "telegram_id") {
     return (
       <div className="relative">
@@ -118,11 +120,16 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
             </svg>
           </span>
         )}
+        {type === "link" && (
+          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+            <ExternalLink size={16} className="text-ink-subtle" />
+          </span>
+        )}
         <input
           ref={inputRef}
-          type="text"
+          type={type === "email" ? "email" : type === "link" ? "url" : "text"}
           maxLength={maxLen}
-          inputMode={type === "number" ? "numeric" : type === "phone_ir" ? "tel" : type === "email" ? "email" : "text"}
+          inputMode={type === "number" ? "numeric" : type === "phone_ir" ? "tel" : type === "email" ? "email" : type === "link" ? "url" : "text"}
           dir={activeDir}
           value={value ?? ""}
           autoFocus={autoFocus}
@@ -133,7 +140,7 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
               onEnter();
             }
           }}
-          className={clsx(shared, activeAlign, type === "phone_ir" && "pr-9")}
+          className={clsx(shared, activeAlign, (type === "phone_ir" || type === "link") && "pr-9")}
           placeholder={ph}
         />
       </div>
@@ -146,6 +153,7 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
   );
 }
 
+// ─── چندگزینه‌ای (Choice) ───
 function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "buttons", maxSelections = 1 }) {
   const isMulti = maxSelections > 1;
   const selectedArr = isMulti ? (Array.isArray(value) ? value : (value != null ? [value] : [])) : [];
@@ -162,7 +170,6 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
     onChange(cur.length > 0 ? cur : null);
   }
 
-  // حالت دراپ‌داون — فقط تک انتخابی
   if (displayMode === "dropdown" && !isMulti) {
     return (
       <select
@@ -172,13 +179,12 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
       >
         <option value="">یک گزینه انتخاب کنید...</option>
         {options.map((opt, i) => (
-          <option key={i} value={opt}>{opt}</option>
+          <option key={i} value={typeof opt === "object" ? opt.text : opt}>{typeof opt === "object" ? opt.text : opt}</option>
         ))}
       </select>
     );
   }
 
-  // حالت دکمه‌ای — تک یا چند انتخابی
   return (
     <div className="flex flex-col gap-2">
       {isMulti && (
@@ -186,7 +192,8 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
           حداکثر {faNum(maxSelections)} گزینه انتخاب کنید {selectedArr.length > 0 && `(${faNum(selectedArr.length)} انتخاب شده)`}
         </span>
       )}
-      {options.map((opt, i) => {
+      {options.map((item, i) => {
+        const opt = typeof item === "object" ? item.text : item;
         const selected = isMulti ? selectedArr.includes(opt) : value === opt;
         const disabled = !selected && isMulti && atLimit;
         return (
@@ -217,7 +224,107 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
   );
 }
 
-function YesNoOptions({ value, onChange, onEnter }) {
+// ─── چندگزینه‌ای تصویری (Picture Choice) ───
+function PictureChoiceOptions({ options = [], value, onChange, maxSelections = 1 }) {
+  const isMulti = maxSelections > 1;
+  const selectedArr = isMulti ? (Array.isArray(value) ? value : (value != null ? [value] : [])) : [];
+
+  function handleToggle(optText) {
+    if (isMulti) {
+      const cur = [...selectedArr];
+      const idx = cur.indexOf(optText);
+      if (idx >= 0) cur.splice(idx, 1);
+      else if (cur.length < maxSelections) cur.push(optText);
+      onChange(cur.length > 0 ? cur : null);
+    } else {
+      onChange(optText);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {isMulti && (
+        <span className="text-xs font-bold text-ink-subtle dark:text-slate-400">
+          حداکثر {faNum(maxSelections)} تصویر انتخاب کنید
+        </span>
+      )}
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3.5">
+        {options.map((item, i) => {
+          const optText = typeof item === "object" ? item.text || `تصویر ${i + 1}` : String(item);
+          const optImage = typeof item === "object" ? item.image : "";
+          const selected = isMulti ? selectedArr.includes(optText) : value === optText;
+
+          return (
+            <button
+              key={i}
+              type="button"
+              onClick={() => handleToggle(optText)}
+              className={clsx(
+                "group relative flex flex-col rounded-2xl border-2 overflow-hidden transition-all duration-200 cursor-pointer text-right hover:-translate-y-1 shadow-xs",
+                selected
+                  ? "border-teal bg-teal/10 dark:bg-teal-950/40 ring-2 ring-teal/30 scale-[1.02]"
+                  : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-teal/50"
+              )}
+            >
+              {/* تصویر */}
+              <div className="relative w-full aspect-square bg-navy/5 dark:bg-slate-900/60 overflow-hidden flex items-center justify-center">
+                {optImage ? (
+                  <img
+                    src={optImage}
+                    alt={optText}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                ) : (
+                  <Image size={36} className="text-ink/30 dark:text-slate-600" />
+                )}
+                {/* نشانگر وضعیت */}
+                <div className={clsx(
+                  "absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center font-black text-xs shadow-md transition-all",
+                  selected ? "bg-teal text-white scale-110" : "bg-white/80 dark:bg-slate-800/80 text-navy dark:text-white border border-ink/10"
+                )}>
+                  {selected ? <Check size={13} className="stroke-[3]" /> : faNum(i + 1)}
+                </div>
+              </div>
+              {/* عنوان متن */}
+              <div className="p-2 sm:p-2.5 flex items-center justify-between gap-1">
+                <span className={clsx("text-xs sm:text-sm font-bold truncate", selected ? "text-teal-text dark:text-teal font-black" : "text-ink dark:text-slate-200")}>
+                  {optText}
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── لیست کشویی (Dropdown) ───
+function DropdownSelect({ options = [], value, onChange, placeholder = "یک گزینه انتخاب کنید..." }) {
+  return (
+    <div className="relative w-full">
+      <select
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value || null)}
+        className="w-full appearance-none bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-4 py-3 sm:py-3.5 font-bold text-sm sm:text-base text-ink dark:text-white focus:outline-none transition-all cursor-pointer text-right pr-4 pl-10"
+      >
+        <option value="">{placeholder}</option>
+        {options.map((opt, i) => (
+          <option key={i} value={typeof opt === "object" ? opt.text : opt}>
+            {typeof opt === "object" ? opt.text : opt}
+          </option>
+        ))}
+      </select>
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink-subtle dark:text-slate-400">
+        <ChevronDown size={18} />
+      </div>
+    </div>
+  );
+}
+
+// ─── بله / خیر (Yes/No) ───
+function YesNoOptions({ value, onChange }) {
   const opts = [{ label: "بله", theme: "ecosystem" }, { label: "خیر", theme: "female" }];
   return (
     <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
@@ -245,6 +352,84 @@ function YesNoOptions({ value, onChange, onEnter }) {
   );
 }
 
+// ─── طیفی (مقیاس لیکرت - Likert Scale) ───
+function LikertScale({ options = [], value, onChange }) {
+  const defaultOpts = ["کاملاً مخالفم", "مخالفم", "نظری ندارم", "موافقم", "کاملاً موافقم"];
+  const list = options.length > 0 ? options : defaultOpts;
+
+  return (
+    <div className="flex flex-col gap-2 w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 w-full">
+        {list.map((opt, i) => {
+          const optText = typeof opt === "object" ? opt.text : opt;
+          const selected = value === optText;
+          return (
+            <button
+              key={i}
+              type="button"
+              onClick={() => onChange(optText)}
+              className={clsx(
+                "flex flex-col items-center justify-center p-3 sm:p-3.5 rounded-xl border-2 transition-all cursor-pointer text-center",
+                selected
+                  ? "border-teal bg-teal text-white font-black shadow-md scale-[1.02] -rotate-[0.5deg]"
+                  : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink dark:text-slate-200 hover:border-teal/50 font-bold"
+              )}
+            >
+              <span className="text-xs sm:text-sm">{optText}</span>
+              <span className={clsx("text-[10px] mt-1 font-mono", selected ? "text-white/80" : "text-ink/40 dark:text-slate-400")}>
+                ({faNum(i + 1)})
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── شاخص وفاداری و امتیازدهی ۰ تا ۱۰ (NPS) ───
+function NpsScale({ value, onChange, minLabel = "اصلاً احتمال ندارد", maxLabel = "بسیار زیاد" }) {
+  const currentVal = value !== null && value !== undefined ? Number(value) : null;
+
+  return (
+    <div className="flex flex-col gap-3 w-full py-1">
+      <div className="grid grid-cols-11 gap-1 sm:gap-1.5 w-full" dir="ltr">
+        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => {
+          const selected = currentVal === n;
+          // تم رنگی بر اساس امتیاز NPS
+          const colorClass = n <= 6
+            ? (selected ? "bg-amber-500 border-amber-600 text-white" : "hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30")
+            : n <= 8
+            ? (selected ? "bg-teal border-teal-600 text-white" : "hover:border-teal/60 hover:bg-teal/5")
+            : (selected ? "bg-emerald-600 border-emerald-700 text-white" : "hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/30");
+
+          return (
+            <button
+              key={n}
+              type="button"
+              onClick={() => onChange(n)}
+              className={clsx(
+                "h-10 sm:h-12 flex items-center justify-center rounded-xl border-2 font-black text-sm sm:text-base transition-all cursor-pointer shadow-xs",
+                selected
+                  ? `${colorClass} scale-110 shadow-md ring-2 ring-teal/30 z-10 font-black`
+                  : `border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink dark:text-slate-200 ${colorClass}`
+              )}
+            >
+              {faNum(n)}
+            </button>
+          );
+        })}
+      </div>
+      {/* برچسب‌های دو طرف */}
+      <div className="flex items-center justify-between text-xs font-extrabold text-ink-subtle dark:text-slate-400 px-1">
+        <span>{minLabel} (۰)</span>
+        <span>{maxLabel} (۱۰)</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── ستاره امتیاز (Rating) ───
 function RatingStars({ value, onChange }) {
   const [hover, setHover] = useState(null);
   const current = hover ?? Number(value ?? 0);
@@ -273,6 +458,271 @@ function RatingStars({ value, onChange }) {
   );
 }
 
+// ─── ماتریسی / جدول سوالات (Matrix) ───
+function MatrixTable({ question, value = {}, onChange }) {
+  const rows = question.validation?.rows || question.rows || ["کیفیت خدمات", "سرعت پاسخگویی", "سهولت استفاده"];
+  const columns = question.validation?.columns || question.columns || ["خیلی ضعیف", "ضعیف", "متوسط", "خوب", "عالی"];
+  const state = (typeof value === "object" && value !== null) ? value : {};
+
+  function handleCell(row, col) {
+    onChange({ ...state, [row]: col });
+  }
+
+  return (
+    <div className="w-full overflow-x-auto rounded-2xl border-2 border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 sm:p-3">
+      <table className="w-full text-xs sm:text-sm">
+        <thead>
+          <tr className="border-b-2 border-ink/10 dark:border-slate-700">
+            <th className="text-right py-2.5 px-3 font-black text-navy dark:text-white">موضوع / سوال</th>
+            {columns.map((c, i) => (
+              <th key={i} className="text-center py-2.5 px-2 font-bold text-ink-subtle dark:text-slate-300">
+                {c}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, ri) => (
+            <tr key={ri} className="border-b border-ink/5 dark:border-slate-700/60 last:border-0 hover:bg-navy/5 dark:hover:bg-slate-700/30">
+              <td className="py-3 px-3 font-bold text-ink dark:text-slate-100">{r}</td>
+              {columns.map((c, ci) => {
+                const isSelected = state[r] === c;
+                return (
+                  <td key={ci} className="py-3 px-2 text-center">
+                    <button
+                      type="button"
+                      onClick={() => handleCell(r, c)}
+                      className={clsx(
+                        "w-5 h-5 sm:w-6 sm:h-6 mx-auto rounded-full border-2 flex items-center justify-center transition-all cursor-pointer",
+                        isSelected
+                          ? "border-teal bg-teal text-white ring-2 ring-teal/30 scale-110"
+                          : "border-ink/20 dark:border-slate-600 bg-white dark:bg-slate-800 hover:border-teal/60"
+                      )}
+                    >
+                      {isSelected && <span className="w-2 h-2 rounded-full bg-white" />}
+                    </button>
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ─── اولویت‌دهی / رتبه‌بندی (Ranking) ───
+function RankingList({ options = [], value, onChange }) {
+  const defaultList = options.length > 0 ? options : ["گزینه اول", "گزینه دوم", "گزینه سوم"];
+  const ranked = (Array.isArray(value) && value.length === defaultList.length) ? value : defaultList;
+
+  function move(idx, dir) {
+    const nextIdx = idx + dir;
+    if (nextIdx < 0 || nextIdx >= ranked.length) return;
+    const copy = [...ranked];
+    const temp = copy[idx];
+    copy[idx] = copy[nextIdx];
+    copy[nextIdx] = temp;
+    onChange(copy);
+  }
+
+  return (
+    <div className="flex flex-col gap-2 w-full">
+      <span className="text-xs font-bold text-ink-subtle dark:text-slate-400 mb-1">
+        با دکمه‌های بالا و پایین، گزینه‌ها را به ترتیب اولویت و اهمیت بچینید:
+      </span>
+      {ranked.map((opt, i) => {
+        const text = typeof opt === "object" ? opt.text : opt;
+        return (
+          <div
+            key={i}
+            className="flex items-center justify-between gap-3 p-3 rounded-xl border-2 border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 transition-all shadow-xs"
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="w-7 h-7 rounded-full bg-navy dark:bg-teal text-white dark:text-navy font-black text-xs flex items-center justify-center">
+                {faNum(i + 1)}
+              </span>
+              <span className="text-sm font-bold text-ink dark:text-slate-100">{text}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => move(i, -1)}
+                disabled={i === 0}
+                className="w-7 h-7 rounded-lg border border-ink/20 dark:border-slate-600 bg-navy/5 dark:bg-slate-700 flex items-center justify-center text-ink dark:text-white disabled:opacity-30 cursor-pointer hover:bg-teal hover:text-white transition-colors"
+                title="افزایش اولویت"
+              >
+                <ArrowUp size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={() => move(i, 1)}
+                disabled={i === ranked.length - 1}
+                className="w-7 h-7 rounded-lg border border-ink/20 dark:border-slate-600 bg-navy/5 dark:bg-slate-700 flex items-center justify-center text-ink dark:text-white disabled:opacity-30 cursor-pointer hover:bg-teal hover:text-white transition-colors"
+                title="کاهش اولویت"
+              >
+                <ArrowDown size={14} />
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── متن توضیحی / بدون پاسخ (Statement) ───
+function StatementCard({ question, onAdvance }) {
+  return (
+    <div className="flex flex-col gap-3 p-4 rounded-2xl bg-navy/5 dark:bg-slate-800/80 border-2 border-dashed border-teal/40 dark:border-teal-500/30 text-center items-center">
+      <div className="w-12 h-12 rounded-2xl bg-teal/15 text-teal flex items-center justify-center shadow-xs">
+        <Info size={24} />
+      </div>
+      <p className="text-xs sm:text-sm font-semibold text-ink dark:text-slate-300 leading-7">
+        {question.description || "لطفاً توضیحات بالا را مطالعه کرده و برای رفتن به سوال بعدی روی دکمه ادامه کلیک کنید."}
+      </p>
+      <button
+        type="button"
+        onClick={onAdvance}
+        className="mt-2 bg-teal hover:bg-teal/90 text-white rounded-pill-md px-6 py-2.5 font-black text-sm shadow-md transition-all cursor-pointer"
+      >
+        متوجه شدم / ادامه ←
+      </button>
+    </div>
+  );
+}
+
+// ─── گروه سوال / بخش‌بندی (Group Divider) ───
+function GroupDivider({ question, onAdvance }) {
+  return (
+    <div className="flex flex-col gap-3 p-5 rounded-2xl bg-gradient-to-br from-navy/10 via-teal/5 to-navy/5 dark:from-slate-800 dark:to-slate-900 border-2 border-teal/40 text-center items-center">
+      <div className="w-12 h-12 rounded-2xl bg-navy dark:bg-teal text-white dark:text-navy flex items-center justify-center shadow-md">
+        <Layers size={24} />
+      </div>
+      <h3 className="text-base sm:text-lg font-black text-navy dark:text-white">{question.title || "بخش جدید"}</h3>
+      {question.description && (
+        <p className="text-xs sm:text-sm font-medium text-ink-subtle dark:text-slate-300 max-w-md leading-6">
+          {question.description}
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={onAdvance}
+        className="mt-2 bg-navy dark:bg-teal text-white dark:text-navy rounded-pill-md px-6 py-2.5 font-black text-sm shadow-md hover:scale-[1.02] transition-all cursor-pointer"
+      >
+        شروع این بخش ←
+      </button>
+    </div>
+  );
+}
+
+// ─── آپلود فایل (File Upload) ───
+function FileUploadBox({ question, value, onChange }) {
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
+
+  function handleFile(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    // خواندن فایل و ایجاد آبجکت اطلاعات فایل
+    setTimeout(() => {
+      onChange({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        uploadedAt: new Date().toISOString(),
+      });
+      setUploading(false);
+    }, 600);
+  }
+
+  return (
+    <div className="flex flex-col gap-2 w-full">
+      <input
+        ref={fileInputRef}
+        type="file"
+        onChange={handleFile}
+        className="hidden"
+      />
+
+      {value ? (
+        <div className="flex items-center justify-between p-3.5 rounded-2xl border-2 border-teal bg-teal/5 dark:bg-teal-950/30">
+          <div className="flex items-center gap-2.5 truncate">
+            <FileCheck size={24} className="text-teal shrink-0" />
+            <div className="truncate text-right">
+              <span className="text-xs sm:text-sm font-black text-navy dark:text-white truncate block">
+                {typeof value === "object" ? value.name : "فایل بارگذاری شده"}
+              </span>
+              {typeof value === "object" && value.size && (
+                <span className="text-[10px] font-mono text-ink-subtle dark:text-slate-400">
+                  {Math.round(value.size / 1024)} KB
+                </span>
+              )}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            className="text-xs font-bold text-magenta-text hover:underline cursor-pointer mr-2 shrink-0"
+          >
+            تغییر فایل
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-ink/20 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-teal dark:hover:border-teal transition-all cursor-pointer group"
+        >
+          <Upload size={32} className="text-ink/30 dark:text-slate-500 group-hover:text-teal group-hover:scale-110 transition-all mb-2" />
+          <span className="text-xs sm:text-sm font-black text-navy dark:text-white">
+            {uploading ? "در حال پردازش..." : "برای انتخاب یا آپلود فایل کلیک کنید"}
+          </span>
+          <span className="text-[11px] font-medium text-ink-subtle dark:text-slate-400 mt-1">
+            حداکثر حجم مجاز: {faNum(question.validation?.max_file_size_mb || question.max_file_size_mb || 10)} مگابایت
+          </span>
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─── درگاه پرداخت (Payment) ───
+function PaymentBox({ question, value, onChange }) {
+  const amount = question.validation?.amount || question.amount || 100000;
+  const currency = question.validation?.currency || question.currency || "تومان";
+  const isPaid = Boolean(value);
+
+  return (
+    <div className="flex flex-col gap-3 p-5 rounded-2xl border-2 border-orange/40 bg-orange/5 dark:bg-amber-950/20 text-center items-center">
+      <CreditCard size={36} className="text-orange" />
+      <span className="text-xs font-bold text-ink-subtle dark:text-slate-400">مبلغ قابل پرداخت</span>
+      <span className="text-2xl sm:text-3xl font-black text-navy dark:text-white">
+        {faNum(amount.toLocaleString("fa-IR"))} <span className="text-sm font-bold text-orange">{currency}</span>
+      </span>
+
+      {isPaid ? (
+        <div className="flex items-center gap-1.5 text-xs font-bold text-teal bg-teal/10 border border-teal/30 px-3 py-1.5 rounded-full">
+          <Check size={14} /> پرداخت با موفقیت شبیه‌سازی شد
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => onChange({ paid: true, amount, currency, txId: `mock_${Date.now()}` })}
+          className="mt-1 bg-orange hover:bg-orange-alt text-white rounded-pill-md px-6 py-2.5 font-black text-sm shadow-md hover:scale-[1.02] transition-all cursor-pointer flex items-center gap-2"
+        >
+          <CreditCard size={16} /> پرداخت آنلاین و ادامه
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─── کامپوننت اصلی اجرای مرحله به مرحله سوال ───
 export default function QuestionStep({ question, index, total, value, timeSpent, onChange, onAdvance }) {
   const [error, setError] = useState(null);
   const [touched, setTouched] = useState(false);
@@ -315,26 +765,39 @@ export default function QuestionStep({ question, index, total, value, timeSpent,
                 <GitFork size={12} /> شرطی
               </span>
             )}
-            {question.required
-              ? <span className="text-xs font-bold text-female-normal dark:text-pink-300 bg-female-light dark:bg-pink-950/40 rounded-pill-sm px-2 py-0.5 flex items-center gap-0.5">اجباری</span>
-              : <span className="text-xs font-bold text-ink-subtle dark:text-slate-400 bg-bg-neutral dark:bg-slate-800 rounded-pill-sm px-2 py-0.5">اختیاری</span>
-            }
+            {question.type === "statement" || question.type === "group" ? (
+              <span className="text-xs font-bold text-teal bg-teal/10 dark:bg-teal-950/40 rounded-pill-sm px-2 py-0.5">اطلاعاتی</span>
+            ) : question.required ? (
+              <span className="text-xs font-bold text-female-normal dark:text-pink-300 bg-female-light dark:bg-pink-950/40 rounded-pill-sm px-2 py-0.5 flex items-center gap-0.5">اجباری</span>
+            ) : (
+              <span className="text-xs font-bold text-ink-subtle dark:text-slate-400 bg-bg-neutral dark:bg-slate-800 rounded-pill-sm px-2 py-0.5">اختیاری</span>
+            )}
           </div>
         </div>
 
         {/* عنوان */}
         <h2 className="text-[17px] leading-[26px] sm:text-[20px] sm:leading-[30px] font-black text-male-normal dark:text-white">
-          {question.title}{question.required && <span className="text-female-normal mr-0.5">*</span>}
+          {question.title}{question.required && question.type !== "statement" && question.type !== "group" && <span className="text-female-normal mr-0.5">*</span>}
         </h2>
         {question.description && <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 leading-6 -mt-1.5">{question.description}</p>}
 
-        {/* فیلد پاسخ */}
-        {(question.type === "short_text" || question.type === "long_text" || question.type === "email" || question.type === "number" || question.type === "phone_ir" || question.type === "telegram_id") && (
+        {/* فیلد پاسخ بر اساس نوع سوال */}
+        {(question.type === "short_text" || question.type === "long_text" || question.type === "email" || question.type === "number" || question.type === "phone_ir" || question.type === "link" || question.type === "telegram_id") && (
           <TextInput type={question.type} value={value} error={error} onChange={handleChange} onEnter={handleNext} placeholder={question.placeholder} question={question} />
         )}
         {question.type === "choice" && <ChoiceOptions options={question.options} value={value} onChange={handleChange} onEnter={handleNext} displayMode={question.display_mode || "buttons"} maxSelections={question.max_selections ?? 1} />}
-        {question.type === "yes_no" && <YesNoOptions value={value} onChange={handleChange} onEnter={handleNext} />}
+        {question.type === "picture_choice" && <PictureChoiceOptions options={question.options} value={value} onChange={handleChange} maxSelections={question.max_selections ?? 1} />}
+        {question.type === "dropdown" && <DropdownSelect options={question.options} value={value} onChange={handleChange} placeholder={question.placeholder} />}
+        {question.type === "yes_no" && <YesNoOptions value={value} onChange={handleChange} />}
+        {question.type === "likert" && <LikertScale options={question.options} value={value} onChange={handleChange} />}
+        {question.type === "nps" && <NpsScale value={value} onChange={handleChange} minLabel={question.validation?.min_label || question.min_label} maxLabel={question.validation?.max_label || question.max_label} />}
         {question.type === "rating" && <RatingStars value={value} onChange={(val) => handleChange(val)} />}
+        {question.type === "matrix" && <MatrixTable question={question} value={value} onChange={handleChange} />}
+        {question.type === "ranking" && <RankingList options={question.options} value={value} onChange={handleChange} />}
+        {question.type === "statement" && <StatementCard question={question} onAdvance={handleNext} />}
+        {question.type === "group" && <GroupDivider question={question} onAdvance={handleNext} />}
+        {question.type === "file_upload" && <FileUploadBox question={question} value={value} onChange={handleChange} />}
+        {question.type === "payment" && <PaymentBox question={question} value={value} onChange={handleChange} />}
 
         {/* ارور */}
         {error && (

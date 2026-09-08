@@ -76,6 +76,7 @@ const CHART_COLORS = ["#6366f1", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#3
 // ─── نمایش مقدار پاسخ ───
 function AnswerValue({ question, value }) {
   if (value === null || value === undefined || value === "") return <span className="text-ink/40 dark:text-slate-500">—</span>;
+  
   if (question.type === "rating") {
     const count = Math.max(0, Math.min(5, Number(value) || 0));
     return (
@@ -86,9 +87,87 @@ function AnswerValue({ question, value }) {
       </span>
     );
   }
-  if (question.type === "choice" && Array.isArray(value)) return <span className="font-medium text-ink dark:text-slate-100">{value.join("، ")}</span>;
+
+  if (question.type === "nps") {
+    const n = Number(value);
+    const badgeColor = n >= 9 ? "bg-teal/15 text-teal-text dark:text-teal-300 border-teal/30" : n >= 7 ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30" : "bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/30";
+    const label = n >= 9 ? "مروج (Promoter)" : n >= 7 ? "بی‌تفاوت (Passive)" : "مخالف (Detractor)";
+    return (
+      <div className="inline-flex items-center gap-2">
+        <span className={`px-2.5 py-0.5 rounded-full text-xs font-black border ${badgeColor}`}>
+          امتیاز: {faNum(n)} از ۱۰
+        </span>
+        <span className="text-xs text-ink/50 dark:text-slate-400 font-semibold">({label})</span>
+      </div>
+    );
+  }
+
+  if (question.type === "likert") {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-teal/10 text-teal-text dark:text-teal-300 rounded-lg text-xs font-bold border border-teal/20">
+        {String(value)}
+      </span>
+    );
+  }
+
+  if (question.type === "matrix" && typeof value === "object" && value !== null) {
+    return (
+      <div className="flex flex-col gap-1 text-xs">
+        {Object.entries(value).map(([row, col], idx) => (
+          <div key={idx} className="flex items-center gap-2 bg-black/5 dark:bg-slate-800 px-2 py-1 rounded">
+            <span className="font-bold text-ink/70 dark:text-slate-300">{row}:</span>
+            <span className="text-teal-text dark:text-teal-300 font-black">{String(col)}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (question.type === "ranking" && Array.isArray(value)) {
+    return (
+      <div className="flex flex-col gap-1 text-xs">
+        {value.map((item, idx) => (
+          <div key={idx} className="flex items-center gap-1.5 font-medium text-ink dark:text-slate-200">
+            <span className="w-5 h-5 rounded-full bg-navy/10 dark:bg-slate-700 text-navy dark:text-white flex items-center justify-center text-[10px] font-black">
+              {faNum(idx + 1)}
+            </span>
+            <span>{item}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (question.type === "file_upload") {
+    if (typeof value === "object" && value !== null) {
+      return (
+        <a href={value.url || "#"} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1 bg-male-light dark:bg-slate-800 text-male-normal dark:text-teal-300 rounded-lg text-xs font-bold hover:underline border border-ink/10">
+          📎 {value.name || "مشاهده فایل"} {value.size ? `(${faNum(Math.round(value.size / 1024))} KB)` : ""}
+        </a>
+      );
+    }
+    return <span className="font-mono text-xs text-male-normal dark:text-teal-300">{String(value)}</span>;
+  }
+
+  if (question.type === "link") {
+    const href = String(value).startsWith("http") ? String(value) : `https://${value}`;
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" dir="ltr" className="inline-flex items-center gap-1 font-mono text-xs text-teal-text dark:text-teal-300 underline font-bold">
+        🔗 {String(value)}
+      </a>
+    );
+  }
+
+  if (question.type === "choice" || question.type === "picture_choice") {
+    if (Array.isArray(value)) {
+      return <span className="font-medium text-ink dark:text-slate-100">{value.join("، ")}</span>;
+    }
+    return <span className="font-medium text-ink dark:text-slate-100">{String(value)}</span>;
+  }
+
   if (question.type === "phone_ir" || question.type === "email" || question.type === "telegram_id")
     return <span dir="ltr" className="font-mono font-bold text-navy dark:text-teal-300">{String(value)}</span>;
+
   return <span className="font-medium whitespace-pre-wrap text-ink dark:text-slate-100">{String(value)}</span>;
 }
 
@@ -96,15 +175,17 @@ function AnswerValue({ question, value }) {
 function hasAnswerValue(ans) {
   if (!ans) return false;
   const v = ans.value;
-  return v !== null && v !== undefined && (Array.isArray(v) ? v.length > 0 : String(v) !== "");
+  return v !== null && v !== undefined && (Array.isArray(v) ? v.length > 0 : typeof v === "object" ? Object.keys(v).length > 0 : String(v) !== "");
 }
 
 // ─── نمایش پاسخ داخل سلول ستون «پاسخ» (خلاصه + «…» برای پاسخ بلند) ───
 function CellAnswer({ question, value, max = 60 }) {
   const empty =
     value === null || value === undefined || value === "" ||
-    (Array.isArray(value) && value.length === 0);
+    (Array.isArray(value) && value.length === 0) ||
+    (typeof value === "object" && Object.keys(value).length === 0);
   if (!question || empty) return <span className="text-ink/25 dark:text-slate-600 text-xs">—</span>;
+
   if (question.type === "rating") {
     const count = Math.max(0, Math.min(5, Number(value) || 0));
     return (
@@ -116,8 +197,27 @@ function CellAnswer({ question, value, max = 60 }) {
     );
   }
 
-  const ltr = question.type === "phone_ir" || question.type === "email" || question.type === "telegram_id";
-  const text = Array.isArray(value) ? value.join("， ") : String(value);
+  if (question.type === "nps") {
+    return <span className="font-bold text-xs text-teal-text dark:text-teal-300">امتیاز: {faNum(value)}/۱۰</span>;
+  }
+
+  if (question.type === "matrix" && typeof value === "object") {
+    const formatted = Object.entries(value).map(([k, v]) => `${k}: ${v}`).join(" | ");
+    return <span className="font-medium text-xs text-ink/90 dark:text-slate-200 truncate block max-w-full" title={formatted}>{formatted}</span>;
+  }
+
+  if (question.type === "ranking" && Array.isArray(value)) {
+    const formatted = value.map((v, i) => `${faNum(i + 1)}. ${v}`).join(" ➔ ");
+    return <span className="font-medium text-xs text-ink/90 dark:text-slate-200 truncate block max-w-full" title={formatted}>{formatted}</span>;
+  }
+
+  if (question.type === "file_upload") {
+    const name = typeof value === "object" ? value.name : String(value);
+    return <span className="text-xs font-bold text-male-normal dark:text-teal-300 truncate block max-w-full">📎 {name}</span>;
+  }
+
+  const ltr = question.type === "phone_ir" || question.type === "email" || question.type === "telegram_id" || question.type === "link";
+  const text = Array.isArray(value) ? value.join("، ") : typeof value === "object" ? JSON.stringify(value) : String(value);
   const shown = text.length > max ? text.slice(0, max).trimEnd() + "…" : text;
   return (
     <span
@@ -735,8 +835,18 @@ export default function Responses() {
       const vals = questions.map((q) => {
         const a = rAnswers.find((x) => x.question_id === q.id);
         if (!a || a.value === null || a.value === undefined) return "";
-        if (q.type === "rating") return Number(a.value);
-        if (q.type === "choice" && (q.max_selections ?? 1) > 1 && Array.isArray(a.value)) return a.value.join(", ");
+        if (q.type === "rating" || q.type === "nps") return Number(a.value);
+        if (q.type === "matrix" && typeof a.value === "object") {
+          return Object.entries(a.value).map(([k, v]) => `${k}: ${v}`).join(" | ");
+        }
+        if (q.type === "ranking" && Array.isArray(a.value)) {
+          return a.value.map((v, i) => `${i + 1}. ${v}`).join(" | ");
+        }
+        if (q.type === "file_upload" && typeof a.value === "object") {
+          return a.value.url || a.value.name || JSON.stringify(a.value);
+        }
+        if (Array.isArray(a.value)) return a.value.join(", ");
+        if (typeof a.value === "object") return JSON.stringify(a.value);
         return a.value;
       });
       return [

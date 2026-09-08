@@ -7,13 +7,9 @@ import { calculateFlow, evaluateNextStep } from "../../lib/logic/flowEngine";
 import { QUESTION_TYPES } from "../../lib/questionTypes";
 import { faNum, faDuration, parseUserAgent } from "../../lib/utils";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
-import { calculateScore, hasScoring } from "../../lib/scoring";
-import ScoreResult from "../../components/ui/ScoreResult";
-import { sendToTelegram } from "../../lib/telegram";
-import { Star, Check, CheckCircle2 } from "lucide-react";
-import "../../index.css";
+import RegistrationForm from "../../components/form/RegistrationForm";
+import QuestionStep from "../Form/QuestionStep";
 
-const inputCls = "w-full bg-white dark:bg-slate-800 border-2 border-ink/10 dark:border-slate-700 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 font-semibold text-ink dark:text-white text-sm sm:text-base placeholder:text-ink/40 dark:placeholder:text-slate-500 placeholder:font-medium focus:outline-none transition-all duration-200";
 
 // ─── پیام‌های postMessage به سایت میزبان ───
 function postToParent(type, data = {}) {
@@ -968,7 +964,7 @@ export default function EmbedForm() {
   if (!schema) return null;
 
   if (isRegistration) {
-    return <EmbedRegistrationForm schema={schema} questions={questions} logicRules={logicRules} formId={formId} />;
+    return <RegistrationForm form={schema} questions={questions} logicRules={logicRules} slug={schema.slug || formId} />;
   }
 
   // ─── فرم مرحله‌ای embed — طراحی رکاد ───
@@ -1030,44 +1026,17 @@ export default function EmbedForm() {
                     transition={{ duration: 0.25 }}
                     className="flex flex-col gap-3.5 sm:gap-4"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs sm:text-sm font-black text-male-normal dark:text-teal-400">سوال {faNum(currentVisibleIndex)} از {faNum(visibleTotal)}</span>
-                      {currentQuestion.required && <span className="text-xs font-bold text-female-normal dark:text-pink-400">اجباری *</span>}
-                    </div>
-                    <h2 className="text-[17px] leading-[26px] sm:text-[20px] sm:leading-[30px] font-black text-male-normal dark:text-white">{currentQuestion.title}</h2>
-                    {currentQuestion.description && <p className="text-xs sm:text-sm text-ink-subtle dark:text-slate-400 -mt-1.5">{currentQuestion.description}</p>}
+                    <QuestionStep
+                      question={currentQuestion}
+                      index={currentVisibleIndex - 1}
+                      total={visibleTotal}
+                      value={answers[currentQuestion.id]}
+                      timeSpent={times[currentQuestion.id] ?? 0}
+                      onChange={setAnswer}
+                      onAdvance={goNext}
+                    />
 
-                    {(currentQuestion.type === "short_text" || currentQuestion.type === "long_text" || currentQuestion.type === "email" || currentQuestion.type === "number" || currentQuestion.type === "phone_ir" || currentQuestion.type === "telegram_id") && (
-                      <TextInput
-                        type={currentQuestion.type}
-                        value={answers[currentQuestion.id]}
-                        onChange={setAnswer}
-                        onEnter={handleNext}
-                        placeholder={currentQuestion.placeholder}
-                        maxLength={currentQuestion.validation?.maxLength || currentQuestion.max_length}
-                      />
-                    )}
-                    {currentQuestion.type === "choice" && (
-                      <ChoiceOptions options={currentQuestion.options} value={answers[currentQuestion.id]} onChange={setAnswer} onEnter={handleNext} displayMode={currentQuestion.display_mode || "buttons"} maxSelections={currentQuestion.max_selections ?? 1} />
-                    )}
-                    {currentQuestion.type === "yes_no" && (
-                      <YesNoOptions value={answers[currentQuestion.id]} onChange={setAnswer} onEnter={handleNext} />
-                    )}
-                    {currentQuestion.type === "rating" && (
-                      <RatingStars value={answers[currentQuestion.id]} onChange={setAnswer} />
-                    )}
-
-                    {touchedFields[currentQuestion.id] && fieldErrors[currentQuestion.id] && (
-                      <div className="flex items-center gap-2 bg-female-light dark:bg-pink-950/40 border-2 border-female-normal rounded-pill-md [corner-shape:squircle] px-3 py-2.5">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-female-normal shrink-0">
-                          <circle cx="12" cy="12" r="10"/>
-                          <line x1="15" y1="9" x2="9" y2="15"/>
-                          <line x1="9" y1="9" x2="15" y2="15"/>
-                        </svg>
-                        <span className="text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">{fieldErrors[currentQuestion.id]}</span>
-                      </div>
-                    )}
-                    {requiredError && !fieldErrors[currentQuestion.id] && (
+                    {requiredError && (
                       <div className="bg-female-light dark:bg-pink-950/40 border-2 border-female-normal rounded-pill-md [corner-shape:squircle] px-4 py-2.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">{requiredError}</div>
                     )}
 

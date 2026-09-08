@@ -8,7 +8,7 @@ import { useState } from "react";
 import { faNum } from "../../lib/utils";
 import { QUESTION_TYPES } from "../../lib/questionTypes";
 import { QUESTION_TYPE_ICONS } from "../../lib/questionIcons";
-import { Star, RotateCcw } from "lucide-react";
+import { Star, RotateCcw, Image, Sliders, Gauge, Grid, ListOrdered, Info, Layers, Upload, CreditCard, ChevronDown } from "lucide-react";
 
 const PLACEHOLDER_DEFAULTS = {
   short_text: "پاسخ خود را بنویسید...",
@@ -16,6 +16,7 @@ const PLACEHOLDER_DEFAULTS = {
   email: "example@email.com",
   phone_ir: "۰۹۱۲۳۴۵۶۷۸۹",
   number: "مثلاً: ۱۲۳",
+  link: "https://example.com",
   telegram_id: "username@",
 };
 
@@ -64,22 +65,78 @@ function MiniChoiceOptions({ options, displayMode, maxSelections = 1, isDark }) 
         isDark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-ink/15 bg-white text-ink/40"
       }`}>
         <span className="text-xs font-semibold">یک گزینه انتخاب کنید...</span>
-        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={isDark ? "text-slate-500" : "text-ink/30"}><path d="m6 9 6 6 6-6"/></svg>
+        <ChevronDown size={12} />
       </div>
     );
   }
   return (
     <div className="flex flex-col gap-1">
-      {(options || []).map((opt, i) => (
-        <div key={i} className={`flex items-center gap-1.5 border rounded-lg px-2 py-1 ${
-          isDark ? "border-slate-700 bg-slate-800 text-slate-200" : "border-ink/15 bg-white text-ink"
+      {(options || []).map((opt, i) => {
+        const text = typeof opt === "object" ? opt.text : opt;
+        return (
+          <div key={i} className={`flex items-center gap-1.5 border rounded-lg px-2 py-1 ${
+            isDark ? "border-slate-700 bg-slate-800 text-slate-200" : "border-ink/15 bg-white text-ink"
+          }`}>
+            <span className={`w-4 h-4 shrink-0 flex items-center justify-center border text-xs font-bold ${
+              isDark ? "border-slate-600 text-teal-400 bg-slate-900" : "border-ink/20 text-navy bg-white"
+            } ${isMulti ? "rounded" : "rounded-full"}`}>
+              {faNum(i + 1)}
+            </span>
+            <span className="text-xs font-semibold truncate">{text}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function MiniPictureChoice({ options, isDark }) {
+  return (
+    <div className="grid grid-cols-2 gap-1.5">
+      {(options || []).slice(0, 4).map((opt, i) => {
+        const text = typeof opt === "object" ? opt.text : `گزینه ${i + 1}`;
+        const img = typeof opt === "object" ? opt.image : "";
+        return (
+          <div key={i} className={`flex flex-col items-center rounded-lg border overflow-hidden p-1 text-center ${
+            isDark ? "border-slate-700 bg-slate-800" : "border-ink/15 bg-white"
+          }`}>
+            <div className="w-full h-10 bg-navy/10 dark:bg-slate-900 flex items-center justify-center rounded">
+              {img ? <img src={img} alt={text} className="w-full h-full object-cover" /> : <Image size={14} className="text-ink/30" />}
+            </div>
+            <span className="text-[10px] font-bold mt-0.5 truncate w-full">{text}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function MiniLikert({ options, isDark }) {
+  const list = (options?.length ? options : ["کاملاً مخالفم", "مخالفم", "نظری ندارم", "موافقم", "کاملاً موافقم"]);
+  return (
+    <div className="grid grid-cols-5 gap-0.5">
+      {list.map((opt, i) => {
+        const text = typeof opt === "object" ? opt.text : opt;
+        return (
+          <div key={i} className={`p-1 rounded text-center text-[9px] font-bold truncate border ${
+            isDark ? "border-slate-700 bg-slate-800 text-slate-300" : "border-ink/10 bg-white text-ink"
+          }`}>
+            {text}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function MiniNps({ isDark }) {
+  return (
+    <div className="flex gap-0.5" dir="ltr">
+      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+        <div key={n} className={`flex-1 h-5 flex items-center justify-center rounded text-[9px] font-bold border ${
+          isDark ? "border-slate-700 bg-slate-800 text-slate-300" : "border-ink/10 bg-white text-ink"
         }`}>
-          <span className={`w-4 h-4 shrink-0 flex items-center justify-center border text-xs font-bold ${
-            isDark ? "border-slate-600 text-teal-400 bg-slate-900" : "border-ink/20 text-navy bg-white"
-          } ${isMulti ? "rounded" : "rounded-full"}`}>
-            {faNum(i + 1)}
-          </span>
-          <span className="text-xs font-semibold">{opt}</span>
+          {n}
         </div>
       ))}
     </div>
@@ -127,19 +184,55 @@ function MiniQuestion({ q, index, total, isDark }) {
         <span className={`text-xs font-bold flex items-center gap-1 ${isDark ? "text-slate-400" : "text-ink/40"}`}>
           {(() => { const Icon = QUESTION_TYPE_ICONS[q.type]; return Icon ? <Icon size={10} /> : null; })()} {meta.label}
         </span>
-        {q.required && <span className="text-xs text-magenta-text font-bold">*</span>}
+        {q.required && q.type !== "statement" && q.type !== "group" && <span className="text-xs text-magenta-text font-bold">*</span>}
       </div>
       <h3 className={`text-xs font-black leading-4 ${isDark ? "text-white" : "text-navy"}`}>{q.title || "سوال بدون عنوان"}</h3>
       {q.description && <p className={`text-xs -mt-0.5 ${isDark ? "text-slate-400" : "text-ink/40"}`}>{q.description}</p>}
-      {(q.type === "short_text" || q.type === "email" || q.type === "phone_ir" || q.type === "number" || q.type === "telegram_id") && <MiniTextInput q={q} isDark={isDark} />}
+
+      {(q.type === "short_text" || q.type === "email" || q.type === "phone_ir" || q.type === "number" || q.type === "link" || q.type === "telegram_id") && <MiniTextInput q={q} isDark={isDark} />}
       {q.type === "long_text" && <MiniLongTextInput q={q} isDark={isDark} />}
-      {q.type === "choice" && <MiniChoiceOptions options={q.options} displayMode={(q.max_selections ?? 1) > 1 ? "buttons" : q.display_mode} maxSelections={q.max_selections ?? 1} isDark={isDark} />}
-      {q.type === "choice" && (q.max_selections ?? 1) > 1 && <span className="text-xs font-bold text-orange">حداکثر {faNum(q.max_selections)} انتخاب</span>}
+      {(q.type === "choice" || q.type === "dropdown") && (
+        <MiniChoiceOptions options={q.options} displayMode={q.type === "dropdown" ? "dropdown" : (q.max_selections ?? 1) > 1 ? "buttons" : q.display_mode} maxSelections={q.max_selections ?? 1} isDark={isDark} />
+      )}
+      {q.type === "picture_choice" && <MiniPictureChoice options={q.options} isDark={isDark} />}
       {q.type === "yes_no" && <MiniYesNo isDark={isDark} />}
+      {q.type === "likert" && <MiniLikert options={q.options} isDark={isDark} />}
+      {q.type === "nps" && <MiniNps isDark={isDark} />}
       {q.type === "rating" && <MiniRating />}
+      {q.type === "matrix" && (
+        <div className="text-[10px] text-teal font-bold bg-teal/10 p-1.5 rounded text-center">
+          جدول ماتریسی ({faNum((q.validation?.rows || q.rows || []).length || 3)} سطر × {faNum((q.validation?.columns || q.columns || []).length || 5)} ستون)
+        </div>
+      )}
+      {q.type === "ranking" && (
+        <div className="text-[10px] text-navy dark:text-teal font-bold bg-navy/5 dark:bg-slate-700 p-1.5 rounded text-center">
+          لیست اولویت‌دهی ({faNum((q.options || []).length || 3)} گزینه)
+        </div>
+      )}
+      {q.type === "statement" && (
+        <div className="text-[10px] text-ink-subtle dark:text-slate-400 bg-navy/5 dark:bg-slate-700 p-1.5 rounded text-center">
+          اسلاید راهنما و پیام توضیحی
+        </div>
+      )}
+      {q.type === "group" && (
+        <div className="text-[10px] text-navy dark:text-teal font-black border-r-2 border-teal pr-1.5">
+          شروع بخش / دسته‌بندی جدید
+        </div>
+      )}
+      {q.type === "file_upload" && (
+        <div className="text-[10px] text-magenta font-bold bg-magenta/10 p-1.5 rounded text-center flex items-center justify-center gap-1">
+          <Upload size={10} /> کادر آپلود فایل
+        </div>
+      )}
+      {q.type === "payment" && (
+        <div className="text-[10px] text-orange font-bold bg-orange/10 p-1.5 rounded text-center flex items-center justify-center gap-1">
+          <CreditCard size={10} /> درگاه پرداخت آنلاین
+        </div>
+      )}
     </div>
   );
 }
+
 // ─── حالت ثبت‌نامی: همه فیلدها یکجا ───
 function RegistrationPreview({ form, questions, isDark }) {
   return (

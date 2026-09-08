@@ -31,7 +31,19 @@ export function isValidEmail(raw) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s);
 }
 
-// ─── رمز عبور (نه خیلی سخت، نه خیلی شل: حداقل ۶ کاراکتر شامل حروف و اعداد) ───
+// ─── لینک / وب‌سایت ───
+export function isValidUrl(raw) {
+  const s = String(raw || "").trim();
+  if (!s) return false;
+  try {
+    const url = new URL(s.startsWith("http://") || s.startsWith("https://") ? s : `https://${s}`);
+    return Boolean(url.hostname && url.hostname.includes("."));
+  } catch {
+    return false;
+  }
+}
+
+// ─── رمز عبور ───
 export const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
 
 export function isValidPassword(pass) {
@@ -52,15 +64,21 @@ export function parseNumber(raw) {
 // ─── ولیدیشن یک جواب بر اساس نوع سوال ───
 // خروجی: رشته‌ی خطا یا null (یعنی سالم)
 export function validateAnswer(question, value) {
+  // سوالات صرفاً اطلاعاتی هیچ اعتبارسنجی نیاز ندارند
+  if (question.type === "statement" || question.type === "group") {
+    return null;
+  }
+
   const isEmpty =
     value === null ||
     value === undefined ||
     (typeof value === "string" && value.trim() === "") ||
     (typeof value === "number" && Number.isNaN(value)) ||
-    (Array.isArray(value) && value.length === 0);
+    (Array.isArray(value) && value.length === 0) ||
+    (typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === 0);
 
   if (question.required && isEmpty) {
-    return "این سوال اجباریه؛ یه جواب بنویس.";
+    return "این سوال اجباری است؛ لطفاً پاسخ دهید.";
   }
   if (isEmpty) return null; // اختیاری و خالی → مشکلی نیست
 
@@ -69,8 +87,8 @@ export function validateAnswer(question, value) {
   if (v) {
     if (v.min !== undefined || v.max !== undefined) {
       const n = parseNumber(value);
-      if (n === null && question.type === "number") {
-        return "فقط عدد وارد کن.";
+      if (n === null && (question.type === "number" || question.type === "nps" || question.type === "rating")) {
+        return "فقط عدد وارد کنید.";
       }
       if (n !== null) {
         if (v.min !== undefined && v.max !== undefined && (n < v.min || n > v.max)) {
@@ -107,35 +125,99 @@ export function validateAnswer(question, value) {
   switch (question.type) {
     case "phone_ir":
       return isValidIranPhone(value) ? null : "شماره موبایل معتبر نیست؛ مثل: 09123456789";
+
     case "email":
       return isValidEmail(value) ? null : "فرمت ایمیل درست نیست؛ مثل: name@example.com";
+
+    case "link":
+      return isValidUrl(value) ? null : "آدرس اینترنتی معتبر نیست؛ مثل: https://example.com";
+
     case "number": {
       const n = parseNumber(value);
-      if (n === null) return "فقط عدد وارد کن.";
+      if (n === null) return "فقط عدد وارد کنید.";
       return null;
     }
-    case "choice": {
+
+    case "choice":
+    case "dropdown":
+    case "likert": {
+      const opts = question.options || [];
+      const optTexts = opts.map((o) => (typeof o === "object" ? o.text || o.label : o));
       const maxSel = question.max_selections ?? 1;
-      if (maxSel > 1) {
-        // حالت چند انتخابی — value آرایه است
+
+      if (maxSel > 1 && question.type === "choice") {
+        // حالت چند انتخابی
         const arr = Array.isArray(value) ? value : (value != null ? [value] : []);
         if (arr.length === 0) return "حداقل یک گزینه انتخاب کنید.";
         if (arr.length > maxSel) return `حداکثر ${maxSel} گزینه می‌توانید انتخاب کنید.`;
-        const invalid = arr.filter((v) => !question.options?.includes?.(v));
+        const invalid = arr.filter((v) => !optTexts.includes(v));
         if (invalid.length > 0) return "یکی از گزینه‌ها نامعتبر است.";
         return null;
       }
-      // حالت تک انتخابی
-      return question.options?.includes?.(value) ? null : "یکی از گزینه‌ها را انتخاب کن.";
+      return optTexts.includes(value) ? null : "یکی از گزینه‌ها را انتخاب کنید.";
     }
+
+    case "picture_choice": {
+      const opts = question.options || [];
+      const optKeys = opts.map((o, idx) => (typeof o === "object" ? o.text || `opt_${idx}` : o));
+      const maxSel = question.max_selections ?? 1;
+
+      if (maxSel > 1) {
+        const arr = Array.isArray(value) ? value : (value != null ? [value] : []);
+        if (arr.length === 0) return "حداقل یک تصویر انتخاب کنید.";
+        if (arr.length > maxSel) return `حداکثر ${maxSel} تصویر می‌توانید انتخاب کنید.`;
+        return null;
+      }
+      return value ? null : "یکی از گزینه‌های تصویری را انتخاب کنید.";
+    }
+
     case "yes_no":
-      return value === "بله" || value === "خیر" ? null : "بله یا خیر را انتخاب کن.";
+      return value === "بله" || value === "خیر" ? null : "بله یا خیر را انتخاب کنید.";
+
     case "rating": {
       const n = Number(value);
-      return Number.isInteger(n) && n >= 1 && n <= 5 ? null : "امتیاز بین ۱ تا ۵ انتخاب کن.";
+      return Number.isInteger(n) && n >= 1 && n <= 5 ? null : "امتیاز بین ۱ تا ۵ ستاره انتخاب کنید.";
     }
+
+    case "nps": {
+      const n = Number(value);
+      return Number.isInteger(n) && n >= 0 && n <= 10 ? null : "امتیازی از ۰ تا ۱۰ انتخاب کنید.";
+    }
+
+    case "matrix": {
+      if (typeof value !== "object" || value === null) return "لطفاً به سوالات جدول پاسخ دهید.";
+      const rows = question.rows || [];
+      if (question.required) {
+        const missing = rows.filter((r) => !value[r]);
+        if (missing.length > 0) {
+          return `لطفاً گزینه مورد نظر برای تمام سطرها را مشخص کنید.`;
+        }
+      }
+      return null;
+    }
+
+    case "ranking": {
+      const arr = Array.isArray(value) ? value : [];
+      const opts = question.options || [];
+      if (question.required && arr.length < opts.length) {
+        return "لطفاً تمام گزینه‌ها را به ترتیب اولویت مرتب کنید.";
+      }
+      return null;
+    }
+
+    case "file_upload": {
+      if (!value) return "لطفاً فایل مورد نظر را آپلود کنید.";
+      return null;
+    }
+
+    case "payment": {
+      if (!value) return "پرداخت انجام نشده است.";
+      return null;
+    }
+
     case "short_text":
       return String(value).trim().length > 255 ? "حداکثر ۲۵۵ کاراکتر مجاز است." : null;
+
     case "long_text": {
       const maxL = question.validation?.maxLength || question.max_length;
       if (maxL && String(value).trim().length > maxL) {
@@ -143,14 +225,16 @@ export function validateAnswer(question, value) {
       }
       return null;
     }
+
     case "telegram_id": {
       const s = String(value).trim();
-      if (!s.startsWith("@")) return "آیدی تلگرام باید با @ شروع بشه.";
-      if (s.length < 5) return "آیدی تلگرام خیلی کوتاهه.";
-      if (s.length > 64) return "آیدی تلگرام خیلی طولانیه.";
-      if (!/^@[a-zA-Z0-9_]{4,63}$/.test(s)) return "آیدی تلگرام فقط حروف انگلیسی، عدد و _ مجازه.";
+      if (!s.startsWith("@")) return "آیدی تلگرام باید با @ شروع شود.";
+      if (s.length < 5) return "آیدی تلگرام خیلی کوتاه است.";
+      if (s.length > 64) return "آیدی تلگرام خیلی طولانی است.";
+      if (!/^@[a-zA-Z0-9_]{4,63}$/.test(s)) return "آیدی تلگرام فقط شامل حروف انگلیسی، عدد و _ مجاز است.";
       return null;
     }
+
     default:
       return null;
   }
@@ -163,7 +247,16 @@ export function normalizeAnswerValue(question, value) {
     case "phone_ir":
       return normalizeIranPhone(value);
     case "number":
+    case "nps":
+    case "rating":
       return parseNumber(value);
+    case "link": {
+      const s = String(value).trim();
+      if (s && !s.startsWith("http://") && !s.startsWith("https://")) {
+        return `https://${s}`;
+      }
+      return s;
+    }
     case "short_text":
     case "long_text":
     case "email":
