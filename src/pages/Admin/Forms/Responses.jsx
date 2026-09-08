@@ -17,7 +17,7 @@ import {
   faDuration,
   DEVICE_FA,
 } from "../../../lib/utils";
-import { QUESTION_TYPES } from "../../../lib/questionTypes";
+import { QUESTION_TYPES, resolveQuestion } from "../../../lib/questionTypes";
 import { isCorrectAnswer, calculateScore, hasScoring } from "../../../lib/scoring";
 import {
   getInvalidRecords,
@@ -670,7 +670,7 @@ export default function Responses() {
       }
 
       setForm(f);
-      setQuestions(qs ?? []);
+      setQuestions((qs ?? []).map(resolveQuestion));
       setResponses(allResponses);
 
       let allAnswers = [];

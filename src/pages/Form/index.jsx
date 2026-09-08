@@ -12,7 +12,7 @@ import { supabase } from "../../lib/supabaseClient";
 import { normalizeAnswerValue, validateAnswer } from "../../lib/validators";
 import { calculateFlow, evaluateNextStep } from "../../lib/logic/flowEngine";
 import { faNum, faDuration, parseUserAgent, generateUuid } from "../../lib/utils";
-import { QUESTION_TYPES } from "../../lib/questionTypes";
+import { QUESTION_TYPES, resolveQuestion } from "../../lib/questionTypes";
 import QuestionStep from "./QuestionStep";
 import RegistrationForm from "../../components/form/RegistrationForm";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
@@ -91,7 +91,7 @@ export default function FormFill() {
       if (cancelled) return;
       if (qError) { setUnavailable("خطا در بارگذاری سوال‌ها."); setLoading(false); return; }
       setForm(formData); setFormType(formData.form_type || "step_by_step");
-      setQuestions((qData ?? []).map((q) => ({ ...q, conditions: normalizeConditionGroup(q.conditions ?? null), jump_actions: q.jump_actions ?? [] })));
+      setQuestions((qData ?? []).map((q) => resolveQuestion({ ...q, conditions: normalizeConditionGroup(q.conditions ?? null), jump_actions: q.jump_actions ?? [] })));
       try {
         const { data: lrs, error: lrError } = await supabase.from("logic_rules").select("*").eq("form_id", formData.id).order("priority");
         if (lrError) setLogicRules([]);

@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "../../lib/supabaseClient";
 import { normalizeAnswerValue, validateAnswer } from "../../lib/validators";
 import { calculateFlow, evaluateNextStep } from "../../lib/logic/flowEngine";
-import { QUESTION_TYPES } from "../../lib/questionTypes";
+import { QUESTION_TYPES, resolveQuestion } from "../../lib/questionTypes";
 import { faNum, faDuration, parseUserAgent } from "../../lib/utils";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import RegistrationForm from "../../components/form/RegistrationForm";
@@ -735,7 +735,7 @@ export default function EmbedForm() {
   }, [formId]);
 
   const questions = useMemo(() =>
-    (schema?.questions ?? []).map((q) => ({
+    (schema?.questions ?? []).map((q) => resolveQuestion({
       ...q,
       conditions: normalizeConditionGroup(q.conditions ?? null),
     })),

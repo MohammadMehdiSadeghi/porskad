@@ -6,7 +6,7 @@ import Badge from "../ui/Badge";
 import Logo from "../ui/Logo";
 import { normalizeAnswerValue, validateAnswer } from "../../lib/validators";
 import { faNum, parseUserAgent, generateUuid } from "../../lib/utils";
-import { QUESTION_TYPES } from "../../lib/questionTypes";
+import { QUESTION_TYPES, resolveQuestion } from "../../lib/questionTypes";
 import { supabase } from "../../lib/supabaseClient";
 import ConfirmDialog from "../ui/ConfirmDialog";
 import SEO from "../ui/SEO";
@@ -58,11 +58,13 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
   const [scoreResult, setScoreResult] = useState(null);
   const formRef = useRef(null);
 
+  const resolvedQuestions = useMemo(() => (questions || []).map(resolveQuestion), [questions]);
+
   // محاسبه سوالات قابل نمایش بر اساس شرط‌ها
   const visibleQuestions = useMemo(() => {
-    const flow = calculateFlow(questions, logicRules, answers, hiddenFields);
+    const flow = calculateFlow(resolvedQuestions, logicRules, answers, hiddenFields);
     return flow.visibleQuestions;
-  }, [questions, logicRules, answers, hiddenFields]);
+  }, [resolvedQuestions, logicRules, answers, hiddenFields]);
 
   function setAnswer(qId, val, q) {
     setAnswers((prev) => ({ ...prev, [qId]: val }));

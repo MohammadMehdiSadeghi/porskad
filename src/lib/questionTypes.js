@@ -338,3 +338,54 @@ export function makeQuestion(type, position = 0) {
 
   return base;
 }
+
+export const LEGACY_TYPE_MAP = {
+  short_text: "short_text",
+  long_text: "long_text",
+  phone_ir: "phone_ir",
+  choice: "choice",
+  email: "email",
+  number: "number",
+  rating: "rating",
+  yes_no: "yes_no",
+  telegram_id: "telegram_id",
+  dropdown: "choice",
+  picture_choice: "choice",
+  likert: "choice",
+  ranking: "choice",
+  matrix: "choice",
+  nps: "rating",
+  link: "short_text",
+  file_upload: "short_text",
+  payment: "number",
+  statement: "short_text",
+  group: "short_text",
+};
+
+export function resolveQuestion(q) {
+  if (!q) return q;
+  const actualType = q.validation?.type || q.validation?.original_type || q.type || "short_text";
+  const rows = q.rows || q.validation?.rows || ["کیفیت خدمات", "سرعت پاسخگویی", "سهولت استفاده"];
+  const columns = q.columns || q.validation?.columns || ["خیلی ضعیف", "ضعیف", "متوسط", "خوب", "عالی"];
+  const min_label = q.min_label || q.validation?.min_label || "اصلاً احتمال ندارد";
+  const max_label = q.max_label || q.validation?.max_label || "بسیار زیاد";
+  const allowed_file_types = q.allowed_file_types || q.validation?.allowed_file_types || "all";
+  const max_file_size_mb = q.max_file_size_mb || q.validation?.max_file_size_mb || 10;
+  const amount = q.amount || q.validation?.amount || 100000;
+  const currency = q.currency || q.validation?.currency || "تومان";
+
+  return {
+    ...q,
+    type: actualType,
+    rows,
+    columns,
+    min_label,
+    max_label,
+    allowed_file_types,
+    max_file_size_mb,
+    amount,
+    currency,
+  };
+}
+
+

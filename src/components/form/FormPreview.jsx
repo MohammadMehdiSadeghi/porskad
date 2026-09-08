@@ -4,9 +4,9 @@
 // ثبت‌نامی: همه فیلدها یکجا
 // ══════════════════════════════════════════════════════════════
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { faNum } from "../../lib/utils";
-import { QUESTION_TYPES } from "../../lib/questionTypes";
+import { QUESTION_TYPES, resolveQuestion } from "../../lib/questionTypes";
 import { QUESTION_TYPE_ICONS } from "../../lib/questionIcons";
 import { Star, RotateCcw, Image, Sliders, Gauge, Grid, ListOrdered, Info, Layers, Upload, CreditCard, ChevronDown } from "lucide-react";
 
@@ -339,6 +339,7 @@ function StepByStepPreview({ form, questions, isDark }) {
 // ─── کامپوننت اصلی ───
 export default function FormPreview({ form, questions }) {
   const isRegistration = form?.form_type === "registration";
+  const resolvedQuestions = useMemo(() => (questions || []).map(resolveQuestion), [questions]);
   const isDark = form?.default_theme === "dark" || (
     form?.default_theme === "system" &&
     typeof window !== "undefined" &&
@@ -369,9 +370,9 @@ export default function FormPreview({ form, questions }) {
         isDark ? "bg-[#0F172A] border-slate-700" : "bg-[#F2FAF9] border-navy/20"
       }`}>
         {isRegistration ? (
-          <RegistrationPreview form={form} questions={questions} isDark={isDark} />
+          <RegistrationPreview form={form} questions={resolvedQuestions} isDark={isDark} />
         ) : (
-          <StepByStepPreview form={form} questions={questions} isDark={isDark} />
+          <StepByStepPreview form={form} questions={resolvedQuestions} isDark={isDark} />
         )}
       </div>
     </div>

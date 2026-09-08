@@ -8,7 +8,7 @@ import Spinner from "../../../components/ui/Spinner";
 import { FormBuilderSkeleton } from "../../../components/ui/Skeleton";
 import { useToast } from "../../../components/ui/Toast";
 import { useAuth } from "../../../context/AuthContext";
-import { QUESTION_TYPES, QUESTION_TYPE_ORDER, QUESTION_CATEGORIES, makeQuestion } from "../../../lib/questionTypes";
+import { QUESTION_TYPES, QUESTION_TYPE_ORDER, QUESTION_CATEGORIES, makeQuestion, resolveQuestion, LEGACY_TYPE_MAP } from "../../../lib/questionTypes";
 import { QUESTION_TYPE_ICONS } from "../../../lib/questionIcons";
 import ConditionBuilder from "../../../components/logic/ConditionBuilder";
 import { makeCondition, makeConditionGroup, makeJumpAction, GROUP_OPERATORS } from "../../../lib/logic/types";
@@ -1004,34 +1004,17 @@ export default function FormBuilder() {
         .order("position");
       setForm(f);
       setQuestions((qs ?? []).map((q) => {
-        let rows = q.validation?.rows || ["کیفیت خدمات", "سرعت پاسخگویی", "سهولت استفاده"];
-        let columns = q.validation?.columns || ["خیلی ضعیف", "ضعیف", "متوسط", "خوب", "عالی"];
-        let min_label = q.validation?.min_label || "اصلاً احتمال ندارد";
-        let max_label = q.validation?.max_label || "بسیار زیاد";
-        let allowed_file_types = q.validation?.allowed_file_types || "all";
-        let max_file_size_mb = q.validation?.max_file_size_mb || 10;
-        let amount = q.validation?.amount || 100000;
-        let currency = q.validation?.currency || "تومان";
-
+        const resolved = resolveQuestion(q);
         return {
-          ...q,
-          localId: q.id,
-          placeholder: q.placeholder ?? "",
-          validation: q.validation ?? null,
-          correct_answer: q.correct_answer ?? null,
-          points: q.points ?? undefined,
-          max_selections: q.max_selections ?? 1,
-          rows,
-          columns,
-          min_label,
-          max_label,
-          allowed_file_types,
-          max_file_size_mb,
-          amount,
-          currency,
-          // مهاجرت: اگه conditions وجود نداشت از condition قدیمی بساز
-          conditions: normalizeConditionGroup(q.conditions ?? (q.condition ? { group_operator: "AND", conditions: [q.condition] } : null)),
-          jump_actions: q.jump_actions ?? [],
+          ...resolved,
+          localId: resolved.id,
+          placeholder: resolved.placeholder ?? "",
+          validation: resolved.validation ?? null,
+          correct_answer: resolved.correct_answer ?? null,
+          points: resolved.points ?? undefined,
+          max_selections: resolved.max_selections ?? 1,
+          conditions: normalizeConditionGroup(resolved.conditions ?? (resolved.condition ? { group_operator: "AND", conditions: [resolved.condition] } : null)),
+          jump_actions: resolved.jump_actions ?? [],
         };
       }));
 
@@ -1129,19 +1112,26 @@ export default function FormBuilder() {
         default_theme: form.default_theme || "light",
       };
 
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
       const pQuestions = questions.map((q, i) => {
-        const isRealUuid = typeof q.id === "string" && uuidRegex.test(q.id);
-        const parsedPoints = (q.points !== "" && q.points !== null && q.points !== undefined && !isNaN(Number(q.points)))
-          ? Number(q.points)
-          : null;
-        const parsedMaxSelections = (q.max_selections !== "" && q.max_selections !== null && q.max_selections !== undefined && !isNaN(Number(q.max_selections)))
-          ? Math.max(1, Number(q.max_selections))
-          : 1;
+        const isRealUuid =
+          q.id &&
+          typeof q.id === "string" &&
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(q.id);
+
+        const parsedPoints =
+          q.points !== undefined && q.points !== "" && !isNaN(Number(q.points))
+            ? Number(q.points)
+            : null;
+
+        const parsedMaxSelections =
+          q.max_selections !== undefined && q.max_selections !== "" && !isNaN(Number(q.max_selections))
+            ? Math.max(1, Number(q.max_selections))
+            : 1;
 
         let optionsToSave = [];
         let validationToSave = q.validation ? { ...q.validation } : {};
+        validationToSave.type = q.type;
+        validationToSave.original_type = q.type;
 
         if (q.type === "choice" || q.type === "dropdown" || q.type === "likert" || q.type === "ranking") {
           optionsToSave = (q.options || []).map((o) => (typeof o === "string" ? o.trim() : o));
@@ -1284,24 +1274,51 @@ export default function FormBuilder() {
           };
 
           if (q.id) {
-            const { data: updatedQ } = await supabase
+            let updateRes = await supabase
               .from("questions")
               .update(qPayload)
               .eq("id", q.id)
               .select()
               .single();
-            savedList.push(updatedQ || { ...qPayload, id: q.id });
+
+            if (updateRes.error) {
+              const legacyPayload = {
+                ...qPayload,
+                type: LEGACY_TYPE_MAP[q.type] || "choice",
+              };
+              updateRes = await supabase
+                .from("questions")
+                .update(legacyPayload)
+                .eq("id", q.id)
+                .select()
+                .single();
+            }
+
+            savedList.push(updateRes.data || { ...qPayload, id: q.id });
           } else {
-            const { data: insertedQ, error: insertErr } = await supabase
+            let insertRes = await supabase
               .from("questions")
               .insert(qPayload)
               .select()
               .single();
-            if (insertErr) {
-              console.error("Error inserting question fallback:", insertErr);
+
+            if (insertRes.error) {
+              const legacyPayload = {
+                ...qPayload,
+                type: LEGACY_TYPE_MAP[q.type] || "choice",
+              };
+              insertRes = await supabase
+                .from("questions")
+                .insert(legacyPayload)
+                .select()
+                .single();
+            }
+
+            if (insertRes.error) {
+              console.error("Error inserting question fallback:", insertRes.error);
               savedList.push({ ...qPayload, id: null });
             } else {
-              savedList.push(insertedQ);
+              savedList.push(insertRes.data);
             }
           }
         }
