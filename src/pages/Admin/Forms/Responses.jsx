@@ -75,7 +75,7 @@ const CHART_COLORS = ["#6366f1", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#3
 
 // ─── نمایش مقدار پاسخ ───
 function AnswerValue({ question, value }) {
-  if (value === null || value === undefined || value === "") return <span className="text-ink/40">—</span>;
+  if (value === null || value === undefined || value === "") return <span className="text-ink/40 dark:text-slate-500">—</span>;
   if (question.type === "rating") {
     const count = Math.max(0, Math.min(5, Number(value) || 0));
     return (
@@ -86,10 +86,10 @@ function AnswerValue({ question, value }) {
       </span>
     );
   }
-  if (question.type === "choice" && Array.isArray(value)) return <span className="font-medium">{value.join("، ")}</span>;
-  if (question.type === "phone_ir" || question.type === "email")
-    return <span dir="ltr" className="font-mono font-bold">{String(value)}</span>;
-  return <span className="font-medium whitespace-pre-wrap">{String(value)}</span>;
+  if (question.type === "choice" && Array.isArray(value)) return <span className="font-medium text-ink dark:text-slate-100">{value.join("، ")}</span>;
+  if (question.type === "phone_ir" || question.type === "email" || question.type === "telegram_id")
+    return <span dir="ltr" className="font-mono font-bold text-navy dark:text-teal-300">{String(value)}</span>;
+  return <span className="font-medium whitespace-pre-wrap text-ink dark:text-slate-100">{String(value)}</span>;
 }
 
 // ─── مقدار پاسخ غیرخالی است؟ ───
@@ -104,7 +104,7 @@ function CellAnswer({ question, value, max = 60 }) {
   const empty =
     value === null || value === undefined || value === "" ||
     (Array.isArray(value) && value.length === 0);
-  if (!question || empty) return <span className="text-ink/25 text-xs">—</span>;
+  if (!question || empty) return <span className="text-ink/25 dark:text-slate-600 text-xs">—</span>;
   if (question.type === "rating") {
     const count = Math.max(0, Math.min(5, Number(value) || 0));
     return (
@@ -123,7 +123,7 @@ function CellAnswer({ question, value, max = 60 }) {
     <span
       dir={ltr ? "ltr" : undefined}
       title={text}
-      className={`block max-w-full truncate leading-5 ${ltr ? "font-mono font-bold text-xs text-navy/80" : "font-medium text-ink/80"}`}
+      className={`block max-w-full truncate leading-5 ${ltr ? "font-mono font-bold text-xs text-navy dark:text-teal-300" : "font-medium text-ink/90 dark:text-slate-200"}`}
     >
       {shown}
     </span>
@@ -136,7 +136,7 @@ function CorrectnessBadge({ question, answer }) {
   const correct = isCorrectAnswer(question, answer);
   return (
     <span className={`inline-flex items-center gap-1 text-xs font-black px-2 py-0.5 rounded-full ${
-      correct ? "bg-teal/15 text-teal-text border border-teal/30" : "bg-magenta/15 text-magenta-text border border-magenta/30"
+      correct ? "bg-teal/15 text-teal-text dark:text-teal-300 border border-teal/30 dark:border-teal-700/50" : "bg-magenta/15 text-magenta-text dark:text-rose-300 border border-magenta/30 dark:border-rose-700/50"
     }`}>
       {correct ? "صحیح" : "غلط"}
     </span>
@@ -156,7 +156,6 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
     let keys;
     if (question.type === "choice") keys = question.options ?? [];
     else if (question.type === "yes_no") keys = ["بله", "خیر"];
-    // choice با max_selections > 1 هم آرایه‌ایه
     else if (question.type === "rating") keys = [5, 4, 3, 2, 1];
     if (!keys) return null;
 
@@ -175,7 +174,6 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
       }
     }
 
-    // denominator = تعداد پاسخ‌دهندگان (درصد هر گزینه از کل پاسخ‌دهندگان)
     const denom = total;
 
     return keys.map((k) => ({
@@ -217,18 +215,18 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
   }, [question, answers]);
 
   return (
-    <div className="bg-white rounded-xl border border-ink/10 p-5">
+    <div className="bg-white dark:bg-slate-900 rounded-xl border border-ink/10 dark:border-slate-800 p-5 shadow-sm">
       {/* هدر */}
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex-1">
-          <h4 className="font-bold text-navy flex items-center gap-2">
+          <h4 className="font-bold text-navy dark:text-white flex items-center gap-2">
             <span>{QUESTION_TYPES[question.type]?.icon}</span>
             {question.title}
             {question.correct_answer && question.points && (
               <Badge color="teal" rotate="0">{faNum(question.points)} نمره</Badge>
             )}
           </h4>
-          <p className="text-xs text-ink/40 mt-0.5">
+          <p className="text-xs text-ink/40 dark:text-slate-400 mt-0.5">
             {QUESTION_TYPES[question.type]?.label || question.type}
           </p>
         </div>
@@ -237,17 +235,17 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
 
       {/* نوار آمار سریع */}
       <div className="flex flex-wrap gap-2 mb-4">
-        <span className="text-xs font-bold text-ink/60 bg-bg-neutral px-2.5 py-1 rounded-full">
+        <span className="text-xs font-bold text-ink/70 dark:text-slate-300 bg-bg-neutral dark:bg-slate-800 px-2.5 py-1 rounded-full">
           نرخ پاسخ: {faNum(completionRate)}٪
         </span>
         {avgTime !== null && avgTime > 0 && (
-          <span className="text-xs font-bold text-ink/60 bg-bg-neutral px-2.5 py-1 rounded-full">
+          <span className="text-xs font-bold text-ink/70 dark:text-slate-300 bg-bg-neutral dark:bg-slate-800 px-2.5 py-1 rounded-full">
             میانگین: {faDuration(avgTime)}
           </span>
         )}
         {correctRate && (
           <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-            correctRate.pct >= 70 ? "text-teal-text bg-teal/10" : correctRate.pct >= 40 ? "text-orange bg-orange/10" : "text-magenta-text bg-magenta/10"
+            correctRate.pct >= 70 ? "text-teal-text dark:text-teal-300 bg-teal/10 dark:bg-teal-950/50" : correctRate.pct >= 40 ? "text-orange dark:text-amber-400 bg-orange/10 dark:bg-amber-950/50" : "text-magenta-text dark:text-rose-300 bg-magenta/10 dark:bg-rose-950/50"
           }`}>
             نرخ صحیح: {faNum(correctRate.pct)}٪ ({faNum(correctRate.correct)}/{faNum(correctRate.total)})
           </span>
@@ -255,26 +253,26 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
       </div>
 
       {total === 0 && (
-        <p className="text-sm text-ink/40">هنوز جوابی ثبت نشده.</p>
+        <p className="text-sm text-ink/40 dark:text-slate-500">هنوز جوابی ثبت نشده.</p>
       )}
 
       {/* نمودار توزیع */}
       {dist && total > 0 && (
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 flex flex-col gap-2">
             {dist.map((d, i) => (
               <div key={String(d.key)} className="flex items-center gap-2">
-                <span className="w-24 shrink-0 text-xs font-medium text-ink/70 truncate" title={String(d.key)}>
+                <span className="w-24 shrink-0 text-xs font-medium text-ink/70 dark:text-slate-300 truncate" title={String(d.key)}>
                   {question.type === "rating" ? `${faNum(d.key)} ستاره` : String(d.key).slice(0, 15)}
                 </span>
-                <div className="flex-1 h-6 bg-bg-neutral rounded-full overflow-hidden relative">
+                <div className="flex-1 h-6 bg-bg-neutral dark:bg-slate-800 rounded-full overflow-hidden relative">
                   <div
                     className="h-full rounded-full transition-all"
                     style={{ width: `${d.pct}%`, backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }}
                   />
                 </div>
-                <span className="w-20 text-xs font-bold text-navy text-left flex items-center gap-1" dir="ltr">
-                  {d.count} <span className="text-ink/40">({d.pct}٪)</span>
+                <span className="w-20 text-xs font-bold text-navy dark:text-white text-left flex items-center gap-1" dir="ltr">
+                  {d.count} <span className="text-ink/40 dark:text-slate-400">({d.pct}٪)</span>
                 </span>
               </div>
             ))}
@@ -298,7 +296,7 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
                 <Tooltip formatter={(v) => [`${v} پاسخ`, ""]} />
               </PieChart>
             </ResponsiveContainer>
-            <p className="text-xs font-semibold text-ink/40">توزیع پاسخ‌ها</p>
+            <p className="text-xs font-semibold text-ink/40 dark:text-slate-400">توزیع پاسخ‌ها</p>
           </div>
         </div>
       )}
@@ -319,13 +317,13 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
       {!dist && !numericStats && total > 0 && (
         <div className="max-h-48 overflow-y-auto flex flex-col gap-1.5">
           {values.slice(0, 20).map((v, i) => (
-            <div key={i} className="bg-bg-neutral border border-ink/10 rounded-lg px-3 py-1.5 text-xs font-medium text-ink flex items-center gap-2">
-              <span className="text-ink/30 font-mono">{i + 1}.</span>
+            <div key={i} className="bg-bg-neutral dark:bg-slate-800/80 border border-ink/10 dark:border-slate-700/80 rounded-lg px-3 py-1.5 text-xs font-medium text-ink dark:text-slate-200 flex items-center gap-2">
+              <span className="text-ink/40 dark:text-slate-500 font-mono">{i + 1}.</span>
               <span className="truncate">{String(v).slice(0, 80)}</span>
             </div>
           ))}
           {values.length > 20 && (
-            <span className="text-xs font-semibold text-ink/50 text-center">+ {faNum(values.length - 20)} پاسخ دیگر</span>
+            <span className="text-xs font-semibold text-ink/50 dark:text-slate-400 text-center">+ {faNum(values.length - 20)} پاسخ دیگر</span>
           )}
         </div>
       )}
@@ -335,9 +333,9 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
 
 function MiniStat({ label, value }) {
   return (
-    <div className="bg-bg-neutral rounded-lg px-2 py-1.5 text-center">
-      <p className="text-xs font-semibold text-ink/50 mb-0.5">{label}</p>
-      <p className="text-xs font-bold text-navy">{value}</p>
+    <div className="bg-bg-neutral dark:bg-slate-800/90 rounded-lg px-2 py-1.5 text-center border border-transparent dark:border-slate-700/60">
+      <p className="text-xs font-semibold text-ink/50 dark:text-slate-400 mb-0.5">{label}</p>
+      <p className="text-xs font-bold text-navy dark:text-white">{value}</p>
     </div>
   );
 }
@@ -367,22 +365,22 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
   return (
     <div className="flex flex-col gap-4" dir="rtl">
       {/* اطلاعات فرد */}
-      <div className="bg-bg-lavender/50 rounded-xl p-4 border border-navy/10">
+      <div className="bg-bg-lavender/50 dark:bg-slate-800/80 rounded-xl p-4 border border-navy/10 dark:border-slate-700">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center font-black text-sm">
+          <div className="w-10 h-10 rounded-full bg-navy dark:bg-teal text-white flex items-center justify-center font-black text-sm">
             <Users size={18} />
           </div>
           <div>
-            <h4 className="text-sm font-black text-navy">پاسخ‌دهنده</h4>
-            <p className="text-xs text-ink/50">{faDateTime(response.submitted_at || response.created_at)}</p>
+            <h4 className="text-sm font-black text-navy dark:text-white">پاسخ‌دهنده</h4>
+            <p className="text-xs text-ink/50 dark:text-slate-400">{faDateTime(response.submitted_at || response.created_at)}</p>
           </div>
           <div className="mr-auto flex items-center gap-2">
             {response.duration_seconds > 0 && (
-              <span className="text-xs font-bold text-ink/50 bg-white px-2 py-1 rounded-full">
+              <span className="text-xs font-bold text-ink/60 dark:text-slate-300 bg-white dark:bg-slate-700 px-2 py-1 rounded-full border border-ink/5 dark:border-slate-600">
                 ⏱ {faDuration(response.duration_seconds)}
               </span>
             )}
-            <span className="text-xs font-bold text-ink/50 bg-white px-2 py-1 rounded-full">
+            <span className="text-xs font-bold text-ink/60 dark:text-slate-300 bg-white dark:bg-slate-700 px-2 py-1 rounded-full border border-ink/5 dark:border-slate-600">
               {DEVICE_FA[response.device] ?? response.device ?? "—"}
             </span>
           </div>
@@ -392,25 +390,25 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
         {scoreData && (
           <div className={`flex items-center gap-4 p-3 rounded-xl border-2 ${
             scoreData.total > 0 && (scoreData.score / scoreData.total) >= 0.7
-              ? "bg-teal/5 border-teal/30"
+              ? "bg-teal/5 dark:bg-teal-950/40 border-teal/30 dark:border-teal-700/60"
               : (scoreData.score / scoreData.total) >= 0.4
-                ? "bg-orange/5 border-orange/30"
-                : "bg-magenta/5 border-magenta/30"
+                ? "bg-orange/5 dark:bg-amber-950/40 border-orange/30 dark:border-amber-700/60"
+                : "bg-magenta/5 dark:bg-rose-950/40 border-magenta/30 dark:border-rose-700/60"
           }`}>
             <div className="flex items-center gap-2">
               <Award size={20} className={
-                (scoreData.score / scoreData.total) >= 0.7 ? "text-teal-text" :
-                (scoreData.score / scoreData.total) >= 0.4 ? "text-orange" : "text-magenta-text"
+                (scoreData.score / scoreData.total) >= 0.7 ? "text-teal-text dark:text-teal-300" :
+                (scoreData.score / scoreData.total) >= 0.4 ? "text-orange dark:text-amber-400" : "text-magenta-text dark:text-rose-300"
               } />
               <div>
-                <p className="text-xs font-bold text-ink/50">نمره</p>
-                <p className="text-lg font-black text-navy">
-                  {faNum(scoreData.score)} <span className="text-sm text-ink/40">از {faNum(scoreData.total)}</span>
+                <p className="text-xs font-bold text-ink/50 dark:text-slate-400">نمره</p>
+                <p className="text-lg font-black text-navy dark:text-white">
+                  {faNum(scoreData.score)} <span className="text-sm text-ink/40 dark:text-slate-400">از {faNum(scoreData.total)}</span>
                 </p>
               </div>
             </div>
             <div className="mr-auto flex items-center gap-1">
-              <div className="w-16 h-2 bg-ink/10 rounded-full overflow-hidden">
+              <div className="w-16 h-2 bg-ink/10 dark:bg-slate-700 rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all"
                   style={{
@@ -420,7 +418,7 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
                   }}
                 />
               </div>
-              <span className="text-xs font-bold text-navy">
+              <span className="text-xs font-bold text-navy dark:text-white">
                 {faNum(Math.round((scoreData.score / scoreData.total) * 100))}٪
               </span>
             </div>
@@ -429,9 +427,9 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
       </div>
 
       {/* ─── ناوبری سریع بین سوالات ─── */}
-      <div className="bg-white border border-ink/10 rounded-xl p-2.5">
+      <div className="bg-white dark:bg-slate-900 border border-ink/10 dark:border-slate-800 rounded-xl p-2.5">
         <div className="flex items-center gap-1.5 mb-1.5">
-          <span className="text-xs font-extrabold text-ink-subtle">پرش به سوال:</span>
+          <span className="text-xs font-extrabold text-ink-subtle dark:text-slate-400">پرش به سوال:</span>
         </div>
         <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto scrollbar-none">
           {questions.map((q, i) => {
@@ -441,7 +439,7 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
               <button key={q.id}
                 onClick={() => scrollToQ(q.id)}
                 className={`text-xs font-bold px-2.5 py-1 rounded-pill-sm border transition-all cursor-pointer
-                  ${activeQ === q.id ? "border-navy bg-navy text-white" : answered ? "border-teal/40 bg-teal/5 text-teal-text" : "border-ink/15 bg-white text-ink-subtle hover:border-teal/30"}
+                  ${activeQ === q.id ? "border-navy bg-navy text-white dark:bg-teal dark:border-teal" : answered ? "border-teal/40 bg-teal/5 text-teal-text dark:text-teal-300 dark:bg-teal-950/40" : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink-subtle dark:text-slate-300 hover:border-teal/30"}
                 `}
                 title={q.title}
               >
@@ -463,46 +461,46 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
             <div key={q.id} ref={(el) => { qRefs.current[q.id] = el; }}
               id={`q-${q.id}`}
               className={`border rounded-xl p-3 transition-colors scroll-mt-20 ${
-                activeQ === q.id ? "ring-2 ring-navy/30 border-navy/30" :
-                correct === true ? "border-teal/30 bg-teal/5" :
-                correct === false ? "border-magenta/30 bg-magenta/5" :
-                "border-ink/10 bg-white"
+                activeQ === q.id ? "ring-2 ring-navy/30 dark:ring-teal/40 border-navy/30 dark:border-teal" :
+                correct === true ? "border-teal/30 dark:border-teal-800 bg-teal/5 dark:bg-teal-950/25" :
+                correct === false ? "border-magenta/30 dark:border-rose-800 bg-magenta/5 dark:bg-rose-950/25" :
+                "border-ink/10 dark:border-slate-800 bg-white dark:bg-slate-900"
               }`}
               onClick={() => setActiveQ(q.id)}
             >
               <div className="flex items-start justify-between gap-2 mb-1.5">
-                <span className="text-xs font-bold text-navy flex items-center gap-1.5">
-                  <span className="w-5 h-5 shrink-0 flex items-center justify-center rounded-full bg-navy/10 text-xs font-black">
+                <span className="text-xs font-bold text-navy dark:text-white flex items-center gap-1.5">
+                  <span className="w-5 h-5 shrink-0 flex items-center justify-center rounded-full bg-navy/10 dark:bg-slate-800 text-xs font-black dark:text-teal-300">
                     {i + 1}
                   </span>
                   {q.title}
                 </span>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {q.points > 0 && (
-                    <span className="text-xs font-bold text-ink/50">{faNum(q.points)} نمره</span>
+                    <span className="text-xs font-bold text-ink/50 dark:text-slate-400">{faNum(q.points)} نمره</span>
                   )}
                   <CorrectnessBadge question={q} answer={a?.value} />
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="text-sm text-ink flex-1">
+                <div className="text-sm text-ink dark:text-slate-200 flex-1">
                   {answered ? (
                     <AnswerValue question={q} value={a?.value} />
                   ) : (
-                    <span className="text-ink/40 text-xs">پاسخی داده نشده</span>
+                    <span className="text-ink/40 dark:text-slate-500 text-xs">پاسخی داده نشده</span>
                   )}
                 </div>
 
                 {correct === false && q.correct_answer && (
-                  <span className="text-xs font-bold text-teal-text bg-teal/10 px-2 py-0.5 rounded-full shrink-0">
+                  <span className="text-xs font-bold text-teal-text dark:text-teal-300 bg-teal/10 dark:bg-teal-950/50 px-2 py-0.5 rounded-full shrink-0">
                     پاسخ صحیح: {Array.isArray(q.correct_answer) ? q.correct_answer.join("، ") : String(q.correct_answer)}
                   </span>
                 )}
               </div>
 
               {a?.time_spent_seconds > 0 && (
-                <span className="text-xs text-ink/40 mt-1 block">
+                <span className="text-xs text-ink/40 dark:text-slate-500 mt-1 block">
                   ⏱ {faDuration(a.time_spent_seconds)}
                 </span>
               )}
@@ -797,14 +795,14 @@ export default function Responses() {
             <ArrowLeft size={14} /> ویرایش فرم
           </Button>
           <div>
-            <h1 className="text-base sm:text-lg font-extrabold text-navy">{form.title}</h1>
-            <p className="text-xs text-ink/60 mt-0.5">
+            <h1 className="text-base sm:text-lg font-extrabold text-navy dark:text-white">{form.title}</h1>
+            <p className="text-xs text-ink/60 dark:text-slate-400 mt-0.5">
               {faNum(questions.length)} سوال • {faNum(stats.total)} پاسخ
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-teal-text bg-bg-mint px-2 py-1 rounded-full">
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-teal-text dark:text-teal-300 bg-bg-mint dark:bg-teal-950/50 px-2 py-1 rounded-full border border-teal/20 dark:border-teal-700/50">
             <span className="w-1.5 h-1.5 rounded-full bg-teal animate-pulse" /> زنده
           </span>
           {hasPermission("export_excel") && (
@@ -826,10 +824,10 @@ export default function Responses() {
 
       {/* کارت نمره‌دهی */}
       {scored && stats.scoreStats && (
-        <div className="bg-gradient-to-l from-teal/5 to-bg-mint border-2 border-teal/20 rounded-xl p-4">
+        <div className="bg-gradient-to-l from-teal/5 to-bg-mint dark:from-slate-800 dark:to-teal-950/30 border-2 border-teal/20 dark:border-teal-700/50 rounded-xl p-4">
           <div className="flex items-center gap-3 mb-2">
-            <Award size={20} className="text-teal-text" />
-            <h3 className="text-sm font-black text-navy">آمار نمره‌دهی</h3>
+            <Award size={20} className="text-teal-text dark:text-teal-300" />
+            <h3 className="text-sm font-black text-navy dark:text-white">آمار نمره‌دهی</h3>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <MiniStat label="میانگین نمره" value={`${stats.scoreStats.avg} از ${faNum(questions.reduce((s, q) => s + (q.points || 0), 0))}`} />
@@ -842,10 +840,10 @@ export default function Responses() {
 
       {/* نمودار روند */}
       {responses.length > 1 && (
-        <div className="bg-white rounded-xl border border-ink/10 p-4">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-ink/10 dark:border-slate-800 p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
-            <BarChart2 size={16} className="text-navy" />
-            <h3 className="text-sm font-black text-navy">روند پاسخ‌ها (۳۰ روز اخیر)</h3>
+            <BarChart2 size={16} className="text-navy dark:text-teal-400" />
+            <h3 className="text-sm font-black text-navy dark:text-white">روند پاسخ‌ها (۳۰ روز اخیر)</h3>
           </div>
           <ResponsiveContainer width="100%" height={180}>
             <AreaChart data={trendData}>
@@ -855,10 +853,10 @@ export default function Responses() {
                   <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="date" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
-              <YAxis allowDecimals={false} tick={{ fontSize: 10 }} />
-              <Tooltip formatter={(v) => [`${v} پاسخ`, "تعداد"]} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" strokeOpacity={0.2} />
+              <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#94a3b8" }} interval="preserveStartEnd" />
+              <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: "#94a3b8" }} />
+              <Tooltip formatter={(v) => [`${v} پاسخ`, "تعداد"]} contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155", color: "#f8fafc", borderRadius: "0.5rem" }} />
               <Area type="monotone" dataKey="count" stroke="#6366f1" strokeWidth={2} fill="url(#colorCount)" />
             </AreaChart>
           </ResponsiveContainer>
@@ -868,21 +866,21 @@ export default function Responses() {
       {/* جستجو و فیلتر */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40" size={16} />
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 dark:text-slate-500" size={16} />
           <input
             type="text"
             placeholder="جستجو در پاسخ‌ها..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white border border-ink/15 rounded-lg pr-9 pl-4 py-2 text-sm font-medium text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
+            className="w-full bg-white dark:bg-slate-800 border border-ink/15 dark:border-slate-700 rounded-lg pr-9 pl-4 py-2 text-sm font-medium text-navy dark:text-slate-100 placeholder:text-ink/40 dark:placeholder:text-slate-500 focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
           />
         </div>
-        <label className="flex items-center gap-2 text-sm font-medium text-ink/70 cursor-pointer bg-white border border-ink/15 rounded-lg px-3 py-2">
-          <input type="checkbox" checked={onlyComplete} onChange={(e) => setOnlyComplete(e.target.checked)} className="accent-teal w-4 h-4" />
+        <label className="flex items-center gap-2 text-sm font-medium text-ink/70 dark:text-slate-300 cursor-pointer bg-white dark:bg-slate-800 border border-ink/15 dark:border-slate-700 rounded-lg px-3 py-2">
+          <input type="checkbox" checked={onlyComplete} onChange={(e) => setOnlyComplete(e.target.checked)} className="accent-teal w-4 h-4 cursor-pointer" />
           فقط کامل‌ها
         </label>
         {Object.keys(questionFilters).some((k) => questionFilters[k]) && (
-          <button onClick={() => setQuestionFilters({})} className="text-xs font-bold text-magenta-text bg-magenta/10 border border-magenta/20 rounded-lg px-3 py-2 hover:bg-magenta/20 transition-colors flex items-center gap-1.5">
+          <button onClick={() => setQuestionFilters({})} className="text-xs font-bold text-magenta-text dark:text-rose-300 bg-magenta/10 dark:bg-rose-950/40 border border-magenta/20 dark:border-rose-800/40 rounded-lg px-3 py-2 hover:bg-magenta/20 transition-colors flex items-center gap-1.5 cursor-pointer">
             <span>پاک کردن فیلترها</span>
             <X size={13} />
           </button>
@@ -903,7 +901,7 @@ export default function Responses() {
                   value={activeVal}
                   onChange={(e) => setQuestionFilters((p) => ({ ...p, [q.id]: e.target.value }))}
                   className={`text-xs font-semibold rounded-lg border px-2.5 py-1.5 cursor-pointer transition-colors ${
-                    activeVal ? "border-teal bg-teal/10 text-teal-text" : "border-ink/15 bg-white text-ink/60 hover:border-ink/30"
+                    activeVal ? "border-teal bg-teal/10 dark:bg-teal-950/40 text-teal-text dark:text-teal-300" : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink/60 dark:text-slate-300 hover:border-ink/30"
                   }`}
                 >
                   <option value="">{q.title.slice(0, 20)}...</option>
@@ -917,7 +915,7 @@ export default function Responses() {
       )}
 
       {/* تب‌ها */}
-      <div className="flex gap-1 bg-bg-neutral rounded-lg p-1 w-fit max-w-full overflow-x-auto scrollbar-none">
+      <div className="flex gap-1 bg-bg-neutral dark:bg-slate-800 border border-transparent dark:border-slate-700 rounded-lg p-1 w-fit max-w-full overflow-x-auto scrollbar-none">
         {[
           { key: "list", label: `پاسخ‌ها (${filtered.length})` },
           { key: "analysis", label: "تحلیل سوال‌ها" },
@@ -927,8 +925,8 @@ export default function Responses() {
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`px-4 py-1.5 rounded-md text-sm font-bold transition-colors ${
-              tab === t.key ? "bg-white text-teal-text shadow-sm" : "text-ink/50 hover:text-ink"
+            className={`px-4 py-1.5 rounded-md text-sm font-bold transition-colors cursor-pointer ${
+              tab === t.key ? "bg-white dark:bg-slate-900 text-teal-text dark:text-teal-300 shadow-sm border border-transparent dark:border-slate-700" : "text-ink/50 dark:text-slate-400 hover:text-ink dark:hover:text-white"
             }`}
           >
             {t.label}
@@ -948,31 +946,31 @@ export default function Responses() {
             ) : null}
           />
         ) : (
-          <div className="rotate-[0.3deg]">
-            <StickerCard theme="white" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
+          <div>
+            <StickerCard theme="white" radius="rounded-2xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-xs sm:text-sm">
                   <thead>
-                    <tr className="text-navy border-b-2 border-ink/10">
-                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">#</th>
-                      <th className="text-right font-extrabold text-ink/70 px-3 py-2 hidden sm:table-cell">زمان</th>
-                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">وضعیت</th>
-                      <th className="text-right font-extrabold text-ink/70 px-3 py-2 hidden md:table-cell">مدت</th>
-                      <th className="text-right font-extrabold text-ink/70 px-3 py-2 hidden lg:table-cell">دستگاه</th>
-                      {scored && <th className="text-right font-extrabold text-ink/70 px-3 py-2">نمره</th>}
-                      <th className="text-right font-extrabold text-ink/70 px-3 py-2 hidden sm:table-cell whitespace-nowrap">
+                    <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40">
+                      <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5">#</th>
+                      <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5 hidden sm:table-cell">زمان</th>
+                      <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5">وضعیت</th>
+                      <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5 hidden md:table-cell">مدت</th>
+                      <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5 hidden lg:table-cell">دستگاه</th>
+                      {scored && <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5">نمره</th>}
+                      <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5 hidden sm:table-cell whitespace-nowrap">
                         <button
                           type="button"
                           onClick={() => setQuickBarOpen((o) => !o)}
                           disabled={questions.length === 0}
                           title={questions.length === 0 ? "این فرم سوالی ندارد" : "نمایش سریع پاسخ یک سوال برای همهٔ ردیف‌ها"}
                           className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-default ${
-                            quickBarOpen || activeQuickQ ? "bg-teal/10 text-teal-text" : "hover:bg-bg-neutral text-ink/70"
+                            quickBarOpen || activeQuickQ ? "bg-teal/10 dark:bg-teal-950/40 text-teal-text dark:text-teal-300" : "hover:bg-bg-neutral dark:hover:bg-slate-700 text-ink/70 dark:text-slate-300"
                           }`}
                         >
                           <span>{activeQuickQ ? "پاسخ سوال" : "پاسخ"}</span>
                           {activeQuickQ && activeQIdx >= 0 && (
-                            <span className="shrink-0 min-w-5 h-5 px-1 flex items-center justify-center rounded-full bg-navy text-white text-xs font-black">
+                            <span className="shrink-0 min-w-5 h-5 px-1 flex items-center justify-center rounded-full bg-navy dark:bg-teal text-white text-xs font-black">
                               {faNum(activeQIdx + 1)}
                             </span>
                           )}
@@ -981,25 +979,25 @@ export default function Responses() {
                           )}
                         </button>
                       </th>
-                      <th className="text-left font-extrabold text-ink/70 px-3 py-2">عملیات</th>
+                      <th className="text-left font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5">عملیات</th>
                     </tr>
                   </thead>
                   <tbody>
                     {/* ─── نوار «نمایش سریع پاسخ‌ها»: انتخاب سوالِ سراسری برای کل لیست ─── */}
                     {quickBarOpen && (
-                      <tr className="bg-teal/5 border-b border-teal/15">
+                      <tr className="bg-teal/5 dark:bg-teal-950/30 border-b border-teal/15 dark:border-teal-800/40">
                         <td colSpan={scored ? 8 : 7} className="px-3 py-2.5">
                           <div className="flex flex-wrap items-center gap-2.5">
-                            <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-teal-text">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-teal-text dark:text-teal-300">
                               <Zap size={13} /> نمایش سریع پاسخ‌ها
                             </span>
-                            <span className="text-xs font-semibold text-ink/60">
+                            <span className="text-xs font-semibold text-ink/60 dark:text-slate-400">
                               پاسخِ سوالِ انتخابی برای همهٔ {faNum(filtered.length)} ردیفِ این لیست نمایش داده می‌شود:
                             </span>
                             <select
                               value={activeQuickQ?.id ?? ""}
                               onChange={(e) => setQuickQId(e.target.value || null)}
-                              className="flex-1 min-w-[220px] max-w-md bg-white border border-ink/15 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-navy cursor-pointer focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
+                              className="flex-1 min-w-[220px] max-w-md bg-white dark:bg-slate-800 border border-ink/15 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-navy dark:text-slate-100 cursor-pointer focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
                             >
                               <option value="">— بدون انتخاب (پاسخ اول هر نفر) —</option>
                               {questions.map((q, qi) => (
@@ -1011,7 +1009,7 @@ export default function Responses() {
                             <button
                               type="button"
                               onClick={() => { setQuickQId(null); setQuickBarOpen(false); }}
-                              className="text-xs font-bold text-magenta-text bg-magenta/10 border border-magenta/20 rounded-lg px-2.5 py-1.5 hover:bg-magenta/20 transition-colors cursor-pointer flex items-center gap-1"
+                              className="text-xs font-bold text-magenta-text dark:text-rose-300 bg-magenta/10 dark:bg-rose-950/40 border border-magenta/20 dark:border-rose-800/40 rounded-lg px-2.5 py-1.5 hover:bg-magenta/20 transition-colors cursor-pointer flex items-center gap-1"
                             >
                               <span>بستن نمایش سریع</span>
                               <X size={12} />
@@ -1045,49 +1043,49 @@ export default function Responses() {
                       return (
                         <tr
                           key={r.id}
-                          className="border-b border-ink/5 last:border-0 transition-colors cursor-pointer hover:bg-bg-neutral/50"
+                          className="border-b border-ink/5 dark:border-slate-800/60 last:border-0 transition-colors cursor-pointer hover:bg-bg-neutral/50 dark:hover:bg-slate-800/50"
                           onClick={() => setDetail(r)}
                         >
-                            <td className="px-3 py-2 font-mono text-ink/50 text-xs">{i + 1}</td>
-                            <td className="px-3 py-2 font-medium text-navy text-xs hidden sm:table-cell">{faDateTime(r.submitted_at || r.created_at)}</td>
-                            <td className="px-3 py-2">
+                            <td className="px-3 py-2.5 font-mono text-ink/50 dark:text-slate-400 text-xs">{i + 1}</td>
+                            <td className="px-3 py-2.5 font-medium text-navy dark:text-slate-200 text-xs hidden sm:table-cell">{faDateTime(r.submitted_at || r.created_at)}</td>
+                            <td className="px-3 py-2.5">
                               {r.is_complete ? (
-                                <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-teal-text bg-bg-mint px-2 py-0.5 rounded-full">
+                                <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-teal-text dark:text-teal-300 bg-bg-mint dark:bg-teal-950/40 px-2 py-0.5 rounded-full border border-teal/20 dark:border-teal-700/50">
                                   <CheckCircle2 size={11} /> کامل
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-ink/60 bg-bg-neutral px-2 py-0.5 rounded-full">
+                                <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-ink/60 dark:text-slate-300 bg-bg-neutral dark:bg-slate-800 px-2 py-0.5 rounded-full border border-ink/10 dark:border-slate-700">
                                   <AlertCircle size={11} /> ناقص
                                 </span>
                               )}
                             </td>
-                            <td className="px-3 py-2 text-ink/50 text-xs hidden md:table-cell">{r.duration_seconds ? faDuration(r.duration_seconds) : "—"}</td>
-                            <td className="px-3 py-2 text-ink/50 text-xs hidden lg:table-cell">{DEVICE_FA[r.device] ?? r.device ?? "—"}</td>
+                            <td className="px-3 py-2.5 text-ink/50 dark:text-slate-400 text-xs hidden md:table-cell">{r.duration_seconds ? faDuration(r.duration_seconds) : "—"}</td>
+                            <td className="px-3 py-2.5 text-ink/50 dark:text-slate-400 text-xs hidden lg:table-cell">{DEVICE_FA[r.device] ?? r.device ?? "—"}</td>
                             {scored && (
                               <td className="px-4 py-3">
                                 {personScore ? (
                                   <span className={`text-xs font-black ${
-                                    (personScore.score / personScore.total) >= 0.7 ? "text-teal-text" :
-                                    (personScore.score / personScore.total) >= 0.4 ? "text-orange" : "text-magenta-text"
+                                    (personScore.score / personScore.total) >= 0.7 ? "text-teal-text dark:text-teal-300" :
+                                    (personScore.score / personScore.total) >= 0.4 ? "text-orange dark:text-amber-400" : "text-magenta-text dark:text-rose-300"
                                   }`}>
                                     {faNum(personScore.score)}/{faNum(personScore.total)}
                                   </span>
                                 ) : (
-                                  <span className="text-xs text-ink/30">—</span>
+                                  <span className="text-xs text-ink/30 dark:text-slate-600">—</span>
                                 )}
                               </td>
                             )}
-                            <td className="px-3 py-2 min-w-0 max-w-[13rem]">
+                            <td className="px-3 py-2.5 min-w-0 max-w-[13rem]">
                               <CellAnswer question={previewQ} value={previewValue} />
                             </td>
-                            <td className="px-3 py-2">
+                            <td className="px-3 py-2.5">
                               <div className="flex items-center gap-1">
                                 <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setDetail(r); }}>
                                   <Eye size={14} />
                                 </Button>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); deleteResponse(r); }}
-                                  className="p-1.5 rounded-lg text-ink/30 hover:text-magenta-text hover:bg-magenta/10 transition-colors"
+                                  className="p-1.5 rounded-lg text-ink/30 dark:text-slate-400 hover:text-magenta-text dark:hover:text-rose-400 hover:bg-magenta/10 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                                   title="حذف پاسخ"
                                 >
                                   <Trash2 size={14} />
@@ -1131,9 +1129,9 @@ export default function Responses() {
       {/* تب روندها */}
       {tab === "trend" && (
         <div className="flex flex-col gap-4">
-          <div className="bg-white rounded-xl border border-ink/10 p-4">
-            <h3 className="text-sm font-black text-navy mb-3 flex items-center gap-2">
-              <Calendar size={16} /> روند پاسخ‌ها (۳۰ روز اخیر)
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-ink/10 dark:border-slate-800 p-4 shadow-sm">
+            <h3 className="text-sm font-black text-navy dark:text-white mb-3 flex items-center gap-2">
+              <Calendar size={16} className="text-teal" /> روند پاسخ‌ها (۳۰ روز اخیر)
             </h3>
             <ResponsiveContainer width="100%" height={250}>
               <AreaChart data={trendData}>
@@ -1143,19 +1141,19 @@ export default function Responses() {
                     <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="date" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
-                <YAxis allowDecimals={false} tick={{ fontSize: 10 }} />
-                <Tooltip formatter={(v) => [`${v} پاسخ`, "تعداد"]} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" strokeOpacity={0.2} />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#94a3b8" }} interval="preserveStartEnd" />
+                <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: "#94a3b8" }} />
+                <Tooltip formatter={(v) => [`${v} پاسخ`, "تعداد"]} contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155", color: "#f8fafc", borderRadius: "0.5rem" }} />
                 <Area type="monotone" dataKey="count" stroke="#6366f1" strokeWidth={2} fill="url(#colorCountFull)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
 
           {/* توزیع دستگاه */}
-          <div className="bg-white rounded-xl border border-ink/10 p-4">
-            <h3 className="text-sm font-black text-navy mb-3 flex items-center gap-2">
-              <Zap size={16} /> توزیع دستگاه‌ها
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-ink/10 dark:border-slate-800 p-4 shadow-sm">
+            <h3 className="text-sm font-black text-navy dark:text-white mb-3 flex items-center gap-2">
+              <Zap size={16} className="text-amber-500" /> توزیع دستگاه‌ها
             </h3>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={(() => {
@@ -1166,10 +1164,10 @@ export default function Responses() {
                 }
                 return Object.entries(counts).map(([name, value]) => ({ name, value }));
               })()}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v) => [`${v} پاسخ`, "تعداد"]} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" strokeOpacity={0.2} />
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#94a3b8" }} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
+                <Tooltip formatter={(v) => [`${v} پاسخ`, "تعداد"]} contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155", color: "#f8fafc", borderRadius: "0.5rem" }} />
                 <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -1180,12 +1178,12 @@ export default function Responses() {
       {/* مودال جزئیات */}
       {detail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-[2px]" onClick={() => setDetail(null)} role="dialog" aria-modal="true">
-          <div className="w-full max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <StickerCard theme="white" rotate="-rotate-[0.5deg]">
-              <div className="bg-white max-h-[85vh] flex flex-col">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-ink/10 shrink-0">
-                  <h3 className="text-lg font-bold text-navy">جزئیات پاسخ</h3>
-                  <button onClick={() => setDetail(null)} className="w-8 h-8 flex items-center justify-center rounded-lg text-ink/40 hover:text-ink/70 hover:bg-bg-neutral"><X size={18} /></button>
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <StickerCard theme="white">
+              <div className="bg-white dark:bg-slate-900 max-h-[85vh] flex flex-col">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-ink/10 dark:border-slate-800 shrink-0">
+                  <h3 className="text-lg font-bold text-navy dark:text-white">جزئیات پاسخ</h3>
+                  <button onClick={() => setDetail(null)} className="w-8 h-8 flex items-center justify-center rounded-lg text-ink/40 dark:text-slate-400 hover:text-ink dark:hover:text-white hover:bg-bg-neutral dark:hover:bg-slate-800 transition-colors"><X size={18} /></button>
                 </div>
                 <div className="flex-1 overflow-y-auto px-6 py-4">
                   <PersonAnalytics
@@ -1194,7 +1192,7 @@ export default function Responses() {
                     answersByResponse={answersByResponse}
                   />
                 </div>
-                <div className="flex items-center justify-between px-6 py-4 border-t border-ink/10 shrink-0">
+                <div className="flex items-center justify-between px-6 py-4 border-t border-ink/10 dark:border-slate-800 shrink-0">
                   <Button variant="red" size="sm" onClick={() => deleteResponse(detail)}>حذف این پاسخ</Button>
                   <Button variant="ghost" size="sm" onClick={() => setDetail(null)}>بستن</Button>
                 </div>
@@ -1388,7 +1386,7 @@ function GroupAnalytics({ questions, answers, responses, form }) {
           <select
             value={activeFieldId ?? ""}
             onChange={(e) => setFieldId(e.target.value)}
-            className="text-xs font-bold rounded-lg border-2 border-ink/15 bg-white text-ink/70 px-2.5 py-2 cursor-pointer focus:outline-none focus:border-teal"
+            className="text-xs font-bold rounded-lg border-2 border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink/70 dark:text-slate-200 px-2.5 py-2 cursor-pointer focus:outline-none focus:border-teal"
           >
             {multiQs.map((q) => (
               <option key={q.id} value={q.id}>{q.title.slice(0, 30)}</option>
@@ -1398,24 +1396,24 @@ function GroupAnalytics({ questions, answers, responses, form }) {
         <select
           value={activeLevel ?? ""}
           onChange={(e) => setGroupByLevel(Number(e.target.value))}
-          className="text-xs font-bold rounded-lg border-2 border-ink/15 bg-white text-ink/70 px-2.5 py-2 cursor-pointer focus:outline-none focus:border-teal"
+          className="text-xs font-bold rounded-lg border-2 border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink/70 dark:text-slate-200 px-2.5 py-2 cursor-pointer focus:outline-none focus:border-teal"
         >
           {identifierMapping.map((m) => (
             <option key={m.level} value={m.level}>گروه‌بندی: {m.label}</option>
           ))}
         </select>
-        <label className="flex items-center gap-1.5 text-xs font-bold text-ink/60 bg-white border-2 border-ink/15 rounded-lg px-2.5 py-1.5">
+        <label className="flex items-center gap-1.5 text-xs font-bold text-ink/60 dark:text-slate-300 bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 rounded-lg px-2.5 py-1.5">
           از
-          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="text-xs font-semibold text-navy bg-transparent focus:outline-none" />
+          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="text-xs font-semibold text-navy dark:text-slate-100 bg-transparent focus:outline-none" />
         </label>
-        <label className="flex items-center gap-1.5 text-xs font-bold text-ink/60 bg-white border-2 border-ink/15 rounded-lg px-2.5 py-1.5">
+        <label className="flex items-center gap-1.5 text-xs font-bold text-ink/60 dark:text-slate-300 bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 rounded-lg px-2.5 py-1.5">
           تا
-          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="text-xs font-semibold text-navy bg-transparent focus:outline-none" />
+          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="text-xs font-semibold text-navy dark:text-slate-100 bg-transparent focus:outline-none" />
         </label>
         {(dateFrom || dateTo) && (
           <button
             onClick={() => { setDateFrom(""); setDateTo(""); }}
-            className="text-xs font-bold text-magenta-text bg-magenta/10 border border-magenta/20 rounded-lg px-3 py-2 hover:bg-magenta/20 transition-colors"
+            className="text-xs font-bold text-magenta-text dark:text-rose-300 bg-magenta/10 dark:bg-rose-950/40 border border-magenta/20 dark:border-rose-800/40 rounded-lg px-3 py-2 hover:bg-magenta/20 transition-colors cursor-pointer"
           >
             پاک کردن بازه
           </button>
@@ -1439,7 +1437,7 @@ function GroupAnalytics({ questions, answers, responses, form }) {
       </div>
 
       {/* ─── زیر تب‌ها ─── */}
-      <div className="flex flex-wrap gap-1 bg-bg-neutral rounded-lg p-1 w-fit">
+      <div className="flex flex-wrap gap-1 bg-bg-neutral dark:bg-slate-800 border border-transparent dark:border-slate-700 rounded-lg p-1 w-fit">
         {[
           { key: "members", label: "سطح عضو" },
           { key: "frequency", label: "فراوانی" },
@@ -1449,8 +1447,8 @@ function GroupAnalytics({ questions, answers, responses, form }) {
           <button
             key={t.key}
             onClick={() => setSubTab(t.key)}
-            className={`px-3.5 py-1.5 rounded-md text-sm font-bold transition-colors ${
-              subTab === t.key ? "bg-white text-teal-text shadow-sm" : "text-ink/50 hover:text-ink"
+            className={`px-3.5 py-1.5 rounded-md text-sm font-bold transition-colors cursor-pointer ${
+              subTab === t.key ? "bg-white dark:bg-slate-900 text-teal-text dark:text-teal-300 shadow-sm border border-transparent dark:border-slate-700" : "text-ink/50 dark:text-slate-400 hover:text-ink dark:hover:text-white"
             }`}
           >
             {t.label}
@@ -1461,8 +1459,8 @@ function GroupAnalytics({ questions, answers, responses, form }) {
       {/* ─── تب سطح عضو (خام) ─── */}
       {subTab === "members" && (
         <div className="flex flex-col gap-2">
-          <label className="flex items-center gap-2 text-xs font-bold text-ink/60 cursor-pointer w-fit">
-            <input type="checkbox" checked={showInvalidOnly} onChange={(e) => setShowInvalidOnly(e.target.checked)} className="accent-teal w-4 h-4" />
+          <label className="flex items-center gap-2 text-xs font-bold text-ink/60 dark:text-slate-300 cursor-pointer w-fit">
+            <input type="checkbox" checked={showInvalidOnly} onChange={(e) => setShowInvalidOnly(e.target.checked)} className="accent-teal w-4 h-4 cursor-pointer" />
             فقط نامعتبرها
           </label>
           {memberViewRows.length === 0 ? (
@@ -1472,34 +1470,34 @@ function GroupAnalytics({ questions, answers, responses, form }) {
               <div className="overflow-x-auto">
                 <table className="w-full text-xs sm:text-sm">
                   <thead>
-                    <tr className="text-navy border-b-2 border-ink/10">
-                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">#</th>
-                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">زمان</th>
+                    <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40">
+                      <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5">#</th>
+                      <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5">زمان</th>
                       {identifierMapping.map((m) => (
-                        <th key={m.level} className="text-right font-extrabold text-ink/70 px-3 py-2">{m.label}</th>
+                        <th key={m.level} className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5">{m.label}</th>
                       ))}
-                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">انتخاب‌ها</th>
-                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">تعداد</th>
-                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">وضعیت</th>
+                      <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5">انتخاب‌ها</th>
+                      <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5">تعداد</th>
+                      <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5">وضعیت</th>
                     </tr>
                   </thead>
                   <tbody>
                     {memberViewRows.map((r, i) => (
-                      <tr key={`${r.response_id}-${r.field_id}`} className={`border-b border-ink/5 last:border-0 ${r.is_invalid ? "bg-magenta/5" : ""}`}>
-                        <td className="px-3 py-2 font-mono text-ink/50 text-xs">{faNum(i + 1)}</td>
-                        <td className="px-3 py-2 text-ink/60 text-xs whitespace-nowrap">{faDateTime(r.submitted_at)}</td>
+                      <tr key={`${r.response_id}-${r.field_id}`} className={`border-b border-ink/5 dark:border-slate-800/60 last:border-0 ${r.is_invalid ? "bg-magenta/5 dark:bg-rose-950/20" : ""}`}>
+                        <td className="px-3 py-2.5 font-mono text-ink/50 dark:text-slate-400 text-xs">{faNum(i + 1)}</td>
+                        <td className="px-3 py-2.5 text-ink/60 dark:text-slate-400 text-xs whitespace-nowrap">{faDateTime(r.submitted_at)}</td>
                         {r.identifiers.map((id) => (
-                          <td key={id.level} className="px-3 py-2 font-bold text-navy">{id.value}</td>
+                          <td key={id.level} className="px-3 py-2.5 font-bold text-navy dark:text-white">{id.value}</td>
                         ))}
-                        <td className="px-3 py-2 text-ink/70">{formatOptionsForExport(r.selected_options)}</td>
-                        <td className="px-3 py-2 font-black text-navy">{faNum(r.selected_count)}</td>
-                        <td className="px-3 py-2">
+                        <td className="px-3 py-2.5 text-ink/70 dark:text-slate-300">{formatOptionsForExport(r.selected_options)}</td>
+                        <td className="px-3 py-2.5 font-black text-navy dark:text-teal-300">{faNum(r.selected_count)}</td>
+                        <td className="px-3 py-2.5">
                           {r.is_invalid ? (
-                            <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-magenta-text bg-magenta/10 px-2 py-0.5 rounded-full">
+                            <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-magenta-text dark:text-rose-300 bg-magenta/10 dark:bg-rose-950/40 px-2 py-0.5 rounded-full border border-magenta/20 dark:border-rose-800/40">
                               <AlertTriangle size={11} /> نامعتبر
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-teal-text bg-bg-mint px-2 py-0.5 rounded-full">
+                            <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-teal-text dark:text-teal-300 bg-bg-mint dark:bg-teal-950/40 px-2 py-0.5 rounded-full border border-teal/20 dark:border-teal-700/50">
                               <CheckCircle2 size={11} /> معتبر
                             </span>
                           )}
@@ -1517,8 +1515,8 @@ function GroupAnalytics({ questions, answers, responses, form }) {
       {/* ─── تب فراوانی (Frequency + Pivot) ─── */}
       {subTab === "frequency" && (
         <div className="flex flex-col gap-3">
-          <label className="flex items-center gap-2 text-xs font-bold text-ink/60 cursor-pointer w-fit">
-            <input type="checkbox" checked={pivotMode} onChange={(e) => setPivotMode(e.target.checked)} className="accent-teal w-4 h-4" />
+          <label className="flex items-center gap-2 text-xs font-bold text-ink/60 dark:text-slate-300 cursor-pointer w-fit">
+            <input type="checkbox" checked={pivotMode} onChange={(e) => setPivotMode(e.target.checked)} className="accent-teal w-4 h-4 cursor-pointer" />
             نمایش جدول محوری (Pivot)
           </label>
           {frequencyRows.length === 0 ? (
@@ -1528,14 +1526,14 @@ function GroupAnalytics({ questions, answers, responses, form }) {
               <div className="overflow-x-auto">
                 <table className="w-full text-xs sm:text-sm">
                   <thead>
-                    <tr className="text-navy border-b-2 border-ink/10">
-                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">
+                    <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40">
+                      <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5">
                         {identifierMapping.find((m) => m.level === activeLevel)?.label ?? "گروه"}
                       </th>
                       {Object.keys(pivotRows[0] ?? {}).filter((k) => k !== "level_value").map((opt) => (
-                        <th key={opt} className="text-center font-extrabold text-ink/70 px-3 py-2">{opt}</th>
+                        <th key={opt} className="text-center font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5">{opt}</th>
                       ))}
-                      <th className="text-center font-extrabold text-navy px-3 py-2 bg-bg-lavender/50">جمع</th>
+                      <th className="text-center font-extrabold text-navy dark:text-white px-3 py-2.5 bg-bg-lavender/50 dark:bg-slate-800">جمع</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1544,14 +1542,14 @@ function GroupAnalytics({ questions, answers, responses, form }) {
                       const sum = opts.reduce((acc, k) => acc + (p[k] || 0), 0);
                       const maxVal = Math.max(...opts.map((k) => p[k] || 0), 0);
                       return (
-                        <tr key={i} className="border-b border-ink/5 last:border-0">
-                          <td className="px-3 py-2 font-bold text-navy whitespace-nowrap">{p.level_value}</td>
+                        <tr key={i} className="border-b border-ink/5 dark:border-slate-800/60 last:border-0">
+                          <td className="px-3 py-2.5 font-bold text-navy dark:text-white whitespace-nowrap">{p.level_value}</td>
                           {opts.map((opt) => (
-                            <td key={opt} className={`px-3 py-2 text-center font-bold ${p[opt] ? (p[opt] === maxVal ? "text-teal-text" : "text-navy") : "text-ink/25"}`}>
+                            <td key={opt} className={`px-3 py-2.5 text-center font-bold ${p[opt] ? (p[opt] === maxVal ? "text-teal-text dark:text-teal-300" : "text-navy dark:text-slate-200") : "text-ink/25 dark:text-slate-600"}`}>
                               {faNum(p[opt] || 0)}
                             </td>
                           ))}
-                          <td className="px-3 py-2 text-center font-black text-navy bg-bg-lavender/30">{faNum(sum)}</td>
+                          <td className="px-3 py-2.5 text-center font-black text-navy dark:text-white bg-bg-lavender/30 dark:bg-slate-800/60">{faNum(sum)}</td>
                         </tr>
                       );
                     })}
@@ -1564,18 +1562,18 @@ function GroupAnalytics({ questions, answers, responses, form }) {
               <div className="overflow-x-auto">
                 <table className="w-full text-xs sm:text-sm">
                   <thead>
-                    <tr className="text-navy border-b-2 border-ink/10">
-                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">{identifierMapping.find((m) => m.level === activeLevel)?.label ?? "گروه"}</th>
-                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">گزینه</th>
-                      <th className="text-right font-extrabold text-ink/70 px-3 py-2">تعداد</th>
+                    <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40">
+                      <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5">{identifierMapping.find((m) => m.level === activeLevel)?.label ?? "گروه"}</th>
+                      <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5">گزینه</th>
+                      <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5">تعداد</th>
                     </tr>
                   </thead>
                   <tbody>
                     {frequencyRows.map((f, i) => (
-                      <tr key={i} className={`border-b border-ink/5 last:border-0 ${f.vote_count > 0 ? "" : "opacity-40"}`}>
-                        <td className="px-3 py-2 font-bold text-navy">{f.level_value}</td>
-                        <td className="px-3 py-2 text-ink/70">{f.option_id}</td>
-                        <td className="px-3 py-2 font-black text-navy">{faNum(f.vote_count)}</td>
+                      <tr key={i} className={`border-b border-ink/5 dark:border-slate-800/60 last:border-0 ${f.vote_count > 0 ? "" : "opacity-40"}`}>
+                        <td className="px-3 py-2.5 font-bold text-navy dark:text-white">{f.level_value}</td>
+                        <td className="px-3 py-2.5 text-ink/70 dark:text-slate-300">{f.option_id}</td>
+                        <td className="px-3 py-2.5 font-black text-navy dark:text-teal-300">{faNum(f.vote_count)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1586,9 +1584,9 @@ function GroupAnalytics({ questions, answers, responses, form }) {
 
           {/* نمودار میله‌ای فراوانی per گروه */}
           {pivotRows.length > 0 && (
-            <div className="bg-white rounded-xl border border-ink/10 p-4">
-              <h4 className="text-sm font-black text-navy mb-3 flex items-center gap-2">
-                <BarChart2 size={16} /> فراوانی گزینه‌ها به تفکیک {identifierMapping.find((m) => m.level === activeLevel)?.label}
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-ink/10 dark:border-slate-800 p-4 shadow-sm">
+              <h4 className="text-sm font-black text-navy dark:text-white mb-3 flex items-center gap-2">
+                <BarChart2 size={16} className="text-teal" /> فراوانی گزینه‌ها به تفکیک {identifierMapping.find((m) => m.level === activeLevel)?.label}
               </h4>
               <ResponsiveContainer width="100%" height={Math.max(160, pivotRows.length * 46 + 40)}>
                 <BarChart data={pivotRows.map((p) => {
@@ -1596,10 +1594,10 @@ function GroupAnalytics({ questions, answers, responses, form }) {
                   for (const [k, v] of Object.entries(p)) { if (k !== "level_value") row[k] = v; }
                   return row;
                 })} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} />
-                  <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 11 }} />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" strokeOpacity={0.2} />
+                  <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10, fill: "#94a3b8" }} />
+                  <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 11, fill: "#94a3b8" }} />
+                  <Tooltip contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155", color: "#f8fafc", borderRadius: "0.5rem" }} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                   {Object.keys(pivotRows[0] ?? {}).filter((k) => k !== "level_value").map((opt, i) => (
                     <Bar key={opt} dataKey={opt} stackId="a" fill={CHART_COLORS[i % CHART_COLORS.length]} radius={i === Object.keys(pivotRows[0]).length - 2 ? [0, 4, 4, 0] : undefined} />
@@ -1618,14 +1616,14 @@ function GroupAnalytics({ questions, answers, responses, form }) {
         ) : (
           <div className="grid md:grid-cols-2 gap-3">
             {unionRows.map((u, i) => (
-              <div key={i} className="bg-white rounded-xl border-2 border-ink/10 p-4 rotate-[0.2deg]">
+              <div key={i} className="bg-white dark:bg-slate-900 rounded-xl border-2 border-ink/10 dark:border-slate-800 p-4 shadow-sm">
                 <div className="flex items-center justify-between gap-2 mb-3">
-                  <h4 className="text-sm font-black text-navy truncate">{u.level_value}</h4>
+                  <h4 className="text-sm font-black text-navy dark:text-white truncate">{u.level_value}</h4>
                   <Badge color="teal" rotate="0">{faNum(u.count)} گزینه یکتا</Badge>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {u.selected_options_union.map((opt) => (
-                    <span key={opt} className="text-xs font-bold text-navy bg-bg-lavender/60 border border-navy/10 rounded-pill-sm px-2.5 py-1">
+                    <span key={opt} className="text-xs font-bold text-navy dark:text-slate-100 bg-bg-lavender/60 dark:bg-slate-800 border border-navy/10 dark:border-slate-700 rounded-pill-sm px-2.5 py-1">
                       {opt}
                     </span>
                   ))}
@@ -1649,22 +1647,22 @@ function GroupAnalytics({ questions, answers, responses, form }) {
             <div className="overflow-x-auto">
               <table className="w-full text-xs sm:text-sm">
                 <thead>
-                  <tr className="text-navy border-b-2 border-ink/10">
-                    <th className="text-right font-extrabold text-ink/70 px-3 py-2">#</th>
-                    <th className="text-right font-extrabold text-ink/70 px-3 py-2">سوال</th>
-                    <th className="text-right font-extrabold text-ink/70 px-3 py-2">انتخاب‌ها</th>
-                    <th className="text-right font-extrabold text-ink/70 px-3 py-2">تعداد / حد</th>
-                    <th className="text-right font-extrabold text-ink/70 px-3 py-2">دلیل</th>
+                  <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40">
+                    <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5">#</th>
+                    <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5">سوال</th>
+                    <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5">انتخاب‌ها</th>
+                    <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5">تعداد / حد</th>
+                    <th className="text-right font-extrabold text-ink/70 dark:text-slate-300 px-3 py-2.5">دلیل</th>
                   </tr>
                 </thead>
                 <tbody>
                   {invalidRecords.map((r, i) => (
-                    <tr key={`${r.response_id}-${r.question_id}-${i}`} className="border-b border-ink/5 last:border-0 bg-magenta/5">
-                      <td className="px-3 py-2 font-mono text-ink/50 text-xs">{faNum(i + 1)}</td>
-                      <td className="px-3 py-2 font-bold text-navy">{r.question_title}</td>
-                      <td className="px-3 py-2 text-ink/70">{formatOptionsForExport(r.selected_options)}</td>
-                      <td className="px-3 py-2 font-black text-magenta-text whitespace-nowrap">{faNum(r.selected_count)} / {faNum(r.max_selectable)}</td>
-                      <td className="px-3 py-2 text-ink/60 text-xs">{r.reason}</td>
+                    <tr key={`${r.response_id}-${r.question_id}-${i}`} className="border-b border-ink/5 dark:border-slate-800/60 last:border-0 bg-magenta/5 dark:bg-rose-950/20">
+                      <td className="px-3 py-2.5 font-mono text-ink/50 dark:text-slate-400 text-xs">{faNum(i + 1)}</td>
+                      <td className="px-3 py-2.5 font-bold text-navy dark:text-white">{r.question_title}</td>
+                      <td className="px-3 py-2.5 text-ink/70 dark:text-slate-300">{formatOptionsForExport(r.selected_options)}</td>
+                      <td className="px-3 py-2.5 font-black text-magenta-text dark:text-rose-300 whitespace-nowrap">{faNum(r.selected_count)} / {faNum(r.max_selectable)}</td>
+                      <td className="px-3 py-2.5 text-ink/60 dark:text-slate-400 text-xs">{r.reason}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1679,16 +1677,16 @@ function GroupAnalytics({ questions, answers, responses, form }) {
 
 function SummaryCard({ icon: Icon, label, value, sub, color }) {
   const colors = {
-    indigo: "bg-bg-lavender text-navy dark:bg-indigo-950/60 dark:text-indigo-400",
-    emerald: "bg-bg-mint text-teal-text dark:bg-emerald-950/60 dark:text-emerald-400",
-    amber: "bg-[#FEF7EC] text-orange dark:bg-amber-950/60 dark:text-amber-400",
-    violet: "bg-[#FEFAFB] text-magenta-text dark:bg-pink-950/60 dark:text-pink-400",
+    indigo: "bg-bg-lavender text-navy dark:bg-indigo-950/60 dark:text-indigo-300",
+    emerald: "bg-bg-mint text-teal-text dark:bg-emerald-950/60 dark:text-emerald-300",
+    amber: "bg-[#FEF7EC] text-orange dark:bg-amber-950/60 dark:text-amber-300",
+    violet: "bg-[#FEFAFB] text-magenta-text dark:bg-pink-950/60 dark:text-pink-300",
   };
   return (
-    <div className="bg-white dark:bg-slate-800/90 rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none border-2 border-ink/10 dark:border-slate-700 p-3 shadow-xs">
+    <div className="bg-white dark:bg-slate-800/90 rounded-2xl border-2 border-ink/10 dark:border-slate-700 p-3.5 shadow-xs">
       <div className="flex items-center gap-2.5">
-        <div className={`w-8 h-8 rounded-pill-sm flex items-center justify-center ${colors[color]}`}>
-          <Icon size={14} />
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${colors[color]}`}>
+          <Icon size={16} />
         </div>
         <div>
           <p className="text-xs font-bold text-ink-subtle dark:text-slate-400">{label}</p>
