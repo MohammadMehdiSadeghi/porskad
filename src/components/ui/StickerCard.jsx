@@ -62,13 +62,14 @@ export default function StickerCard({
   border = "border-[0.1875rem]",
   className = "",
   backClassName = "",
+  innerClassName = "",
   children,
   as: Tag = "div",
   ...rest
 }) {
   const t = STICKER_THEMES[theme] ?? STICKER_THEMES.white;
   return (
-    <div className={`relative ${rotate} ${className}`}>
+    <div className={clsx("relative", rotate, className)}>
       <div
         aria-hidden="true"
         className={clsx(
@@ -82,12 +83,13 @@ export default function StickerCard({
       />
       <Tag
         className={clsx(
-          "relative z-10",
+          "relative z-10 h-full",
           radius,
           "[corner-shape:squircle]",
           border,
           t.border,
           t.bg,
+          innerClassName,
         )}
         {...rest}
       >

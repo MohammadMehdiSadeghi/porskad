@@ -8,7 +8,7 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import StickerCard from "../../components/ui/StickerCard";
 import Modal from "../../components/ui/Modal";
-import { Plus, Edit, Edit3, Trash2, Crown, Users, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings, Eye, EyeOff, Sliders, Bot, Copy, Calendar, CheckCircle, XCircle, Phone, Mail, RotateCcw, Save, Info } from "lucide-react";
+import { Plus, Edit, Edit3, Trash2, Crown, Users, User, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings, Eye, EyeOff, Sliders, Bot, Copy, Calendar, CheckCircle, XCircle, Phone, Mail, RotateCcw, Save, Info } from "lucide-react";
 import SEO from "../../components/ui/SEO";
 import { supabase } from "../../lib/supabaseClient";
 import { logActivity } from "../../lib/activityLogger";
@@ -631,21 +631,21 @@ export default function Managers() {
               return (
                 <div
                   key={m.id}
-                  className={`${i % 2 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"} transition-all duration-200`}
+                  className={`${i % 2 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"} transition-all duration-200 h-full flex flex-col`}
                 >
-                  <StickerCard theme={isSuperAdminOrOwner ? "orange" : "white"}>
+                  <StickerCard theme={isSuperAdminOrOwner ? "orange" : "white"} className="h-full flex flex-col">
                     <div
-                      className="p-3.5 sm:p-4 flex flex-col gap-3 cursor-pointer select-none"
+                      className="p-3.5 sm:p-4 flex flex-col justify-between h-full gap-3 cursor-pointer select-none"
                       onClick={(e) => {
                         if (e.target.closest("button, a, input")) return;
                         setSelectedUserModal(m);
                       }}
                     >
-                      {/* هدر کارت: آواتار، نام، ایمیل، وضعیت */}
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2.5 min-w-0">
+                      {/* هدر کارت: آواتار، نام، ایمیل، وضعیت و نقش با تراز دقیق */}
+                      <div className="flex items-start justify-between gap-2.5">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
                           <div
-                            className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs sm:text-sm shrink-0 shadow-xs ${
+                            className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xs sm:text-sm shrink-0 shadow-xs ${
                               isSuperAdminOrOwner
                                 ? "bg-orange text-white"
                                 : m.is_active
@@ -655,30 +655,42 @@ export default function Managers() {
                           >
                             {m.full_name?.[0]?.toUpperCase() ?? m.email?.[0]?.toUpperCase() ?? "U"}
                           </div>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-black text-navy text-xs sm:text-sm truncate">
-                                {m.full_name || "کاربر بدون نام"}
-                              </span>
-                              {m.is_owner ? (
-                                <span className="inline-flex items-center gap-0.5 text-xs font-black text-amber-900 bg-amber-200 border border-amber-400 rounded-full px-2 py-0.5 shrink-0">
-                                  <Crown size={11} /> صاحب
-                                </span>
-                              ) : isSuperAdmin ? (
-                                <span className="inline-flex items-center gap-0.5 text-xs font-black text-amber-900 bg-amber-200 border border-amber-400 rounded-full px-2 py-0.5 shrink-0">
-                                  <Shield size={11} /> سوپرادمین
-                                </span>
-                              ) : null}
-                            </div>
-                            <span className="text-xs font-medium text-ink-subtle truncate block" dir="ltr">
+                          <div className="min-w-0 flex-1">
+                            <span
+                              className="font-black text-navy text-xs sm:text-sm truncate block leading-snug"
+                              title={m.full_name || "کاربر بدون نام"}
+                            >
+                              {m.full_name || "کاربر بدون نام"}
+                            </span>
+                            <span
+                              className="text-xs font-medium text-ink-subtle truncate block mt-0.5"
+                              dir="ltr"
+                              title={m.email}
+                            >
                               {m.email}
                             </span>
                           </div>
                         </div>
 
-                        <Badge color={m.is_active ? "green" : "gray"}>
-                          {m.is_active ? "فعال" : "غیرفعال"}
-                        </Badge>
+                        {/* برچسب‌های وضعیت و نقش با ساختار ثابت و منظم */}
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <Badge color={m.is_active ? "green" : "gray"}>
+                            {m.is_active ? "فعال" : "غیرفعال"}
+                          </Badge>
+                          {m.is_owner ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-900 bg-amber-200 border border-amber-400 rounded-full px-1.5 py-0.5 shrink-0">
+                              <Crown size={10} /> صاحب
+                            </span>
+                          ) : isSuperAdmin ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-900 bg-amber-200 border border-amber-400 rounded-full px-1.5 py-0.5 shrink-0">
+                              <Shield size={10} /> سوپرادمین
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-ink-subtle bg-navy/5 border border-navy/10 rounded-full px-1.5 py-0.5 shrink-0">
+                              <User size={10} /> عضو عادی
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       {/* اطلاعات فشرده: تاریخ عضویت و باقیمانده سهمیه */}
