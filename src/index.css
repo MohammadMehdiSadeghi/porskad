@@ -627,25 +627,103 @@ html.dark .shadow-lg {
     background-color: #FFFFFF !important;
 }
 
-.form-preview-container[data-preview-theme="dark"] input,
-.form-preview-container[data-preview-theme="dark"] textarea,
-.form-preview-container[data-preview-theme="dark"] select {
-    background-color: #1E293B !important;
-    color: #F8FAFC !important;
-    border-color: #334155 !important;
+/* ─── Global Dark Mode Modal & Dialog Theming ─── */
+html.dark [role="dialog"] {
+    color: #F8FAFC;
 }
 
-.form-preview-container[data-preview-theme="dark"] h2,
-.form-preview-container[data-preview-theme="dark"] h3,
-.form-preview-container[data-preview-theme="dark"] .text-navy {
+html.dark [role="dialog"] .text-navy {
     color: #F8FAFC !important;
 }
 
-.form-preview-container[data-preview-theme="dark"] p,
-.form-preview-container[data-preview-theme="dark"] span,
-.form-preview-container[data-preview-theme="dark"] .text-ink {
+html.dark [role="dialog"] .text-ink {
     color: #E2E8F0 !important;
 }
+
+html.dark [role="dialog"] .text-ink-subtle,
+html.dark [role="dialog"] .text-ink-soft {
+    color: #94A3B8 !important;
+}
+
+html.dark [role="dialog"] label {
+    color: #E2E8F0 !important;
+}
+
+html.dark [role="dialog"] h1,
+html.dark [role="dialog"] h2,
+html.dark [role="dialog"] h3,
+html.dark [role="dialog"] h4 {
+    color: #F8FAFC !important;
+}
+
+/* Modal Inner Boxes, Sub-containers & Cards */
+html.dark [role="dialog"] .bg-bg-neutral,
+html.dark [role="dialog"] .bg-bg-neutral\/70,
+html.dark [role="dialog"] .bg-bg-lavender,
+html.dark [role="dialog"] .bg-bg-lavender\/40,
+html.dark [role="dialog"] .bg-bg-lavender\/50,
+html.dark [role="dialog"] .bg-bg-lavender\/60,
+html.dark [role="dialog"] .bg-bg-mint,
+html.dark [role="dialog"] .bg-bg-mint\/30,
+html.dark [role="dialog"] .bg-bg-mint\/40 {
+    background-color: #161F33 !important;
+    border-color: #2D3A58 !important;
+}
+
+html.dark [role="dialog"] .bg-white\/50,
+html.dark [role="dialog"] .bg-white\/60,
+html.dark [role="dialog"] .bg-white\/80 {
+    background-color: #1A2338 !important;
+    border-color: #2D3A58 !important;
+}
+
+/* Modal Inputs, Textareas, and Selects in Dark Mode */
+html.dark [role="dialog"] input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="range"]),
+html.dark [role="dialog"] textarea,
+html.dark [role="dialog"] select {
+    background-color: #0B1120 !important;
+    color: #F8FAFC !important;
+    border-color: #2D3A58 !important;
+}
+
+html.dark [role="dialog"] input:focus,
+html.dark [role="dialog"] textarea:focus,
+html.dark [role="dialog"] select:focus {
+    border-color: #2DD4BF !important;
+    box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.25) !important;
+}
+
+html.dark [role="dialog"] input::placeholder,
+html.dark [role="dialog"] textarea::placeholder {
+    color: #64748B !important;
+}
+
+/* Modal Borders */
+html.dark [role="dialog"] .border-ink\/10,
+html.dark [role="dialog"] .border-ink\/15,
+html.dark [role="dialog"] .border-ink\/20,
+html.dark [role="dialog"] .border-navy\/5,
+html.dark [role="dialog"] .border-navy\/10 {
+    border-color: #2D3A58 !important;
+}
+
+/* Modal Tables */
+html.dark [role="dialog"] table {
+    background-color: #0E172A !important;
+    color: #F8FAFC !important;
+}
+
+html.dark [role="dialog"] th {
+    background-color: #162035 !important;
+    color: #E2E8F0 !important;
+    border-color: #2D3A58 !important;
+}
+
+html.dark [role="dialog"] td {
+    border-color: #24304D !important;
+    color: #F8FAFC !important;
+}
+
 
 
 

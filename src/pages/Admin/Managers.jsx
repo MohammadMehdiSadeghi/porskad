@@ -1348,7 +1348,7 @@ export default function Managers() {
         <form onSubmit={handleSaveQuota} className="flex flex-col gap-4">
 
           {/* کلیدهای سریع پلن‌ها */}
-          <div className="flex gap-2 p-1.5 bg-bg-neutral rounded-xl">
+          <div className="flex gap-2 p-1.5 bg-bg-neutral dark:bg-slate-800/90 rounded-xl border border-ink/10 dark:border-slate-700">
             <button
               type="button"
               onClick={() => {
@@ -1359,7 +1359,7 @@ export default function Managers() {
               className={`flex-1 py-2 px-3 rounded-lg text-xs font-black transition-all cursor-pointer ${
                 (Number(quotaMaxForms) >= 999999 && Number(quotaMaxResponses) >= 999999) || quotaPlan === "unlimited"
                   ? "bg-teal text-white shadow-xs"
-                  : "text-navy hover:bg-white bg-white/50"
+                  : "text-navy dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 bg-white/50 dark:bg-slate-700/60"
               }`}
             >
               ⚡ پلن نامحدود (بدون سقف)
@@ -1373,8 +1373,8 @@ export default function Managers() {
               }}
               className={`flex-1 py-2 px-3 rounded-lg text-xs font-black transition-all cursor-pointer ${
                 Number(quotaMaxForms) === 5 && Number(quotaMaxResponses) === 100 && quotaPlan === "free"
-                  ? "bg-navy text-white shadow-xs"
-                  : "text-navy hover:bg-white bg-white/50"
+                  ? "bg-navy dark:bg-slate-900 text-white shadow-xs"
+                  : "text-navy dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 bg-white/50 dark:bg-slate-700/60"
               }`}
             >
               پلن پایه (۵ فرم / ۱۰۰ ورودی)
@@ -1382,7 +1382,7 @@ export default function Managers() {
           </div>
 
           <div>
-            <label className="block text-sm font-extrabold text-navy mb-1.5">حداکثر تعداد فرم‌های فعال</label>
+            <label className="block text-sm font-extrabold text-navy dark:text-slate-100 mb-1.5">حداکثر تعداد فرم‌های فعال</label>
             <input
               type="number"
               min="1"
@@ -1390,11 +1390,11 @@ export default function Managers() {
               onChange={(e) => setQuotaMaxForms(e.target.value)}
               className={inputCls}
             />
-            <span className="text-xs text-ink-subtle mt-1 block">پیش‌فرض: ۵ فرم. برای نامحدود عدد ۹۹۹۹۹۹ یا کلید بالای فرم را بزنید.</span>
+            <span className="text-xs text-ink-subtle dark:text-slate-400 mt-1 block">پیش‌فرض: ۵ فرم. برای نامحدود عدد ۹۹۹۹۹۹ یا کلید بالای فرم را بزنید.</span>
           </div>
 
           <div>
-            <label className="block text-sm font-extrabold text-navy mb-1.5">حداکثر پاسخ در ماه</label>
+            <label className="block text-sm font-extrabold text-navy dark:text-slate-100 mb-1.5">حداکثر پاسخ در ماه</label>
             <input
               type="number"
               min="1"
@@ -1402,13 +1402,13 @@ export default function Managers() {
               onChange={(e) => setQuotaMaxResponses(e.target.value)}
               className={inputCls}
             />
-            <span className="text-xs text-ink-subtle mt-1 block">پیش‌فرض: ۱۰۰ ورودی در ماه. برای نامحدود عدد ۹۹۹۹۹۹ قرار دهید.</span>
+            <span className="text-xs text-ink-subtle dark:text-slate-400 mt-1 block">پیش‌فرض: ۱۰۰ ورودی در ماه. برای نامحدود عدد ۹۹۹۹۹۹ قرار دهید.</span>
           </div>
 
-          <div className="flex items-center justify-between p-3.5 rounded-xl bg-bg-lavender/50 border-2 border-teal/20">
+          <div className="flex items-center justify-between p-3.5 rounded-xl bg-bg-lavender/50 dark:bg-slate-800/80 border-2 border-teal/20 dark:border-teal-700/40">
             <div>
-              <span className="block text-sm font-extrabold text-navy">دسترسی به بات تلگرام</span>
-              <span className="text-xs font-semibold text-ink-subtle">
+              <span className="block text-sm font-extrabold text-navy dark:text-slate-100">دسترسی به بات تلگرام</span>
+              <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400">
                 امکان اتصال فرم‌ها به بات تلگرام و دریافت ورودی‌ها
               </span>
             </div>
@@ -1424,14 +1424,14 @@ export default function Managers() {
           </div>
 
           {/* وضعیت مصرف سهمیه در مودال */}
-          <div className="p-3 bg-bg-neutral/70 rounded-xl border border-ink/10 flex flex-col gap-1.5 text-xs">
+          <div className="p-3 bg-bg-neutral/70 dark:bg-slate-800/90 rounded-xl border border-ink/10 dark:border-slate-700 flex flex-col gap-1.5 text-xs">
             <div className="flex justify-between items-center">
-              <span className="text-ink-subtle">ورودی‌های مصرف‌شده ماه جاری:</span>
-              <span className="font-black text-navy">{quotaModal?.monthly_responses_used ?? 0} از {quotaModal?.max_responses_per_month ?? 100}</span>
+              <span className="text-ink-subtle dark:text-slate-400">ورودی‌های مصرف‌شده ماه جاری:</span>
+              <span className="font-black text-navy dark:text-slate-100">{quotaModal?.monthly_responses_used ?? 0} از {quotaModal?.max_responses_per_month ?? 100}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-ink-subtle">تاریخ پایان دوره و ریست بعدی:</span>
-              <span className="font-mono text-navy" dir="ltr">{quotaModal?.quota_reset_at ? new Date(quotaModal.quota_reset_at).toLocaleDateString("fa-IR") : "—"}</span>
+              <span className="text-ink-subtle dark:text-slate-400">تاریخ پایان دوره و ریست بعدی:</span>
+              <span className="font-mono text-navy dark:text-slate-100" dir="ltr">{quotaModal?.quota_reset_at ? new Date(quotaModal.quota_reset_at).toLocaleDateString("fa-IR") : "—"}</span>
             </div>
             {canManage && (
               <div className="pt-1.5 flex justify-end">
@@ -1474,7 +1474,7 @@ export default function Managers() {
           </p>
 
           <div>
-            <label className="block text-xs font-bold text-navy mb-1.5">
+            <label className="block text-xs font-bold text-navy dark:text-slate-100 mb-1.5">
               نام / عنوان سامانه
             </label>
             <input
@@ -1487,7 +1487,7 @@ export default function Managers() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-navy mb-1.5">
+            <label className="block text-xs font-bold text-navy dark:text-slate-100 mb-1.5">
               آیدی پشتیبانی در تلگرام (بدون @ یا با @)
             </label>
             <input
@@ -1498,14 +1498,14 @@ export default function Managers() {
               placeholder="porskad_support"
               className={inputCls}
             />
-            <span className="text-xs text-ink-subtle mt-1 block">
+            <span className="text-xs text-ink-subtle dark:text-slate-400 mt-1 block">
               این آیدی در بخش پشتیبانی برای ارتباط سریع با تلگرام قرار می‌گیرد.
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-navy mb-1.5">
+              <label className="block text-xs font-bold text-navy dark:text-slate-100 mb-1.5">
                 سقف فرم‌های فعال همزمان (پیش‌فرض)
               </label>
               <input
@@ -1516,13 +1516,13 @@ export default function Managers() {
                 onChange={(e) => setSysSettings({ ...sysSettings, default_max_active_forms: parseInt(e.target.value) || 5 })}
                 className={inputCls}
               />
-              <span className="text-xs text-ink-subtle mt-1 block">
+              <span className="text-xs text-ink-subtle dark:text-slate-400 mt-1 block">
                 محدودیت پیش‌فرض: ۵ فرم فعال همزمان
               </span>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-navy mb-1.5">
+              <label className="block text-xs font-bold text-navy dark:text-slate-100 mb-1.5">
                 سقف ورودی ماهانه پیش‌فرض هر کاربر
               </label>
               <input
@@ -1533,16 +1533,16 @@ export default function Managers() {
                 onChange={(e) => setSysSettings({ ...sysSettings, default_max_monthly_responses: parseInt(e.target.value) || 100 })}
                 className={inputCls}
               />
-              <span className="text-xs text-ink-subtle mt-1 block">
+              <span className="text-xs text-ink-subtle dark:text-slate-400 mt-1 block">
                 محدودیت پیش‌فرض: ۱۰۰ ورودی در ماه (با چرخه ۳۰ روزه)
               </span>
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-bg-lavender/50 rounded-xl border border-navy/10">
+          <div className="flex items-center justify-between p-3 bg-bg-lavender/50 dark:bg-slate-800/80 rounded-xl border border-navy/10 dark:border-slate-700">
             <div>
-              <div className="text-xs font-bold text-navy">امکان ثبت‌نام مستقیم کاربران</div>
-              <div className="text-xs text-ink-subtle">
+              <div className="text-xs font-bold text-navy dark:text-slate-100">امکان ثبت‌نام مستقیم کاربران</div>
+              <div className="text-xs text-ink-subtle dark:text-slate-400">
                 در صورت غیرفعال بودن، کاربران جدید فقط توسط ادمین قابل ثبت خواهند بود.
               </div>
             </div>
