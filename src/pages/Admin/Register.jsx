@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Headphones, Send, ExternalLink, HelpCircle, KeyRound } from "lucide-react";
 import StickerCard from "../../components/ui/StickerCard";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
+import Modal from "../../components/ui/Modal";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabaseClient";
 import { isValidIranPhone, normalizeIranPhone, isValidPassword } from "../../lib/validators";
@@ -22,6 +23,32 @@ export default function Register() {
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
   const [successNotice, setSuccessNotice] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
+  const [telegramSupportId, setTelegramSupportId] = useState("porskad_support");
+
+  useEffect(() => {
+    async function loadTelegramSupport() {
+      try {
+        const { data } = await supabase.rpc("get_system_settings");
+        if (data?.telegram_support_id) {
+          setTelegramSupportId(String(data.telegram_support_id).replace(/^@/, "").trim());
+        }
+      } catch {
+        try {
+          const { data } = await supabase
+            .from("system_settings")
+            .select("value")
+            .eq("key", "telegram_support_id")
+            .maybeSingle();
+          if (data?.value) {
+            const val = typeof data.value === "string" ? data.value : JSON.stringify(data.value);
+            setTelegramSupportId(val.replace(/[ "@]/g, "").trim());
+          }
+        } catch {}
+      }
+    }
+    loadTelegramSupport();
+  }, []);
 
   if (user) {
     return <Navigate to="/admin/forms" replace />;
@@ -231,8 +258,25 @@ export default function Register() {
               </div>
 
               {error && (
-                <div className="rotate-[-0.5deg] bg-female-light border-2 border-female-normal rounded-pill-md px-3 py-2 text-xs sm:text-sm font-bold text-female-normal">
-                  {error}
+                <div className="flex flex-col gap-2.5">
+                  <div className="rotate-[-0.5deg] bg-female-light border-2 border-female-normal rounded-pill-md px-3.5 py-2 text-xs sm:text-sm font-bold text-female-normal">
+                    {error}
+                  </div>
+                  <div className="bg-bg-yellow/40 border-2 border-dashed border-ink/25 rounded-pill-md p-3 flex items-center justify-between gap-2 text-xs font-bold text-navy">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Headphones size={15} className="text-teal shrink-0" />
+                      <span className="truncate">نیاز به راهنمایی دارید؟ پشتیبانی:</span>
+                    </div>
+                    <a
+                      href={`https://t.me/${telegramSupportId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 bg-white hover:bg-teal hover:text-white border-2 border-ink text-navy px-2.5 py-1 rounded-pill-sm text-xs font-black transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] shrink-0"
+                    >
+                      <Send size={11} className="rotate-45" />
+                      <span>@{telegramSupportId}</span>
+                    </a>
+                  </div>
                 </div>
               )}
 
@@ -257,11 +301,68 @@ export default function Register() {
                     ورود به پنل کاربری
                   </Link>
                 </div>
+
+                <div className="flex justify-center pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowSupportModal(true)}
+                    className="text-[12px] font-bold text-ink-subtle hover:text-teal hover:underline inline-flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <HelpCircle size={13} />
+                    فراموشی رمز یا نیاز به راهنمایی؟
+                  </button>
+                </div>
               </div>
             </form>
           )}
         </StickerCard>
       </div>
+
+      {/* مودال پشتیبانی و راهنمایی */}
+      <Modal
+        open={showSupportModal}
+        onClose={() => setShowSupportModal(false)}
+        title="راهنمایی و پشتیبانی"
+      >
+        <div className="flex flex-col items-center text-center gap-4 py-2">
+          <div className="w-14 h-14 rounded-full bg-teal/10 border-2 border-teal flex items-center justify-center text-teal">
+            <Headphones size={28} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <h4 className="text-base sm:text-lg font-black text-navy">پشتیبانی و بازیابی حساب کاربری</h4>
+            <p className="text-xs sm:text-sm font-semibold text-ink-subtle leading-6 max-w-md">
+              در صورت وجود هرگونه مشکل در ثبت‌نام، ورود، یا فراموشی رمز عبور، همکاران ما در تلگرام پاسخگوی شما هستند.
+            </p>
+          </div>
+
+          <div className="w-full bg-bg-mint border-2 border-ink/20 rounded-pill-md p-4 flex flex-col sm:flex-row items-center justify-between gap-3 mt-1">
+            <div className="flex items-center gap-2 text-navy font-bold text-xs sm:text-sm">
+              <Headphones size={18} className="text-teal shrink-0" />
+              <span>ارتباط در تلگرام:</span>
+              <Badge color="yellow">@{telegramSupportId}</Badge>
+            </div>
+            <a
+              href={`https://t.me/${telegramSupportId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-teal hover:bg-navy text-white px-4 py-2 rounded-pill-md text-xs sm:text-sm font-black transition-all border-2 border-ink shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none"
+            >
+              <Send size={14} className="rotate-45" />
+              ارسال پیام در تلگرام
+              <ExternalLink size={12} />
+            </a>
+          </div>
+
+          <Button
+            variant="neutral"
+            size="sm"
+            onClick={() => setShowSupportModal(false)}
+            className="mt-1"
+          >
+            بستن پنجره
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }
