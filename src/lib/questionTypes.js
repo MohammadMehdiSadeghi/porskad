@@ -298,9 +298,11 @@ const STORAGE_KEY = "porskad_question_types_config";
  */
 export function getQuestionTypesConfig() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      return JSON.parse(raw);
+    if (typeof localStorage !== "undefined") {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        return JSON.parse(raw);
+      }
     }
   } catch (err) {
     console.error("Error reading question types config:", err);
@@ -313,7 +315,9 @@ export function getQuestionTypesConfig() {
  */
 export async function saveQuestionTypesConfig(config) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    }
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("porskad:question_types_updated", { detail: config }));
     }

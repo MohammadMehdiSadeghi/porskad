@@ -3,8 +3,8 @@
 // مدل پرس‌لاین: LogicRule متمرکز + متغیرها + Checkbox multi-branch
 // ════════════════════════════════════════════════════════════════
 
-import { evaluateRule, evaluateQuestionConditions } from "./conditionEvaluator";
-import { MAX_FLOW_STEPS } from "./types";
+import { evaluateRule, evaluateQuestionConditions } from "./conditionEvaluator.js";
+import { MAX_FLOW_STEPS } from "./types.js";
 
 /**
  * محاسبه مسیر نهایی فرم

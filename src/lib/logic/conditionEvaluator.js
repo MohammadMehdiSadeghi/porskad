@@ -3,7 +3,7 @@
 // پشتیبانی از answer/variable/score + عملگرهای چند انتخابی
 // ════════════════════════════════════════════════════════════════
 
-import { toEnDigits } from "../validators";
+import { toEnDigits } from "../validators.js";
 
 /**
  * دریافت مقدار منبع شرط

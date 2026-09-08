@@ -1,4 +1,4 @@
-import { toEnDigits } from "./validators";
+import { toEnDigits } from "./validators.js";
 
 // ─── ارقام فارسی برای نمایش ───
 export function faNum(n) {
