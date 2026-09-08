@@ -12,20 +12,20 @@ import { QUESTION_TYPE_ICONS } from "../../../lib/questionIcons";
 import ConditionBuilder from "../../../components/logic/ConditionBuilder";
 import { makeCondition, makeConditionGroup, makeJumpAction, GROUP_OPERATORS } from "../../../lib/logic/types";
 import { faNum, slugify, copyToClipboard } from "../../../lib/utils";
-import { Link2, BarChart3, Share2, Puzzle, Settings, FileText, AlignLeft, ArrowRight, Eye, Save, Target, Check, ChevronDown, ChevronUp, LayoutGrid, Trash2, X } from "lucide-react";
+import { Link2, BarChart3, Share2, Puzzle, Settings, FileText, AlignLeft, ArrowRight, Eye, Save, Target, Check, ChevronDown, ChevronUp, LayoutGrid, Trash2, X, Sun, Moon, Monitor } from "lucide-react";
 import FormPreview from "../../../components/form/FormPreview";
 import { logActivity } from "../../../lib/activityLogger";
 import SEO from "../../../components/ui/SEO";
 
 const inputCls =
-  "w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink focus:outline-none transition-all";
+  "w-full bg-white dark:bg-slate-800/90 border-2 border-ink/20 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink dark:text-white placeholder:text-ink/40 dark:placeholder:text-slate-500 focus:outline-none transition-all";
 
 function Field({ label, children, hint }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-sm font-extrabold text-navy">{label}</span>
+      <span className="text-sm font-extrabold text-navy dark:text-slate-200">{label}</span>
       {children}
-      {hint && <span className="text-xs font-medium text-ink-subtle">{hint}</span>}
+      {hint && <span className="text-xs font-medium text-ink-subtle dark:text-slate-400">{hint}</span>}
     </label>
   );
 }
@@ -844,6 +844,7 @@ export default function FormBuilder() {
         published: !!form.published,
         form_type: form.form_type || "step_by_step",
         identifier_mapping: form.identifier_mapping ?? null,
+        default_theme: form.default_theme || "light",
       };
 
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -910,10 +911,16 @@ export default function FormBuilder() {
 
       // فالبک ذخیره مستقیم در صورت عدم موفقیت RPC
       if (!rpcSuccess) {
-        const { error: formUpdateErr } = await supabase
+        let { error: formUpdateErr } = await supabase
           .from("forms")
           .update(pForm)
           .eq("id", id);
+
+        if (formUpdateErr && formUpdateErr.message?.includes("default_theme")) {
+          delete pForm.default_theme;
+          const retry = await supabase.from("forms").update(pForm).eq("id", id);
+          formUpdateErr = retry.error;
+        }
 
         if (formUpdateErr) {
           if (
@@ -1122,19 +1129,54 @@ export default function FormBuilder() {
                       onClick={() => setFormField({ form_type: t.key })}
                       className={`flex-1 flex items-center gap-3 p-3 rounded-xl border-2 transition-all cursor-pointer ${
                         form.form_type === t.key
-                          ? "border-teal bg-teal/10 shadow-sm"
-                          : "border-ink/15 bg-white hover:border-teal/40"
+                          ? "border-teal bg-teal/10 dark:bg-teal-500/15 shadow-sm"
+                          : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-teal/40"
                       }`}
                     >
-                      <span className="text-navy">{t.key === "step_by_step" ? <FileText size={24} /> : <AlignLeft size={24} />}</span>
+                      <span className="text-navy dark:text-white">{t.key === "step_by_step" ? <FileText size={24} /> : <AlignLeft size={24} />}</span>
                       <div className="text-right">
-                        <span className={`text-sm font-black block ${form.form_type === t.key ? "text-teal-text" : "text-navy"}`}>
+                        <span className={`text-sm font-black block ${form.form_type === t.key ? "text-teal-text dark:text-teal" : "text-navy dark:text-white"}`}>
                           {t.label}
                         </span>
-                        <span className="text-xs text-ink/50">{t.desc}</span>
+                        <span className="text-xs text-ink/50 dark:text-slate-400">{t.desc}</span>
                       </div>
                     </button>
                   ))}
+                </div>
+              </Field>
+            </div>
+
+            {/* ─── تم ظاهری پیش‌فرض فرم ─── */}
+            <div className="border-t-2 border-dashed border-navy/15 dark:border-slate-700/60 pt-4">
+              <Field
+                label={<><Sun size={14} className="text-teal" /> تم ظاهری پیش‌فرض فرم (برای پاسخ‌دهندگان)</>}
+                hint="این تم در لینک عمومی و کد امبد فرم به عنوان تم اولیه اعمال خواهد شد."
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {[
+                    { key: "light", label: "تم روشن", icon: Sun, desc: "سفید و شاداب رکاد" },
+                    { key: "dark", label: "تم دارک", icon: Moon, desc: "تیره اوبسیدین نئونی" },
+                    { key: "system", label: "هماهنگ با سیستم", icon: Monitor, desc: "تشخیص خودکار دستگاه" },
+                  ].map((t) => {
+                    const Icon = t.icon;
+                    const isSelected = (form.default_theme || "light") === t.key;
+                    return (
+                      <button
+                        key={t.key}
+                        type="button"
+                        onClick={() => setFormField({ default_theme: t.key })}
+                        className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer text-center ${
+                          isSelected
+                            ? "border-teal bg-teal/15 text-teal shadow-xs font-black scale-[1.02]"
+                            : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-ink/70 dark:text-slate-300 hover:border-teal/40"
+                        }`}
+                      >
+                        <Icon size={20} className={isSelected ? "text-teal" : "text-ink/60 dark:text-slate-400"} />
+                        <span className="text-xs font-black mt-1.5">{t.label}</span>
+                        <span className="text-[10px] opacity-70 mt-0.5">{t.desc}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </Field>
             </div>

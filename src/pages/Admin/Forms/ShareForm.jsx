@@ -22,6 +22,8 @@ import {
   PanelRightOpen,
   PanelBottomOpen,
   Layers,
+  Sun,
+  Moon,
 } from "lucide-react";
 import SEO from "../../../components/ui/SEO";
 
@@ -81,13 +83,14 @@ export default function ShareForm() {
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(null);
   const [activeTab, setActiveTab] = useState("inline");
+  const [embedTheme, setEmbedTheme] = useState("default");
 
   useEffect(() => {
     if (authLoading) return;
     async function load() {
       const { data, error } = await supabase
         .from("forms")
-        .select("id, slug, title, public_id, published, manager_id, created_by")
+        .select("id, slug, title, public_id, published, manager_id, created_by, default_theme")
         .eq("id", id)
         .maybeSingle();
       if (error || !data) {
@@ -120,15 +123,20 @@ export default function ShareForm() {
 
   const publicId = form.public_id || form.id;
   const baseUrl = window.location.origin;
-  const embedUrl = `${baseUrl}/embed/${publicId}`;
-  const directLink = `${baseUrl}/f/${form.slug}`;
+
+  const themeAttr = embedTheme !== "default" ? ` data-pcode-theme="${embedTheme}"` : "";
+  const themeQuery = embedTheme !== "default" ? `?theme=${embedTheme}` : "";
+  const popoverThemeLine = embedTheme !== "default" ? `\n    theme: "${embedTheme}",` : "";
+
+  const embedUrl = `${baseUrl}/embed/${publicId}${themeQuery}`;
+  const directLink = `${baseUrl}/f/${form.slug}${themeQuery}`;
 
   const codes = {
     inline: {
       label: "جاسازی در صفحه (Inline)",
       icon: Monitor,
       description: "فرم مستقیم داخل محتوای صفحه نمایش داده می‌شود",
-      code: `<div data-pcode-form="${publicId}" style="min-height:600px;"></div>\n<script src="${baseUrl}/loader.js" async></script>\n<!--
+      code: `<div data-pcode-form="${publicId}"${themeAttr} style="min-height:600px;"></div>\n<script src="${baseUrl}/loader.js" async></script>\n<!--
   تنظیمات دلخواه:
   - min-height: حداقل ارتفاع (پیش‌فرض: 600px)
   - اگر اسکرول نمی‌خواهید: overflow:hidden اضافه کنید
@@ -139,13 +147,13 @@ export default function ShareForm() {
       label: "پنجره شناور (Popup)",
       icon: Maximize,
       description: "فرم با کلیک روی دکمه باز می‌شود",
-      code: `<button data-pcode-popup="${publicId}">باز کردن فرم</button>\n<script src="${baseUrl}/loader.js" async></script>`,
+      code: `<button data-pcode-popup="${publicId}"${themeAttr}>باز کردن فرم</button>\n<script src="${baseUrl}/loader.js" async></script>`,
     },
     popover: {
       label: "پنل کوچک (Popover)",
       icon: PanelBottomOpen,
       description: "فرم از گوشه صفحه باز می‌شود",
-      code: `<script>\n  window.PorsCode = window.PorsCode || {};\n  window.PorsCode.popover = {\n    formId: "${publicId}",\n    position: "bottom-right"\n  };\n</script>\n<script src="${baseUrl}/loader.js" async></script>`,
+      code: `<script>\n  window.PorsCode = window.PorsCode || {};\n  window.PorsCode.popover = {\n    formId: "${publicId}",${popoverThemeLine}\n    position: "bottom-right"\n  };\n</script>\n<script src="${baseUrl}/loader.js" async></script>`,
     },
     fullpage: {
       label: "تمام صفحه (Fullpage)",
@@ -218,8 +226,8 @@ export default function ShareForm() {
             ویرایش فرم
           </Button>
           <div>
-            <h1 className="text-lg sm:text-xl font-black text-navy">اشتراک‌گذاری فرم</h1>
-            <p className="text-xs text-ink/40 mt-0.5">{form.title}</p>
+            <h1 className="text-lg sm:text-xl font-black text-navy dark:text-white">اشتراک‌گذاری فرم</h1>
+            <p className="text-xs text-ink/40 dark:text-slate-400 mt-0.5">{form.title}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -236,27 +244,56 @@ export default function ShareForm() {
       </div>
 
       {/* Public ID */}
-      <div className="bg-bg-mint border border-teal/20 rounded-xl px-4 py-3 flex items-center gap-3">
-        <Globe size={16} className="text-teal-text shrink-0" />
+      <div className="bg-bg-mint dark:bg-slate-800/90 border border-teal/20 dark:border-teal/30 rounded-xl px-4 py-3 flex items-center gap-3">
+        <Globe size={16} className="text-teal-text dark:text-teal shrink-0" />
         <div className="flex-1">
-          <span className="text-xs font-bold text-ink/50 block">شناسه عمومی فرم</span>
-          <span className="text-sm font-mono font-bold text-navy" dir="ltr">{publicId}</span>
+          <span className="text-xs font-bold text-ink/50 dark:text-slate-400 block">شناسه عمومی فرم</span>
+          <span className="text-sm font-mono font-bold text-navy dark:text-slate-100" dir="ltr">{publicId}</span>
         </div>
         <CopyButton text={publicId} />
       </div>
 
+      {/* انتخاب تم خروجی کد و لینک */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-2xl bg-white dark:bg-slate-800/90 border-2 border-ink/10 dark:border-slate-700 shadow-xs">
+        <div className="flex items-center gap-2">
+          <Sun size={16} className="text-teal" />
+          <span className="text-xs sm:text-sm font-black text-navy dark:text-white">تم خروجی کد و پیش‌نمایش:</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {[
+            { id: "default", label: `پیش‌فرض (${form.default_theme === "dark" ? "دارک" : form.default_theme === "system" ? "سیستم" : "روشن"})` },
+            { id: "light", label: "روشن" },
+            { id: "dark", label: "دارک" },
+            { id: "system", label: "سیستم" },
+          ].map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setEmbedTheme(t.id)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                embedTheme === t.id
+                  ? "bg-teal text-white shadow-xs font-black"
+                  : "bg-navy/5 dark:bg-slate-700/60 text-ink/70 dark:text-slate-300 hover:bg-navy/10 dark:hover:bg-slate-700"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* تب‌های نوع Embed */}
-      <div className="flex gap-1 bg-bg-neutral rounded-lg p-1 overflow-x-auto">
+      <div className="flex gap-1 bg-bg-neutral dark:bg-slate-800/90 border border-transparent dark:border-slate-700 rounded-lg p-1 overflow-x-auto">
         {Object.entries(codes).map(([key, c]) => {
           const Icon = c.icon;
           return (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-colors whitespace-nowrap ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-colors whitespace-nowrap cursor-pointer ${
                 activeTab === key
-                  ? "bg-white text-teal-text shadow-sm"
-                  : "text-ink/50 hover:text-ink"
+                  ? "bg-white dark:bg-slate-700 text-teal-text dark:text-teal shadow-sm"
+                  : "text-ink/50 dark:text-slate-400 hover:text-ink dark:hover:text-white"
               }`}
             >
               <Icon size={14} />

@@ -16,8 +16,8 @@ import ScoreResult from "../ui/ScoreResult";
 import { sendToTelegram } from "../../lib/telegram";
 import { Star, Check, CheckCircle2, AlertCircle } from "lucide-react";
 
-const inputCls = "w-full bg-white border-2 border-ink/10 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 font-semibold text-ink text-sm sm:text-base placeholder:text-ink/40 placeholder:font-medium focus:outline-none transition-all duration-200";
-const selectCls = "w-full bg-white border-2 border-ink/10 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 font-semibold text-ink text-sm sm:text-base focus:outline-none transition-all duration-200 appearance-none cursor-pointer";
+const inputCls = "w-full bg-white dark:bg-slate-800 border-2 border-ink/10 dark:border-slate-700 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 font-semibold text-ink dark:text-white text-sm sm:text-base placeholder:text-ink/40 dark:placeholder:text-slate-500 placeholder:font-medium focus:outline-none transition-all duration-200";
+const selectCls = "w-full bg-white dark:bg-slate-800 border-2 border-ink/10 dark:border-slate-700 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 font-semibold text-ink dark:text-white text-sm sm:text-base focus:outline-none transition-all duration-200 appearance-none cursor-pointer";
 
 function isFieldEmpty(v) {
   return v === null || v === undefined || (typeof v === "string" && v.trim() === "") || (Array.isArray(v) && v.length === 0);
@@ -28,7 +28,7 @@ function DropdownChoice({ options = [], value, onChange }) {
     <select
       value={value || ""}
       onChange={(e) => onChange(e.target.value || null)}
-      className="w-full bg-white border-2 border-ink/15 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:px-4 sm:py-3.5 font-bold text-sm sm:text-base text-ink focus:outline-none transition-all duration-200 cursor-pointer text-right"
+      className="w-full bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:px-4 sm:py-3.5 font-bold text-sm sm:text-base text-ink dark:text-white focus:outline-none transition-all duration-200 cursor-pointer text-right"
     >
       <option value="">یک گزینه انتخاب کنید...</option>
       {options.map((opt, i) => (
@@ -182,8 +182,8 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
 
     return (
       <div key={q.id} className="flex flex-col gap-2">
-        <label className="text-sm sm:text-base font-black text-ink">{q.title}</label>
-        {q.description && <p className="text-xs text-ink-subtle">{q.description}</p>}
+        <label className="text-sm sm:text-base font-black text-ink dark:text-white">{q.title}</label>
+        {q.description && <p className="text-xs text-ink-subtle dark:text-slate-400">{q.description}</p>}
         {(q.type === "short_text" || q.type === "email" || q.type === "phone_ir" || q.type === "telegram_id") && (
           <input
             type={q.type === "email" ? "email" : "text"}
@@ -229,9 +229,13 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
                     }
                     handleBlur(q.id, val, q);
                   }}
-                  className={`relative flex items-center gap-3 p-3 border-2 rounded-pill-md font-bold transition-all ${selected ? "border-teal bg-teal/5" : "border-ink/10 hover:border-teal/50"}`}
+                  className={`relative flex items-center gap-3 p-3 border-2 rounded-pill-md font-bold transition-all ${
+                    selected
+                      ? "border-teal bg-teal/10 text-teal-text dark:text-teal dark:bg-teal-950/40"
+                      : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink dark:text-slate-200 hover:border-teal/50"
+                  }`}
                 >
-                  <div className={`w-6 h-6 flex items-center justify-center rounded-md border-2 ${selected ? "border-teal bg-teal text-white" : "border-ink/20"}`}>
+                  <div className={`w-6 h-6 flex items-center justify-center rounded-md border-2 ${selected ? "border-teal bg-teal text-white" : "border-ink/20 dark:border-slate-600"}`}>
                     {selected && <Check size={14} className="stroke-[3]" />}
                   </div>
                   {opt}
@@ -251,7 +255,7 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
               >
                 <Star
                   size={24}
-                  className={Number(val) >= star ? "text-amber-400 fill-amber-400 drop-shadow-xs" : "text-ink/20 fill-transparent"}
+                  className={Number(val) >= star ? "text-amber-400 fill-amber-400 drop-shadow-xs" : "text-ink/20 dark:text-slate-600 fill-transparent"}
                 />
               </button>
             ))}
@@ -273,8 +277,8 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
           <StickerCard theme="teal" radius="rounded-[1.5rem]">
             <div className="p-8 flex flex-col items-center text-center gap-4">
               <CheckCircle2 size={48} className="text-teal" />
-              <h1 className="text-xl font-black text-ink">{form.exit_title || "ثبت‌نام با موفقیت انجام شد!"}</h1>
-              <p className="font-semibold text-ink-subtle">{form.exit_message || "ممنون از همراهی شما."}</p>
+              <h1 className="text-xl font-black text-ink dark:text-white">{form.exit_title || "ثبت‌نام با موفقیت انجام شد!"}</h1>
+              <p className="font-semibold text-ink-subtle dark:text-slate-300">{form.exit_message || "ممنون از همراهی شما."}</p>
               {scoreResult && <ScoreResult score={scoreResult.score} total={scoreResult.total} />}
             </div>
           </StickerCard>
@@ -284,19 +288,19 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
   }
 
   return (
-    <div className="min-h-dvh bg-ink/5 p-4">
+    <div className="min-h-dvh dot-pattern bg-ecosystem-light dark:bg-[#0B0F19] text-ink dark:text-slate-100 p-4 transition-colors duration-200">
       <SEO title={form.title} />
       <main className="max-w-xl mx-auto">
         <StickerCard theme="white" radius="rounded-[1.5rem]">
           <div className="p-6">
             <form ref={formRef} onSubmit={openConfirm} className="flex flex-col gap-6">
               <div className="text-center">
-                <h1 className="text-xl font-black text-ink">{form.title}</h1>
-                {form.description && <p className="text-sm text-ink-subtle mt-1">{form.description}</p>}
+                <h1 className="text-xl font-black text-ink dark:text-white">{form.title}</h1>
+                {form.description && <p className="text-sm text-ink-subtle dark:text-slate-400 mt-1">{form.description}</p>}
               </div>
               <input type="text" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} tabIndex={-1} className="hidden" />
               {visibleQuestions.map((q) => renderQuestion(q))}
-              {error && <div className="flex items-center gap-2 text-female-normal font-bold bg-female-normal/10 p-3 rounded-pill-md"><AlertCircle size={16} />{error}</div>}
+              {error && <div className="flex items-center gap-2 text-female-normal font-bold bg-female-normal/10 dark:bg-pink-950/40 p-3 rounded-pill-md"><AlertCircle size={16} />{error}</div>}
               <Button type="submit" variant="teal" size="md" disabled={submitting} className="w-full">
                 {submitting ? "در حال ثبت..." : "ارسال و ثبت‌نام"}
               </Button>

@@ -10,11 +10,17 @@
         font-size: 16px;
         overflow-x: hidden;
     }
+    html.dark {
+        color-scheme: dark;
+    }
     body {
-        @apply font-sans text-ink bg-white antialiased;
+        @apply font-sans text-ink bg-white antialiased transition-colors duration-200;
         direction: rtl;
         overflow-x: hidden;
         line-height: 1.6;
+    }
+    html.dark body {
+        @apply text-slate-100 bg-[#0B0F19];
     }
     a:focus-visible,
     button:focus-visible {
@@ -62,6 +68,9 @@ html {
     scrollbar-width: thin;
     scrollbar-color: #58BDAF transparent;
 }
+html.dark {
+    scrollbar-color: #2dd4bf transparent;
+}
 ::-webkit-scrollbar {
     width: 0.625rem;
 }
@@ -78,11 +87,20 @@ html {
     background-color: #4AB7AA;
     background-clip: content-box;
 }
+html.dark ::-webkit-scrollbar-thumb {
+    background-color: #14b8a6;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+    background-color: #2dd4bf;
+}
 
 /* ─── پترن نقطه‌ای پس‌زمینه برای صفحات عمومی ─── */
 .dot-pattern {
     background-image: radial-gradient(rgba(33, 41, 90, 0.07) 1.5px, transparent 1.5px);
     background-size: 1.5rem 1.5rem;
+}
+html.dark .dot-pattern {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px);
 }
 
 /* ─── انیمیشن ورود پاسخ زنده ─── */

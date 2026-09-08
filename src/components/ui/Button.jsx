@@ -31,16 +31,16 @@ const VARIANTS = {
     btn: "bg-orange border-orange text-white hover:bg-orange-alt",
   },
   white: {
-    layer: "bg-ink",
-    btn: "bg-white border-ink text-ink hover:bg-bg-neutral",
+    layer: "bg-ink dark:bg-black",
+    btn: "bg-white border-ink text-ink hover:bg-bg-neutral dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-700",
   },
   ghost: {
     layer: "hidden",
-    btn: "bg-transparent border-transparent text-navy hover:bg-bg-neutral",
+    btn: "bg-transparent border-transparent text-navy hover:bg-bg-neutral dark:text-slate-200 dark:hover:bg-white/10",
   },
   glass: {
     layer: "hidden",
-    btn: "bg-navy/5 backdrop-blur-sm border-ink/10 text-navy hover:bg-navy/10",
+    btn: "bg-navy/5 backdrop-blur-sm border-ink/10 text-navy hover:bg-navy/10 dark:bg-white/10 dark:border-white/15 dark:text-slate-100 dark:hover:bg-white/15",
   },
 };
 

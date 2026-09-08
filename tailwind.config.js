@@ -5,6 +5,7 @@ const md = mdTheme.theme.extend;
 
 /** @type {import('tailwindcss').Config} */
 export default {
+    darkMode: "class",
     content: ["./index.html", "./src/**/*.{js,jsx}"],
     theme: {
         screens: {
@@ -17,6 +18,18 @@ export default {
                 ...md.fontFamily,
             },
             colors: {
+                // ── Dark Mode Surface & Text Tokens ──
+                dark: {
+                    canvas: "#0B0F19",
+                    card: "#131B2E",
+                    surface: "#1A233A",
+                    border: "#232F4A",
+                    borderHover: "#3B4D75",
+                    muted: "#64748B",
+                    text: "#F1F5F9",
+                    subtext: "#94A3B8",
+                },
+
                 // ── Brand Aliases (Design System) ──
                 primary: "#59BBAF",
                 "primary-alt": "#59bbaf",

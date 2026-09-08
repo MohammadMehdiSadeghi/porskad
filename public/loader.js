@@ -22,9 +22,11 @@
   })();
 
   // ─── ساخت iframe برای هر فرم ───
-  function createIframe(formId, container, mode) {
+  function createIframe(formId, container, mode, customTheme) {
     var iframe = document.createElement("iframe");
-    iframe.src = BASE + "/embed/" + formId;
+    var theme = customTheme || (container && container.getAttribute ? container.getAttribute("data-pcode-theme") : "") || "";
+    var themeParam = theme ? "?theme=" + encodeURIComponent(theme) : "";
+    iframe.src = BASE + "/embed/" + formId + themeParam;
     iframe.setAttribute("data-form-id", formId);
     iframe.setAttribute("data-pcode-iframe", formId);
     iframe.setAttribute("frameborder", "0");
@@ -223,7 +225,7 @@
       var cfg = window.PorsCode.popover;
       if (cfg.formId) {
         var dummy = document.createElement("div");
-        createIframe(cfg.formId, dummy, "popover");
+        createIframe(cfg.formId, dummy, "popover", cfg.theme);
       }
     }
   }

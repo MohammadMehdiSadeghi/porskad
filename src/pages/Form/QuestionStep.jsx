@@ -18,12 +18,12 @@ function TelegramIcon({ className }) {
 }
 
 const STEP_THEMES = [
-  { bg: "bg-white", border: "border-ink/10", label: "text-male-normal", backBg: "bg-ink" },
-  { bg: "bg-ecosystem-light", border: "border-ecosystem-normal/20", label: "text-ecosystem-dark", backBg: "bg-ecosystem-dark" },
-  { bg: "bg-male-light", border: "border-male-normal/10", label: "text-male-normal", backBg: "bg-male-dark" },
-  { bg: "bg-female-light", border: "border-female-normal/10", label: "text-female-dark", backBg: "bg-female-dark" },
-  { bg: "bg-white", border: "border-ink/10", label: "text-male-normal", backBg: "bg-ink" },
-  { bg: "bg-ecosystem-light", border: "border-ecosystem-normal/20", label: "text-ecosystem-dark", backBg: "bg-ecosystem-dark" },
+  { bg: "bg-white dark:bg-[#131b2e]", border: "border-ink/10 dark:border-slate-700", label: "text-male-normal dark:text-teal-300", backBg: "bg-ink dark:bg-black" },
+  { bg: "bg-ecosystem-light dark:bg-[#0c2322]", border: "border-ecosystem-normal/20 dark:border-teal-500/30", label: "text-ecosystem-dark dark:text-teal-300", backBg: "bg-ecosystem-dark dark:bg-teal-950" },
+  { bg: "bg-male-light dark:bg-[#11182c]", border: "border-male-normal/10 dark:border-blue-500/30", label: "text-male-normal dark:text-blue-300", backBg: "bg-male-dark dark:bg-slate-950" },
+  { bg: "bg-female-light dark:bg-[#250d18]", border: "border-female-normal/10 dark:border-pink-500/30", label: "text-female-dark dark:text-pink-300", backBg: "bg-female-dark dark:bg-pink-950" },
+  { bg: "bg-white dark:bg-[#131b2e]", border: "border-ink/10 dark:border-slate-700", label: "text-male-normal dark:text-teal-300", backBg: "bg-ink dark:bg-black" },
+  { bg: "bg-ecosystem-light dark:bg-[#0c2322]", border: "border-ecosystem-normal/20 dark:border-teal-500/30", label: "text-ecosystem-dark dark:text-teal-300", backBg: "bg-ecosystem-dark dark:bg-teal-950" },
 ];
 function getStepTheme(i) { return STEP_THEMES[i % STEP_THEMES.length]; }
 
@@ -47,10 +47,10 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
   const currentLength = value ? String(value).length : 0;
 
   const shared = clsx(
-    "w-full bg-white border-2 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3",
-    "font-semibold text-ink text-sm sm:text-base placeholder:text-ink-subtle/60 placeholder:font-medium",
+    "w-full bg-white dark:bg-slate-800 border-2 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3",
+    "font-semibold text-ink dark:text-white text-sm sm:text-base placeholder:text-ink-subtle/60 dark:placeholder:text-slate-500 placeholder:font-medium",
     "placeholder:text-right placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-ecosystem-normal/15 transition-all duration-200",
-    error ? "border-female-normal" : "border-ink/15 focus:border-ecosystem-normal",
+    error ? "border-female-normal" : "border-ink/15 dark:border-slate-700 focus:border-ecosystem-normal",
   );
 
   if (type === "long_text") {
@@ -168,7 +168,7 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
       <select
         value={value || ""}
         onChange={(e) => { const v = e.target.value || null; onChange(v); }}
-        className="w-full bg-white border-2 border-ink/15 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:px-4 sm:py-3.5 font-bold text-sm sm:text-base text-ink focus:outline-none transition-all duration-200 cursor-pointer text-right"
+        className="w-full bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:px-4 sm:py-3.5 font-bold text-sm sm:text-base text-ink dark:text-white focus:outline-none transition-all duration-200 cursor-pointer text-right"
       >
         <option value="">یک گزینه انتخاب کنید...</option>
         {options.map((opt, i) => (
@@ -182,7 +182,7 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
   return (
     <div className="flex flex-col gap-2">
       {isMulti && (
-        <span className="text-xs font-bold text-ink-subtle">
+        <span className="text-xs font-bold text-ink-subtle dark:text-slate-400">
           حداکثر {faNum(maxSelections)} گزینه انتخاب کنید {selectedArr.length > 0 && `(${faNum(selectedArr.length)} انتخاب شده)`}
         </span>
       )}
@@ -194,19 +194,21 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
             disabled={disabled}
             className={clsx("relative group flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 transition-all duration-200 cursor-pointer hover:-translate-y-px",
               disabled ? "opacity-40 cursor-not-allowed hover:translate-y-0" : "",
-              selected ? "border-ecosystem-normal bg-ecosystem-light rotate-[-0.5deg]" : "border-ink/10 bg-white hover:border-ecosystem-normal/50",
+              selected
+                ? "border-ecosystem-normal bg-ecosystem-light dark:bg-teal-950/50 rotate-[-0.5deg]"
+                : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800/90 hover:border-ecosystem-normal/50 dark:hover:border-teal-500/50",
             )}>
             {selected && <div aria-hidden="true" className="absolute top-[2px] left-[2px] w-full h-full bg-ecosystem-dark/15 rounded-pill-md [corner-shape:squircle] pointer-events-none" />}
             {isMulti ? (
               <span className={clsx("relative z-10 w-7 h-7 sm:w-8 sm:h-8 shrink-0 flex items-center justify-center rounded-md border-2 font-black text-xs sm:text-sm transition-colors duration-200",
-                selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal group-hover:border-ecosystem-normal",
+                selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 dark:border-slate-600 text-male-normal dark:text-slate-300 group-hover:border-ecosystem-normal",
               )}>{selected ? <Check size={14} className="stroke-[3]" /> : null}</span>
             ) : (
               <span className={clsx("relative z-10 w-8 h-8 sm:w-9 sm:h-9 shrink-0 flex items-center justify-center rounded-full border-2 font-black text-sm sm:text-base transition-colors duration-200",
-                selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 text-male-normal group-hover:border-ecosystem-normal",
+                selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 dark:border-slate-600 text-male-normal dark:text-slate-300 group-hover:border-ecosystem-normal",
               )}>{faNum(i + 1)}</span>
             )}
-            <span className={clsx("relative z-10 font-bold text-sm sm:text-base", selected ? "text-ecosystem-dark" : "text-ink")}>{opt}</span>
+            <span className={clsx("relative z-10 font-bold text-sm sm:text-base", selected ? "text-ecosystem-dark dark:text-teal-300" : "text-ink dark:text-slate-200")}>{opt}</span>
             {selected && <CheckIcon className="mr-auto text-ecosystem-normal shrink-0" />}
           </button>
         );
@@ -222,8 +224,8 @@ function YesNoOptions({ value, onChange, onEnter }) {
       {opts.map((o) => {
         const selected = value === o.label;
         const active = selected
-          ? o.theme === "ecosystem" ? "border-ecosystem-normal bg-ecosystem-light text-ecosystem-dark" : "border-female-normal bg-female-light text-female-dark"
-          : "border-ink/10 bg-white text-ink";
+          ? o.theme === "ecosystem" ? "border-ecosystem-normal bg-ecosystem-light dark:bg-teal-950/50 text-ecosystem-dark dark:text-teal-300" : "border-female-normal bg-female-light dark:bg-pink-950/50 text-female-dark dark:text-pink-300"
+          : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800/90 text-ink dark:text-slate-200";
         return (
           <button key={o.label} type="button" onClick={() => { onChange(o.label); }}
             className={clsx("flex flex-col items-center gap-1.5 border-2 rounded-pill-md [corner-shape:squircle] py-4 sm:py-5 text-base sm:text-lg font-black transition-all duration-200 hover:-translate-y-px cursor-pointer",
@@ -309,22 +311,22 @@ export default function QuestionStep({ question, index, total, value, timeSpent,
           </span>
           <div className="flex items-center gap-1 mr-auto">
             {question.conditions && (
-              <span className="text-xs font-bold text-male-normal bg-male-light rounded-pill-sm px-2 py-0.5 flex items-center gap-1">
+              <span className="text-xs font-bold text-male-normal dark:text-blue-300 bg-male-light dark:bg-slate-800 rounded-pill-sm px-2 py-0.5 flex items-center gap-1">
                 <GitFork size={12} /> شرطی
               </span>
             )}
             {question.required
-              ? <span className="text-xs font-bold text-female-normal bg-female-light rounded-pill-sm px-2 py-0.5 flex items-center gap-0.5">اجباری</span>
-              : <span className="text-xs font-bold text-ink-subtle bg-bg-neutral rounded-pill-sm px-2 py-0.5">اختیاری</span>
+              ? <span className="text-xs font-bold text-female-normal dark:text-pink-300 bg-female-light dark:bg-pink-950/40 rounded-pill-sm px-2 py-0.5 flex items-center gap-0.5">اجباری</span>
+              : <span className="text-xs font-bold text-ink-subtle dark:text-slate-400 bg-bg-neutral dark:bg-slate-800 rounded-pill-sm px-2 py-0.5">اختیاری</span>
             }
           </div>
         </div>
 
         {/* عنوان */}
-        <h2 className="text-[17px] leading-[26px] sm:text-[20px] sm:leading-[30px] font-black text-male-normal">
+        <h2 className="text-[17px] leading-[26px] sm:text-[20px] sm:leading-[30px] font-black text-male-normal dark:text-white">
           {question.title}{question.required && <span className="text-female-normal mr-0.5">*</span>}
         </h2>
-        {question.description && <p className="text-xs sm:text-sm font-semibold text-ink-subtle leading-6 -mt-1.5">{question.description}</p>}
+        {question.description && <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 leading-6 -mt-1.5">{question.description}</p>}
 
         {/* فیلد پاسخ */}
         {(question.type === "short_text" || question.type === "long_text" || question.type === "email" || question.type === "number" || question.type === "phone_ir" || question.type === "telegram_id") && (

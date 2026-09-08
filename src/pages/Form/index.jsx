@@ -113,6 +113,25 @@ export default function FormFill() {
     return () => { cancelled = true; };
   }, [slug]);
 
+  // اعمال تم دارک یا روشن بر اساس URL ?theme= یا form.default_theme یا سیستم
+  useEffect(() => {
+    const urlTheme = new URLSearchParams(window.location.search).get("theme");
+    const targetTheme = urlTheme || form?.default_theme || "light";
+
+    let shouldBeDark = false;
+    if (targetTheme === "dark") {
+      shouldBeDark = true;
+    } else if (targetTheme === "system") {
+      shouldBeDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+
+    if (shouldBeDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [form?.default_theme]);
+
   const total = questions.length;
 
   useEffect(() => {
@@ -247,17 +266,17 @@ export default function FormFill() {
   const progressValue = step < 0 ? 0 : currentVisibleIndex;
   const approxMinutes = useMemo(() => Math.max(1, Math.round(visibleTotal * 0.4)), [visibleTotal]);
 
-  if (loading) return <div className="min-h-dvh dot-pattern bg-ecosystem-light"><Spinner label="فرم داره لود می‌شه..." /></div>;
+  if (loading) return <div className="min-h-dvh dot-pattern bg-ecosystem-light dark:bg-[#0B0F19] flex items-center justify-center"><Spinner label="فرم داره لود می‌شه..." /></div>;
   if (unavailable) return <NotAvailable message={unavailable} />;
   if (!form) return null;
   if (formType === "registration") return <RegistrationForm form={form} questions={questions} logicRules={logicRules} hiddenFields={hiddenFields} slug={slug} />;
 
   return (
-    <div className="min-h-dvh dot-pattern bg-ecosystem-light flex flex-col overflow-x-hidden">
+    <div className="min-h-dvh dot-pattern bg-ecosystem-light dark:bg-[#0B0F19] text-ink dark:text-slate-100 flex flex-col overflow-x-hidden transition-colors duration-200">
       <SEO title={form.title} description={form.description || `فرم ${form.title}`} url={`/f/${slug}`} />
       <div className="w-full max-w-[75rem] mx-auto flex items-center justify-between px-3 sm:px-4 py-2">
         <Logo linked={false} size="sm" />
-        <span className="text-xs sm:text-sm font-bold text-ink-subtle truncate max-w-[50vw]">{form.title}</span>
+        <span className="text-xs sm:text-sm font-bold text-ink-subtle dark:text-slate-400 truncate max-w-[50vw]">{form.title}</span>
       </div>
       {step >= 0 && step < total && <div className="w-full max-w-lg mx-auto px-3 pb-1"><ProgressBar value={progressValue} max={visibleTotal} showLabel /></div>}
 
@@ -270,9 +289,9 @@ export default function FormFill() {
                 {step === -1 && (
                   <motion.div key="welcome" custom={dir} initial={{ opacity: 0, x: dir * 32 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: dir * -32 }} transition={{ duration: 0.22 }} className="flex-1 flex flex-col items-center text-center justify-center gap-2.5 sm:gap-3">
                     {visibleTotal > 0 && <Badge color="navy" rotate="rotate-[1.5deg]">{faNum(visibleTotal)} سوال · حدود {faNum(approxMinutes)} دقیقه</Badge>}
-                    <span className="text-3xl sm:text-4xl rotate-[3deg]"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ecosystem-dark"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                    <h1 className="text-lg sm:text-xl lg:text-2xl font-black text-male-normal leading-snug">{form.welcome_title}</h1>
-                    <p className="font-semibold text-ink-soft leading-7 text-sm sm:text-base max-w-sm">{form.welcome_message}</p>
+                    <span className="text-3xl sm:text-4xl rotate-[3deg]"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ecosystem-dark dark:text-teal-400"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+                    <h1 className="text-lg sm:text-xl lg:text-2xl font-black text-male-normal dark:text-white leading-snug">{form.welcome_title}</h1>
+                    <p className="font-semibold text-ink-soft dark:text-slate-300 leading-7 text-sm sm:text-base max-w-sm">{form.welcome_message}</p>
                     <div className="mt-1.5 sm:mt-2"><Button variant="teal" size="md" rotate="-rotate-[1deg]" disabled={visibleTotal === 0} onClick={goNext} className="text-sm sm:text-base">{visibleTotal === 0 ? "این فرم هنوز سوالی ندارد" : "شروع پاسخ‌دهی"}</Button></div>
                   </motion.div>
                 )}
@@ -281,9 +300,9 @@ export default function FormFill() {
                   <motion.div key={currentQuestion.id} custom={dir} initial={{ opacity: 0, x: dir * 32 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: dir * -32 }} transition={{ duration: 0.2 }} className="flex-1 flex flex-col">
                     <QuestionStep question={currentQuestion} index={currentVisibleIndex - 1} total={visibleTotal} value={answers[currentQuestion.id]} timeSpent={times[currentQuestion.id] ?? 0} onChange={setAnswer} onAdvance={goNext} />
                     {requiredError && (
-                      <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 bg-female-light border-2 border-female-normal rounded-pill-md px-3 py-2 mt-2.5 sm:mt-3">
+                      <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 bg-female-light dark:bg-pink-950/40 border-2 border-female-normal rounded-pill-md px-3 py-2 mt-2.5 sm:mt-3">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-female-normal shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        <span className="text-xs sm:text-sm font-bold text-female-normal">{requiredError}</span>
+                        <span className="text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">{requiredError}</span>
                       </motion.div>
                     )}
                     <div className="mt-2.5 sm:mt-3 flex items-center justify-between gap-2">
@@ -294,7 +313,7 @@ export default function FormFill() {
                         <Button variant="magenta" onClick={openConfirm} disabled={submitting || !!currentValidationError} rotate="rotate-[0.5deg]" className={`text-xs sm:text-sm ${currentValidationError && !submitting ? "opacity-50 cursor-not-allowed" : ""}`}>{submitting ? "در حال ثبت..." : "ثبت نهایی"}</Button>
                       )}
                     </div>
-                    {submitError && <div className="mt-2 self-end rotate-[-0.5deg] bg-white border-2 border-female-normal rounded-pill-md px-2.5 py-1.5 text-xs sm:text-sm font-bold text-female-normal">{submitError}</div>}
+                    {submitError && <div className="mt-2 self-end rotate-[-0.5deg] bg-white dark:bg-slate-800 border-2 border-female-normal rounded-pill-md px-2.5 py-1.5 text-xs sm:text-sm font-bold text-female-normal">{submitError}</div>}
                   </motion.div>
                 )}
 
@@ -303,10 +322,10 @@ export default function FormFill() {
                     <motion.span className="text-4xl sm:text-5xl" animate={{ rotate: [0, -6, 6, -3, 3, 0] }} transition={{ duration: 0.6, delay: 0.1 }}>
                       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ecosystem-normal"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                     </motion.span>
-                    <h1 className="text-lg sm:text-xl lg:text-2xl font-black text-male-normal leading-snug">{form.exit_title}</h1>
-                    <p className="font-semibold text-ink-soft leading-7 text-sm sm:text-base max-w-sm">{form.exit_message}</p>
+                    <h1 className="text-lg sm:text-xl lg:text-2xl font-black text-male-normal dark:text-white leading-snug">{form.exit_title}</h1>
+                    <p className="font-semibold text-ink-soft dark:text-slate-300 leading-7 text-sm sm:text-base max-w-sm">{form.exit_message}</p>
                     {scoreResult && <ScoreResult score={scoreResult.score} total={scoreResult.total} details={scoreResult.details} questions={questions} />}
-                    {startedAt && <span className="text-xs sm:text-sm font-medium text-ink-subtle">این پاسخ در {faDuration(Math.round((Date.now() - startedAt) / 1000))} ثبت شد</span>}
+                    {startedAt && <span className="text-xs sm:text-sm font-medium text-ink-subtle dark:text-slate-400">این پاسخ در {faDuration(Math.round((Date.now() - startedAt) / 1000))} ثبت شد</span>}
                   </motion.div>
                 )}
               </AnimatePresence>

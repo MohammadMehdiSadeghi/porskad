@@ -63,6 +63,7 @@ export default async function handler(req, res) {
       exit_title = "تمام شد!",
       exit_message = "از اینکه جواب دادی خیلی ممنونیم. نظراتت برای ما طلاست!",
       slug,
+      default_theme = "light",
     } = req.body || {};
 
     const cleanSlug = slug || `form-${Math.random().toString(36).substring(2, 8)}`;
@@ -79,6 +80,7 @@ export default async function handler(req, res) {
       manager_id: user.id,
       created_by: user.id,
       slug: cleanSlug,
+      default_theme: ["light", "dark", "system"].includes(default_theme) ? default_theme : "light",
     };
 
     const { data, error } = await adminClient

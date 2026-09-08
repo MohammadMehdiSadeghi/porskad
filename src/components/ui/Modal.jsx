@@ -18,7 +18,7 @@ export default function Modal({ open, onClose, title, children, wide = false, cl
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 dark:bg-black/80 backdrop-blur-[2px]"
       onClick={closable ? onClose : undefined}
       role="dialog"
       aria-modal="true"
@@ -32,11 +32,11 @@ export default function Modal({ open, onClose, title, children, wide = false, cl
           <div className="max-h-[80vh] overflow-y-auto p-4 sm:p-5">
             {title && (
               <div className="flex items-center justify-between gap-3 mb-4">
-                <h3 className="text-lg sm:text-xl font-black text-navy">{title}</h3>
+                <h3 className="text-lg sm:text-xl font-black text-navy dark:text-white">{title}</h3>
                 {closable && onClose && (
                   <button
                     onClick={onClose}
-                    className="w-9 h-9 flex items-center justify-center rounded-pill-md border-2 border-ink bg-white text-ink font-black hover:bg-bg-neutral transition-colors cursor-pointer"
+                    className="w-9 h-9 flex items-center justify-center rounded-pill-md border-2 border-ink dark:border-slate-600 bg-white dark:bg-slate-800 text-ink dark:text-white font-black hover:bg-bg-neutral dark:hover:bg-slate-700 transition-colors cursor-pointer"
                     aria-label="بستن"
                   >
                     <X size={16} />

@@ -10,7 +10,7 @@ import Modal from "../../../components/ui/Modal";
 import { useToast } from "../../../components/ui/Toast";
 import { useAuth } from "../../../context/AuthContext";
 import { copyToClipboard, randomSlug, faNum } from "../../../lib/utils";
-import { FileText, Plus, AlignLeft, ClipboardList, Undo2, Trash2, User, Calendar, Link2, Copy, ExternalLink, Settings, BarChart3, Share2, Edit, Archive, ArchiveRestore, CheckCircle2, AlertTriangle, X } from "lucide-react";
+import { FileText, Plus, AlignLeft, ClipboardList, Undo2, Trash2, User, Calendar, Link2, Copy, ExternalLink, Settings, BarChart3, Share2, Edit, Archive, ArchiveRestore, CheckCircle2, AlertTriangle, X, Sun, Moon, Monitor } from "lucide-react";
 import SEO from "../../../components/ui/SEO";
 
 const FORM_TYPES = [
@@ -111,6 +111,7 @@ export default function FormsList() {
   const [deleting, setDeleting] = useState(null);
   const [busy, setBusy] = useState(false);
   const [showTypeModal, setShowTypeModal] = useState(false);
+  const [newFormTheme, setNewFormTheme] = useState("light");
   const [showQuotaModal, setShowQuotaModal] = useState(false);
   const [actionModalForm, setActionModalForm] = useState(null);
 
@@ -162,7 +163,7 @@ export default function FormsList() {
   );
   const maxForms = profile?.max_forms ?? 5;
 
-  async function createForm(formType = "step_by_step") {
+  async function createForm(formType = "step_by_step", formTheme = newFormTheme) {
     if (!hasPermission("create_form")) {
       push("شما مجوز ایجاد فرم ندارید.", "error");
       return;
@@ -195,6 +196,7 @@ export default function FormsList() {
           title,
           form_type: formType,
           slug,
+          default_theme: formTheme,
         }),
       });
       if (apiRes.ok) {
@@ -216,9 +218,17 @@ export default function FormsList() {
         manager_id: currentUserId,
         created_by: currentUserId,
         form_type: formType,
+        default_theme: formTheme,
       };
 
-      const { data, error } = await supabase.from("forms").insert(base).select().single();
+      let { data, error } = await supabase.from("forms").insert(base).select().single();
+      if (error && error.message?.includes("default_theme")) {
+        delete base.default_theme;
+        const retry = await supabase.from("forms").insert(base).select().single();
+        data = retry.data;
+        error = retry.error;
+      }
+
       if (error) {
         setBusy(false);
         console.error("createForm error:", error);
@@ -299,6 +309,7 @@ export default function FormsList() {
           exit_message: form.exit_message || "از اینکه جواب دادی خیلی ممنونیم. نظراتت برای ما طلاست!",
           slug,
           form_type: form.form_type || "step_by_step",
+          default_theme: form.default_theme || "light",
         }),
       });
       if (apiRes.ok) {
@@ -325,8 +336,15 @@ export default function FormsList() {
         manager_id: currentUserId,
         created_by: currentUserId,
         form_type: form.form_type || "step_by_step",
+        default_theme: form.default_theme || "light",
       };
-      const { data, error } = await supabase.from("forms").insert(copy).select().single();
+      let { data, error } = await supabase.from("forms").insert(copy).select().single();
+      if (error && error.message?.includes("default_theme")) {
+        delete copy.default_theme;
+        const retry = await supabase.from("forms").insert(copy).select().single();
+        data = retry.data;
+        error = retry.error;
+      }
       if (error) {
         setBusy(false);
         console.error("duplicate error:", error);
@@ -542,9 +560,9 @@ export default function FormsList() {
           placeholder="جستجوی فرم..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-[200px] bg-white border-2 border-ink/15 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
+          className="flex-1 min-w-[200px] bg-white dark:bg-slate-800/90 border-2 border-ink/15 dark:border-slate-700 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy dark:text-white placeholder:text-ink/40 dark:placeholder:text-slate-500 focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
         />
-        <div className="flex items-center gap-0.5 bg-white border-2 border-ink/15 rounded-pill-md p-0.5 overflow-x-auto scrollbar-none max-w-full">
+        <div className="flex items-center gap-0.5 bg-white dark:bg-slate-800/90 border-2 border-ink/15 dark:border-slate-700 rounded-pill-md p-0.5 overflow-x-auto scrollbar-none max-w-full">
           {[
             { key: "all", label: "همه" },
             { key: "published", label: "منتشر" },
@@ -555,9 +573,9 @@ export default function FormsList() {
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`px-3 py-1.5 text-sm font-bold rounded-pill-sm transition-colors ${filter === f.key
+              className={`px-3 py-1.5 text-sm font-bold rounded-pill-sm transition-colors cursor-pointer ${filter === f.key
                   ? f.key === "trash" ? "bg-magenta text-white" : "bg-teal text-white"
-                  : "text-ink-subtle hover:text-ink"
+                  : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white"
                 }`}
             >
               {f.label}
@@ -929,27 +947,67 @@ export default function FormsList() {
       <Modal
         open={showTypeModal}
         onClose={() => setShowTypeModal(false)}
-        title="انتخاب نوع فرم"
+        title="ساخت فرم جدید"
       >
-        <p className="text-sm font-semibold text-ink-subtle mb-4 leading-7">
-          نوع فرم خود را انتخاب کنید. هر دو قابل ویرایش و سفارشی‌سازی هستند.
+        <p className="text-sm font-semibold text-ink-subtle dark:text-slate-400 mb-4 leading-7">
+          تم پیش‌فرض و نوع ارائه فرم را مشخص کنید. بعداً در تنظیمات فرم نیز می‌توانید آن‌ها را تغییر دهید.
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        {/* تم پیش‌فرض ظاهر فرم */}
+        <div className="mb-5 p-3.5 rounded-2xl bg-navy/5 dark:bg-slate-800/60 border border-navy/10 dark:border-slate-700">
+          <label className="block text-xs sm:text-sm font-black text-navy dark:text-slate-200 mb-2.5">
+            🎨 تم پیش‌فرض فرم:
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { id: "light", label: "روشن (سفید)", icon: Sun, desc: "تم شاداب رکاد" },
+              { id: "dark", label: "دارک مود (شب)", icon: Moon, desc: "تیره و پرکنتراست" },
+              { id: "system", label: "هماهنگ با دستگاه", icon: Monitor, desc: "تشخیص خودکار" },
+            ].map((t) => {
+              const Icon = t.icon;
+              const isSelected = newFormTheme === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setNewFormTheme(t.id)}
+                  className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer text-center ${
+                    isSelected
+                      ? "border-teal bg-teal/15 text-teal shadow-xs font-black scale-[1.02]"
+                      : "border-ink/10 dark:border-slate-700/80 bg-white dark:bg-slate-800 text-ink/70 dark:text-slate-300 hover:border-teal/40"
+                  }`}
+                >
+                  <Icon size={20} className={isSelected ? "text-teal" : "text-ink/60 dark:text-slate-400"} />
+                  <span className="text-xs font-black mt-1.5">{t.label}</span>
+                  <span className="text-[10px] opacity-70 mt-0.5 leading-tight">{t.desc}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* انتخاب نوع نمایش فرم */}
+        <label className="block text-xs sm:text-sm font-black text-navy dark:text-slate-200 mb-2.5">
+          📋 ساختار سوالات:
+        </label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           {FORM_TYPES.map((ft) => (
             <button
               key={ft.key}
-              onClick={() => createForm(ft.key)}
+              onClick={() => createForm(ft.key, newFormTheme)}
               disabled={busy}
-              className="text-right p-5 rounded-pill-md border-2 border-ink/15 bg-white hover:border-teal hover:shadow-md transition-all group disabled:opacity-50"
+              className="text-right p-5 rounded-2xl border-2 border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-teal dark:hover:border-teal hover:shadow-md transition-all group disabled:opacity-50 cursor-pointer"
             >
-              <span className="block mb-3 group-hover:scale-110 transition-transform text-navy">{ft.key === "step_by_step" ? <ClipboardList size={36} /> : <AlignLeft size={36} />}</span>
-              <h3 className="text-base sm:text-lg font-black text-navy mb-1">{ft.title}</h3>
-              <p className="text-xs font-medium text-ink-subtle leading-5">{ft.description}</p>
+              <span className="block mb-3 group-hover:scale-110 transition-transform text-navy dark:text-white">
+                {ft.key === "step_by_step" ? <ClipboardList size={32} /> : <AlignLeft size={32} />}
+              </span>
+              <h3 className="text-base sm:text-lg font-black text-navy dark:text-white mb-1">{ft.title}</h3>
+              <p className="text-xs font-medium text-ink-subtle dark:text-slate-400 leading-5">{ft.description}</p>
             </button>
           ))}
         </div>
         {busy && (
-          <div className="mt-4 text-center text-sm font-bold text-teal-text">
+          <div className="mt-4 text-center text-sm font-bold text-teal-text dark:text-teal">
             در حال ساخت فرم...
           </div>
         )}

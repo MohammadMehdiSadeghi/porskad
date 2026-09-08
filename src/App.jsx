@@ -3,6 +3,7 @@ import { Outlet, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./components/ui/Toast";
 import { NotificationProvider } from "./context/NotificationContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import SetupNotice from "./components/ui/SetupNotice";
 import { isSupabaseConfigured } from "./lib/supabaseClient";
 import { AlertTriangle } from "lucide-react";
@@ -97,54 +98,56 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <ToastProvider>
-        <NotificationProvider>
-          <Routes>
-            {/* عمومی — فرم پر کردن */}
-            <Route path="/f/:slug" element={<FormFill />} />
+      <ThemeProvider>
+        <AuthProvider>
+          <ToastProvider>
+          <NotificationProvider>
+            <Routes>
+              {/* عمومی — فرم پر کردن */}
+              <Route path="/f/:slug" element={<FormFill />} />
 
-            {/* Embed — جاسازی فرم در سایت‌های دیگر */}
-            <Route path="/embed/:formId" element={<EmbedForm />} />
+              {/* Embed — جاسازی فرم در سایت‌های دیگر */}
+              <Route path="/embed/:formId" element={<EmbedForm />} />
 
-            {/* ورود و ثبت‌نام عمومی */}
-            <Route path="/register" element={<Register />} />
-            <Route path="/admin/login" element={<Login />} />
+              {/* ورود و ثبت‌نام عمومی */}
+              <Route path="/register" element={<Register />} />
+              <Route path="/admin/login" element={<Login />} />
 
-            {/* پنل کاربری و ادمین */}
-            <Route
-              path="/admin"
-              element={
-                <AuthGuard adminOnly={false}>
-                  <AdminLayout />
-                </AuthGuard>
-              }
-            >
-              <Route index element={<AdminIndex />} />
-              <Route path="forms" element={<FormsList />} />
-              <Route path="forms/:id" element={<FormBuilder />} />
-              <Route path="forms/:id/responses" element={<Responses />} />
-              <Route path="forms/:id/share" element={<ShareForm />} />
-              <Route path="embed" element={<EmbedHub />} />
-              <Route path="telegram" element={<TelegramBot />} />
-              <Route path="support" element={<Support />} />
-              <Route path="profile" element={<Profile />} />
+              {/* پنل کاربری و ادمین */}
+              <Route
+                path="/admin"
+                element={
+                  <AuthGuard adminOnly={false}>
+                    <AdminLayout />
+                  </AuthGuard>
+                }
+              >
+                <Route index element={<AdminIndex />} />
+                <Route path="forms" element={<FormsList />} />
+                <Route path="forms/:id" element={<FormBuilder />} />
+                <Route path="forms/:id/responses" element={<Responses />} />
+                <Route path="forms/:id/share" element={<ShareForm />} />
+                <Route path="embed" element={<EmbedHub />} />
+                <Route path="telegram" element={<TelegramBot />} />
+                <Route path="support" element={<Support />} />
+                <Route path="profile" element={<Profile />} />
 
-              {/* بخش‌های اختصاصی مالک و سوپرادمین */}
-              <Route path="managers" element={<AuthGuard ownerOnly={true}><Managers /></AuthGuard>} />
-              <Route path="settings" element={<AuthGuard ownerOnly={true}><Settings /></AuthGuard>} />
-              <Route path="sms" element={<AuthGuard ownerOnly={true}><SmsPanel /></AuthGuard>} />
-              <Route path="superadmin" element={<AuthGuard ownerOnly={true}><SuperAdmin /></AuthGuard>} />
-            </Route>
+                {/* بخش‌های اختصاصی مالک و سوپرادمین */}
+                <Route path="managers" element={<AuthGuard ownerOnly={true}><Managers /></AuthGuard>} />
+                <Route path="settings" element={<AuthGuard ownerOnly={true}><Settings /></AuthGuard>} />
+                <Route path="sms" element={<AuthGuard ownerOnly={true}><SmsPanel /></AuthGuard>} />
+                <Route path="superadmin" element={<AuthGuard ownerOnly={true}><SuperAdmin /></AuthGuard>} />
+              </Route>
 
-            {/* هدایت پیش‌فرض */}
-            <Route path="/" element={<Navigate to="/admin" replace />} />
-            <Route path="/index.html" element={<Navigate to="/" replace />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </NotificationProvider>
-        </ToastProvider>
-      </AuthProvider>
+              {/* هدایت پیش‌فرض */}
+              <Route path="/" element={<Navigate to="/admin" replace />} />
+              <Route path="/index.html" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </NotificationProvider>
+          </ToastProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

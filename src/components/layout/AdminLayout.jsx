@@ -24,6 +24,7 @@ import {
   Crown,
 } from "lucide-react";
 import NotificationBell from "../ui/NotificationBell";
+import ThemeToggle from "../ui/ThemeToggle";
 import { faNum } from "../../lib/utils";
 
 export default function AdminLayout() {
@@ -105,9 +106,9 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="h-screen bg-bg-lavender flex flex-col md:flex-row overflow-hidden">
+    <div className="h-screen bg-bg-lavender dark:bg-[#0B0F19] text-ink dark:text-slate-100 flex flex-col md:flex-row overflow-hidden transition-colors duration-200">
       {/* ─── سایدبار دسکتاپ — ثابت در سمت راست ─── */}
-      <aside className="hidden md:flex bg-navy text-white md:w-60 shrink-0 md:h-screen flex-col overflow-y-auto z-20">
+      <aside className="hidden md:flex bg-navy dark:bg-[#0E1526] text-white md:w-60 shrink-0 md:h-screen flex-col overflow-y-auto z-20 border-l border-transparent dark:border-slate-800/80">
         {/* هدر برند */}
         <div className="flex items-center justify-between px-3.5 py-3 border-b border-white/10">
           <span className="inline-flex items-baseline gap-0.5 text-base lg:text-lg font-black rotate-[-2deg] select-none">
@@ -192,7 +193,7 @@ export default function AdminLayout() {
       />
 
       <aside
-        className={`fixed top-0 right-0 h-full w-72 max-w-[85vw] bg-navy text-white z-[9991] flex flex-col shadow-2xl transition-transform duration-300 ease-out md:hidden ${
+        className={`fixed top-0 right-0 h-full w-72 max-w-[85vw] bg-navy dark:bg-[#0E1526] text-white z-[9991] flex flex-col shadow-2xl transition-transform duration-300 ease-out md:hidden ${
           mobileNavOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -259,8 +260,12 @@ export default function AdminLayout() {
           ))}
         </nav>
 
-        {/* فوتر منوی موبایل */}
-        <div className="p-3.5 border-t border-white/10 flex flex-col gap-2 shrink-0 bg-navy">
+        {/* فوتر منوی موبایل همراه با تغییر تم */}
+        <div className="p-3.5 border-t border-white/10 flex flex-col gap-3 shrink-0 bg-navy dark:bg-[#0E1526]">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs text-white/70 font-bold">تم پنل:</span>
+            <ThemeToggle />
+          </div>
           <div className="text-center w-full min-w-0">
             <div className="text-xs font-bold text-white/90 truncate">
               {profile?.full_name || user.email?.split("@")[0]}
@@ -285,14 +290,14 @@ export default function AdminLayout() {
 
       {/* بخش اصلی: تاپ‌بار بالا + محتوا */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-        {/* هدر بالای صفحه — محل قرارگیری همبرگر منو در موبایل، نوتیفیکیشن‌ها و مشخصات سریع */}
-        <header className="bg-white/90 backdrop-blur-md border-b border-navy/10 px-3.5 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between shrink-0 z-20 shadow-xs">
+        {/* هدر بالای صفحه — محل قرارگیری همبرگر منو در موبایل، نوتیفیکیشن‌ها، تم و مشخصات سریع */}
+        <header className="bg-white/90 dark:bg-[#131B2E]/90 backdrop-blur-md border-b border-navy/10 dark:border-slate-800 px-3.5 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between shrink-0 z-20 shadow-xs transition-colors duration-200">
           {/* سمت راست: دکمه همبرگر در موبایل + مشخصات یا لوگو */}
           <div className="flex items-center gap-2.5 min-w-0">
             {/* دکمه همبرگر اختصاصی در موبایل */}
             <button
               onClick={() => setMobileNavOpen(true)}
-              className="md:hidden p-2 rounded-xl bg-navy/5 hover:bg-navy/10 text-navy border border-navy/10 active:scale-95 transition-all flex items-center justify-center shrink-0"
+              className="md:hidden p-2 rounded-xl bg-navy/5 dark:bg-white/5 hover:bg-navy/10 dark:hover:bg-white/10 text-navy dark:text-white border border-navy/10 dark:border-white/10 active:scale-95 transition-all flex items-center justify-center shrink-0"
               title="باز کردن منو"
               aria-label="منوی اصلی"
             >
@@ -301,18 +306,18 @@ export default function AdminLayout() {
 
             {/* لوگو در موبایل */}
             <div className="md:hidden flex items-center gap-1">
-              <span className="text-base font-black text-navy rotate-[-2deg] select-none">
+              <span className="text-base font-black text-navy dark:text-white rotate-[-2deg] select-none">
                 پرس‌<span className="text-teal">کاد</span>
               </span>
             </div>
 
             {/* مشخصات کاربر در دسکتاپ */}
             <div className="hidden md:flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-teal/10 text-teal flex items-center justify-center font-black text-sm shrink-0 border border-teal/20">
+              <div className="w-8 h-8 rounded-xl bg-teal/10 dark:bg-teal-500/20 text-teal flex items-center justify-center font-black text-sm shrink-0 border border-teal/20">
                 {profile?.full_name ? profile.full_name.charAt(0) : <User size={15} />}
               </div>
               <div className="min-w-0">
-                <div className="text-xs sm:text-sm font-black text-navy truncate flex items-center gap-2">
+                <div className="text-xs sm:text-sm font-black text-navy dark:text-white truncate flex items-center gap-2">
                   <span>{profile?.full_name || user.email?.split("@")[0]}</span>
                   {owner ? (
                     <span className="text-xs font-bold bg-teal/20 text-teal px-1.5 py-0.5 rounded-md flex items-center gap-1">
@@ -321,7 +326,7 @@ export default function AdminLayout() {
                     </span>
                   ) : null}
                 </div>
-                <div className="text-xs sm:text-xs text-ink/40 font-medium truncate flex items-center gap-1.5">
+                <div className="text-xs sm:text-xs text-ink/40 dark:text-slate-400 font-medium truncate flex items-center gap-1.5">
                   <span>{user.email}</span>
                   {!owner && profile?.max_forms && (
                     <>
@@ -338,15 +343,19 @@ export default function AdminLayout() {
             </div>
           </div>
 
-          {/* سمت چپ: دکمه زنگوله نوتیفیکیشن و دسترسی سریع */}
+          {/* سمت چپ: تغییر تم، زنگوله نوتیفیکیشن و دسترسی سریع */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* انتخابگر تم */}
+            <ThemeToggle className="hidden sm:inline-flex" />
+            <ThemeToggle compact className="sm:hidden" />
+
             {/* زنگوله اعلان‌ها در بالا */}
             <NotificationBell />
 
             {/* دسترسی سریع به پشتیبانی در دسکتاپ */}
             <NavLink
               to="/admin/support"
-              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-navy/5 hover:bg-navy/10 text-navy text-xs font-bold transition-all border border-navy/10"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-navy/5 dark:bg-white/5 hover:bg-navy/10 dark:hover:bg-white/10 text-navy dark:text-slate-200 text-xs font-bold transition-all border border-navy/10 dark:border-white/10"
               title="پشتیبانی و تیکت‌ها"
             >
               <Headphones size={14} className="text-teal" />
@@ -368,12 +377,12 @@ export default function AdminLayout() {
         closable={false}
       >
         <form onSubmit={handleSavePhone} className="space-y-4">
-          <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-3.5 text-xs sm:text-sm leading-relaxed">
+          <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-300 rounded-xl p-3.5 text-xs sm:text-sm leading-relaxed">
             کاربر گرامی، جهت امنیت حساب کاربری و دریافت اعلان‌های مهم، ثبت شماره موبایل برای تمامی کاربران <strong>الزامی</strong> است. لطفاً شماره موبایل خود را وارد و ثبت نمایید.
           </div>
 
           <label className="flex flex-col gap-1 text-right">
-            <span className="text-xs sm:text-sm font-extrabold text-navy">
+            <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">
               شماره تلفن همراه <span className="text-red-500">*</span>
             </span>
             <input
@@ -386,11 +395,11 @@ export default function AdminLayout() {
                 setPromptPhone(e.target.value);
                 if (phoneError) setPhoneError(null);
               }}
-              className="w-full bg-white border-2 border-ink/25 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink text-left focus:outline-none transition-all text-sm"
+              className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink dark:text-white text-left focus:outline-none transition-all text-sm"
               placeholder="۰۹۱۲۳۴۵۶۷۸۹"
             />
             {phoneError && (
-              <span className="text-xs font-bold text-red-600 mt-1">
+              <span className="text-xs font-bold text-red-600 dark:text-red-400 mt-1">
                 {phoneError}
               </span>
             )}

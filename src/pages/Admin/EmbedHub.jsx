@@ -23,6 +23,9 @@ import {
   Lightbulb,
   Share2,
   Info,
+  Sun,
+  Moon,
+  Monitor,
 } from "lucide-react";
 
 // ─── توضیحات هر حالت Embed ───
@@ -202,14 +205,19 @@ function EmbedModeCard({ mode, code }) {
 // ─── کارت فرم (شبیه FormsList) ───
 function FormEmbedCard({ form, baseUrl, index }) {
   const [expanded, setExpanded] = useState(false);
+  const [embedTheme, setEmbedTheme] = useState(form.default_theme || "default");
   const publicId = form.public_id || form.id;
 
+  const themeAttr = embedTheme !== "default" ? ` data-pcode-theme="${embedTheme}"` : "";
+  const themeQuery = embedTheme !== "default" ? `?theme=${embedTheme}` : "";
+  const popoverThemeLine = embedTheme !== "default" ? `\n    theme: "${embedTheme}",` : "";
+
   const codes = {
-    inline: `<div data-pcode-form="${publicId}"></div>\n<script src="${baseUrl}/loader.js" async></script>`,
-    popup: `<button data-pcode-popup="${publicId}">باز کردن فرم</button>\n<script src="${baseUrl}/loader.js" async></script>`,
-    popover: `<script>\n  window.PorsCode = window.PorsCode || {};\n  window.PorsCode.popover = {\n    formId: "${publicId}",\n    position: "bottom-right"\n  };\n</script>\n<script src="${baseUrl}/loader.js" async></script>`,
-    iframe: `<iframe src="${baseUrl}/embed/${publicId}" width="100%" height="600" frameborder="0"></iframe>`,
-    link: `${baseUrl}/f/${form.slug}`,
+    inline: `<div data-pcode-form="${publicId}"${themeAttr}></div>\n<script src="${baseUrl}/loader.js" async></script>`,
+    popup: `<button data-pcode-popup="${publicId}"${themeAttr}>باز کردن فرم</button>\n<script src="${baseUrl}/loader.js" async></script>`,
+    popover: `<script>\n  window.PorsCode = window.PorsCode || {};\n  window.PorsCode.popover = {\n    formId: "${publicId}",${popoverThemeLine}\n    position: "bottom-right"\n  };\n</script>\n<script src="${baseUrl}/loader.js" async></script>`,
+    iframe: `<iframe src="${baseUrl}/embed/${publicId}${themeQuery}" width="100%" height="600" frameborder="0"></iframe>`,
+    link: `${baseUrl}/f/${form.slug}${themeQuery}`,
   };
 
   // کد انتخاب شده (پیش‌فرض inline)
@@ -222,17 +230,17 @@ function FormEmbedCard({ form, baseUrl, index }) {
           {/* هدر */}
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <h3 className="font-black text-navy leading-6 line-clamp-1">{form.title}</h3>
+              <h3 className="font-black text-navy dark:text-white leading-6 line-clamp-1">{form.title}</h3>
               <div className="flex items-center gap-2 mt-1">
                 <Badge color={form.published ? "green" : "gray"}>
                   {form.published ? "منتشر" : "پیش‌نویس"}
                 </Badge>
-                <span className="text-xs font-mono text-ink/40" dir="ltr">{publicId}</span>
+                <span className="text-xs font-mono text-ink/40 dark:text-slate-400" dir="ltr">{publicId}</span>
               </div>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               {form.published && (
-                <a href={`/f/${form.slug}`} target="_blank" rel="noopener noreferrer">
+                <a href={`/f/${form.slug}${themeQuery}`} target="_blank" rel="noopener noreferrer">
                   <Button variant="ghost" size="sm" title="مشاهده زنده فرم"><Eye size={14} /></Button>
                 </a>
               )}
@@ -250,18 +258,47 @@ function FormEmbedCard({ form, baseUrl, index }) {
 
           {/* لینک سریع */}
           {form.published && (
-            <div className="flex items-center gap-2 bg-bg-neutral rounded-lg px-3 py-2 border border-ink/5">
-              <Link2 size={13} className="text-ink/40 shrink-0" />
-              <span className="text-xs font-mono font-semibold text-navy truncate flex-1" dir="ltr">
-                {baseUrl}/f/{form.slug}
+            <div className="flex items-center gap-2 bg-bg-neutral dark:bg-slate-800/80 rounded-lg px-3 py-2 border border-ink/5 dark:border-slate-700">
+              <Link2 size={13} className="text-ink/40 dark:text-slate-400 shrink-0" />
+              <span className="text-xs font-mono font-semibold text-navy dark:text-slate-200 truncate flex-1" dir="ltr">
+                {baseUrl}/f/{form.slug}{themeQuery}
               </span>
-              <CopyButton text={`${baseUrl}/f/${form.slug}`} />
+              <CopyButton text={`${baseUrl}/f/${form.slug}${themeQuery}`} />
             </div>
           )}
 
           {/* حالت‌های Embed و اشتراک‌گذاری — فقط وقتی expand شد */}
           {expanded && (
-            <div className="flex flex-col gap-3 mt-1 pt-2 border-t border-navy/5">
+            <div className="flex flex-col gap-3 mt-1 pt-2 border-t border-navy/5 dark:border-slate-800">
+              {/* انتخاب تم خروجی Embed */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-xl bg-navy/5 dark:bg-slate-800/60 border border-navy/10 dark:border-slate-700">
+                <div className="flex items-center gap-1.5 text-xs font-black text-navy dark:text-slate-200">
+                  <Sun size={14} className="text-teal" />
+                  <span>تم خروجی کد:</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-1">
+                  {[
+                    { id: "default", label: `پیش‌فرض (${form.default_theme === "dark" ? "دارک" : form.default_theme === "system" ? "سیستم" : "روشن"})` },
+                    { id: "light", label: "روشن" },
+                    { id: "dark", label: "دارک" },
+                    { id: "system", label: "سیستم" },
+                  ].map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setEmbedTheme(t.id)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        embedTheme === t.id
+                          ? "bg-teal text-white shadow-xs font-black"
+                          : "text-ink/60 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5"
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* ۵ کارت حالت — ریسپانسیو */}
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
                 {EMBED_MODES.map((mode) => (
@@ -271,8 +308,8 @@ function FormEmbedCard({ form, baseUrl, index }) {
                     className={`
                       flex flex-col items-center gap-1 sm:gap-1.5 p-2 sm:p-2.5 rounded-xl border-2 transition-all cursor-pointer
                       ${selectedMode === mode.key
-                        ? `${mode.borderClass} ${mode.bgClass} shadow-sm`
-                        : "border-ink/10 bg-white hover:border-ink/20"
+                        ? `${mode.borderClass} ${mode.bgClass} shadow-sm dark:bg-slate-800 dark:border-teal`
+                        : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-ink/20 dark:hover:border-slate-600"
                       }
                     `}
                   >
@@ -343,7 +380,7 @@ export default function EmbedHub() {
       // فقط فرم‌های فعال (منتشرشده و حذف/آرشیو نشده) متعلق به خود کاربر نمایش داده می‌شوند
       let query = supabase
         .from("forms")
-        .select("id, slug, title, public_id, published, created_at, manager_id, created_by")
+        .select("id, slug, title, public_id, published, created_at, manager_id, created_by, default_theme")
         .eq("published", true)
         .eq("archived", false)
         .is("deleted_at", null)
