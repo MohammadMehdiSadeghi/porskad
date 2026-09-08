@@ -168,6 +168,7 @@ export default function Managers() {
   const canView = isOwner() || hasPermission("manage_managers") || hasPermission("view_admins");
   const [loading, setLoading] = useState(true);
   const [managers, setManagers] = useState([]);
+  const [roleTab, setRoleTab] = useState("all"); // "all" | "admins" | "users"
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedManager, setSelectedManager] = useState(null);
@@ -505,117 +506,183 @@ export default function Managers() {
         </div>
       </div>
 
-      {/* لیست کاربران */}
-      {managers.length === 0 ? (
-        <EmptyState
-          icon={<Users size={48} />}
-          title="هنوز کاربری وجود ندارد"
-          subtitle="اولین کاربر سیستم را ایجاد کنید."
-          action={<Button variant="teal" onClick={() => setShowCreateModal(true)}>کاربر جدید</Button>}
-        />
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 lg:gap-5">
-          {managers.map((m, i) => {
-            const createdForms = userFormsCount[m.id] || 0;
-            const maxForms = m.max_forms ?? 5;
-            const remainingForms = Math.max(0, maxForms - createdForms);
+      {/* تب‌های تفکیک ادمین‌ها و کاربران */}
+      <div className="flex items-center gap-2 border-b-2 border-ink/10 pb-3 flex-wrap">
+        <button
+          type="button"
+          onClick={() => setRoleTab("all")}
+          className={`px-3.5 py-1.5 rounded-pill-md text-xs sm:text-sm font-black transition-all flex items-center gap-2 cursor-pointer ${
+            roleTab === "all"
+              ? "bg-navy text-white shadow-xs"
+              : "bg-white hover:bg-bg-lavender text-navy/70 border border-navy/10"
+          }`}
+        >
+          <span>همه اعضا</span>
+          <Badge color={roleTab === "all" ? "orange" : "gray"}>{managers.length}</Badge>
+        </button>
 
-            return (
-              <div
-                key={m.id}
-                className={`${i % 2 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"} transition-all duration-200`}
-              >
-                <StickerCard theme={m.is_owner ? "orange" : "white"}>
-                  <div
-                    className="p-3.5 sm:p-4 flex flex-col gap-3 cursor-pointer select-none"
-                    onClick={(e) => {
-                      if (e.target.closest("button, a, input")) return;
-                      setSelectedUserModal(m);
-                    }}
-                  >
-                    {/* هدر کارت: آواتار، نام، ایمیل، وضعیت */}
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div
-                          className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs sm:text-sm shrink-0 shadow-xs ${
-                            m.is_owner
-                              ? "bg-orange text-white"
-                              : m.is_active
-                              ? "bg-teal/15 text-teal-text border border-teal/30"
-                              : "bg-bg-neutral text-ink-subtle"
-                          }`}
-                        >
-                          {m.full_name?.[0]?.toUpperCase() ?? m.email?.[0]?.toUpperCase() ?? "U"}
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-black text-navy text-xs sm:text-sm truncate">
-                              {m.full_name || "کاربر بدون نام"}
-                            </span>
-                            {m.is_owner && (
-                              <span className="inline-flex items-center gap-0.5 text-xs font-black text-amber-800 bg-amber-100 border border-amber-300 rounded-full px-2 py-0.5 shrink-0">
-                                <Crown size={11} /> صاحب
-                              </span>
-                            )}
+        <button
+          type="button"
+          onClick={() => setRoleTab("admins")}
+          className={`px-3.5 py-1.5 rounded-pill-md text-xs sm:text-sm font-black transition-all flex items-center gap-2 cursor-pointer ${
+            roleTab === "admins"
+              ? "bg-amber-600 text-white shadow-xs"
+              : "bg-white hover:bg-bg-lavender text-amber-900 border border-amber-300"
+          }`}
+        >
+          <Shield size={14} />
+          <span>مدیران و ادمین‌ها</span>
+          <Badge color={roleTab === "admins" ? "yellow" : "gray"}>
+            {managers.filter((m) => m.is_owner || m.role === "admin").length}
+          </Badge>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setRoleTab("users")}
+          className={`px-3.5 py-1.5 rounded-pill-md text-xs sm:text-sm font-black transition-all flex items-center gap-2 cursor-pointer ${
+            roleTab === "users"
+              ? "bg-teal text-white shadow-xs"
+              : "bg-white hover:bg-bg-lavender text-teal-text border border-teal/30"
+          }`}
+        >
+          <Users size={14} />
+          <span>کاربران عادی</span>
+          <Badge color={roleTab === "users" ? "green" : "gray"}>
+            {managers.filter((m) => !m.is_owner && m.role !== "admin").length}
+          </Badge>
+        </button>
+      </div>
+
+      {/* لیست کاربران */}
+      {(() => {
+        const displayedManagers = managers.filter((m) => {
+          if (roleTab === "admins") return m.is_owner || m.role === "admin";
+          if (roleTab === "users") return !m.is_owner && m.role !== "admin";
+          return true;
+        });
+
+        if (displayedManagers.length === 0) {
+          return (
+            <EmptyState
+              icon={roleTab === "admins" ? <Shield size={48} /> : <Users size={48} />}
+              title={roleTab === "admins" ? "هیچ مدیر یا سوپرادمینی یافت نشد" : "هیچ کاربر عادی یافت نشد"}
+              subtitle="در این دسته‌بندی کاربری ثبت نشده است."
+              action={<Button variant="teal" onClick={() => setShowCreateModal(true)}>کاربر جدید</Button>}
+            />
+          );
+        }
+
+        return (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 lg:gap-5">
+            {displayedManagers.map((m, i) => {
+              const isSuperAdmin = m.role === "admin";
+              const isSuperAdminOrOwner = m.is_owner || isSuperAdmin;
+              const createdForms = userFormsCount[m.id] || 0;
+              const maxForms = m.max_forms ?? 5;
+              const remainingForms = Math.max(0, maxForms - createdForms);
+
+              return (
+                <div
+                  key={m.id}
+                  className={`${i % 2 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"} transition-all duration-200`}
+                >
+                  <StickerCard theme={isSuperAdminOrOwner ? "orange" : "white"}>
+                    <div
+                      className="p-3.5 sm:p-4 flex flex-col gap-3 cursor-pointer select-none"
+                      onClick={(e) => {
+                        if (e.target.closest("button, a, input")) return;
+                        setSelectedUserModal(m);
+                      }}
+                    >
+                      {/* هدر کارت: آواتار، نام، ایمیل، وضعیت */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div
+                            className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs sm:text-sm shrink-0 shadow-xs ${
+                              isSuperAdminOrOwner
+                                ? "bg-orange text-white"
+                                : m.is_active
+                                ? "bg-teal/15 text-teal-text border border-teal/30"
+                                : "bg-bg-neutral text-ink-subtle"
+                            }`}
+                          >
+                            {m.full_name?.[0]?.toUpperCase() ?? m.email?.[0]?.toUpperCase() ?? "U"}
                           </div>
-                          <span className="text-xs font-medium text-ink-subtle truncate block" dir="ltr">
-                            {m.email}
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-black text-navy text-xs sm:text-sm truncate">
+                                {m.full_name || "کاربر بدون نام"}
+                              </span>
+                              {m.is_owner ? (
+                                <span className="inline-flex items-center gap-0.5 text-xs font-black text-amber-900 bg-amber-200 border border-amber-400 rounded-full px-2 py-0.5 shrink-0">
+                                  <Crown size={11} /> صاحب
+                                </span>
+                              ) : isSuperAdmin ? (
+                                <span className="inline-flex items-center gap-0.5 text-xs font-black text-amber-900 bg-amber-200 border border-amber-400 rounded-full px-2 py-0.5 shrink-0">
+                                  <Shield size={11} /> سوپرادمین
+                                </span>
+                              ) : null}
+                            </div>
+                            <span className="text-xs font-medium text-ink-subtle truncate block" dir="ltr">
+                              {m.email}
+                            </span>
+                          </div>
+                        </div>
+
+                        <Badge color={m.is_active ? "green" : "gray"}>
+                          {m.is_active ? "فعال" : "غیرفعال"}
+                        </Badge>
+                      </div>
+
+                      {/* اطلاعات فشرده: تاریخ عضویت و باقیمانده سهمیه */}
+                      <div className="bg-bg-lavender/50 rounded-xl p-2.5 flex flex-col gap-1.5 border border-navy/5 text-xs font-semibold">
+                        <div className="flex items-center justify-between text-ink-subtle">
+                          <span className="flex items-center gap-1 text-xs">
+                            <Calendar size={12} className="text-teal shrink-0" />
+                            تاریخ عضویت:
+                          </span>
+                          <strong className="text-navy text-xs">
+                            {new Date(m.created_at).toLocaleDateString("fa-IR")}
+                          </strong>
+                        </div>
+
+                        <div className="flex items-center justify-between text-ink-subtle pt-1 border-t border-navy/5">
+                          <span className="flex items-center gap-1 text-xs">
+                            <BarChart3 size={12} className="text-orange shrink-0" />
+                            باقیمانده سهمیه:
+                          </span>
+                          <span className={`text-xs font-black ${remainingForms === 0 && !isSuperAdminOrOwner ? "text-magenta-text" : "text-teal-text"}`}>
+                            {isSuperAdminOrOwner ? "نامحدود" : `${faNum(remainingForms)} از ${faNum(maxForms)} فرم`}
                           </span>
                         </div>
                       </div>
 
-                      <Badge color={m.is_active ? "green" : "gray"}>
-                        {m.is_active ? "فعال" : "غیرفعال"}
-                      </Badge>
-                    </div>
-
-                    {/* اطلاعات فشرده: تاریخ عضویت و باقیمانده سهمیه */}
-                    <div className="bg-bg-lavender/50 rounded-xl p-2.5 flex flex-col gap-1.5 border border-navy/5 text-xs font-semibold">
-                      <div className="flex items-center justify-between text-ink-subtle">
-                        <span className="flex items-center gap-1 text-xs">
-                          <Calendar size={12} className="text-teal shrink-0" />
-                          تاریخ عضویت:
-                        </span>
-                        <strong className="text-navy text-xs">
-                          {new Date(m.created_at).toLocaleDateString("fa-IR")}
-                        </strong>
-                      </div>
-
-                      <div className="flex items-center justify-between text-ink-subtle pt-1 border-t border-navy/5">
-                        <span className="flex items-center gap-1 text-xs">
-                          <BarChart3 size={12} className="text-orange shrink-0" />
-                          باقیمانده سهمیه:
-                        </span>
-                        <span className={`text-xs font-black ${remainingForms === 0 && !m.is_owner ? "text-magenta-text" : "text-teal-text"}`}>
-                          {m.is_owner ? "نامحدود" : `${faNum(remainingForms)} از ${faNum(maxForms)} فرم`}
-                        </span>
+                      {/* دکمه مشاهده و مدیریت کاربر */}
+                      <div className="pt-0.5 mt-auto">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedUserModal(m);
+                          }}
+                          className="w-full py-2 px-3 rounded-pill-sm text-xs font-bold transition-all flex items-center justify-between bg-navy/5 hover:bg-teal hover:text-white text-navy border border-navy/10 group cursor-pointer"
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <Settings size={13} className="text-teal group-hover:text-white transition-colors" />
+                            <span>مشاهده و عملیات کاربر</span>
+                          </span>
+                          <span className="text-xs font-bold text-ink/40 group-hover:text-white/90">مشاهده ←</span>
+                        </button>
                       </div>
                     </div>
-
-                    {/* دکمه مشاهده و مدیریت کاربر */}
-                    <div className="pt-0.5 mt-auto">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedUserModal(m);
-                        }}
-                        className="w-full py-2 px-3 rounded-pill-sm text-xs font-bold transition-all flex items-center justify-between bg-navy/5 hover:bg-teal hover:text-white text-navy border border-navy/10 group cursor-pointer"
-                      >
-                        <span className="flex items-center gap-1.5">
-                          <Settings size={13} className="text-teal group-hover:text-white transition-colors" />
-                          <span>مشاهده و عملیات کاربر</span>
-                        </span>
-                        <span className="text-xs font-bold text-ink/40 group-hover:text-white/90">مشاهده ←</span>
-                      </button>
-                    </div>
-                  </div>
-                </StickerCard>
-              </div>
-            );
-          })}
-        </div>
-      )}
+                  </StickerCard>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* ─── مودال پاپ‌آپ مدیریت کاربر ─── */}
       <Modal
@@ -625,6 +692,8 @@ export default function Managers() {
       >
         {selectedUserModal && (() => {
           const m = selectedUserModal;
+          const isSuperAdmin = m.role === "admin";
+          const isSuperAdminOrOwner = m.is_owner || isSuperAdmin;
           const createdForms = userFormsCount[m.id] || 0;
           const maxForms = m.max_forms ?? 5;
           const remainingForms = Math.max(0, maxForms - createdForms);
@@ -637,22 +706,27 @@ export default function Managers() {
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-base shadow-sm ${
-                        m.is_owner ? "bg-orange text-white" : "bg-teal text-white"
+                        isSuperAdminOrOwner ? "bg-orange text-white" : "bg-teal text-white"
                       }`}
                     >
                       {m.full_name?.[0]?.toUpperCase() ?? m.email?.[0]?.toUpperCase() ?? "U"}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="text-base font-black text-navy">{m.full_name || "کاربر بدون نام"}</h3>
                         {m.is_owner ? (
-                          <span className="text-xs font-black text-amber-800 bg-amber-100 border border-amber-300 rounded-full px-2 py-0.5 flex items-center gap-1">
+                          <span className="text-xs font-black text-amber-900 bg-amber-200 border border-amber-400 rounded-full px-2.5 py-0.5 flex items-center gap-1">
                             <Crown size={11} />
                             <span>صاحب اصلی</span>
                           </span>
+                        ) : isSuperAdmin ? (
+                          <span className="text-xs font-black text-amber-900 bg-amber-200 border border-amber-400 rounded-full px-2.5 py-0.5 flex items-center gap-1">
+                            <Shield size={11} />
+                            <span>سوپر ادمین (مدیر ارشد)</span>
+                          </span>
                         ) : (
-                          <span className="text-xs font-bold text-navy bg-navy/10 rounded-full px-2 py-0.5">
-                            کاربر سیستم
+                          <span className="text-xs font-bold text-navy bg-navy/10 rounded-full px-2.5 py-0.5">
+                            کاربر عادی سیستم
                           </span>
                         )}
                       </div>

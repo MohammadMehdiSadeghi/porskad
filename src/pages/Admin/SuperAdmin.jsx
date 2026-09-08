@@ -1623,7 +1623,17 @@ export default function SuperAdmin() {
                         {r.phone || "—"}
                       </td>
                       <td>
-                        <span className="sa-tag sa-tag-green">{r.role || "manager"}</span>
+                        {r.is_owner ? (
+                          <span className="sa-tag sa-tag-yellow" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                            <Crown size={12} /> Owner
+                          </span>
+                        ) : r.role === "admin" ? (
+                          <span className="sa-tag sa-tag-yellow" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                            <Shield size={12} /> SuperAdmin
+                          </span>
+                        ) : (
+                          <span className="sa-tag sa-tag-blue">Manager</span>
+                        )}
                       </td>
                       <td>
                         <span
