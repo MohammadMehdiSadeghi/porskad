@@ -173,14 +173,14 @@ export default function AdminLayout() {
               {user.email}
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="!text-white/80 hover:!text-white !border-white/20 text-xs w-full"
+          <button
+            type="button"
             onClick={handleLogout}
+            className="flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-xl border border-white/15 bg-white/5 hover:bg-rose-500/20 hover:border-rose-400/40 text-white/80 hover:text-rose-200 text-xs font-bold transition-all duration-200 cursor-pointer shadow-xs active:scale-[0.98]"
           >
-            <LogOut size={13} className="ml-1" /> خروج
-          </Button>
+            <LogOut size={14} className="ml-0.5" />
+            <span>خروج از حساب</span>
+          </button>
         </div>
       </aside>
 
@@ -274,17 +274,17 @@ export default function AdminLayout() {
               {user.email}
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="!text-white/80 hover:!text-white !border-white/20 text-xs w-full justify-center"
+          <button
+            type="button"
             onClick={() => {
               setMobileNavOpen(false);
               handleLogout();
             }}
+            className="flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-xl border border-white/15 bg-white/5 hover:bg-rose-500/20 hover:border-rose-400/40 text-white/80 hover:text-rose-200 text-xs font-bold transition-all duration-200 cursor-pointer shadow-xs active:scale-[0.98]"
           >
-            <LogOut size={14} className="ml-1" /> خروج از حساب
-          </Button>
+            <LogOut size={14} className="ml-0.5" />
+            <span>خروج از حساب</span>
+          </button>
         </div>
       </aside>
 
