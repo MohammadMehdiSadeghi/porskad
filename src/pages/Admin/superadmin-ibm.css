@@ -757,29 +757,53 @@ html.dark .sa-perm.inactive {
   color: #8d8d8d !important;
 }
 
-/* Force dark contrast on any inline dark text colors within SuperAdmin */
+/* ─── SuperAdmin Modal Box & Containers ─── */
+.sa-modal-box {
+  border: 1px solid #e0e0e0;
+  padding: 0.75rem;
+  background: #f4f4f4;
+  color: #161616;
+}
+
+.sa-modal-box-blue {
+  border: 1px solid #0f62fe;
+  padding: 0.75rem;
+  background: #edf5ff;
+  color: #0f62fe;
+}
+
+/* Force dark contrast on any inline dark text colors within SuperAdmin & Modals */
 html.dark .sa-root [style*="color: #161616"],
 html.dark .sa-root [style*="color: rgb(22, 22, 22)"],
 html.dark .sa-root [style*="color: #000"],
 html.dark .sa-root [style*="color: black"],
 html.dark .sa-root [style*="color: #111"],
 html.dark .sa-root [style*="color: #222"],
-html.dark .sa-root [style*="color: #333"] {
+html.dark .sa-root [style*="color: #333"],
+html.dark [role="dialog"] [style*="color: #161616"],
+html.dark [role="dialog"] [style*="color: rgb(22, 22, 22)"],
+html.dark [role="dialog"] [style*="color: #000"],
+html.dark [role="dialog"] [style*="color: black"] {
   color: #f4f4f4 !important;
 }
 
 html.dark .sa-root [style*="color: #525252"],
 html.dark .sa-root [style*="color: rgb(82, 82, 82)"],
 html.dark .sa-root [style*="color: #6f6f6f"],
-html.dark .sa-root [style*="color: rgb(111, 111, 111)"] {
-  color: #b0b0b0 !important;
+html.dark .sa-root [style*="color: rgb(111, 111, 111)"],
+html.dark [role="dialog"] [style*="color: #525252"],
+html.dark [role="dialog"] [style*="color: #6f6f6f"] {
+  color: #c6c6c6 !important;
 }
 
 html.dark .sa-root [style*="background: #fff"],
 html.dark .sa-root [style*="background: white"],
 html.dark .sa-root [style*="background: #ffffff"],
 html.dark .sa-root [style*="background-color: #fff"],
-html.dark .sa-root [style*="background-color: white"] {
+html.dark .sa-root [style*="background-color: white"],
+html.dark [role="dialog"] [style*="background: #fff"],
+html.dark [role="dialog"] [style*="background: white"],
+html.dark [role="dialog"] [style*="background: #ffffff"] {
   background: #1e1e1e !important;
   color: #f4f4f4 !important;
 }
@@ -787,14 +811,46 @@ html.dark .sa-root [style*="background-color: white"] {
 html.dark .sa-root [style*="background: #f4f4f4"],
 html.dark .sa-root [style*="background: #f8f9fa"],
 html.dark .sa-root [style*="background: #f5f5f5"],
-html.dark .sa-root [style*="background: #e8e8e8"] {
+html.dark .sa-root [style*="background: #e8e8e8"],
+html.dark .sa-root [style*="background: #fafafa"],
+html.dark .sa-root [style*="background: #fbfbfb"],
+html.dark [role="dialog"] [style*="background: #f4f4f4"],
+html.dark [role="dialog"] [style*="background: #f8f9fa"],
+html.dark [role="dialog"] [style*="background: #f5f5f5"],
+html.dark [role="dialog"] [style*="background: #fafafa"],
+html.dark [role="dialog"] [style*="background: #fbfbfb"] {
   background: #262626 !important;
   color: #f4f4f4 !important;
 }
 
+html.dark .sa-root [style*="background: #f8faff"],
+html.dark .sa-root [style*="background: #fdfefe"],
+html.dark .sa-root [style*="background: #edf5ff"],
+html.dark [role="dialog"] [style*="background: #f8faff"],
+html.dark [role="dialog"] [style*="background: #fdfefe"],
+html.dark [role="dialog"] [style*="background: #edf5ff"] {
+  background: #111e38 !important;
+  color: #f4f4f4 !important;
+  border-color: #0f62fe !important;
+}
+
 html.dark .sa-root [style*="border: 1px solid #c6c6c6"],
-html.dark .sa-root [style*="border: 1px solid #e0e0e0"] {
+html.dark .sa-root [style*="border: 1px solid #e0e0e0"],
+html.dark [role="dialog"] [style*="border: 1px solid #c6c6c6"],
+html.dark [role="dialog"] [style*="border: 1px solid #e0e0e0"] {
   border-color: #393939 !important;
+}
+
+html.dark [role="dialog"] input,
+html.dark [role="dialog"] select,
+html.dark [role="dialog"] textarea {
+  background: #161616 !important;
+  border-color: #4c4c4c !important;
+  color: #f4f4f4 !important;
+}
+
+html.dark [role="dialog"] label {
+  color: #e0e0e0 !important;
 }
 
 html.dark .sa-tile[style*="background: #d0e2ff"],
@@ -810,4 +866,5 @@ html.dark .sa-tile[style*="background: rgb(208, 226, 255)"] .sa-tile-name,
 html.dark .sa-tile[style*="background: rgb(208, 226, 255)"] .sa-tile-count {
   color: #ffffff !important;
 }
+
 

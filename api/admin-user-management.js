@@ -195,6 +195,37 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, role: roleToSet });
     }
 
+    // ۷. ورود به عنوان کاربر دیگر (Impersonate)
+    if (action === "impersonate") {
+      const { data: targetAuthUser, error: targetAuthErr } = await adminClient.auth.admin.getUserById(target_user_id);
+      const userEmail = targetAuthUser?.user?.email || targetProf?.email;
+      if (!userEmail) {
+        return res.status(404).json({ error: "کاربر یا ایمیل مربوطه یافت نشد" });
+      }
+
+      const origin = req.headers.origin || (req.headers.host ? `https://${req.headers.host}` : "https://porskad.ir");
+      const { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
+        type: "magiclink",
+        email: userEmail,
+        options: {
+          redirectTo: `${origin}/dashboard`,
+        },
+      });
+
+      if (linkErr) {
+        return res.status(400).json({ error: linkErr.message });
+      }
+
+      const actionLink = linkData?.properties?.action_link;
+
+      return res.status(200).json({
+        success: true,
+        redirect_url: actionLink,
+        magic_link: actionLink,
+        email: userEmail,
+      });
+    }
+
     return res.status(400).json({ error: `عملیات ناشناخته: ${action}` });
   } catch (err) {
     console.error("Admin user management error:", err);

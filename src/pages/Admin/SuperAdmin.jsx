@@ -857,7 +857,54 @@ export default function SuperAdmin() {
   }
 
   // ─── Admin Action Proxy ───
-  async function adminAction(action, payload) {
+  async function adminAction(action, payload = {}) {
+    // 1. Try serverless API (/api/admin-user-management)
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const res = await fetch("/api/admin-user-management", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: session?.access_token ? `Bearer ${session.access_token}` : "",
+        },
+        body: JSON.stringify({ action, ...payload }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        return json;
+      }
+      const errJson = await res.json().catch(() => ({}));
+      if (errJson.error && res.status !== 501 && res.status !== 404) {
+        throw new Error(errJson.error);
+      }
+    } catch (e) {
+      if (
+        e.message &&
+        !e.message.includes("501") &&
+        !e.message.includes("404") &&
+        !e.message.includes("Failed to fetch")
+      ) {
+        throw e;
+      }
+    }
+
+    // 2. RPC fallback for impersonation
+    if (action === "impersonate" && payload.target_user_id) {
+      try {
+        const { data: rpcData, error: rpcErr } = await supabase.rpc("impersonate_user", {
+          p_target_user_id: payload.target_user_id,
+        });
+        if (!rpcErr && rpcData) {
+          return { success: true, user: rpcData };
+        }
+      } catch (rpcErr) {
+        console.warn("RPC impersonate fallback error:", rpcErr);
+      }
+    }
+
+    // 3. Fallback to Supabase Edge Function if deployed
     const { data, error } = await supabase.functions.invoke("superadmin-action", {
       body: { action, ...payload },
     });
@@ -869,11 +916,14 @@ export default function SuperAdmin() {
   // ─── Impersonate User ───
   async function doImpersonate(targetUserId) {
     try {
+      showToast("Generating impersonation session...");
       const res = await adminAction("impersonate", { target_user_id: targetUserId });
-      if (res?.redirect_url) {
-        window.open(res.redirect_url, "_blank");
-      } else if (res?.magic_link) {
-        window.open(res.magic_link, "_blank");
+      if (res?.redirect_url || res?.magic_link) {
+        const url = res.redirect_url || res.magic_link;
+        window.open(url, "_blank");
+        showToast("Logged in as user in a new tab");
+      } else if (res?.user) {
+        showToast(`Impersonating ${res.user.full_name || res.user.email}`);
       } else {
         showToast("Impersonation link generated");
       }
@@ -3175,16 +3225,14 @@ export default function SuperAdmin() {
           >
             {/* Quick Actions at Top of Detail Modal */}
             <div
+              className="sa-modal-box"
               style={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                background: "#f4f4f4",
-                padding: "0.5rem 0.75rem",
-                border: "1px solid #e0e0e0",
               }}
             >
-              <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#161616" }}>
+              <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>
                 User Audit & Diagnostics:
               </span>
               <button
@@ -4102,26 +4150,24 @@ export default function SuperAdmin() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {/* Header info bar */}
             <div
+              className="sa-modal-box"
               style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                background: "#f4f4f4",
-                padding: "0.6rem 0.75rem",
-                border: "1px solid #e0e0e0",
                 flexWrap: "wrap",
                 gap: "0.5rem",
               }}
             >
               <div>
-                <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#161616" }}>
+                <div style={{ fontWeight: 700, fontSize: "0.9rem" }}>
                   {selectedUserForLogs.full_name || "—"} ({selectedUserForLogs.email})
                 </div>
                 <div
                   style={{
                     fontSize: "0.8rem",
                     fontFamily: "'IBM Plex Mono', monospace",
-                    color: "#525252",
+                    opacity: 0.75,
                   }}
                 >
                   User ID: {selectedUserForLogs.id}
@@ -4292,24 +4338,24 @@ export default function SuperAdmin() {
       >
         {impersonateModal && (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            <p style={{ fontSize: "0.8rem", color: "#6f6f6f" }}>You will be logged in as:</p>
-            <div style={{ background: "#f4f4f4", padding: "0.75rem" }}>
-              <div style={{ fontWeight: 700, fontSize: "0.9rem" }}>
+            <p style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>You will be logged in as:</p>
+            <div className="sa-modal-box">
+              <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>
                 {impersonateModal.full_name || "—"}
               </div>
-              <div style={{ fontSize: "0.8rem", color: "#6f6f6f" }}>
+              <div style={{ fontSize: "0.85rem", opacity: 0.8 }}>
                 {impersonateModal.email}
               </div>
             </div>
             <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "#da1e28", display: "flex", alignItems: "center", gap: "0.35rem" }}>
               <AlertTriangle size={14} /> This action will be recorded in the security audit log.
             </p>
-            <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+            <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginTop: "0.5rem" }}>
               <button
                 className="sa-btn sa-btn-primary"
                 onClick={() => doImpersonate(impersonateModal.id)}
               >
-                Confirm
+                Confirm Login
               </button>
               <button className="sa-btn sa-btn-secondary" onClick={() => setImpersonateModal(null)}>
                 Cancel
