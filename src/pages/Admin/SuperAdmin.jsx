@@ -93,6 +93,8 @@ export default function SuperAdmin() {
     "user_roles",
     "user_permissions",
     "logic_rules",
+    "system_settings",
+    "support_tickets",
     "auth_logs",
     "activity_log",
     "error_log",
@@ -709,6 +711,22 @@ export default function SuperAdmin() {
   }
 
   // ─── Table Browser ───
+  const KNOWN_COLUMNS = {
+    forms: ["id", "title", "slug", "published", "form_type", "default_theme", "created_at"],
+    questions: ["id", "form_id", "type", "title", "position", "required", "created_at"],
+    responses: ["id", "form_id", "is_complete", "duration_seconds", "device", "created_at"],
+    answers: ["id", "response_id", "question_id", "value", "created_at"],
+    profiles: ["id", "email", "full_name", "phone", "is_active", "is_owner", "created_at"],
+    user_roles: ["id", "user_id", "role_id", "active", "created_at"],
+    user_permissions: ["id", "user_id", "permission_id", "created_at"],
+    logic_rules: ["id", "form_id", "action_type", "priority", "created_at"],
+    system_settings: ["key", "value", "updated_at"],
+    support_tickets: ["id", "user_id", "subject", "status", "created_at"],
+    auth_logs: ["id", "user_id", "email", "action", "ip_address", "created_at"],
+    activity_log: ["id", "user_id", "action", "target_type", "created_at"],
+    error_log: ["id", "source", "message", "created_at"],
+  };
+
   async function browseTable(tableName) {
     setSelectedTable(tableName);
     try {
@@ -730,11 +748,15 @@ export default function SuperAdmin() {
 
       const { data, error } = await q;
       if (error) throw error;
-      setTableData(data || []);
-      if (data && data.length > 0) {
-        setTableCols(Object.keys(data[0]));
+      const rows = data || [];
+      setTableData(rows);
+      if (rows.length > 0) {
+        setTableCols(Object.keys(rows[0]));
+      } else {
+        setTableCols(KNOWN_COLUMNS[tableName] || ["id", "created_at"]);
       }
     } catch (err) {
+      console.error("browseTable error:", err);
       showToast("Error loading table: " + err.message, "error");
     }
   }
@@ -1049,6 +1071,17 @@ export default function SuperAdmin() {
     );
   }, [userLogs, userLogsTab, userLogsSearch]);
 
+  // ─── Filtered Table Data for Database Tab ───
+  const filteredData = useMemo(() => {
+    if (!search) return tableData;
+    const q = search.toLowerCase();
+    return tableData.filter((r) =>
+      Object.values(r).some((v) =>
+        v !== null && v !== undefined && String(v).toLowerCase().includes(q)
+      )
+    );
+  }, [tableData, search]);
+
   if (loading) {
     return <Spinner label="Loading SuperAdmin (God Mode)..." />;
   }
@@ -1105,7 +1138,12 @@ export default function SuperAdmin() {
         {TABS.map((t) => (
           <button
             key={t.id}
-            onClick={() => setTab(t.id)}
+            onClick={() => {
+              setTab(t.id);
+              if (t.id === "database" && !selectedTable) {
+                browseTable("forms");
+              }
+            }}
             className={`sa-tab ${tab === t.id ? "active" : ""}`}
           >
             <t.icon size={14} />
@@ -1362,12 +1400,12 @@ export default function SuperAdmin() {
                 </div>
               </div>
 
-              <div style={{ padding: "0.75rem", background: "#f4f4f4", border: "1px solid #e0e0e0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div className="sa-card" style={{ padding: "0.85rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 0 }}>
                 <div>
-                  <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#161616" }}>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 700 }}>
                     Allow Public User Registrations
                   </div>
-                  <div style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>
+                  <div className="sa-stat-sub" style={{ fontSize: "0.8rem", marginTop: "0.2rem" }}>
                     When disabled, only admins can register new users.
                   </div>
                 </div>
@@ -1376,9 +1414,9 @@ export default function SuperAdmin() {
                     type="checkbox"
                     checked={sysSettings.registration_enabled !== false}
                     onChange={(e) => setSysSettings({ ...sysSettings, registration_enabled: e.target.checked })}
-                    style={{ width: 18, height: 18 }}
+                    style={{ width: 18, height: 18, cursor: "pointer" }}
                   />
-                  <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>
+                  <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>
                     {sysSettings.registration_enabled !== false ? "Enabled" : "Disabled"}
                   </span>
                 </label>
@@ -1455,11 +1493,10 @@ export default function SuperAdmin() {
                 </div>
 
                 <div
+                  className="sa-card"
                   style={{
                     fontSize: "0.8rem",
-                    color: "#525252",
                     lineHeight: 1.6,
-                    background: "#edf5ff",
                     padding: "0.75rem",
                     borderLeft: "3px solid #0f62fe",
                   }}
@@ -1472,7 +1509,6 @@ export default function SuperAdmin() {
                     style={{
                       fontSize: "0.85rem",
                       fontWeight: 700,
-                      color: "#525252",
                       textTransform: "uppercase",
                       marginBottom: "0.5rem",
                     }}
@@ -1550,10 +1586,9 @@ export default function SuperAdmin() {
                 </div>
 
                 <div
+                  className="sa-card"
                   style={{
-                    background: "#f4f4f4",
                     padding: "0.75rem",
-                    border: "1px solid #e0e0e0",
                   }}
                 >
                   <div
@@ -1563,7 +1598,7 @@ export default function SuperAdmin() {
                       marginBottom: "0.25rem",
                     }}
                   >
-                    <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#161616" }}>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>
                       Source code & assets (excluding node_modules):
                     </span>
                     <span
@@ -1577,7 +1612,7 @@ export default function SuperAdmin() {
                       {storageData?.project?.source_pretty || "—"}
                     </span>
                   </div>
-                  <div style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>
+                  <div className="sa-stat-sub" style={{ fontSize: "0.8rem" }}>
                     Contains pages, components, stylesheets, media assets, and API routes (
                     {(storageData?.project?.source_files || 0).toLocaleString()} files)
                   </div>
@@ -1588,7 +1623,6 @@ export default function SuperAdmin() {
                     style={{
                       fontSize: "0.85rem",
                       fontWeight: 700,
-                      color: "#525252",
                       textTransform: "uppercase",
                       marginBottom: "0.5rem",
                     }}
@@ -1599,10 +1633,10 @@ export default function SuperAdmin() {
                     {storageData?.project?.breakdown?.map((item, idx) => (
                       <div
                         key={idx}
+                        className="sa-card"
                         style={{
-                          background: "#fff",
-                          border: "1px solid #e0e0e0",
                           padding: "0.6rem 0.75rem",
+                          marginBottom: 0,
                         }}
                       >
                         <div
@@ -1613,14 +1647,13 @@ export default function SuperAdmin() {
                             marginBottom: "0.25rem",
                           }}
                         >
-                          <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#161616" }}>
+                          <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>
                             {item.name}
                           </span>
                           <span
                             style={{
                               fontSize: "0.8rem",
                               fontWeight: 700,
-                              color: "#161616",
                               fontFamily: "'IBM Plex Mono', monospace",
                             }}
                           >
@@ -1628,7 +1661,7 @@ export default function SuperAdmin() {
                           </span>
                         </div>
                         {item.files !== undefined && (
-                          <div style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>
+                          <div className="sa-stat-sub" style={{ fontSize: "0.8rem" }}>
                             {item.files.toLocaleString()} files
                           </div>
                         )}
@@ -1753,6 +1786,16 @@ export default function SuperAdmin() {
                         </td>
                       </tr>
                     ))}
+                    {filteredData.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={Math.max(1, tableCols.length + 1)}
+                          style={{ textAlign: "center", color: "#8d8d8d", padding: "2.5rem 1rem" }}
+                        >
+                          No records found in table "{selectedTable}".
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>

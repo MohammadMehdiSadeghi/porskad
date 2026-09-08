@@ -797,3 +797,17 @@ html.dark .sa-root [style*="border: 1px solid #e0e0e0"] {
   border-color: #393939 !important;
 }
 
+html.dark .sa-tile[style*="background: #d0e2ff"],
+html.dark .sa-tile[style*="background: rgb(208, 226, 255)"],
+html.dark .sa-tile.active {
+  background: #0043ce !important;
+  border-color: #78a9ff !important;
+}
+
+html.dark .sa-tile[style*="background: #d0e2ff"] .sa-tile-name,
+html.dark .sa-tile[style*="background: #d0e2ff"] .sa-tile-count,
+html.dark .sa-tile[style*="background: rgb(208, 226, 255)"] .sa-tile-name,
+html.dark .sa-tile[style*="background: rgb(208, 226, 255)"] .sa-tile-count {
+  color: #ffffff !important;
+}
+
