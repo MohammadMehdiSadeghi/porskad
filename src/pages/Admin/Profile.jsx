@@ -194,33 +194,44 @@ export default function Profile() {
 
             {/* سهمیه و وضعیت امکانات */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-              <div className="bg-white/80 border border-ink/10 rounded-xl p-3 text-center">
-                <span className="text-xs font-semibold text-ink-subtle block">سقف فرم‌های فعال</span>
-                <span className="text-base font-black text-navy mt-1 block">
+              <div className="bg-white/80 dark:bg-slate-800/80 border border-ink/10 dark:border-slate-700 rounded-xl p-3 text-center">
+                <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400 block">سقف فرم‌های فعال</span>
+                <span className="text-base font-black text-navy dark:text-slate-100 mt-1 block">
                   {profile?.is_owner || profile?.max_forms >= 999999 || profile?.plan === "unlimited"
                     ? "نامحدود ✨"
                     : `${faNum(profile?.max_forms ?? 5)} فرم`}
                 </span>
               </div>
-              <div className="bg-white/80 border border-ink/10 rounded-xl p-3 text-center">
-                <span className="text-xs font-semibold text-ink-subtle block">سقف پاسخ در ماه</span>
-                <span className="text-base font-black text-navy mt-1 block">
+              <div className="bg-white/80 dark:bg-slate-800/80 border border-ink/10 dark:border-slate-700 rounded-xl p-3 text-center">
+                <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400 block">ورودی‌های ماه جاری</span>
+                <span className="text-base font-black text-navy dark:text-slate-100 mt-1 block">
                   {profile?.is_owner || profile?.max_responses_per_month >= 999999 || profile?.plan === "unlimited"
                     ? "نامحدود ✨"
-                    : `${faNum(profile?.max_responses_per_month ?? 100)} پاسخ`}
+                    : `${faNum(profile?.monthly_responses_used ?? 0)} از ${faNum(profile?.max_responses_per_month ?? 100)}`}
                 </span>
+                {!profile?.is_owner && (profile?.max_responses_per_month ?? 100) < 999999 && (
+                  <span className="text-[10px] font-bold text-teal dark:text-teal-400 block mt-0.5">
+                    {faNum(Math.max(0, (profile?.max_responses_per_month ?? 100) - (profile?.monthly_responses_used ?? 0)))} پاسخ مانده تا سرماه
+                  </span>
+                )}
               </div>
-              <div className="bg-white/80 border border-ink/10 rounded-xl p-3 text-center col-span-2 sm:col-span-1">
-                <span className="text-xs font-semibold text-ink-subtle block">ارسال به تلگرام</span>
+              <div className="bg-white/80 dark:bg-slate-800/80 border border-ink/10 dark:border-slate-700 rounded-xl p-3 text-center col-span-2 sm:col-span-1">
+                <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400 block">ارسال به تلگرام</span>
                 <span className="text-base font-black text-teal mt-1 block">
                   {profile?.is_owner || profile?.can_use_telegram === true ? "فعال" : "غیرفعال"}
                 </span>
               </div>
             </div>
 
+            {!profile?.is_owner && profile?.quota_reset_at && (
+              <div className="text-[11px] font-semibold text-ink-subtle dark:text-slate-400 text-center bg-navy/5 dark:bg-slate-800/50 py-1.5 px-3 rounded-lg">
+                🔄 تاریخ تمدید خودکار سهمیه ماهانه: <span className="font-bold text-navy dark:text-slate-200">{new Date(profile.quota_reset_at).toLocaleDateString("fa-IR")}</span>
+              </div>
+            )}
+
             {!profile?.is_owner && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-ink/10">
-                <span className="text-xs font-semibold text-ink-subtle">نیاز به ظرفیت بیشتر دارید؟</span>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-ink/10 dark:border-slate-700">
+                <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400">نیاز به ظرفیت بیشتر دارید؟</span>
                 <Button as={Link} to="/admin/support" variant="teal" size="sm">
                   درخواست افزایش سهمیه
                 </Button>
