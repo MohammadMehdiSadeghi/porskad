@@ -289,10 +289,10 @@ export default function Register() {
                   rotate="-rotate-[1deg]"
                   className="w-full justify-center text-center"
                 >
-                  {busy ? "در حال ساخت حساب..." : "ساخت حساب کاربری"}
+                  <span className="w-full text-center">{busy ? "در حال ساخت حساب..." : "ساخت حساب کاربری"}</span>
                 </Button>
 
-                <div className="flex items-center justify-between text-[13px] font-bold text-ink-subtle pt-2 border-t border-ink/10">
+                <div className="flex items-center justify-center gap-2 text-[13px] font-bold text-ink-subtle pt-2 border-t border-ink/10 text-center flex-wrap">
                   <span>قبلاً حساب ساخته‌اید؟</span>
                   <Link
                     to="/admin/login"

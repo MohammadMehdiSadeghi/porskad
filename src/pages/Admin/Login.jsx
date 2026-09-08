@@ -172,12 +172,12 @@ export default function Login() {
                 size="lg"
                 disabled={busy}
                 rotate="-rotate-[1deg]"
-                className="w-full justify-center"
+                className="w-full justify-center text-center"
               >
-                {busy ? "در حال ورود..." : "ورود به پنل"}
+                <span className="w-full text-center">{busy ? "در حال ورود..." : "ورود به پنل"}</span>
               </Button>
 
-              <div className="flex items-center justify-between text-[13px] font-bold text-ink-subtle pt-3 border-t border-ink/10">
+              <div className="flex items-center justify-center gap-2 text-[13px] font-bold text-ink-subtle pt-3 border-t border-ink/10 text-center flex-wrap">
                 <span>حساب کاربری ندارید؟</span>
                 <Link
                   to="/register"
