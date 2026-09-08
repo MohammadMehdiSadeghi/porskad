@@ -942,7 +942,7 @@ export default function Managers() {
                         <input
                           type="number"
                           min="1"
-                          max="1000"
+                          max="9999999"
                           dir="ltr"
                           value={userEditMaxForms}
                           onChange={(e) => setUserEditMaxForms(e.target.value)}
@@ -958,7 +958,7 @@ export default function Managers() {
                         <input
                           type="number"
                           min="1"
-                          max="100000"
+                          max="9999999"
                           step="10"
                           dir="ltr"
                           value={userEditMaxResponses}
@@ -975,7 +975,7 @@ export default function Managers() {
                         <input
                           type="number"
                           min="0"
-                          max="100000"
+                          max="9999999"
                           dir="ltr"
                           value={userEditResponsesUsed}
                           onChange={(e) => setUserEditResponsesUsed(e.target.value)}

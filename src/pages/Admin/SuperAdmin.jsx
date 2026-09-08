@@ -2630,7 +2630,7 @@ export default function SuperAdmin() {
                   <input
                     type="number"
                     min="1"
-                    max="1000"
+                    max="9999999"
                     value={detailMaxForms}
                     onChange={(e) => setDetailMaxForms(e.target.value)}
                     style={{
@@ -2660,7 +2660,7 @@ export default function SuperAdmin() {
                   <input
                     type="number"
                     min="1"
-                    max="100000"
+                    max="9999999"
                     step="10"
                     value={detailMaxResponses}
                     onChange={(e) => setDetailMaxResponses(e.target.value)}
@@ -2691,7 +2691,7 @@ export default function SuperAdmin() {
                   <input
                     type="number"
                     min="0"
-                    max="100000"
+                    max="9999999"
                     value={detailResponsesUsed}
                     onChange={(e) => setDetailResponsesUsed(e.target.value)}
                     style={{

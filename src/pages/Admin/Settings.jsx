@@ -245,7 +245,7 @@ export default function Settings() {
                   <input
                     type="number"
                     min="1"
-                    max="1000"
+                    max="9999999"
                     dir="ltr"
                     value={settings.default_max_active_forms}
                     onChange={(e) =>
@@ -281,7 +281,7 @@ export default function Settings() {
                   <input
                     type="number"
                     min="10"
-                    max="100000"
+                    max="9999999"
                     step="10"
                     dir="ltr"
                     value={settings.default_max_monthly_responses}
