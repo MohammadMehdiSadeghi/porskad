@@ -207,6 +207,10 @@ export function validateAnswer(question, value) {
 
     case "file_upload": {
       if (!value) return "لطفاً فایل مورد نظر را آپلود کنید.";
+      if (typeof value === "object" && value.name) {
+        const valRes = validateUploadedFile(value, question);
+        if (!valRes.isValid) return valRes.error;
+      }
       return null;
     }
 
@@ -240,6 +244,92 @@ export function validateAnswer(question, value) {
   }
 }
 
+// ══════════════════════════════════════════════════════════════
+// تنظیمات و اعتبارسنجی آپلود فایل
+// ══════════════════════════════════════════════════════════════
+export const FILE_TYPE_PRESETS = {
+  all: { label: "همه فرمت‌ها (آزاد)", extensions: [] },
+  image: { label: "تصاویر (JPG, PNG, WebP, GIF, SVG)", extensions: ["jpg", "jpeg", "png", "webp", "gif", "svg", "bmp"] },
+  document: { label: "اسناد و آفیس (PDF, Word, Excel, PowerPoint, Text)", extensions: ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "rtf", "csv"] },
+  archive: { label: "فایل‌های فشرده (ZIP, RAR, 7Z, TAR)", extensions: ["zip", "rar", "7z", "tar", "gz"] },
+  media: { label: "صوتی و تصویری (MP3, MP4, WAV, MOV)", extensions: ["mp3", "wav", "ogg", "mp4", "mkv", "mov", "avi", "webm"] },
+  custom: { label: "پسوندهای سفارشی و دلخواه", extensions: [] },
+};
+
+/**
+ * دریافت لیست پسوندهای مجاز برای یک سوال
+ */
+export function getAllowedExtensions(question) {
+  const allowedType = question.validation?.allowed_file_types || question.allowed_file_types || "all";
+  const customExts = question.validation?.custom_extensions || question.custom_extensions || "";
+  
+  let extensions = [];
+  if (allowedType !== "all" && FILE_TYPE_PRESETS[allowedType]) {
+    extensions = [...FILE_TYPE_PRESETS[allowedType].extensions];
+  }
+  
+  if (customExts) {
+    const parsed = customExts
+      .split(/[,\s|،]+/)
+      .map((e) => e.replace(/^\./, "").trim().toLowerCase())
+      .filter(Boolean);
+    extensions = Array.from(new Set([...extensions, ...parsed]));
+  }
+
+  return extensions;
+}
+
+/**
+ * اعتبارسنجی فایل آپلود شده از نظر حجم و پسوند مجاز
+ */
+export function validateUploadedFile(file, question) {
+  if (!file) {
+    return { isValid: false, error: "فایلی انتخاب نشده است." };
+  }
+
+  const fileName = file.name || "";
+  const fileSize = file.size || 0;
+  const maxMb = Number(question.validation?.max_file_size_mb || question.max_file_size_mb || 10);
+  const maxBytes = maxMb * 1024 * 1024;
+
+  // ۱. بررسی حجم فایل
+  if (fileSize > maxBytes) {
+    const sizeInMb = (fileSize / (1024 * 1024)).toFixed(1);
+    return {
+      isValid: false,
+      error: `حجم فایل انتخابی (${sizeInMb} مگابایت) بیشتر از سقف مجاز (${maxMb} مگابایت) است.`,
+    };
+  }
+
+  // ۲. بررسی پسوند فایل
+  const allowedExtensions = getAllowedExtensions(question);
+  if (allowedExtensions.length > 0) {
+    const ext = fileName.split(".").pop()?.toLowerCase() || "";
+    if (!ext || !allowedExtensions.includes(ext)) {
+      return {
+        isValid: false,
+        error: `فرمت فایل انتخابی (${ext ? `.${ext}` : "نامشخص"}) مجاز نیست. پسوندهای مجاز: ${allowedExtensions.join("، ")}`,
+      };
+    }
+  }
+
+  return { isValid: true };
+}
+
+/**
+ * تولید مقدار ویژگی accept برای تگ input file
+ */
+export function getFileAcceptString(question) {
+  const allowedType = question.validation?.allowed_file_types || question.allowed_file_types || "all";
+  const exts = getAllowedExtensions(question);
+  
+  if (allowedType === "image" && exts.length === 0) return "image/*";
+  if (exts.length > 0) {
+    return exts.map((e) => `.${e}`).join(",");
+  }
+  return "*/*";
+}
+
 // نرمال‌سازی مقدار قبل از ذخیره در دیتابیس
 export function normalizeAnswerValue(question, value) {
   if (value === null || value === undefined) return null;
@@ -266,3 +356,4 @@ export function normalizeAnswerValue(question, value) {
       return value;
   }
 }
+

@@ -1,4 +1,5 @@
 // متادیتای انواع سوال — منبع واحد برای فرم‌ساز، صفحه پر کردن و گزارش‌ها
+import { supabase } from "./supabaseClient";
 
 export const QUESTION_TYPES = {
   // ─── گزینه‌ای و انتخابی ───
@@ -221,7 +222,7 @@ export const QUESTION_TYPES = {
     category: "advanced",
     hint: "بارگذاری تصویر، سند یا فایل توسط کاربر",
     hasOptions: false,
-    defaultAllowedTypes: "all", // all, image, pdf, document
+    defaultAllowedTypes: "all", // all, image, document, archive, media, custom
     defaultMaxSizeMb: 10,
     conditionOperators: ["is_empty", "is_not_empty"],
     valueFieldType: "text",
@@ -287,8 +288,131 @@ export const QUESTION_TYPE_ORDER = [
   "payment",
 ];
 
+// ══════════════════════════════════════════════════════════════
+// تنظیمات داینامیک فیلدها و سوالات (مدیریت توسط سوپر ادمین)
+// ══════════════════════════════════════════════════════════════
+const STORAGE_KEY = "porskad_question_types_config";
+
+/**
+ * دریافت تنظیمات سفارشی انواع سوالات از لوکال‌استوریج یا کش
+ */
+export function getQuestionTypesConfig() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      return JSON.parse(raw);
+    }
+  } catch (err) {
+    console.error("Error reading question types config:", err);
+  }
+  return {};
+}
+
+/**
+ * ذخیره تنظیمات سفارشی انواع سوالات در لوکال‌استوریج و دیتابیس Supabase
+ */
+export async function saveQuestionTypesConfig(config) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("porskad:question_types_updated", { detail: config }));
+    }
+    
+    // تلاش برای ذخیره در جدول system_settings
+    try {
+      await supabase.from("system_settings").upsert({
+        key: "question_types_config",
+        value: config,
+        updated_at: new Date().toISOString(),
+      });
+    } catch {
+      // ادامه با کش لوکال در صورت نبود دسترسی به RPC
+    }
+    return true;
+  } catch (err) {
+    console.error("Failed to save question types config:", err);
+    return false;
+  }
+}
+
+/**
+ * بارگذاری تنظیمات از دیتابیس در هنگام استارت
+ */
+export async function loadQuestionTypesConfigFromDb() {
+  try {
+    const { data, error } = await supabase
+      .from("system_settings")
+      .select("value")
+      .eq("key", "question_types_config")
+      .maybeSingle();
+
+    if (!error && data?.value) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data.value));
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("porskad:question_types_updated", { detail: data.value }));
+      }
+      return data.value;
+    }
+  } catch (err) {
+    console.warn("Could not fetch question_types_config from DB:", err);
+  }
+  return getQuestionTypesConfig();
+}
+
+/**
+ * ریست کردن کلیه تنظیمات سوالات به حالت پیش‌فرض کارخانه
+ */
+export async function resetQuestionTypesConfig() {
+  localStorage.removeItem(STORAGE_KEY);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("porskad:question_types_updated", { detail: {} }));
+  }
+  try {
+    await supabase.from("system_settings").delete().eq("key", "question_types_config");
+  } catch { /* ignore */ }
+  return true;
+}
+
+/**
+ * متادیتای نهایی نوع سوال با احتساب تنظیمات سفارشی ادمین (نام، توضیح، فعال/غیرفعال، مخفی)
+ */
+export function getEffectiveQuestionType(typeKey, configOverride) {
+  const base = QUESTION_TYPES[typeKey] || QUESTION_TYPES.short_text;
+  const config = configOverride || getQuestionTypesConfig();
+  const custom = config[typeKey] || {};
+
+  return {
+    ...base,
+    label: custom.label || base.label,
+    hint: custom.hint !== undefined ? custom.hint : base.hint,
+    category: custom.category || base.category,
+    enabled: custom.enabled !== undefined ? custom.enabled : true,
+    hidden: custom.hidden !== undefined ? custom.hidden : false,
+    deleted: custom.deleted !== undefined ? custom.deleted : false,
+  };
+}
+
+/**
+ * دریافت دسته‌بندی‌ها حاوی فقط فیلدهای مجاز و فعال برای فرم‌ساز
+ */
+export function getAvailableQuestionCategories(configOverride) {
+  const config = configOverride || getQuestionTypesConfig();
+  
+  return QUESTION_CATEGORIES.map((cat) => {
+    const activeTypes = cat.types.filter((tKey) => {
+      const meta = getEffectiveQuestionType(tKey, config);
+      return meta.enabled !== false && meta.hidden !== true && meta.deleted !== true;
+    });
+
+    return {
+      ...cat,
+      types: activeTypes,
+    };
+  }).filter((cat) => cat.types.length > 0);
+}
+
 export function makeQuestion(type, position = 0) {
-  const meta = QUESTION_TYPES[type] || QUESTION_TYPES.short_text;
+  const meta = getEffectiveQuestionType(type);
   
   let options = [];
   if (type === "picture_choice") {
@@ -370,6 +494,7 @@ export function resolveQuestion(q) {
   const min_label = q.min_label || q.validation?.min_label || "اصلاً احتمال ندارد";
   const max_label = q.max_label || q.validation?.max_label || "بسیار زیاد";
   const allowed_file_types = q.allowed_file_types || q.validation?.allowed_file_types || "all";
+  const custom_extensions = q.custom_extensions || q.validation?.custom_extensions || "";
   const max_file_size_mb = q.max_file_size_mb || q.validation?.max_file_size_mb || 10;
   const amount = q.amount || q.validation?.amount || 100000;
   const currency = q.currency || q.validation?.currency || "تومان";
@@ -382,10 +507,12 @@ export function resolveQuestion(q) {
     min_label,
     max_label,
     allowed_file_types,
+    custom_extensions,
     max_file_size_mb,
     amount,
     currency,
   };
 }
+
 
 

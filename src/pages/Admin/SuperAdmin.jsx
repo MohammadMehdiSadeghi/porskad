@@ -56,11 +56,27 @@ import {
   UserPlus,
   LogIn,
   LogOut,
+  Edit3,
+  Power,
+  Layers,
 } from "lucide-react";
+import {
+  QUESTION_TYPES,
+  QUESTION_TYPE_ORDER,
+  QUESTION_CATEGORIES,
+  getQuestionTypesConfig,
+  saveQuestionTypesConfig,
+  resetQuestionTypesConfig,
+  loadQuestionTypesConfigFromDb,
+  getEffectiveQuestionType,
+} from "../../lib/questionTypes";
+import { QUESTION_TYPE_ICONS } from "../../lib/questionIcons";
+
 
 const TABS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "settings", label: "Settings", icon: Settings },
+  { id: "question_types", label: "Form Questions", icon: ListOrdered },
   { id: "storage", label: "Storage", icon: HardDrive },
   { id: "database", label: "Database", icon: Database },
   { id: "users", label: "Users", icon: Users },
@@ -70,6 +86,7 @@ const TABS = [
   { id: "logs", label: "System Logs", icon: FileText },
   { id: "query", label: "SQL", icon: Code },
 ];
+
 
 // ══════════════════════════════════════════════════════════════
 // God-Mode SuperAdmin
@@ -133,6 +150,14 @@ export default function SuperAdmin() {
   });
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsSaving, setSettingsSaving] = useState(false);
+
+  // ─── Question Types Management State ───
+  const [qConfig, setQConfig] = useState(() => getQuestionTypesConfig());
+  const [qSearch, setQSearch] = useState("");
+  const [qCategoryFilter, setQCategoryFilter] = useState("all");
+  const [qEditModal, setQEditModal] = useState(null);
+  const [qEditForm, setQEditForm] = useState({ label: "", hint: "", category: "choice", enabled: true, hidden: false });
+  const [qSaving, setQSaving] = useState(false);
 
   // ─── Modals ───
   const [editModal, setEditModal] = useState(null);
@@ -390,6 +415,86 @@ export default function SuperAdmin() {
     } finally {
       setSettingsSaving(false);
     }
+  }
+
+  // ─── Question Types Management Handlers ───
+  async function handleToggleQField(typeKey, field) {
+    const current = getEffectiveQuestionType(typeKey, qConfig);
+    const updated = {
+      ...qConfig,
+      [typeKey]: {
+        ...(qConfig[typeKey] || {}),
+        [field]: !current[field],
+      },
+    };
+    setQConfig(updated);
+    await saveQuestionTypesConfig(updated);
+    showToast(`Question type '${typeKey}' updated (${field}: ${!current[field]})`);
+  }
+
+  function handleOpenQEdit(typeKey) {
+    const current = getEffectiveQuestionType(typeKey, qConfig);
+    setQEditModal(typeKey);
+    setQEditForm({
+      label: current.label || "",
+      hint: current.hint || "",
+      category: current.category || "choice",
+      enabled: current.enabled !== false,
+      hidden: current.hidden === true,
+    });
+  }
+
+  async function handleSaveQEdit() {
+    if (!qEditModal) return;
+    setQSaving(true);
+    try {
+      const updated = {
+        ...qConfig,
+        [qEditModal]: {
+          ...(qConfig[qEditModal] || {}),
+          label: qEditForm.label.trim(),
+          hint: qEditForm.hint.trim(),
+          category: qEditForm.category,
+          enabled: qEditForm.enabled,
+          hidden: qEditForm.hidden,
+        },
+      };
+      setQConfig(updated);
+      await saveQuestionTypesConfig(updated);
+      setQEditModal(null);
+      showToast(`Question type '${qEditModal}' saved successfully`);
+    } catch (err) {
+      showToast("Failed to save question config: " + err.message, "error");
+    } finally {
+      setQSaving(false);
+    }
+  }
+
+  async function handleDeleteQType(typeKey) {
+    const isAlreadyDisabled = qConfig[typeKey]?.enabled === false;
+    const confirmMsg = isAlreadyDisabled
+      ? `Re-enable question type '${typeKey}'?`
+      : `Disable / delete question type '${typeKey}' from form builders?`;
+    if (!confirm(confirmMsg)) return;
+
+    const updated = {
+      ...qConfig,
+      [typeKey]: {
+        ...(qConfig[typeKey] || {}),
+        enabled: isAlreadyDisabled,
+        hidden: !isAlreadyDisabled,
+      },
+    };
+    setQConfig(updated);
+    await saveQuestionTypesConfig(updated);
+    showToast(isAlreadyDisabled ? `Question type '${typeKey}' re-enabled` : `Question type '${typeKey}' disabled & hidden`);
+  }
+
+  async function handleResetAllQ() {
+    if (!confirm("Are you sure you want to reset ALL 20 question types to factory defaults?")) return;
+    await resetQuestionTypesConfig();
+    setQConfig({});
+    showToast("All question types reset to factory defaults");
   }
 
   async function handleResetUserQuota(targetUserId, targetUserName) {
@@ -1489,8 +1594,408 @@ export default function SuperAdmin() {
         </div>
       )}
 
+      {/* ═══════════ Question Types & Fields Manager ═══════════ */}
+      {tab === "question_types" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+          {/* Header */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "0.75rem",
+            }}
+          >
+            <div>
+              <div className="sa-section-title" style={{ margin: 0, fontSize: "1.1rem" }}>
+                Form Field & Question Types Manager
+              </div>
+              <div style={{ fontSize: "0.8rem", color: "#525252" }}>
+                Enable, disable, hide, rename, and customize all 20 question types across the platform.
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button
+                className="sa-btn sa-btn-secondary"
+                onClick={handleResetAllQ}
+                style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+                title="Reset all customized labels and visibilities back to default"
+              >
+                <RotateCcw size={14} />
+                Reset All to Defaults
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Metrics */}
+          {(() => {
+            const allTypes = QUESTION_TYPE_ORDER.map((k) => getEffectiveQuestionType(k, qConfig));
+            const totalCount = allTypes.length;
+            const activeCount = allTypes.filter((t) => t.enabled !== false && t.hidden !== true).length;
+            const hiddenCount = allTypes.filter((t) => t.hidden === true).length;
+            const disabledCount = allTypes.filter((t) => t.enabled === false).length;
+
+            return (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: "0.75rem",
+                }}
+              >
+                <div className="sa-card" style={{ padding: "0.85rem 1rem" }}>
+                  <div className="sa-stat-label">Total Field Types</div>
+                  <div className="sa-stat-value" style={{ fontSize: "1.5rem" }}>{totalCount}</div>
+                  <div className="sa-stat-sub">Across 3 categories</div>
+                </div>
+
+                <div className="sa-card" style={{ padding: "0.85rem 1rem" }}>
+                  <div className="sa-stat-label">Active & Available</div>
+                  <div className="sa-stat-value" style={{ fontSize: "1.5rem", color: "#198038" }}>
+                    {activeCount}
+                  </div>
+                  <div className="sa-stat-sub">Visible in Form Builder</div>
+                </div>
+
+                <div className="sa-card" style={{ padding: "0.85rem 1rem" }}>
+                  <div className="sa-stat-label">Hidden Fields</div>
+                  <div className="sa-stat-value" style={{ fontSize: "1.5rem", color: "#f1c21b" }}>
+                    {hiddenCount}
+                  </div>
+                  <div className="sa-stat-sub">Hidden from new questions</div>
+                </div>
+
+                <div className="sa-card" style={{ padding: "0.85rem 1rem" }}>
+                  <div className="sa-stat-label">Disabled / Inactive</div>
+                  <div className="sa-stat-value" style={{ fontSize: "1.5rem", color: "#da1e28" }}>
+                    {disabledCount}
+                  </div>
+                  <div className="sa-stat-sub">Completely disabled</div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Search & Category Filter Toolbar */}
+          <div
+            className="sa-card"
+            style={{
+              padding: "0.75rem 1rem",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "0.75rem",
+            }}
+          >
+            {/* Search */}
+            <div style={{ position: "relative", minWidth: 260, flex: 1 }}>
+              <Search
+                size={14}
+                style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#8d8d8d" }}
+              />
+              <input
+                type="text"
+                value={qSearch}
+                onChange={(e) => setQSearch(e.target.value)}
+                placeholder="Search question types, keys, labels..."
+                style={{
+                  width: "100%",
+                  padding: "0.45rem 0.75rem 0.45rem 2rem",
+                  fontSize: "0.8rem",
+                  border: "1px solid #c6c6c6",
+                  outline: "none",
+                }}
+              />
+              {qSearch && (
+                <button
+                  onClick={() => setQSearch("")}
+                  style={{
+                    position: "absolute",
+                    right: 8,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#8d8d8d",
+                  }}
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+
+            {/* Category Filter Tabs */}
+            <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
+              {[
+                { id: "all", label: "All (20)" },
+                { id: "choice", label: "Choice & Scale" },
+                { id: "text", label: "Text & Inputs" },
+                { id: "advanced", label: "Advanced" },
+                { id: "active", label: "Active Only" },
+                { id: "hidden", label: "Hidden" },
+                { id: "disabled", label: "Disabled" },
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setQCategoryFilter(f.id)}
+                  className={`sa-btn ${qCategoryFilter === f.id ? "sa-btn-primary" : "sa-btn-secondary"}`}
+                  style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem" }}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Table of Question Types */}
+          {(() => {
+            const filteredKeys = QUESTION_TYPE_ORDER.filter((key) => {
+              const meta = getEffectiveQuestionType(key, qConfig);
+              const qTerm = qSearch.toLowerCase().trim();
+
+              // Search match
+              const matchSearch =
+                !qTerm ||
+                key.toLowerCase().includes(qTerm) ||
+                meta.label.toLowerCase().includes(qTerm) ||
+                (meta.hint && meta.hint.toLowerCase().includes(qTerm)) ||
+                meta.category.toLowerCase().includes(qTerm);
+
+              if (!matchSearch) return false;
+
+              // Filter match
+              if (qCategoryFilter === "choice") return meta.category === "choice";
+              if (qCategoryFilter === "text") return meta.category === "text";
+              if (qCategoryFilter === "advanced") return meta.category === "advanced";
+              if (qCategoryFilter === "active") return meta.enabled !== false && meta.hidden !== true;
+              if (qCategoryFilter === "hidden") return meta.hidden === true;
+              if (qCategoryFilter === "disabled") return meta.enabled === false;
+
+              return true;
+            });
+
+            if (filteredKeys.length === 0) {
+              return (
+                <div className="sa-card" style={{ padding: "3rem 1rem", textAlign: "center", color: "#6f6f6f" }}>
+                  <ListOrdered size={36} style={{ margin: "0 auto 0.5rem", opacity: 0.4 }} />
+                  <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>No Question Types Match Your Filters</div>
+                  <div style={{ fontSize: "0.8rem", marginTop: "0.25rem" }}>
+                    Try adjusting your search query or category filter above.
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <div className="sa-card" style={{ padding: 0, overflow: "hidden" }}>
+                <div style={{ overflowX: "auto" }}>
+                  <table className="sa-table" style={{ width: "100%", textAlign: "left" }}>
+                    <thead>
+                      <tr>
+                        <th style={{ width: 45 }}>#</th>
+                        <th style={{ minWidth: 200 }}>Question Type / Key</th>
+                        <th style={{ minWidth: 220 }}>Persian Display Name</th>
+                        <th style={{ minWidth: 140 }}>Category</th>
+                        <th style={{ width: 120, textAlign: "center" }}>Status</th>
+                        <th style={{ width: 120, textAlign: "center" }}>Visibility</th>
+                        <th style={{ width: 150, textAlign: "right" }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredKeys.map((key, index) => {
+                        const meta = getEffectiveQuestionType(key, qConfig);
+                        const defaultMeta = QUESTION_TYPES[key] || {};
+                        const Icon = QUESTION_TYPE_ICONS[key];
+                        const isCustomized = qConfig[key] && Object.keys(qConfig[key]).length > 0;
+                        const isEnabled = meta.enabled !== false;
+                        const isHidden = meta.hidden === true;
+
+                        return (
+                          <tr
+                            key={key}
+                            style={{
+                              opacity: !isEnabled ? 0.6 : 1,
+                              background: isHidden ? "rgba(241, 194, 27, 0.04)" : !isEnabled ? "rgba(218, 30, 40, 0.04)" : undefined,
+                            }}
+                          >
+                            <td style={{ color: "#8d8d8d", fontSize: "0.75rem", fontFamily: "monospace" }}>
+                              {index + 1}
+                            </td>
+
+                            <td>
+                              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                <div
+                                  style={{
+                                    width: 30,
+                                    height: 30,
+                                    borderRadius: 4,
+                                    background: "#f4f4f4",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontWeight: 800,
+                                    fontSize: "0.75rem",
+                                    color: "#0f62fe",
+                                  }}
+                                >
+                                  {Icon ? <Icon size={16} /> : meta.icon}
+                                </div>
+                                <div>
+                                  <div style={{ fontWeight: 700, fontSize: "0.85rem", fontFamily: "'IBM Plex Mono', monospace" }}>
+                                    {key}
+                                  </div>
+                                  <div style={{ fontSize: "0.72rem", color: "#6f6f6f", maxWidth: 260 }} title={meta.hint}>
+                                    {meta.hint}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            <td>
+                              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                                <span style={{ fontWeight: 700, fontSize: "0.9rem" }}>{meta.label}</span>
+                                {isCustomized && (
+                                  <span
+                                    style={{
+                                      fontSize: "0.65rem",
+                                      fontWeight: 800,
+                                      padding: "1px 4px",
+                                      background: "#edf5ff",
+                                      color: "#0f62fe",
+                                      borderRadius: 2,
+                                      border: "1px solid #d0e2ff",
+                                    }}
+                                  >
+                                    Custom
+                                  </span>
+                                )}
+                              </div>
+                              {defaultMeta.label !== meta.label && (
+                                <div style={{ fontSize: "0.72rem", color: "#8d8d8d" }}>
+                                  Default: {defaultMeta.label}
+                                </div>
+                              )}
+                            </td>
+
+                            <td>
+                              <span
+                                style={{
+                                  fontSize: "0.72rem",
+                                  fontWeight: 700,
+                                  textTransform: "uppercase",
+                                  padding: "2px 6px",
+                                  borderRadius: 2,
+                                  background:
+                                    meta.category === "choice"
+                                      ? "#f6f2ff"
+                                      : meta.category === "text"
+                                      ? "#e5f6ff"
+                                      : "#defbe6",
+                                  color:
+                                    meta.category === "choice"
+                                      ? "#6929c4"
+                                      : meta.category === "text"
+                                      ? "#0043ce"
+                                      : "#0e6027",
+                                }}
+                              >
+                                {meta.category}
+                              </span>
+                            </td>
+
+                            <td style={{ textAlign: "center" }}>
+                              <button
+                                onClick={() => handleToggleQField(key, "enabled")}
+                                style={{
+                                  border: "none",
+                                  background: isEnabled ? "#defbe6" : "#ffd7d9",
+                                  color: isEnabled ? "#0e6027" : "#da1e28",
+                                  padding: "2px 8px",
+                                  borderRadius: 12,
+                                  fontSize: "0.75rem",
+                                  fontWeight: 700,
+                                  cursor: "pointer",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "0.25rem",
+                                }}
+                                title={isEnabled ? "Click to Disable" : "Click to Enable"}
+                              >
+                                <span
+                                  style={{
+                                    width: 6,
+                                    height: 6,
+                                    borderRadius: "50%",
+                                    background: isEnabled ? "#198038" : "#da1e28",
+                                  }}
+                                />
+                                {isEnabled ? "Active" : "Disabled"}
+                              </button>
+                            </td>
+
+                            <td style={{ textAlign: "center" }}>
+                              <button
+                                onClick={() => handleToggleQField(key, "hidden")}
+                                style={{
+                                  border: "none",
+                                  background: !isHidden ? "#e5f6ff" : "#fcf4d6",
+                                  color: !isHidden ? "#0043ce" : "#8a6d10",
+                                  padding: "2px 8px",
+                                  borderRadius: 12,
+                                  fontSize: "0.75rem",
+                                  fontWeight: 700,
+                                  cursor: "pointer",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "0.25rem",
+                                }}
+                                title={!isHidden ? "Click to Hide from Builder" : "Click to Show in Builder"}
+                              >
+                                {!isHidden ? <Eye size={11} /> : <EyeOff size={11} />}
+                                {!isHidden ? "Visible" : "Hidden"}
+                              </button>
+                            </td>
+
+                            <td style={{ textAlign: "right" }}>
+                              <div style={{ display: "inline-flex", gap: "0.35rem" }}>
+                                <button
+                                  className="sa-btn sa-btn-secondary"
+                                  onClick={() => handleOpenQEdit(key)}
+                                  style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                                  title="Edit name, hint, and category"
+                                >
+                                  <Edit3 size={12} />
+                                  Edit
+                                </button>
+                                <button
+                                  className={`sa-btn ${isEnabled ? "sa-btn-danger" : "sa-btn-secondary"}`}
+                                  onClick={() => handleDeleteQType(key)}
+                                  style={{ padding: "0.25rem 0.45rem", fontSize: "0.75rem" }}
+                                  title={isEnabled ? "Disable field" : "Restore field"}
+                                >
+                                  {isEnabled ? <Ban size={12} /> : <RotateCcw size={12} />}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
       {/* ═══════════ Storage & System ═══════════ */}
       {tab === "storage" && (
+
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           <div
             style={{
@@ -4323,6 +4828,150 @@ export default function SuperAdmin() {
           </div>
         )}
       </Modal>
+
+      {/* ═══════════ Edit Question Type Modal ═══════════ */}
+      <Modal
+        open={!!qEditModal}
+        onClose={() => setQEditModal(null)}
+        title={`Edit Question Type (${qEditModal})`}
+      >
+
+        {qEditModal && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSaveQEdit();
+            }}
+            style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+          >
+            <div>
+              <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, marginBottom: "0.25rem" }}>
+                Type Key (Identifier)
+              </label>
+              <input
+                type="text"
+                disabled
+                value={qEditModal}
+                style={{
+                  width: "100%",
+                  padding: "0.45rem 0.65rem",
+                  fontSize: "0.85rem",
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  background: "rgba(0,0,0,0.05)",
+                  border: "1px solid #c6c6c6",
+                  color: "#6f6f6f",
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, marginBottom: "0.25rem" }}>
+                Persian Display Name (عنوان نمایشی فارسی)
+              </label>
+              <input
+                type="text"
+                value={qEditForm.label}
+                onChange={(e) => setQEditForm({ ...qEditForm, label: e.target.value })}
+                required
+                placeholder="مثلاً: ماتریسی (جدول سوالات)"
+                style={{
+                  width: "100%",
+                  padding: "0.5rem 0.75rem",
+                  fontSize: "0.85rem",
+                  border: "1px solid #c6c6c6",
+                  outline: "none",
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, marginBottom: "0.25rem" }}>
+                Description / Hint (توضیحات و راهنما)
+              </label>
+              <input
+                type="text"
+                value={qEditForm.hint}
+                onChange={(e) => setQEditForm({ ...qEditForm, hint: e.target.value })}
+                placeholder="مثلاً: چند سوال با گزینه‌های یکسان در جدول"
+                style={{
+                  width: "100%",
+                  padding: "0.5rem 0.75rem",
+                  fontSize: "0.85rem",
+                  border: "1px solid #c6c6c6",
+                  outline: "none",
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, marginBottom: "0.25rem" }}>
+                Category (دسته‌بندی)
+              </label>
+              <select
+                value={qEditForm.category}
+                onChange={(e) => setQEditForm({ ...qEditForm, category: e.target.value })}
+                style={{
+                  width: "100%",
+                  padding: "0.5rem 0.75rem",
+                  fontSize: "0.85rem",
+                  border: "1px solid #c6c6c6",
+                  outline: "none",
+                }}
+              >
+                <option value="choice">سوالات گزینه‌ای و مقیاسی (choice)</option>
+                <option value="text">سوالات متنی و اطلاعات تماس (text)</option>
+                <option value="advanced">پیشرفته، رسانه و ساختار فرم (advanced)</option>
+              </select>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginTop: "0.25rem" }}>
+              <label className="sa-card" style={{ padding: "0.65rem 0.85rem", display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", marginBottom: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={qEditForm.enabled !== false}
+                  onChange={(e) => setQEditForm({ ...qEditForm, enabled: e.target.checked })}
+                  style={{ width: 16, height: 16 }}
+                />
+                <span style={{ fontSize: "0.8rem", fontWeight: 700 }}>
+                  {qEditForm.enabled !== false ? "✓ Field is Active" : "✕ Disabled"}
+                </span>
+              </label>
+
+              <label className="sa-card" style={{ padding: "0.65rem 0.85rem", display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", marginBottom: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={qEditForm.hidden === true}
+                  onChange={(e) => setQEditForm({ ...qEditForm, hidden: e.target.checked })}
+                  style={{ width: 16, height: 16 }}
+                />
+                <span style={{ fontSize: "0.8rem", fontWeight: 700 }}>
+                  {qEditForm.hidden === true ? "Hide from Form Builder" : "Visible in Form Builder"}
+                </span>
+              </label>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.5rem" }}>
+              <button
+                type="submit"
+                className="sa-btn sa-btn-primary"
+                disabled={qSaving}
+                style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+              >
+                <Save size={14} />
+                {qSaving ? "Saving..." : "Save Changes"}
+              </button>
+              <button
+                type="button"
+                className="sa-btn sa-btn-secondary"
+                onClick={() => setQEditModal(null)}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 }
+

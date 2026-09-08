@@ -4,7 +4,7 @@ import StickerCard from "../ui/StickerCard";
 import Button from "../ui/Button";
 import Badge from "../ui/Badge";
 import Logo from "../ui/Logo";
-import { normalizeAnswerValue, validateAnswer } from "../../lib/validators";
+import { normalizeAnswerValue, validateAnswer, validateUploadedFile, getFileAcceptString, getAllowedExtensions } from "../../lib/validators";
 import { faNum, parseUserAgent, generateUuid } from "../../lib/utils";
 import { QUESTION_TYPES, resolveQuestion } from "../../lib/questionTypes";
 import { supabase } from "../../lib/supabaseClient";
@@ -549,21 +549,56 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
           <div className="p-4 rounded-xl border-2 border-dashed border-ink/20 dark:border-slate-700 bg-white dark:bg-slate-800 text-center">
             {val ? (
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-teal flex items-center gap-1.5"><FileCheck size={16} /> {typeof val === "object" ? val.name : "فایل انتخاب شد"}</span>
-                <button type="button" onClick={() => setAnswer(q.id, null, q)} className="text-xs text-magenta-text font-bold hover:underline cursor-pointer">حذف</button>
+                <div className="flex items-center gap-2 truncate">
+                  <FileCheck size={18} className="text-teal shrink-0" />
+                  <div className="text-right truncate">
+                    <span className="text-xs font-bold text-teal block truncate">
+                      {typeof val === "object" ? val.name : "فایل انتخاب شد"}
+                    </span>
+                    {typeof val === "object" && val.size && (
+                      <span className="text-[10px] text-ink-subtle dark:text-slate-400">
+                        {faNum((val.size / (1024 * 1024)).toFixed(2))} MB
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button type="button" onClick={() => setAnswer(q.id, null, q)} className="text-xs text-magenta-text font-bold hover:underline cursor-pointer mr-2 shrink-0">حذف</button>
               </div>
             ) : (
-              <label className="flex flex-col items-center justify-center cursor-pointer gap-1 py-2">
+              <label className="flex flex-col items-center justify-center cursor-pointer gap-1.5 py-2">
                 <Upload size={24} className="text-ink/40" />
-                <span className="text-xs font-bold text-ink dark:text-slate-200">انتخاب فایل</span>
-                <input type="file" onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) setAnswer(q.id, { name: file.name, size: file.size, type: file.type }, q);
-                }} className="hidden" />
+                <span className="text-xs font-bold text-ink dark:text-slate-200">انتخاب یا بارگذاری فایل</span>
+                <span className="text-[10px] text-ink-subtle dark:text-slate-400">
+                  سقف حجم: {faNum(q.validation?.max_file_size_mb || q.max_file_size_mb || 10)} مگابایت
+                  {getAllowedExtensions(q).length > 0 && ` • فرمت‌ها: ${getAllowedExtensions(q).join("، ")}`}
+                </span>
+                <input
+                  type="file"
+                  accept={getFileAcceptString(q)}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const check = validateUploadedFile(file, q);
+                      if (!check.isValid) {
+                        setErrors((prev) => ({ ...prev, [q.id]: check.error }));
+                        e.target.value = "";
+                        return;
+                      }
+                      setAnswer(q.id, {
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        ext: file.name.split(".").pop()?.toLowerCase() || "",
+                      }, q);
+                    }
+                  }}
+                  className="hidden"
+                />
               </label>
             )}
           </div>
         )}
+
 
         {/* پرداخت */}
         {q.type === "payment" && (

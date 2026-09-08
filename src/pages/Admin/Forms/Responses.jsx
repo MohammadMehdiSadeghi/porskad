@@ -245,6 +245,7 @@ function CorrectnessBadge({ question, answer }) {
 }
 
 // ─── تحلیل هر سوال ───
+// ─── تحلیل هر سوال ───
 function QuestionAnalysis({ question, answers, totalResponses }) {
   const values = answers.map((a) => a.value).filter((v) => v !== null && v !== undefined && v !== "");
   const total = values.length;
@@ -252,19 +253,21 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
   const times = answers.map((a) => a.time_spent_seconds).filter((t) => t > 0);
   const avgTime = times.length ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : null;
 
-  // ─── توزیع گزینه‌ها (choice / yes_no / checkbox) ───
+  // ─── توزیع گزینه‌ها (choice / dropdown / picture_choice / yes_no / rating) ───
   const dist = useMemo(() => {
     let keys;
-    if (question.type === "choice") keys = question.options ?? [];
-    else if (question.type === "yes_no") keys = ["بله", "خیر"];
+    if (question.type === "choice" || question.type === "dropdown") keys = question.options ?? [];
+    else if (question.type === "picture_choice") {
+      keys = (question.options ?? []).map((o) => (typeof o === "object" ? o.text : String(o)));
+    } else if (question.type === "yes_no") keys = ["بله", "خیر"];
     else if (question.type === "rating") keys = [5, 4, 3, 2, 1];
     if (!keys) return null;
 
-    const isCheckbox = question.type === "choice" && (question.max_selections ?? 1) > 1;
+    const isMulti = (question.type === "choice" || question.type === "picture_choice") && (question.max_selections ?? 1) > 1;
     const counts = Object.fromEntries(keys.map((k) => [String(k), 0]));
 
     for (const v of values) {
-      if (isCheckbox && Array.isArray(v)) {
+      if (isMulti && Array.isArray(v)) {
         for (const item of v) {
           const k = String(item);
           if (k in counts) counts[k]++;
@@ -284,6 +287,206 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
     }));
   }, [question, values, total]);
 
+  // ─── تحلیل شاخص NPS ───
+  const npsStats = useMemo(() => {
+    if (question.type !== "nps" || !values.length) return null;
+    const nums = values.map((v) => Number(v)).filter((n) => !isNaN(n) && n >= 0 && n <= 10);
+    if (!nums.length) return null;
+
+    let promoters = 0; // 9-10
+    let passives = 0;  // 7-8
+    let detractors = 0; // 0-6
+    const scoreCounts = Array(11).fill(0);
+
+    nums.forEach((score) => {
+      scoreCounts[score]++;
+      if (score >= 9) promoters++;
+      else if (score >= 7) passives++;
+      else detractors++;
+    });
+
+    const totalN = nums.length;
+    const pPct = Math.round((promoters / totalN) * 100);
+    const pasPct = Math.round((passives / totalN) * 100);
+    const dPct = Math.round((detractors / totalN) * 100);
+    const npsScore = pPct - dPct;
+    const avgScore = (nums.reduce((a, b) => a + b, 0) / totalN).toFixed(1);
+
+    return {
+      npsScore,
+      avgScore,
+      totalCount: totalN,
+      promoters: { count: promoters, pct: pPct },
+      passives: { count: passives, pct: pasPct },
+      detractors: { count: detractors, pct: dPct },
+      scoreCounts,
+    };
+  }, [question.type, values]);
+
+  // ─── تحلیل طیف مقیاس لیکرت (Likert) ───
+  const likertStats = useMemo(() => {
+    if (question.type !== "likert") return null;
+    const defaultOpts = ["کاملاً مخالفم", "مخالفم", "نظری ندارم", "موافقم", "کاملاً موافقم"];
+    const opts = question.options?.length ? question.options : defaultOpts;
+    const counts = Object.fromEntries(opts.map((o) => [String(o), 0]));
+
+    let weightedSum = 0;
+    let validCount = 0;
+
+    values.forEach((v) => {
+      const s = String(v);
+      if (s in counts) counts[s]++;
+      const idx = opts.indexOf(s);
+      if (idx !== -1) {
+        weightedSum += idx + 1; // 1 to N scale
+        validCount++;
+      }
+    });
+
+    const avgScale = validCount ? (weightedSum / validCount).toFixed(2) : null;
+
+    const breakdown = opts.map((opt, idx) => ({
+      label: opt,
+      count: counts[String(opt)],
+      pct: total ? Math.round((counts[String(opt)] / total) * 100) : 0,
+      weight: idx + 1,
+    }));
+
+    return { breakdown, avgScale, totalScale: opts.length };
+  }, [question, values, total]);
+
+  // ─── تحلیل ماتریسی (Matrix) ───
+  const matrixStats = useMemo(() => {
+    if (question.type !== "matrix") return null;
+    const rows = question.rows || ["کیفیت خدمات", "سرعت پاسخگویی", "سهولت استفاده"];
+    const cols = question.columns || ["خیلی ضعیف", "ضعیف", "متوسط", "خوب", "عالی"];
+
+    const matrixData = rows.map((row) => {
+      const colCounts = Object.fromEntries(cols.map((c) => [c, 0]));
+      let rowTotal = 0;
+
+      values.forEach((v) => {
+        if (typeof v === "object" && v !== null && v[row]) {
+          const chosen = String(v[row]);
+          if (chosen in colCounts) {
+            colCounts[chosen]++;
+            rowTotal++;
+          }
+        }
+      });
+
+      let topCol = null;
+      let topCount = -1;
+      const breakdown = cols.map((col) => {
+        const cnt = colCounts[col];
+        if (cnt > topCount) {
+          topCount = cnt;
+          topCol = col;
+        }
+        return {
+          col,
+          count: cnt,
+          pct: rowTotal ? Math.round((cnt / rowTotal) * 100) : 0,
+        };
+      });
+
+      return {
+        row,
+        rowTotal,
+        breakdown,
+        topCol: rowTotal > 0 ? topCol : null,
+      };
+    });
+
+    return matrixData;
+  }, [question, values]);
+
+  // ─── تحلیل اولویت‌بندی (Ranking - Borda Count) ───
+  const rankingStats = useMemo(() => {
+    if (question.type !== "ranking") return null;
+    const opts = question.options || [];
+    if (!opts.length) return null;
+
+    const n = opts.length;
+    const scores = Object.fromEntries(opts.map((o) => [o, { points: 0, positionsSum: 0, firstRankCount: 0, count: 0 }]));
+
+    values.forEach((v) => {
+      if (Array.isArray(v)) {
+        v.forEach((item, pos) => {
+          if (scores[item]) {
+            scores[item].points += n - pos; // Borda score: 1st gets n points, 2nd gets n-1...
+            scores[item].positionsSum += pos + 1;
+            scores[item].count++;
+            if (pos === 0) scores[item].firstRankCount++;
+          }
+        });
+      }
+    });
+
+    const ranked = opts.map((item) => {
+      const s = scores[item];
+      const avgPos = s.count > 0 ? (s.positionsSum / s.count).toFixed(2) : null;
+      const firstPct = total > 0 ? Math.round((s.firstRankCount / total) * 100) : 0;
+      return {
+        item,
+        points: s.points,
+        avgPosition: avgPos,
+        firstPct,
+        totalAnswers: s.count,
+      };
+    }).sort((a, b) => b.points - a.points);
+
+    return ranked;
+  }, [question, values, total]);
+
+  // ─── تحلیل آپلود فایل (File Upload) ───
+  const fileUploadStats = useMemo(() => {
+    if (question.type !== "file_upload") return null;
+    let totalSizeBytes = 0;
+    const filesList = [];
+
+    values.forEach((v) => {
+      if (typeof v === "object" && v !== null && v.name) {
+        totalSizeBytes += v.size || 0;
+        filesList.push(v);
+      }
+    });
+
+    const totalMb = (totalSizeBytes / (1024 * 1024)).toFixed(2);
+    const avgKb = filesList.length ? Math.round((totalSizeBytes / filesList.length) / 1024) : 0;
+
+    return {
+      fileCount: filesList.length,
+      totalMb,
+      avgKb,
+      files: filesList.slice(0, 10),
+    };
+  }, [question.type, values]);
+
+  // ─── تحلیل درگاه پرداخت (Payment) ───
+  const paymentStats = useMemo(() => {
+    if (question.type !== "payment") return null;
+    const baseAmount = question.validation?.amount || question.amount || 100000;
+    const currency = question.validation?.currency || question.currency || "تومان";
+    let paidCount = 0;
+    let totalRevenue = 0;
+
+    values.forEach((v) => {
+      if (v === true || (typeof v === "object" && v?.paid)) {
+        paidCount++;
+        totalRevenue += baseAmount;
+      }
+    });
+
+    return {
+      paidCount,
+      totalRevenue,
+      baseAmount,
+      currency,
+      conversionRate: total > 0 ? Math.round((paidCount / total) * 100) : 0,
+    };
+  }, [question, values, total]);
+
   // ─── آمار عددی ───
   const numericStats = useMemo(() => {
     if (question.type !== "number" && question.type !== "rating") return null;
@@ -293,8 +496,7 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
     const sum = nums.reduce((a, b) => a + b, 0);
     const avg = sum / nums.length;
     const mid = Math.floor(sorted.length / 2);
-    const median =
-      sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    const median = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
     const min = sorted[0];
     const max = sorted[sorted.length - 1];
     const variance = nums.reduce((acc, n) => acc + Math.pow(n - avg, 2), 0) / nums.length;
@@ -317,7 +519,7 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-xl border border-ink/10 dark:border-slate-800 p-5 shadow-sm">
-      {/* هدر */}
+      {/* هدر سوال */}
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex-1">
           <h4 className="font-bold text-navy dark:text-white flex items-center gap-2">
@@ -357,14 +559,209 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
         <p className="text-sm text-ink/40 dark:text-slate-500">هنوز جوابی ثبت نشده.</p>
       )}
 
-      {/* نمودار توزیع */}
-      {dist && total > 0 && (
+      {/* ─── ویژوال NPS شاخص وفاداری ─── */}
+      {npsStats && total > 0 && (
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <div className="sm:col-span-1 p-4 rounded-xl border-2 border-orange/30 bg-orange/5 dark:bg-amber-950/30 flex flex-col items-center justify-center text-center">
+              <span className="text-xs font-bold text-ink-subtle dark:text-slate-400">شاخص NPS</span>
+              <span className={`text-3xl font-black ${npsStats.npsScore > 30 ? "text-teal-text dark:text-teal-300" : npsStats.npsScore >= 0 ? "text-amber-500" : "text-rose-500"}`} dir="ltr">
+                {npsStats.npsScore > 0 ? `+${faNum(npsStats.npsScore)}` : faNum(npsStats.npsScore)}
+              </span>
+              <span className="text-[10px] font-extrabold mt-1 text-ink/50 dark:text-slate-400">
+                میانگین امتیاز: {faNum(npsStats.avgScore)} از ۱۰
+              </span>
+            </div>
+
+            <div className="sm:col-span-3 flex flex-col justify-center gap-2">
+              <div className="flex items-center justify-between text-xs font-bold">
+                <span className="text-teal-text dark:text-teal-300 flex items-center gap-1">
+                  💚 مروجان (۹-۱۰): {faNum(npsStats.promoters.count)} ({faNum(npsStats.promoters.pct)}٪)
+                </span>
+                <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                  💛 منفعل‌ها (۷-۸): {faNum(npsStats.passives.count)} ({faNum(npsStats.passives.pct)}٪)
+                </span>
+                <span className="text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                  💔 ناراضیان (۰-۶): {faNum(npsStats.detractors.count)} ({faNum(npsStats.detractors.pct)}٪)
+                </span>
+              </div>
+
+              {/* نوار تقسیم‌بندی NPS */}
+              <div className="h-6 w-full rounded-full overflow-hidden flex bg-bg-neutral dark:bg-slate-800 p-0.5 gap-0.5">
+                {npsStats.promoters.pct > 0 && (
+                  <div style={{ width: `${npsStats.promoters.pct}%` }} className="bg-teal h-full rounded-l-full" title={`مروجان: ${npsStats.promoters.pct}٪`} />
+                )}
+                {npsStats.passives.pct > 0 && (
+                  <div style={{ width: `${npsStats.passives.pct}%` }} className="bg-amber-400 h-full" title={`منفعل‌ها: ${npsStats.passives.pct}٪`} />
+                )}
+                {npsStats.detractors.pct > 0 && (
+                  <div style={{ width: `${npsStats.detractors.pct}%` }} className="bg-rose-500 h-full rounded-r-full" title={`ناراضیان: ${npsStats.detractors.pct}٪`} />
+                )}
+              </div>
+
+              <div className="flex justify-between text-[10px] text-ink-subtle dark:text-slate-500 px-1 font-mono">
+                <span>{question.min_label || "۰: اصلاً احتمال ندارد"}</span>
+                <span>{question.max_label || "۱۰: بسیار زیاد"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── ویژوال مقیاس لیکرت ─── */}
+      {likertStats && total > 0 && (
+        <div className="flex flex-col gap-3">
+          {likertStats.avgScale && (
+            <div className="flex items-center justify-between text-xs font-bold bg-teal/5 dark:bg-teal-950/30 p-2.5 rounded-lg border border-teal/20">
+              <span className="text-teal-text dark:text-teal-300">میانگین گرایش و رضایت:</span>
+              <span className="font-mono text-sm font-black text-navy dark:text-white">
+                {faNum(likertStats.avgScale)} از {faNum(likertStats.totalScale)}
+              </span>
+            </div>
+          )}
+          <div className="flex flex-col gap-2">
+            {likertStats.breakdown.map((item, i) => (
+              <div key={item.label} className="flex items-center gap-2.5">
+                <span className="w-28 shrink-0 text-xs font-bold text-ink dark:text-slate-300 truncate" title={item.label}>
+                  {item.label}
+                </span>
+                <div className="flex-1 h-5 bg-bg-neutral dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${item.pct}%`,
+                      backgroundColor: CHART_COLORS[i % CHART_COLORS.length],
+                    }}
+                  />
+                </div>
+                <span className="w-16 text-xs font-mono font-bold text-navy dark:text-white text-left" dir="ltr">
+                  {item.count} <span className="text-ink/40 text-[10px]">({item.pct}٪)</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ─── ویژوال ماتریسی (جدول سوالات) ─── */}
+      {matrixStats && total > 0 && (
+        <div className="flex flex-col gap-3">
+          <div className="text-xs font-bold text-ink-subtle dark:text-slate-400 mb-1">
+            تفکیک پاسخ‌ها به تفکیک سطرها و گزینه‌های ستون:
+          </div>
+          <div className="flex flex-col gap-3">
+            {matrixStats.map((r, rIdx) => (
+              <div key={rIdx} className="p-3 rounded-xl border border-ink/10 dark:border-slate-800 bg-bg-neutral/40 dark:bg-slate-800/40 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-navy dark:text-white">{r.row}</span>
+                  {r.topCol && (
+                    <span className="text-[11px] font-bold text-teal-text dark:text-teal-300 bg-teal/10 px-2 py-0.5 rounded-full border border-teal/20">
+                      بیشترین انتخاب: {r.topCol}
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-1">
+                  {r.breakdown.map((c, cIdx) => (
+                    <div key={cIdx} className="bg-white dark:bg-slate-800 p-2 rounded-lg border border-ink/5 dark:border-slate-700 flex flex-col items-center text-center">
+                      <span className="text-[11px] font-medium text-ink-subtle dark:text-slate-400 truncate w-full">{c.col}</span>
+                      <span className="text-xs font-black text-navy dark:text-white mt-0.5">{faNum(c.count)}</span>
+                      <span className="text-[10px] text-ink/40 font-mono font-bold">({faNum(c.pct)}٪)</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ─── ویژوال اولویت‌بندی (Ranking) ─── */}
+      {rankingStats && total > 0 && (
+        <div className="flex flex-col gap-3">
+          <div className="text-xs font-bold text-ink-subtle dark:text-slate-400">
+            رتبه‌بندی نهایی گزینه‌ها بر اساس وزن‌دهی بردا (Borda Count):
+          </div>
+          <div className="flex flex-col gap-2">
+            {rankingStats.map((item, idx) => (
+              <div key={item.item} className="flex items-center justify-between p-2.5 rounded-xl border border-ink/10 dark:border-slate-800 bg-white dark:bg-slate-800/80">
+                <div className="flex items-center gap-2.5 truncate">
+                  <span className={`w-6 h-6 rounded-full flex items-center justify-center font-black text-xs shrink-0 ${
+                    idx === 0 ? "bg-amber-400 text-amber-950 font-black" : idx === 1 ? "bg-slate-300 text-slate-800" : idx === 2 ? "bg-amber-700 text-white" : "bg-black/5 dark:bg-slate-700 text-ink"
+                  }`}>
+                    {faNum(idx + 1)}
+                  </span>
+                  <span className="text-xs font-black text-navy dark:text-white truncate">{item.item}</span>
+                </div>
+                <div className="flex items-center gap-3 shrink-0 text-xs font-mono">
+                  {item.avgPosition && (
+                    <span className="text-ink-subtle dark:text-slate-400 text-[11px]">
+                      میانگین رتبه: <strong className="text-navy dark:text-white">{faNum(item.avgPosition)}</strong>
+                    </span>
+                  )}
+                  <span className="px-2 py-0.5 bg-teal/10 text-teal-text dark:text-teal-300 rounded font-black text-[11px] border border-teal/20">
+                    {faNum(item.points)} امتیاز
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ─── ویژوال آپلود فایل ─── */}
+      {fileUploadStats && total > 0 && (
+        <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <MiniStat label="تعداد کل فایل‌ها" value={faNum(fileUploadStats.fileCount)} />
+            <MiniStat label="حجم کل آپلودها" value={`${faNum(fileUploadStats.totalMb)} MB`} />
+            <MiniStat label="میانگین حجم هر فایل" value={`${faNum(fileUploadStats.avgKb)} KB`} />
+          </div>
+          {fileUploadStats.files.length > 0 && (
+            <div className="flex flex-col gap-1.5 mt-2">
+              <span className="text-xs font-bold text-ink-subtle dark:text-slate-400">آخرین فایل‌های دریافتی:</span>
+              {fileUploadStats.files.map((f, i) => (
+                <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-bg-neutral dark:bg-slate-800 border border-ink/5 dark:border-slate-700 text-xs">
+                  <span className="font-bold text-navy dark:text-white truncate max-w-[200px] sm:max-w-xs">{f.name}</span>
+                  <span className="text-[10px] text-ink-subtle font-mono">{f.size ? `${faNum(Math.round(f.size / 1024))} KB` : ""}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── ویژوال درگاه پرداخت ─── */}
+      {paymentStats && total > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="p-3 rounded-xl bg-orange/5 dark:bg-amber-950/30 border border-orange/30 text-center">
+            <span className="text-xs font-bold text-ink-subtle dark:text-slate-400 block">مجموع مبالغ دریافتی</span>
+            <span className="text-base font-black text-navy dark:text-white mt-1 block">
+              {faNum(paymentStats.totalRevenue.toLocaleString("fa-IR"))} <span className="text-xs text-orange">{paymentStats.currency}</span>
+            </span>
+          </div>
+          <div className="p-3 rounded-xl bg-bg-neutral dark:bg-slate-800 border border-ink/10 dark:border-slate-700 text-center">
+            <span className="text-xs font-bold text-ink-subtle dark:text-slate-400 block">تعداد پرداخت موفق</span>
+            <span className="text-base font-black text-teal-text dark:text-teal-300 mt-1 block">
+              {faNum(paymentStats.paidCount)} تراکنش
+            </span>
+          </div>
+          <div className="p-3 rounded-xl bg-bg-neutral dark:bg-slate-800 border border-ink/10 dark:border-slate-700 text-center col-span-2 sm:col-span-1">
+            <span className="text-xs font-bold text-ink-subtle dark:text-slate-400 block">نرخ تکمیل پرداخت</span>
+            <span className="text-base font-black text-navy dark:text-white mt-1 block">
+              {faNum(paymentStats.conversionRate)}٪
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* نمودار توزیع گزینه‌ها (choice, dropdown, picture_choice, yes_no, rating) */}
+      {dist && !npsStats && !likertStats && !matrixStats && !rankingStats && !fileUploadStats && !paymentStats && total > 0 && (
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 flex flex-col gap-2">
             {dist.map((d, i) => (
               <div key={String(d.key)} className="flex items-center gap-2">
-                <span className="w-24 shrink-0 text-xs font-medium text-ink/70 dark:text-slate-300 truncate" title={String(d.key)}>
-                  {question.type === "rating" ? `${faNum(d.key)} ستاره` : String(d.key).slice(0, 15)}
+                <span className="w-28 shrink-0 text-xs font-medium text-ink/70 dark:text-slate-300 truncate" title={String(d.key)}>
+                  {question.type === "rating" ? `${faNum(d.key)} ستاره` : String(d.key).slice(0, 18)}
                 </span>
                 <div className="flex-1 h-6 bg-bg-neutral dark:bg-slate-800 rounded-full overflow-hidden relative">
                   <div
@@ -414,13 +811,13 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
         </div>
       )}
 
-      {/* لیست پاسخ‌های متنی */}
-      {!dist && !numericStats && total > 0 && (
+      {/* لیست پاسخ‌های متنی عمومی */}
+      {!dist && !numericStats && !npsStats && !likertStats && !matrixStats && !rankingStats && !fileUploadStats && !paymentStats && total > 0 && (
         <div className="max-h-48 overflow-y-auto flex flex-col gap-1.5">
           {values.slice(0, 20).map((v, i) => (
             <div key={i} className="bg-bg-neutral dark:bg-slate-800/80 border border-ink/10 dark:border-slate-700/80 rounded-lg px-3 py-1.5 text-xs font-medium text-ink dark:text-slate-200 flex items-center gap-2">
               <span className="text-ink/40 dark:text-slate-500 font-mono">{i + 1}.</span>
-              <span className="truncate">{String(v).slice(0, 80)}</span>
+              <span className="truncate">{typeof v === "object" ? JSON.stringify(v) : String(v).slice(0, 80)}</span>
             </div>
           ))}
           {values.length > 20 && (
@@ -431,6 +828,7 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
     </div>
   );
 }
+
 
 function MiniStat({ label, value }) {
   return (

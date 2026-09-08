@@ -8,7 +8,7 @@ import Spinner from "../../../components/ui/Spinner";
 import { FormBuilderSkeleton } from "../../../components/ui/Skeleton";
 import { useToast } from "../../../components/ui/Toast";
 import { useAuth } from "../../../context/AuthContext";
-import { QUESTION_TYPES, QUESTION_TYPE_ORDER, QUESTION_CATEGORIES, makeQuestion, resolveQuestion, LEGACY_TYPE_MAP } from "../../../lib/questionTypes";
+import { QUESTION_TYPES, QUESTION_TYPE_ORDER, QUESTION_CATEGORIES, makeQuestion, resolveQuestion, LEGACY_TYPE_MAP, getAvailableQuestionCategories, getEffectiveQuestionType, loadQuestionTypesConfigFromDb } from "../../../lib/questionTypes";
 import { QUESTION_TYPE_ICONS } from "../../../lib/questionIcons";
 import ConditionBuilder from "../../../components/logic/ConditionBuilder";
 import { makeCondition, makeConditionGroup, makeJumpAction, GROUP_OPERATORS } from "../../../lib/logic/types";
@@ -537,36 +537,103 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
 
           {/* ─── تنظیمات آپلود فایل ─── */}
           {q.type === "file_upload" && (
-            <div className="flex flex-col gap-2.5 border-2 border-dashed border-magenta/40 rounded-pill-md bg-magenta/5 dark:bg-pink-950/20 p-3">
-              <span className="text-xs font-extrabold text-magenta-text dark:text-pink-300 flex items-center gap-1">
-                <Upload size={14} /> تنظیمات بارگذاری فایل
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <Field label="نوع فایل‌های مجاز" hint="محدود کردن پسوند">
+            <div className="flex flex-col gap-3 border-2 border-dashed border-magenta/40 rounded-pill-md bg-magenta/5 dark:bg-pink-950/20 p-3.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-extrabold text-magenta-text dark:text-pink-300 flex items-center gap-1.5">
+                  <Upload size={14} /> تنظیمات و محدودیت‌های بارگذاری فایل
+                </span>
+                <span className="text-[10px] font-bold text-ink-subtle dark:text-slate-400">
+                  فرمت و حجم مجاز
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="دسته‌بندی فرمت مجاز" hint="محدودسازی نوع فایل‌های ورودی">
                   <select
                     value={q.validation?.allowed_file_types || q.allowed_file_types || "all"}
-                    onChange={(e) => onChange({ validation: { ...q.validation, allowed_file_types: e.target.value }, allowed_file_types: e.target.value })}
-                    className={`${inputCls} !py-1.5 !text-xs`}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      onChange({
+                        allowed_file_types: val,
+                        validation: { ...q.validation, allowed_file_types: val },
+                      });
+                    }}
+                    className={`${inputCls} !py-1.5 !text-xs font-bold`}
                   >
-                    <option value="all">همه فرمت‌ها (آزاد)</option>
-                    <option value="image">فقط تصاویر (JPG, PNG, WebP)</option>
-                    <option value="pdf">فقط اسناد PDF</option>
-                    <option value="document">اسناد و فایل‌ها (PDF, Word, Excel, ZIP)</option>
+                    <option value="all">همه فرمت‌ها (بدون محدودیت)</option>
+                    <option value="image">فقط تصاویر (JPG, PNG, WebP, GIF, SVG)</option>
+                    <option value="document">اسناد متنی و آفیس (PDF, Word, Excel, PowerPoint, Text)</option>
+                    <option value="archive">فایل‌های فشرده (ZIP, RAR, 7Z, TAR)</option>
+                    <option value="media">صوت و ویدیو (MP3, MP4, WAV, MOV)</option>
+                    <option value="custom">پسوندهای سفارشی و دلخواه</option>
                   </select>
                 </Field>
-                <Field label="حداکثر حجم مجاز (مگابایت)" hint="حداکثر تا ۵۰ مگابایت">
+
+                <Field label="حداکثر سقف حجم فایل (مگابایت)" hint="از ۱ تا ۱۰۰ مگابایت">
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={q.validation?.max_file_size_mb || q.max_file_size_mb || 10}
+                      onChange={(e) => {
+                        const val = Math.max(1, Math.min(100, Number(e.target.value) || 1));
+                        onChange({
+                          max_file_size_mb: val,
+                          validation: { ...q.validation, max_file_size_mb: val },
+                        });
+                      }}
+                      className={`${inputCls} !py-1.5 !text-xs`}
+                    />
+                    <div className="flex items-center gap-1">
+                      {[5, 10, 25, 50].map((sz) => (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() => {
+                            onChange({
+                              max_file_size_mb: sz,
+                              validation: { ...q.validation, max_file_size_mb: sz },
+                            });
+                          }}
+                          className="px-1.5 py-1 text-[10px] font-black rounded bg-white dark:bg-slate-800 border border-ink/15 hover:border-magenta hover:text-magenta-text transition-all cursor-pointer"
+                        >
+                          {sz}MB
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </Field>
+              </div>
+
+              {/* ورودی پسوندهای سفارشی دلخواه */}
+              <div className="flex flex-col gap-1">
+                <Field
+                  label="پسوندهای مجاز دلخواه (با کاما جدا کنید)"
+                  hint="مثال: pdf, png, jpg, zip, docx, psd, mp4"
+                >
                   <input
-                    type="number"
-                    min="1"
-                    max="50"
-                    value={q.validation?.max_file_size_mb || q.max_file_size_mb || 10}
-                    onChange={(e) => onChange({ validation: { ...q.validation, max_file_size_mb: Number(e.target.value) }, max_file_size_mb: Number(e.target.value) })}
-                    className={`${inputCls} !py-1.5 !text-xs`}
+                    type="text"
+                    dir="ltr"
+                    placeholder="pdf, png, jpg, zip, docx"
+                    value={q.validation?.custom_extensions ?? (q.custom_extensions ?? "")}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      onChange({
+                        custom_extensions: val,
+                        validation: { ...q.validation, custom_extensions: val },
+                      });
+                    }}
+                    className={`${inputCls} !py-1.5 !text-xs font-mono`}
                   />
                 </Field>
+                <div className="text-[10px] text-ink-subtle dark:text-slate-400">
+                  اگر فرمتی خاص مدنظر شماست، می‌توانید پسوندهای دلخواه را در کادر بالا وارد کنید تا کاربر فقط قادر به ارسال آن فایل‌ها باشد.
+                </div>
               </div>
             </div>
           )}
+
 
           {/* ─── تنظیمات درگاه پرداخت ─── */}
           {q.type === "payment" && (
@@ -981,6 +1048,20 @@ export default function FormBuilder() {
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [slugError, setSlugError] = useState(null);
+  const [availableCategories, setAvailableCategories] = useState(() => getAvailableQuestionCategories());
+
+  useEffect(() => {
+    loadQuestionTypesConfigFromDb().then(() => {
+      setAvailableCategories(getAvailableQuestionCategories());
+    });
+
+    const handleConfigChange = () => {
+      setAvailableCategories(getAvailableQuestionCategories());
+    };
+
+    window.addEventListener("porskad:question_types_updated", handleConfigChange);
+    return () => window.removeEventListener("porskad:question_types_updated", handleConfigChange);
+  }, []);
 
   useEffect(() => {
     if (authLoading) return;
@@ -1157,8 +1238,10 @@ export default function FormBuilder() {
 
         if (q.type === "file_upload") {
           validationToSave.allowed_file_types = q.allowed_file_types || q.validation?.allowed_file_types || "all";
+          validationToSave.custom_extensions = q.custom_extensions || q.validation?.custom_extensions || "";
           validationToSave.max_file_size_mb = q.max_file_size_mb || q.validation?.max_file_size_mb || 10;
         }
+
 
         if (q.type === "payment") {
           validationToSave.amount = q.amount || q.validation?.amount || 100000;
@@ -1597,14 +1680,14 @@ export default function FormBuilder() {
               </span>
 
               <div className="flex flex-col gap-3.5">
-                {QUESTION_CATEGORIES.map((cat) => (
+                {availableCategories.map((cat) => (
                   <div key={cat.key} className="flex flex-col gap-1.5">
                     <span className="text-xs font-black text-navy dark:text-slate-200">
                       {cat.title}
                     </span>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                       {cat.types.map((key) => {
-                        const t = QUESTION_TYPES[key];
+                        const t = getEffectiveQuestionType(key);
                         if (!t) return null;
                         const Icon = QUESTION_TYPE_ICONS[key];
                         return (
@@ -1623,6 +1706,7 @@ export default function FormBuilder() {
                   </div>
                 ))}
               </div>
+
             </div>
           </StickerCard>
         </div>

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import clsx from "../../components/ui/clsx";
 import { faNum, faDuration } from "../../lib/utils";
-import { validateAnswer } from "../../lib/validators";
+import { validateAnswer, validateUploadedFile, getFileAcceptString, getAllowedExtensions } from "../../lib/validators";
 import { Star, GitFork, Check, ArrowUp, ArrowDown, Upload, FileCheck, CreditCard, ChevronDown, Image, Info, Layers, ExternalLink } from "lucide-react";
 
 function CheckIcon({ className }) {
@@ -620,53 +620,76 @@ function GroupDivider({ question, onAdvance }) {
 // ─── آپلود فایل (File Upload) ───
 function FileUploadBox({ question, value, onChange }) {
   const [uploading, setUploading] = useState(false);
+  const [fileError, setFileError] = useState(null);
   const fileInputRef = useRef(null);
 
+  const allowedExts = getAllowedExtensions(question);
+  const maxMb = question.validation?.max_file_size_mb || question.max_file_size_mb || 10;
+  const acceptStr = getFileAcceptString(question);
+
   function handleFile(e) {
+    setFileError(null);
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // اعتبارسنجی محدودیت پسوند و حجم
+    const check = validateUploadedFile(file, question);
+    if (!check.isValid) {
+      setFileError(check.error);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
     setUploading(true);
-    // خواندن فایل و ایجاد آبجکت اطلاعات فایل
     setTimeout(() => {
       onChange({
         name: file.name,
         size: file.size,
         type: file.type,
+        ext: file.name.split(".").pop()?.toLowerCase() || "",
         uploadedAt: new Date().toISOString(),
       });
       setUploading(false);
-    }, 600);
+    }, 400);
+  }
+
+  function handleRemove() {
+    setFileError(null);
+    onChange(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   return (
-    <div className="flex flex-col gap-2 w-full">
+    <div className="flex flex-col gap-2.5 w-full">
       <input
         ref={fileInputRef}
         type="file"
+        accept={acceptStr}
         onChange={handleFile}
         className="hidden"
       />
 
       {value ? (
-        <div className="flex items-center justify-between p-3.5 rounded-2xl border-2 border-teal bg-teal/5 dark:bg-teal-950/30">
-          <div className="flex items-center gap-2.5 truncate">
-            <FileCheck size={24} className="text-teal shrink-0" />
+        <div className="flex items-center justify-between p-4 rounded-2xl border-2 border-teal bg-teal/5 dark:bg-teal-950/30">
+          <div className="flex items-center gap-3 truncate">
+            <div className="w-10 h-10 rounded-xl bg-teal/10 dark:bg-teal-900/40 flex items-center justify-center shrink-0">
+              <FileCheck size={22} className="text-teal" />
+            </div>
             <div className="truncate text-right">
               <span className="text-xs sm:text-sm font-black text-navy dark:text-white truncate block">
                 {typeof value === "object" ? value.name : "فایل بارگذاری شده"}
               </span>
               {typeof value === "object" && value.size && (
-                <span className="text-[10px] font-mono text-ink-subtle dark:text-slate-400">
-                  {Math.round(value.size / 1024)} KB
+                <span className="text-[11px] font-mono text-ink-subtle dark:text-slate-400">
+                  {faNum((value.size / (1024 * 1024)).toFixed(2))} MB ({faNum(Math.round(value.size / 1024))} KB)
                 </span>
               )}
             </div>
           </div>
           <button
             type="button"
-            onClick={() => onChange(null)}
-            className="text-xs font-bold text-magenta-text hover:underline cursor-pointer mr-2 shrink-0"
+            onClick={handleRemove}
+            className="text-xs font-bold text-magenta-text hover:underline cursor-pointer mr-2 shrink-0 bg-magenta/10 hover:bg-magenta/20 px-3 py-1.5 rounded-lg transition-all"
           >
             تغییر فایل
           </button>
@@ -676,16 +699,30 @@ function FileUploadBox({ question, value, onChange }) {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-ink/20 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-teal dark:hover:border-teal transition-all cursor-pointer group"
+          className="flex flex-col items-center justify-center p-6 sm:p-8 rounded-2xl border-2 border-dashed border-ink/20 dark:border-slate-700 bg-white dark:bg-slate-800/90 hover:border-teal dark:hover:border-teal hover:bg-teal/5 transition-all cursor-pointer group"
         >
-          <Upload size={32} className="text-ink/30 dark:text-slate-500 group-hover:text-teal group-hover:scale-110 transition-all mb-2" />
+          <Upload size={36} className="text-ink/30 dark:text-slate-500 group-hover:text-teal group-hover:scale-110 transition-all mb-2.5" />
           <span className="text-xs sm:text-sm font-black text-navy dark:text-white">
-            {uploading ? "در حال پردازش..." : "برای انتخاب یا آپلود فایل کلیک کنید"}
+            {uploading ? "در حال پردازش فایل..." : "برای انتخاب یا آپلود فایل کلیک کنید"}
           </span>
-          <span className="text-[11px] font-medium text-ink-subtle dark:text-slate-400 mt-1">
-            حداکثر حجم مجاز: {faNum(question.validation?.max_file_size_mb || question.max_file_size_mb || 10)} مگابایت
-          </span>
+          
+          {/* راهنمای محدودیت پسوند و حجم */}
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
+            <span className="text-[11px] font-bold text-ink-subtle dark:text-slate-400 bg-black/5 dark:bg-slate-700/60 px-2.5 py-1 rounded-full">
+              حداکثر حجم: {faNum(maxMb)} مگابایت
+            </span>
+            <span className="text-[11px] font-bold text-ink-subtle dark:text-slate-400 bg-black/5 dark:bg-slate-700/60 px-2.5 py-1 rounded-full">
+              {allowedExts.length > 0 ? `پسوندهای مجاز: ${allowedExts.join("، ")}` : "همه فرمت‌ها آزاد است"}
+            </span>
+          </div>
         </button>
+      )}
+
+      {fileError && (
+        <div className="flex items-center gap-1.5 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-300 text-xs font-bold animate-fadeIn">
+          <Info size={16} className="shrink-0" />
+          <span>{fileError}</span>
+        </div>
       )}
     </div>
   );
