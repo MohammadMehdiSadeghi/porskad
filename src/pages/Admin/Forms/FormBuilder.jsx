@@ -288,8 +288,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                   </div>
                 </div>
               )}
-              <Field label="الگو (Regex)
-" hint="اختیاری — مثلاً: ^[a-zA-Z]+$">
+              <Field label="الگو (Regex)" hint="اختیاری — مثلاً: ^[a-zA-Z]+$">
                 <input
                   value={q.validation?.pattern ?? ""}
                   onChange={(e) => onChange({ validation: { ...q.validation, pattern: e.target.value || undefined } })}
@@ -838,71 +837,178 @@ export default function FormBuilder() {
         title: form.title.trim(),
         description: form.description ?? "",
         slug: cleanSlug,
-        welcome_title: form.welcome_title,
-        welcome_message: form.welcome_message,
-        exit_title: form.exit_title,
-        exit_message: form.exit_message,
-        published: form.published,
+        welcome_title: form.welcome_title ?? "سلام!",
+        welcome_message: form.welcome_message ?? "ممنون که وقت گذاشتی؛ چند سوال کوتاه داریم.",
+        exit_title: form.exit_title ?? "تمام شد!",
+        exit_message: form.exit_message ?? "از اینکه جواب دادی خیلی ممنونیم. نظراتت برای ما طلاست!",
+        published: !!form.published,
         form_type: form.form_type || "step_by_step",
         identifier_mapping: form.identifier_mapping ?? null,
       };
-      const pQuestions = questions.map((q, i) => ({
-        id: q.id ?? null,
-        type: q.type,
-        title: q.title.trim(),
-        description: q.description ?? "",
-        placeholder: q.placeholder ?? "",
-        validation: q.validation ?? null,
-        required: !!q.required,
-        options: q.type === "choice" ? q.options.map((o) => o.trim()) : q.type === "yes_no" ? ["بله", "خیر"] : [],
-        position: i,
-        conditions: q.conditions ?? null,
-        jump_actions: q.jump_actions ?? [],
-        correct_answer: q.correct_answer ?? null,
-        points: q.points ?? null,
-        display_mode: q.display_mode ?? null,
-        max_selections: q.max_selections ?? 1,
-      }));
 
-      const { data: freshQs, error } = await supabase.rpc("save_form", {
-        p_form_id: id,
-        p_form: pForm,
-        p_questions: pQuestions,
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+      const pQuestions = questions.map((q, i) => {
+        const isRealUuid = typeof q.id === "string" && uuidRegex.test(q.id);
+        const parsedPoints = (q.points !== "" && q.points !== null && q.points !== undefined && !isNaN(Number(q.points)))
+          ? Number(q.points)
+          : null;
+        const parsedMaxSelections = (q.max_selections !== "" && q.max_selections !== null && q.max_selections !== undefined && !isNaN(Number(q.max_selections)))
+          ? Math.max(1, Number(q.max_selections))
+          : 1;
+
+        return {
+          id: isRealUuid ? q.id : null,
+          type: q.type,
+          title: (q.title || "").trim(),
+          description: q.description ?? "",
+          placeholder: q.placeholder ?? "",
+          validation: q.validation ?? null,
+          required: !!q.required,
+          options: q.type === "choice" ? (q.options || []).map((o) => (o || "").trim()) : q.type === "yes_no" ? ["بله", "خیر"] : [],
+          position: i,
+          conditions: q.conditions ?? null,
+          jump_actions: Array.isArray(q.jump_actions) ? q.jump_actions : [],
+          correct_answer: q.correct_answer ?? null,
+          points: parsedPoints,
+          display_mode: q.display_mode ?? null,
+          max_selections: parsedMaxSelections,
+        };
       });
+
+      let freshQuestionsData = null;
+      let rpcSuccess = false;
+
+      try {
+        const { data: freshQs, error: rpcErr } = await supabase.rpc("save_form", {
+          p_form_id: id,
+          p_form: pForm,
+          p_questions: pQuestions,
+        });
+
+        if (rpcErr) {
+          if (
+            rpcErr.code === "23505" ||
+            (rpcErr.message ?? "").includes("forms_slug_key") ||
+            (rpcErr.message ?? "").includes("duplicate key")
+          ) {
+            setSlugError("این اسلاگ قبلاً استفاده شده.");
+            throw rpcErr;
+          }
+          console.warn("RPC save_form returned error, attempting direct fallback:", rpcErr);
+        } else {
+          freshQuestionsData = freshQs;
+          rpcSuccess = true;
+        }
+      } catch (err) {
+        if ((err.message ?? "").includes("forms_slug_key") || (err.message ?? "").includes("duplicate key") || err.code === "23505") {
+          setSlugError("این اسلاگ قبلاً استفاده شده.");
+          throw err;
+        }
+        console.warn("RPC save_form call failed, attempting direct fallback:", err);
+      }
+
+      // فالبک ذخیره مستقیم در صورت عدم موفقیت RPC
+      if (!rpcSuccess) {
+        const { error: formUpdateErr } = await supabase
+          .from("forms")
+          .update(pForm)
+          .eq("id", id);
+
+        if (formUpdateErr) {
+          if (
+            formUpdateErr.code === "23505" ||
+            (formUpdateErr.message ?? "").includes("forms_slug_key") ||
+            (formUpdateErr.message ?? "").includes("duplicate key")
+          ) {
+            setSlugError("این اسلاگ قبلاً استفاده شده.");
+          }
+          throw formUpdateErr;
+        }
+
+        // حذف سوالات حذف شده
+        const validIds = pQuestions.filter((q) => q.id).map((q) => q.id);
+        if (validIds.length > 0) {
+          const formattedIds = `(${validIds.join(",")})`;
+          await supabase.from("questions").delete().eq("form_id", id).not("id", "in", formattedIds);
+        } else {
+          await supabase.from("questions").delete().eq("form_id", id);
+        }
+
+        // درج و به‌روزرسانی تک‌تک سوالات
+        const savedList = [];
+        for (let idx = 0; idx < pQuestions.length; idx++) {
+          const q = pQuestions[idx];
+          const qPayload = {
+            form_id: id,
+            type: q.type,
+            title: q.title,
+            description: q.description,
+            required: q.required,
+            placeholder: q.placeholder,
+            validation: q.validation,
+            options: q.options,
+            position: idx,
+            conditions: q.conditions,
+            jump_actions: q.jump_actions,
+            correct_answer: q.correct_answer,
+            points: q.points,
+            display_mode: q.display_mode,
+            max_selections: q.max_selections,
+          };
+
+          if (q.id) {
+            const { data: updatedQ } = await supabase
+              .from("questions")
+              .update(qPayload)
+              .eq("id", q.id)
+              .select()
+              .single();
+            savedList.push(updatedQ || { ...qPayload, id: q.id });
+          } else {
+            const { data: insertedQ, error: insertErr } = await supabase
+              .from("questions")
+              .insert(qPayload)
+              .select()
+              .single();
+            if (insertErr) {
+              console.error("Error inserting question fallback:", insertErr);
+              savedList.push({ ...qPayload, id: null });
+            } else {
+              savedList.push(insertedQ);
+            }
+          }
+        }
+        freshQuestionsData = savedList;
+      }
 
       logActivity("edit_form", "form", id, { title: form.title, slug: cleanSlug, questions: pQuestions.length });
 
-      if (error) {
-        if (
-          error.code === "23505" ||
-          (error.message ?? "").includes("forms_slug_key") ||
-          (error.message ?? "").includes("duplicate key")
-        ) {
-          setSlugError("این اسلاگ قبلاً استفاده شده.");
-        }
-        throw error;
-      }
-
-      if (Array.isArray(freshQs)) {
-        setQuestions((prev) => prev.map((pq) => {
-          const saved = freshQs.find((fq) => fq.id === pq.id || fq.id === pq.localId);
-          if (saved) {
-            return {
-              ...pq,
-              id: saved.id,
-              localId: saved.id,
-            };
-          }
-          return pq;
-        }));
+      if (Array.isArray(freshQuestionsData) && freshQuestionsData.length > 0) {
+        setQuestions((prev) =>
+          prev.map((pq, idx) => {
+            const saved =
+              freshQuestionsData.find((fq) => fq.id === pq.id) ||
+              freshQuestionsData[idx];
+            if (saved && saved.id) {
+              return {
+                ...pq,
+                ...saved,
+                id: saved.id,
+                localId: saved.id,
+              };
+            }
+            return pq;
+          })
+        );
       }
 
       setForm((f) => ({ ...f, slug: cleanSlug }));
       setDirty(false);
-      push("همه‌چیز ذخیره شد");
+      push("همه‌چیز ذخیره شد", "success");
     } catch (err) {
-      console.error(err);
-      push("ذخیره ناموفق بود: " + (err.message ?? ""), "error");
+      console.error("Save form error:", err);
+      push("ذخیره ناموفق بود: " + (err.message || "خطای ناشناخته"), "error");
     } finally {
       setSaving(false);
     }

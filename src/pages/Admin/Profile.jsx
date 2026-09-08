@@ -197,13 +197,17 @@ export default function Profile() {
               <div className="bg-white/80 border border-ink/10 rounded-xl p-3 text-center">
                 <span className="text-xs font-semibold text-ink-subtle block">سقف فرم‌های فعال</span>
                 <span className="text-base font-black text-navy mt-1 block">
-                  {profile?.is_owner ? "نامحدود" : `${faNum(profile?.max_forms ?? 5)} فرم`}
+                  {profile?.is_owner || profile?.max_forms >= 999999 || profile?.plan === "unlimited"
+                    ? "نامحدود ✨"
+                    : `${faNum(profile?.max_forms ?? 5)} فرم`}
                 </span>
               </div>
               <div className="bg-white/80 border border-ink/10 rounded-xl p-3 text-center">
                 <span className="text-xs font-semibold text-ink-subtle block">سقف پاسخ در ماه</span>
                 <span className="text-base font-black text-navy mt-1 block">
-                  {profile?.is_owner ? "نامحدود" : `${faNum(profile?.max_responses_per_month ?? 100)} پاسخ`}
+                  {profile?.is_owner || profile?.max_responses_per_month >= 999999 || profile?.plan === "unlimited"
+                    ? "نامحدود ✨"
+                    : `${faNum(profile?.max_responses_per_month ?? 100)} پاسخ`}
                 </span>
               </div>
               <div className="bg-white/80 border border-ink/10 rounded-xl p-3 text-center col-span-2 sm:col-span-1">

@@ -8,7 +8,7 @@ export function downloadExcel(filename, header, rows, dates = {}) {
   const ws = XLSX.utils.aoa_to_sheet(data);
 
   // Set column widths
-  ws["!cols"] = header.map((h) => ({ wch: Math.max(h.length, 15) }));
+  ws["!cols"] = header.map((h) => ({ wch: Math.max(String(h ?? "").length, 15) }));
 
   XLSX.utils.book_append_sheet(wb, ws, "پاسخ‌ها");
 

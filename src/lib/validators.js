@@ -56,7 +56,8 @@ export function validateAnswer(question, value) {
     value === null ||
     value === undefined ||
     (typeof value === "string" && value.trim() === "") ||
-    (typeof value === "number" && Number.isNaN(value));
+    (typeof value === "number" && Number.isNaN(value)) ||
+    (Array.isArray(value) && value.length === 0);
 
   if (question.required && isEmpty) {
     return "این سوال اجباریه؛ یه جواب بنویس.";

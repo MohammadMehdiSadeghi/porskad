@@ -233,6 +233,51 @@ export default function Managers() {
     }
   }
 
+  async function handleToggleUnlimitedQuota(targetUser) {
+    if (!targetUser) return;
+    const isCurrentlyUnlimited =
+      (targetUser.max_forms >= 999999 && targetUser.max_responses_per_month >= 999999) ||
+      targetUser.plan === "unlimited";
+    const newUnlimited = !isCurrentlyUnlimited;
+
+    const maxF = newUnlimited ? 999999 : 5;
+    const maxR = newUnlimited ? 999999 : 100;
+    const newPlan = newUnlimited ? "unlimited" : "free";
+
+    try {
+      await updateUserQuota(targetUser.id, {
+        maxForms: maxF,
+        maxResponses: maxR,
+        plan: newPlan,
+        canUseTelegram: targetUser.can_use_telegram,
+      });
+
+      setManagers((prev) =>
+        prev.map((x) =>
+          x.id === targetUser.id
+            ? { ...x, max_forms: maxF, max_responses_per_month: maxR, plan: newPlan }
+            : x
+        )
+      );
+      setSelectedUserModal((prev) =>
+        prev && prev.id === targetUser.id
+          ? { ...prev, max_forms: maxF, max_responses_per_month: maxR, plan: newPlan }
+          : prev
+      );
+      setUserEditMaxForms(maxF);
+      setUserEditMaxResponses(maxR);
+
+      push(
+        newUnlimited
+          ? `سهمیه فرم فعال و تعداد ثبت‌نام برای «${targetUser.full_name || targetUser.email}» نامحدود شد ⚡`
+          : `سهمیه «${targetUser.full_name || targetUser.email}» به حالت پایه (۵ فرم / ۱۰۰ ورودی) بازگردانده شد.`,
+        "success"
+      );
+    } catch (err) {
+      push("خطا در تغییر سهمیه: " + err.message, "error");
+    }
+  }
+
   async function handleChangeUserRole(targetUser, newRole) {
     if (!targetUser || targetUser.is_owner) return;
     const isPromoting = newRole === "admin";
@@ -832,15 +877,53 @@ export default function Managers() {
                   </div>
                   <div className="bg-bg-neutral p-2.5 rounded-xl text-center">
                     <span className="text-xs text-ink-subtle block font-semibold mb-0.5">سقف مجاز فعلی</span>
-                    <strong className="text-navy text-sm font-black">{m.is_owner ? "نامحدود" : `${faNum(m.max_forms ?? 5)} فرم`}</strong>
+                    <strong className="text-navy text-sm font-black">
+                      {m.is_owner || m.max_forms >= 999999 || m.plan === "unlimited" ? "نامحدود ✨" : `${faNum(m.max_forms ?? 5)} فرم`}
+                    </strong>
                   </div>
                   <div className="bg-bg-neutral p-2.5 rounded-xl text-center col-span-2 sm:col-span-1">
                     <span className="text-xs text-ink-subtle block font-semibold mb-0.5">باقیمانده فرم فعال</span>
-                    <strong className={`text-sm font-black ${remainingForms === 0 && !m.is_owner ? "text-magenta-text" : "text-teal-text"}`}>
-                      {m.is_owner ? "نامحدود" : `${faNum(remainingForms)} فرم`}
+                    <strong className={`text-sm font-black ${remainingForms === 0 && !m.is_owner && m.max_forms < 999999 ? "text-magenta-text" : "text-teal-text"}`}>
+                      {m.is_owner || m.max_forms >= 999999 || m.plan === "unlimited" ? "نامحدود ✨" : `${faNum(remainingForms)} فرم`}
                     </strong>
                   </div>
                 </div>
+
+                {/* کارت سهمیه نامحدود (بدون سقف فرم و ورودی) */}
+                {!m.is_owner && (
+                  <div className={`p-3 rounded-xl border-2 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 ${
+                    (m.max_forms >= 999999 && m.max_responses_per_month >= 999999) || m.plan === "unlimited"
+                      ? "bg-teal/10 border-teal/40"
+                      : "bg-navy/5 border-navy/10"
+                  }`}>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-xl">⚡</span>
+                      <div>
+                        <span className="block text-xs font-black text-navy">
+                          {(m.max_forms >= 999999 && m.max_responses_per_month >= 999999) || m.plan === "unlimited"
+                            ? "پلن سهمیه نامحدود فعال است"
+                            : "سهمیه نامحدود فرم و ثبت‌نام"}
+                        </span>
+                        <span className="text-xs text-ink-subtle leading-5">
+                          {(m.max_forms >= 999999 && m.max_responses_per_month >= 999999) || m.plan === "unlimited"
+                            ? "بدون محدودیت تعداد فرم فعال و تعداد پاسخ (بدون دسترسی سوپرادمین)"
+                            : "نامحدود کردن فرم‌های فعال و ورودی‌ها برای این کاربر"}
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={(m.max_forms >= 999999 && m.max_responses_per_month >= 999999) || m.plan === "unlimited" ? "ghost" : "teal"}
+                      onClick={() => handleToggleUnlimitedQuota(m)}
+                      className="shrink-0 text-xs font-black"
+                    >
+                      {(m.max_forms >= 999999 && m.max_responses_per_month >= 999999) || m.plan === "unlimited"
+                        ? "بازگشت به پلن پایه"
+                        : "فعال‌سازی سهمیه نامحدود ⚡"}
+                    </Button>
+                  </div>
+                )}
 
                 {!m.is_owner && (
                   <form onSubmit={handleSaveUserQuotaDirect} className="pt-2 border-t border-navy/10 space-y-3">
@@ -1264,6 +1347,40 @@ export default function Managers() {
       <Modal open={!!quotaModal} onClose={() => setQuotaModal(null)} title={`تنظیم سهمیه و دسترسی: ${quotaModal?.full_name || quotaModal?.email || ""}`}>
         <form onSubmit={handleSaveQuota} className="flex flex-col gap-4">
 
+          {/* کلیدهای سریع پلن‌ها */}
+          <div className="flex gap-2 p-1.5 bg-bg-neutral rounded-xl">
+            <button
+              type="button"
+              onClick={() => {
+                setQuotaMaxForms(999999);
+                setQuotaMaxResponses(999999);
+                setQuotaPlan("unlimited");
+              }}
+              className={`flex-1 py-2 px-3 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                (Number(quotaMaxForms) >= 999999 && Number(quotaMaxResponses) >= 999999) || quotaPlan === "unlimited"
+                  ? "bg-teal text-white shadow-xs"
+                  : "text-navy hover:bg-white bg-white/50"
+              }`}
+            >
+              ⚡ پلن نامحدود (بدون سقف)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setQuotaMaxForms(5);
+                setQuotaMaxResponses(100);
+                setQuotaPlan("free");
+              }}
+              className={`flex-1 py-2 px-3 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                Number(quotaMaxForms) === 5 && Number(quotaMaxResponses) === 100 && quotaPlan === "free"
+                  ? "bg-navy text-white shadow-xs"
+                  : "text-navy hover:bg-white bg-white/50"
+              }`}
+            >
+              پلن پایه (۵ فرم / ۱۰۰ ورودی)
+            </button>
+          </div>
+
           <div>
             <label className="block text-sm font-extrabold text-navy mb-1.5">حداکثر تعداد فرم‌های فعال</label>
             <input
@@ -1273,7 +1390,7 @@ export default function Managers() {
               onChange={(e) => setQuotaMaxForms(e.target.value)}
               className={inputCls}
             />
-            <span className="text-xs text-ink-subtle mt-1 block">پیش‌فرض: ۵ فرم. برای نامحدود عدد بالایی مثل ۹۹۹۹ قرار دهید.</span>
+            <span className="text-xs text-ink-subtle mt-1 block">پیش‌فرض: ۵ فرم. برای نامحدود عدد ۹۹۹۹۹۹ یا کلید بالای فرم را بزنید.</span>
           </div>
 
           <div>
@@ -1285,6 +1402,7 @@ export default function Managers() {
               onChange={(e) => setQuotaMaxResponses(e.target.value)}
               className={inputCls}
             />
+            <span className="text-xs text-ink-subtle mt-1 block">پیش‌فرض: ۱۰۰ ورودی در ماه. برای نامحدود عدد ۹۹۹۹۹۹ قرار دهید.</span>
           </div>
 
           <div className="flex items-center justify-between p-3.5 rounded-xl bg-bg-lavender/50 border-2 border-teal/20">

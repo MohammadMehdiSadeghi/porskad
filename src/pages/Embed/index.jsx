@@ -416,12 +416,12 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
         }
       }
       const { data, error: rpcError } = await supabase.rpc("submit_public_response", {
-        p_form_public_id: formId, p_answers: answersObj, p_meta: meta, p_times: times || {},
+        p_form_public_id: formId, p_answers: answersObj, p_meta: meta, p_times: {},
       });
       if (rpcError) throw rpcError;
 
-      if (hasScoring(questions)) {
-        const score = calculateScore(questions, answers);
+      if (hasScoring(visibleQuestions)) {
+        const score = calculateScore(visibleQuestions, answers);
         setScoreResult(score);
       }
 
@@ -735,6 +735,26 @@ export default function EmbedForm() {
     return { valid: true };
   }, [currentQuestion, answers]);
 
+  const isLastVisibleStep = useMemo(() => {
+    if (step < 0) return false;
+    return findNextVisibleStep(step) >= total;
+  }, [step, findNextVisibleStep, total]);
+
+  const openConfirm = useCallback(() => {
+    const unfilled = [];
+    for (const q of visibleQuestions) {
+      if (q.required) {
+        const v = answers[q.id];
+        const isEmpty = isFieldEmpty(v);
+        if (isEmpty) {
+          unfilled.push({ id: q.id, title: q.title, typeLabel: QUESTION_TYPES[q.type]?.label || q.type });
+        }
+      }
+    }
+    setConfirmUnfilled(unfilled);
+    setShowConfirm(true);
+  }, [visibleQuestions, answers]);
+
   const goNext = useCallback(() => {
     if (step === -1) {
       setStartedAt((prev) => prev ?? Date.now());
@@ -760,13 +780,13 @@ export default function EmbedForm() {
         currentQuestion, answer, questions, visibleQuestions, jumpQueueRef.current
       );
 
-      if (jumpResult.type === "end") { setStep(total); return; }
+      if (jumpResult.type === "end") { openConfirm(); return; }
       if (jumpResult.type === "redirect" && jumpResult.url) {
         if (window.parent && window.parent !== window) {
           postToParent("pcode:redirect", { url: jumpResult.url });
         }
         window.open(jumpResult.url, "_blank");
-        setStep(total);
+        openConfirm();
         return;
       }
       if (jumpResult.type === "jump" && jumpResult.targetId) {
@@ -775,8 +795,13 @@ export default function EmbedForm() {
       }
     }
 
-    setStep((s) => findNextVisibleStep(s));
-  }, [step, accrueTime, validateCurrent, findNextVisibleStep, currentQuestion, answers, questions, visibleQuestions, total, formId]);
+    const nextStep = findNextVisibleStep(step);
+    if (nextStep >= total) {
+      openConfirm();
+    } else {
+      setStep(nextStep);
+    }
+  }, [step, accrueTime, validateCurrent, findNextVisibleStep, currentQuestion, answers, questions, visibleQuestions, total, formId, openConfirm]);
 
   const goNextRef = useRef(null);
   goNextRef.current = goNext;
@@ -790,21 +815,6 @@ export default function EmbedForm() {
     setDir(-1);
     setStep((s) => findPrevVisibleStep(s));
   }, [step, accrueTime, findPrevVisibleStep]);
-
-  const openConfirm = useCallback(() => {
-    const unfilled = [];
-    for (const q of visibleQuestions) {
-      if (q.required) {
-        const v = answers[q.id];
-        const isEmpty = isFieldEmpty(v);
-        if (isEmpty) {
-          unfilled.push({ id: q.id, title: q.title, typeLabel: QUESTION_TYPES[q.type]?.label || q.type });
-        }
-      }
-    }
-    setConfirmUnfilled(unfilled);
-    setShowConfirm(true);
-  }, [visibleQuestions, answers]);
 
   const doSubmit = useCallback(async () => {
     setShowConfirm(false);
@@ -836,7 +846,7 @@ export default function EmbedForm() {
 
       if (rpcError) throw rpcError;
 
-      if (hasScoring(questions)) {
+      if (hasScoring(visibleQuestions)) {
         const score = calculateScore(visibleQuestions, answers);
         setScoreResult(score);
       }
@@ -853,7 +863,7 @@ export default function EmbedForm() {
     } finally {
       setSubmitting(false);
     }
-  }, [submitting, visibleQuestions, questions, answers, times, startedAt, formId, total, schema]);
+  }, [submitting, visibleQuestions, answers, times, startedAt, formId, total, schema]);
 
   useEffect(() => {
     if (formEnded && step >= 0 && step < total) {
@@ -983,7 +993,7 @@ export default function EmbedForm() {
                     )}
 
                     <div className="flex items-center justify-between mt-1.5 sm:mt-2">                        <button onClick={goBack} className="text-xs sm:text-sm font-bold text-ink-subtle hover:text-ink transition-colors duration-200">برگشت</button>
-                      {step < total - 1 ? (
+                      {!isLastVisibleStep ? (
                         <div className="relative">
                           <div aria-hidden="true" className="absolute top-[0.125rem] left-[0.125rem] w-full h-full bg-male-dark rounded-pill-md [corner-shape:squircle]" />
                           <button onClick={goNext} className="relative z-10 bg-male-normal border-2 border-male-dark text-white px-5 sm:px-6 py-2.5 rounded-pill-md [corner-shape:squircle] font-bold hover:bg-male-dark transition-colors duration-200 text-xs sm:text-sm">بعدی ←</button>

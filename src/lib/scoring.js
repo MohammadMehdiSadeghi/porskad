@@ -11,6 +11,7 @@
 export function isCorrectAnswer(question, answer) {
   const correct = question.correct_answer;
   if (correct === null || correct === undefined) return false; // سوال نمره‌دار نیست
+  if (answer === null || answer === undefined || answer === "") return false;
 
   switch (question.type) {
     case "choice":

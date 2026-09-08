@@ -184,21 +184,10 @@ export default function FormFill() {
   const validateCurrent = useCallback(() => { if (!currentQuestion) return { valid: true }; const err = validateAnswer(currentQuestion, answers[currentQuestion.id]); if (err) return { valid: false, error: err }; return { valid: true }; }, [currentQuestion, answers]);
   const currentValidationError = useMemo(() => { if (!currentQuestion) return null; return validateAnswer(currentQuestion, answers[currentQuestion.id]) || null; }, [currentQuestion, answers]);
 
-  const goNext = useCallback(() => {
-    if (step === -1) { setStartedAt((prev) => prev ?? Date.now()); setDir(1); setStep(findNextVisibleStep(-1)); setRequiredError(null); return; }
-    const result = validateCurrent();
-    if (!result.valid) { setRequiredError(result.error); return; }
-    setRequiredError(null); accrueTime(); setDir(1);
-    if (currentQuestion) {
-      const jumpResult = evaluateNextStep(currentQuestion, answers[currentQuestion.id], questions, visibleQuestions, jumpQueueRef.current);
-      if (jumpResult.type === "end") { setStep(total); return; }
-      if (jumpResult.type === "redirect" && jumpResult.url) { window.open(jumpResult.url, "_blank"); setStep(total); return; }
-      if (jumpResult.type === "jump" && jumpResult.targetId) { const idx = questions.findIndex((q) => q.id === jumpResult.targetId); if (idx >= 0) { setStep(idx); return; } }
-    }
-    setStep((s) => findNextVisibleStep(s));
-  }, [step, accrueTime, validateCurrent, findNextVisibleStep, currentQuestion, answers, questions, visibleQuestions, total]);
-
-  const goBack = useCallback(() => { if (step <= -1) return; accrueTime(); setDir(-1); setStep((s) => findPrevVisibleStep(s)); }, [step, accrueTime, findPrevVisibleStep]);
+  const isLastVisibleStep = useMemo(() => {
+    if (step < 0) return false;
+    return findNextVisibleStep(step) >= total;
+  }, [step, findNextVisibleStep, total]);
 
   const openConfirm = useCallback(() => {
     if (submitting || honeypot.trim() !== "") return;
@@ -207,6 +196,27 @@ export default function FormFill() {
     if (errors.length > 0) { setRequiredError(errors[0].title); setConfirmUnfilled(errors); setShowConfirm(false); return; }
     setRequiredError(null); setConfirmUnfilled([]); setShowConfirm(true);
   }, [submitting, honeypot, visibleQuestions, answers]);
+
+  const goNext = useCallback(() => {
+    if (step === -1) { setStartedAt((prev) => prev ?? Date.now()); setDir(1); setStep(findNextVisibleStep(-1)); setRequiredError(null); return; }
+    const result = validateCurrent();
+    if (!result.valid) { setRequiredError(result.error); return; }
+    setRequiredError(null); accrueTime(); setDir(1);
+    if (currentQuestion) {
+      const jumpResult = evaluateNextStep(currentQuestion, answers[currentQuestion.id], questions, visibleQuestions, jumpQueueRef.current);
+      if (jumpResult.type === "end") { openConfirm(); return; }
+      if (jumpResult.type === "redirect" && jumpResult.url) { window.open(jumpResult.url, "_blank"); openConfirm(); return; }
+      if (jumpResult.type === "jump" && jumpResult.targetId) { const idx = questions.findIndex((q) => q.id === jumpResult.targetId); if (idx >= 0) { setStep(idx); return; } }
+    }
+    const nextStep = findNextVisibleStep(step);
+    if (nextStep >= total) {
+      openConfirm();
+    } else {
+      setStep(nextStep);
+    }
+  }, [step, accrueTime, validateCurrent, findNextVisibleStep, currentQuestion, answers, questions, visibleQuestions, total, openConfirm]);
+
+  const goBack = useCallback(() => { if (step <= -1) return; accrueTime(); setDir(-1); setStep((s) => findPrevVisibleStep(s)); }, [step, accrueTime, findPrevVisibleStep]);
 
   const doSubmit = useCallback(async () => {
     setShowConfirm(false);
@@ -278,7 +288,7 @@ export default function FormFill() {
                     )}
                     <div className="mt-2.5 sm:mt-3 flex items-center justify-between gap-2">
                       <Button variant="ghost" size="sm" onClick={goBack} className="text-xs sm:text-sm">برگشت</Button>
-                      {step < total - 1 ? (
+                      {!isLastVisibleStep ? (
                         <Button variant="navy" onClick={goNext} disabled={!!currentValidationError} className={`text-xs sm:text-sm ${currentValidationError ? "opacity-50 cursor-not-allowed" : ""}`}>سوال بعدی</Button>
                       ) : (
                         <Button variant="magenta" onClick={openConfirm} disabled={submitting || !!currentValidationError} rotate="rotate-[0.5deg]" className={`text-xs sm:text-sm ${currentValidationError && !submitting ? "opacity-50 cursor-not-allowed" : ""}`}>{submitting ? "در حال ثبت..." : "ثبت نهایی"}</Button>

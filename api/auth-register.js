@@ -34,12 +34,15 @@ export default async function handler(req, res) {
   }
 
   // اعتبارسنجی شماره موبایل ایران
-  const cleanPhone = String(phone || "")
+  let cleanPhone = String(phone || "")
     .replace(/[۰-۹]/g, (d) => "۰۱۲۳۴۵۶۷۸۹".indexOf(d))
     .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d))
-    .replace(/[^\d+]/g, "")
-    .replace(/^(\+98|0098)/, "0")
-    .replace(/^(9\d{9})$/, "0$1");
+    .replace(/[^\d+]/g, "");
+
+  if (cleanPhone.startsWith("+98")) cleanPhone = "0" + cleanPhone.slice(3);
+  else if (cleanPhone.startsWith("0098")) cleanPhone = "0" + cleanPhone.slice(4);
+  else if (cleanPhone.startsWith("98") && cleanPhone.length >= 12) cleanPhone = "0" + cleanPhone.slice(2);
+  else if (cleanPhone.startsWith("9") && cleanPhone.length === 10) cleanPhone = "0" + cleanPhone;
 
   if (!/^09\d{9}$/.test(cleanPhone)) {
     return res.status(400).json({ error: "شماره موبایل نامعتبر است (مثال: ۰۹۱۲۳۴۵۶۷۸۹)" });

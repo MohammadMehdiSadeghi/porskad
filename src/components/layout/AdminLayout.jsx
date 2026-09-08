@@ -130,8 +130,12 @@ export default function AdminLayout() {
         {!owner && profile && (
           <div className="mx-2 mt-2 p-2.5 rounded-xl bg-white/5 border border-white/10 text-xs">
             <div className="flex items-center justify-between text-white/70 font-bold">
-              <span>سهمیه ساخت فرم:</span>
-              <span className="text-teal font-extrabold">{faNum(profile.max_forms ?? 5)} فرم مجاز</span>
+              <span>سهمیه فرم:</span>
+              <span className="text-teal font-extrabold">
+                {(profile.max_forms >= 999999 || profile.plan === "unlimited")
+                  ? "نامحدود ✨"
+                  : `${faNum(profile.max_forms ?? 5)} فرم مجاز`}
+              </span>
             </div>
           </div>
         )}
@@ -223,8 +227,12 @@ export default function AdminLayout() {
         {!owner && profile && (
           <div className="mx-3 mt-3 p-2.5 rounded-xl bg-white/5 border border-white/10 text-xs shrink-0">
             <div className="flex items-center justify-between text-white/70 font-bold">
-              <span>سهمیه ساخت فرم:</span>
-              <span className="text-teal font-extrabold">{faNum(profile.max_forms ?? 5)} فرم مجاز</span>
+              <span>سهمیه فرم:</span>
+              <span className="text-teal font-extrabold">
+                {(profile.max_forms >= 999999 || profile.plan === "unlimited")
+                  ? "نامحدود ✨"
+                  : `${faNum(profile.max_forms ?? 5)} فرم مجاز`}
+              </span>
             </div>
           </div>
         )}
@@ -319,7 +327,9 @@ export default function AdminLayout() {
                     <>
                       <span>•</span>
                       <span className="text-teal font-bold">
-                        {faNum(profile.max_forms)} فرم مجاز
+                        {(profile.max_forms >= 999999 || profile.plan === "unlimited")
+                          ? "پلن نامحدود ✨"
+                          : `${faNum(profile.max_forms)} فرم مجاز`}
                       </span>
                     </>
                   )}

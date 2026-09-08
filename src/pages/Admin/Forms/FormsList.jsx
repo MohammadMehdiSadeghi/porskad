@@ -240,13 +240,13 @@ export default function FormsList() {
       return;
     }
 
-    // اگر فرم قرار است فعال/منتشر شود، سقف ۵ فرم همزمان فعال بررسی شود
+    // اگر فرم قرار است فعال/منتشر شود، سقف فرم‌های همزمان فعال بررسی شود
     if (!form.published && !isOwner()) {
       const activePublishedCount = forms.filter(
         (f) => f.published && !f.archived && !f.deleted_at && f.id !== form.id
       ).length;
       const allowedMax = profile?.max_forms ?? 5;
-      if (activePublishedCount >= allowedMax) {
+      if (allowedMax < 999999 && activePublishedCount >= allowedMax) {
         setShowQuotaModal(true);
         push(`سقف فرم‌های همزمان فعال (حداکثر ${faNum(allowedMax)} فرم) تکمیل شده است. لطفاً ابتدا یکی از فرم‌های فعال را غیرفعال یا بایگانی کنید.`, "error");
         return;

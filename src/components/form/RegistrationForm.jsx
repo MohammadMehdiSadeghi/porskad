@@ -14,6 +14,7 @@ import { calculateScore, hasScoring } from "../../lib/scoring";
 import { calculateFlow } from "../../lib/logic/flowEngine";
 import ScoreResult from "../ui/ScoreResult";
 import { sendToTelegram } from "../../lib/telegram";
+import { Star, Check, CheckCircle2, AlertCircle } from "lucide-react";
 
 const inputCls = "w-full bg-white border-2 border-ink/10 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 font-semibold text-ink text-sm sm:text-base placeholder:text-ink/40 placeholder:font-medium focus:outline-none transition-all duration-200";
 const selectCls = "w-full bg-white border-2 border-ink/10 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 font-semibold text-ink text-sm sm:text-base focus:outline-none transition-all duration-200 appearance-none cursor-pointer";
@@ -127,28 +128,49 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
 
   async function doSubmit() {
     setShowConfirm(false);
-    if (submitting) return;
-    setSubmitting(true); setError(null);
-    if (honeypot) return;
+    if (submitting || honeypot) return;
     setSubmitting(true);
     setError(null);
     try {
-      const ua = getDeviceInfo();
+      const ua = parseUserAgent();
       const responseId = crypto.randomUUID ? crypto.randomUUID() : `r_${Date.now()}`;
       const { error: respError } = await supabase.from("responses").insert({
-        id: responseId, form_id: form.id, submitted_at: new Date().toISOString(),
-        device: ua.device, browser: ua.browser, os: ua.os, user_agent: navigator.userAgent, referer: document.referrer || null,
+        id: responseId,
+        form_id: form.id,
+        submitted_at: new Date().toISOString(),
+        device: ua.device,
+        browser: ua.browser,
+        os: ua.os,
+        user_agent: navigator.userAgent,
+        referer: document.referrer || null,
       });
       if (respError) throw respError;
-      const rows = visibleQuestions.filter((q) => !isFieldEmpty(answers[q.id])).map((q) => ({
-        response_id: responseId, question_id: q.id, value: normalizeAnswerValue(q, answers[q.id]), time_spent_seconds: 0,
-      }));
-      if (rows.length) { const { error: ansError } = await supabase.from("answers").insert(rows); if (ansError) throw ansError; }
+
+      const rows = visibleQuestions
+        .filter((q) => !isFieldEmpty(answers[q.id]))
+        .map((q) => ({
+          response_id: responseId,
+          question_id: q.id,
+          value: normalizeAnswerValue(q, answers[q.id]),
+          time_spent_seconds: 0,
+        }));
+
+      if (rows.length) {
+        const { error: ansError } = await supabase.from("answers").insert(rows);
+        if (ansError) throw ansError;
+      }
+
       sendToTelegram(form.id, responseId);
-      if (hasScoring(visibleQuestions)) setScoreResult(calculateScore(visibleQuestions, answers));
+      if (hasScoring(visibleQuestions)) {
+        setScoreResult(calculateScore(visibleQuestions, answers));
+      }
       setSubmitted(true);
-    } catch (err) { setError("ثبت ناموفق بود؛ دوباره تلاش کنید."); }
-    finally { setSubmitting(false); }
+    } catch (err) {
+      console.error("Registration form submit error:", err);
+      setError("ثبت ناموفق بود؛ دوباره تلاش کنید.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   function renderQuestion(q) {

@@ -2422,10 +2422,10 @@ export default function SuperAdmin() {
                 ["Full Name", detailModal.full_name || "—"],
                 ["Phone Number", detailModal.phone || "—"],
                 ["System Role", detailModal.role || "manager"],
-                ["Form Quota", `${detailModal.max_forms ?? 5} allowed`],
+                ["Form Quota", (detailModal.is_owner || detailModal.max_forms >= 999999 || detailModal.plan === "unlimited") ? "Unlimited ✨" : `${detailModal.max_forms ?? 5} allowed`],
                 ["SuperAdmin / Owner", detailModal.is_owner ? "Yes" : "No"],
                 ["Account Status", detailModal.is_active ? "Active" : "Inactive"],
-                ["Monthly Responses", `${detailModal.monthly_responses_used ?? 0} / ${detailModal.max_responses_per_month ?? 100} used`],
+                ["Monthly Responses", (detailModal.is_owner || detailModal.max_responses_per_month >= 999999 || detailModal.plan === "unlimited") ? `${detailModal.monthly_responses_used ?? 0} used (Unlimited ✨)` : `${detailModal.monthly_responses_used ?? 0} / ${detailModal.max_responses_per_month ?? 100} used`],
                 ["Quota Reset Date", detailModal.quota_reset_at ? new Date(detailModal.quota_reset_at).toLocaleDateString() : "—"],
                 [
                   "Joined Date",
@@ -2563,6 +2563,48 @@ export default function SuperAdmin() {
                 <span className="sa-tag sa-tag-blue" style={{ fontSize: "0.85rem" }}>
                   SuperAdmin Limit Control
                 </span>
+              </div>
+
+              {/* Quick Preset Buttons */}
+              <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.6rem" }}>
+                <button
+                  type="button"
+                  className="sa-btn sa-btn-sm"
+                  style={{
+                    flex: 1,
+                    background: (Number(detailMaxForms) >= 999999 && Number(detailMaxResponses) >= 999999) ? "#0f62fe" : "#edf5ff",
+                    color: (Number(detailMaxForms) >= 999999 && Number(detailMaxResponses) >= 999999) ? "#ffffff" : "#0f62fe",
+                    border: "1px solid #0f62fe",
+                    fontWeight: 700,
+                    fontSize: "0.8rem",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => {
+                    setDetailMaxForms(999999);
+                    setDetailMaxResponses(999999);
+                  }}
+                >
+                  ⚡ Set Unlimited (Forms & Submissions)
+                </button>
+                <button
+                  type="button"
+                  className="sa-btn sa-btn-sm"
+                  style={{
+                    flex: 1,
+                    background: (Number(detailMaxForms) === 5 && Number(detailMaxResponses) === 100) ? "#161616" : "#f4f4f4",
+                    color: (Number(detailMaxForms) === 5 && Number(detailMaxResponses) === 100) ? "#ffffff" : "#161616",
+                    border: "1px solid #8d8d8d",
+                    fontWeight: 700,
+                    fontSize: "0.8rem",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => {
+                    setDetailMaxForms(5);
+                    setDetailMaxResponses(100);
+                  }}
+                >
+                  Standard Quota (5 forms / 100 resp)
+                </button>
               </div>
 
               <div
