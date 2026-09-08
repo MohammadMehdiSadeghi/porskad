@@ -6,6 +6,7 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import ProgressBar from "../../components/ui/ProgressBar";
 import Spinner from "../../components/ui/Spinner";
+import { FormFillSkeleton } from "../../components/ui/Skeleton";
 import Logo from "../../components/ui/Logo";
 import { supabase } from "../../lib/supabaseClient";
 import { normalizeAnswerValue, validateAnswer } from "../../lib/validators";
@@ -283,7 +284,7 @@ export default function FormFill() {
   const progressValue = step < 0 ? 0 : currentVisibleIndex;
   const approxMinutes = useMemo(() => Math.max(1, Math.round(visibleTotal * 0.4)), [visibleTotal]);
 
-  if (loading) return <div className="min-h-dvh dot-pattern bg-ecosystem-light dark:bg-[#0B0F19] flex items-center justify-center"><Spinner label="فرم داره لود می‌شه..." /></div>;
+  if (loading) return <FormFillSkeleton />;
   if (unavailable) return <NotAvailable message={unavailable} />;
   if (!form) return null;
   if (formType === "registration") return <RegistrationForm form={form} questions={questions} logicRules={logicRules} hiddenFields={hiddenFields} slug={slug} />;

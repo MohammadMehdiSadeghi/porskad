@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabaseClient";
 import Button from "../../../components/ui/Button";
 import Spinner from "../../../components/ui/Spinner";
+import { ShareFormSkeleton } from "../../../components/ui/Skeleton";
 import EmptyState from "../../../components/ui/EmptyState";
 import StickerCard from "../../../components/ui/StickerCard";
 import Badge from "../../../components/ui/Badge";
@@ -110,7 +111,7 @@ export default function ShareForm() {
     load();
   }, [id, user?.id, isOwner, authLoading, push]);
 
-  if (loading) return <Spinner label="در حال بارگذاری..." />;
+  if (loading) return <ShareFormSkeleton />;
   if (!form) {
     return (
       <EmptyState

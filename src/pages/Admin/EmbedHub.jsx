@@ -7,6 +7,7 @@ import StickerCard from "../../components/ui/StickerCard";
 import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
 import Spinner from "../../components/ui/Spinner";
+import { FormsListSkeleton } from "../../components/ui/Skeleton";
 import EmptyState from "../../components/ui/EmptyState";
 import SEO from "../../components/ui/SEO";
 import { faNum } from "../../lib/utils";
@@ -431,7 +432,7 @@ export default function EmbedHub() {
     load();
   }, [load]);
 
-  if (loading || authLoading) return <Spinner label="در حال بارگذاری فرم‌ها..." />;
+  if (loading || authLoading) return <FormsListSkeleton />;
 
   return (
     <div className="flex flex-col gap-6">

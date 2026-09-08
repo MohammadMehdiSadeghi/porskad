@@ -9,6 +9,7 @@ import StickerCard from "../../components/ui/StickerCard";
 import Modal from "../../components/ui/Modal";
 import EmptyState from "../../components/ui/EmptyState";
 import Spinner from "../../components/ui/Spinner";
+import { TableSkeleton } from "../../components/ui/Skeleton";
 import SEO from "../../components/ui/SEO";
 import {
   Send,
@@ -774,7 +775,7 @@ export default function TelegramBot() {
           </div>
 
           {logLoading ? (
-            <Spinner label="بارگذاری تاریخچه..." />
+            <TableSkeleton rows={5} cols={3} />
           ) : sendLog.length > 0 ? (
             <div>
               <StickerCard theme="white">

@@ -7,11 +7,13 @@ import StickerCard from "../../components/ui/StickerCard";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import Spinner from "../../components/ui/Spinner";
+import { DashboardSkeleton } from "../../components/ui/Skeleton";
 import EmptyState from "../../components/ui/EmptyState";
 import { useToast } from "../../components/ui/Toast";
 import { Inbox } from "lucide-react";
 import { faNum, faRelative, faDuration, DEVICE_FA } from "../../lib/utils";
 import SEO from "../../components/ui/SEO";
+
 
 export default function Dashboard() {
   const { user, isOwner, loading: authLoading } = useAuth();
@@ -157,7 +159,7 @@ export default function Dashboard() {
 
   const formTitleById = useMemo(() => Object.fromEntries(forms.map((f) => [f.id, f.title])), [forms]);
 
-  if (loading) return <Spinner label="داشبورد داره لود می‌شه..." />;
+  if (loading) return <DashboardSkeleton />;
 
   return (      <div className="flex flex-col gap-6">
       <SEO

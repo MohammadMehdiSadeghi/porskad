@@ -5,6 +5,7 @@ import StickerCard from "../../../components/ui/StickerCard";
 import Button from "../../../components/ui/Button";
 import Badge from "../../../components/ui/Badge";
 import Spinner from "../../../components/ui/Spinner";
+import { FormBuilderSkeleton } from "../../../components/ui/Skeleton";
 import { useToast } from "../../../components/ui/Toast";
 import { useAuth } from "../../../context/AuthContext";
 import { QUESTION_TYPES, QUESTION_TYPE_ORDER, QUESTION_CATEGORIES, makeQuestion } from "../../../lib/questionTypes";
@@ -1339,7 +1340,7 @@ export default function FormBuilder() {
     }
   }
 
-  if (loading) return <Spinner label="فرم‌ساز در حال بارگذاری..." />;
+  if (loading) return <FormBuilderSkeleton />;
 
   if (notFound) {
     return (

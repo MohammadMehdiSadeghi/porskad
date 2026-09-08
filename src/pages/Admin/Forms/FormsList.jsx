@@ -5,6 +5,8 @@ import StickerCard from "../../../components/ui/StickerCard";
 import Button from "../../../components/ui/Button";
 import Badge from "../../../components/ui/Badge";
 import Spinner from "../../../components/ui/Spinner";
+import { FormsListSkeleton } from "../../../components/ui/Skeleton";
+
 import EmptyState from "../../../components/ui/EmptyState";
 import Modal from "../../../components/ui/Modal";
 import { useToast } from "../../../components/ui/Toast";
@@ -487,7 +489,7 @@ export default function FormsList() {
   // شمارنده سطل زباله
   const trashCount = useMemo(() => forms.filter((f) => f.deleted_at).length, [forms]);
 
-  if (loading) return <Spinner label="فرم‌ها در حال بارگذاری..." />;
+  if (loading) return <FormsListSkeleton />;
 
   return (
     <div className="flex flex-col gap-6">

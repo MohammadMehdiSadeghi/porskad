@@ -8,6 +8,7 @@ import StatCard from "../../components/ui/StatCard";
 import StickerCard from "../../components/ui/StickerCard";
 import EmptyState from "../../components/ui/EmptyState";
 import Spinner from "../../components/ui/Spinner";
+import { TableSkeleton, DashboardSkeleton } from "../../components/ui/Skeleton";
 import SEO from "../../components/ui/SEO";
 import {
   MessageSquare,
@@ -117,7 +118,7 @@ export default function SmsPanel() {
     { id: "settings", label: "تنظیمات پیامک", icon: Settings },
   ];
 
-  if (loading) return <Spinner label="بارگذاری پنل پیامک..." />;
+  if (loading) return <DashboardSkeleton />;
 
   return (
     <div className="flex flex-col gap-6">
@@ -272,7 +273,7 @@ export default function SmsPanel() {
             </Button>
           </div>
           {logLoading ? (
-            <Spinner label="بارگذاری..." />
+            <TableSkeleton rows={5} cols={4} />
           ) : outbox.length === 0 ? (
             <EmptyState icon={<History size={48} />} title="هنوز پیامکی ارسال نشده" subtitle="تاریخچه ارسال‌ها پس از فعال‌سازی سیستم ثبت خواهد شد." />
           ) : (
@@ -322,7 +323,7 @@ export default function SmsPanel() {
             </Button>
           </div>
           {logLoading ? (
-            <Spinner label="بارگذاری..." />
+            <TableSkeleton rows={4} cols={3} />
           ) : inboxMsgs.length === 0 ? (
             <EmptyState icon={<Inbox size={48} />} title="هنوز پیامک دریافتی ندارید" subtitle="پیامک‌های دریافتی اینجا نمایش داده می‌شوند." />
           ) : (

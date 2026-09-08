@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NavLink, Navigate, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Spinner from "../ui/Spinner";
+import { DashboardSkeleton } from "../ui/Skeleton";
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
 import { useToast } from "../ui/Toast";
@@ -39,8 +40,8 @@ export default function AdminLayout() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-bg-lavender">
-        <Spinner label="چک کردن لاگین..." />
+      <div className="min-h-screen bg-bg-neutral dark:bg-[#0B0F19] p-6">
+        <DashboardSkeleton />
       </div>
     );
   }
