@@ -56,7 +56,7 @@ export default async function handler(req, res) {
 
     const PRIMARY_GOD_EMAILS = ["superadmin@gmailc.com", "superadmin@gmail.com"];
     const requesterEmail = user.email?.toLowerCase()?.trim();
-    const isCallerPrimaryGod = PRIMARY_GOD_EMAILS.includes(requesterEmail);
+    const isCallerPrimaryGod = Boolean(prof?.is_owner || isSuperAdmin || PRIMARY_GOD_EMAILS.includes(requesterEmail));
 
     const { action, target_user_id, new_password, new_email } = req.body || {};
 
@@ -139,10 +139,10 @@ export default async function handler(req, res) {
       });
     }
 
-    // ۶. ارتقا یا تنزل نقش کاربر (فقط صاحب اصلی / گاد مُد مجاز است)
+    // ۶. ارتقا یا تنزل نقش کاربر (صاحب اصلی / سوپرادمین)
     if (action === "update_role") {
-      if (!isCallerPrimaryGod) {
-        return res.status(403).json({ error: "فقط صاحب اصلی (God Mode) مجاز به ارتقای کاربران به سوپرادمین است" });
+      if (!isCallerPrimaryGod && !prof?.is_owner) {
+        return res.status(403).json({ error: "فقط صاحب اصلی سیستم مجاز به تغییر نقش کاربران است" });
       }
       const { new_role } = req.body || {};
       if (!["manager", "admin", "superadmin"].includes(new_role)) {
@@ -150,15 +150,40 @@ export default async function handler(req, res) {
       }
 
       const roleToSet = new_role === "superadmin" ? "admin" : new_role;
+
+      // ۱. حذف رکوردهای قبلی نقش برای کاربر
+      await adminClient.from("user_roles").delete().eq("user_id", target_user_id);
+
+      // ۲. درج رکورد نقش جدید
       const { error: roleErr } = await adminClient
         .from("user_roles")
-        .upsert(
-          { user_id: target_user_id, role_id: roleToSet, active: true },
-          { onConflict: "user_id" }
-        );
+        .insert({ user_id: target_user_id, role_id: roleToSet, active: true });
 
       if (roleErr) {
         return res.status(400).json({ error: roleErr.message });
+      }
+
+      // ۳. به‌روزرسانی سهمیه و پلن متناسب با نقش
+      if (roleToSet === "admin") {
+        await adminClient
+          .from("profiles")
+          .update({
+            max_forms: 999999,
+            max_responses_per_month: 999999,
+            plan: "enterprise",
+            can_use_telegram: true,
+            can_export_excel: true,
+          })
+          .eq("id", target_user_id);
+      } else {
+        await adminClient
+          .from("profiles")
+          .update({
+            max_forms: 5,
+            max_responses_per_month: 100,
+            plan: "free",
+          })
+          .eq("id", target_user_id);
       }
 
       return res.status(200).json({ success: true, role: roleToSet });

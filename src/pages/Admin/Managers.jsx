@@ -233,6 +233,52 @@ export default function Managers() {
     }
   }
 
+  async function handleChangeUserRole(targetUser, newRole) {
+    if (!targetUser || targetUser.is_owner) return;
+    const isPromoting = newRole === "admin";
+    if (!confirm(isPromoting ? `آیا از ارتقای «${targetUser.full_name || targetUser.email}» به سطح سوپر ادمین (SuperAdmin) اطمینان دارید؟` : `آیا از تغییر نقش «${targetUser.full_name || targetUser.email}» به کاربر عادی اطمینان دارید؟`)) return;
+    
+    try {
+      try {
+        const token = session?.access_token;
+        const res = await fetch("/api/admin-user-management", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            action: "update_role",
+            target_user_id: targetUser.id,
+            new_role: newRole,
+          }),
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Error ${res.status}`);
+        }
+      } catch {
+        // فالبک کلاینت به Supabase
+        await supabase.from("user_roles").delete().eq("user_id", targetUser.id);
+        const { error } = await supabase
+          .from("user_roles")
+          .insert({ user_id: targetUser.id, role_id: newRole, active: true });
+        if (error) throw error;
+        if (newRole === "admin") {
+          await supabase.from("profiles").update({ max_forms: 999999, max_responses_per_month: 999999, plan: "enterprise", can_use_telegram: true, can_export_excel: true }).eq("id", targetUser.id);
+        } else {
+          await supabase.from("profiles").update({ max_forms: 5, max_responses_per_month: 100, plan: "free" }).eq("id", targetUser.id);
+        }
+      }
+
+      push(isPromoting ? `کاربر «${targetUser.full_name || targetUser.email}» به سوپرادمین ارتقا یافت.` : `نقش کاربر به کاربر عادی تغییر یافت.`, "success");
+      setSelectedUserModal((prev) => prev ? { ...prev, role: newRole } : null);
+      load();
+    } catch (err) {
+      push("خطا در تغییر نقش: " + err.message, "error");
+    }
+  }
+
   // ─── تنظیمات سامانه و محدودیت‌ها ───
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [sysSettings, setSysSettings] = useState({
@@ -895,6 +941,55 @@ export default function Managers() {
                       {m.can_use_telegram ? "قطع دسترسی" : "وصل دسترسی"}
                     </Button>
                   )}
+                </div>
+              )}
+
+              {/* تعیین نقش و سطح دسترسی کاربر */}
+              {!m.is_owner && isOwner() && (
+                <div className="bg-white border-2 border-ink/10 rounded-2xl p-3.5 flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-navy flex items-center gap-1.5">
+                      <Shield size={15} className="text-teal" /> تعیین نقش و سطح دسترسی کاربر
+                    </span>
+                    <span className="text-[11px] font-bold text-ink-subtle">فقط توسط مدیر ارشد</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleChangeUserRole(m, "manager")}
+                      className={`p-2.5 rounded-xl border-2 text-right transition-all cursor-pointer ${
+                        m.role !== "admin"
+                          ? "border-teal bg-teal/10 text-teal-text shadow-xs"
+                          : "border-ink/15 bg-white text-navy/70 hover:border-ink/30"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-black">کاربر عادی (Manager)</span>
+                        {m.role !== "admin" && <Badge color="green">نقش فعلی</Badge>}
+                      </div>
+                      <p className="text-[11px] text-ink-subtle leading-4">دسترسی استاندارد به فرم‌ها و پاسخ‌های خود</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleChangeUserRole(m, "admin")}
+                      className={`p-2.5 rounded-xl border-2 text-right transition-all cursor-pointer ${
+                        m.role === "admin"
+                          ? "border-amber-500 bg-amber-50 text-amber-900 shadow-xs"
+                          : "border-ink/15 bg-white text-navy/70 hover:border-amber-300"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-black flex items-center gap-1">
+                          <Shield size={13} className="text-amber-600" />
+                          سوپرادمین (SuperAdmin)
+                        </span>
+                        {m.role === "admin" && <Badge color="yellow">نقش فعلی</Badge>}
+                      </div>
+                      <p className="text-[11px] text-ink-subtle leading-4">دسترسی کامل به پنل مدیریت کل و نظارت بر سیستم</p>
+                    </button>
+                  </div>
                 </div>
               )}
 

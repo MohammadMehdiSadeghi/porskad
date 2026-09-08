@@ -67,7 +67,7 @@ export default function SuperAdmin() {
   const [search, setSearch] = useState("");
   const refreshRef = useRef(null);
 
-  const isCallerGod = isPrimaryGodEmail(user?.email);
+  const isCallerGod = Boolean(isOwner() || profile?.is_owner || isPrimaryGodEmail(user?.email));
 
   // ─── State ───
   const [dbStats, setDbStats] = useState({});
@@ -1823,13 +1823,12 @@ export default function SuperAdmin() {
                                 new_role: "manager",
                               });
                             } catch {
+                              await supabase.from("user_roles").delete().eq("user_id", a.id);
                               const { error } = await supabase
                                 .from("user_roles")
-                                .upsert(
-                                  { user_id: a.id, role_id: "manager", active: true },
-                                  { onConflict: "user_id,role_id" }
-                                );
+                                .insert({ user_id: a.id, role_id: "manager", active: true });
                               if (error) throw error;
+                              await supabase.from("profiles").update({ max_forms: 5, max_responses_per_month: 100, plan: "free" }).eq("id", a.id);
                             }
                             showToast(`User "${a.email}" has been demoted to regular user.`);
                             loadAdmins();
@@ -2956,13 +2955,16 @@ export default function SuperAdmin() {
                                 new_role: r.id,
                               });
                             } catch {
+                              await supabase.from("user_roles").delete().eq("user_id", detailModal.id);
                               const { error } = await supabase
                                 .from("user_roles")
-                                .upsert(
-                                  { user_id: detailModal.id, role_id: r.id, active: true },
-                                  { onConflict: "user_id,role_id" }
-                                );
+                                .insert({ user_id: detailModal.id, role_id: r.id, active: true });
                               if (error) throw error;
+                              if (r.id === "admin") {
+                                await supabase.from("profiles").update({ max_forms: 999999, max_responses_per_month: 999999, plan: "enterprise", can_use_telegram: true, can_export_excel: true }).eq("id", detailModal.id);
+                              } else {
+                                await supabase.from("profiles").update({ max_forms: 5, max_responses_per_month: 100, plan: "free" }).eq("id", detailModal.id);
+                              }
                             }
 
                             showToast(r.id === "admin" ? `User "${detailModal.email}" promoted to SuperAdmin.` : `User role set to Manager.`);
