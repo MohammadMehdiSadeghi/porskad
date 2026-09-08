@@ -9,11 +9,12 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import StickerCard from "../../components/ui/StickerCard";
 import Modal from "../../components/ui/Modal";
-import { Plus, Edit, Edit3, Trash2, Crown, Users, User, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings, Eye, EyeOff, Sliders, Bot, Copy, Calendar, CheckCircle, XCircle, Phone, Mail, RotateCcw, Save, Info } from "lucide-react";
+import { Plus, Edit, Edit3, Trash2, Crown, Users, User, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings, Eye, EyeOff, Sliders, Bot, Copy, Calendar, CheckCircle, XCircle, Phone, Mail, RotateCcw, Save, Info, Sparkles, Zap, Layers, Check } from "lucide-react";
 import SEO from "../../components/ui/SEO";
 import { supabase } from "../../lib/supabaseClient";
 import { logActivity } from "../../lib/activityLogger";
 import { faNum } from "../../lib/utils";
+import { DEFAULT_PLANS, getEffectivePlans } from "../../lib/plans";
 
 // ─── دسته‌بندی مجوزها ───
 const PERMISSION_CATEGORIES = [
@@ -183,19 +184,82 @@ export default function Managers() {
   const [selectedUserModal, setSelectedUserModal] = useState(null);
   const [userFormsCount, setUserFormsCount] = useState({});
 
-  // ─── ویرایش مستقیم سهمیه کاربر در مودال کاربری ───
+  // ─── ویرایش مستقیم سهمیه و دسترسی‌های کاربر در مودال کاربری ───
+  const [userEditPlan, setUserEditPlan] = useState("free");
+  const [userEditQuotaResetAt, setUserEditQuotaResetAt] = useState("");
   const [userEditMaxForms, setUserEditMaxForms] = useState(5);
   const [userEditMaxResponses, setUserEditMaxResponses] = useState(100);
   const [userEditResponsesUsed, setUserEditResponsesUsed] = useState(0);
+  const [userEditCanTelegram, setUserEditCanTelegram] = useState(false);
+  const [userEditCanExcel, setUserEditCanExcel] = useState(true);
+  const [userEditCanLogic, setUserEditCanLogic] = useState(false);
+  const [userEditCanFileUpload, setUserEditCanFileUpload] = useState(false);
+  const [userEditCanSms, setUserEditCanSms] = useState(false);
+  const [userEditCanWebhooks, setUserEditCanWebhooks] = useState(false);
+  const [userEditCanRemoveBranding, setUserEditCanRemoveBranding] = useState(false);
   const [userEditSaving, setUserEditSaving] = useState(false);
 
   useEffect(() => {
     if (selectedUserModal) {
+      setUserEditPlan(selectedUserModal.plan ?? "free");
       setUserEditMaxForms(selectedUserModal.max_forms ?? 5);
       setUserEditMaxResponses(selectedUserModal.max_responses_per_month ?? 100);
       setUserEditResponsesUsed(selectedUserModal.monthly_responses_used ?? 0);
+      setUserEditQuotaResetAt(selectedUserModal.quota_reset_at ? selectedUserModal.quota_reset_at.slice(0, 10) : "");
+      setUserEditCanTelegram(Boolean(selectedUserModal.can_use_telegram));
+      setUserEditCanExcel(selectedUserModal.can_export_excel !== false);
+      setUserEditCanLogic(Boolean(selectedUserModal.can_use_logic));
+      setUserEditCanFileUpload(Boolean(selectedUserModal.can_upload_files));
+      setUserEditCanSms(Boolean(selectedUserModal.can_use_sms));
+      setUserEditCanWebhooks(Boolean(selectedUserModal.can_use_webhooks));
+      setUserEditCanRemoveBranding(Boolean(selectedUserModal.can_remove_branding));
     }
   }, [selectedUserModal?.id]);
+
+  function handleSelectPresetPlanDirect(planKey) {
+    setUserEditPlan(planKey);
+    const plans = getEffectivePlans();
+    const p = plans[planKey] || DEFAULT_PLANS[planKey];
+    if (planKey === "unlimited") {
+      setUserEditMaxForms(999999);
+      setUserEditMaxResponses(999999);
+      setUserEditCanTelegram(true);
+      setUserEditCanExcel(true);
+      setUserEditCanLogic(true);
+      setUserEditCanFileUpload(true);
+      setUserEditCanSms(true);
+      setUserEditCanWebhooks(true);
+      setUserEditCanRemoveBranding(true);
+    } else if (p) {
+      setUserEditMaxForms(p.maxForms ?? 5);
+      setUserEditMaxResponses(p.monthlyResponsesLimit ?? 100);
+      if (planKey === "enterprise") {
+        setUserEditCanTelegram(true);
+        setUserEditCanExcel(true);
+        setUserEditCanLogic(true);
+        setUserEditCanFileUpload(true);
+        setUserEditCanSms(true);
+        setUserEditCanWebhooks(true);
+        setUserEditCanRemoveBranding(true);
+      } else if (planKey === "pro") {
+        setUserEditCanTelegram(true);
+        setUserEditCanExcel(true);
+        setUserEditCanLogic(true);
+        setUserEditCanFileUpload(true);
+        setUserEditCanSms(false);
+        setUserEditCanWebhooks(false);
+        setUserEditCanRemoveBranding(false);
+      } else {
+        setUserEditCanTelegram(false);
+        setUserEditCanExcel(true);
+        setUserEditCanLogic(false);
+        setUserEditCanFileUpload(false);
+        setUserEditCanSms(false);
+        setUserEditCanWebhooks(false);
+        setUserEditCanRemoveBranding(false);
+      }
+    }
+  }
 
   async function handleSaveUserQuotaDirect(e) {
     e?.preventDefault?.();
@@ -205,30 +269,53 @@ export default function Managers() {
       const maxF = Math.max(1, Number(userEditMaxForms) || 1);
       const maxR = Math.max(1, Number(userEditMaxResponses) || 1);
       const usedR = Math.max(0, Number(userEditResponsesUsed) || 0);
+      const resetIso = userEditQuotaResetAt ? new Date(userEditQuotaResetAt).toISOString() : null;
 
       await updateUserQuota(selectedUserModal.id, {
         maxForms: maxF,
         maxResponses: maxR,
         monthlyResponsesUsed: usedR,
-        plan: selectedUserModal.plan ?? "free",
-        canUseTelegram: selectedUserModal.can_use_telegram,
+        plan: userEditPlan,
+        quotaResetAt: resetIso,
+        canUseTelegram: Boolean(userEditCanTelegram),
+        canExportExcel: Boolean(userEditCanExcel),
+        canUseLogic: Boolean(userEditCanLogic),
+        canUploadFiles: Boolean(userEditCanFileUpload),
+        canUseSms: Boolean(userEditCanSms),
+        canUseWebhooks: Boolean(userEditCanWebhooks),
+        canRemoveBranding: Boolean(userEditCanRemoveBranding),
       });
+
+      const updatedProps = {
+        max_forms: maxF,
+        max_responses_per_month: maxR,
+        monthly_responses_used: usedR,
+        plan: userEditPlan,
+        quota_reset_at: resetIso,
+        can_use_telegram: Boolean(userEditCanTelegram),
+        can_export_excel: Boolean(userEditCanExcel),
+        can_use_logic: Boolean(userEditCanLogic),
+        can_upload_files: Boolean(userEditCanFileUpload),
+        can_use_sms: Boolean(userEditCanSms),
+        can_use_webhooks: Boolean(userEditCanWebhooks),
+        can_remove_branding: Boolean(userEditCanRemoveBranding),
+      };
 
       setManagers((prev) =>
         prev.map((x) =>
           x.id === selectedUserModal.id
-            ? { ...x, max_forms: maxF, max_responses_per_month: maxR, monthly_responses_used: usedR }
+            ? { ...x, ...updatedProps }
             : x
         )
       );
       setSelectedUserModal((prev) =>
         prev
-          ? { ...prev, max_forms: maxF, max_responses_per_month: maxR, monthly_responses_used: usedR }
+          ? { ...prev, ...updatedProps }
           : null
       );
-      push(`سهمیه کاربر «${selectedUserModal.full_name || selectedUserModal.email}» با موفقیت ذخیره شد.`, "success");
+      push(`طرح، سهمیه و امکانات کاربر «${selectedUserModal.full_name || selectedUserModal.email}» با موفقیت ذخیره شد.`, "success");
     } catch (err) {
-      push("خطا در ذخیره سهمیه: " + err.message, "error");
+      push("خطا در ذخیره مشخصات کاربر: " + err.message, "error");
     } finally {
       setUserEditSaving(false);
     }
@@ -250,23 +337,36 @@ export default function Managers() {
         maxForms: maxF,
         maxResponses: maxR,
         plan: newPlan,
-        canUseTelegram: targetUser.can_use_telegram,
+        canUseTelegram: newUnlimited ? true : targetUser.can_use_telegram,
+        canExportExcel: true,
+        canUseLogic: newUnlimited ? true : targetUser.can_use_logic,
+        canUploadFiles: newUnlimited ? true : targetUser.can_upload_files,
+        canUseSms: newUnlimited ? true : targetUser.can_use_sms,
+        canUseWebhooks: newUnlimited ? true : targetUser.can_use_webhooks,
+        canRemoveBranding: newUnlimited ? true : targetUser.can_remove_branding,
       });
+
+      const updatedProps = {
+        max_forms: maxF,
+        max_responses_per_month: maxR,
+        plan: newPlan,
+      };
 
       setManagers((prev) =>
         prev.map((x) =>
           x.id === targetUser.id
-            ? { ...x, max_forms: maxF, max_responses_per_month: maxR, plan: newPlan }
+            ? { ...x, ...updatedProps }
             : x
         )
       );
       setSelectedUserModal((prev) =>
         prev && prev.id === targetUser.id
-          ? { ...prev, max_forms: maxF, max_responses_per_month: maxR, plan: newPlan }
+          ? { ...prev, ...updatedProps }
           : prev
       );
       setUserEditMaxForms(maxF);
       setUserEditMaxResponses(maxR);
+      setUserEditPlan(newPlan);
 
       push(
         newUnlimited
@@ -390,7 +490,14 @@ export default function Managers() {
   const [quotaMaxForms, setQuotaMaxForms] = useState(5);
   const [quotaMaxResponses, setQuotaMaxResponses] = useState(100);
   const [quotaPlan, setQuotaPlan] = useState("free");
+  const [quotaResetAt, setQuotaResetAt] = useState("");
   const [quotaCanUseTelegram, setQuotaCanUseTelegram] = useState(false);
+  const [quotaCanExportExcel, setQuotaCanExportExcel] = useState(true);
+  const [quotaCanUseLogic, setQuotaCanUseLogic] = useState(false);
+  const [quotaCanUploadFiles, setQuotaCanUploadFiles] = useState(false);
+  const [quotaCanUseSms, setQuotaCanUseSms] = useState(false);
+  const [quotaCanUseWebhooks, setQuotaCanUseWebhooks] = useState(false);
+  const [quotaCanRemoveBranding, setQuotaCanRemoveBranding] = useState(false);
   const [quotaSaving, setQuotaSaving] = useState(false);
 
   function openQuotaModal(m) {
@@ -398,7 +505,59 @@ export default function Managers() {
     setQuotaMaxForms(m.max_forms ?? 5);
     setQuotaMaxResponses(m.max_responses_per_month ?? 100);
     setQuotaPlan(m.plan ?? "free");
+    setQuotaResetAt(m.quota_reset_at ? m.quota_reset_at.slice(0, 10) : "");
     setQuotaCanUseTelegram(Boolean(m.can_use_telegram));
+    setQuotaCanExportExcel(m.can_export_excel !== false);
+    setQuotaCanUseLogic(Boolean(m.can_use_logic));
+    setQuotaCanUploadFiles(Boolean(m.can_upload_files));
+    setQuotaCanUseSms(Boolean(m.can_use_sms));
+    setQuotaCanUseWebhooks(Boolean(m.can_use_webhooks));
+    setQuotaCanRemoveBranding(Boolean(m.can_remove_branding));
+  }
+
+  function handleSelectPresetPlanQuota(planKey) {
+    setQuotaPlan(planKey);
+    const plans = getEffectivePlans();
+    const p = plans[planKey] || DEFAULT_PLANS[planKey];
+    if (planKey === "unlimited") {
+      setQuotaMaxForms(999999);
+      setQuotaMaxResponses(999999);
+      setQuotaCanUseTelegram(true);
+      setQuotaCanExportExcel(true);
+      setQuotaCanUseLogic(true);
+      setQuotaCanUploadFiles(true);
+      setQuotaCanUseSms(true);
+      setQuotaCanUseWebhooks(true);
+      setQuotaCanRemoveBranding(true);
+    } else if (p) {
+      setQuotaMaxForms(p.maxForms ?? 5);
+      setQuotaMaxResponses(p.monthlyResponsesLimit ?? 100);
+      if (planKey === "enterprise") {
+        setQuotaCanUseTelegram(true);
+        setQuotaCanExportExcel(true);
+        setQuotaCanUseLogic(true);
+        setQuotaCanUploadFiles(true);
+        setQuotaCanUseSms(true);
+        setQuotaCanUseWebhooks(true);
+        setQuotaCanRemoveBranding(true);
+      } else if (planKey === "pro") {
+        setQuotaCanUseTelegram(true);
+        setQuotaCanExportExcel(true);
+        setQuotaCanUseLogic(true);
+        setQuotaCanUploadFiles(true);
+        setQuotaCanUseSms(false);
+        setQuotaCanUseWebhooks(false);
+        setQuotaCanRemoveBranding(false);
+      } else {
+        setQuotaCanUseTelegram(false);
+        setQuotaCanExportExcel(true);
+        setQuotaCanUseLogic(false);
+        setQuotaCanUploadFiles(false);
+        setQuotaCanUseSms(false);
+        setQuotaCanUseWebhooks(false);
+        setQuotaCanRemoveBranding(false);
+      }
+    }
   }
 
   async function handleSaveQuota(e) {
@@ -406,13 +565,21 @@ export default function Managers() {
     if (!quotaModal) return;
     setQuotaSaving(true);
     try {
+      const resetIso = quotaResetAt ? new Date(quotaResetAt).toISOString() : null;
       await updateUserQuota(quotaModal.id, {
         maxForms: Number(quotaMaxForms) || 5,
         maxResponses: Number(quotaMaxResponses) || 100,
         plan: quotaPlan,
+        quotaResetAt: resetIso,
         canUseTelegram: Boolean(quotaCanUseTelegram),
+        canExportExcel: Boolean(quotaCanExportExcel),
+        canUseLogic: Boolean(quotaCanUseLogic),
+        canUploadFiles: Boolean(quotaCanUploadFiles),
+        canUseSms: Boolean(quotaCanUseSms),
+        canUseWebhooks: Boolean(quotaCanUseWebhooks),
+        canRemoveBranding: Boolean(quotaCanRemoveBranding),
       });
-      push("سهمیه و دسترسی‌های کاربر با موفقیت به‌روزرسانی شد.", "success");
+      push("طرح، سهمیه و دسترسی‌های کاربر با موفقیت به‌روزرسانی شد.", "success");
       setQuotaModal(null);
       load();
     } catch (err) {
@@ -890,51 +1057,105 @@ export default function Managers() {
                   </div>
                 </div>
 
-                {/* کارت سهمیه نامحدود (بدون سقف فرم و ورودی) */}
                 {!m.is_owner && (
-                  <div className={`p-3 rounded-xl border-2 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 ${
-                    (m.max_forms >= 999999 && m.max_responses_per_month >= 999999) || m.plan === "unlimited"
-                      ? "bg-teal/10 dark:bg-teal-950/30 border-teal/40 dark:border-teal-700"
-                      : "bg-navy/5 dark:bg-slate-800 border-navy/10 dark:border-slate-700"
-                  }`}>
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-xl">⚡</span>
-                      <div>
-                        <span className="block text-xs font-black text-navy dark:text-slate-100">
-                          {(m.max_forms >= 999999 && m.max_responses_per_month >= 999999) || m.plan === "unlimited"
-                            ? "پلن سهمیه نامحدود فعال است"
-                            : "سهمیه نامحدود فرم و ثبت‌نام"}
+                  <form onSubmit={handleSaveUserQuotaDirect} className="pt-3 border-t border-navy/10 dark:border-slate-700 space-y-4">
+                    {/* انتخاب طرح / پلن */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs font-black text-navy dark:text-slate-100 flex items-center gap-1.5">
+                          <Sparkles size={14} className="text-amber-500" />
+                          <span>طرح اشتراک کاربر:</span>
+                        </label>
+                        <span className="text-[11px] text-ink-subtle dark:text-slate-400">
+                          با انتخاب طرح، مقادیر پیش‌فرض جایگذاری می‌شوند ولی تک‌تک قابل ویرایشند.
                         </span>
-                        <span className="text-xs text-ink-subtle dark:text-slate-400 leading-5">
-                          {(m.max_forms >= 999999 && m.max_responses_per_month >= 999999) || m.plan === "unlimited"
-                            ? "بدون محدودیت تعداد فرم فعال و تعداد پاسخ (بدون دسترسی سوپرادمین)"
-                            : "نامحدود کردن فرم‌های فعال و ورودی‌ها برای این کاربر"}
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {[
+                          { id: "free", label: "رایگان (Free)", desc: "۵ فرم / ۱۰۰ ورودی" },
+                          { id: "pro", label: "حرفه‌ای (Pro)", desc: "۵۰ فرم / ۴هزار ورودی" },
+                          { id: "enterprise", label: "سازمانی (Enterprise)", desc: "نامحدود / ۱۲هزار ورودی" },
+                          { id: "unlimited", label: "کاملاً نامحدود ⚡", desc: "بدون هیچ سقفی" },
+                        ].map((p) => {
+                          const isSel = userEditPlan === p.id;
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() => handleSelectPresetPlanDirect(p.id)}
+                              className={`p-2 rounded-xl border-2 text-right transition-all cursor-pointer ${
+                                isSel
+                                  ? "border-teal bg-teal/10 dark:bg-teal-950/40 text-teal-text dark:text-teal-300 font-black shadow-xs"
+                                  : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy/70 dark:text-slate-300 hover:border-ink/30"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-black">{p.label}</span>
+                                {isSel && <Check size={12} className="text-teal shrink-0" />}
+                              </div>
+                              <span className="text-[10px] text-ink-subtle dark:text-slate-400 block mt-0.5">{p.desc}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* تاریخ تمدید و انقضای دوره */}
+                    <div className="bg-bg-neutral/70 dark:bg-slate-800/80 p-3 rounded-xl border border-ink/10 dark:border-slate-700">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                        <label className="text-xs font-black text-navy dark:text-slate-100 flex items-center gap-1.5">
+                          <Calendar size={13} className="text-teal" />
+                          <span>تاریخ تمدید / پایان دوره اشتراک:</span>
+                        </label>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const d = new Date();
+                              d.setDate(d.getDate() + 30);
+                              setUserEditQuotaResetAt(d.toISOString().slice(0, 10));
+                            }}
+                            className="px-2 py-0.5 text-[11px] font-bold bg-white dark:bg-slate-700 hover:bg-teal/10 hover:text-teal border border-ink/15 dark:border-slate-600 rounded-lg transition-colors cursor-pointer"
+                          >
+                            +۳۰ روز
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const d = new Date();
+                              d.setFullYear(d.getFullYear() + 1);
+                              setUserEditQuotaResetAt(d.toISOString().slice(0, 10));
+                            }}
+                            className="px-2 py-0.5 text-[11px] font-bold bg-white dark:bg-slate-700 hover:bg-teal/10 hover:text-teal border border-ink/15 dark:border-slate-600 rounded-lg transition-colors cursor-pointer"
+                          >
+                            +۱ سال
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setUserEditQuotaResetAt("")}
+                            className="px-2 py-0.5 text-[11px] font-bold text-magenta-text bg-white dark:bg-slate-700 hover:bg-magenta/10 border border-ink/15 dark:border-slate-600 rounded-lg transition-colors cursor-pointer"
+                          >
+                            بدون انقضا
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="date"
+                          dir="ltr"
+                          value={userEditQuotaResetAt}
+                          onChange={(e) => setUserEditQuotaResetAt(e.target.value)}
+                          className="px-3 py-1.5 rounded-xl border-2 border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-mono font-bold text-navy dark:text-slate-100 outline-none focus:border-teal"
+                        />
+                        <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400">
+                          {userEditQuotaResetAt
+                            ? `شمسی: ${new Date(userEditQuotaResetAt).toLocaleDateString("fa-IR")}`
+                            : "نامحدود یا بدون تاریخ انقضا"}
                         </span>
                       </div>
                     </div>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant={(m.max_forms >= 999999 && m.max_responses_per_month >= 999999) || m.plan === "unlimited" ? "ghost" : "teal"}
-                      onClick={() => handleToggleUnlimitedQuota(m)}
-                      className="shrink-0 text-xs font-black"
-                    >
-                      {(m.max_forms >= 999999 && m.max_responses_per_month >= 999999) || m.plan === "unlimited"
-                        ? "بازگشت به پلن پایه"
-                        : "فعال‌سازی سهمیه نامحدود ⚡"}
-                    </Button>
-                  </div>
-                )}
 
-                {!m.is_owner && (
-                  <form onSubmit={handleSaveUserQuotaDirect} className="pt-2 border-t border-navy/10 dark:border-slate-700 space-y-3">
-                    <div className="text-xs font-black text-navy dark:text-slate-100 flex items-center justify-between">
-                      <span className="flex items-center gap-1"><Edit3 size={12} className="text-teal" /> ویرایش دستی محدودیت‌های این کاربر:</span>
-                      <span className="text-xs text-ink-subtle dark:text-slate-400 font-semibold">
-                        ریست بعدی: {m.quota_reset_at ? new Date(m.quota_reset_at).toLocaleDateString("fa-IR") : "چرخه ۳۰ روزه"}
-                      </span>
-                    </div>
-
+                    {/* سقف‌های عددی */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                       <div>
                         <label className="block text-xs font-bold text-navy dark:text-slate-200 mb-1">
@@ -986,6 +1207,90 @@ export default function Managers() {
                       </div>
                     </div>
 
+                    {/* امکانات و دسترسی‌های پیشرفته کاربر (Granular Toggles) */}
+                    <div className="bg-bg-neutral/60 dark:bg-slate-800/60 p-3 rounded-xl border border-ink/10 dark:border-slate-700 space-y-2.5">
+                      <div className="text-xs font-black text-navy dark:text-slate-100 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <Sliders size={13} className="text-teal" /> دسترسی‌ها و امکانات مجاز برای این کاربر:
+                        </span>
+                        <span className="text-[11px] text-ink-subtle dark:text-slate-400 font-semibold">
+                          شخصی‌سازی دقیق هر ویژگی
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                        <label className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={userEditCanTelegram}
+                            onChange={(e) => setUserEditCanTelegram(e.target.checked)}
+                            className="rounded text-teal focus:ring-teal"
+                          />
+                          <span className="font-bold text-navy dark:text-slate-200">اتصال به بات تلگرام</span>
+                        </label>
+
+                        <label className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={userEditCanExcel}
+                            onChange={(e) => setUserEditCanExcel(e.target.checked)}
+                            className="rounded text-teal focus:ring-teal"
+                          />
+                          <span className="font-bold text-navy dark:text-slate-200">خروجی اکسل و CSV</span>
+                        </label>
+
+                        <label className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={userEditCanLogic}
+                            onChange={(e) => setUserEditCanLogic(e.target.checked)}
+                            className="rounded text-teal focus:ring-teal"
+                          />
+                          <span className="font-bold text-navy dark:text-slate-200">شرط‌گذاری و انشعاب (Logic)</span>
+                        </label>
+
+                        <label className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={userEditCanFileUpload}
+                            onChange={(e) => setUserEditCanFileUpload(e.target.checked)}
+                            className="rounded text-teal focus:ring-teal"
+                          />
+                          <span className="font-bold text-navy dark:text-slate-200">آپلود فایل توسط کاربر</span>
+                        </label>
+
+                        <label className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={userEditCanSms}
+                            onChange={(e) => setUserEditCanSms(e.target.checked)}
+                            className="rounded text-teal focus:ring-teal"
+                          />
+                          <span className="font-bold text-navy dark:text-slate-200">احراز هویت و پیامک (SMS OTP)</span>
+                        </label>
+
+                        <label className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={userEditCanWebhooks}
+                            onChange={(e) => setUserEditCanWebhooks(e.target.checked)}
+                            className="rounded text-teal focus:ring-teal"
+                          />
+                          <span className="font-bold text-navy dark:text-slate-200">وب‌هوک و API اختصاصی</span>
+                        </label>
+
+                        <label className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 cursor-pointer sm:col-span-2">
+                          <input
+                            type="checkbox"
+                            checked={userEditCanRemoveBranding}
+                            onChange={(e) => setUserEditCanRemoveBranding(e.target.checked)}
+                            className="rounded text-teal focus:ring-teal"
+                          />
+                          <span className="font-bold text-navy dark:text-slate-200">حذف واترمارک و لوگوی پرس‌کاد از انتهای فرم</span>
+                        </label>
+                      </div>
+                    </div>
+
                     <div className="flex items-center justify-between gap-2 pt-2 border-t border-navy/5 dark:border-slate-700">
                       <button
                         type="button"
@@ -1005,40 +1310,12 @@ export default function Managers() {
                         className="text-xs font-black"
                       >
                         <Save size={13} className="ml-1" />
-                        {userEditSaving ? "در حال ذخیره..." : "ذخیره تغییرات سهمیه"}
+                        {userEditSaving ? "در حال ذخیره..." : "ذخیره طرح، سهمیه و امکانات"}
                       </Button>
                     </div>
                   </form>
                 )}
               </div>
-
-              {/* دسترسی به ربات تلگرام */}
-              {!m.is_owner && (
-                <div className="bg-white dark:bg-slate-900 border-2 border-ink/10 dark:border-slate-700 rounded-2xl p-3.5 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${m.can_use_telegram ? "bg-teal/15 dark:bg-teal-950/50 text-teal dark:text-teal-300" : "bg-ink/10 dark:bg-slate-800 text-ink-subtle dark:text-slate-400"}`}>
-                      <Bot size={16} />
-                    </div>
-                    <div>
-                      <span className="text-xs font-black text-navy dark:text-slate-100 block">اتصال به ربات تلگرام</span>
-                      <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400">
-                        وضعیت: {m.can_use_telegram ? <strong className="text-teal-text dark:text-teal-300">فعال</strong> : <strong className="text-amber-700 dark:text-amber-400">قطع</strong>}
-                      </span>
-                    </div>
-                  </div>
-
-                  {canManage && (
-                    <Button
-                      variant={m.can_use_telegram ? "ghost" : "teal"}
-                      size="sm"
-                      className={m.can_use_telegram ? "!text-amber-700 dark:!text-amber-400 border-amber-300 dark:border-amber-700/50 hover:bg-amber-50 dark:hover:bg-amber-950/30 text-xs" : "text-xs"}
-                      onClick={() => toggleTelegramAccess(m)}
-                    >
-                      {m.can_use_telegram ? "قطع دسترسی" : "وصل دسترسی"}
-                    </Button>
-                  )}
-                </div>
-              )}
 
               {/* تعیین نقش و سطح دسترسی کاربر */}
               {!m.is_owner && isOwner() && (
@@ -1349,79 +1626,201 @@ export default function Managers() {
         <form onSubmit={handleSaveQuota} className="flex flex-col gap-4">
 
           {/* کلیدهای سریع پلن‌ها */}
-          <div className="flex gap-2 p-1.5 bg-bg-neutral dark:bg-slate-800/90 rounded-xl border border-ink/10 dark:border-slate-700">
-            <button
-              type="button"
-              onClick={() => {
-                setQuotaMaxForms(999999);
-                setQuotaMaxResponses(999999);
-                setQuotaPlan("unlimited");
-              }}
-              className={`flex-1 py-2 px-3 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                (Number(quotaMaxForms) >= 999999 && Number(quotaMaxResponses) >= 999999) || quotaPlan === "unlimited"
-                  ? "bg-teal text-white shadow-xs"
-                  : "text-navy dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 bg-white/50 dark:bg-slate-700/60"
-              }`}
-            >
-              ⚡ پلن نامحدود (بدون سقف)
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setQuotaMaxForms(5);
-                setQuotaMaxResponses(100);
-                setQuotaPlan("free");
-              }}
-              className={`flex-1 py-2 px-3 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                Number(quotaMaxForms) === 5 && Number(quotaMaxResponses) === 100 && quotaPlan === "free"
-                  ? "bg-navy dark:bg-slate-900 text-white shadow-xs"
-                  : "text-navy dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 bg-white/50 dark:bg-slate-700/60"
-              }`}
-            >
-              پلن پایه (۵ فرم / ۱۰۰ ورودی)
-            </button>
-          </div>
-
           <div>
-            <label className="block text-sm font-extrabold text-navy dark:text-slate-100 mb-1.5">حداکثر تعداد فرم‌های فعال</label>
-            <input
-              type="number"
-              min="1"
-              value={quotaMaxForms}
-              onChange={(e) => setQuotaMaxForms(e.target.value)}
-              className={inputCls}
-            />
-            <span className="text-xs text-ink-subtle dark:text-slate-400 mt-1 block">پیش‌فرض: ۵ فرم. برای نامحدود عدد ۹۹۹۹۹۹ یا کلید بالای فرم را بزنید.</span>
+            <label className="block text-xs font-black text-navy dark:text-slate-100 mb-1.5 flex items-center gap-1.5">
+              <Sparkles size={14} className="text-amber-500" />
+              <span>انتخاب طرح کاربری:</span>
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { id: "free", label: "رایگان", desc: "۵ فرم / ۱۰۰ ورودی" },
+                { id: "pro", label: "حرفه‌ای", desc: "۵۰ فرم / ۴هزار ورودی" },
+                { id: "enterprise", label: "سازمانی", desc: "نامحدود / ۱۲هزار ورودی" },
+                { id: "unlimited", label: "نامحدود ⚡", desc: "بدون هیچ سقفی" },
+              ].map((p) => {
+                const isSel = quotaPlan === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => handleSelectPresetPlanQuota(p.id)}
+                    className={`p-2 rounded-xl border-2 text-right transition-all cursor-pointer ${
+                      isSel
+                        ? "border-teal bg-teal/10 dark:bg-teal-950/40 text-teal-text dark:text-teal-300 font-black shadow-xs"
+                        : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy/70 dark:text-slate-300 hover:border-ink/30"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black">{p.label}</span>
+                      {isSel && <Check size={12} className="text-teal shrink-0" />}
+                    </div>
+                    <span className="text-[10px] text-ink-subtle dark:text-slate-400 block mt-0.5">{p.desc}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-extrabold text-navy dark:text-slate-100 mb-1.5">حداکثر پاسخ در ماه</label>
-            <input
-              type="number"
-              min="1"
-              value={quotaMaxResponses}
-              onChange={(e) => setQuotaMaxResponses(e.target.value)}
-              className={inputCls}
-            />
-            <span className="text-xs text-ink-subtle dark:text-slate-400 mt-1 block">پیش‌فرض: ۱۰۰ ورودی در ماه. برای نامحدود عدد ۹۹۹۹۹۹ قرار دهید.</span>
-          </div>
-
-          <div className="flex items-center justify-between p-3.5 rounded-xl bg-bg-lavender/50 dark:bg-slate-800/80 border-2 border-teal/20 dark:border-teal-700/40">
-            <div>
-              <span className="block text-sm font-extrabold text-navy dark:text-slate-100">دسترسی به بات تلگرام</span>
+          {/* تاریخ تمدید و انقضای دوره */}
+          <div className="bg-bg-neutral/70 dark:bg-slate-800/80 p-3 rounded-xl border border-ink/10 dark:border-slate-700">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+              <label className="text-xs font-black text-navy dark:text-slate-100 flex items-center gap-1.5">
+                <Calendar size={13} className="text-teal" />
+                <span>تاریخ تمدید / پایان دوره اشتراک:</span>
+              </label>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const d = new Date();
+                    d.setDate(d.getDate() + 30);
+                    setQuotaResetAt(d.toISOString().slice(0, 10));
+                  }}
+                  className="px-2 py-0.5 text-[11px] font-bold bg-white dark:bg-slate-700 hover:bg-teal/10 hover:text-teal border border-ink/15 dark:border-slate-600 rounded-lg transition-colors cursor-pointer"
+                >
+                  +۳۰ روز
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const d = new Date();
+                    d.setFullYear(d.getFullYear() + 1);
+                    setQuotaResetAt(d.toISOString().slice(0, 10));
+                  }}
+                  className="px-2 py-0.5 text-[11px] font-bold bg-white dark:bg-slate-700 hover:bg-teal/10 hover:text-teal border border-ink/15 dark:border-slate-600 rounded-lg transition-colors cursor-pointer"
+                >
+                  +۱ سال
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setQuotaResetAt("")}
+                  className="px-2 py-0.5 text-[11px] font-bold text-magenta-text bg-white dark:bg-slate-700 hover:bg-magenta/10 border border-ink/15 dark:border-slate-600 rounded-lg transition-colors cursor-pointer"
+                >
+                  بدون انقضا
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <input
+                type="date"
+                dir="ltr"
+                value={quotaResetAt}
+                onChange={(e) => setQuotaResetAt(e.target.value)}
+                className="px-3 py-1.5 rounded-xl border-2 border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-mono font-bold text-navy dark:text-slate-100 outline-none focus:border-teal"
+              />
               <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400">
-                امکان اتصال فرم‌ها به بات تلگرام و دریافت ورودی‌ها
+                {quotaResetAt
+                  ? `شمسی: ${new Date(quotaResetAt).toLocaleDateString("fa-IR")}`
+                  : "نامحدود یا بدون تاریخ انقضا"}
               </span>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-extrabold text-navy dark:text-slate-100 mb-1.5">حداکثر تعداد فرم‌های فعال</label>
               <input
-                type="checkbox"
-                checked={quotaCanUseTelegram}
-                onChange={(e) => setQuotaCanUseTelegram(e.target.checked)}
-                className="sr-only peer"
+                type="number"
+                min="1"
+                value={quotaMaxForms}
+                onChange={(e) => setQuotaMaxForms(e.target.value)}
+                className={inputCls}
               />
-              <div className="w-11 h-6 bg-ink/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal"></div>
-            </label>
+              <span className="text-[11px] text-ink-subtle dark:text-slate-400 mt-1 block">پیش‌فرض: ۵ فرم. برای نامحدود ۹۹۹۹۹۹</span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-extrabold text-navy dark:text-slate-100 mb-1.5">حداکثر پاسخ در ماه</label>
+              <input
+                type="number"
+                min="1"
+                value={quotaMaxResponses}
+                onChange={(e) => setQuotaMaxResponses(e.target.value)}
+                className={inputCls}
+              />
+              <span className="text-[11px] text-ink-subtle dark:text-slate-400 mt-1 block">پیش‌فرض: ۱۰۰ ورودی. برای نامحدود ۹۹۹۹۹۹</span>
+            </div>
+          </div>
+
+          {/* امکانات و دسترسی‌های پیشرفته کاربر (Granular Toggles) */}
+          <div className="bg-bg-neutral/60 dark:bg-slate-800/60 p-3 rounded-xl border border-ink/10 dark:border-slate-700 space-y-2.5">
+            <div className="text-xs font-black text-navy dark:text-slate-100 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Sliders size={13} className="text-teal" /> دسترسی‌ها و امکانات مجاز برای این کاربر:
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <label className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={quotaCanUseTelegram}
+                  onChange={(e) => setQuotaCanUseTelegram(e.target.checked)}
+                  className="rounded text-teal focus:ring-teal"
+                />
+                <span className="font-bold text-navy dark:text-slate-200">اتصال به بات تلگرام</span>
+              </label>
+
+              <label className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={quotaCanExportExcel}
+                  onChange={(e) => setQuotaCanExportExcel(e.target.checked)}
+                  className="rounded text-teal focus:ring-teal"
+                />
+                <span className="font-bold text-navy dark:text-slate-200">خروجی اکسل و CSV</span>
+              </label>
+
+              <label className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={quotaCanUseLogic}
+                  onChange={(e) => setQuotaCanUseLogic(e.target.checked)}
+                  className="rounded text-teal focus:ring-teal"
+                />
+                <span className="font-bold text-navy dark:text-slate-200">شرط‌گذاری و انشعاب (Logic)</span>
+              </label>
+
+              <label className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={quotaCanUploadFiles}
+                  onChange={(e) => setQuotaCanUploadFiles(e.target.checked)}
+                  className="rounded text-teal focus:ring-teal"
+                />
+                <span className="font-bold text-navy dark:text-slate-200">آپلود فایل توسط کاربر</span>
+              </label>
+
+              <label className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={quotaCanUseSms}
+                  onChange={(e) => setQuotaCanUseSms(e.target.checked)}
+                  className="rounded text-teal focus:ring-teal"
+                />
+                <span className="font-bold text-navy dark:text-slate-200">احراز هویت و پیامک (SMS OTP)</span>
+              </label>
+
+              <label className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={quotaCanUseWebhooks}
+                  onChange={(e) => setQuotaCanUseWebhooks(e.target.checked)}
+                  className="rounded text-teal focus:ring-teal"
+                />
+                <span className="font-bold text-navy dark:text-slate-200">وب‌هوک و API اختصاصی</span>
+              </label>
+
+              <label className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 cursor-pointer sm:col-span-2">
+                <input
+                  type="checkbox"
+                  checked={quotaCanRemoveBranding}
+                  onChange={(e) => setQuotaCanRemoveBranding(e.target.checked)}
+                  className="rounded text-teal focus:ring-teal"
+                />
+                <span className="font-bold text-navy dark:text-slate-200">حذف واترمارک و لوگوی پرس‌کاد از انتهای فرم</span>
+              </label>
+            </div>
           </div>
 
           {/* وضعیت مصرف سهمیه در مودال */}
@@ -1455,7 +1854,7 @@ export default function Managers() {
 
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="teal" size="sm" type="submit" disabled={quotaSaving}>
-              {quotaSaving ? "در حال ذخیره..." : "ذخیره سهمیه"}
+              {quotaSaving ? "در حال ذخیره..." : "ذخیره تغییرات"}
             </Button>
             <Button variant="ghost" size="sm" type="button" onClick={() => setQuotaModal(null)}>انصراف</Button>
           </div>

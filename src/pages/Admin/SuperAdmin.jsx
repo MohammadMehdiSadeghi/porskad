@@ -80,11 +80,19 @@ import {
   FILE_TYPE_PRESETS,
   DEFAULT_FILE_UPLOAD_POLICY,
 } from "../../lib/validators";
+import {
+  getEffectivePlans,
+  savePlansConfig,
+  resetPlansConfig,
+  DEFAULT_PLANS,
+  PLAN_ORDER,
+} from "../../lib/plans";
 
 
 const TABS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "settings", label: "Settings", icon: Settings },
+  { id: "plans", label: "Plans & Pricing", icon: Crown },
   { id: "question_types", label: "Form Questions", icon: ListOrdered },
   { id: "storage", label: "Storage", icon: HardDrive },
   { id: "database", label: "Database", icon: Database },
@@ -174,6 +182,11 @@ export default function SuperAdmin() {
   const [customExtInput, setCustomExtInput] = useState("");
   const [newBlockExtInput, setNewBlockExtInput] = useState("");
 
+  // ─── Dynamic Plans & Features State ───
+  const [plansConfig, setPlansConfig] = useState(() => getEffectivePlans());
+  const [plansSaving, setPlansSaving] = useState(false);
+  const [newPlanFeatureInput, setNewPlanFeatureInput] = useState({ planId: "free", text: "", included: true });
+
   // ─── Modals ───
   const [editModal, setEditModal] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -192,13 +205,22 @@ export default function SuperAdmin() {
   const [userLogsLoading, setUserLogsLoading] = useState(false);
   const [userLogsSearch, setUserLogsSearch] = useState("");
 
-  // ─── User Detail Password, Email, Quota & Activity States ───
+  // ─── User Detail Password, Email, Plan, Quota & Activity States ───
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [newEmail, setNewEmail] = useState("");
+  const [detailPlan, setDetailPlan] = useState("free");
   const [detailMaxForms, setDetailMaxForms] = useState(5);
   const [detailMaxResponses, setDetailMaxResponses] = useState(100);
   const [detailResponsesUsed, setDetailResponsesUsed] = useState(0);
+  const [detailQuotaResetAt, setDetailQuotaResetAt] = useState("");
+  const [detailCanTelegram, setDetailCanTelegram] = useState(true);
+  const [detailCanExcel, setDetailCanExcel] = useState(true);
+  const [detailCanLogic, setDetailCanLogic] = useState(false);
+  const [detailCanFileUpload, setDetailCanFileUpload] = useState(false);
+  const [detailCanSms, setDetailCanSms] = useState(false);
+  const [detailCanWebhooks, setDetailCanWebhooks] = useState(false);
+  const [detailCanRemoveBranding, setDetailCanRemoveBranding] = useState(false);
   const [detailQuotaSaving, setDetailQuotaSaving] = useState(false);
   const [detailActivityHistory, setDetailActivityHistory] = useState([]);
   const [detailActivityLoading, setDetailActivityLoading] = useState(false);
@@ -208,9 +230,18 @@ export default function SuperAdmin() {
       setNewEmail(detailModal.email || "");
       setNewPassword("");
       setPasswordVisible(false);
+      setDetailPlan(detailModal.plan || "free");
       setDetailMaxForms(detailModal.max_forms ?? 5);
       setDetailMaxResponses(detailModal.max_responses_per_month ?? 100);
       setDetailResponsesUsed(detailModal.monthly_responses_used ?? 0);
+      setDetailQuotaResetAt(detailModal.quota_reset_at ? String(detailModal.quota_reset_at).slice(0, 10) : "");
+      setDetailCanTelegram(detailModal.can_use_telegram ?? true);
+      setDetailCanExcel(detailModal.can_export_excel ?? true);
+      setDetailCanLogic(detailModal.can_use_logic ?? false);
+      setDetailCanFileUpload(detailModal.can_upload_files ?? false);
+      setDetailCanSms(detailModal.can_use_sms ?? false);
+      setDetailCanWebhooks(detailModal.can_use_webhooks ?? false);
+      setDetailCanRemoveBranding(detailModal.can_remove_branding ?? false);
 
       setDetailActivityLoading(true);
       supabase
@@ -594,6 +625,76 @@ export default function SuperAdmin() {
     }));
   }
 
+  // ─── Dynamic Plans & Pricing Handlers ───
+  async function handleSavePlansConfig() {
+    setPlansSaving(true);
+    try {
+      savePlansConfig(plansConfig);
+      try {
+        await supabase
+          .from("system_settings")
+          .upsert(
+            { key: "plans_config", value: plansConfig, updated_at: new Date().toISOString() },
+            { onConflict: "key" }
+          );
+      } catch (dbErr) {
+        console.warn("Could not sync plans to database:", dbErr);
+      }
+      showToast("Plans & pricing packages saved successfully");
+    } catch (err) {
+      showToast("Error saving plans: " + err.message, "error");
+    } finally {
+      setPlansSaving(false);
+    }
+  }
+
+  async function handleResetPlansConfig() {
+    if (!confirm("Reset all 3 plans and features to factory defaults?")) return;
+    resetPlansConfig();
+    setPlansConfig(DEFAULT_PLANS);
+    showToast("Plans configuration reset to defaults");
+  }
+
+  function handleUpdatePlanMeta(planId, field, value) {
+    setPlansConfig((prev) => ({
+      ...prev,
+      [planId]: {
+        ...(prev[planId] || {}),
+        [field]: value,
+      },
+    }));
+  }
+
+  function handleTogglePlanFeature(planId, index) {
+    setPlansConfig((prev) => {
+      const plan = prev[planId] || {};
+      const features = [...(plan.features || [])];
+      if (features[index]) {
+        features[index] = { ...features[index], included: !features[index].included };
+      }
+      return { ...prev, [planId]: { ...plan, features } };
+    });
+  }
+
+  function handleRemovePlanFeature(planId, index) {
+    setPlansConfig((prev) => {
+      const plan = prev[planId] || {};
+      const features = (plan.features || []).filter((_, i) => i !== index);
+      return { ...prev, [planId]: { ...plan, features } };
+    });
+  }
+
+  function handleAddPlanFeature(planId) {
+    const text = newPlanFeatureInput.text.trim();
+    if (!text) return;
+    setPlansConfig((prev) => {
+      const plan = prev[planId] || {};
+      const features = [...(plan.features || []), { text, included: newPlanFeatureInput.included }];
+      return { ...prev, [planId]: { ...plan, features } };
+    });
+    setNewPlanFeatureInput((prev) => ({ ...prev, text: "" }));
+  }
+
   async function handleResetUserQuota(targetUserId, targetUserName) {
     if (
       !confirm(
@@ -622,26 +723,36 @@ export default function SuperAdmin() {
       const maxF = Math.max(1, Number(detailMaxForms) || 1);
       const maxR = Math.max(1, Number(detailMaxResponses) || 1);
       const usedR = Math.max(0, Number(detailResponsesUsed) || 0);
+      const resetIso = detailQuotaResetAt ? new Date(detailQuotaResetAt).toISOString() : detailModal.quota_reset_at;
+
+      const updatePayload = {
+        plan: detailPlan,
+        max_forms: maxF,
+        max_responses_per_month: maxR,
+        monthly_responses_used: usedR,
+        quota_reset_at: resetIso,
+        can_use_telegram: detailCanTelegram,
+        can_export_excel: detailCanExcel,
+        can_use_logic: detailCanLogic,
+        can_upload_files: detailCanFileUpload,
+        can_use_sms: detailCanSms,
+        can_use_webhooks: detailCanWebhooks,
+        can_remove_branding: detailCanRemoveBranding,
+      };
 
       const { error } = await supabase
         .from("profiles")
-        .update({
-          max_forms: maxF,
-          max_responses_per_month: maxR,
-          monthly_responses_used: usedR,
-        })
+        .update(updatePayload)
         .eq("id", detailModal.id);
 
       if (error) throw error;
 
-      showToast(`User quotas updated: ${maxF} forms, ${maxR} responses/month`);
+      showToast(`User settings & plan updated: ${detailPlan.toUpperCase()} plan, ${maxF} forms, ${maxR} responses/month`);
       setDetailModal((prev) =>
         prev
           ? {
               ...prev,
-              max_forms: maxF,
-              max_responses_per_month: maxR,
-              monthly_responses_used: usedR,
+              ...updatePayload,
             }
           : null
       );
@@ -650,9 +761,7 @@ export default function SuperAdmin() {
           u.id === detailModal.id
             ? {
                 ...u,
-                max_forms: maxF,
-                max_responses_per_month: maxR,
-                monthly_responses_used: usedR,
+                ...updatePayload,
               }
             : u
         )
@@ -662,9 +771,7 @@ export default function SuperAdmin() {
           a.id === detailModal.id
             ? {
                 ...a,
-                max_forms: maxF,
-                max_responses_per_month: maxR,
-                monthly_responses_used: usedR,
+                ...updatePayload,
               }
             : a
         )
@@ -1687,6 +1794,311 @@ export default function SuperAdmin() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════ Subscription Plans & Pricing Packages Manager ═══════════ */}
+      {tab === "plans" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+          {/* Header */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "0.75rem",
+            }}
+          >
+            <div>
+              <div className="sa-section-title" style={{ margin: 0, fontSize: "1.1rem" }}>
+                Subscription Plans & Pricing Packages Manager
+              </div>
+              <div style={{ fontSize: "0.8rem", color: "#525252" }}>
+                Customize pricing, quotas, and granular feature lists for Free, Professional, and Enterprise packages.
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button
+                type="button"
+                className="sa-btn sa-btn-secondary"
+                onClick={handleResetPlansConfig}
+                style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+                title="Reset all plans to factory defaults"
+              >
+                <RotateCcw size={14} />
+                Reset Defaults
+              </button>
+              <button
+                type="button"
+                className="sa-btn sa-btn-primary"
+                onClick={handleSavePlansConfig}
+                disabled={plansSaving}
+                style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+              >
+                <Save size={14} />
+                {plansSaving ? "Saving Plans..." : "Save All Plans"}
+              </button>
+            </div>
+          </div>
+
+          {/* 3 Plans Cards Grid */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+              gap: "1rem",
+              alignItems: "start",
+            }}
+          >
+            {PLAN_ORDER.map((planKey) => {
+              const p = plansConfig[planKey] || DEFAULT_PLANS[planKey];
+              return (
+                <div
+                  key={planKey}
+                  className="sa-card"
+                  style={{
+                    padding: "1.25rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1rem",
+                    borderTop: `4px solid ${planKey === "enterprise" ? "#ff832b" : planKey === "pro" ? "#0f62fe" : "#8d8d8d"}`,
+                  }}
+                >
+                  {/* Plan Top Info */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <span
+                        style={{
+                          fontSize: "1.15rem",
+                          fontWeight: 800,
+                          color: "#161616",
+                        }}
+                      >
+                        {p.name}
+                      </span>
+                      <span style={{ fontSize: "0.8rem", color: "#6f6f6f", marginLeft: "0.4rem" }}>
+                        ({p.nameEn})
+                      </span>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: "0.75rem",
+                        padding: "0.2rem 0.6rem",
+                        borderRadius: "1rem",
+                        backgroundColor: planKey === "enterprise" ? "#fff1e5" : planKey === "pro" ? "#edf5ff" : "#f4f4f4",
+                        color: planKey === "enterprise" ? "#b24000" : planKey === "pro" ? "#0043ce" : "#525252",
+                        fontWeight: 700,
+                      }}
+                    >
+                      ID: {p.id}
+                    </span>
+                  </div>
+
+                  {/* Plan Meta Inputs */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#525252", marginBottom: "0.2rem" }}>
+                        Monthly Price (Toman)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1000"
+                        value={p.priceMonthly ?? 0}
+                        onChange={(e) => handleUpdatePlanMeta(planKey, "priceMonthly", Number(e.target.value))}
+                        style={{ width: "100%", padding: "0.35rem 0.5rem", fontSize: "0.85rem", fontWeight: 700 }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#525252", marginBottom: "0.2rem" }}>
+                        Yearly Price (Toman)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="5000"
+                        value={p.priceYearly ?? 0}
+                        onChange={(e) => handleUpdatePlanMeta(planKey, "priceYearly", Number(e.target.value))}
+                        style={{ width: "100%", padding: "0.35rem 0.5rem", fontSize: "0.85rem", fontWeight: 700 }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#525252", marginBottom: "0.2rem" }}>
+                        Max Active Forms
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={p.maxForms ?? 5}
+                        onChange={(e) => handleUpdatePlanMeta(planKey, "maxForms", Number(e.target.value))}
+                        style={{ width: "100%", padding: "0.35rem 0.5rem", fontSize: "0.85rem", fontWeight: 700 }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#525252", marginBottom: "0.2rem" }}>
+                        Responses / Month
+                      </label>
+                      <input
+                        type="number"
+                        min="10"
+                        value={p.monthlyResponsesLimit ?? 100}
+                        onChange={(e) => handleUpdatePlanMeta(planKey, "monthlyResponsesLimit", Number(e.target.value))}
+                        style={{ width: "100%", padding: "0.35rem 0.5rem", fontSize: "0.85rem", fontWeight: 700 }}
+                      />
+                    </div>
+
+                    <div style={{ gridColumn: "span 2" }}>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#525252", marginBottom: "0.2rem" }}>
+                        Plan Description
+                      </label>
+                      <input
+                        type="text"
+                        value={p.description || ""}
+                        onChange={(e) => handleUpdatePlanMeta(planKey, "description", e.target.value)}
+                        style={{ width: "100%", padding: "0.35rem 0.5rem", fontSize: "0.8rem" }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Feature Bullets List Manager */}
+                  <div style={{ borderTop: "1px solid #e0e0e0", paddingTop: "0.75rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                      <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#161616" }}>
+                        Plan Features & Limits ({(p.features || []).length})
+                      </span>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "0.35rem",
+                        maxHeight: 260,
+                        overflowY: "auto",
+                        paddingRight: "0.25rem",
+                        marginBottom: "0.75rem",
+                      }}
+                    >
+                      {(p.features || []).map((feat, fIdx) => (
+                        <div
+                          key={fIdx}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.4rem",
+                            padding: "0.35rem 0.5rem",
+                            borderRadius: "0.35rem",
+                            backgroundColor: feat.included ? "#f4f9f4" : "#fdfdfd",
+                            border: `1px solid ${feat.included ? "#c6e9c6" : "#e0e0e0"}`,
+                            fontSize: "0.8rem",
+                          }}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => handleTogglePlanFeature(planKey, fIdx)}
+                            style={{
+                              border: "none",
+                              background: "none",
+                              cursor: "pointer",
+                              color: feat.included ? "#198038" : "#8d8d8d",
+                              display: "inline-flex",
+                              padding: 0,
+                            }}
+                            title={feat.included ? "Mark as not included (disabled)" : "Mark as included (active)"}
+                          >
+                            {feat.included ? <Check size={15} strokeWidth={3} /> : <X size={15} strokeWidth={2} />}
+                          </button>
+
+                          <input
+                            type="text"
+                            value={feat.text}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setPlansConfig((prev) => {
+                                const plan = prev[planKey] || {};
+                                const features = [...(plan.features || [])];
+                                if (features[fIdx]) {
+                                  features[fIdx] = { ...features[fIdx], text: val };
+                                }
+                                return { ...prev, [planKey]: { ...plan, features } };
+                              });
+                            }}
+                            style={{
+                              flex: 1,
+                              border: "none",
+                              background: "transparent",
+                              fontSize: "0.8rem",
+                              color: feat.included ? "#161616" : "#8d8d8d",
+                              textDecoration: feat.included ? "none" : "line-through",
+                              outline: "none",
+                            }}
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() => handleRemovePlanFeature(planKey, fIdx)}
+                            style={{
+                              border: "none",
+                              background: "none",
+                              cursor: "pointer",
+                              color: "#da1e28",
+                              opacity: 0.6,
+                              padding: 0,
+                            }}
+                            title="Delete feature item"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Add New Feature Form */}
+                    <div style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
+                      <input
+                        type="text"
+                        placeholder="Add new feature bullet..."
+                        value={newPlanFeatureInput.planId === planKey ? newPlanFeatureInput.text : ""}
+                        onChange={(e) =>
+                          setNewPlanFeatureInput({
+                            planId: planKey,
+                            text: e.target.value,
+                            included: true,
+                          })
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddPlanFeature(planKey);
+                          }
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: "0.35rem 0.5rem",
+                          fontSize: "0.8rem",
+                          borderRadius: "0.35rem",
+                          border: "1px solid #8d8d8d",
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="sa-btn sa-btn-secondary"
+                        onClick={() => handleAddPlanFeature(planKey)}
+                        style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", display: "inline-flex", alignItems: "center", gap: "0.2rem" }}
+                      >
+                        <Plus size={13} /> Add
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -4410,7 +4822,7 @@ export default function SuperAdmin() {
               </div>
             </div>
 
-            {/* User Quota & Limits (Forms & Responses) Editor */}
+            {/* User Plan, Quotas & Custom Permissions Editor */}
             <div className="sa-modal-box-blue">
               <div
                 style={{
@@ -4431,59 +4843,129 @@ export default function SuperAdmin() {
                     gap: "0.35rem",
                   }}
                 >
-                  <Zap size={13} /> Active Forms & Monthly Quotas (Manual Override)
+                  <Zap size={13} /> User Plan, Quotas & Permissions Customization
                 </span>
                 <span className="sa-tag sa-tag-blue" style={{ fontSize: "0.85rem" }}>
-                  SuperAdmin Limit Control
+                  SuperAdmin Override
                 </span>
               </div>
 
-              {/* Quick Preset Buttons */}
-              <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.6rem" }}>
-                <button
-                  type="button"
-                  className={`sa-btn sa-btn-sm ${
-                    Number(detailMaxForms) >= 999999 && Number(detailMaxResponses) >= 999999
-                      ? "sa-btn-primary"
-                      : "sa-btn-secondary"
-                  }`}
-                  style={{ flex: 1, fontSize: "0.8rem" }}
-                  onClick={() => {
-                    setDetailMaxForms(999999);
-                    setDetailMaxResponses(999999);
-                  }}
-                >
-                  ⚡ Set Unlimited (Forms & Submissions)
-                </button>
-                <button
-                  type="button"
-                  className={`sa-btn sa-btn-sm ${
-                    Number(detailMaxForms) === 5 && Number(detailMaxResponses) === 100
-                      ? "sa-btn-primary"
-                      : "sa-btn-secondary"
-                  }`}
-                  style={{ flex: 1, fontSize: "0.8rem" }}
-                  onClick={() => {
-                    setDetailMaxForms(5);
-                    setDetailMaxResponses(100);
-                  }}
-                >
-                  Standard Quota (5 forms / 100 resp)
-                </button>
+              {/* Plan Selector & Quick Presets */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", marginBottom: "0.6rem" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "#161616", marginBottom: "0.2rem" }}>
+                    Account Plan / Tier
+                  </label>
+                  <select
+                    value={detailPlan}
+                    onChange={(e) => {
+                      const newP = e.target.value;
+                      setDetailPlan(newP);
+                      if (newP === "enterprise" || newP === "unlimited") {
+                        setDetailMaxForms(999999);
+                        setDetailMaxResponses(12000);
+                        setDetailCanTelegram(true);
+                        setDetailCanExcel(true);
+                        setDetailCanLogic(true);
+                        setDetailCanFileUpload(true);
+                        setDetailCanSms(true);
+                        setDetailCanWebhooks(true);
+                        setDetailCanRemoveBranding(true);
+                      } else if (newP === "pro") {
+                        setDetailMaxForms(50);
+                        setDetailMaxResponses(4000);
+                        setDetailCanTelegram(true);
+                        setDetailCanExcel(true);
+                        setDetailCanLogic(true);
+                        setDetailCanFileUpload(true);
+                        setDetailCanSms(false);
+                        setDetailCanWebhooks(false);
+                      } else if (newP === "free") {
+                        setDetailMaxForms(5);
+                        setDetailMaxResponses(100);
+                        setDetailCanTelegram(true);
+                        setDetailCanExcel(true);
+                        setDetailCanLogic(false);
+                        setDetailCanFileUpload(false);
+                        setDetailCanSms(false);
+                        setDetailCanWebhooks(false);
+                      }
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "0.4rem 0.5rem",
+                      fontSize: "0.85rem",
+                      fontWeight: 700,
+                      borderRadius: "0.35rem",
+                      border: "1px solid #8d8d8d",
+                      backgroundColor: "#fff",
+                    }}
+                  >
+                    <option value="free">Free Plan (رایگان)</option>
+                    <option value="pro">Pro Plan (حرفه‌ای)</option>
+                    <option value="enterprise">Enterprise Plan (سازمانی)</option>
+                    <option value="unlimited">Unlimited / VIP (نامحدود اختصاصی)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "#161616", marginBottom: "0.2rem" }}>
+                    Next Quota Renewal Date
+                  </label>
+                  <div style={{ display: "flex", gap: "0.3rem" }}>
+                    <input
+                      type="date"
+                      value={detailQuotaResetAt}
+                      onChange={(e) => setDetailQuotaResetAt(e.target.value)}
+                      style={{
+                        flex: 1,
+                        padding: "0.35rem 0.5rem",
+                        fontSize: "0.8rem",
+                        borderRadius: "0.35rem",
+                        border: "1px solid #8d8d8d",
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="sa-btn sa-btn-secondary sa-btn-sm"
+                      onClick={() => {
+                        const d = new Date();
+                        d.setDate(d.getDate() + 30);
+                        setDetailQuotaResetAt(d.toISOString().slice(0, 10));
+                      }}
+                      title="Set 30 days from now"
+                    >
+                      +30d
+                    </button>
+                    <button
+                      type="button"
+                      className="sa-btn sa-btn-secondary sa-btn-sm"
+                      onClick={() => {
+                        const d = new Date();
+                        d.setDate(d.getDate() + 365);
+                        setDetailQuotaResetAt(d.toISOString().slice(0, 10));
+                      }}
+                      title="Set 1 year from now"
+                    >
+                      +1y
+                    </button>
+                  </div>
+                </div>
               </div>
 
+              {/* Quota Numbers Grid */}
               <div
                 style={{
                   display: "grid",
                   gridTemplateColumns: "1fr 1fr 1fr",
                   gap: "0.5rem",
-                  marginBottom: "0.5rem",
+                  marginBottom: "0.6rem",
                 }}
               >
                 <div>
                   <label
                     style={{
-                      fontSize: "0.85rem",
+                      fontSize: "0.8rem",
                       fontWeight: 700,
                       display: "block",
                       marginBottom: "0.2rem",
@@ -4511,7 +4993,7 @@ export default function SuperAdmin() {
                 <div>
                   <label
                     style={{
-                      fontSize: "0.85rem",
+                      fontSize: "0.8rem",
                       fontWeight: 700,
                       display: "block",
                       marginBottom: "0.2rem",
@@ -4540,7 +5022,7 @@ export default function SuperAdmin() {
                 <div>
                   <label
                     style={{
-                      fontSize: "0.85rem",
+                      fontSize: "0.8rem",
                       fontWeight: 700,
                       display: "block",
                       marginBottom: "0.2rem",
@@ -4566,6 +5048,58 @@ export default function SuperAdmin() {
                 </div>
               </div>
 
+              {/* Granular Custom Feature Toggles */}
+              <div
+                style={{
+                  padding: "0.6rem 0.75rem",
+                  backgroundColor: "#ffffff",
+                  borderRadius: "0.4rem",
+                  border: "1px solid #d0e2ff",
+                  marginBottom: "0.6rem",
+                }}
+              >
+                <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#0043ce", marginBottom: "0.4rem" }}>
+                  Custom Feature Overrides for this User:
+                </div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                    gap: "0.4rem",
+                  }}
+                >
+                  <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
+                    <input type="checkbox" checked={detailCanTelegram} onChange={(e) => setDetailCanTelegram(e.target.checked)} />
+                    Telegram Bot Integration
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
+                    <input type="checkbox" checked={detailCanExcel} onChange={(e) => setDetailCanExcel(e.target.checked)} />
+                    Excel & CSV Export
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
+                    <input type="checkbox" checked={detailCanLogic} onChange={(e) => setDetailCanLogic(e.target.checked)} />
+                    Logic Rules & Branching
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
+                    <input type="checkbox" checked={detailCanFileUpload} onChange={(e) => setDetailCanFileUpload(e.target.checked)} />
+                    File Upload Questions
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
+                    <input type="checkbox" checked={detailCanSms} onChange={(e) => setDetailCanSms(e.target.checked)} />
+                    SMS & OTP Verification
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
+                    <input type="checkbox" checked={detailCanWebhooks} onChange={(e) => setDetailCanWebhooks(e.target.checked)} />
+                    Webhooks & API Integration
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
+                    <input type="checkbox" checked={detailCanRemoveBranding} onChange={(e) => setDetailCanRemoveBranding(e.target.checked)} />
+                    Remove Porskad Branding
+                  </label>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
               <div
                 style={{
                   display: "flex",
@@ -4575,13 +5109,8 @@ export default function SuperAdmin() {
                   borderTop: "1px solid rgba(140, 140, 140, 0.2)",
                 }}
               >
-                <div style={{ fontSize: "0.85rem", opacity: 0.8 }}>
-                  Next reset:{" "}
-                  <b>
-                    {detailModal.quota_reset_at
-                      ? new Date(detailModal.quota_reset_at).toLocaleDateString()
-                      : "30-day cycle"}
-                  </b>
+                <div style={{ fontSize: "0.8rem", opacity: 0.8 }}>
+                  Current Plan: <b>{String(detailPlan).toUpperCase()}</b>
                 </div>
 
                 <div style={{ display: "flex", gap: "0.35rem" }}>
@@ -4602,15 +5131,13 @@ export default function SuperAdmin() {
                         detailModal.full_name || detailModal.email
                       );
                       setDetailResponsesUsed(0);
-                      setDetailModal({
-                        ...detailModal,
-                        monthly_responses_used: 0,
-                        quota_reset_at: new Date(Date.now() + 30 * 86400000).toISOString(),
-                      });
+                      const d = new Date();
+                      d.setDate(d.getDate() + 30);
+                      setDetailQuotaResetAt(d.toISOString().slice(0, 10));
                     }}
                   >
                     <RotateCcw size={12} />
-                    Reset to 0
+                    Reset Consumed
                   </button>
 
                   <button
@@ -4620,7 +5147,7 @@ export default function SuperAdmin() {
                     disabled={detailQuotaSaving}
                     onClick={handleSaveDetailQuota}
                   >
-                    {detailQuotaSaving ? "Saving..." : "Save Quotas"}
+                    {detailQuotaSaving ? "Saving..." : "Save User Plan & Quotas"}
                   </button>
                 </div>
               </div>

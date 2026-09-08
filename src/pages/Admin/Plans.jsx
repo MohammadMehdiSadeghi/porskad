@@ -2,11 +2,13 @@
 // صفحه طرح‌ها، تعرفه‌ها و ارتقای اشتراک (Plans & Pricing)
 // ══════════════════════════════════════════════════════════════
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../components/ui/Toast";
-import { PLANS, PLAN_ORDER, getPlan, upgradeUserSubscription } from "../../lib/plans";
+import { getEffectivePlans, PLAN_ORDER, getPlan } from "../../lib/plans";
 import { faNum, faDate } from "../../lib/utils";
+import { supabase } from "../../lib/supabaseClient";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import StickerCard from "../../components/ui/StickerCard";
@@ -22,25 +24,35 @@ import {
   Crown,
   CreditCard,
   Layers,
-  FileCheck,
-  GraduationCap,
-  Building,
+  Send,
+  MessageSquare,
+  CheckCircle,
   HelpCircle,
   ArrowRight,
   TrendingUp,
 } from "lucide-react";
 
 export default function Plans() {
-  const { user, profile, isOwner, updateProfile, loading } = useAuth();
+  const { user, profile, isOwner, loading } = useAuth();
   const { push } = useToast();
+  const navigate = useNavigate();
 
+  const [plans, setPlans] = useState(() => getEffectivePlans());
   const [billingCycle, setBillingCycle] = useState("monthly"); // "monthly" | "yearly"
   const [checkoutModal, setCheckoutModal] = useState(null); // plan object or null
   const [checkoutDuration, setCheckoutDuration] = useState(30); // 30, 90, 180, 365
-  const [upgrading, setUpgrading] = useState(false);
-  const [studentModal, setStudentModal] = useState(false);
-  const [studentForm, setStudentForm] = useState({ university: "", studentId: "", field: "", description: "" });
-  const [studentSubmitting, setStudentSubmitting] = useState(false);
+  const [userNote, setUserNote] = useState("");
+  const [submittingTicket, setSubmittingTicket] = useState(false);
+  const [successTicketModal, setSuccessTicketModal] = useState(null);
+
+  // گوش دادن به تغییرات طرح‌ها توسط سوپرادمین
+  useEffect(() => {
+    function handlePlansChanged(e) {
+      if (e.detail) setPlans(e.detail);
+    }
+    window.addEventListener("porskad:plans_changed", handlePlansChanged);
+    return () => window.removeEventListener("porskad:plans_changed", handlePlansChanged);
+  }, []);
 
   if (loading && !profile) {
     return <PlansSkeleton />;
@@ -60,40 +72,58 @@ export default function Plans() {
     }
     setCheckoutModal(plan);
     setCheckoutDuration(billingCycle === "yearly" ? 365 : 30);
+    setUserNote("");
   }
 
-  async function handleConfirmUpgrade() {
+  // ثبت تیکت درخواست خرید / ارتقای اشتراک
+  async function handleSubmitUpgradeTicket(e) {
+    if (e) e.preventDefault();
     if (!checkoutModal || !user) return;
-    setUpgrading(true);
+
+    setSubmittingTicket(true);
+    const invoice = getInvoiceDetails();
+
     try {
-      const res = await upgradeUserSubscription(user.id, checkoutModal.id, checkoutDuration);
-      if (!res.success) throw new Error(res.error);
+      const ticketSubject = `💎 درخواست ارتقای اشتراک به طرح ${checkoutModal.name} (${invoice.durationLabel})`;
+      const ticketMessage =
+        `📌 مشخصات درخواست ارتقای اشتراک:\n\n` +
+        `• طرح درخواستی: ${checkoutModal.name} (${checkoutModal.nameEn})\n` +
+        `• شناسه طرح: ${checkoutModal.id}\n` +
+        `• دوره اشتراک: ${invoice.durationLabel} (${checkoutDuration} روز)\n` +
+        `• مبلغ فاکتور: ${invoice.finalAmount.toLocaleString("fa-IR")} تومان\n` +
+        `• نام متقاضی: ${profile?.full_name || "ثبت‌نشده"}\n` +
+        `• ایمیل: ${user?.email}\n` +
+        `• شماره تماس: ${profile?.phone || "ثبت‌نشده"}\n` +
+        `• تاریخ ثبت: ${new Date().toLocaleDateString("fa-IR")}\n` +
+        (userNote.trim() ? `• توضیحات / یادداشت کاربر: ${userNote.trim()}\n` : "") +
+        `\nلطفاً پس از بررسی پرداخت و فاکتور، اشتراک حساب من را فعال نمایید.`;
 
-      if (updateProfile) {
-        await updateProfile(res.profile);
-      }
+      const { data, error } = await supabase
+        .from("support_tickets")
+        .insert({
+          user_id: user.id,
+          subject: ticketSubject,
+          message: ticketMessage,
+          status: "open",
+        })
+        .select()
+        .single();
 
-      push(`طرح شما با موفقیت به «${checkoutModal.name}» ارتقا یافت! 🎉`, "success");
+      if (error) throw error;
+
+      push("درخواست ارتقای اشتراک شما با موفقیت به عنوان تیکت ثبت شد 🎉", "success");
+      setSuccessTicketModal({
+        plan: checkoutModal,
+        durationLabel: invoice.durationLabel,
+        amount: invoice.finalAmount,
+        ticketId: data?.id,
+      });
       setCheckoutModal(null);
-      setTimeout(() => {
-        window.location.reload();
-      }, 800);
     } catch (err) {
-      push("خطا در ارتقای اشتراک: " + err.message, "error");
+      push("خطا در ثبت تیکت ارتقا: " + err.message, "error");
     } finally {
-      setUpgrading(false);
+      setSubmittingTicket(false);
     }
-  }
-
-  function handleStudentSubmit(e) {
-    e.preventDefault();
-    setStudentSubmitting(true);
-    setTimeout(() => {
-      setStudentSubmitting(false);
-      setStudentModal(false);
-      push("درخواست تخفیف دانشجویی شما با موفقیت ثبت شد. نتیجه به زودی به ایمیل شما ارسال می‌شود.", "success");
-      setStudentForm({ university: "", studentId: "", field: "", description: "" });
-    }, 1000);
   }
 
   // محاسبه قیمت فاکتور
@@ -211,8 +241,8 @@ export default function Plans() {
               <Button
                 variant="teal"
                 size="sm"
-                onClick={() => handleOpenCheckout(PLANS.pro)}
-                className="font-black text-xs shrink-0 self-stretch sm:self-auto justify-center"
+                onClick={() => handleOpenCheckout(plans.pro || plans.enterprise)}
+                className="font-black text-xs shrink-0 self-stretch sm:self-auto justify-center shadow-sticker-sm"
               >
                 <Sparkles size={14} /> ارتقا به طرح حرفه‌ای
               </Button>
@@ -224,7 +254,7 @@ export default function Plans() {
       {/* کارت‌های ۳ گانه تعرفه‌ها */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
         {PLAN_ORDER.map((planKey) => {
-          const p = PLANS[planKey];
+          const p = plans[planKey] || getPlan(planKey);
           const isCurrent = currentPlan.id === p.id && !isGod;
           const isYearly = billingCycle === "yearly";
           const displayPrice = isYearly ? p.priceYearly : p.priceMonthly;
@@ -295,7 +325,7 @@ export default function Plans() {
               {/* لیست ویژگی‌ها */}
               <div className="flex-1 flex flex-col gap-2.5 py-5">
                 <span className="text-xs font-black text-navy dark:text-slate-200">امکانات شامل:</span>
-                {p.features.map((feat, idx) => (
+                {(p.features || []).map((feat, idx) => (
                   <div key={idx} className="flex items-start gap-2 text-xs">
                     {feat.included ? (
                       <Check size={16} className="text-teal shrink-0 mt-0.5 stroke-[2.5]" />
@@ -323,9 +353,9 @@ export default function Plans() {
                     variant={p.isPopular ? "teal" : p.isEnterprise ? "orange" : "outline"}
                     size="lg"
                     onClick={() => handleOpenCheckout(p)}
-                    className="w-full justify-center text-xs font-black py-3 shadow-sm"
+                    className="w-full justify-center text-xs font-black py-3 shadow-sticker-sm"
                   >
-                    {p.priceMonthly === 0 ? "انتخاب طرح رایگان" : `ارتقا به ${p.name}`}
+                    {p.priceMonthly === 0 ? "انتخاب طرح رایگان" : `درخواست ارتقا به ${p.name}`}
                   </Button>
                 )}
               </div>
@@ -334,60 +364,14 @@ export default function Plans() {
         })}
       </div>
 
-      {/* بخش تخفیف‌های ویژه (دانشجویان و سازمان‌های بزرگ) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-        <div className="p-5 rounded-2xl border-2 border-dashed border-teal/40 bg-teal/5 dark:bg-teal-950/20 flex flex-col justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-teal/20 text-teal flex items-center justify-center shrink-0">
-              <GraduationCap size={22} />
-            </div>
-            <div>
-              <h4 className="text-sm font-black text-navy dark:text-white">تخفیف ویژه دانشجویان و پژوهشگران</h4>
-              <p className="text-xs text-ink-subtle dark:text-slate-400 mt-1 font-medium leading-relaxed">
-                برای تحقیقات دانشگاهی و پایان‌نامه‌های دانشجویی، امکان دریافت اشتراک حرفه‌ای رایگان یا تخفیف ویژه وجود دارد.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setStudentModal(true)}
-            className="self-start text-xs font-black text-teal hover:underline cursor-pointer flex items-center gap-1"
-          >
-            ثبت درخواست تخفیف دانشجویی ←
-          </button>
-        </div>
-
-        <div className="p-5 rounded-2xl border-2 border-dashed border-orange/40 bg-orange/5 dark:bg-amber-950/20 flex flex-col justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-orange/20 text-orange flex items-center justify-center shrink-0">
-              <Building size={22} />
-            </div>
-            <div>
-              <h4 className="text-sm font-black text-navy dark:text-white">پلن‌های سازمانی و تیم‌های بزرگ (۱۰+ کاربر)</h4>
-              <p className="text-xs text-ink-subtle dark:text-slate-400 mt-1 font-medium leading-relaxed">
-                سازمان‌ها، شرکت‌ها و تیم‌های بیش از ۱۰ نفر می‌توانند از تخفیف‌های تجمیعی و میزبانی اختصاصی (On-premise) استفاده کنند.
-              </p>
-            </div>
-          </div>
-          <a
-            href="https://t.me/porskad_support"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="self-start text-xs font-black text-orange hover:underline cursor-pointer flex items-center gap-1"
-          >
-            ارتباط با پشتیبانی و مشاوره سازمانی ←
-          </a>
-        </div>
-      </div>
-
-      {/* ═══════════ مودال فاکتور و تایید ارتقای اشتراک ═══════════ */}
+      {/* ═══════════ مودال فاکتور و ثبت تیکت ارتقای اشتراک ═══════════ */}
       <Modal
         open={!!checkoutModal}
         onClose={() => setCheckoutModal(null)}
-        title={`ارتقای اشتراک به طرح ${checkoutModal?.name || ""}`}
+        title={`درخواست ارتقای اشتراک به طرح ${checkoutModal?.name || ""}`}
       >
         {checkoutModal && invoice && (
-          <div className="flex flex-col gap-4">
+          <form onSubmit={handleSubmitUpgradeTicket} className="flex flex-col gap-4">
             {/* انتخاب مدت زمان اشتراک */}
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-black text-navy dark:text-slate-200">
@@ -418,7 +402,7 @@ export default function Plans() {
             </div>
 
             {/* پیش‌فاکتور شفاف */}
-            <div className="p-4 rounded-2xl bg-bg-neutral/80 dark:bg-slate-800/80 border border-ink/10 dark:border-slate-700 flex flex-col gap-2.5">
+            <div className="p-4 rounded-2xl bg-bg-neutral/80 dark:bg-slate-800/80 border-2 border-ink/10 dark:border-slate-700 flex flex-col gap-2.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-ink/60 dark:text-slate-400 font-bold">طرح انتخابی:</span>
                 <span className="font-black text-navy dark:text-white">{checkoutModal.name} ({checkoutModal.nameEn})</span>
@@ -437,7 +421,7 @@ export default function Plans() {
                   <span className="font-mono font-black">- {faNum(invoice.discount.toLocaleString("fa-IR"))} تومان</span>
                 </div>
               )}
-              <div className="pt-2 border-t border-ink/10 dark:border-slate-700 flex items-center justify-between">
+              <div className="pt-2 border-t-2 border-ink/10 dark:border-slate-700 flex items-center justify-between">
                 <span className="text-xs sm:text-sm font-black text-navy dark:text-white">مبلغ نهایی قابل پرداخت:</span>
                 <span className="text-base sm:text-lg font-black text-teal font-mono">
                   {faNum(invoice.finalAmount.toLocaleString("fa-IR"))} تومان
@@ -445,92 +429,99 @@ export default function Plans() {
               </div>
             </div>
 
+            {/* یادداشت اختیاری کاربر */}
+            <div>
+              <label className="block text-xs font-black text-navy dark:text-slate-200 mb-1">
+                توضیحات یا کد رهگیری واریز (اختیاری):
+              </label>
+              <textarea
+                rows={2}
+                value={userNote}
+                onChange={(e) => setUserNote(e.target.value)}
+                placeholder="در صورت داشتن کد تخفیف، شماره فیش واریزی یا هرگونه توضیح..."
+                className="w-full bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 rounded-pill-md p-2.5 text-xs font-semibold outline-none"
+              />
+            </div>
+
+            {/* راهنمای فرایند فعال‌سازی */}
+            <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-xl text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2">
+              <Sparkles size={16} className="text-amber-600 shrink-0 mt-0.5" />
+              <span>
+                پس از کلیک روی «ثبت درخواست خرید»، تیکت شما به صورت اختصاصی برای تیم مدیریت ارسال شده و پس از تایید فاکتور، اشتراک شما فعال می‌گردد.
+              </span>
+            </div>
+
             {/* دکمه‌های تایید و پرداخت */}
             <div className="flex items-center justify-end gap-2 pt-2">
               <Button
                 variant="teal"
                 size="md"
-                onClick={handleConfirmUpgrade}
-                disabled={upgrading}
-                className="font-black text-xs px-5 py-2.5 flex items-center gap-1.5 shadow-md"
+                type="submit"
+                disabled={submittingTicket}
+                className="font-black text-xs px-5 py-2.5 flex items-center gap-1.5 shadow-sticker-sm"
               >
-                <CreditCard size={15} />
-                {upgrading ? "در حال فعال‌سازی..." : "پرداخت آنلاین و فعال‌سازی آنی"}
+                <Send size={15} />
+                {submittingTicket ? "در حال ثبت تیکت..." : "ثبت درخواست خرید و ارسال تیکت"}
               </Button>
               <Button
                 variant="ghost"
                 size="md"
+                type="button"
                 onClick={() => setCheckoutModal(null)}
                 className="text-xs font-bold"
               >
                 انصراف
               </Button>
             </div>
-          </div>
+          </form>
         )}
       </Modal>
 
-      {/* ═══════════ مودال درخواست تخفیف دانشجویی ═══════════ */}
+      {/* ═══════════ مودال موفقیت ثبت تیکت ارتقا ═══════════ */}
       <Modal
-        open={studentModal}
-        onClose={() => setStudentModal(false)}
-        title="درخواست تخفیف دانشجویی / پژوهشی"
+        open={Boolean(successTicketModal)}
+        onClose={() => setSuccessTicketModal(null)}
+        title="درخواست ارتقای اشتراک ثبت شد"
       >
-        <form onSubmit={handleStudentSubmit} className="flex flex-col gap-3">
-          <div>
-            <label className="block text-xs font-black text-navy dark:text-slate-200 mb-1">نام دانشگاه / موسسه</label>
-            <input
-              type="text"
-              required
-              value={studentForm.university}
-              onChange={(e) => setStudentForm({ ...studentForm, university: e.target.value })}
-              placeholder="مثلاً: دانشگاه تهران"
-              className="w-full bg-white dark:bg-slate-800 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md p-2 text-xs font-bold outline-none"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-xs font-black text-navy dark:text-slate-200 mb-1">شماره دانشجویی</label>
-              <input
-                type="text"
-                required
-                value={studentForm.studentId}
-                onChange={(e) => setStudentForm({ ...studentForm, studentId: e.target.value })}
-                placeholder="مثلاً: ۹۹۱۲۳۴۵۶"
-                className="w-full bg-white dark:bg-slate-800 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md p-2 text-xs font-bold outline-none font-mono"
-              />
+        {successTicketModal && (
+          <div className="flex flex-col items-center text-center gap-4 py-2">
+            <div className="w-14 h-14 rounded-3xl bg-teal/15 text-teal flex items-center justify-center border-2 border-teal shadow-sticker-sm">
+              <CheckCircle size={32} />
             </div>
-            <div>
-              <label className="block text-xs font-black text-navy dark:text-slate-200 mb-1">رشته و مقطع</label>
-              <input
-                type="text"
-                required
-                value={studentForm.field}
-                onChange={(e) => setStudentForm({ ...studentForm, field: e.target.value })}
-                placeholder="مثلاً: کارشناسی ارشد مدیریت"
-                className="w-full bg-white dark:bg-slate-800 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md p-2 text-xs font-bold outline-none"
-              />
+
+            <div className="space-y-1">
+              <h3 className="text-base font-black text-navy dark:text-white">
+                تیکت ارتقای اشتراک شما با موفقیت ثبت شد!
+              </h3>
+              <p className="text-xs text-ink-subtle dark:text-slate-300 max-w-sm">
+                درخواست شما برای طرح <strong className="text-teal font-black">{successTicketModal.plan.name}</strong> ({successTicketModal.durationLabel}) به بخش پشتیبانی ارسال شد. پس از بررسی تیم مدیریت، طرح حساب شما فعال می‌گردد.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 pt-3 w-full">
+              <Button
+                variant="teal"
+                size="md"
+                onClick={() => {
+                  setSuccessTicketModal(null);
+                  navigate("/admin/support");
+                }}
+                className="flex-1 justify-center font-black text-xs shadow-sticker-sm"
+              >
+                <MessageSquare size={15} />
+                مشاهده در تیکت‌های پشتیبانی
+              </Button>
+              <Button
+                variant="ghost"
+                size="md"
+                onClick={() => setSuccessTicketModal(null)}
+                className="text-xs font-bold"
+              >
+                بستن
+              </Button>
             </div>
           </div>
-          <div>
-            <label className="block text-xs font-black text-navy dark:text-slate-200 mb-1">عنوان تحقیق / پایان‌نامه</label>
-            <textarea
-              rows={3}
-              value={studentForm.description}
-              onChange={(e) => setStudentForm({ ...studentForm, description: e.target.value })}
-              placeholder="توضیح مختصری از عنوان و هدف پرسشنامه..."
-              className="w-full bg-white dark:bg-slate-800 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md p-2 text-xs font-semibold outline-none"
-            />
-          </div>
-          <div className="flex items-center justify-end gap-2 pt-2">
-            <Button variant="teal" size="sm" type="submit" disabled={studentSubmitting} className="font-black text-xs">
-              {studentSubmitting ? "در حال ثبت..." : "ارسال درخواست"}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setStudentModal(false)} className="text-xs">
-              بستن
-            </Button>
-          </div>
-        </form>
+        )}
       </Modal>
     </div>
   );

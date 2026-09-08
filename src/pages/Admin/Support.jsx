@@ -12,6 +12,7 @@ import Modal from "../../components/ui/Modal";
 import EmptyState from "../../components/ui/EmptyState";
 import SEO from "../../components/ui/SEO";
 import { faDateTime, faRelative, faNum } from "../../lib/utils";
+import { upgradeUserSubscription } from "../../lib/plans";
 import {
   MessageSquare,
   Send,
@@ -37,6 +38,7 @@ import {
   Crown,
   AlertTriangle,
   Edit3,
+  Sparkles,
 } from "lucide-react";
 
 export default function Support() {
@@ -116,6 +118,46 @@ export default function Support() {
     }
     return localStorage.getItem(`user_archived_${t.id}`) === "true";
   }, []);
+
+  // تشخیص و استخراج اطلاعات تیکت خرید/ارتقای اشتراک
+  const isSubscriptionTicket = useCallback((t) => {
+    if (!t) return false;
+    return (
+      t.category === "subscription" ||
+      t.type === "subscription" ||
+      (t.subject && t.subject.includes("ارتقای اشتراک")) ||
+      (t.message && (t.message.includes("طرح درخواستی:") || t.message.includes("دوره اشتراک:")))
+    );
+  }, []);
+
+  const parseSubscriptionInfo = useCallback((t) => {
+    if (!t || !isSubscriptionTicket(t)) return null;
+    const msg = t.message || "";
+    const planMatch = msg.match(/•\s*طرح درخواستی:\s*([^\n]+)/) || (t.subject && t.subject.match(/طرح\s+([^\(\n]+)/));
+    const planIdMatch = msg.match(/•\s*شناسه طرح:\s*([a-zA-Z0-9_-]+)/);
+    const durationMatch = msg.match(/•\s*دوره اشتراک:\s*([^\n]+)/);
+    const amountMatch = msg.match(/•\s*مبلغ فاکتور:\s*([^\n]+)/);
+
+    let planId = planIdMatch ? planIdMatch[1].trim().toLowerCase() : "pro";
+    if (!planIdMatch) {
+      if (msg.includes("سازمانی") || (t.subject && t.subject.includes("سازمانی"))) planId = "enterprise";
+      else if (msg.includes("حرفه‌ای") || (t.subject && t.subject.includes("حرفه‌ای"))) planId = "pro";
+      else if (msg.includes("رایگان") || (t.subject && t.subject.includes("رایگان"))) planId = "free";
+    }
+
+    let durationDays = 30;
+    if (msg.includes("۳۶۵ روز") || msg.includes("۱ ساله") || (t.subject && t.subject.includes("۱ ساله"))) durationDays = 365;
+    else if (msg.includes("۱۸۰ روز") || msg.includes("۶ ماهه")) durationDays = 180;
+    else if (msg.includes("۹۰ روز") || msg.includes("۳ ماهه")) durationDays = 90;
+
+    return {
+      planName: planMatch ? planMatch[1].trim() : "طرح ویژه",
+      planId,
+      durationLabel: durationMatch ? durationMatch[1].trim() : "۱ ماهه (۳۰ روز)",
+      durationDays,
+      amount: amountMatch ? amountMatch[1].trim() : "",
+    };
+  }, [isSubscriptionTicket]);
 
   // بارگذاری تیکت‌ها از دیتابیس
   const loadTickets = useCallback(async (silent = false) => {
@@ -385,6 +427,46 @@ export default function Support() {
     }
   }
 
+  // ─── فعال‌سازی مستقیم اشتراک کاربر از روی تیکت توسط مدیر ───
+  const [activatingPlanTicketId, setActivatingPlanTicketId] = useState(null);
+
+  async function handleDirectActivateSubscription(ticket) {
+    const info = parseSubscriptionInfo(ticket);
+    if (!info) return;
+
+    if (!confirm(`آیا از فعال‌سازی طرح «${info.planName}» (${info.durationLabel}) برای این کاربر اطمینان دارید؟`)) {
+      return;
+    }
+
+    setActivatingPlanTicketId(ticket.id);
+    try {
+      const upgradeRes = await upgradeUserSubscription(ticket.user_id, info.planId, info.durationDays);
+      if (!upgradeRes.success) throw new Error(upgradeRes.error);
+
+      const autoReply = `✅ با سلام و احترام؛\nاشتراک شما برای طرح «${info.planName}» (${info.durationLabel}) با موفقیت فعال گردید.\n\nهم‌اکنون تمامی سقف‌ها و امکانات این طرح در حساب کاربری شما اعمال شده است. از حسن اعتماد و همراهی شما به پرس‌کاد سپاسگزاریم! 🎉`;
+
+      const { error: ticketErr } = await supabase
+        .from("support_tickets")
+        .update({
+          admin_reply: autoReply,
+          status: "answered",
+          replied_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", ticket.id);
+
+      if (ticketErr) throw ticketErr;
+
+      push(`طرح «${info.planName}» برای کاربر با موفقیت فعال شد و پاسخ تایید ثبت گردید 🎉`, "success");
+      loadTickets();
+    } catch (err) {
+      console.error("Direct activate subscription error:", err);
+      push("خطا در فعال‌سازی اشتراک: " + err.message, "error");
+    } finally {
+      setActivatingPlanTicketId(null);
+    }
+  }
+
   // عملکردهای باز/بسته کردن همه گروه‌های کاربر در پنل مدیر
   function toggleUserExpand(userId) {
     setExpandedUsers((prev) => ({ ...prev, [userId]: !prev[userId] }));
@@ -415,6 +497,7 @@ export default function Support() {
       // فیلتر تب فعال مدیر
       if (adminFilter === "archived" && !isArchived) continue;
       if (adminFilter !== "archived" && isArchived) continue;
+      if (adminFilter === "subscriptions" && !isSubscriptionTicket(t)) continue;
       if (adminFilter === "open" && t.status !== "open") continue;
       if (adminFilter === "answered" && t.status !== "answered") continue;
       if (adminFilter === "closed" && t.status !== "closed") continue;
@@ -443,15 +526,19 @@ export default function Support() {
           answeredCount: 0,
           closedCount: 0,
           archivedCount: 0,
+          subscriptionsCount: 0,
           latestDate: t.created_at,
         };
       }
 
       map[uid].tickets.push(t);
       if (isArchived) map[uid].archivedCount++;
-      else if (t.status === "open") map[uid].openCount++;
-      else if (t.status === "answered") map[uid].answeredCount++;
-      else if (t.status === "closed") map[uid].closedCount++;
+      else {
+        if (isSubscriptionTicket(t)) map[uid].subscriptionsCount++;
+        if (t.status === "open") map[uid].openCount++;
+        else if (t.status === "answered") map[uid].answeredCount++;
+        else if (t.status === "closed") map[uid].closedCount++;
+      }
 
       if (new Date(t.created_at) > new Date(map[uid].latestDate)) {
         map[uid].latestDate = t.created_at;
@@ -464,7 +551,7 @@ export default function Support() {
       if (b.openCount > 0 && a.openCount === 0) return 1;
       return new Date(b.latestDate) - new Date(a.latestDate);
     });
-  }, [tickets, isOwner, adminFilter, searchQuery, isArchivedByAdmin]);
+  }, [tickets, isOwner, adminFilter, searchQuery, isArchivedByAdmin, isSubscriptionTicket]);
 
   // ─── محاسبات تیکت‌های کاربر عادی ───
   const userFilteredTickets = useMemo(() => {
@@ -481,12 +568,13 @@ export default function Support() {
     const unarchived = tickets.filter((t) => !isArchivedByAdmin(t));
     return {
       all: unarchived.length,
+      subscriptions: unarchived.filter((t) => isSubscriptionTicket(t)).length,
       open: unarchived.filter((t) => t.status === "open").length,
       answered: unarchived.filter((t) => t.status === "answered").length,
       closed: unarchived.filter((t) => t.status === "closed").length,
       archived: tickets.filter((t) => isArchivedByAdmin(t)).length,
     };
-  }, [tickets, isArchivedByAdmin]);
+  }, [tickets, isArchivedByAdmin, isSubscriptionTicket]);
 
   const userCounts = useMemo(() => {
     return {
@@ -597,6 +685,15 @@ export default function Support() {
               }`}
             >
               همه فعال‌ها ({faNum(adminCounts.all)})
+            </button>
+            <button
+              onClick={() => setAdminFilter("subscriptions")}
+              className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors flex items-center gap-1 ${
+                adminFilter === "subscriptions" ? "bg-amber-600 text-white" : "text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40"
+              }`}
+            >
+              <Sparkles size={12} />
+              اشتراک‌ها ({faNum(adminCounts.subscriptions)})
             </button>
             <button
               onClick={() => setAdminFilter("open")}
@@ -862,6 +959,47 @@ export default function Support() {
                                 </span>
                               </div>
 
+                              {/* 💎 باکس اختصاصی درخواست خرید/ارتقای اشتراک */}
+                              {isSubscriptionTicket(t) && (() => {
+                                const subInfo = parseSubscriptionInfo(t);
+                                if (!subInfo) return null;
+                                return (
+                                  <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange-50/70 dark:from-amber-950/40 dark:to-orange-950/30 border-2 border-amber-300 dark:border-amber-700/60 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sticker-sm">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0 border border-amber-400/40">
+                                        <Sparkles size={20} />
+                                      </div>
+                                      <div>
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-xs font-black text-navy dark:text-amber-200">
+                                            💎 درخواست ارتقای اشتراک به طرح: {subInfo.planName}
+                                          </span>
+                                          <Badge color="orange">{subInfo.durationLabel}</Badge>
+                                        </div>
+                                        {subInfo.amount && (
+                                          <div className="text-xs font-bold text-amber-800 dark:text-amber-400 mt-0.5">
+                                            مبلغ فاکتور: {subInfo.amount}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {isOwner() && (
+                                      <Button
+                                        variant="teal"
+                                        size="sm"
+                                        disabled={activatingPlanTicketId === t.id}
+                                        onClick={() => handleDirectActivateSubscription(t)}
+                                        className="text-xs font-black px-4 py-2 shadow-sticker-sm"
+                                      >
+                                        <CheckCircle2 size={14} />
+                                        {activatingPlanTicketId === t.id ? "در حال فعال‌سازی..." : "تایید و فعال‌سازی فوری اشتراک"}
+                                      </Button>
+                                    )}
+                                  </div>
+                                );
+                              })()}
+
                               {/* متن پیام کاربر */}
                               <p className="text-sm font-semibold text-ink dark:text-slate-200 leading-7 whitespace-pre-wrap">
                                 {t.message}
@@ -1027,6 +1165,35 @@ export default function Support() {
                           {faRelative(t.created_at)}
                         </span>
                       </div>
+
+                      {/* 💎 باکس اختصاصی درخواست خرید/ارتقای اشتراک */}
+                      {isSubscriptionTicket(t) && (() => {
+                        const subInfo = parseSubscriptionInfo(t);
+                        if (!subInfo) return null;
+                        return (
+                          <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange-50/70 dark:from-amber-950/40 dark:to-orange-950/30 border-2 border-amber-300 dark:border-amber-700/60 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sticker-sm">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0 border border-amber-400/40">
+                                <Sparkles size={20} />
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-black text-navy dark:text-amber-200">
+                                    💎 درخواست ارتقای اشتراک به طرح: {subInfo.planName}
+                                  </span>
+                                  <Badge color="orange">{subInfo.durationLabel}</Badge>
+                                </div>
+                                {subInfo.amount && (
+                                  <div className="text-xs font-bold text-amber-800 dark:text-amber-400 mt-0.5">
+                                    مبلغ فاکتور: {subInfo.amount}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <Badge color="blue">در حال بررسی و فعال‌سازی توسط مدیریت</Badge>
+                          </div>
+                        );
+                      })()}
 
                       {/* متن پیام */}
                       <p className="text-sm font-semibold text-ink dark:text-slate-200 leading-7 whitespace-pre-wrap">

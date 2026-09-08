@@ -339,7 +339,20 @@ export function AuthProvider({ children }) {
     return data;
   }
 
-  async function updateUserQuota(userId, { maxForms, maxResponses, plan, canUseTelegram, monthlyResponsesUsed }) {
+  async function updateUserQuota(userId, {
+    maxForms,
+    maxResponses,
+    plan,
+    canUseTelegram,
+    canExportExcel,
+    canUseLogic,
+    canUploadFiles,
+    canUseSms,
+    canUseWebhooks,
+    canRemoveBranding,
+    quotaResetAt,
+    monthlyResponsesUsed,
+  }) {
     try {
       await supabase.rpc("set_user_quotas", {
         p_user_id: userId,
@@ -349,25 +362,29 @@ export function AuthProvider({ children }) {
       });
     } catch {}
 
-    const updatePayload = {
-      max_forms: Number(maxForms) || 5,
-      max_responses_per_month: Number(maxResponses) || 100,
-    };
-    if (plan !== undefined) {
-      updatePayload.plan = plan;
-    }
-    if (typeof canUseTelegram === "boolean") {
-      updatePayload.can_use_telegram = canUseTelegram;
-    }
+    const updatePayload = {};
+    if (maxForms !== undefined) updatePayload.max_forms = Math.max(1, Number(maxForms) || 1);
+    if (maxResponses !== undefined) updatePayload.max_responses_per_month = Math.max(1, Number(maxResponses) || 1);
+    if (plan !== undefined) updatePayload.plan = plan;
+    if (typeof canUseTelegram === "boolean") updatePayload.can_use_telegram = canUseTelegram;
+    if (typeof canExportExcel === "boolean") updatePayload.can_export_excel = canExportExcel;
+    if (typeof canUseLogic === "boolean") updatePayload.can_use_logic = canUseLogic;
+    if (typeof canUploadFiles === "boolean") updatePayload.can_upload_files = canUploadFiles;
+    if (typeof canUseSms === "boolean") updatePayload.can_use_sms = canUseSms;
+    if (typeof canUseWebhooks === "boolean") updatePayload.can_use_webhooks = canUseWebhooks;
+    if (typeof canRemoveBranding === "boolean") updatePayload.can_remove_branding = canRemoveBranding;
+    if (quotaResetAt !== undefined) updatePayload.quota_reset_at = quotaResetAt;
     if (monthlyResponsesUsed !== undefined && !isNaN(Number(monthlyResponsesUsed))) {
       updatePayload.monthly_responses_used = Math.max(0, Number(monthlyResponsesUsed));
     }
 
-    const { error } = await supabase
-      .from("profiles")
-      .update(updatePayload)
-      .eq("id", userId);
-    if (error) throw error;
+    if (Object.keys(updatePayload).length > 0) {
+      const { error } = await supabase
+        .from("profiles")
+        .update(updatePayload)
+        .eq("id", userId);
+      if (error) throw error;
+    }
   }
 
   async function logout() {
@@ -545,7 +562,7 @@ export function AuthProvider({ children }) {
       try {
         const res = await supabase
           .from("profiles")
-          .select("id, email, full_name, phone, is_active, is_owner, created_at, created_by, hidden_from, max_forms, max_responses_per_month, monthly_responses_used, quota_reset_at, plan, can_use_telegram")
+          .select("id, email, full_name, phone, is_active, is_owner, created_at, created_by, hidden_from, max_forms, max_responses_per_month, monthly_responses_used, quota_reset_at, plan, can_use_telegram, can_export_excel, can_use_logic, can_upload_files, can_use_sms, can_use_webhooks, can_remove_branding")
           .order("created_at", { ascending: true });
         profilesData = res.data;
         profilesError = res.error;
@@ -611,6 +628,12 @@ export function AuthProvider({ children }) {
           quota_reset_at: p.quota_reset_at || null,
           plan: p.is_owner ? 'enterprise' : (p.plan ?? 'free'),
           can_use_telegram: p.is_owner ? true : (p.can_use_telegram === true),
+          can_export_excel: p.is_owner ? true : (p.can_export_excel === true),
+          can_use_logic: p.is_owner ? true : (p.can_use_logic === true),
+          can_upload_files: p.is_owner ? true : (p.can_upload_files === true),
+          can_use_sms: p.is_owner ? true : (p.can_use_sms === true),
+          can_use_webhooks: p.is_owner ? true : (p.can_use_webhooks === true),
+          can_remove_branding: p.is_owner ? true : (p.can_remove_branding === true),
           role: roleId,
           roleActive: roleData?.active ?? true,
           permissions: effectivePermissions,

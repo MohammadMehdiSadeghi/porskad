@@ -3,7 +3,7 @@
 // ══════════════════════════════════════════════════════════════
 import { supabase } from "./supabaseClient.js";
 
-export const PLANS = {
+export const DEFAULT_PLANS = {
   free: {
     id: "free",
     name: "رایگان",
@@ -17,6 +17,7 @@ export const PLANS = {
     storageMb: 100, // 100 مگابایت
     features: [
       { text: "۱۰۰ پاسخ ماهانه", included: true },
+      { text: "۵ فرم فعال همزمان", included: true },
       { text: "تعداد نامحدود سوال در هر فرم", included: true },
       { text: "افزودن ویدیو و تصویر به سوال‌ها", included: true },
       { text: "قالب‌ها و رنگ‌بندی اختصاصی", included: true },
@@ -101,17 +102,73 @@ export const PLANS = {
   },
 };
 
+export const PLANS = DEFAULT_PLANS;
 export const PLAN_ORDER = ["free", "pro", "enterprise"];
 
+const PLANS_CONFIG_KEY = "porskad_plans_config";
+
 /**
- * دریافت اطلاعات طرح بر اساس شناسه
+ * دریافت لیست کامل طرح‌ها با در نظر گرفتن شخصی‌سازی‌های سوپرادمین
+ */
+export function getEffectivePlans() {
+  try {
+    if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+      const raw = localStorage.getItem(PLANS_CONFIG_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") {
+          return {
+            free: { ...DEFAULT_PLANS.free, ...(parsed.free || {}) },
+            pro: { ...DEFAULT_PLANS.pro, ...(parsed.pro || {}) },
+            enterprise: { ...DEFAULT_PLANS.enterprise, ...(parsed.enterprise || {}) },
+          };
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Failed to parse cached plans config:", e);
+  }
+  return DEFAULT_PLANS;
+}
+
+/**
+ * ذخیره تنظیمات شخصی‌سازی‌شده طرح‌ها توسط سوپرادمین
+ */
+export function savePlansConfig(config) {
+  try {
+    if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+      localStorage.setItem(PLANS_CONFIG_KEY, JSON.stringify(config));
+      window.dispatchEvent(new CustomEvent("porskad:plans_changed", { detail: config }));
+    }
+  } catch (e) {
+    console.error("Failed to save plans config:", e);
+  }
+}
+
+/**
+ * بازنشانی طرح‌ها به مقادیر پیش‌فرض
+ */
+export function resetPlansConfig() {
+  try {
+    if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+      localStorage.removeItem(PLANS_CONFIG_KEY);
+      window.dispatchEvent(new CustomEvent("porskad:plans_changed", { detail: DEFAULT_PLANS }));
+    }
+  } catch (e) {
+    console.error("Failed to reset plans config:", e);
+  }
+}
+
+/**
+ * دریافت اطلاعات یک طرح بر اساس شناسه
  */
 export function getPlan(planId) {
-  if (!planId) return PLANS.free;
+  const currentPlans = getEffectivePlans();
+  if (!planId) return currentPlans.free;
   const key = String(planId).toLowerCase();
-  if (key === "unlimited" || key === "enterprise") return PLANS.enterprise;
-  if (key === "pro" || key === "professional") return PLANS.pro;
-  return PLANS.free;
+  if (key === "unlimited" || key === "enterprise") return currentPlans.enterprise;
+  if (key === "pro" || key === "professional") return currentPlans.pro;
+  return currentPlans.free || DEFAULT_PLANS.free;
 }
 
 /**
@@ -121,6 +178,34 @@ export function canUserAccessFeature(profile, featureKey) {
   if (!profile) return false;
   if (profile.is_owner) return true;
 
+  // ۱. بررسی دسترسی‌های صریح و کاستوم تنظیم‌شده روی پروفایل توسط ادمین
+  if (featureKey === "telegram" || featureKey === "can_use_telegram") {
+    if (profile.can_use_telegram !== undefined && profile.can_use_telegram !== null) {
+      return Boolean(profile.can_use_telegram);
+    }
+  }
+  if (featureKey === "excel" || featureKey === "can_export_excel") {
+    if (profile.can_export_excel !== undefined && profile.can_export_excel !== null) {
+      return Boolean(profile.can_export_excel);
+    }
+  }
+  if (featureKey === "logic" && profile.can_use_logic !== undefined) {
+    return Boolean(profile.can_use_logic);
+  }
+  if (featureKey === "file_upload" && profile.can_upload_files !== undefined) {
+    return Boolean(profile.can_upload_files);
+  }
+  if ((featureKey === "sms_notification" || featureKey === "respondent_auth") && profile.can_use_sms !== undefined) {
+    return Boolean(profile.can_use_sms);
+  }
+  if (featureKey === "webhook" && profile.can_use_webhooks !== undefined) {
+    return Boolean(profile.can_use_webhooks);
+  }
+  if (featureKey === "remove_branding" && profile.can_remove_branding !== undefined) {
+    return Boolean(profile.can_remove_branding);
+  }
+
+  // ۲. بررسی سطح دسترسی بر اساس طرح اشتراک کاربر
   const userPlan = getPlan(profile.plan);
 
   switch (featureKey) {
