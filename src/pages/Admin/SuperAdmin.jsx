@@ -42,6 +42,7 @@ import {
   Zap,
   Ban,
   X,
+  Lock,
 } from "lucide-react";
 
 const TABS = [
@@ -2913,12 +2914,12 @@ export default function SuperAdmin() {
                     System Role
                   </span>
                   {isCallerGod ? (
-                    <span style={{ fontSize: "0.8125rem", color: "#eb6200", fontWeight: 700 }}>
-                      👑 Primary God Control
+                    <span style={{ fontSize: "0.8125rem", color: "#eb6200", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                      <Crown size={14} /> Primary God Control
                     </span>
                   ) : (
-                    <span style={{ fontSize: "0.8125rem", color: "#6f6f6f", fontWeight: 600 }}>
-                      🔒 Role modification restricted to Primary God Owner
+                    <span style={{ fontSize: "0.8125rem", color: "#6f6f6f", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                      <Lock size={13} /> Role modification restricted to Primary God Owner
                     </span>
                   )}
                 </div>
@@ -2982,7 +2983,11 @@ export default function SuperAdmin() {
                         <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
                           {r.id === "admin" ? <Shield size={14} /> : <Users size={14} />}
                           <span>{r.label}</span>
-                          {isCurrent && <span style={{ marginLeft: "auto", fontSize: "0.75rem" }}>✓ Current Role</span>}
+                          {isCurrent && (
+                            <span style={{ marginLeft: "auto", fontSize: "0.75rem", display: "inline-flex", alignItems: "center", gap: "0.2rem" }}>
+                              <Check size={13} /> Current Role
+                            </span>
+                          )}
                         </div>
                       </button>
                     );

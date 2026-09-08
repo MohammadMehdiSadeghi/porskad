@@ -52,6 +52,7 @@ import {
   AlertTriangle,
   Filter,
   X,
+  Star,
 } from "lucide-react";
 import SEO from "../../../components/ui/SEO";
 import {
@@ -75,7 +76,16 @@ const CHART_COLORS = ["#6366f1", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#3
 // ─── نمایش مقدار پاسخ ───
 function AnswerValue({ question, value }) {
   if (value === null || value === undefined || value === "") return <span className="text-ink/40">—</span>;
-  if (question.type === "rating") return <span>{"⭐".repeat(Number(value))}</span>;
+  if (question.type === "rating") {
+    const count = Math.max(0, Math.min(5, Number(value) || 0));
+    return (
+      <span className="inline-flex items-center gap-0.5 text-amber-500" dir="ltr">
+        {Array.from({ length: count }).map((_, i) => (
+          <Star key={i} size={14} className="fill-amber-400 text-amber-400" />
+        ))}
+      </span>
+    );
+  }
   if (question.type === "choice" && Array.isArray(value)) return <span className="font-medium">{value.join("، ")}</span>;
   if (question.type === "phone_ir" || question.type === "email")
     return <span dir="ltr" className="font-mono font-bold">{String(value)}</span>;
@@ -95,7 +105,16 @@ function CellAnswer({ question, value, max = 60 }) {
     value === null || value === undefined || value === "" ||
     (Array.isArray(value) && value.length === 0);
   if (!question || empty) return <span className="text-ink/25 text-xs">—</span>;
-  if (question.type === "rating") return <span dir="ltr">{"⭐".repeat(Number(value))}</span>;
+  if (question.type === "rating") {
+    const count = Math.max(0, Math.min(5, Number(value) || 0));
+    return (
+      <span className="inline-flex items-center gap-0.5 text-amber-500" dir="ltr">
+        {Array.from({ length: count }).map((_, i) => (
+          <Star key={i} size={12} className="fill-amber-400 text-amber-400" />
+        ))}
+      </span>
+    );
+  }
 
   const ltr = question.type === "phone_ir" || question.type === "email" || question.type === "telegram_id";
   const text = Array.isArray(value) ? value.join("， ") : String(value);

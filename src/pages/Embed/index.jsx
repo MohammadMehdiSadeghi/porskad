@@ -555,8 +555,13 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
                         <div className="flex justify-center gap-2" dir="ltr">
                           {[1, 2, 3, 4, 5].map((n) => (
                             <button key={n} type="button"
-                              className={`star-btn text-2xl sm:text-3xl cursor-pointer ${Number(val) >= n ? "" : "opacity-30 grayscale"}`}
-                              onClick={() => { setAnswer(q.id, String(n), q); handleBlur(q.id, String(n), q); }}>⭐</button>
+                              className="p-1 cursor-pointer transition-transform duration-150 hover:scale-115"
+                              onClick={() => { setAnswer(q.id, String(n), q); handleBlur(q.id, String(n), q); }}>
+                              <Star
+                                size={28}
+                                className={Number(val) >= n ? "text-amber-400 fill-amber-400 drop-shadow-xs" : "text-ink/20 fill-transparent"}
+                              />
+                            </button>
                           ))}
                         </div>
                       )}
