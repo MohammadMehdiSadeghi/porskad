@@ -61,8 +61,9 @@ export default function Button({
   ...rest
 }) {
   const v = VARIANTS[variant] ?? VARIANTS.teal;
+  const isFull = className.includes("w-full");
   return (
-    <div className={clsx("relative inline-flex w-fit", rotate)}>
+    <div className={clsx("relative", isFull ? "flex w-full" : "inline-flex w-fit", rotate)}>
       <div
         aria-hidden="true"
         className={clsx(
@@ -72,7 +73,8 @@ export default function Button({
       />
       <Tag
         className={clsx(
-          "relative z-10 inline-flex items-center justify-center w-full",
+          "relative z-10 inline-flex items-center justify-center text-center",
+          isFull ? "w-full" : "",
           "rounded-pill-md [corner-shape:squircle] border-2",
           "font-extrabold select-none cursor-pointer",
           "transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0",

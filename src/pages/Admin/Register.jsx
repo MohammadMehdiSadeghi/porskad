@@ -287,9 +287,9 @@ export default function Register() {
                   size="md"
                   disabled={busy}
                   rotate="-rotate-[1deg]"
-                  className="w-full justify-center"
+                  className="w-full justify-center text-center"
                 >
-                  {busy ? "در حال ساخت حساب..." : "شروع ساخت فرم‌ها (رایگان)"}
+                  {busy ? "در حال ساخت حساب..." : "ساخت حساب کاربری"}
                 </Button>
 
                 <div className="flex items-center justify-between text-[13px] font-bold text-ink-subtle pt-2 border-t border-ink/10">
