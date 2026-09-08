@@ -608,38 +608,55 @@
 /* ═══════════════════════════════════════════════════════════
    Comprehensive Dark Mode Support for SuperAdmin (Carbon Dark)
    ═══════════════════════════════════════════════════════════ */
+:is(html.dark, body.dark, .dark) .sa-root,
 html.dark .sa-root {
-  background: #121212 !important;
+  background: #0B0F19 !important;
   color: #f4f4f4 !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-header,
 html.dark .sa-header {
-  border-color: #393939 !important;
+  border-color: #1E293B !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-logo,
 html.dark .sa-logo {
-  background: #262626 !important;
+  background: #1E293B !important;
   color: #78a9ff !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-tabs,
 html.dark .sa-tabs {
-  border-color: #393939 !important;
+  border-color: #1E293B !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-tab,
 html.dark .sa-tab {
-  color: #c6c6c6 !important;
+  color: #94A3B8 !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-tab:hover,
 html.dark .sa-tab:hover {
   color: #ffffff !important;
-  background: #262626 !important;
+  background: #1E293B !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-tab.active,
 html.dark .sa-tab.active {
-  color: #78a9ff !important;
-  border-bottom-color: #78a9ff !important;
+  color: #38BDF8 !important;
+  border-bottom-color: #38BDF8 !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-card,
+:is(html.dark, body.dark, .dark) .sa-stat,
+:is(html.dark, body.dark, .dark) .sa-tile,
+:is(html.dark, body.dark, .dark) .sa-panel,
+:is(html.dark, body.dark, .dark) .sa-admin-card,
+:is(html.dark, body.dark, .dark) .sa-storage-card,
+:is(html.dark, body.dark, .dark) .sa-empty,
+:is(html.dark, body.dark, .dark) .sa-modal-content,
+:is(html.dark, body.dark, .dark) .sa-table-wrap,
+:is(html.dark, body.dark, .dark) .sa-error-item,
 html.dark .sa-card,
 html.dark .sa-stat,
 html.dark .sa-tile,
@@ -648,31 +665,50 @@ html.dark .sa-admin-card,
 html.dark .sa-storage-card,
 html.dark .sa-empty,
 html.dark .sa-modal-content,
+html.dark .sa-table-wrap,
 html.dark .sa-error-item {
-  background: #1e1e1e !important;
-  border-color: #393939 !important;
-  color: #f4f4f4 !important;
+  background: #111827 !important;
+  border-color: #1F2937 !important;
+  color: #F3F4F6 !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-storage-header,
+:is(html.dark, body.dark, .dark) .sa-panel-header,
 html.dark .sa-storage-header,
 html.dark .sa-panel-header {
-  background: #262626 !important;
-  border-color: #393939 !important;
+  background: #1E293B !important;
+  border-color: #334155 !important;
 }
 
-html.dark .sa-stats {
-  background: #393939 !important;
+:is(html.dark, body.dark, .dark) .sa-stats,
+:is(html.dark, body.dark, .dark) .sa-tiles,
+html.dark .sa-stats,
+html.dark .sa-tiles {
+  background: #1F2937 !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-stat-value,
+:is(html.dark, body.dark, .dark) .sa-tile-name,
+:is(html.dark, body.dark, .dark) .sa-section-title,
+:is(html.dark, body.dark, .dark) .sa-panel-title,
+:is(html.dark, body.dark, .dark) .sa-storage-title,
+:is(html.dark, body.dark, .dark) .sa-admin-name,
 html.dark .sa-stat-value,
 html.dark .sa-tile-name,
 html.dark .sa-section-title,
 html.dark .sa-panel-title,
 html.dark .sa-storage-title,
 html.dark .sa-admin-name {
-  color: #f4f4f4 !important;
+  color: #F9FAFB !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-stat-label,
+:is(html.dark, body.dark, .dark) .sa-stat-sub,
+:is(html.dark, body.dark, .dark) .sa-tile-desc,
+:is(html.dark, body.dark, .dark) .sa-tile-count,
+:is(html.dark, body.dark, .dark) .sa-admin-email,
+:is(html.dark, body.dark, .dark) .sa-storage-desc,
+:is(html.dark, body.dark, .dark) .sa-panel-desc,
 html.dark .sa-stat-label,
 html.dark .sa-stat-sub,
 html.dark .sa-tile-desc,
@@ -680,81 +716,149 @@ html.dark .sa-tile-count,
 html.dark .sa-admin-email,
 html.dark .sa-storage-desc,
 html.dark .sa-panel-desc {
-  color: #a8a8a8 !important;
+  color: #9CA3AF !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-table,
 html.dark .sa-table {
-  background: #1e1e1e !important;
-  color: #f4f4f4 !important;
+  background: #111827 !important;
+  color: #F3F4F6 !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-table th,
 html.dark .sa-table th {
-  background: #262626 !important;
-  color: #e0e0e0 !important;
-  border-color: #393939 !important;
+  background: #1E293B !important;
+  color: #E2E8F0 !important;
+  border-color: #334155 !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-table td,
 html.dark .sa-table td {
-  background: #1e1e1e !important;
-  color: #f4f4f4 !important;
-  border-color: #2e2e2e !important;
+  background: #111827 !important;
+  color: #F3F4F6 !important;
+  border-color: #1F2937 !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-table tr:hover td,
 html.dark .sa-table tr:hover td {
-  background: #282828 !important;
+  background: #1E293B !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-root input,
+:is(html.dark, body.dark, .dark) .sa-root select,
+:is(html.dark, body.dark, .dark) .sa-root textarea,
+:is(html.dark, body.dark, .dark) .sa-input,
+:is(html.dark, body.dark, .dark) .sa-select,
+:is(html.dark, body.dark, .dark) .sa-textarea,
+:is(html.dark, body.dark, .dark) .sa-search input,
+:is(html.dark, body.dark, .dark) .sa-sql textarea,
 html.dark .sa-root input,
 html.dark .sa-root select,
 html.dark .sa-root textarea,
 html.dark .sa-input,
 html.dark .sa-select,
 html.dark .sa-textarea,
-html.dark .sa-search input {
-  background: #161616 !important;
-  border-color: #4c4c4c !important;
-  color: #f4f4f4 !important;
+html.dark .sa-search input,
+html.dark .sa-sql textarea {
+  background: #0F172A !important;
+  border-color: #334155 !important;
+  color: #F8FAFC !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-root input:focus,
+:is(html.dark, body.dark, .dark) .sa-root select:focus,
+:is(html.dark, body.dark, .dark) .sa-root textarea:focus,
+:is(html.dark, body.dark, .dark) .sa-search input:focus,
 html.dark .sa-root input:focus,
 html.dark .sa-root select:focus,
 html.dark .sa-root textarea:focus,
 html.dark .sa-search input:focus {
-  border-color: #78a9ff !important;
-  box-shadow: 0 0 0 1px #78a9ff !important;
+  border-color: #38BDF8 !important;
+  box-shadow: 0 0 0 1px #38BDF8 !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-root input::placeholder,
+:is(html.dark, body.dark, .dark) .sa-root textarea::placeholder,
 html.dark .sa-root input::placeholder,
 html.dark .sa-root textarea::placeholder {
-  color: #8d8d8d !important;
+  color: #64748B !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-root label,
 html.dark .sa-root label {
-  color: #e0e0e0 !important;
+  color: #E2E8F0 !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-btn-secondary,
 html.dark .sa-btn-secondary {
-  color: #f4f4f4 !important;
-  border-color: #525252 !important;
-  background: transparent !important;
+  color: #F8FAFC !important;
+  border-color: #334155 !important;
+  background: #1E293B !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-btn-secondary:hover,
 html.dark .sa-btn-secondary:hover {
-  background: #353535 !important;
+  background: #334155 !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-btn-ghost,
 html.dark .sa-btn-ghost {
-  color: #78a9ff !important;
+  color: #38BDF8 !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-btn-ghost:hover,
 html.dark .sa-btn-ghost:hover {
-  background: #353535 !important;
+  background: #1E293B !important;
 }
 
+:is(html.dark, body.dark, .dark) .sa-perm.inactive,
 html.dark .sa-perm.inactive {
-  background: #262626 !important;
-  border-color: #393939 !important;
-  color: #8d8d8d !important;
+  background: #1E293B !important;
+  border-color: #334155 !important;
+  color: #94A3B8 !important;
+}
+
+/* ─── Dark Mode Carbon Tags / Badges ─── */
+:is(html.dark, body.dark, .dark) .sa-tag-red,
+html.dark .sa-tag-red {
+  background: #4C0519 !important;
+  color: #FDA4AF !important;
+  border-color: #E11D48 !important;
+}
+
+:is(html.dark, body.dark, .dark) .sa-tag-green,
+html.dark .sa-tag-green {
+  background: #052E16 !important;
+  color: #86EFAC !important;
+  border-color: #16A34A !important;
+}
+
+:is(html.dark, body.dark, .dark) .sa-tag-blue,
+html.dark .sa-tag-blue {
+  background: #082F49 !important;
+  color: #7DD3FC !important;
+  border-color: #0284C7 !important;
+}
+
+:is(html.dark, body.dark, .dark) .sa-tag-orange,
+html.dark .sa-tag-orange {
+  background: #431407 !important;
+  color: #FDBA74 !important;
+  border-color: #EA580C !important;
+}
+
+:is(html.dark, body.dark, .dark) .sa-tag-yellow,
+html.dark .sa-tag-yellow {
+  background: #422006 !important;
+  color: #FDE047 !important;
+  border-color: #CA8A04 !important;
+}
+
+:is(html.dark, body.dark, .dark) .sa-tag-gray,
+html.dark .sa-tag-gray {
+  background: #1E293B !important;
+  color: #CBD5E1 !important;
+  border-color: #475569 !important;
 }
 
 /* ─── SuperAdmin Modal Box & Containers ─── */
@@ -773,117 +877,117 @@ html.dark .sa-perm.inactive {
 }
 
 /* Force dark contrast on any inline dark text colors within SuperAdmin & Modals */
-html.dark .sa-root [style*="color: #161616"],
-html.dark .sa-root [style*="color: rgb(22, 22, 22)"],
-html.dark .sa-root [style*="color: #000"],
-html.dark .sa-root [style*="color: black"],
-html.dark .sa-root [style*="color: #111"],
-html.dark .sa-root [style*="color: #222"],
-html.dark .sa-root [style*="color: #333"],
-html.dark [role="dialog"] [style*="color: #161616"],
-html.dark [role="dialog"] [style*="color: rgb(22, 22, 22)"],
-html.dark [role="dialog"] [style*="color: #000"],
-html.dark [role="dialog"] [style*="color: black"] {
-  color: #f4f4f4 !important;
+:is(html.dark, body.dark, .dark) .sa-root [style*="color: #161616"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="color: rgb(22, 22, 22)"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="color: #000"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="color: black"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="color: #111"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="color: #222"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="color: #333"],
+:is(html.dark, body.dark, .dark) [role="dialog"] [style*="color: #161616"],
+:is(html.dark, body.dark, .dark) [role="dialog"] [style*="color: rgb(22, 22, 22)"],
+:is(html.dark, body.dark, .dark) [role="dialog"] [style*="color: #000"],
+:is(html.dark, body.dark, .dark) [role="dialog"] [style*="color: black"] {
+  color: #F8FAFC !important;
 }
 
-html.dark .sa-root [style*="color: #525252"],
-html.dark .sa-root [style*="color: rgb(82, 82, 82)"],
-html.dark .sa-root [style*="color: #6f6f6f"],
-html.dark .sa-root [style*="color: rgb(111, 111, 111)"],
-html.dark [role="dialog"] [style*="color: #525252"],
-html.dark [role="dialog"] [style*="color: #6f6f6f"] {
-  color: #c6c6c6 !important;
+:is(html.dark, body.dark, .dark) .sa-root [style*="color: #525252"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="color: rgb(82, 82, 82)"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="color: #6f6f6f"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="color: rgb(111, 111, 111)"],
+:is(html.dark, body.dark, .dark) [role="dialog"] [style*="color: #525252"],
+:is(html.dark, body.dark, .dark) [role="dialog"] [style*="color: #6f6f6f"] {
+  color: #94A3B8 !important;
 }
 
-html.dark .sa-root [style*="background: #fff"],
-html.dark .sa-root [style*="background: white"],
-html.dark .sa-root [style*="background: #ffffff"],
-html.dark .sa-root [style*="background-color: #fff"],
-html.dark .sa-root [style*="background-color: white"],
-html.dark [role="dialog"] [style*="background: #fff"],
-html.dark [role="dialog"] [style*="background: white"],
-html.dark [role="dialog"] [style*="background: #ffffff"] {
-  background: #1e1e1e !important;
-  color: #f4f4f4 !important;
+:is(html.dark, body.dark, .dark) .sa-root [style*="background: #fff"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="background: white"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="background: #ffffff"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="background-color: #fff"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="background-color: white"],
+:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: #fff"],
+:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: white"],
+:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: #ffffff"] {
+  background: #111827 !important;
+  color: #F8FAFC !important;
 }
 
-html.dark .sa-root [style*="background: #f4f4f4"],
-html.dark .sa-root [style*="background: #f8f9fa"],
-html.dark .sa-root [style*="background: #f5f5f5"],
-html.dark .sa-root [style*="background: #e8e8e8"],
-html.dark .sa-root [style*="background: #fafafa"],
-html.dark .sa-root [style*="background: #fbfbfb"],
-html.dark [role="dialog"] [style*="background: #f4f4f4"],
-html.dark [role="dialog"] [style*="background: #f8f9fa"],
-html.dark [role="dialog"] [style*="background: #f5f5f5"],
-html.dark [role="dialog"] [style*="background: #fafafa"],
-html.dark [role="dialog"] [style*="background: #fbfbfb"] {
-  background: #262626 !important;
-  color: #f4f4f4 !important;
+:is(html.dark, body.dark, .dark) .sa-root [style*="background: #f4f4f4"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="background: #f8f9fa"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="background: #f5f5f5"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="background: #e8e8e8"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="background: #fafafa"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="background: #fbfbfb"],
+:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: #f4f4f4"],
+:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: #f8f9fa"],
+:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: #f5f5f5"],
+:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: #fafafa"],
+:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: #fbfbfb"] {
+  background: #1E293B !important;
+  color: #F8FAFC !important;
 }
 
-html.dark .sa-root [style*="background: #f8faff"],
-html.dark .sa-root [style*="background: #fdfefe"],
-html.dark .sa-root [style*="background: #edf5ff"],
-html.dark [role="dialog"] [style*="background: #f8faff"],
-html.dark [role="dialog"] [style*="background: #fdfefe"],
-html.dark [role="dialog"] [style*="background: #edf5ff"] {
-  background: #111e38 !important;
-  color: #f4f4f4 !important;
-  border-color: #0f62fe !important;
+:is(html.dark, body.dark, .dark) .sa-root [style*="background: #f8faff"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="background: #fdfefe"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="background: #edf5ff"],
+:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: #f8faff"],
+:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: #fdfefe"],
+:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: #edf5ff"] {
+  background: #0F172A !important;
+  color: #F8FAFC !important;
+  border-color: #0284C7 !important;
 }
 
-html.dark .sa-root [style*="border: 1px solid #c6c6c6"],
-html.dark .sa-root [style*="border: 1px solid #e0e0e0"],
-html.dark [role="dialog"] input,
-html.dark [role="dialog"] select,
-html.dark [role="dialog"] textarea {
-  background: #121212 !important;
-  border-color: #404040 !important;
-  color: #ffffff !important;
+:is(html.dark, body.dark, .dark) .sa-root [style*="border: 1px solid #c6c6c6"],
+:is(html.dark, body.dark, .dark) .sa-root [style*="border: 1px solid #e0e0e0"],
+:is(html.dark, body.dark, .dark) [role="dialog"] input,
+:is(html.dark, body.dark, .dark) [role="dialog"] select,
+:is(html.dark, body.dark, .dark) [role="dialog"] textarea {
+  background: #0F172A !important;
+  border-color: #334155 !important;
+  color: #FFFFFF !important;
 }
 
-html.dark [role="dialog"] input::placeholder,
-html.dark [role="dialog"] textarea::placeholder {
-  color: #737373 !important;
+:is(html.dark, body.dark, .dark) [role="dialog"] input::placeholder,
+:is(html.dark, body.dark, .dark) [role="dialog"] textarea::placeholder {
+  color: #64748B !important;
 }
 
-html.dark [role="dialog"] .sa-modal-box {
-  background: #1e1e1e !important;
-  border-color: #383838 !important;
-  color: #ffffff !important;
+:is(html.dark, body.dark, .dark) [role="dialog"] .sa-modal-box {
+  background: #111827 !important;
+  border-color: #1F2937 !important;
+  color: #FFFFFF !important;
 }
 
-html.dark [role="dialog"] .sa-modal-box-blue {
-  background: #0f1c38 !important;
-  border-color: #0f62fe !important;
-  color: #78a9ff !important;
+:is(html.dark, body.dark, .dark) [role="dialog"] .sa-modal-box-blue {
+  background: #082F49 !important;
+  border-color: #0284C7 !important;
+  color: #7DD3FC !important;
 }
 
-html.dark [role="dialog"] [class*="bg-white"],
-html.dark [role="dialog"] [class*="bg-[#fff"],
-html.dark [role="dialog"] [class*="bg-slate-50"],
-html.dark [role="dialog"] [class*="bg-gray-50"] {
-  background-color: #1a1a1a !important;
+:is(html.dark, body.dark, .dark) [role="dialog"] [class*="bg-white"],
+:is(html.dark, body.dark, .dark) [role="dialog"] [class*="bg-[#fff"],
+:is(html.dark, body.dark, .dark) [role="dialog"] [class*="bg-slate-50"],
+:is(html.dark, body.dark, .dark) [role="dialog"] [class*="bg-gray-50"] {
+  background-color: #111827 !important;
 }
 
-html.dark [role="dialog"] label {
-  color: #e0e0e0 !important;
+:is(html.dark, body.dark, .dark) [role="dialog"] label {
+  color: #E2E8F0 !important;
 }
 
-html.dark .sa-tile[style*="background: #d0e2ff"],
-html.dark .sa-tile[style*="background: rgb(208, 226, 255)"],
-html.dark .sa-tile.active {
-  background: #0043ce !important;
-  border-color: #78a9ff !important;
+:is(html.dark, body.dark, .dark) .sa-tile[style*="background: #d0e2ff"],
+:is(html.dark, body.dark, .dark) .sa-tile[style*="background: rgb(208, 226, 255)"],
+:is(html.dark, body.dark, .dark) .sa-tile.active {
+  background: #0369A1 !important;
+  border-color: #38BDF8 !important;
 }
 
-html.dark .sa-tile[style*="background: #d0e2ff"] .sa-tile-name,
-html.dark .sa-tile[style*="background: #d0e2ff"] .sa-tile-count,
-html.dark .sa-tile[style*="background: rgb(208, 226, 255)"] .sa-tile-name,
-html.dark .sa-tile[style*="background: rgb(208, 226, 255)"] .sa-tile-count {
-  color: #ffffff !important;
+:is(html.dark, body.dark, .dark) .sa-tile[style*="background: #d0e2ff"] .sa-tile-name,
+:is(html.dark, body.dark, .dark) .sa-tile[style*="background: #d0e2ff"] .sa-tile-count,
+:is(html.dark, body.dark, .dark) .sa-tile[style*="background: rgb(208, 226, 255)"] .sa-tile-name,
+:is(html.dark, body.dark, .dark) .sa-tile[style*="background: rgb(208, 226, 255)"] .sa-tile-count {
+  color: #FFFFFF !important;
 }
 
 

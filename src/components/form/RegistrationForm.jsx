@@ -197,6 +197,48 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
             className={`${inputCls} ${align} ${fieldErr ? "!border-female-normal" : ""}`}
           />
         )}
+        {q.type === "number" && (
+          <input
+            type="text"
+            inputMode="numeric"
+            dir="ltr"
+            value={val}
+            onChange={(e) => setAnswer(q.id, e.target.value, q)}
+            onBlur={(e) => handleBlur(q.id, e.target.value, q)}
+            placeholder={q.placeholder || "عدد را وارد کنید..."}
+            className={`${inputCls} text-left ${fieldErr ? "!border-female-normal" : ""}`}
+          />
+        )}
+        {q.type === "yes_no" && (
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: "بله", value: "yes" },
+              { label: "خیر", value: "no" },
+            ].map((opt) => {
+              const selected = val === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    setAnswer(q.id, opt.value, q);
+                    handleBlur(q.id, opt.value, q);
+                  }}
+                  className={`flex items-center justify-center gap-2 p-3 border-2 rounded-pill-md font-bold transition-all cursor-pointer ${
+                    selected
+                      ? "border-teal bg-teal/10 text-teal-text dark:text-teal dark:bg-teal-950/40"
+                      : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink dark:text-slate-200 hover:border-teal/50"
+                  }`}
+                >
+                  <div className={`w-5 h-5 flex items-center justify-center rounded-full border-2 ${selected ? "border-teal bg-teal text-white" : "border-ink/20 dark:border-slate-600"}`}>
+                    {selected && <Check size={12} className="stroke-[3]" />}
+                  </div>
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
         {q.type === "long_text" && (
           <textarea
             dir="rtl"
@@ -210,39 +252,52 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
           />
         )}
         {q.type === "choice" && (
-          <div className="flex flex-col gap-2">
-            {(q.options || []).map((opt, i) => {
-              const isMulti = q.max_selections > 1;
-              const selected = isMulti ? (Array.isArray(val) && val.includes(opt)) : val === opt;
-              return (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => {
-                    if (isMulti) {
-                      const arr = Array.isArray(val) ? [...val] : [];
-                      const idx = arr.indexOf(opt);
-                      idx >= 0 ? arr.splice(idx, 1) : arr.push(opt);
-                      setAnswer(q.id, arr, q);
-                    } else {
-                      setAnswer(q.id, opt, q);
-                    }
-                    handleBlur(q.id, val, q);
-                  }}
-                  className={`relative flex items-center gap-3 p-3 border-2 rounded-pill-md font-bold transition-all ${
-                    selected
-                      ? "border-teal bg-teal/10 text-teal-text dark:text-teal dark:bg-teal-950/40"
-                      : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink dark:text-slate-200 hover:border-teal/50"
-                  }`}
-                >
-                  <div className={`w-6 h-6 flex items-center justify-center rounded-md border-2 ${selected ? "border-teal bg-teal text-white" : "border-ink/20 dark:border-slate-600"}`}>
-                    {selected && <Check size={14} className="stroke-[3]" />}
-                  </div>
-                  {opt}
-                </button>
-              );
-            })}
-          </div>
+          q.display_mode === "dropdown" ? (
+            <DropdownChoice
+              options={q.options || []}
+              value={val}
+              onChange={(newVal) => {
+                setAnswer(q.id, newVal, q);
+                handleBlur(q.id, newVal, q);
+              }}
+            />
+          ) : (
+            <div className="flex flex-col gap-2">
+              {(q.options || []).map((opt, i) => {
+                const isMulti = q.max_selections > 1;
+                const selected = isMulti ? (Array.isArray(val) && val.includes(opt)) : val === opt;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => {
+                      let nextVal;
+                      if (isMulti) {
+                        const arr = Array.isArray(val) ? [...val] : [];
+                        const idx = arr.indexOf(opt);
+                        idx >= 0 ? arr.splice(idx, 1) : arr.push(opt);
+                        nextVal = arr;
+                      } else {
+                        nextVal = opt;
+                      }
+                      setAnswer(q.id, nextVal, q);
+                      handleBlur(q.id, nextVal, q);
+                    }}
+                    className={`relative flex items-center gap-3 p-3 border-2 rounded-pill-md font-bold transition-all cursor-pointer ${
+                      selected
+                        ? "border-teal bg-teal/10 text-teal-text dark:text-teal dark:bg-teal-950/40"
+                        : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink dark:text-slate-200 hover:border-teal/50"
+                    }`}
+                  >
+                    <div className={`w-6 h-6 flex items-center justify-center rounded-md border-2 ${selected ? "border-teal bg-teal text-white" : "border-ink/20 dark:border-slate-600"}`}>
+                      {selected && <Check size={14} className="stroke-[3]" />}
+                    </div>
+                    {opt}
+                  </button>
+                );
+              })}
+            </div>
+          )
         )}
         {q.type === "rating" && (
           <div className="flex gap-1.5 items-center py-1">
@@ -279,7 +334,7 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
               <CheckCircle2 size={48} className="text-teal" />
               <h1 className="text-xl font-black text-ink dark:text-white">{form.exit_title || "ثبت‌نام با موفقیت انجام شد!"}</h1>
               <p className="font-semibold text-ink-subtle dark:text-slate-300">{form.exit_message || "ممنون از همراهی شما."}</p>
-              {scoreResult && <ScoreResult score={scoreResult.score} total={scoreResult.total} />}
+              {scoreResult && <ScoreResult score={scoreResult.score} total={scoreResult.total} details={scoreResult.details} questions={questions} />}
             </div>
           </StickerCard>
         </motion.div>
