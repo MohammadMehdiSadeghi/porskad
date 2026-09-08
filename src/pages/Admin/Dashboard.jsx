@@ -18,7 +18,20 @@ export default function Dashboard() {
   const { push } = useToast();
   const [loading, setLoading] = useState(true);
   const [forms, setForms] = useState([]);
-  const [durationUnit, setDurationUnit] = useState(() => localStorage.getItem("porskad_dash_duration_unit") || "sec");
+  const [recent, setRecent] = useState([]);
+  const [stats, setStats] = useState({
+    forms: 0,
+    responses: 0,
+    complete: 0,
+    avgDuration: null,
+  });
+  const [durationUnit, setDurationUnit] = useState(() => {
+    try {
+      return localStorage.getItem("porskad_dash_duration_unit") || "sec";
+    } catch {
+      return "sec";
+    }
+  });
 
   const toggleDurationUnit = () => {
     setDurationUnit((prev) => {
