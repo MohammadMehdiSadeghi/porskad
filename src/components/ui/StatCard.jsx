@@ -46,14 +46,26 @@ const THEMES = {
   },
 };
 
-export default function StatCard({ theme = "teal", label, value, caption }) {
+export default function StatCard({
+  theme = "teal",
+  label,
+  value,
+  caption,
+  onClick,
+  title,
+  className = "",
+}) {
   const t = THEMES[theme] ?? THEMES.teal;
   const texture = TEXTURES[theme] ?? TEXTURES.teal;
   const shapeClass =
     "rounded-tl-[2rem] rounded-br-[2rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]";
 
   return (
-    <div className={`relative ${t.rotate} h-full`}>
+    <div
+      onClick={onClick}
+      title={title}
+      className={`relative ${t.rotate} h-full ${onClick ? "cursor-pointer select-none transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]" : ""} ${className}`}
+    >
       {/* لایه‌ی سایه */}
       <div
         aria-hidden="true"
@@ -66,20 +78,20 @@ export default function StatCard({ theme = "teal", label, value, caption }) {
           ${shapeClass} border-[0.1875rem] ${t.border} ${t.cardBg}
           px-3 xs:px-4 pt-3 xs:pt-5 pb-3 xs:pb-5 lg:px-5 lg:pt-6 lg:pb-6`}
       >
-        {/* بافت */}
+        {/* بافت ظریف و بهینه‌شده بدون زوم بیش از حد */}
         <div className={`absolute inset-0 ${shapeClass} overflow-hidden pointer-events-none`}>
           <img
             src={texture.src}
             alt=""
             draggable={false}
-            className="absolute inset-0 w-full h-full object-cover scale-125 select-none opacity-80 dark:opacity-20"
+            className="absolute inset-0 w-full h-full object-cover scale-90 select-none opacity-35 dark:opacity-15 mix-blend-multiply dark:mix-blend-screen"
           />
         </div>
 
         {label && (
           <span
             className={`relative z-20 inline-block -mt-1 mb-1.5 xs:mb-2 lg:-mt-1.5 lg:mb-4
-              bg-white border-[0.0625rem] rounded-xl [corner-shape:squircle]
+              bg-white dark:bg-slate-900 border-[0.0625rem] rounded-xl [corner-shape:squircle]
               px-1.5 py-0.5 lg:px-3 lg:py-1 whitespace-nowrap
               text-xs xs:text-xs lg:text-[0.8rem] font-bold shadow-sm
               ${t.badgeRotate} ${t.badge}`}

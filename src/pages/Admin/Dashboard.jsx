@@ -18,8 +18,33 @@ export default function Dashboard() {
   const { push } = useToast();
   const [loading, setLoading] = useState(true);
   const [forms, setForms] = useState([]);
-  const [recent, setRecent] = useState([]);
-  const [stats, setStats] = useState({ forms: 0, responses: 0, complete: 0, avgDuration: null });
+  const [durationUnit, setDurationUnit] = useState(() => localStorage.getItem("porskad_dash_duration_unit") || "sec");
+
+  const toggleDurationUnit = () => {
+    setDurationUnit((prev) => {
+      const next = prev === "sec" ? "min" : "sec";
+      try {
+        localStorage.setItem("porskad_dash_duration_unit", next);
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
+
+  let formattedDuration = "—";
+  let durationCaption = "داده‌ای نیست";
+  if (stats.avgDuration) {
+    if (durationUnit === "min") {
+      const mins = stats.avgDuration / 60;
+      const minFormatted = mins >= 10 ? Math.round(mins) : mins.toFixed(1);
+      formattedDuration = `${faNum(minFormatted)}`;
+      durationCaption = "دقیقه/فرم (کلیک برای ثانیه)";
+    } else {
+      formattedDuration = `${faNum(stats.avgDuration)}`;
+      durationCaption = "ثانیه/فرم (کلیک برای دقیقه)";
+    }
+  }
 
   const loadAll = useCallback(async () => {
     if (!user) return;
@@ -148,9 +173,11 @@ export default function Dashboard() {
         <StatCard theme="navy" label="تکمیل" value={faNum(stats.complete)} caption="کامل پر شده" />
         <StatCard
           theme="magenta"
-          label="میانگین زمان"
-          value={stats.avgDuration ? faNum(stats.avgDuration) : "—"}
-          caption={stats.avgDuration ? "ثانیه/فرم" : "داده‌ای نیست"}
+          label={durationUnit === "min" ? "میانگین زمان (دقیقه)" : "میانگین زمان (ثانیه)"}
+          value={formattedDuration}
+          caption={durationCaption}
+          onClick={toggleDurationUnit}
+          title="برای تبدیل واحد به دقیقه یا ثانیه کلیک کنید"
         />
       </div>
 

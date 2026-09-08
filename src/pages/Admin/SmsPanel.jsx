@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 
 const inputCls =
-  "w-full bg-white border-2 border-ink/15 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none transition-all disabled:bg-bg-neutral disabled:text-ink/40 disabled:cursor-not-allowed";
+  "w-full bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy dark:text-slate-100 focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none transition-all disabled:bg-bg-neutral dark:disabled:bg-slate-900 disabled:text-ink/40 dark:disabled:text-slate-500 disabled:cursor-not-allowed";
 
 export default function SmsPanel() {
   const { hasPermission, isOwner } = useAuth();
@@ -139,18 +139,18 @@ export default function SmsPanel() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-xl sm:text-3xl font-black text-navy flex items-center gap-2">
+          <h1 className="text-xl sm:text-3xl font-black text-navy dark:text-white flex items-center gap-2">
             <MessageSquare size={22} className="text-teal" />
             پنل پیامک
           </h1>
-          <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-0.5">
+          <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 mt-0.5">
             ارسال و مدیریت پیامک‌های اطلاع‌رسانی
           </p>
         </div>
       </div>
 
       {/* ─── باکس اطلاع‌رسانی غیرفعال بودن پنل پیامک ─── */}
-      <div className="-rotate-[0.3deg]">
+      <div>
         <StickerCard theme="orange">
           <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3.5">
@@ -159,10 +159,10 @@ export default function SmsPanel() {
               </span>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-black text-navy text-base">سامانه پیامک در حال حاضر غیرفعال است</h3>
+                  <h3 className="font-black text-navy dark:text-white text-base">سامانه پیامک در حال حاضر غیرفعال است</h3>
                   <Badge color="orange">غیرفعال موقت</Badge>
                 </div>
-                <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-1 leading-6">
+                <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-300 mt-1 leading-6">
                   ارسال پیامک و اتصال به وب‌سرویس پیامکی موقتاً غیرفعال شده است. رابط کاربری پنل صرفاً برای مشاهده اطلاعات قبلی و پیش‌نمایش در دسترس می‌باشد.
                 </p>
               </div>
@@ -172,15 +172,15 @@ export default function SmsPanel() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-white border-2 border-ink/10 rounded-pill-md p-1 overflow-x-auto scrollbar-none max-w-full">
+      <div className="flex gap-1 bg-white dark:bg-slate-800 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md p-1 overflow-x-auto scrollbar-none max-w-full">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-pill-sm text-sm font-bold transition-all whitespace-nowrap ${
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-pill-sm text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
               tab === t.id
                 ? "bg-teal text-white shadow-[2px_2px_0_0_rgba(0,0,0,0.15)]"
-                : "text-ink-subtle hover:text-ink hover:bg-bg-lavender"
+                : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white hover:bg-bg-lavender dark:hover:bg-slate-700"
             }`}
           >
             <t.icon size={14} /> {t.label}
@@ -200,17 +200,17 @@ export default function SmsPanel() {
 
           {/* وضعیت سرویس */}
           <div>
-            <h2 className="text-base sm:text-lg font-extrabold text-navy mb-3">وضعیت سرویس پیامک</h2>
-            <div className="rotate-[0.3deg]">
+            <h2 className="text-base sm:text-lg font-extrabold text-navy dark:text-white mb-3">وضعیت سرویس پیامک</h2>
+            <div>
               <StickerCard theme="white">
                 <div className="p-5 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-orange/10 flex items-center justify-center">
-                      <PauseCircle size={20} className="text-orange" />
+                    <div className="w-10 h-10 rounded-full bg-orange/10 dark:bg-amber-950/40 flex items-center justify-center">
+                      <PauseCircle size={20} className="text-orange dark:text-amber-400" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-navy">وضعیت ارائه‌دهنده: غیرفعال (معلق)</p>
-                      <p className="text-xs font-semibold text-ink-subtle">ارسال پیامک تا راه‌اندازی نسخه جدید متوقف است</p>
+                      <p className="text-sm font-bold text-navy dark:text-white">وضعیت ارائه‌دهنده: غیرفعال (معلق)</p>
+                      <p className="text-xs font-semibold text-ink-subtle dark:text-slate-400">ارسال پیامک تا راه‌اندازی نسخه جدید متوقف است</p>
                     </div>
                   </div>
                   <Badge color="orange">غیرفعال</Badge>
@@ -224,11 +224,11 @@ export default function SmsPanel() {
       {/* ═══ Send ═══ */}
       {tab === "send" && (
         <div className="flex flex-col gap-4 max-w-2xl">
-          <div className="-rotate-[0.5deg]">
+          <div>
             <StickerCard theme="white">
               <form onSubmit={(e) => { e.preventDefault(); showToast("سامانه پیامک در حال حاضر غیرفعال است", "error"); }} className="p-4 flex flex-col gap-4">
                 <div>
-                  <label className="block text-base font-extrabold text-navy mb-1">شماره موبایل‌ها</label>
+                  <label className="block text-base font-extrabold text-navy dark:text-white mb-1">شماره موبایل‌ها</label>
                   <textarea
                     value={smsNumbers}
                     onChange={(e) => setSmsNumbers(e.target.value)}
@@ -237,12 +237,12 @@ export default function SmsPanel() {
                     dir="ltr"
                     disabled
                   />
-                  <p className="text-xs font-semibold text-ink-subtle mt-0.5">
+                  <p className="text-xs font-semibold text-ink-subtle dark:text-slate-400 mt-0.5">
                     ورود شماره‌ها در حال حاضر غیرفعال است.
                   </p>
                 </div>
                 <div>
-                  <label className="block text-base font-extrabold text-navy mb-1">متن پیامک</label>
+                  <label className="block text-base font-extrabold text-navy dark:text-white mb-1">متن پیامک</label>
                   <textarea
                     value={smsText}
                     onChange={(e) => setSmsText(e.target.value)}
@@ -266,7 +266,7 @@ export default function SmsPanel() {
       {tab === "history" && (
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base sm:text-lg font-extrabold text-navy">تاریخچه ارسال‌ها</h2>
+            <h2 className="text-base sm:text-lg font-extrabold text-navy dark:text-white">تاریخچه ارسال‌ها</h2>
             <Button variant="ghost" size="sm" onClick={loadHistory}>
               <RefreshCw size={14} />
             </Button>
@@ -276,12 +276,12 @@ export default function SmsPanel() {
           ) : outbox.length === 0 ? (
             <EmptyState icon={<History size={48} />} title="هنوز پیامکی ارسال نشده" subtitle="تاریخچه ارسال‌ها پس از فعال‌سازی سیستم ثبت خواهد شد." />
           ) : (
-            <div className="rotate-[0.3deg]">
+            <div>
               <StickerCard theme="white">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-navy border-b-2 border-ink/10">
+                      <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40">
                         <th className="text-right font-black px-4 py-3">موبایل</th>
                         <th className="text-right font-black px-4 py-3">متن</th>
                         <th className="text-center font-black px-4 py-3">وضعیت</th>
@@ -290,15 +290,15 @@ export default function SmsPanel() {
                     </thead>
                     <tbody>
                       {outbox.map((o, i) => (
-                        <tr key={o.id} className={`${i % 2 ? "bg-bg-lavender/60" : ""} border-b border-ink/5 last:border-0`}>
-                          <td className="px-4 py-3 font-bold text-ink font-mono text-xs" dir="ltr">{o.mobile}</td>
-                          <td className="px-4 py-3 font-semibold text-ink-subtle text-xs truncate max-w-[200px]">{o.text}</td>
+                        <tr key={o.id} className={`${i % 2 ? "bg-bg-lavender/60 dark:bg-slate-800/40" : ""} border-b border-ink/5 dark:border-slate-800/60 last:border-0`}>
+                          <td className="px-4 py-3 font-bold text-ink dark:text-slate-200 font-mono text-xs" dir="ltr">{o.mobile}</td>
+                          <td className="px-4 py-3 font-semibold text-ink-subtle dark:text-slate-400 text-xs truncate max-w-[200px]">{o.text}</td>
                           <td className="px-4 py-3 text-center">
                             <Badge color={o.status === "sent" || o.status === "delivered" ? "green" : o.status === "failed" ? "red" : "gray"}>
                               {o.status === "sent" ? "ارسال شده" : o.status === "delivered" ? "تحویل شده" : o.status === "failed" ? "خطا" : "در انتظار"}
                             </Badge>
                           </td>
-                          <td className="px-4 py-3 text-xs font-semibold text-ink-subtle">
+                          <td className="px-4 py-3 text-xs font-semibold text-ink-subtle dark:text-slate-400">
                             {new Date(o.created_at).toLocaleString("fa-IR")}
                           </td>
                         </tr>
@@ -316,7 +316,7 @@ export default function SmsPanel() {
       {tab === "inbox" && (
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base sm:text-lg font-extrabold text-navy">پیامک‌های دریافتی</h2>
+            <h2 className="text-base sm:text-lg font-extrabold text-navy dark:text-white">پیامک‌های دریافتی</h2>
             <Button variant="ghost" size="sm" onClick={loadHistory}>
               <RefreshCw size={14} />
             </Button>
@@ -331,10 +331,10 @@ export default function SmsPanel() {
                 <StickerCard key={msg.id} theme="white">
                   <div className="p-4 flex flex-col gap-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-bold text-navy" dir="ltr">{msg.mobile}</span>
-                      <span className="text-xs font-medium text-ink-subtle">{new Date(msg.created_at).toLocaleString("fa-IR")}</span>
+                      <span className="text-sm font-bold text-navy dark:text-slate-100" dir="ltr">{msg.mobile}</span>
+                      <span className="text-xs font-medium text-ink-subtle dark:text-slate-400">{new Date(msg.created_at).toLocaleString("fa-IR")}</span>
                     </div>
-                    <p className="text-sm font-semibold text-ink leading-6">{msg.text}</p>
+                    <p className="text-sm font-semibold text-ink dark:text-slate-200 leading-6">{msg.text}</p>
                   </div>
                 </StickerCard>
               ))}
@@ -346,12 +346,12 @@ export default function SmsPanel() {
       {/* ═══ Settings ═══ */}
       {tab === "settings" && (
         <div className="flex flex-col gap-4 max-w-2xl">
-          <div className="rotate-[0.3deg]">
+          <div>
             <StickerCard theme="white">
               <form onSubmit={(e) => { e.preventDefault(); showToast("تنظیمات پیامک در حال حاضر غیرفعال است", "error"); }} className="p-5 flex flex-col gap-4">
                 <div>
-                  <h2 className="text-base sm:text-lg font-black text-navy mb-1">تنظیمات درگاه پیامک</h2>
-                  <p className="text-xs font-semibold text-ink-subtle">
+                  <h2 className="text-base sm:text-lg font-black text-navy dark:text-white mb-1">تنظیمات درگاه پیامک</h2>
+                  <p className="text-xs font-semibold text-ink-subtle dark:text-slate-400">
                     تنظیمات وب‌سرویس و خطوط ارسال پیامک در حال حاضر در دست بازطراحی است.
                   </p>
                 </div>
@@ -359,19 +359,19 @@ export default function SmsPanel() {
                 <div className="flex flex-col gap-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-navy mb-1"><Smartphone size={12} className="inline ml-1" /> شماره خط</label>
+                      <label className="block text-xs font-bold text-navy dark:text-slate-200 mb-1"><Smartphone size={12} className="inline ml-1" /> شماره خط</label>
                       <input type="text" value={settings.line_number} readOnly className={inputCls} dir="ltr" disabled />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-navy mb-1"><User size={12} className="inline ml-1" /> نام فرستنده</label>
+                      <label className="block text-xs font-bold text-navy dark:text-slate-200 mb-1"><User size={12} className="inline ml-1" /> نام فرستنده</label>
                       <input type="text" value={settings.sender_name} readOnly className={inputCls} disabled />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-college-light border-2 border-orange/30 rounded-pill-md px-4 py-3 flex items-center gap-3">
-                  <AlertTriangle size={18} className="text-orange shrink-0" />
-                  <p className="text-xs font-semibold text-ink-subtle">
+                <div className="bg-college-light dark:bg-amber-950/30 border-2 border-orange/30 dark:border-amber-700/40 rounded-pill-md px-4 py-3 flex items-center gap-3">
+                  <AlertTriangle size={18} className="text-orange dark:text-amber-400 shrink-0" />
+                  <p className="text-xs font-semibold text-ink-subtle dark:text-slate-300">
                     این ماژول موقتاً غیرفعال شده است. تنظیمات به‌زودی در دسترس قرار می‌گیرد.
                   </p>
                 </div>
