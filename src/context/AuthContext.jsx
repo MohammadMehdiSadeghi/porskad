@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient";
+import { logAuthEvent } from "../lib/activityLogger";
 
 const AuthContext = createContext(null);
 
@@ -247,6 +248,17 @@ export function AuthProvider({ children }) {
       password,
     });
     if (error) throw error;
+
+    // ثبت لاگ ورود همراه با IP کلاینت در پس‌زمینه
+    if (data?.user) {
+      logAuthEvent({
+        userId: data.user.id,
+        email: data.user.email || email,
+        action: "login",
+        details: { method: "password" },
+      });
+    }
+
     return data;
   }
 
@@ -270,6 +282,13 @@ export function AuthProvider({ children }) {
               await supabase.from("profiles").update({ phone: cleanPhone }).eq("id", loginData.user.id);
             } catch {}
           }
+          // ثبت لاگ ورود پس از ثبت‌نام
+          logAuthEvent({
+            userId: loginData.user.id,
+            email: loginData.user.email || email,
+            action: "login_after_register",
+            details: { phone: cleanPhone, method: "api_auto_login" },
+          });
           return loginData;
         }
       } else {
@@ -307,6 +326,13 @@ export function AuthProvider({ children }) {
           max_responses_per_month: 100,
           plan: 'free',
         }).eq("id", data.user.id);
+
+        logAuthEvent({
+          userId: data.user.id,
+          email: data.user.email || email,
+          action: "register",
+          details: { phone: cleanPhone, full_name: fullName, method: "supabase_signup" },
+        });
       }
     } catch {}
 
@@ -345,6 +371,13 @@ export function AuthProvider({ children }) {
   }
 
   async function logout() {
+    if (user?.id) {
+      logAuthEvent({
+        userId: user.id,
+        email: user.email,
+        action: "logout",
+      });
+    }
     await supabase.auth.signOut();
   }
 

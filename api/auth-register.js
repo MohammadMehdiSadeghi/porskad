@@ -109,6 +109,41 @@ export default async function handler(req, res) {
           .from("user_roles")
           .upsert({ user_id: data.user.id, role_id: "manager", active: true }, { onConflict: "user_id,role_id" });
       } catch {}
+
+      // ثبت لاگ ثبت‌نام همراه با IP در auth_logs و activity_log
+      try {
+        const ua = req.headers["user-agent"] || "";
+        let browser = "Other";
+        let os = "Other";
+        let device = "Desktop";
+        if (/mobile|android|iphone|ipad|ipod/i.test(ua)) device = /ipad|tablet/i.test(ua) ? "Tablet" : "Mobile";
+        if (/windows/i.test(ua)) os = "Windows";
+        else if (/macintosh|mac os x/i.test(ua)) os = "macOS";
+        else if (/iphone|ipad|ipod/i.test(ua)) os = "iOS";
+        else if (/android/i.test(ua)) os = "Android";
+        else if (/linux/i.test(ua)) os = "Linux";
+
+        if (/edg/i.test(ua)) browser = "Edge";
+        else if (/chrome|crios/i.test(ua) && !/opr|opera|edg/i.test(ua)) browser = "Chrome";
+        else if (/firefox|fxios/i.test(ua)) browser = "Firefox";
+        else if (/safari/i.test(ua) && !/chrome|crios/i.test(ua)) browser = "Safari";
+
+        await supabaseAdmin.from("auth_logs").insert({
+          user_id: data.user.id,
+          email: email.trim().toLowerCase(),
+          ip_address: clientIp.replace(/^::ffff:/i, ""),
+          action: "register",
+          device,
+          browser,
+          os,
+          user_agent: ua,
+          details: {
+            full_name: fullName?.trim() || email.split("@")[0],
+            phone: cleanPhone,
+            method: "api_registration",
+          },
+        });
+      } catch {}
     }
 
     return res.status(200).json({ user: data.user });
