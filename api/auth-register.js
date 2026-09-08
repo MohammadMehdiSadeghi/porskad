@@ -104,7 +104,7 @@ export default async function handler(req, res) {
       try {
         await supabaseAdmin
           .from("user_roles")
-          .upsert({ user_id: data.user.id, role_id: "manager", active: true }, { onConflict: "user_id" });
+          .upsert({ user_id: data.user.id, role_id: "manager", active: true }, { onConflict: "user_id,role_id" });
       } catch {}
     }
 
