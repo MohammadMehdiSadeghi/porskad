@@ -29,7 +29,9 @@ const inputCls =
 
 export default function TelegramBot() {
   const { user, profile, isOwner, hasPermission } = useAuth();
-  const canManage = isOwner() || (hasPermission("manage_telegram") && profile?.can_use_telegram === true);
+  const canManage =
+    isOwner() ||
+    (hasPermission("manage_telegram") && profile?.can_use_telegram === true);
   const [tab, setTab] = useState("config");
   const [loading, setLoading] = useState(true);
   const [showHelpModal, setShowHelpModal] = useState(false);
@@ -81,14 +83,21 @@ export default function TelegramBot() {
       let allForms = formsRes.data || [];
       if (!isOwner() && user?.id) {
         allForms = allForms.filter(
-          (f) => f.manager_id === user.id || f.created_by === user.id
+          (f) => f.manager_id === user.id || f.created_by === user.id,
         );
       }
       const userFormIds = new Set(allForms.map((f) => f.id));
 
       let allConfigs = configRes.data || [];
-      if (!isOwner() && user?.id && allConfigs.length > 0 && "user_id" in allConfigs[0]) {
-        allConfigs = allConfigs.filter((c) => !c.user_id || c.user_id === user.id);
+      if (
+        !isOwner() &&
+        user?.id &&
+        allConfigs.length > 0 &&
+        "user_id" in allConfigs[0]
+      ) {
+        allConfigs = allConfigs.filter(
+          (c) => !c.user_id || c.user_id === user.id,
+        );
       }
 
       setConfigs(allConfigs);
@@ -96,7 +105,7 @@ export default function TelegramBot() {
       setLinks(
         isOwner()
           ? linksRes.data || []
-          : (linksRes.data || []).filter((l) => userFormIds.has(l.form_id))
+          : (linksRes.data || []).filter((l) => userFormIds.has(l.form_id)),
       );
     } catch (err) {
       console.error("loadAll error:", err);
@@ -109,7 +118,9 @@ export default function TelegramBot() {
     try {
       const { data, error } = await supabase
         .from("telegram_send_log")
-        .select("id, form_id, response_id, chat_id, status, error_message, sent_at")
+        .select(
+          "id, form_id, response_id, chat_id, status, error_message, sent_at",
+        )
         .order("sent_at", { ascending: false })
         .limit(100);
 
@@ -198,7 +209,10 @@ export default function TelegramBot() {
     }
     if (!confirm("آیا از حذف این تنظیمات مطمئنید؟")) return;
     try {
-      const { error } = await supabase.from("telegram_config").delete().eq("id", id);
+      const { error } = await supabase
+        .from("telegram_config")
+        .delete()
+        .eq("id", id);
       if (error) throw error;
       showToast("حذف شد");
       loadAll();
@@ -272,7 +286,10 @@ export default function TelegramBot() {
     }
     if (!confirm("لینک حذف شود؟")) return;
     try {
-      const { error } = await supabase.from("telegram_form_links").delete().eq("id", id);
+      const { error } = await supabase
+        .from("telegram_form_links")
+        .delete()
+        .eq("id", id);
       if (error) throw error;
       showToast("لینک حذف شد");
       loadAll();
@@ -284,10 +301,8 @@ export default function TelegramBot() {
   // ─── Helpers ───
   const formTitleById = Object.fromEntries(forms.map((f) => [f.id, f.title]));
   const configLabelById = Object.fromEntries(
-    configs.map((c) => [c.id, c.chat_title || c.chat_id])
+    configs.map((c) => [c.id, c.chat_title || c.chat_id]),
   );
-
-
 
   const TABS = [
     { id: "config", label: "تنظیمات ربات", icon: Settings },
@@ -337,9 +352,13 @@ export default function TelegramBot() {
                   <Bot size={22} />
                 </span>
                 <div>
-                  <h3 className="font-black text-navy dark:text-slate-100 text-base">قابلیت اتصال به بات تلگرام برای حساب شما فعال نیست</h3>
+                  <h3 className="font-black text-navy dark:text-slate-100 text-base">
+                    قابلیت اتصال به بات تلگرام برای حساب شما فعال نیست
+                  </h3>
                   <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-300 mt-1 leading-6">
-                    برای اتصال ربات و دریافت لحظه‌ای اطلاعات فرم‌ها در کانال یا گروه تلگرامی خود، می‌توانید درخواست خود را از طریق تیکت برای مدیریت ارسال کنید تا این قابلیت برای حسابتان فعال گردد.
+                    برای اتصال ربات و دریافت لحظه‌ای اطلاعات فرم‌ها در کانال یا
+                    گروه تلگرامی خود، می‌توانید درخواست خود را از طریق تیکت برای
+                    مدیریت ارسال کنید تا این قابلیت برای حسابتان فعال گردد.
                   </p>
                 </div>
               </div>
@@ -413,7 +432,10 @@ export default function TelegramBot() {
                       type="text"
                       value={configForm.bot_token}
                       onChange={(e) =>
-                        setConfigForm((p) => ({ ...p, bot_token: e.target.value }))
+                        setConfigForm((p) => ({
+                          ...p,
+                          bot_token: e.target.value,
+                        }))
                       }
                       className={inputCls}
                       placeholder="123456:ABC-DEF..."
@@ -430,7 +452,10 @@ export default function TelegramBot() {
                         type="text"
                         value={configForm.chat_id}
                         onChange={(e) =>
-                          setConfigForm((p) => ({ ...p, chat_id: e.target.value }))
+                          setConfigForm((p) => ({
+                            ...p,
+                            chat_id: e.target.value,
+                          }))
                         }
                         className={inputCls}
                         placeholder="-100123456789"
@@ -446,7 +471,10 @@ export default function TelegramBot() {
                         type="text"
                         value={configForm.chat_title}
                         onChange={(e) =>
-                          setConfigForm((p) => ({ ...p, chat_title: e.target.value }))
+                          setConfigForm((p) => ({
+                            ...p,
+                            chat_title: e.target.value,
+                          }))
                         }
                         className={inputCls}
                         placeholder="گروه مدیریت"
@@ -464,13 +492,22 @@ export default function TelegramBot() {
                       type="button"
                       onClick={() => {
                         setEditingConfig(null);
-                        setConfigForm({ bot_token: "", chat_id: "", chat_title: "" });
+                        setConfigForm({
+                          bot_token: "",
+                          chat_id: "",
+                          chat_title: "",
+                        });
                       }}
                     >
                       انصراف
                     </Button>
                   )}
-                  <Button variant="teal" size="sm" type="submit" disabled={!canManage}>
+                  <Button
+                    variant="teal"
+                    size="sm"
+                    type="submit"
+                    disabled={!canManage}
+                  >
                     {editingConfig ? "بروزرسانی" : "ذخیره"}
                   </Button>
                 </div>
@@ -497,10 +534,16 @@ export default function TelegramBot() {
                             {cfg.is_active ? "فعال" : "غیرفعال"}
                           </Badge>
                         </div>
-                        <div className="text-xs font-mono text-ink-subtle dark:text-slate-400 truncate" dir="ltr">
+                        <div
+                          className="text-xs font-mono text-ink-subtle dark:text-slate-400 truncate"
+                          dir="ltr"
+                        >
                           Chat: {cfg.chat_id}
                         </div>
-                        <div className="text-xs font-mono text-ink-subtle dark:text-slate-400 truncate" dir="ltr">
+                        <div
+                          className="text-xs font-mono text-ink-subtle dark:text-slate-400 truncate"
+                          dir="ltr"
+                        >
                           Token: {cfg.bot_token.slice(0, 20)}...
                         </div>
                       </div>
@@ -508,12 +551,19 @@ export default function TelegramBot() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => toggleConfigActive(cfg.id, cfg.is_active)}
+                          onClick={() =>
+                            toggleConfigActive(cfg.id, cfg.is_active)
+                          }
                           disabled={!canManage}
                         >
                           {cfg.is_active ? "غیرفعال" : "فعال"}
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => editConfig(cfg)} disabled={!canManage}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => editConfig(cfg)}
+                          disabled={!canManage}
+                        >
                           ویرایش
                         </Button>
                         <Button
@@ -544,7 +594,11 @@ export default function TelegramBot() {
               title="ابتدا تنظیمات ربات را ذخیره کنید"
               subtitle="برای لینک کردن فرم‌ها، ابتدا باید توکن ربات و شناسه چت را تنظیم کنید."
               action={
-                <Button variant="teal" size="sm" onClick={() => setTab("config")}>
+                <Button
+                  variant="teal"
+                  size="sm"
+                  onClick={() => setTab("config")}
+                >
                   رفتن به تنظیمات
                 </Button>
               }
@@ -555,7 +609,9 @@ export default function TelegramBot() {
               <div>
                 <StickerCard theme="white">
                   <div className="p-5 flex flex-col gap-3">
-                    <h2 className="text-base sm:text-lg font-black text-navy dark:text-slate-100">افزودن لینک جدید</h2>
+                    <h2 className="text-base sm:text-lg font-black text-navy dark:text-slate-100">
+                      افزودن لینک جدید
+                    </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
                         <label className="block text-xs font-bold text-navy dark:text-slate-200 mb-1">
@@ -622,10 +678,18 @@ export default function TelegramBot() {
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-700">
-                              <th className="text-right font-black px-4 py-3">فرم</th>
-                              <th className="text-right font-black px-4 py-3">چت تلگرام</th>
-                              <th className="text-center font-black px-4 py-3">وضعیت</th>
-                              <th className="text-center font-black px-4 py-3">عملیات</th>
+                              <th className="text-right font-black px-4 py-3">
+                                فرم
+                              </th>
+                              <th className="text-right font-black px-4 py-3">
+                                چت تلگرام
+                              </th>
+                              <th className="text-center font-black px-4 py-3">
+                                وضعیت
+                              </th>
+                              <th className="text-center font-black px-4 py-3">
+                                عملیات
+                              </th>
                             </tr>
                           </thead>
                           <tbody>
@@ -633,7 +697,9 @@ export default function TelegramBot() {
                               <tr
                                 key={link.id}
                                 className={`${
-                                  i % 2 ? "bg-bg-lavender/60 dark:bg-slate-800/40" : ""
+                                  i % 2
+                                    ? "bg-bg-lavender/60 dark:bg-slate-800/40"
+                                    : ""
                                 } border-b border-ink/5 dark:border-slate-800 last:border-0`}
                               >
                                 <td className="px-4 py-3 font-bold text-ink dark:text-slate-200">
@@ -643,7 +709,9 @@ export default function TelegramBot() {
                                   {configLabelById[link.config_id] || "—"}
                                 </td>
                                 <td className="px-4 py-3 text-center">
-                                  <Badge color={link.is_active ? "green" : "gray"}>
+                                  <Badge
+                                    color={link.is_active ? "green" : "gray"}
+                                  >
                                     {link.is_active ? "فعال" : "غیرفعال"}
                                   </Badge>
                                 </td>
@@ -652,7 +720,12 @@ export default function TelegramBot() {
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      onClick={() => toggleLinkActive(link.id, link.is_active)}
+                                      onClick={() =>
+                                        toggleLinkActive(
+                                          link.id,
+                                          link.is_active,
+                                        )
+                                      }
                                       disabled={!canManage}
                                     >
                                       {link.is_active ? "غیرفعال" : "فعال"}
@@ -711,8 +784,12 @@ export default function TelegramBot() {
                       <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-700">
                         <th className="text-right font-black px-4 py-3">فرم</th>
                         <th className="text-right font-black px-4 py-3">چت</th>
-                        <th className="text-center font-black px-4 py-3">وضعیت</th>
-                        <th className="text-right font-black px-4 py-3">زمان</th>
+                        <th className="text-center font-black px-4 py-3">
+                          وضعیت
+                        </th>
+                        <th className="text-right font-black px-4 py-3">
+                          زمان
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -720,7 +797,9 @@ export default function TelegramBot() {
                         <tr
                           key={log.id}
                           className={`${
-                            i % 2 ? "bg-bg-lavender/60 dark:bg-slate-800/40" : ""
+                            i % 2
+                              ? "bg-bg-lavender/60 dark:bg-slate-800/40"
+                              : ""
                           } border-b border-ink/5 dark:border-slate-800 last:border-0`}
                         >
                           <td className="px-4 py-3 font-bold text-ink dark:text-slate-200">
@@ -732,7 +811,10 @@ export default function TelegramBot() {
                           <td className="px-4 py-3 text-center">
                             {log.status === "sent" ? (
                               <Badge color="green">
-                                <CheckCircle size={11} className="ml-1 inline" />
+                                <CheckCircle
+                                  size={11}
+                                  className="ml-1 inline"
+                                />
                                 ارسال شد
                               </Badge>
                             ) : (
@@ -774,9 +856,26 @@ export default function TelegramBot() {
               ۱
             </span>
             <div>
-              <strong className="text-navy dark:text-slate-100 block text-sm">دریافت توکن از BotFather:</strong>
+              <strong className="text-navy dark:text-slate-100 block text-sm">
+                دریافت توکن از BotFather:
+              </strong>
               <p className="text-xs text-ink-subtle dark:text-slate-300 mt-0.5">
-                در تلگرام به ربات رسمی <code className="text-teal font-bold bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-ink/10 dark:border-slate-700" dir="ltr">@BotFather</code> بروید، دستور <code className="text-teal font-bold bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-ink/10 dark:border-slate-700" dir="ltr">/newbot</code> را ارسال کرده و نام و یوزرنیم بات را وارد کنید تا <strong>توکن اختصاصی</strong> دریافت شود.
+                در تلگرام به ربات رسمی{" "}
+                <code
+                  className="text-teal font-bold bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-ink/10 dark:border-slate-700"
+                  dir="ltr"
+                >
+                  @BotFather
+                </code>{" "}
+                بروید، دستور{" "}
+                <code
+                  className="text-teal font-bold bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-ink/10 dark:border-slate-700"
+                  dir="ltr"
+                >
+                  /newbot
+                </code>{" "}
+                را ارسال کرده و نام و یوزرنیم بات را وارد کنید تا{" "}
+                <strong>توکن اختصاصی</strong> دریافت شود.
               </p>
             </div>
           </div>
@@ -786,10 +885,21 @@ export default function TelegramBot() {
               ۲
             </span>
             <div>
-              <strong className="text-navy dark:text-slate-100 block text-sm">دریافت چت‌آیدی (Chat ID):</strong>
+              <strong className="text-navy dark:text-slate-100 block text-sm">
+                دریافت چت‌آیدی (Chat ID):
+              </strong>
               <p className="text-xs text-ink-subtle dark:text-slate-300 mt-0.5">
-                برای پیوی شخصی، به یک ربات مانند <code className="text-teal font-bold bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-ink/10 dark:border-slate-700" dir="ltr">@userinfobot</code> پیام دهید تا Chat ID عددی شما را بدهد.<br />
-                برای کانال یا گروه، ربات ساخته‌شده را در کانال/گروه <strong>ادمین</strong> کنید و آیدی یا چت‌آیدی آن را وارد کنید.
+                برای پیوی شخصی، به یک ربات مانند{" "}
+                <code
+                  className="text-teal font-bold bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-ink/10 dark:border-slate-700"
+                  dir="ltr"
+                >
+                  @userinfobot
+                </code>{" "}
+                پیام دهید تا Chat ID عددی شما را بدهد.
+                <br />
+                برای کانال یا گروه، ربات ساخته‌شده را در کانال/گروه{" "}
+                <strong>ادمین</strong> کنید و آیدی یا چت‌آیدی آن را وارد کنید.
               </p>
             </div>
           </div>
@@ -799,18 +909,27 @@ export default function TelegramBot() {
               ۳
             </span>
             <div>
-              <strong className="text-navy dark:text-slate-100 block text-sm">انتخاب و لینک کردن فرم:</strong>
+              <strong className="text-navy dark:text-slate-100 block text-sm">
+                انتخاب و لینک کردن فرم:
+              </strong>
               <p className="text-xs text-ink-subtle dark:text-slate-300 mt-0.5">
-                اطلاعات ربات را در تب «تنظیمات ربات» ذخیره کنید. سپس در تب «لینک فرم‌ها»، فرم مورد نظرتان را انتخاب کرده تا از این پس پاسخ‌های ثبت‌شده فوراً به تلگرام ارسال گردند.
+                اطلاعات ربات را در تب «تنظیمات ربات» ذخیره کنید. سپس در تب «لینک
+                فرم‌ها»، فرم مورد نظرتان را انتخاب کرده تا از این پس پاسخ‌های
+                ثبت‌شده فوراً به تلگرام ارسال گردند.
               </p>
             </div>
           </div>
 
           <div className="flex justify-end pt-2">
-            <Button variant="teal" size="sm" onClick={() => setShowHelpModal(false)}>
+            <Button
+              variant="teal"
+              size="sm"
+              onClick={() => setShowHelpModal(false)}
+            >
               متوجه شدم
             </Button>
           </div>
+          <a href=""></a>
         </div>
       </Modal>
     </div>
