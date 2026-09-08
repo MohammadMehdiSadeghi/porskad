@@ -836,17 +836,36 @@ html.dark [role="dialog"] [style*="background: #edf5ff"] {
 
 html.dark .sa-root [style*="border: 1px solid #c6c6c6"],
 html.dark .sa-root [style*="border: 1px solid #e0e0e0"],
-html.dark [role="dialog"] [style*="border: 1px solid #c6c6c6"],
-html.dark [role="dialog"] [style*="border: 1px solid #e0e0e0"] {
-  border-color: #393939 !important;
-}
-
 html.dark [role="dialog"] input,
 html.dark [role="dialog"] select,
 html.dark [role="dialog"] textarea {
-  background: #161616 !important;
-  border-color: #4c4c4c !important;
-  color: #f4f4f4 !important;
+  background: #121212 !important;
+  border-color: #404040 !important;
+  color: #ffffff !important;
+}
+
+html.dark [role="dialog"] input::placeholder,
+html.dark [role="dialog"] textarea::placeholder {
+  color: #737373 !important;
+}
+
+html.dark [role="dialog"] .sa-modal-box {
+  background: #1e1e1e !important;
+  border-color: #383838 !important;
+  color: #ffffff !important;
+}
+
+html.dark [role="dialog"] .sa-modal-box-blue {
+  background: #0f1c38 !important;
+  border-color: #0f62fe !important;
+  color: #78a9ff !important;
+}
+
+html.dark [role="dialog"] [class*="bg-white"],
+html.dark [role="dialog"] [class*="bg-[#fff"],
+html.dark [role="dialog"] [class*="bg-slate-50"],
+html.dark [role="dialog"] [class*="bg-gray-50"] {
+  background-color: #1a1a1a !important;
 }
 
 html.dark [role="dialog"] label {

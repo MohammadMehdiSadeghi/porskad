@@ -3288,7 +3288,7 @@ export default function SuperAdmin() {
             </div>
 
             {/* Authentication & Security History */}
-            <div style={{ border: "1px solid #0f62fe", background: "#f8faff", padding: "0.75rem" }}>
+            <div className="sa-modal-box-blue">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
                 <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0f62fe", textTransform: "uppercase", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
                   <Activity size={14} /> Recent Authentication History ({detailActivityHistory.length})
@@ -3310,11 +3310,11 @@ export default function SuperAdmin() {
               {detailActivityLoading ? (
                 <div style={{ fontSize: "0.8rem", color: "#6f6f6f", padding: "0.5rem 0" }}>Loading activity history...</div>
               ) : detailActivityHistory.length === 0 ? (
-                <div style={{ fontSize: "0.8rem", color: "#6f6f6f", background: "#fff", padding: "0.5rem", border: "1px dashed #d0d0d0" }}>
+                <div className="sa-modal-box" style={{ fontSize: "0.8rem", borderStyle: "dashed" }}>
                   No dedicated auth logs recorded for this user yet.
                 </div>
               ) : (
-                <div style={{ maxHeight: "160px", overflowY: "auto", background: "#fff", border: "1px solid #d0e2ff" }}>
+                <div className="sa-table-wrap" style={{ maxHeight: "160px", overflowY: "auto" }}>
                   <table className="sa-table" style={{ fontSize: "0.75rem" }}>
                     <thead>
                       <tr>
@@ -3334,7 +3334,7 @@ export default function SuperAdmin() {
                           <td style={{ padding: "0.3rem 0.5rem" }}>
                             {log.device || "Desktop"} · {log.browser || "—"} ({log.os || "—"})
                           </td>
-                          <td style={{ padding: "0.3rem 0.5rem", color: "#525252", whiteSpace: "nowrap" }}>
+                          <td style={{ padding: "0.3rem 0.5rem", whiteSpace: "nowrap" }}>
                             {log.created_at ? new Date(log.created_at).toLocaleString("en-US") : "—"}
                           </td>
                         </tr>
@@ -3346,12 +3346,11 @@ export default function SuperAdmin() {
             </div>
 
             {/* Edit Name & Phone */}
-            <div style={{ border: "1px solid #e0e0e0", padding: "0.75rem" }}>
+            <div className="sa-modal-box">
               <span
                 style={{
                   fontSize: "0.85rem",
                   fontWeight: 700,
-                  color: "#525252",
                   textTransform: "uppercase",
                 }}
               >
@@ -3376,7 +3375,6 @@ export default function SuperAdmin() {
                     flex: 1,
                     minWidth: 140,
                     padding: "0.5rem 0.75rem",
-                    border: "1px solid #c6c6c6",
                     fontSize: "0.8rem",
                     fontFamily: "'IBM Plex Sans', sans-serif",
                     outline: "none",
@@ -3393,7 +3391,6 @@ export default function SuperAdmin() {
                     flex: 1,
                     minWidth: 140,
                     padding: "0.5rem 0.75rem",
-                    border: "1px solid #c6c6c6",
                     fontSize: "0.8rem",
                     fontFamily: "'IBM Plex Sans', sans-serif",
                     outline: "none",
@@ -3425,13 +3422,7 @@ export default function SuperAdmin() {
             </div>
 
             {/* User Quota & Limits (Forms & Responses) Editor */}
-            <div
-              style={{
-                border: "1px solid #0f62fe",
-                padding: "0.75rem",
-                background: "#fdfefe",
-              }}
-            >
+            <div className="sa-modal-box-blue">
               <div
                 style={{
                   display: "flex",
@@ -3462,16 +3453,12 @@ export default function SuperAdmin() {
               <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.6rem" }}>
                 <button
                   type="button"
-                  className="sa-btn sa-btn-sm"
-                  style={{
-                    flex: 1,
-                    background: (Number(detailMaxForms) >= 999999 && Number(detailMaxResponses) >= 999999) ? "#0f62fe" : "#edf5ff",
-                    color: (Number(detailMaxForms) >= 999999 && Number(detailMaxResponses) >= 999999) ? "#ffffff" : "#0f62fe",
-                    border: "1px solid #0f62fe",
-                    fontWeight: 700,
-                    fontSize: "0.8rem",
-                    cursor: "pointer",
-                  }}
+                  className={`sa-btn sa-btn-sm ${
+                    Number(detailMaxForms) >= 999999 && Number(detailMaxResponses) >= 999999
+                      ? "sa-btn-primary"
+                      : "sa-btn-secondary"
+                  }`}
+                  style={{ flex: 1, fontSize: "0.8rem" }}
                   onClick={() => {
                     setDetailMaxForms(999999);
                     setDetailMaxResponses(999999);
@@ -3481,16 +3468,12 @@ export default function SuperAdmin() {
                 </button>
                 <button
                   type="button"
-                  className="sa-btn sa-btn-sm"
-                  style={{
-                    flex: 1,
-                    background: (Number(detailMaxForms) === 5 && Number(detailMaxResponses) === 100) ? "#161616" : "#f4f4f4",
-                    color: (Number(detailMaxForms) === 5 && Number(detailMaxResponses) === 100) ? "#ffffff" : "#161616",
-                    border: "1px solid #8d8d8d",
-                    fontWeight: 700,
-                    fontSize: "0.8rem",
-                    cursor: "pointer",
-                  }}
+                  className={`sa-btn sa-btn-sm ${
+                    Number(detailMaxForms) === 5 && Number(detailMaxResponses) === 100
+                      ? "sa-btn-primary"
+                      : "sa-btn-secondary"
+                  }`}
+                  style={{ flex: 1, fontSize: "0.8rem" }}
                   onClick={() => {
                     setDetailMaxForms(5);
                     setDetailMaxResponses(100);
@@ -3513,7 +3496,6 @@ export default function SuperAdmin() {
                     style={{
                       fontSize: "0.85rem",
                       fontWeight: 700,
-                      color: "#525252",
                       display: "block",
                       marginBottom: "0.2rem",
                     }}
@@ -3529,7 +3511,6 @@ export default function SuperAdmin() {
                     style={{
                       width: "100%",
                       padding: "0.4rem 0.5rem",
-                      border: "1px solid #c6c6c6",
                       fontSize: "0.8rem",
                       fontFamily: "'IBM Plex Mono', monospace",
                       fontWeight: 700,
@@ -3543,7 +3524,6 @@ export default function SuperAdmin() {
                     style={{
                       fontSize: "0.85rem",
                       fontWeight: 700,
-                      color: "#525252",
                       display: "block",
                       marginBottom: "0.2rem",
                     }}
@@ -3560,7 +3540,6 @@ export default function SuperAdmin() {
                     style={{
                       width: "100%",
                       padding: "0.4rem 0.5rem",
-                      border: "1px solid #c6c6c6",
                       fontSize: "0.8rem",
                       fontFamily: "'IBM Plex Mono', monospace",
                       fontWeight: 700,
@@ -3574,7 +3553,6 @@ export default function SuperAdmin() {
                     style={{
                       fontSize: "0.85rem",
                       fontWeight: 700,
-                      color: "#525252",
                       display: "block",
                       marginBottom: "0.2rem",
                     }}
@@ -3590,7 +3568,6 @@ export default function SuperAdmin() {
                     style={{
                       width: "100%",
                       padding: "0.4rem 0.5rem",
-                      border: "1px solid #c6c6c6",
                       fontSize: "0.8rem",
                       fontFamily: "'IBM Plex Mono', monospace",
                       fontWeight: 700,
@@ -3606,10 +3583,10 @@ export default function SuperAdmin() {
                   justifyContent: "space-between",
                   alignItems: "center",
                   paddingTop: "0.4rem",
-                  borderTop: "1px solid #e0e0e0",
+                  borderTop: "1px solid rgba(140, 140, 140, 0.2)",
                 }}
               >
-                <div style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>
+                <div style={{ fontSize: "0.85rem", opacity: 0.8 }}>
                   Next reset:{" "}
                   <b>
                     {detailModal.quota_reset_at
@@ -3661,13 +3638,7 @@ export default function SuperAdmin() {
             </div>
 
             {/* Set New Password Form (Without displaying old passwords) */}
-            <div
-              style={{
-                border: "1px solid #0f62fe",
-                padding: "0.75rem",
-                background: "#f8faff",
-              }}
-            >
+            <div className="sa-modal-box-blue">
               <div
                 style={{
                   display: "flex",
@@ -3694,7 +3665,7 @@ export default function SuperAdmin() {
                 </span>
               </div>
 
-              <p style={{ fontSize: "0.85rem", color: "#525252", margin: "0 0 0.5rem 0" }}>
+              <p style={{ fontSize: "0.85rem", opacity: 0.8, margin: "0 0 0.5rem 0" }}>
                 Enter a new password below to immediately overwrite and update the user's password.
               </p>
 
@@ -3712,7 +3683,6 @@ export default function SuperAdmin() {
                     style={{
                       width: "100%",
                       padding: "0.5rem 2rem 0.5rem 0.75rem",
-                      border: "1px solid #c6c6c6",
                       fontSize: "0.8rem",
                       fontFamily: "'IBM Plex Sans', sans-serif",
                       outline: "none",
@@ -3788,12 +3758,11 @@ export default function SuperAdmin() {
             </div>
 
             {/* Change Email */}
-            <div style={{ border: "1px solid #e0e0e0", padding: "0.75rem" }}>
+            <div className="sa-modal-box">
               <span
                 style={{
                   fontSize: "0.85rem",
                   fontWeight: 700,
-                  color: "#525252",
                   textTransform: "uppercase",
                   display: "inline-flex",
                   alignItems: "center",
@@ -3810,7 +3779,6 @@ export default function SuperAdmin() {
                   style={{
                     flex: 1,
                     padding: "0.5rem 0.75rem",
-                    border: "1px solid #c6c6c6",
                     fontSize: "0.8rem",
                     fontFamily: "'IBM Plex Sans', monospace",
                     outline: "none",
@@ -3847,15 +3815,14 @@ export default function SuperAdmin() {
 
             {/* Role Management (Promote / Demote SuperAdmin — God Only) */}
             {!detailModal.is_owner && (
-              <div style={{ border: "1px solid #e0e0e0", padding: "0.75rem", background: "#fafafa" }}>
+              <div className="sa-modal-box">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
                   <span
                     style={{
                       fontSize: "0.85rem",
                       fontWeight: 700,
-                      color: "#161616",
                       textTransform: "uppercase",
-                      display: "flex",
+                      display: "inline-flex",
                       alignItems: "center",
                       gap: "0.35rem",
                     }}
@@ -3868,7 +3835,7 @@ export default function SuperAdmin() {
                       <Crown size={14} /> Primary God Control
                     </span>
                   ) : (
-                    <span style={{ fontSize: "0.8125rem", color: "#6f6f6f", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                    <span style={{ fontSize: "0.8125rem", opacity: 0.75, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
                       <Lock size={13} /> Role modification restricted to Primary God Owner
                     </span>
                   )}
@@ -3916,21 +3883,15 @@ export default function SuperAdmin() {
                             showToast("Error updating role: " + err.message, "error");
                           }
                         }}
+                        className={`sa-btn ${isCurrent ? (r.id === "admin" ? "sa-btn-primary" : "sa-btn-primary") : "sa-btn-secondary"}`}
                         style={{
                           flex: 1,
                           minWidth: "160px",
                           padding: "0.5rem 0.85rem",
                           fontSize: "0.85rem",
-                          fontWeight: 700,
-                          border: "2px solid",
-                          borderColor: isCurrent ? (r.id === "admin" ? "#0f62fe" : "#198038") : "#c6c6c6",
-                          background: isCurrent ? (r.id === "admin" ? "#d0e2ff" : "#defbe6") : "#fff",
-                          color: isCurrent ? (r.id === "admin" ? "#0043ce" : "#0e6027") : "#525252",
                           cursor: isCallerGod ? "pointer" : "not-allowed",
                           opacity: !isCallerGod && !isCurrent ? 0.4 : 1,
-                          fontFamily: "'IBM Plex Sans', sans-serif",
                           textAlign: "left",
-                          transition: "all 0.15s",
                         }}
                       >
                         <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
@@ -3951,12 +3912,11 @@ export default function SuperAdmin() {
 
             {/* Activate / Deactivate */}
             {!detailModal.is_owner && (
-              <div style={{ border: "1px solid #e0e0e0", padding: "0.75rem" }}>
+              <div className="sa-modal-box">
                 <span
                   style={{
                     fontSize: "0.85rem",
                     fontWeight: 700,
-                    color: "#525252",
                     textTransform: "uppercase",
                   }}
                 >
@@ -4000,7 +3960,7 @@ export default function SuperAdmin() {
             )}
 
             {/* Permissions */}
-            <div style={{ border: "1px solid #e0e0e0", padding: "0.75rem" }}>
+            <div className="sa-modal-box">
               <div
                 style={{
                   display: "flex",
@@ -4012,7 +3972,6 @@ export default function SuperAdmin() {
                   style={{
                     fontSize: "0.85rem",
                     fontWeight: 700,
-                    color: "#525252",
                     textTransform: "uppercase",
                   }}
                 >
@@ -4066,7 +4025,7 @@ export default function SuperAdmin() {
             </div>
 
             {/* Visibility Isolation */}
-            <div style={{ border: "1px solid #e0e0e0", padding: "0.75rem" }}>
+            <div className="sa-modal-box">
               <div
                 style={{
                   display: "flex",
@@ -4078,17 +4037,16 @@ export default function SuperAdmin() {
                   style={{
                     fontSize: "0.85rem",
                     fontWeight: 700,
-                    color: "#525252",
                     textTransform: "uppercase",
                   }}
                 >
                   Visibility Restrictions
                 </span>
-                <span style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>
+                <span style={{ fontSize: "0.85rem", opacity: 0.8 }}>
                   Hidden from {detailModal.hidden_from?.length || 0} administrators
                 </span>
               </div>
-              <p style={{ fontSize: "0.85rem", color: "#6f6f6f", marginBottom: "0.5rem" }}>
+              <p style={{ fontSize: "0.85rem", opacity: 0.8, marginBottom: "0.5rem" }}>
                 Select administrators to hide this user profile from:
               </p>
               <div className="sa-perms">
@@ -4125,7 +4083,7 @@ export default function SuperAdmin() {
               </div>
             </div>
 
-            <div style={{ paddingTop: "0.5rem", borderTop: "1px solid #e0e0e0" }}>
+            <div style={{ paddingTop: "0.5rem", borderTop: "1px solid rgba(140, 140, 140, 0.2)" }}>
               <button
                 className="sa-btn sa-btn-primary"
                 onClick={() => {
@@ -4241,18 +4199,18 @@ export default function SuperAdmin() {
               </div>
             ) : filteredUserLogs.length === 0 ? (
               <div
+                className="sa-modal-box"
                 style={{
                   padding: "2.5rem 1rem",
                   textAlign: "center",
-                  background: "#fbfbfb",
-                  border: "1px dashed #d0d0d0",
+                  borderStyle: "dashed",
                 }}
               >
-                <FileText size={24} color="#a8a8a8" style={{ margin: "0 auto 0.5rem auto" }} />
-                <p style={{ margin: 0, fontWeight: 700, fontSize: "0.85rem", color: "#525252" }}>
+                <FileText size={24} style={{ margin: "0 auto 0.5rem auto", opacity: 0.6 }} />
+                <p style={{ margin: 0, fontWeight: 700, fontSize: "0.85rem" }}>
                   No logs found for this filter
                 </p>
-                <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#8d8d8d" }}>
+                <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", opacity: 0.7 }}>
                   Try changing the search filter or sub-tab.
                 </p>
               </div>
