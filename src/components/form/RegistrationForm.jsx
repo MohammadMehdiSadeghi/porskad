@@ -208,7 +208,7 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
   function renderQuestion(q) {
     const val = answers[q.id] ?? "";
     const fieldErr = touched[q.id] ? fieldErrors[q.id] : null;
-    const isLtr = q.type === "email" || q.type === "phone_ir" || q.type === "telegram_id" || q.type === "link";
+    const isLtr = q.type === "email" || q.type === "phone_ir" || q.type === "telegram_id" || q.type === "link" || q.type === "national_id";
     const dir = isLtr ? "ltr" : "rtl";
     const align = isLtr ? "text-left" : "text-right";
 
@@ -247,17 +247,17 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
         </label>
         {q.description && <p className="text-xs text-ink-subtle dark:text-slate-400">{q.description}</p>}
 
-        {/* ورودی متنی / ایمیل / تلفن / لینک / تلگرام */}
-        {(q.type === "short_text" || q.type === "email" || q.type === "phone_ir" || q.type === "link" || q.type === "telegram_id") && (
+        {/* ورودی متنی / ایمیل / تلفن / لینک / تلگرام / کد ملی */}
+        {(q.type === "short_text" || q.type === "email" || q.type === "phone_ir" || q.type === "link" || q.type === "telegram_id" || q.type === "national_id") && (
           <input
             type={q.type === "email" ? "email" : q.type === "link" ? "url" : "text"}
-            inputMode={q.type === "phone_ir" ? "tel" : q.type === "email" ? "email" : q.type === "link" ? "url" : "text"}
+            inputMode={q.type === "phone_ir" ? "tel" : q.type === "email" ? "email" : q.type === "link" ? "url" : q.type === "national_id" ? "numeric" : "text"}
             dir={dir}
             value={val}
-            maxLength={q.type === "short_text" ? 255 : undefined}
+            maxLength={q.type === "short_text" ? 255 : q.type === "national_id" ? 10 : undefined}
             onChange={(e) => setAnswer(q.id, e.target.value, q)}
             onBlur={(e) => handleBlur(q.id, e.target.value, q)}
-            placeholder={q.placeholder || "پاسخ خود را بنویسید..."}
+            placeholder={q.placeholder || (q.type === "national_id" ? "کد ملی ۱۰ رقمی (مثلاً: ۰۰۱۲۳۴۵۶۷۸)" : "پاسخ خود را بنویسید...")}
             className={`${inputCls} ${align} ${fieldErr ? "!border-female-normal" : ""}`}
           />
         )}

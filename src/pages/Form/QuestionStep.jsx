@@ -34,17 +34,18 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
     long_text: "پاسخ خود را بنویسید...",
     email: "example@email.com",
     phone_ir: "۰۹۱۲۳۴۵۶۷۸۹",
+    national_id: "کد ملی ۱۰ رقمی (مثلاً ۰۰۱۲۳۴۵۶۷۸)",
     number: "مثلاً: ۱۲۳",
     link: "https://example.com",
     telegram_id: "username@",
   }[type] || "پاسخ خود را بنویسید...";
 
   const hasValue = Boolean(value != null && String(value).trim().length > 0);
-  const isLtrType = type === "email" || type === "phone_ir" || type === "telegram_id" || type === "link";
+  const isLtrType = type === "email" || type === "phone_ir" || type === "telegram_id" || type === "link" || type === "national_id";
   const activeDir = hasValue && isLtrType ? "ltr" : "rtl";
   const activeAlign = hasValue && isLtrType ? "text-left" : "text-right";
 
-  const maxLen = type === "short_text" ? 255 : (question?.validation?.maxLength || question?.max_length || undefined);
+  const maxLen = type === "short_text" ? 255 : type === "national_id" ? 10 : (question?.validation?.maxLength || question?.max_length || undefined);
   const currentLength = value ? String(value).length : 0;
 
   const shared = clsx(
@@ -819,7 +820,7 @@ export default function QuestionStep({ question, index, total, value, timeSpent,
         {question.description && <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 leading-6 -mt-1.5">{question.description}</p>}
 
         {/* فیلد پاسخ بر اساس نوع سوال */}
-        {(question.type === "short_text" || question.type === "long_text" || question.type === "email" || question.type === "number" || question.type === "phone_ir" || question.type === "link" || question.type === "telegram_id") && (
+        {(question.type === "short_text" || question.type === "long_text" || question.type === "email" || question.type === "number" || question.type === "phone_ir" || question.type === "link" || question.type === "telegram_id" || question.type === "national_id") && (
           <TextInput type={question.type} value={value} error={error} onChange={handleChange} onEnter={handleNext} placeholder={question.placeholder} question={question} />
         )}
         {question.type === "choice" && <ChoiceOptions options={question.options} value={value} onChange={handleChange} onEnter={handleNext} displayMode={question.display_mode || "buttons"} maxSelections={question.max_selections ?? 1} />}
