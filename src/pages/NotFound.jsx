@@ -32,7 +32,6 @@ export default function NotFound() {
               <Home size={16} /> برگشت به خانه
             </Button>
           </div>
-          <a href=""></a>
         </StickerCard>
       </div>
     </div>
