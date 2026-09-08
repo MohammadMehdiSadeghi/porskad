@@ -429,8 +429,8 @@ export default function Managers() {
   const [createError, setCreateError] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  async function load() {
-    setLoading(true);
+  async function load(silent = false) {
+    if (!silent) setLoading(true);
     try {
       const [data, formsRes] = await Promise.all([
         listManagers({ includeHidden: isOwner() }),

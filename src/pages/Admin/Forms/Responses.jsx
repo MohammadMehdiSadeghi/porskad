@@ -535,7 +535,8 @@ export default function Responses() {
   const ANSWER_CHUNK = 100;
   const MAX_RESPONSES = 5000;
 
-  async function load() {
+  async function load(silent = false) {
+    if (!silent) setLoading(true);
     try {
       let allResponses = [];
       let from = 0;
@@ -595,13 +596,13 @@ export default function Responses() {
 
   useEffect(() => {
     if (authLoading) return;
-    load();
+    load(false);
     const channel = supabase
       .channel(`responses-${id}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "responses", filter: `form_id=eq.${id}` },
-        () => { push("پاسخ جدیدی ثبت شد!", "info"); load(); }
+        () => { push("پاسخ جدیدی ثبت شد!", "info"); load(true); }
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };

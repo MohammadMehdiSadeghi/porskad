@@ -59,9 +59,9 @@ export default function Dashboard() {
     }
   }
 
-  const loadAll = useCallback(async () => {
+  const loadAll = useCallback(async (isInitial = false) => {
     if (!user) return;
-    setLoading(true);
+    if (isInitial) setLoading(true);
     let formsQuery = supabase
       .from("forms")
       .select("id, slug, title, published, created_at, manager_id, created_by")
@@ -134,7 +134,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (authLoading) return;
-    loadAll();
+    loadAll(true);
     if (!supabase) return;
     const channel = supabase
       .channel("dashboard-live")
@@ -145,7 +145,7 @@ export default function Dashboard() {
           const form = formsRef.current.find((f) => f.id === payload.new.form_id);
           if (form) {
             push(`پاسخ جدید برای «${form?.title ?? "فرم"}» ثبت شد!`, "info");
-            loadAll();
+            loadAll(false);
           }
         },
       )

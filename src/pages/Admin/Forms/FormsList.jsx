@@ -119,9 +119,9 @@ export default function FormsList() {
   const [undoToast, setUndoToast] = useState(null);
   const undoTimerRef = useRef(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (silent = false) => {
     if (!user) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const [{ data: formsData, error: formsError }, { data: countsData }] =
         await Promise.all([

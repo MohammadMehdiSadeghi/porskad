@@ -1,12 +1,5 @@
-// ─── StatCard — کپی وفادار از رکاد با همان بافت‌ها و چرخش‌ها ───
-// کارت آماری استیکری: لایه‌ی سایه + بوردر + بج سفید چرخیده + عدد درشت
-const TEXTURES = {
-  orange: { src: "/assets/StatCard/yellow.png", opacity: 80 },
-  navy: { src: "/assets/StatCard/blue.png", opacity: 50 },
-  magenta: { src: "/assets/StatCard/pink.png", opacity: 100 },
-  teal: { src: "/assets/StatCard/green.png", opacity: 150 },
-};
-
+// ─── StatCard — کارت آماری استیکری فلت و تمیز ───
+// لایه‌ی سایه + بوردر + بج سفید چرخیده + عدد درشت
 const THEMES = {
   orange: {
     rotate: "rotate-[1deg] lg:rotate-[2.5deg]",
@@ -56,7 +49,6 @@ export default function StatCard({
   className = "",
 }) {
   const t = THEMES[theme] ?? THEMES.teal;
-  const texture = TEXTURES[theme] ?? TEXTURES.teal;
   const shapeClass =
     "rounded-tl-[2rem] rounded-br-[2rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]";
 
@@ -78,15 +70,6 @@ export default function StatCard({
           ${shapeClass} border-[0.1875rem] ${t.border} ${t.cardBg}
           px-3 xs:px-4 pt-3 xs:pt-5 pb-3 xs:pb-5 lg:px-5 lg:pt-6 lg:pb-6`}
       >
-        {/* بافت ظریف و بهینه‌شده بدون زوم بیش از حد */}
-        <div className={`absolute inset-0 ${shapeClass} overflow-hidden pointer-events-none`}>
-          <img
-            src={texture.src}
-            alt=""
-            draggable={false}
-            className="absolute inset-0 w-full h-full object-cover scale-90 select-none opacity-35 dark:opacity-15 mix-blend-multiply dark:mix-blend-screen"
-          />
-        </div>
 
         {label && (
           <span

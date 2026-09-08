@@ -606,115 +606,194 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   Dark Mode Support (Carbon Gray 100 / Gray 90)
+   Comprehensive Dark Mode Support for SuperAdmin (Carbon Dark)
    ═══════════════════════════════════════════════════════════ */
 html.dark .sa-root {
-  background: #161616;
-  color: #f4f4f4;
+  background: #121212 !important;
+  color: #f4f4f4 !important;
 }
-html.dark .sa-header,
-html.dark .sa-tabs,
-html.dark .sa-storage-header,
-html.dark .sa-table th,
-html.dark .sa-table td,
-html.dark .sa-empty,
-html.dark .sa-storage-card,
-html.dark .sa-tile,
-html.dark .sa-panel,
-html.dark .sa-card,
-html.dark .sa-filter-bar,
-html.dark .sa-modal-content {
-  border-color: #393939;
+
+html.dark .sa-header {
+  border-color: #393939 !important;
 }
+
+html.dark .sa-logo {
+  background: #262626 !important;
+  color: #78a9ff !important;
+}
+
+html.dark .sa-tabs {
+  border-color: #393939 !important;
+}
+
 html.dark .sa-tab {
-  color: #c6c6c6;
+  color: #c6c6c6 !important;
 }
+
 html.dark .sa-tab:hover {
-  color: #f4f4f4;
+  color: #ffffff !important;
+  background: #262626 !important;
 }
+
 html.dark .sa-tab.active {
-  color: #78a9ff;
-  border-bottom-color: #78a9ff;
+  color: #78a9ff !important;
+  border-bottom-color: #78a9ff !important;
 }
-html.dark .sa-storage-card,
+
+html.dark .sa-card,
+html.dark .sa-stat,
 html.dark .sa-tile,
 html.dark .sa-panel,
-html.dark .sa-card,
+html.dark .sa-admin-card,
+html.dark .sa-storage-card,
 html.dark .sa-empty,
-html.dark .sa-modal-content {
-  background: #262626;
-  color: #f4f4f4;
-}
-html.dark .sa-storage-header,
-html.dark .sa-panel-header {
-  background: #1e1e1e;
-}
-html.dark .sa-storage-title,
-html.dark .sa-panel-title {
-  color: #f4f4f4;
-}
-html.dark .sa-storage-desc,
-html.dark .sa-tile-desc {
-  color: #c6c6c6;
-}
-html.dark .sa-table {
-  background: #262626;
-  color: #f4f4f4;
-}
-html.dark .sa-table th {
-  background: #1e1e1e;
-  color: #c6c6c6;
-}
-html.dark .sa-stat {
-  background: #262626;
-  color: #f4f4f4;
-}
-html.dark .sa-stats {
-  background: #393939;
-}
-html.dark .sa-stat-value {
-  color: #f4f4f4;
-}
-html.dark .sa-stat-label,
-html.dark .sa-stat-sub {
-  color: #c6c6c6;
-}
-html.dark .sa-section-title {
-  color: #f4f4f4;
-}
-html.dark .sa-admin-card {
-  background: #262626;
-  border-color: #393939;
-  color: #f4f4f4;
-}
-html.dark .sa-admin-email {
-  color: #c6c6c6;
-}
-html.dark .sa-btn-secondary {
-  color: #f4f4f4;
-  border-color: #525252;
-}
-html.dark .sa-btn-secondary:hover {
-  background: #353535;
-}
-html.dark .sa-btn-ghost:hover {
-  background: #353535;
-}
-html.dark .sa-search input {
-  background: #161616;
-  border-color: #393939;
-  color: #f4f4f4;
-}
-html.dark .sa-perm.inactive {
-  background: #1e1e1e;
-  border-color: #393939;
-  color: #8d8d8d;
-}
-html.dark .sa-input,
-html.dark .sa-select,
-html.dark .sa-textarea {
-  background: #161616 !important;
+html.dark .sa-modal-content,
+html.dark .sa-error-item {
+  background: #1e1e1e !important;
   border-color: #393939 !important;
   color: #f4f4f4 !important;
+}
+
+html.dark .sa-storage-header,
+html.dark .sa-panel-header {
+  background: #262626 !important;
+  border-color: #393939 !important;
+}
+
+html.dark .sa-stats {
+  background: #393939 !important;
+}
+
+html.dark .sa-stat-value,
+html.dark .sa-tile-name,
+html.dark .sa-section-title,
+html.dark .sa-panel-title,
+html.dark .sa-storage-title,
+html.dark .sa-admin-name {
+  color: #f4f4f4 !important;
+}
+
+html.dark .sa-stat-label,
+html.dark .sa-stat-sub,
+html.dark .sa-tile-desc,
+html.dark .sa-tile-count,
+html.dark .sa-admin-email,
+html.dark .sa-storage-desc,
+html.dark .sa-panel-desc {
+  color: #a8a8a8 !important;
+}
+
+html.dark .sa-table {
+  background: #1e1e1e !important;
+  color: #f4f4f4 !important;
+}
+
+html.dark .sa-table th {
+  background: #262626 !important;
+  color: #e0e0e0 !important;
+  border-color: #393939 !important;
+}
+
+html.dark .sa-table td {
+  background: #1e1e1e !important;
+  color: #f4f4f4 !important;
+  border-color: #2e2e2e !important;
+}
+
+html.dark .sa-table tr:hover td {
+  background: #282828 !important;
+}
+
+html.dark .sa-root input,
+html.dark .sa-root select,
+html.dark .sa-root textarea,
+html.dark .sa-input,
+html.dark .sa-select,
+html.dark .sa-textarea,
+html.dark .sa-search input {
+  background: #161616 !important;
+  border-color: #4c4c4c !important;
+  color: #f4f4f4 !important;
+}
+
+html.dark .sa-root input:focus,
+html.dark .sa-root select:focus,
+html.dark .sa-root textarea:focus,
+html.dark .sa-search input:focus {
+  border-color: #78a9ff !important;
+  box-shadow: 0 0 0 1px #78a9ff !important;
+}
+
+html.dark .sa-root input::placeholder,
+html.dark .sa-root textarea::placeholder {
+  color: #8d8d8d !important;
+}
+
+html.dark .sa-root label {
+  color: #e0e0e0 !important;
+}
+
+html.dark .sa-btn-secondary {
+  color: #f4f4f4 !important;
+  border-color: #525252 !important;
+  background: transparent !important;
+}
+
+html.dark .sa-btn-secondary:hover {
+  background: #353535 !important;
+}
+
+html.dark .sa-btn-ghost {
+  color: #78a9ff !important;
+}
+
+html.dark .sa-btn-ghost:hover {
+  background: #353535 !important;
+}
+
+html.dark .sa-perm.inactive {
+  background: #262626 !important;
+  border-color: #393939 !important;
+  color: #8d8d8d !important;
+}
+
+/* Force dark contrast on any inline dark text colors within SuperAdmin */
+html.dark .sa-root [style*="color: #161616"],
+html.dark .sa-root [style*="color: rgb(22, 22, 22)"],
+html.dark .sa-root [style*="color: #000"],
+html.dark .sa-root [style*="color: black"],
+html.dark .sa-root [style*="color: #111"],
+html.dark .sa-root [style*="color: #222"],
+html.dark .sa-root [style*="color: #333"] {
+  color: #f4f4f4 !important;
+}
+
+html.dark .sa-root [style*="color: #525252"],
+html.dark .sa-root [style*="color: rgb(82, 82, 82)"],
+html.dark .sa-root [style*="color: #6f6f6f"],
+html.dark .sa-root [style*="color: rgb(111, 111, 111)"] {
+  color: #b0b0b0 !important;
+}
+
+html.dark .sa-root [style*="background: #fff"],
+html.dark .sa-root [style*="background: white"],
+html.dark .sa-root [style*="background: #ffffff"],
+html.dark .sa-root [style*="background-color: #fff"],
+html.dark .sa-root [style*="background-color: white"] {
+  background: #1e1e1e !important;
+  color: #f4f4f4 !important;
+}
+
+html.dark .sa-root [style*="background: #f4f4f4"],
+html.dark .sa-root [style*="background: #f8f9fa"],
+html.dark .sa-root [style*="background: #f5f5f5"],
+html.dark .sa-root [style*="background: #e8e8e8"] {
+  background: #262626 !important;
+  color: #f4f4f4 !important;
+}
+
+html.dark .sa-root [style*="border: 1px solid #c6c6c6"],
+html.dark .sa-root [style*="border: 1px solid #e0e0e0"] {
+  border-color: #393939 !important;
 }
 

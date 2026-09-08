@@ -117,9 +117,9 @@ export default function Support() {
   }, []);
 
   // بارگذاری تیکت‌ها از دیتابیس
-  const loadTickets = useCallback(async () => {
+  const loadTickets = useCallback(async (silent = false) => {
     if (!user) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       let query = supabase
         .from("support_tickets")
