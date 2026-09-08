@@ -1679,21 +1679,21 @@ function GroupAnalytics({ questions, answers, responses, form }) {
 
 function SummaryCard({ icon: Icon, label, value, sub, color }) {
   const colors = {
-    indigo: "bg-bg-lavender text-navy",
-    emerald: "bg-bg-mint text-teal-text",
-    amber: "bg-[#FEF7EC] text-orange",
-    violet: "bg-[#FEFAFB] text-magenta-text",
+    indigo: "bg-bg-lavender text-navy dark:bg-indigo-950/60 dark:text-indigo-400",
+    emerald: "bg-bg-mint text-teal-text dark:bg-emerald-950/60 dark:text-emerald-400",
+    amber: "bg-[#FEF7EC] text-orange dark:bg-amber-950/60 dark:text-amber-400",
+    violet: "bg-[#FEFAFB] text-magenta-text dark:bg-pink-950/60 dark:text-pink-400",
   };
   return (
-    <div className="bg-white rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none border-2 border-ink/10 p-3">
+    <div className="bg-white dark:bg-slate-800/90 rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none border-2 border-ink/10 dark:border-slate-700 p-3 shadow-xs">
       <div className="flex items-center gap-2.5">
         <div className={`w-8 h-8 rounded-pill-sm flex items-center justify-center ${colors[color]}`}>
           <Icon size={14} />
         </div>
         <div>
-          <p className="text-xs font-bold text-ink-subtle">{label}</p>
-          <p className="text-lg font-extrabold text-navy">{value}</p>
-          {sub && <p className="text-xs font-semibold text-ink-subtle">{sub}</p>}
+          <p className="text-xs font-bold text-ink-subtle dark:text-slate-400">{label}</p>
+          <p className="text-lg font-extrabold text-navy dark:text-white">{value}</p>
+          {sub && <p className="text-xs font-semibold text-ink-subtle dark:text-slate-400">{sub}</p>}
         </div>
       </div>
     </div>
