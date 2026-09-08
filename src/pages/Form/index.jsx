@@ -115,22 +115,39 @@ export default function FormFill() {
 
   // اعمال تم دارک یا روشن بر اساس URL ?theme= یا form.default_theme یا سیستم
   useEffect(() => {
+    if (loading && !form) return;
     const urlTheme = new URLSearchParams(window.location.search).get("theme");
     const targetTheme = urlTheme || form?.default_theme || "light";
 
-    let shouldBeDark = false;
-    if (targetTheme === "dark") {
-      shouldBeDark = true;
-    } else if (targetTheme === "system") {
-      shouldBeDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    }
+    const applyTheme = () => {
+      let shouldBeDark = false;
+      if (targetTheme === "dark") {
+        shouldBeDark = true;
+      } else if (targetTheme === "system") {
+        shouldBeDark = typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      }
 
-    if (shouldBeDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
+      if (shouldBeDark) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    };
+
+    applyTheme();
+
+    if (targetTheme === "system" && typeof window !== "undefined" && window.matchMedia) {
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      const handler = () => applyTheme();
+      if (mediaQuery.addEventListener) {
+        mediaQuery.addEventListener("change", handler);
+        return () => mediaQuery.removeEventListener("change", handler);
+      } else if (mediaQuery.addListener) {
+        mediaQuery.addListener(handler);
+        return () => mediaQuery.removeListener(handler);
+      }
     }
-  }, [form?.default_theme]);
+  }, [form?.default_theme, loading]);
 
   const total = questions.length;
 

@@ -909,30 +909,32 @@ export default function FormBuilder() {
         console.warn("RPC save_form call failed, attempting direct fallback:", err);
       }
 
-      // فالبک ذخیره مستقیم در صورت عدم موفقیت RPC
+      // به‌روزرسانی مستقیم جدول forms برای تضمین ذخیره default_theme و سایر فیلدها در هر شرایطی
+      let { error: formUpdateErr } = await supabase
+        .from("forms")
+        .update(pForm)
+        .eq("id", id);
+
+      if (formUpdateErr && formUpdateErr.message?.includes("default_theme")) {
+        const copyPForm = { ...pForm };
+        delete copyPForm.default_theme;
+        const retry = await supabase.from("forms").update(copyPForm).eq("id", id);
+        formUpdateErr = retry.error;
+      }
+
+      if (formUpdateErr) {
+        if (
+          formUpdateErr.code === "23505" ||
+          (formUpdateErr.message ?? "").includes("forms_slug_key") ||
+          (formUpdateErr.message ?? "").includes("duplicate key")
+        ) {
+          setSlugError("این اسلاگ قبلاً استفاده شده.");
+        }
+        throw formUpdateErr;
+      }
+
+      // فالبک ذخیره سوالات در صورت عدم موفقیت RPC
       if (!rpcSuccess) {
-        let { error: formUpdateErr } = await supabase
-          .from("forms")
-          .update(pForm)
-          .eq("id", id);
-
-        if (formUpdateErr && formUpdateErr.message?.includes("default_theme")) {
-          delete pForm.default_theme;
-          const retry = await supabase.from("forms").update(pForm).eq("id", id);
-          formUpdateErr = retry.error;
-        }
-
-        if (formUpdateErr) {
-          if (
-            formUpdateErr.code === "23505" ||
-            (formUpdateErr.message ?? "").includes("forms_slug_key") ||
-            (formUpdateErr.message ?? "").includes("duplicate key")
-          ) {
-            setSlugError("این اسلاگ قبلاً استفاده شده.");
-          }
-          throw formUpdateErr;
-        }
-
         // حذف سوالات حذف شده
         const validIds = pQuestions.filter((q) => q.id).map((q) => q.id);
         if (validIds.length > 0) {
@@ -1010,7 +1012,7 @@ export default function FormBuilder() {
         );
       }
 
-      setForm((f) => ({ ...f, slug: cleanSlug }));
+      setForm((f) => ({ ...f, ...pForm }));
       setDirty(false);
       push("همه‌چیز ذخیره شد", "success");
     } catch (err) {
