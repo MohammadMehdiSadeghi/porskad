@@ -212,3 +212,177 @@ html.dark .dot-pattern {
     .text-3xl { font-size: 46px; line-height: 64px; }
 }
 
+/* ══════════════════════════════════════════════════════════════
+   DARK MODE COMPREHENSIVE TYPOGRAPHY & CONTRAST OVERHAUL
+   ══════════════════════════════════════════════════════════════ */
+
+/* Headings & Prominent Navy Text -> High-contrast bright text */
+html.dark .text-navy,
+html.dark .text-navy-alt,
+html.dark .text-navy-hover,
+html.dark .text-sec,
+html.dark .text-male-normal,
+html.dark .text-male-dark,
+html.dark .text-male-darker {
+    color: #F8FAFC !important;
+}
+
+/* Body & Primary Ink Text */
+html.dark .text-ink,
+html.dark .text-ink-dark,
+html.dark .text-ink-darker {
+    color: #F1F5F9 !important;
+}
+
+/* Secondary / Soft Text */
+html.dark .text-ink-soft {
+    color: #E2E8F0 !important;
+}
+
+/* Subtle / Muted / Metadata Text */
+html.dark .text-ink-subtle {
+    color: #94A3B8 !important;
+}
+
+/* FAQ / Paragraph Text */
+html.dark .text-ink-faq {
+    color: #CBD5E1 !important;
+}
+
+/* Tailwind Gray / Slate Scale Overrides */
+html.dark .text-gray-900,
+html.dark .text-gray-800,
+html.dark .text-slate-900,
+html.dark .text-slate-800 {
+    color: #F8FAFC !important;
+}
+
+html.dark .text-gray-700,
+html.dark .text-gray-600,
+html.dark .text-slate-700,
+html.dark .text-slate-600 {
+    color: #CBD5E1 !important;
+}
+
+/* Brand Accent Colors in Dark Mode */
+html.dark .text-teal-text,
+html.dark .text-teal-text-alt {
+    color: #2DD4BF !important;
+}
+
+html.dark .text-magenta-text {
+    color: #FB7185 !important;
+}
+
+html.dark .text-orange,
+html.dark .text-orange-alt {
+    color: #FBBF24 !important;
+}
+
+html.dark .text-ecosystem-dark,
+html.dark .text-ecosystem-darker {
+    color: #2DD4BF !important;
+}
+
+html.dark .text-female-dark,
+html.dark .text-female-darker {
+    color: #FB7185 !important;
+}
+
+html.dark .text-college-dark,
+html.dark .text-college-darker {
+    color: #FBBF24 !important;
+}
+
+html.dark .text-club-dark,
+html.dark .text-club-darker {
+    color: #C084FC !important;
+}
+
+/* ─── Dark Mode Surfaces & Backgrounds ─── */
+html.dark .bg-bg-lavender {
+    background-color: #0B0F19 !important;
+}
+
+html.dark .bg-bg-neutral {
+    background-color: #162032 !important;
+}
+
+html.dark .bg-bg-mint {
+    background-color: rgba(45, 212, 191, 0.1) !important;
+}
+
+html.dark .bg-bg-blush {
+    background-color: rgba(244, 114, 182, 0.1) !important;
+}
+
+html.dark .bg-male-light {
+    background-color: #131B2E !important;
+}
+
+html.dark .bg-ecosystem-light {
+    background-color: rgba(45, 212, 191, 0.12) !important;
+}
+
+html.dark .bg-female-light {
+    background-color: rgba(244, 114, 182, 0.12) !important;
+}
+
+html.dark .bg-college-light {
+    background-color: rgba(251, 191, 36, 0.12) !important;
+}
+
+html.dark .bg-club-light {
+    background-color: rgba(168, 85, 247, 0.15) !important;
+}
+
+/* ─── Dark Mode Borders & Dividers ─── */
+html.dark .border-ink\/5,
+html.dark .border-ink\/10,
+html.dark .border-ink\/15,
+html.dark .border-ink\/20,
+html.dark .border-navy\/10,
+html.dark .border-navy\/20,
+html.dark .border-gray-200,
+html.dark .border-gray-300 {
+    border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+html.dark .border-male-normal,
+html.dark .border-navy,
+html.dark .border-sec {
+    border-color: #3B4D75 !important;
+}
+
+html.dark .border-ink-light {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* ─── Dark Mode Form Controls & Inputs ─── */
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="range"]),
+html.dark textarea,
+html.dark select {
+    background-color: #131B2E;
+    color: #F8FAFC;
+    border-color: #232F4A;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+    color: #64748B !important;
+}
+
+html.dark select option {
+    background-color: #131B2E;
+    color: #F8FAFC;
+}
+
+/* ─── Dark Mode Table & Card Polish ─── */
+html.dark tr.bg-bg-lavender\/60,
+html.dark tr.bg-bg-lavender\/40 {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+html.dark thead.bg-white {
+    background-color: #131B2E !important;
+}

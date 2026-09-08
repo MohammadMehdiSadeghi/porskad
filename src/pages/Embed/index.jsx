@@ -23,11 +23,11 @@ function postToParent(type, data = {}) {
 }
 
 // ─── گزارش ارتفاع به سایت میزبان ───
-function useAutoResize() {
+function useAutoResize(formId) {
   useEffect(() => {
     function reportHeight() {
       const height = document.body.scrollHeight;
-      postToParent("pcode:resize", { height });
+      postToParent("pcode:resize", { formId: formId || window.__pcodeFormId, height });
     }
     reportHeight();
     const observer = new ResizeObserver(reportHeight);
@@ -37,7 +37,7 @@ function useAutoResize() {
       observer.disconnect();
       window.removeEventListener("resize", reportHeight);
     };
-  }, []);
+  }, [formId]);
 }
 
 // ─── دکمه بستن embed ───
@@ -635,7 +635,7 @@ export default function EmbedForm() {
   // ست کردن formId روی window برای handleMessage در loader.js
   useEffect(() => { window.__pcodeFormId = formId; }, [formId]);
 
-  useAutoResize();
+  useAutoResize(formId);
 
   // اعمال تم دارک یا روشن بر اساس URL ?theme= یا schema.default_theme یا سیستم
   useEffect(() => {
@@ -659,16 +659,56 @@ export default function EmbedForm() {
   useEffect(() => {
     async function load() {
       try {
-        const { data, error: rpcError } = await supabase.rpc("get_public_form", {
-          p_form_id: formId,
-        });
-        if (rpcError) throw rpcError;
-        if (!data) {
+        let loadedSchema = null;
+        try {
+          const { data, error: rpcError } = await supabase.rpc("get_public_form", {
+            p_form_id: formId,
+          });
+          if (!rpcError && data) {
+            loadedSchema = data;
+          }
+        } catch (e) {
+          console.warn("RPC get_public_form error, trying fallback:", e);
+        }
+
+        if (!loadedSchema) {
+          // Direct fallback query
+          const { data: fData } = await supabase
+            .from("forms")
+            .select("*")
+            .or(`public_id.eq.${formId},id.eq.${formId},slug.eq.${formId}`)
+            .maybeSingle();
+
+          if (fData) {
+            const [{ data: qData }, { data: lData }] = await Promise.all([
+              supabase.from("questions").select("*").eq("form_id", fData.id).order("position", { ascending: true }),
+              supabase.from("logic_rules").select("*").eq("form_id", fData.id).order("priority"),
+            ]);
+
+            loadedSchema = {
+              id: fData.id,
+              title: fData.title,
+              description: fData.description,
+              slug: fData.slug,
+              form_type: fData.form_type,
+              default_theme: fData.default_theme || "light",
+              welcome_title: fData.welcome_title,
+              welcome_message: fData.welcome_message,
+              exit_title: fData.exit_title,
+              exit_message: fData.exit_message,
+              showBranding: true,
+              questions: qData || [],
+              logicRules: lData || [],
+            };
+          }
+        }
+
+        if (!loadedSchema) {
           setError("فرم یافت نشد یا منتشر نشده.");
           setLoading(false);
           return;
         }
-        setSchema(data);
+        setSchema(loadedSchema);
         postToParent("pcode:view", { formId });
       } catch (err) {
         console.error("Embed load error:", err);

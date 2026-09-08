@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 const ThemeContext = createContext({
-  theme: "system",
+  theme: "light",
   resolvedTheme: "light",
   isDark: false,
   setTheme: () => {},
@@ -20,7 +20,7 @@ export function ThemeProvider({ children }) {
     } catch {
       // ignore
     }
-    return "system";
+    return "light";
   });
 
   const [systemIsDark, setSystemIsDark] = useState(() => {
@@ -48,8 +48,14 @@ export function ThemeProvider({ children }) {
   const resolvedTheme = theme === "system" ? (systemIsDark ? "dark" : "light") : theme;
   const isDark = resolvedTheme === "dark";
 
-  // Apply to document.documentElement
+  // Apply to document.documentElement (skip embed and public form routes)
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const p = window.location.pathname;
+      if (p.startsWith("/embed/") || p.startsWith("/f/")) {
+        return;
+      }
+    }
     const root = document.documentElement;
     if (isDark) {
       root.classList.add("dark");
@@ -69,7 +75,6 @@ export function ThemeProvider({ children }) {
 
   const toggleTheme = () => {
     if (theme === "light") setTheme("dark");
-    else if (theme === "dark") setTheme("system");
     else setTheme("light");
   };
 
