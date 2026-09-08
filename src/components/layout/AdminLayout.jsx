@@ -176,9 +176,9 @@ export default function AdminLayout() {
           <button
             type="button"
             onClick={handleLogout}
-            className="flex items-center justify-center gap-2 w-full px-3 py-2 rounded-pill-sm text-xs lg:text-sm font-bold text-white/70 hover:text-rose-300 hover:bg-rose-500/15 transition-all duration-150 cursor-pointer active:scale-[0.98]"
+            className="flex items-center justify-center gap-1.5 w-full py-1.5 px-2.5 rounded-pill-sm border border-white/15 bg-white/5 hover:bg-rose-500/20 hover:border-rose-400/40 text-white/80 hover:text-rose-200 text-xs font-bold transition-all duration-150 cursor-pointer shadow-xs active:scale-[0.98]"
           >
-            <LogOut size={16} className="shrink-0" />
+            <LogOut size={13} className="shrink-0" />
             <span>خروج از حساب</span>
           </button>
         </div>
@@ -280,9 +280,9 @@ export default function AdminLayout() {
               setMobileNavOpen(false);
               handleLogout();
             }}
-            className="flex items-center justify-center gap-2.5 w-full rounded-xl px-3.5 py-2.5 text-sm font-bold text-white/70 hover:text-rose-300 hover:bg-rose-500/15 transition-all duration-150 cursor-pointer active:scale-[0.98]"
+            className="flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-pill-sm border border-white/15 bg-white/5 hover:bg-rose-500/20 hover:border-rose-400/40 text-white/80 hover:text-rose-200 text-xs font-bold transition-all duration-150 cursor-pointer shadow-xs active:scale-[0.98]"
           >
-            <LogOut size={18} className="shrink-0" />
+            <LogOut size={14} className="shrink-0" />
             <span>خروج از حساب</span>
           </button>
         </div>
