@@ -1817,7 +1817,7 @@ export default function SuperAdmin() {
                                 .from("user_roles")
                                 .upsert(
                                   { user_id: a.id, role_id: "manager", active: true },
-                                  { onConflict: "user_id" }
+                                  { onConflict: "user_id,role_id" }
                                 );
                               if (error) throw error;
                             }
@@ -2950,7 +2950,7 @@ export default function SuperAdmin() {
                                 .from("user_roles")
                                 .upsert(
                                   { user_id: detailModal.id, role_id: r.id, active: true },
-                                  { onConflict: "user_id" }
+                                  { onConflict: "user_id,role_id" }
                                 );
                               if (error) throw error;
                             }
