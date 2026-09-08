@@ -8,6 +8,7 @@ import Modal from "../../components/ui/Modal";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabaseClient";
 import SEO from "../../components/ui/SEO";
+import ThemeToggle from "../../components/ui/ThemeToggle";
 import { logActivity } from "../../lib/activityLogger";
 
 export default function Login() {
@@ -69,7 +70,10 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen dot-pattern bg-bg-mint flex items-center justify-center p-4">
+    <div className="min-h-screen dot-pattern bg-bg-mint flex items-center justify-center p-4 relative">
+      <div className="absolute top-4 left-4 z-20">
+        <ThemeToggle />
+      </div>
       <SEO
         title="ورود به حساب کاربری"
         description="ورود به پنل کاربری پرس‌کاد — سیستم فرم و نظرسنجی آنلاین"

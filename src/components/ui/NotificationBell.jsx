@@ -171,7 +171,7 @@ export default function NotificationBell() {
             <aside
               ref={panelRef}
               dir="rtl"
-              className="fixed inset-y-0 right-0 h-full h-screen w-full sm:w-[390px] max-w-full sm:max-w-[90vw] flex flex-col bg-white shadow-2xl border-l border-black/10 z-[99999] overflow-hidden"
+              className="fixed inset-y-0 right-0 h-full h-screen w-full sm:w-[390px] max-w-full sm:max-w-[90vw] flex flex-col bg-white dark:bg-[#0E1526] shadow-2xl border-l border-black/10 dark:border-slate-800 z-[99999] overflow-hidden"
               style={{
                 position: "fixed",
                 top: 0,
@@ -185,9 +185,7 @@ export default function NotificationBell() {
                 zIndex: 99999,
                 display: "flex",
                 flexDirection: "column",
-                backgroundColor: "#FFFFFF",
-                boxShadow: "-8px 0 35px rgba(0,0,0,0.2)",
-                borderLeft: "1px solid rgba(0,0,0,0.1)",
+                boxShadow: "-8px 0 35px rgba(0,0,0,0.4)",
                 transform: isOpen ? "translateX(0)" : "translateX(100%)",
                 transition: "transform 300ms cubic-bezier(0.16, 1, 0.3, 1), visibility 300ms",
                 pointerEvents: isOpen ? "auto" : "none",
@@ -246,8 +244,8 @@ export default function NotificationBell() {
               </div>
 
               {/* نوار سوییچ‌های روشن/خاموش اعلان و صدا */}
-              <div className="p-3 border-b border-ink/10 bg-slate-50 shrink-0 select-none">
-                <div className="text-xs font-bold text-ink/60 mb-2">تنظیمات دریافت اعلان:</div>
+              <div className="p-3 border-b border-ink/10 dark:border-slate-800 bg-slate-50 dark:bg-[#131B2E] shrink-0 select-none">
+                <div className="text-xs font-bold text-ink/60 dark:text-slate-400 mb-2">تنظیمات دریافت اعلان:</div>
                 <div className="flex items-center gap-2">
                   <ToggleSwitch
                     checked={notifEnabled}
@@ -279,46 +277,46 @@ export default function NotificationBell() {
               >
                 {notifications.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 px-4 text-center gap-3 my-auto">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal/10 to-teal/5 border border-teal/10 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal/10 to-teal/5 border border-teal/10 dark:border-teal-500/20 flex items-center justify-center">
                       <Bell size={24} className="text-teal/40" />
                     </div>
-                    <p className="text-sm font-black text-navy/70">اعلانی وجود ندارد</p>
-                    <p className="text-xs text-ink/50 leading-relaxed max-w-xs">
+                    <p className="text-sm font-black text-navy/70 dark:text-slate-200">اعلانی وجود ندارد</p>
+                    <p className="text-xs text-ink/50 dark:text-slate-400 leading-relaxed max-w-xs">
                       به محض اینکه پاسخی برای فرم‌های شما ثبت شود یا پیام پشتیبانی دریافت کنید، اینجا نمایش داده خواهد شد.
                     </p>
                   </div>
                 ) : (
                   notifications.map((n) => {
                     let badgeLabel = "رویداد";
-                    let badgeClass = "bg-ink/5 text-ink/60";
+                    let badgeClass = "bg-ink/5 text-ink/60 dark:bg-slate-800 dark:text-slate-300";
                     let IconComponent = Bell;
-                    let iconColorClass = "text-navy/70";
+                    let iconColorClass = "text-navy/70 dark:text-slate-300";
 
                     if (n.type === "response") {
                       badgeLabel = "ثبت فرم";
-                      badgeClass = "bg-teal/15 text-teal border border-teal/20";
+                      badgeClass = "bg-teal/15 text-teal border border-teal/20 dark:bg-teal-950/60 dark:text-teal-300";
                       IconComponent = Inbox;
                       iconColorClass = "text-teal";
                     } else if (n.type === "ticket_new") {
                       badgeLabel = "تیکت جدید";
-                      badgeClass = "bg-sky-500/15 text-sky-700 border border-sky-500/20";
+                      badgeClass = "bg-sky-500/15 text-sky-700 border border-sky-500/20 dark:bg-sky-950/60 dark:text-sky-300";
                       IconComponent = MessageSquare;
-                      iconColorClass = "text-sky-600";
+                      iconColorClass = "text-sky-600 dark:text-sky-400";
                     } else if (n.type === "ticket_reply") {
                       badgeLabel = "پاسخ پشتیبانی";
-                      badgeClass = "bg-emerald-500/15 text-emerald-700 border border-emerald-500/20";
+                      badgeClass = "bg-emerald-500/15 text-emerald-700 border border-emerald-500/20 dark:bg-emerald-950/60 dark:text-emerald-300";
                       IconComponent = Headphones;
-                      iconColorClass = "text-emerald-600";
+                      iconColorClass = "text-emerald-600 dark:text-emerald-400";
                     } else if (n.type === "ticket_closed") {
                       badgeLabel = "تیکت بسته شد";
-                      badgeClass = "bg-amber-500/15 text-amber-700 border border-amber-500/20";
+                      badgeClass = "bg-amber-500/15 text-amber-700 border border-amber-500/20 dark:bg-amber-950/60 dark:text-amber-300";
                       IconComponent = Lock;
-                      iconColorClass = "text-amber-600";
+                      iconColorClass = "text-amber-600 dark:text-amber-400";
                     } else if (n.type === "ticket_reopen") {
                       badgeLabel = "بازگشایی تیکت";
-                      badgeClass = "bg-purple-500/15 text-purple-700 border border-purple-500/20";
+                      badgeClass = "bg-purple-500/15 text-purple-700 border border-purple-500/20 dark:bg-purple-950/60 dark:text-purple-300";
                       IconComponent = Unlock;
-                      iconColorClass = "text-purple-600";
+                      iconColorClass = "text-purple-600 dark:text-purple-400";
                     }
 
                     return (
@@ -333,27 +331,27 @@ export default function NotificationBell() {
                         }}
                         className={`group flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 border ${
                           n.read
-                            ? "bg-white border-black/5 hover:bg-slate-50 opacity-75 hover:opacity-100"
-                            : "bg-gradient-to-l from-teal/10 via-white to-white border-teal/25 shadow-xs hover:from-teal/15"
+                            ? "bg-white dark:bg-[#131B2E] border-black/5 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/80 opacity-80 hover:opacity-100"
+                            : "bg-gradient-to-l from-teal/10 via-white to-white dark:from-teal-950/40 dark:via-[#131B2E] dark:to-[#131B2E] border-teal/25 dark:border-teal-500/30 shadow-xs hover:from-teal/15"
                         }`}
                       >
                         <div
                           className={`shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shadow-2xs ${
-                            n.read ? "bg-ink/5" : "bg-gradient-to-br from-teal/20 to-teal/10 border border-teal/20"
+                            n.read ? "bg-ink/5 dark:bg-white/5" : "bg-gradient-to-br from-teal/20 to-teal/10 dark:from-teal-500/20 dark:to-teal-500/10 border border-teal/20"
                           }`}
                         >
                           <IconComponent size={16} className={iconColorClass} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-1.5 mb-0.5">
-                            <span className="text-xs font-black text-navy truncate">{n.title}</span>
+                            <span className="text-xs font-black text-navy dark:text-white truncate">{n.title}</span>
                             <span className={`text-xs font-bold px-1.5 py-0.5 rounded-md shrink-0 ${badgeClass}`}>
                               {badgeLabel}
                             </span>
                           </div>
-                          <p className="text-xs text-ink/70 line-clamp-2 leading-relaxed">{n.message}</p>
+                          <p className="text-xs text-ink/70 dark:text-slate-300 line-clamp-2 leading-relaxed">{n.message}</p>
                           <div className="flex items-center justify-between mt-1.5">
-                            <span className="text-xs text-ink/40 font-medium" dir="ltr">
+                            <span className="text-xs text-ink/40 dark:text-slate-400 font-medium" dir="ltr">
                               {faDateTime(n.time)}
                             </span>
                             {!n.read && (

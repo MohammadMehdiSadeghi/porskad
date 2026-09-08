@@ -604,3 +604,75 @@
   .sa-table { font-size: 0.8125rem; }
   .sa-table th, .sa-table td { padding: 0.4rem 0.5rem; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Dark Mode Support (Carbon Gray 100 / Gray 90)
+   ═══════════════════════════════════════════════════════════ */
+html.dark .sa-root {
+  background: #161616;
+  color: #f4f4f4;
+}
+html.dark .sa-header,
+html.dark .sa-tabs,
+html.dark .sa-storage-header,
+html.dark .sa-table th,
+html.dark .sa-table td,
+html.dark .sa-empty,
+html.dark .sa-storage-card,
+html.dark .sa-tile,
+html.dark .sa-panel,
+html.dark .sa-card,
+html.dark .sa-filter-bar,
+html.dark .sa-modal-content {
+  border-color: #393939;
+}
+html.dark .sa-tab {
+  color: #c6c6c6;
+}
+html.dark .sa-tab:hover {
+  color: #f4f4f4;
+}
+html.dark .sa-tab.active {
+  color: #78a9ff;
+  border-bottom-color: #78a9ff;
+}
+html.dark .sa-storage-card,
+html.dark .sa-tile,
+html.dark .sa-panel,
+html.dark .sa-card,
+html.dark .sa-empty,
+html.dark .sa-modal-content {
+  background: #262626;
+  color: #f4f4f4;
+}
+html.dark .sa-storage-header,
+html.dark .sa-panel-header {
+  background: #1e1e1e;
+}
+html.dark .sa-storage-title,
+html.dark .sa-panel-title {
+  color: #f4f4f4;
+}
+html.dark .sa-storage-desc,
+html.dark .sa-tile-desc {
+  color: #c6c6c6;
+}
+html.dark .sa-table {
+  background: #262626;
+  color: #f4f4f4;
+}
+html.dark .sa-table th {
+  background: #1e1e1e;
+  color: #c6c6c6;
+}
+html.dark .sa-table tr:hover td {
+  background: #353535;
+}
+html.dark .sa-input,
+html.dark .sa-select,
+html.dark .sa-textarea {
+  background: #161616 !important;
+  border-color: #393939 !important;
+  color: #f4f4f4 !important;
+}
+

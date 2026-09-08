@@ -9,6 +9,7 @@ import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabaseClient";
 import { isValidIranPhone, normalizeIranPhone, isValidPassword } from "../../lib/validators";
 import SEO from "../../components/ui/SEO";
+import ThemeToggle from "../../components/ui/ThemeToggle";
 
 export default function Register() {
   const { register, user } = useAuth();
@@ -122,7 +123,10 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen dot-pattern bg-bg-mint flex items-center justify-center p-4">
+    <div className="min-h-screen dot-pattern bg-bg-mint flex items-center justify-center p-4 relative">
+      <div className="absolute top-4 left-4 z-20">
+        <ThemeToggle />
+      </div>
       <SEO
         title="ثبت‌نام کاربر جدید"
         description="ثبت‌نام رایگان در سامانه ساخت فرم و نظرسنجی پرس‌کاد"

@@ -2,7 +2,7 @@ import { OPERATORS, CONDITION_SOURCES } from "../../lib/logic/types";
 import { QUESTION_TYPES } from "../../lib/questionTypes";
 
 const inputCls =
-  "w-full bg-white border-2 border-ink/20 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3 py-2 font-semibold text-ink focus:outline-none transition-all";
+  "w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3 py-2 font-semibold text-ink dark:text-white focus:outline-none transition-all";
 
 /**
  * سازنده شرط تکی — با اعمال سریع + دکمه حذف
@@ -124,7 +124,7 @@ export default function ConditionBuilder({
   }
 
   return (
-    <div className={`flex flex-col gap-2 border-2 border-dashed rounded-pill-md p-3 transition-colors ${isComplete ? "border-teal/40 bg-teal/5" : "border-ink/15 bg-white/80"}`}>
+    <div className={`flex flex-col gap-2 border-2 border-dashed rounded-pill-md p-3 transition-colors ${isComplete ? "border-teal/40 bg-teal/5 dark:bg-teal-950/20" : "border-ink/15 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80"}`}>
       {/* هدر شرط */}
       <div className="flex items-center gap-2">
         <span className="text-xs font-extrabold text-ink-subtle shrink-0">
@@ -160,8 +160,8 @@ export default function ConditionBuilder({
               }}
               className={`text-xs font-bold px-2 py-1 rounded-pill-sm border transition-colors ${
                 source === key
-                  ? "bg-teal/10 border-teal/40 text-teal"
-                  : "bg-white border-ink/15 text-ink-subtle hover:border-teal/30"
+                  ? "bg-teal/10 dark:bg-teal-950/50 border-teal/40 text-teal"
+                  : "bg-white dark:bg-slate-800 border-ink/15 dark:border-slate-700 text-ink-subtle dark:text-slate-300 hover:border-teal/30"
               }`}
             >
               {meta.icon} {meta.label}

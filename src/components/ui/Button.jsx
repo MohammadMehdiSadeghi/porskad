@@ -34,6 +34,22 @@ const VARIANTS = {
     layer: "bg-ink dark:bg-black",
     btn: "bg-white border-ink text-ink hover:bg-bg-neutral dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-700",
   },
+  neutral: {
+    layer: "bg-ink/20 dark:bg-black/50",
+    btn: "bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700",
+  },
+  danger: {
+    layer: "bg-rose-900",
+    btn: "bg-rose-600 border-rose-700 text-white hover:bg-rose-700 dark:bg-rose-600 dark:border-rose-700 dark:hover:bg-rose-700",
+  },
+  outline: {
+    layer: "hidden",
+    btn: "bg-transparent border-ink/20 text-navy hover:bg-ink/5 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-white/5",
+  },
+  secondary: {
+    layer: "bg-navy dark:bg-black",
+    btn: "bg-slate-100 border-navy text-navy hover:bg-navy hover:text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700",
+  },
   ghost: {
     layer: "hidden",
     btn: "bg-transparent border-transparent text-navy hover:bg-bg-neutral dark:text-slate-200 dark:hover:bg-white/10",
