@@ -929,7 +929,6 @@ export default function TelegramBot() {
               متوجه شدم
             </Button>
           </div>
-          <a href=""></a>
         </div>
       </Modal>
     </div>
