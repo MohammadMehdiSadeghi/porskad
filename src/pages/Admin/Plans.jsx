@@ -30,6 +30,8 @@ import {
   HelpCircle,
   ArrowRight,
   TrendingUp,
+  Wrench,
+  Info,
 } from "lucide-react";
 
 export default function Plans() {
@@ -162,6 +164,39 @@ export default function Plans() {
   }
 
   const invoice = getInvoiceDetails();
+
+  // صفحه خرید و ارتقا موقتاً برای کاربران عادی بسته است؛ سوپرادمین‌ها محتوای کامل را می‌بینند
+  if (!isGod) {
+    return (
+      <div className="flex flex-col gap-8 pb-16 max-w-6xl mx-auto">
+        <SEO title="طرح‌ها و تعرفه‌ها | پرس‌کاد" />
+        <div className="flex flex-col items-center text-center gap-5 pt-10 sm:pt-16">
+          <div className="relative w-20 h-20 rounded-[1.75rem] bg-amber-100 dark:bg-amber-950/40 border-2 border-amber-300 dark:border-amber-700 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-sticker-sm rotate-[-3deg]">
+            <Wrench size={36} className="rotate-[8deg]" />
+            <span className="absolute -top-1.5 -left-1.5 w-6 h-6 rounded-full bg-teal text-white flex items-center justify-center shadow-sm">
+              <Sparkles size={13} />
+            </span>
+          </div>
+
+          <div className="space-y-2.5 max-w-md">
+            <h1 className="text-xl sm:text-2xl font-black text-navy dark:text-white">
+              این بخش به‌زودی برمی‌گردد
+            </h1>
+            <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-300 leading-relaxed">
+              صفحه خرید و ارتقای اشتراک در حال به‌روزرسانی است و به‌زودی با امکانات جدید در دسترس شما قرار می‌گیرد.
+            </p>
+          </div>
+
+          <div className="w-full max-w-sm p-3.5 rounded-2xl bg-teal/5 dark:bg-teal-950/20 border border-teal/20 text-xs font-semibold text-teal-text dark:text-teal-300 flex items-start gap-2 text-right">
+            <Info size={16} className="shrink-0 mt-0.5" />
+            <span>
+              اگر نیاز به ارتقای اشتراک دارید، از طریق <button type="button" onClick={() => navigate("/admin/support")} className="underline underline-offset-4 font-black hover:text-teal cursor-pointer">بخش پشتیبانی</button> درخواست خود را ثبت کنید تا تیم ما برایتان فعال‌سازی انجام دهد.
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8 pb-16 max-w-6xl mx-auto">
