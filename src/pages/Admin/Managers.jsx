@@ -321,6 +321,19 @@ export default function Managers() {
     }
   }
 
+  async function handleResetQuota(targetUser) {
+    if (!targetUser) return;
+    try {
+      await resetUserQuota(targetUser.id);
+      const updatedProps = { monthly_responses_used: 0, quota_reset_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() };
+      setManagers((prev) => prev.map((x) => (x.id === targetUser.id ? { ...x, ...updatedProps } : x)));
+      setSelectedUserModal((prev) => (prev && prev.id === targetUser.id ? { ...prev, ...updatedProps } : prev));
+      push(`سهمیه ماهانه «${targetUser.full_name || targetUser.email}» ریست شد.`, "success");
+    } catch (err) {
+      push("خطا در ریست سهمیه: " + err.message, "error");
+    }
+  }
+
   async function handleToggleUnlimitedQuota(targetUser) {
     if (!targetUser) return;
     const isCurrentlyUnlimited =

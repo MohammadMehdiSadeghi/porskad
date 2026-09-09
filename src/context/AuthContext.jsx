@@ -569,7 +569,7 @@ export function AuthProvider({ children }) {
       } catch {
         const res = await supabase
           .from("profiles")
-          .select("id, email, full_name, phone, is_active, created_at, created_by")
+          .select("id, email, full_name, phone, is_active, is_owner, created_at, created_by, hidden_from, max_forms, max_responses_per_month, monthly_responses_used, quota_reset_at, plan, can_use_telegram, can_export_excel")
           .order("created_at", { ascending: true });
         profilesData = res.data;
         profilesError = res.error;
