@@ -25,7 +25,6 @@ import TelegramBot from "./pages/Admin/TelegramBot";
 import Managers from "./pages/Admin/Managers";
 import Profile from "./pages/Admin/Profile";
 import Plans from "./pages/Admin/Plans";
-import PlansSettings from "./pages/Admin/PlansSettings";
 import SuperAdmin from "./pages/Admin/SuperAdmin";
 import Support from "./pages/Admin/Support";
 import Settings from "./pages/Admin/Settings";
@@ -133,7 +132,6 @@ export default function App() {
                 <Route path="telegram" element={<TelegramBot />} />
                 <Route path="support" element={<Support />} />
                 <Route path="plans" element={<Plans />} />
-                <Route path="plans-settings" element={<AuthGuard ownerOnly={true}><PlansSettings /></AuthGuard>} />
                 <Route path="profile" element={<Profile />} />
 
                 {/* بخش‌های اختصاصی مالک و سوپرادمین */}

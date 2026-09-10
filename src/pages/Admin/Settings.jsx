@@ -10,21 +10,27 @@ import {
   Settings as SettingsIcon,
   Shield,
   Save,
-  RotateCcw,
   Sliders,
-  MessageSquare,
   Users,
   CheckCircle2,
-  AlertTriangle,
+  Crown,
   ExternalLink,
   Layers,
   Inbox,
   UserPlus,
 } from "lucide-react";
+import PlansSettingsPanel from "./PlansSettingsPanel";
+
+const TABS = [
+  { id: "general", label: "تنظیمات عمومی", icon: Sliders },
+  { id: "plans", label: "مدیریت اشتراک‌ها", icon: Crown },
+];
 
 export default function Settings() {
   const { isOwner } = useAuth();
   const { push } = useToast();
+
+  const [tab, setTab] = useState("general");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -107,8 +113,8 @@ export default function Settings() {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-12">
-      <SEO title="تنظیمات سامانه | پرس‌کاد" description="مدیریت سهمیه‌ها، محدودیت‌ها و تنظیمات عمومی سامانه" />
+    <div className={`space-y-6 mx-auto pb-12 ${tab === "plans" ? "max-w-[1400px]" : "max-w-5xl"}`}>
+      <SEO title="تنظیمات سامانه | پرس‌کاد" description="مدیریت سهمیه‌ها، محدودیت‌ها، اشتراک‌ها و تنظیمات عمومی سامانه" />
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -118,30 +124,51 @@ export default function Settings() {
             تنظیمات و محدودیت‌های کل سامانه
           </h1>
           <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 mt-1">
-            پیکربندی هویت سامانه، اتصال پشتیبانی، سهمیه فرم‌های فعال و ظرفیت ورودی ماهانه کاربران
+            پیکربندی هویت سامانه، اتصال پشتیبانی، سهمیه کاربران و مدیریت کامل طرح‌های اشتراک
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Link to="/admin/managers">
-            <Button variant="ghost" size="sm" className="text-xs">
-              <Users size={14} className="ml-1" />
-              مدیریت کاربران و سهمیه‌ها
+        {tab === "general" && (
+          <div className="flex items-center gap-2">
+            <Link to="/admin/managers">
+              <Button variant="ghost" size="sm" className="text-xs">
+                <Users size={14} className="ml-1" />
+                مدیریت کاربران و سهمیه‌ها
+              </Button>
+            </Link>
+            <Button
+              variant="teal"
+              size="sm"
+              onClick={handleSave}
+              disabled={saving || loading}
+              className="text-xs"
+            >
+              <Save size={14} className="ml-1" />
+              {saving ? "در حال ذخیره..." : "ذخیره تغییرات"}
             </Button>
-          </Link>
-          <Button
-            variant="teal"
-            size="sm"
-            onClick={handleSave}
-            disabled={saving || loading}
-            className="text-xs"
-          >
-            <Save size={14} className="ml-1" />
-            {saving ? "در حال ذخیره..." : "ذخیره تغییرات"}
-          </Button>
-        </div>
+          </div>
+        )}
       </div>
 
+      {/* تب‌ها */}
+      <div className="flex gap-1 bg-white dark:bg-slate-900 border-2 border-ink/10 dark:border-slate-800 rounded-pill-md p-1 overflow-x-auto scrollbar-none max-w-full w-fit">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-pill-sm text-sm font-bold transition-all whitespace-nowrap ${
+              tab === t.id
+                ? "bg-teal text-white shadow-[2px_2px_0_0_rgba(0,0,0,0.15)]"
+                : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-slate-200 hover:bg-bg-lavender dark:hover:bg-slate-800"
+            }`}
+          >
+            <t.icon size={14} />
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "general" && (
       <form onSubmit={handleSave} className="space-y-6">
         {/* ۱. تنظیمات عمومی و برندینگ */}
         <StickerCard title="مشخصات و برندینگ سامانه">
@@ -367,6 +394,9 @@ export default function Settings() {
           </Button>
         </div>
       </form>
+      )}
+
+      {tab === "plans" && <PlansSettingsPanel />}
     </div>
   );
 }
