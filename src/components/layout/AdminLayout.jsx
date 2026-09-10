@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { NavLink, Navigate, Outlet, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, Navigate, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Spinner from "../ui/Spinner";
 import { DashboardSkeleton } from "../ui/Skeleton";
@@ -25,13 +25,27 @@ import {
   Crown,
 } from "lucide-react";
 import NotificationBell from "../ui/NotificationBell";
+import TabGate from "./TabGate";
 import ThemeToggle from "../ui/ThemeToggle";
 import { faNum } from "../../lib/utils";
+import {
+  useUserTabsConfig,
+  loadUserTabsConfigFromDb,
+  TAB_STATE_DISABLED,
+} from "../../lib/userTabs";
 
 export default function AdminLayout() {
   const { user, profile, loading, logout, isOwner, updateProfile } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
+
+  const location = useLocation();
+  const tabsCfg = useUserTabsConfig();
+
+  // تازه‌سازی وضعیت تب‌ها از سرور در ورود به پنل و هر جابه‌جایی مسیر
+  useEffect(() => {
+    loadUserTabsConfigFromDb().catch(() => {});
+  }, [location.pathname]);
 
   const [promptPhone, setPromptPhone] = useState("");
   const [phoneError, setPhoneError] = useState(null);
@@ -67,16 +81,27 @@ export default function AdminLayout() {
         { to: "/admin/profile", label: "پروفایل", icon: User, end: false },
       ]
     : [
-        { to: "/admin/forms", label: "فرم‌های من", icon: FileText, end: false },
-        { to: "/admin/embed", label: "اشتراک‌گذاری", icon: Share2, end: false },
-        { to: "/admin/telegram", label: "اتصال به تلگرام", icon: Bot, end: false },
-        { to: "/admin/support", label: "پشتیبانی", icon: Headphones, end: false },
-        { to: "/admin/profile", label: "پروفایل و سهمیه", icon: User, end: false },
-      ];
+        { to: "/admin/forms", label: "فرم‌های من", icon: FileText, end: false, tabId: "forms" },
+        { to: "/admin/embed", label: "اشتراک‌گذاری", icon: Share2, end: false, tabId: "embed" },
+        { to: "/admin/telegram", label: "اتصال به تلگرام", icon: Bot, end: false, tabId: "telegram" },
+        { to: "/admin/support", label: "پشتیبانی", icon: Headphones, end: false, tabId: "support" },
+        { to: "/admin/profile", label: "پروفایل و سهمیه", icon: User, end: false, tabId: "profile" },
+      ].filter((item) => tabsCfg[item.tabId]?.state !== TAB_STATE_DISABLED);
 
 
   const isSuperAdmin = owner || profile?.is_owner;
   const needsPhone = Boolean(!isSuperAdmin && profile && !profile.phone);
+
+  // تبِ متناظر با مسیر فعلی (برای گیت «غیرفعال/بروزرسانی»)
+  const activeTabId = (() => {
+    const path = location.pathname;
+    if (path.startsWith("/admin/forms")) return "forms";
+    if (path.startsWith("/admin/embed")) return "embed";
+    if (path.startsWith("/admin/telegram")) return "telegram";
+    if (path.startsWith("/admin/support")) return "support";
+    if (path.startsWith("/admin/profile")) return "profile";
+    return null;
+  })();
 
   async function handleSavePhone(e) {
     e.preventDefault();
@@ -358,7 +383,7 @@ export default function AdminLayout() {
             {/* دسترسی سریع به پشتیبانی در دسکتاپ */}
             <NavLink
               to="/admin/support"
-              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-navy/5 dark:bg-white/5 hover:bg-navy/10 dark:hover:bg-white/10 text-navy dark:text-slate-200 text-xs font-bold transition-all border border-navy/10 dark:border-white/10"
+              className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-navy/5 dark:bg-white/5 hover:bg-navy/10 dark:hover:bg-white/10 text-navy dark:text-slate-200 text-xs font-bold transition-all border border-navy/10 dark:border-white/10 ${owner || tabsCfg.support?.state !== "disabled" ? "" : "hidden"}`}
               title="پشتیبانی و تیکت‌ها"
             >
               <Headphones size={14} className="text-teal" />
@@ -369,7 +394,13 @@ export default function AdminLayout() {
 
         {/* محتوا — قابل اسکرول */}
         <main className="flex-1 min-w-0 p-3 sm:p-5 lg:p-6 overflow-y-auto">
-          <Outlet />
+          {owner || !activeTabId ? (
+            <Outlet />
+          ) : (
+            <TabGate tabId={activeTabId}>
+              <Outlet />
+            </TabGate>
+          )}
         </main>
       </div>
 

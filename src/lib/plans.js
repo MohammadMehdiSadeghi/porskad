@@ -191,14 +191,10 @@ export async function savePlansConfig(config, { persistToDb = true } = {}) {
   if (!persistToDb) return { ok: true };
 
   try {
-    const { error } = await supabase.from("system_settings").upsert(
-      {
-        key: PLANS_DB_KEY,
-        value: config,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "key" }
-    );
+    // نوشتن از طریق RPC سوپرادمین — .upsert مستقیم به‌خاطر RLS بی‌صدا رد می‌شد
+    const { error } = await supabase.rpc("update_system_settings", {
+      p_settings: { [PLANS_DB_KEY]: config },
+    });
     if (error) {
       console.warn("Plans saved locally but DB sync failed:", error.message);
       return { ok: true, dbError: error.message };
@@ -223,7 +219,11 @@ export async function resetPlansConfig() {
     console.error("Failed to reset plans config:", e);
   }
   try {
-    await supabase.from("system_settings").delete().eq("key", PLANS_DB_KEY);
+    // حذف از طریق RPC — delete مستقیم به‌خاطر RLS بی‌صدا رد می‌شد
+    const { error } = await supabase.rpc("update_system_settings", {
+      p_settings: { [PLANS_DB_KEY]: DEFAULT_PLANS },
+    });
+    if (error) return { ok: true, dbError: error.message };
     return { ok: true };
   } catch (e) {
     return { ok: true, dbError: e.message };

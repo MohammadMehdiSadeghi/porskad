@@ -6,7 +6,7 @@ import Badge from "../ui/Badge";
 import Logo from "../ui/Logo";
 import { normalizeAnswerValue, validateAnswer, validateUploadedFile, getFileAcceptString, getAllowedExtensions } from "../../lib/validators";
 import { faNum, parseUserAgent, generateUuid } from "../../lib/utils";
-import { QUESTION_TYPES, resolveQuestion } from "../../lib/questionTypes";
+import { QUESTION_TYPES, resolveQuestion, filterDisabledQuestions } from "../../lib/questionTypes";
 import { supabase } from "../../lib/supabaseClient";
 import ConfirmDialog from "../ui/ConfirmDialog";
 import SEO from "../ui/SEO";
@@ -59,7 +59,7 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
   const [redirectCountdown, setRedirectCountdown] = useState(null);
   const formRef = useRef(null);
 
-  const resolvedQuestions = useMemo(() => (questions || []).map(resolveQuestion), [questions]);
+  const resolvedQuestions = useMemo(() => filterDisabledQuestions((questions || []).map(resolveQuestion)), [questions]);
 
   // محاسبه سوالات قابل نمایش بر اساس شرط‌ها
   const visibleQuestions = useMemo(() => {

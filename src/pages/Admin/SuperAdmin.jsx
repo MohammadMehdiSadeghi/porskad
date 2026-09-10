@@ -73,6 +73,7 @@ import {
   getEffectiveQuestionType,
 } from "../../lib/questionTypes";
 import { QUESTION_TYPE_ICONS } from "../../lib/questionIcons";
+import UserTabsPanel from "./UserTabsPanel";
 import {
   getGlobalFileUploadPolicy,
   saveGlobalFileUploadPolicy,
@@ -85,6 +86,7 @@ const TABS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "settings", label: "Settings", icon: Settings },
   { id: "question_types", label: "Form Questions", icon: ListOrdered },
+  { id: "user_tabs", label: "User Tabs Control", icon: LayoutDashboard },
   { id: "storage", label: "Storage", icon: HardDrive },
   { id: "database", label: "Database", icon: Database },
   { id: "users", label: "Users", icon: Users },
@@ -188,6 +190,14 @@ export default function SuperAdmin() {
   const [sqlError, setSqlError] = useState(null);
   const [sqlRunning, setSqlRunning] = useState(false);
   const [toast, setToast] = useState(null);
+
+  // ─── همگام‌سازی تنظیمات انواع سوال با دیتابیس در ورود به پنل گاد ───
+  useEffect(() => {
+    loadQuestionTypesConfigFromDb().then((cfg) => setQConfig(cfg || {}));
+    const onCfg = (e) => setQConfig(e.detail || {});
+    window.addEventListener("porskad:question_types_updated", onCfg);
+    return () => window.removeEventListener("porskad:question_types_updated", onCfg);
+  }, []);
 
   // ─── Dedicated User Activity & Auth Logs Modal State ───
   const [userLogsModal, setUserLogsModal] = useState(false);
@@ -2412,6 +2422,8 @@ export default function SuperAdmin() {
       )}
 
       {/* ═══════════ Storage & System ═══════════ */}
+      {tab === "user_tabs" && <UserTabsPanel />}
+
       {tab === "storage" && (
 
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>

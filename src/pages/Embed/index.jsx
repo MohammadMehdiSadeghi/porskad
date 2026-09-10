@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "../../lib/supabaseClient";
 import { normalizeAnswerValue, validateAnswer } from "../../lib/validators";
 import { calculateFlow, evaluateNextStep } from "../../lib/logic/flowEngine";
-import { QUESTION_TYPES, resolveQuestion } from "../../lib/questionTypes";
+import { QUESTION_TYPES, resolveQuestion, filterDisabledQuestions, loadQuestionTypesConfigFromDb } from "../../lib/questionTypes";
 import { faNum, faDuration, parseUserAgent } from "../../lib/utils";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import RegistrationForm from "../../components/form/RegistrationForm";
@@ -672,6 +672,8 @@ export default function EmbedForm() {
 
   useEffect(() => {
     async function load() {
+      // اول کانفیگ انواع سوال از سرور (تا فیلتر سوالات غیرفعال دقیق باشد)
+      const cfgPromise = loadQuestionTypesConfigFromDb().catch(() => {});
       try {
         let loadedSchema = null;
         try {
@@ -722,6 +724,7 @@ export default function EmbedForm() {
           setLoading(false);
           return;
         }
+        await cfgPromise;
         setSchema(loadedSchema);
         postToParent("pcode:view", { formId });
       } catch (err) {
@@ -735,10 +738,10 @@ export default function EmbedForm() {
   }, [formId]);
 
   const questions = useMemo(() =>
-    (schema?.questions ?? []).map((q) => resolveQuestion({
+    filterDisabledQuestions((schema?.questions ?? []).map((q) => resolveQuestion({
       ...q,
       conditions: normalizeConditionGroup(q.conditions ?? null),
-    })),
+    }))),
     [schema]
   );
   const logicRules = useMemo(() => {

@@ -12,7 +12,7 @@ import { supabase } from "../../lib/supabaseClient";
 import { normalizeAnswerValue, validateAnswer } from "../../lib/validators";
 import { calculateFlow, evaluateNextStep } from "../../lib/logic/flowEngine";
 import { faNum, faDuration, parseUserAgent, generateUuid } from "../../lib/utils";
-import { QUESTION_TYPES, resolveQuestion } from "../../lib/questionTypes";
+import { QUESTION_TYPES, resolveQuestion, filterDisabledQuestions, loadQuestionTypesConfigFromDb } from "../../lib/questionTypes";
 import QuestionStep from "./QuestionStep";
 import RegistrationForm from "../../components/form/RegistrationForm";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
@@ -84,6 +84,8 @@ export default function FormFill() {
   useEffect(() => {
     let cancelled = false;
     async function load() {
+      // اول کانفیگ انواع سوال از سرور (تا فیلتر سوالات غیرفعال دقیق باشد)
+      const cfgPromise = loadQuestionTypesConfigFromDb().catch(() => {});
       const { data: formData, error: formError } = await supabase.from("forms").select("*").eq("slug", slug).eq("published", true).eq("archived", false).maybeSingle();
       if (cancelled) return;
       if (formError || !formData) { setUnavailable("This form has been deleted, unpublished, archived, or the link is incorrect."); setLoading(false); return; }
@@ -114,7 +116,9 @@ export default function FormFill() {
       if (cancelled) return;
       if (qError) { setUnavailable("خطا در بارگذاری سوال‌ها."); setLoading(false); return; }
       setForm(formData); setFormType(formData.form_type || "step_by_step");
-      setQuestions((qData ?? []).map((q) => resolveQuestion({ ...q, conditions: normalizeConditionGroup(q.conditions ?? null), jump_actions: q.jump_actions ?? [] })));
+      // حذف سوالاتی که نوعشان توسط سوپرادمین غیرفعال شده (همگام با تنظیمات سرور)
+      await cfgPromise;
+      setQuestions(filterDisabledQuestions((qData ?? []).map((q) => resolveQuestion({ ...q, conditions: normalizeConditionGroup(q.conditions ?? null), jump_actions: q.jump_actions ?? [] }))));
       try {
         const { data: lrs, error: lrError } = await supabase.from("logic_rules").select("*").eq("form_id", formData.id).order("priority");
         if (lrError) setLogicRules([]);

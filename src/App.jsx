@@ -6,6 +6,7 @@ import { NotificationProvider } from "./context/NotificationContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import SetupNotice from "./components/ui/SetupNotice";
 import { isSupabaseConfigured } from "./lib/supabaseClient";
+import { loadQuestionTypesConfigFromDb } from "./lib/questionTypes";
 import { AlertTriangle } from "lucide-react";
 
 import FormFill from "./pages/Form";
@@ -92,6 +93,11 @@ class ErrorBoundary extends React.Component {
 }
 
 export default function App() {
+  // همگام‌سازی تنظیمات انواع سوال (فعال/غیرفعال سوپرادمین) با سرور برای همه کاربران
+  React.useEffect(() => {
+    loadQuestionTypesConfigFromDb().catch(() => {});
+  }, []);
+
   if (!isSupabaseConfigured) {
     return <SetupNotice />;
   }

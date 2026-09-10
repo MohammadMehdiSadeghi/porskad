@@ -310,8 +310,14 @@ export function getQuestionTypesConfig() {
   return {};
 }
 
+// کلید تنظیمات در جدول system_settings (نسخهٔ سروری — منبع حقیقت برای همهٔ کاربران)
+const SETTINGS_DB_KEY = "question_types_config";
+
 /**
- * ذخیره تنظیمات سفارشی انواع سوالات در لوکال‌استوریج و دیتابیس Supabase
+ * ذخیره تنظیمات سفارشی انواع سوالات:
+ * ۱) کش لوکال + رویداد realtime  ۲) دیتابیس از طریق RPC سوپرادمین
+ * نک: نوشتن مستقیم با .upsert به‌خاطر RLS بی‌صدا رد می‌شد (باگ قبلی) —
+ * حالا از RPC امنیتی‌دیفاینر update_system_settings استفاده می‌شود.
  */
 export async function saveQuestionTypesConfig(config) {
   try {
@@ -321,41 +327,47 @@ export async function saveQuestionTypesConfig(config) {
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("porskad:question_types_updated", { detail: config }));
     }
-    
-    // تلاش برای ذخیره در جدول system_settings
-    try {
-      await supabase.from("system_settings").upsert({
-        key: "question_types_config",
-        value: config,
-        updated_at: new Date().toISOString(),
-      });
-    } catch {
-      // ادامه با کش لوکال در صورت نبود دسترسی به RPC
+
+    const { error } = await supabase.rpc("update_system_settings", {
+      p_settings: { [SETTINGS_DB_KEY]: config },
+    });
+    if (error) {
+      console.error("Question types config saved locally but DB sync failed:", error.message);
+      return { ok: true, dbError: error.message };
     }
-    return true;
+    return { ok: true };
   } catch (err) {
     console.error("Failed to save question types config:", err);
-    return false;
+    return { ok: false, error: err.message };
   }
 }
 
 /**
- * بارگذاری تنظیمات از دیتابیس در هنگام استارت
+ * بارگذاری تنظیمات از دیتابیس در هنگام استارت (برای همهٔ کاربران، حتی آنون)
+ * منبع: RPC امنیتی‌دیفاینر get_system_settings که خواندنش عمومی است.
  */
 export async function loadQuestionTypesConfigFromDb() {
   try {
-    const { data, error } = await supabase
-      .from("system_settings")
-      .select("value")
-      .eq("key", "question_types_config")
-      .maybeSingle();
-
-    if (!error && data?.value) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data.value));
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("porskad:question_types_updated", { detail: data.value }));
+    const { data, error } = await supabase.rpc("get_system_settings");
+    if (!error && data && data[SETTINGS_DB_KEY] !== undefined) {
+      const cfg = data[SETTINGS_DB_KEY] || {};
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
       }
-      return data.value;
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("porskad:question_types_updated", { detail: cfg }));
+      }
+      return cfg;
+    }
+    if (!error && data) {
+      // کلیدی در سرور نیست → پیش‌فرض کارخانه (تا کش کهنهٔ مرورگر کسی باعث تفاوت نشود)
+      if (typeof localStorage !== "undefined") {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("porskad:question_types_updated", { detail: {} }));
+      }
+      return {};
     }
   } catch (err) {
     console.warn("Could not fetch question_types_config from DB:", err);
@@ -364,17 +376,19 @@ export async function loadQuestionTypesConfigFromDb() {
 }
 
 /**
- * ریست کردن کلیه تنظیمات سوالات به حالت پیش‌فرض کارخانه
+ * ریست کردن کلیه تنظیمات سوالات به حالت پیش‌فرض کارخانه (سرور + لوکال)
  */
 export async function resetQuestionTypesConfig() {
-  localStorage.removeItem(STORAGE_KEY);
+  if (typeof localStorage !== "undefined") {
+    localStorage.removeItem(STORAGE_KEY);
+  }
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("porskad:question_types_updated", { detail: {} }));
   }
-  try {
-    await supabase.from("system_settings").delete().eq("key", "question_types_config");
-  } catch { /* ignore */ }
-  return true;
+  const { error } = await supabase.rpc("update_system_settings", {
+    p_settings: { [SETTINGS_DB_KEY]: {} },
+  });
+  return !error;
 }
 
 /**
@@ -413,6 +427,18 @@ export function getAvailableQuestionCategories(configOverride) {
       types: activeTypes,
     };
   }).filter((cat) => cat.types.length > 0);
+}
+
+/**
+ * فیلتر سوالات یک فرم برای نمایش به کاربر/پاسخ‌دهنده:
+ * هر سوالی که نوعش توسط سوپرادمین غیرفعال شده، حذف می‌شود.
+ */
+export function filterDisabledQuestions(questions, configOverride) {
+  const config = configOverride || getQuestionTypesConfig();
+  return (questions || []).filter((q) => {
+    const meta = getEffectiveQuestionType(q.type, config);
+    return meta.enabled !== false;
+  });
 }
 
 export function makeQuestion(type, position = 0) {
