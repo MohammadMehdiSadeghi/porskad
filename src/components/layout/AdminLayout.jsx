@@ -137,7 +137,7 @@ export default function AdminLayout() {
           <div className="mx-2 mt-2 p-2.5 rounded-xl bg-white/5 border border-white/10 text-xs">
             <div className="flex items-center justify-between text-white/70 font-bold">
               <span>سهمیه فرم:</span>
-              <span className="text-teal font-extrabold">
+              <span className="text-teal font-extrabold" style={{ fontFamily: '"IRANSansX", Tahoma, sans-serif' }}>
                 {(profile.max_forms >= 999999 || profile.plan === "unlimited")
                   ? "نامحدود ✨"
                   : `${faNum(profile.max_forms ?? 5)} فرم مجاز`}
