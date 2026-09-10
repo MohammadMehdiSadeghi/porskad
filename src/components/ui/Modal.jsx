@@ -1,8 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import StickerCard from "./StickerCard";
 import { X } from "lucide-react";
 
 export default function Modal({ open, onClose, title, children, wide = false, closable = true }) {
+  // برای تشخیص «کلیک واقعی روی پس‌زمینه»: موس‌داون و موس‌آپ هر دو باید روی خود بک‌دراپ شروع/تمام شده باشند
+  const downOnBackdropRef = useRef(false);
+
   useEffect(() => {
     if (!open || !closable) return;
     const onKey = (e) => e.key === "Escape" && onClose?.();
@@ -16,18 +19,35 @@ export default function Modal({ open, onClose, title, children, wide = false, cl
 
   if (!open) return null;
 
+  const handleMouseDown = (e) => {
+    downOnBackdropRef.current = e.target === e.currentTarget;
+  };
+
+  const handleMouseUp = (e) => {
+    const upOnBackdrop = e.target === e.currentTarget;
+    if (closable && downOnBackdropRef.current && upOnBackdrop) {
+      downOnBackdropRef.current = false;
+      onClose?.();
+    } else {
+      downOnBackdropRef.current = false;
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 dark:bg-black/80 backdrop-blur-[2px]"
-      onClick={closable ? onClose : undefined}
+      onMouseDown={closable ? handleMouseDown : undefined}
+      onMouseUp={closable ? handleMouseUp : undefined}
       role="dialog"
       aria-modal="true"
     >
-      <div className="w-full" onClick={(e) => e.stopPropagation()}>
+      <div className={`w-full ${wide ? "max-w-3xl" : "max-w-xl"} mx-auto`}>
         <StickerCard
           theme="white"
           rotate="-rotate-[0.5deg]"
-          className={wide ? "max-w-3xl mx-auto" : "max-w-xl mx-auto"}
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onMouseUp={(e) => e.stopPropagation()}
         >
           <div className="max-h-[80vh] overflow-y-auto p-4 sm:p-5">
             {title && (
