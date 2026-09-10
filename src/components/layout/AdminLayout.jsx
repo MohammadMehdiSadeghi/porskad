@@ -341,7 +341,7 @@ export default function AdminLayout() {
 
             {/* مشخصات کاربر در دسکتاپ */}
             <div className="hidden md:flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-teal/10 dark:bg-teal-500/20 text-teal flex items-center justify-center font-black text-sm shrink-0 border border-teal/20">
+              <div className="w-8 h-8 rounded-xl bg-teal/10 dark:bg-teal/20 text-teal flex items-center justify-center font-black text-sm shrink-0 border border-teal/20">
                 {profile?.full_name ? profile.full_name.charAt(0) : <User size={15} />}
               </div>
               <div className="min-w-0">

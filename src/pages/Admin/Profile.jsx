@@ -210,7 +210,7 @@ export default function Profile() {
                     : `${faNum(profile?.monthly_responses_used ?? 0)} از ${faNum(profile?.max_responses_per_month ?? 100)}`}
                 </span>
                 {!profile?.is_owner && (profile?.max_responses_per_month ?? 100) < 999999 && (
-                  <span className="text-[10px] font-bold text-teal dark:text-teal-400 block mt-0.5">
+                  <span className="text-[10px] font-bold text-teal dark:text-teal block mt-0.5">
                     {faNum(Math.max(0, (profile?.max_responses_per_month ?? 100) - (profile?.monthly_responses_used ?? 0)))} پاسخ مانده تا سرماه
                   </span>
                 )}

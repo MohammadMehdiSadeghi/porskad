@@ -227,11 +227,11 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
               disabled
                 ? "opacity-40 cursor-not-allowed border-ink/10 dark:border-slate-800 bg-black/5 dark:bg-white/5"
                 : selected
-                ? "border-ecosystem-normal bg-ecosystem-light dark:bg-teal-950/60 rotate-[-0.5deg]"
+                ? "border-ecosystem-normal bg-ecosystem-light dark:bg-teal/10 rotate-[-0.5deg]"
                 : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink dark:text-slate-200 hover:border-ecosystem-normal/50"
             }`}
           >
-            {selected && <div aria-hidden="true" className="absolute top-[2px] left-[2px] w-full h-full bg-ecosystem-dark/15 dark:bg-teal-400/10 rounded-pill-md [corner-shape:squircle] pointer-events-none" />}
+            {selected && <div aria-hidden="true" className="absolute top-[2px] left-[2px] w-full h-full bg-ecosystem-dark/15 dark:bg-teal/10 rounded-pill-md [corner-shape:squircle] pointer-events-none" />}
             {isMulti ? (
               <span className={`relative z-10 w-7 h-7 sm:w-8 sm:h-8 shrink-0 flex items-center justify-center rounded-md border-2 text-xs font-bold transition-colors duration-200 ${
                 selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 dark:border-slate-600 text-male-normal dark:text-slate-300"
@@ -241,7 +241,7 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
                 selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 dark:border-slate-600 text-male-normal dark:text-slate-300"
               }`}>{faNum(i + 1)}</span>
             )}
-            <span className={`relative z-10 font-bold text-sm sm:text-base ${selected ? "text-ecosystem-dark dark:text-teal-300" : "text-ink dark:text-slate-200"}`}>{opt}</span>
+            <span className={`relative z-10 font-bold text-sm sm:text-base ${selected ? "text-ecosystem-dark dark:text-teal" : "text-ink dark:text-slate-200"}`}>{opt}</span>
           </button>
         );
       })}
@@ -261,7 +261,7 @@ function YesNoOptions({ value, onChange, onEnter }) {
           className={`flex items-center justify-center gap-1.5 py-3.5 sm:py-4 rounded-pill-md [corner-shape:squircle] border-2 text-base sm:text-lg font-black transition-all duration-200 cursor-pointer ${
             value === o.label
               ? o.theme === "ecosystem"
-                ? "border-ecosystem-normal bg-ecosystem-light dark:bg-teal-950/60 text-ecosystem-dark dark:text-teal-300"
+                ? "border-ecosystem-normal bg-ecosystem-light dark:bg-teal/10 text-ecosystem-dark dark:text-teal"
                 : "border-female-normal bg-female-light dark:bg-pink-950/60 text-female-dark dark:text-pink-300"
               : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink dark:text-slate-200 hover:border-ink/25"
           }`}
@@ -464,7 +464,7 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
       <div className="w-full max-w-xl mx-auto px-5 py-3 text-center">
         <span className="inline-flex items-baseline gap-0.5 text-base sm:text-lg font-black select-none">
           <span className="text-male-normal dark:text-white">پرس</span>
-          <span className="text-ecosystem-dark dark:text-teal-400">کاد</span>
+          <span className="text-ecosystem-dark dark:text-teal">کاد</span>
         </span>
         <span className="block text-xs font-bold text-ink/40 dark:text-slate-400 mt-0.5">{schema.title}</span>
       </div>
@@ -979,7 +979,7 @@ export default function EmbedForm() {
       <div className="w-full max-w-xl mx-auto px-5 py-3 text-center">
         <span className="inline-flex items-baseline gap-0.5 text-base sm:text-lg font-black select-none">
           <span className="text-male-normal dark:text-white">پرس</span>
-          <span className="text-ecosystem-dark dark:text-teal-400">کاد</span>
+          <span className="text-ecosystem-dark dark:text-teal">کاد</span>
         </span>
         <span className="block text-xs font-bold text-ink/40 dark:text-slate-400 mt-0.5">{schema.title}</span>
       </div>

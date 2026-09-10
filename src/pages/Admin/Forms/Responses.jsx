@@ -91,7 +91,7 @@ function AnswerValue({ question, value }) {
 
   if (question.type === "nps") {
     const n = Number(value);
-    const badgeColor = n >= 9 ? "bg-teal/15 text-teal-text dark:text-teal-300 border-teal/30" : n >= 7 ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30" : "bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/30";
+    const badgeColor = n >= 9 ? "bg-teal/15 text-teal-text dark:text-teal border-teal/30" : n >= 7 ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30" : "bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/30";
     const label = n >= 9 ? "مروج (Promoter)" : n >= 7 ? "بی‌تفاوت (Passive)" : "مخالف (Detractor)";
     return (
       <div className="inline-flex items-center gap-2">
@@ -105,7 +105,7 @@ function AnswerValue({ question, value }) {
 
   if (question.type === "likert") {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-teal/10 text-teal-text dark:text-teal-300 rounded-lg text-xs font-bold border border-teal/20">
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-teal/10 text-teal-text dark:text-teal rounded-lg text-xs font-bold border border-teal/20">
         {String(value)}
       </span>
     );
@@ -117,7 +117,7 @@ function AnswerValue({ question, value }) {
         {Object.entries(value).map(([row, col], idx) => (
           <div key={idx} className="flex items-center gap-2 bg-black/5 dark:bg-slate-800 px-2 py-1 rounded">
             <span className="font-bold text-ink/70 dark:text-slate-300">{row}:</span>
-            <span className="text-teal-text dark:text-teal-300 font-black">{String(col)}</span>
+            <span className="text-teal-text dark:text-teal font-black">{String(col)}</span>
           </div>
         ))}
       </div>
@@ -142,18 +142,18 @@ function AnswerValue({ question, value }) {
   if (question.type === "file_upload") {
     if (typeof value === "object" && value !== null) {
       return (
-        <a href={value.url || "#"} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1 bg-male-light dark:bg-slate-800 text-male-normal dark:text-teal-300 rounded-lg text-xs font-bold hover:underline border border-ink/10">
+        <a href={value.url || "#"} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1 bg-male-light dark:bg-slate-800 text-male-normal dark:text-teal rounded-lg text-xs font-bold hover:underline border border-ink/10">
           📎 {value.name || "مشاهده فایل"} {value.size ? `(${faNum(Math.round(value.size / 1024))} KB)` : ""}
         </a>
       );
     }
-    return <span className="font-mono text-xs text-male-normal dark:text-teal-300">{String(value)}</span>;
+    return <span className="font-mono text-xs text-male-normal dark:text-teal">{String(value)}</span>;
   }
 
   if (question.type === "link") {
     const href = String(value).startsWith("http") ? String(value) : `https://${value}`;
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer" dir="ltr" className="inline-flex items-center gap-1 font-mono text-xs text-teal-text dark:text-teal-300 underline font-bold">
+      <a href={href} target="_blank" rel="noopener noreferrer" dir="ltr" className="inline-flex items-center gap-1 font-mono text-xs text-teal-text dark:text-teal underline font-bold">
         🔗 {String(value)}
       </a>
     );
@@ -167,7 +167,7 @@ function AnswerValue({ question, value }) {
   }
 
   if (question.type === "phone_ir" || question.type === "email" || question.type === "telegram_id")
-    return <span dir="ltr" className="font-mono font-bold text-navy dark:text-teal-300">{String(value)}</span>;
+    return <span dir="ltr" className="font-mono font-bold text-navy dark:text-teal">{String(value)}</span>;
 
   return <span className="font-medium whitespace-pre-wrap text-ink dark:text-slate-100">{String(value)}</span>;
 }
@@ -199,7 +199,7 @@ function CellAnswer({ question, value, max = 60 }) {
   }
 
   if (question.type === "nps") {
-    return <span className="font-bold text-xs text-teal-text dark:text-teal-300">امتیاز: {faNum(value)}/۱۰</span>;
+    return <span className="font-bold text-xs text-teal-text dark:text-teal">امتیاز: {faNum(value)}/۱۰</span>;
   }
 
   if (question.type === "matrix" && typeof value === "object") {
@@ -214,7 +214,7 @@ function CellAnswer({ question, value, max = 60 }) {
 
   if (question.type === "file_upload") {
     const name = typeof value === "object" ? value.name : String(value);
-    return <span className="text-xs font-bold text-male-normal dark:text-teal-300 truncate block max-w-full">📎 {name}</span>;
+    return <span className="text-xs font-bold text-male-normal dark:text-teal truncate block max-w-full">📎 {name}</span>;
   }
 
   const ltr = question.type === "phone_ir" || question.type === "email" || question.type === "telegram_id" || question.type === "link";
@@ -224,7 +224,7 @@ function CellAnswer({ question, value, max = 60 }) {
     <span
       dir={ltr ? "ltr" : undefined}
       title={text}
-      className={`block max-w-full truncate leading-5 ${ltr ? "font-mono font-bold text-xs text-navy dark:text-teal-300" : "font-medium text-ink/90 dark:text-slate-200"}`}
+      className={`block max-w-full truncate leading-5 ${ltr ? "font-mono font-bold text-xs text-navy dark:text-teal" : "font-medium text-ink/90 dark:text-slate-200"}`}
     >
       {shown}
     </span>
@@ -237,7 +237,7 @@ function CorrectnessBadge({ question, answer }) {
   const correct = isCorrectAnswer(question, answer);
   return (
     <span className={`inline-flex items-center gap-1 text-xs font-black px-2 py-0.5 rounded-full ${
-      correct ? "bg-teal/15 text-teal-text dark:text-teal-300 border border-teal/30 dark:border-teal-700/50" : "bg-magenta/15 text-magenta-text dark:text-rose-300 border border-magenta/30 dark:border-rose-700/50"
+      correct ? "bg-teal/15 text-teal-text dark:text-teal border border-teal/30 dark:border-teal/30" : "bg-magenta/15 text-magenta-text dark:text-rose-300 border border-magenta/30 dark:border-rose-700/50"
     }`}>
       {correct ? "صحیح" : "غلط"}
     </span>
@@ -548,7 +548,7 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
         )}
         {correctRate && (
           <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-            correctRate.pct >= 70 ? "text-teal-text dark:text-teal-300 bg-teal/10 dark:bg-teal-950/50" : correctRate.pct >= 40 ? "text-orange dark:text-amber-400 bg-orange/10 dark:bg-amber-950/50" : "text-magenta-text dark:text-rose-300 bg-magenta/10 dark:bg-rose-950/50"
+            correctRate.pct >= 70 ? "text-teal-text dark:text-teal bg-teal/10 dark:bg-teal/10" : correctRate.pct >= 40 ? "text-orange dark:text-amber-400 bg-orange/10 dark:bg-amber-950/50" : "text-magenta-text dark:text-rose-300 bg-magenta/10 dark:bg-rose-950/50"
           }`}>
             نرخ صحیح: {faNum(correctRate.pct)}٪ ({faNum(correctRate.correct)}/{faNum(correctRate.total)})
           </span>
@@ -565,7 +565,7 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div className="sm:col-span-1 p-4 rounded-xl border-2 border-orange/30 bg-orange/5 dark:bg-amber-950/30 flex flex-col items-center justify-center text-center">
               <span className="text-xs font-bold text-ink-subtle dark:text-slate-400">شاخص NPS</span>
-              <span className={`text-3xl font-black ${npsStats.npsScore > 30 ? "text-teal-text dark:text-teal-300" : npsStats.npsScore >= 0 ? "text-amber-500" : "text-rose-500"}`} dir="ltr">
+              <span className={`text-3xl font-black ${npsStats.npsScore > 30 ? "text-teal-text dark:text-teal" : npsStats.npsScore >= 0 ? "text-amber-500" : "text-rose-500"}`} dir="ltr">
                 {npsStats.npsScore > 0 ? `+${faNum(npsStats.npsScore)}` : faNum(npsStats.npsScore)}
               </span>
               <span className="text-[10px] font-extrabold mt-1 text-ink/50 dark:text-slate-400">
@@ -575,7 +575,7 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
 
             <div className="sm:col-span-3 flex flex-col justify-center gap-2">
               <div className="flex items-center justify-between text-xs font-bold">
-                <span className="text-teal-text dark:text-teal-300 flex items-center gap-1">
+                <span className="text-teal-text dark:text-teal flex items-center gap-1">
                   💚 مروجان (۹-۱۰): {faNum(npsStats.promoters.count)} ({faNum(npsStats.promoters.pct)}٪)
                 </span>
                 <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
@@ -612,8 +612,8 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
       {likertStats && total > 0 && (
         <div className="flex flex-col gap-3">
           {likertStats.avgScale && (
-            <div className="flex items-center justify-between text-xs font-bold bg-teal/5 dark:bg-teal-950/30 p-2.5 rounded-lg border border-teal/20">
-              <span className="text-teal-text dark:text-teal-300">میانگین گرایش و رضایت:</span>
+            <div className="flex items-center justify-between text-xs font-bold bg-teal/5 dark:bg-teal/10 p-2.5 rounded-lg border border-teal/20">
+              <span className="text-teal-text dark:text-teal">میانگین گرایش و رضایت:</span>
               <span className="font-mono text-sm font-black text-navy dark:text-white">
                 {faNum(likertStats.avgScale)} از {faNum(likertStats.totalScale)}
               </span>
@@ -655,7 +655,7 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black text-navy dark:text-white">{r.row}</span>
                   {r.topCol && (
-                    <span className="text-[11px] font-bold text-teal-text dark:text-teal-300 bg-teal/10 px-2 py-0.5 rounded-full border border-teal/20">
+                    <span className="text-[11px] font-bold text-teal-text dark:text-teal bg-teal/10 px-2 py-0.5 rounded-full border border-teal/20">
                       بیشترین انتخاب: {r.topCol}
                     </span>
                   )}
@@ -698,7 +698,7 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
                       میانگین رتبه: <strong className="text-navy dark:text-white">{faNum(item.avgPosition)}</strong>
                     </span>
                   )}
-                  <span className="px-2 py-0.5 bg-teal/10 text-teal-text dark:text-teal-300 rounded font-black text-[11px] border border-teal/20">
+                  <span className="px-2 py-0.5 bg-teal/10 text-teal-text dark:text-teal rounded font-black text-[11px] border border-teal/20">
                     {faNum(item.points)} امتیاز
                   </span>
                 </div>
@@ -741,7 +741,7 @@ function QuestionAnalysis({ question, answers, totalResponses }) {
           </div>
           <div className="p-3 rounded-xl bg-bg-neutral dark:bg-slate-800 border border-ink/10 dark:border-slate-700 text-center">
             <span className="text-xs font-bold text-ink-subtle dark:text-slate-400 block">تعداد پرداخت موفق</span>
-            <span className="text-base font-black text-teal-text dark:text-teal-300 mt-1 block">
+            <span className="text-base font-black text-teal-text dark:text-teal mt-1 block">
               {faNum(paymentStats.paidCount)} تراکنش
             </span>
           </div>
@@ -889,14 +889,14 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
         {scoreData && (
           <div className={`flex items-center gap-4 p-3 rounded-xl border-2 ${
             scoreData.total > 0 && (scoreData.score / scoreData.total) >= 0.7
-              ? "bg-teal/5 dark:bg-teal-950/40 border-teal/30 dark:border-teal-700/60"
+              ? "bg-teal/5 dark:bg-teal/10 border-teal/30 dark:border-teal/30"
               : (scoreData.score / scoreData.total) >= 0.4
                 ? "bg-orange/5 dark:bg-amber-950/40 border-orange/30 dark:border-amber-700/60"
                 : "bg-magenta/5 dark:bg-rose-950/40 border-magenta/30 dark:border-rose-700/60"
           }`}>
             <div className="flex items-center gap-2">
               <Award size={20} className={
-                (scoreData.score / scoreData.total) >= 0.7 ? "text-teal-text dark:text-teal-300" :
+                (scoreData.score / scoreData.total) >= 0.7 ? "text-teal-text dark:text-teal" :
                 (scoreData.score / scoreData.total) >= 0.4 ? "text-orange dark:text-amber-400" : "text-magenta-text dark:text-rose-300"
               } />
               <div>
@@ -938,7 +938,7 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
               <button key={q.id}
                 onClick={() => scrollToQ(q.id)}
                 className={`text-xs font-bold px-2.5 py-1 rounded-pill-sm border transition-all cursor-pointer
-                  ${activeQ === q.id ? "border-navy bg-navy text-white dark:bg-teal dark:border-teal" : answered ? "border-teal/40 bg-teal/5 text-teal-text dark:text-teal-300 dark:bg-teal-950/40" : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink-subtle dark:text-slate-300 hover:border-teal/30"}
+                  ${activeQ === q.id ? "border-navy bg-navy text-white dark:bg-teal dark:border-teal" : answered ? "border-teal/40 bg-teal/5 text-teal-text dark:text-teal dark:bg-teal/10" : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink-subtle dark:text-slate-300 hover:border-teal/30"}
                 `}
                 title={q.title}
               >
@@ -961,7 +961,7 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
               id={`q-${q.id}`}
               className={`border rounded-xl p-3 transition-colors scroll-mt-20 ${
                 activeQ === q.id ? "ring-2 ring-navy/30 dark:ring-teal/40 border-navy/30 dark:border-teal" :
-                correct === true ? "border-teal/30 dark:border-teal-800 bg-teal/5 dark:bg-teal-950/25" :
+                correct === true ? "border-teal/30 dark:border-teal bg-teal/5 dark:bg-teal/10" :
                 correct === false ? "border-magenta/30 dark:border-rose-800 bg-magenta/5 dark:bg-rose-950/25" :
                 "border-ink/10 dark:border-slate-800 bg-white dark:bg-slate-900"
               }`}
@@ -969,7 +969,7 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
             >
               <div className="flex items-start justify-between gap-2 mb-1.5">
                 <span className="text-xs font-bold text-navy dark:text-white flex items-center gap-1.5">
-                  <span className="w-5 h-5 shrink-0 flex items-center justify-center rounded-full bg-navy/10 dark:bg-slate-800 text-xs font-black dark:text-teal-300">
+                  <span className="w-5 h-5 shrink-0 flex items-center justify-center rounded-full bg-navy/10 dark:bg-slate-800 text-xs font-black dark:text-teal">
                     {i + 1}
                   </span>
                   {q.title}
@@ -992,7 +992,7 @@ function PersonAnalytics({ response, questions, answersByResponse }) {
                 </div>
 
                 {correct === false && q.correct_answer && (
-                  <span className="text-xs font-bold text-teal-text dark:text-teal-300 bg-teal/10 dark:bg-teal-950/50 px-2 py-0.5 rounded-full shrink-0">
+                  <span className="text-xs font-bold text-teal-text dark:text-teal bg-teal/10 dark:bg-teal/10 px-2 py-0.5 rounded-full shrink-0">
                     پاسخ صحیح: {Array.isArray(q.correct_answer) ? q.correct_answer.join("، ") : String(q.correct_answer)}
                   </span>
                 )}
@@ -1312,7 +1312,7 @@ export default function Responses() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-teal-text dark:text-teal-300 bg-bg-mint dark:bg-teal-950/50 px-2 py-1 rounded-full border border-teal/20 dark:border-teal-700/50">
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-teal-text dark:text-teal bg-bg-mint dark:bg-teal/10 px-2 py-1 rounded-full border border-teal/20 dark:border-teal/30">
             <span className="w-1.5 h-1.5 rounded-full bg-teal animate-pulse" /> زنده
           </span>
           {hasPermission("export_excel") && (
@@ -1334,9 +1334,9 @@ export default function Responses() {
 
       {/* کارت نمره‌دهی */}
       {scored && stats.scoreStats && (
-        <div className="bg-gradient-to-l from-teal/5 to-bg-mint dark:from-slate-800 dark:to-teal-950/30 border-2 border-teal/20 dark:border-teal-700/50 rounded-xl p-4">
+        <div className="bg-gradient-to-l from-teal/5 to-bg-mint dark:from-slate-800 dark:to-teal/30 border-2 border-teal/20 dark:border-teal/30 rounded-xl p-4">
           <div className="flex items-center gap-3 mb-2">
-            <Award size={20} className="text-teal-text dark:text-teal-300" />
+            <Award size={20} className="text-teal-text dark:text-teal" />
             <h3 className="text-sm font-black text-navy dark:text-white">آمار نمره‌دهی</h3>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1352,7 +1352,7 @@ export default function Responses() {
       {responses.length > 1 && (
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-ink/10 dark:border-slate-800 p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
-            <BarChart2 size={16} className="text-navy dark:text-teal-400" />
+            <BarChart2 size={16} className="text-navy dark:text-teal" />
             <h3 className="text-sm font-black text-navy dark:text-white">روند پاسخ‌ها (۳۰ روز اخیر)</h3>
           </div>
           <ResponsiveContainer width="100%" height={180}>
@@ -1411,7 +1411,7 @@ export default function Responses() {
                   value={activeVal}
                   onChange={(e) => setQuestionFilters((p) => ({ ...p, [q.id]: e.target.value }))}
                   className={`text-xs font-semibold rounded-lg border px-2.5 py-1.5 cursor-pointer transition-colors ${
-                    activeVal ? "border-teal bg-teal/10 dark:bg-teal-950/40 text-teal-text dark:text-teal-300" : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink/60 dark:text-slate-300 hover:border-ink/30"
+                    activeVal ? "border-teal bg-teal/10 dark:bg-teal/10 text-teal-text dark:text-teal" : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink/60 dark:text-slate-300 hover:border-ink/30"
                   }`}
                 >
                   <option value="">{q.title.slice(0, 20)}...</option>
@@ -1436,7 +1436,7 @@ export default function Responses() {
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`px-4 py-1.5 rounded-md text-sm font-bold transition-colors cursor-pointer ${
-              tab === t.key ? "bg-white dark:bg-slate-900 text-teal-text dark:text-teal-300 shadow-sm border border-transparent dark:border-slate-700" : "text-ink/50 dark:text-slate-400 hover:text-ink dark:hover:text-white"
+              tab === t.key ? "bg-white dark:bg-slate-900 text-teal-text dark:text-teal shadow-sm border border-transparent dark:border-slate-700" : "text-ink/50 dark:text-slate-400 hover:text-ink dark:hover:text-white"
             }`}
           >
             {t.label}
@@ -1475,7 +1475,7 @@ export default function Responses() {
                           disabled={questions.length === 0}
                           title={questions.length === 0 ? "این فرم سوالی ندارد" : "نمایش سریع پاسخ یک سوال برای همهٔ ردیف‌ها"}
                           className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-default ${
-                            quickBarOpen || activeQuickQ ? "bg-teal/10 dark:bg-teal-950/40 text-teal-text dark:text-teal-300" : "hover:bg-bg-neutral dark:hover:bg-slate-700 text-ink/70 dark:text-slate-300"
+                            quickBarOpen || activeQuickQ ? "bg-teal/10 dark:bg-teal/10 text-teal-text dark:text-teal" : "hover:bg-bg-neutral dark:hover:bg-slate-700 text-ink/70 dark:text-slate-300"
                           }`}
                         >
                           <span>{activeQuickQ ? "پاسخ سوال" : "پاسخ"}</span>
@@ -1495,10 +1495,10 @@ export default function Responses() {
                   <tbody>
                     {/* ─── نوار «نمایش سریع پاسخ‌ها»: انتخاب سوالِ سراسری برای کل لیست ─── */}
                     {quickBarOpen && (
-                      <tr className="bg-teal/5 dark:bg-teal-950/30 border-b border-teal/15 dark:border-teal-800/40">
+                      <tr className="bg-teal/5 dark:bg-teal/10 border-b border-teal/15 dark:border-teal/40">
                         <td colSpan={scored ? 8 : 7} className="px-3 py-2.5">
                           <div className="flex flex-wrap items-center gap-2.5">
-                            <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-teal-text dark:text-teal-300">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-teal-text dark:text-teal">
                               <Zap size={13} /> نمایش سریع پاسخ‌ها
                             </span>
                             <span className="text-xs font-semibold text-ink/60 dark:text-slate-400">
@@ -1560,7 +1560,7 @@ export default function Responses() {
                             <td className="px-3 py-2.5 font-medium text-navy dark:text-slate-200 text-xs hidden sm:table-cell">{faDateTime(r.submitted_at || r.created_at)}</td>
                             <td className="px-3 py-2.5">
                               {r.is_complete ? (
-                                <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-teal-text dark:text-teal-300 bg-bg-mint dark:bg-teal-950/40 px-2 py-0.5 rounded-full border border-teal/20 dark:border-teal-700/50">
+                                <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-teal-text dark:text-teal bg-bg-mint dark:bg-teal/10 px-2 py-0.5 rounded-full border border-teal/20 dark:border-teal/30">
                                   <CheckCircle2 size={11} /> کامل
                                 </span>
                               ) : (
@@ -1575,7 +1575,7 @@ export default function Responses() {
                               <td className="px-4 py-3">
                                 {personScore ? (
                                   <span className={`text-xs font-black ${
-                                    (personScore.score / personScore.total) >= 0.7 ? "text-teal-text dark:text-teal-300" :
+                                    (personScore.score / personScore.total) >= 0.7 ? "text-teal-text dark:text-teal" :
                                     (personScore.score / personScore.total) >= 0.4 ? "text-orange dark:text-amber-400" : "text-magenta-text dark:text-rose-300"
                                   }`}>
                                     {faNum(personScore.score)}/{faNum(personScore.total)}
@@ -1958,7 +1958,7 @@ function GroupAnalytics({ questions, answers, responses, form }) {
             key={t.key}
             onClick={() => setSubTab(t.key)}
             className={`px-3.5 py-1.5 rounded-md text-sm font-bold transition-colors cursor-pointer ${
-              subTab === t.key ? "bg-white dark:bg-slate-900 text-teal-text dark:text-teal-300 shadow-sm border border-transparent dark:border-slate-700" : "text-ink/50 dark:text-slate-400 hover:text-ink dark:hover:text-white"
+              subTab === t.key ? "bg-white dark:bg-slate-900 text-teal-text dark:text-teal shadow-sm border border-transparent dark:border-slate-700" : "text-ink/50 dark:text-slate-400 hover:text-ink dark:hover:text-white"
             }`}
           >
             {t.label}
@@ -2000,14 +2000,14 @@ function GroupAnalytics({ questions, answers, responses, form }) {
                           <td key={id.level} className="px-3 py-2.5 font-bold text-navy dark:text-white">{id.value}</td>
                         ))}
                         <td className="px-3 py-2.5 text-ink/70 dark:text-slate-300">{formatOptionsForExport(r.selected_options)}</td>
-                        <td className="px-3 py-2.5 font-black text-navy dark:text-teal-300">{faNum(r.selected_count)}</td>
+                        <td className="px-3 py-2.5 font-black text-navy dark:text-teal">{faNum(r.selected_count)}</td>
                         <td className="px-3 py-2.5">
                           {r.is_invalid ? (
                             <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-magenta-text dark:text-rose-300 bg-magenta/10 dark:bg-rose-950/40 px-2 py-0.5 rounded-full border border-magenta/20 dark:border-rose-800/40">
                               <AlertTriangle size={11} /> نامعتبر
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-teal-text dark:text-teal-300 bg-bg-mint dark:bg-teal-950/40 px-2 py-0.5 rounded-full border border-teal/20 dark:border-teal-700/50">
+                            <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-teal-text dark:text-teal bg-bg-mint dark:bg-teal/10 px-2 py-0.5 rounded-full border border-teal/20 dark:border-teal/30">
                               <CheckCircle2 size={11} /> معتبر
                             </span>
                           )}
@@ -2055,7 +2055,7 @@ function GroupAnalytics({ questions, answers, responses, form }) {
                         <tr key={i} className="border-b border-ink/5 dark:border-slate-800/60 last:border-0">
                           <td className="px-3 py-2.5 font-bold text-navy dark:text-white whitespace-nowrap">{p.level_value}</td>
                           {opts.map((opt) => (
-                            <td key={opt} className={`px-3 py-2.5 text-center font-bold ${p[opt] ? (p[opt] === maxVal ? "text-teal-text dark:text-teal-300" : "text-navy dark:text-slate-200") : "text-ink/25 dark:text-slate-600"}`}>
+                            <td key={opt} className={`px-3 py-2.5 text-center font-bold ${p[opt] ? (p[opt] === maxVal ? "text-teal-text dark:text-teal" : "text-navy dark:text-slate-200") : "text-ink/25 dark:text-slate-600"}`}>
                               {faNum(p[opt] || 0)}
                             </td>
                           ))}
@@ -2083,7 +2083,7 @@ function GroupAnalytics({ questions, answers, responses, form }) {
                       <tr key={i} className={`border-b border-ink/5 dark:border-slate-800/60 last:border-0 ${f.vote_count > 0 ? "" : "opacity-40"}`}>
                         <td className="px-3 py-2.5 font-bold text-navy dark:text-white">{f.level_value}</td>
                         <td className="px-3 py-2.5 text-ink/70 dark:text-slate-300">{f.option_id}</td>
-                        <td className="px-3 py-2.5 font-black text-navy dark:text-teal-300">{faNum(f.vote_count)}</td>
+                        <td className="px-3 py-2.5 font-black text-navy dark:text-teal">{faNum(f.vote_count)}</td>
                       </tr>
                     ))}
                   </tbody>

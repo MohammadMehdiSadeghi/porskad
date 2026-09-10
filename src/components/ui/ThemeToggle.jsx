@@ -15,7 +15,7 @@ export default function ThemeToggle({ className = "", compact = false }) {
       id: "dark",
       label: "تاریک",
       icon: Moon,
-      activeColor: "text-teal-400 bg-teal-500/15 shadow-xs",
+      activeColor: "text-teal bg-teal/15 shadow-xs",
     },
     {
       id: "system",
@@ -39,7 +39,7 @@ export default function ThemeToggle({ className = "", compact = false }) {
         title={`${label} (برای تغییر کلیک کنید)`}
         aria-label="تغییر تم"
       >
-        <CurrentIcon size={18} className={resolvedTheme === "dark" ? "text-teal-400" : "text-amber-500"} />
+        <CurrentIcon size={18} className={resolvedTheme === "dark" ? "text-teal" : "text-amber-500"} />
       </button>
     );
   }

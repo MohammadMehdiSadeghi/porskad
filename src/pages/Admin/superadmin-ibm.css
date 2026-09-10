@@ -4,10 +4,10 @@
 
 .sa-root {
   font-family: 'IBM Plex Sans', 'IBM Plex Sans Arabic', sans-serif;
-  background: #f4f4f4;
+  background: var(--sa-surface-2);
   min-height: 100vh;
   padding: 1.5rem;
-  color: #161616;
+  color: var(--sa-text-0);
   max-width: 96rem;
   margin: 0 auto;
 }
@@ -19,7 +19,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 0.75rem;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--sa-surface-3);
   padding-bottom: 1rem;
   margin-bottom: 1.5rem;
 }
@@ -36,8 +36,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #161616;
-  color: #fff;
+  background: var(--sa-text-0);
+  color: var(--sa-surface);
 }
 
 .sa-header-right {
@@ -52,7 +52,7 @@
   gap: 0.35rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #24a148;
+  color: var(--sa-success);
 }
 
 .sa-badge-online::before {
@@ -60,7 +60,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #24a148;
+  background: var(--sa-success);
 }
 
 .sa-avatar {
@@ -69,7 +69,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--sa-surface);
   font-size: 0.8125rem;
   font-weight: 700;
   background: #393939;
@@ -79,7 +79,7 @@
 .sa-tabs {
   display: flex;
   gap: 0;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--sa-surface-3);
   margin-bottom: 1.5rem;
   overflow-x: auto;
 }
@@ -95,20 +95,20 @@
   border: none;
   border-bottom: 2px solid transparent;
   background: transparent;
-  color: #525252;
+  color: var(--sa-text-1);
   cursor: pointer;
   font-family: 'IBM Plex Sans', sans-serif;
   transition: all 0.15s;
 }
 
 .sa-tab:hover {
-  color: #161616;
-  background: #e8e8e8;
+  color: var(--sa-text-0);
+  background: var(--sa-surface-4);
 }
 
 .sa-tab.active {
-  color: #0f62fe;
-  border-bottom-color: #0f62fe;
+  color: var(--sa-link);
+  border-bottom-color: var(--sa-link);
 }
 
 /* ─── Search bar ─── */
@@ -125,18 +125,18 @@
   min-width: 150px;
   max-width: 24rem;
   padding: 0.5rem 0.75rem;
-  border: 1px solid #c6c6c6;
-  background: #fff;
+  border: 1px solid var(--sa-field-border);
+  background: var(--sa-surface);
   font-size: 0.875rem;
-  color: #161616;
+  color: var(--sa-text-0);
   font-family: 'IBM Plex Sans', sans-serif;
   outline: none;
   transition: border-color 0.15s;
 }
 
 .sa-search input:focus {
-  border-color: #0f62fe;
-  box-shadow: 0 0 0 1px #0f62fe;
+  border-color: var(--sa-link);
+  box-shadow: 0 0 0 1px var(--sa-link);
 }
 
 .sa-actions {
@@ -156,41 +156,41 @@
 }
 
 .sa-btn-primary {
-  background: #0f62fe;
-  color: #fff;
+  background: var(--sa-link);
+  color: var(--sa-surface);
 }
 
 .sa-btn-primary:hover {
-  background: #0043ce;
+  background: var(--sa-link-strong);
 }
 
 .sa-btn-secondary {
   background: transparent;
-  color: #161616;
-  border: 1px solid #c6c6c6;
+  color: var(--sa-text-0);
+  border: 1px solid var(--sa-field-border);
 }
 
 .sa-btn-secondary:hover {
-  background: #e8e8e8;
+  background: var(--sa-surface-4);
 }
 
 .sa-btn-danger {
-  background: #da1e28;
-  color: #fff;
+  background: var(--sa-danger);
+  color: var(--sa-surface);
 }
 
 .sa-btn-danger:hover {
-  background: #a2191f;
+  background: var(--sa-danger-strong);
 }
 
 .sa-btn-ghost {
   background: transparent;
-  color: #0f62fe;
+  color: var(--sa-link);
   padding: 0.25rem 0.5rem;
 }
 
 .sa-btn-ghost:hover {
-  background: #e8e8e8;
+  background: var(--sa-surface-4);
 }
 
 .sa-btn-sm {
@@ -200,8 +200,8 @@
 
 /* ─── Carbon Cards ─── */
 .sa-card {
-  background: #fff;
-  border: 1px solid #e0e0e0;
+  background: var(--sa-surface);
+  border: 1px solid var(--sa-surface-3);
   margin-bottom: 1rem;
 }
 
@@ -221,31 +221,31 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
   gap: 1px;
-  background: #e0e0e0;
+  background: var(--sa-surface-3);
   margin-bottom: 1.5rem;
 }
 
 .sa-stat {
-  background: #fff;
+  background: var(--sa-surface);
   padding: 1rem;
   text-align: center;
 }
 
 .sa-stat-label {
   font-size: 0.9rem;
-  color: #525252;
+  color: var(--sa-text-1);
   margin-bottom: 0.35rem;
 }
 
 .sa-stat-value {
   font-size: 2.25rem;
   font-weight: 700;
-  color: #161616;
+  color: var(--sa-text-0);
 }
 
 .sa-stat-sub {
   font-size: 0.85rem;
-  color: #6f6f6f;
+  color: var(--sa-text-2);
 }
 
 /* ─── Quick access tiles ─── */
@@ -253,12 +253,12 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
   gap: 1px;
-  background: #e0e0e0;
+  background: var(--sa-surface-3);
   margin-bottom: 1.5rem;
 }
 
 .sa-tile {
-  background: #fff;
+  background: var(--sa-surface);
   padding: 0.75rem;
   text-align: center;
   cursor: pointer;
@@ -268,13 +268,13 @@
 }
 
 .sa-tile:hover {
-  background: #e8e8e8;
+  background: var(--sa-surface-4);
 }
 
 .sa-tile-name {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #525252;
+  color: var(--sa-text-1);
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
@@ -282,16 +282,38 @@
 .sa-tile-count {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #161616;
+  color: var(--sa-text-0);
   margin-top: 0.2rem;
 }
+
+/* ─── Carbon form controls (light base; dark handled below) ─── */
+.sa-input,
+.sa-select,
+.sa-textarea {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--sa-field-border);
+  background: var(--sa-surface);
+  font-size: 0.875rem;
+  color: var(--sa-text-0);
+  font-family: 'IBM Plex Sans', sans-serif;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.sa-input:focus,
+.sa-select:focus,
+.sa-textarea:focus {
+  border-color: var(--sa-link);
+  box-shadow: 0 0 0 1px var(--sa-link);
+}
+.sa-input::placeholder,
+.sa-textarea::placeholder { color: var(--sa-text-4); }
 
 /* ─── Carbon Table ─── */
 .sa-table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  border: 1px solid #e0e0e0;
-  background: #fff;
+  border: 1px solid var(--sa-surface-3);
+  background: var(--sa-surface);
   width: 100%;
   max-width: 100%;
   margin-bottom: 1rem;
@@ -309,22 +331,22 @@
   padding: 0.6rem 0.75rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #525252;
+  color: var(--sa-text-1);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  background: #f4f4f4;
-  border-bottom: 1px solid #e0e0e0;
+  background: var(--sa-surface-2);
+  border-bottom: 1px solid var(--sa-surface-3);
   white-space: nowrap;
 }
 
 .sa-table td {
   padding: 0.6rem 0.75rem;
-  border-bottom: 1px solid #e0e0e0;
-  color: #161616;
+  border-bottom: 1px solid var(--sa-surface-3);
+  color: var(--sa-text-0);
 }
 
 .sa-table tr:hover td {
-  background: #e8e8e8;
+  background: var(--sa-surface-4);
 }
 
 .sa-table tr:last-child td {
@@ -342,46 +364,46 @@
 }
 
 .sa-tag-green {
-  color: #198038;
-  border-color: #198038;
-  background: #defbe6;
+  color: var(--sa-success);
+  border-color: var(--sa-success);
+  background: var(--sa-success-bg);
 }
 
 .sa-tag-red {
-  color: #a2191f;
-  border-color: #a2191f;
-  background: #fff1f1;
+  color: var(--sa-danger-strong);
+  border-color: var(--sa-danger-strong);
+  background: var(--sa-red-soft);
 }
 
 .sa-tag-blue {
-  color: #0043ce;
-  border-color: #0043ce;
-  background: #d0e2ff;
+  color: var(--sa-link-strong);
+  border-color: var(--sa-link-strong);
+  background: var(--sa-blue-bg);
 }
 
 .sa-tag-gray {
-  color: #6f6f6f;
-  border-color: #c6c6c6;
-  background: #f4f4f4;
+  color: var(--sa-text-2);
+  border-color: var(--sa-field-border);
+  background: var(--sa-surface-2);
 }
 
 .sa-tag-orange {
-  color: #eb6200;
-  border-color: #eb6200;
+  color: var(--sa-orange);
+  border-color: var(--sa-orange);
   background: #fff2e0;
 }
 
 .sa-tag-yellow {
-  color: #8a3800;
-  border-color: #f1c21b;
-  background: #fff8e1;
+  color: var(--sa-warn-text);
+  border-color: var(--sa-warn-border);
+  background: var(--sa-warn-bg);
 }
 
 /* ─── Section titles ─── */
 .sa-section-title {
   font-size: 1.05rem;
   font-weight: 700;
-  color: #161616;
+  color: var(--sa-text-0);
   margin-bottom: 0.75rem;
 }
 
@@ -392,7 +414,7 @@
   gap: 0.5rem;
   padding: 0.45rem 0.5rem;
   font-size: 0.875rem;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--sa-surface-3);
 }
 
 .sa-error-item:last-child {
@@ -400,13 +422,13 @@
 }
 
 .sa-error-item:hover {
-  background: #f4f4f4;
+  background: var(--sa-surface-2);
 }
 
 /* ─── Admin card ─── */
 .sa-admin-card {
-  background: #fff;
-  border: 1px solid #e0e0e0;
+  background: var(--sa-surface);
+  border: 1px solid var(--sa-surface-3);
   padding: 1rem;
   margin-bottom: 0.75rem;
 }
@@ -432,20 +454,20 @@
   justify-content: center;
   font-size: 0.8125rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--sa-surface);
 }
 
 .sa-admin-avatar.owner {
-  background: #eb6200;
+  background: var(--sa-orange);
 }
 
 .sa-admin-avatar.normal {
-  background: #161616;
+  background: var(--sa-text-0);
 }
 
 .sa-admin-email {
   font-size: 0.8125rem;
-  color: #6f6f6f;
+  color: var(--sa-text-2);
 }
 
 /* ─── Permission toggles ─── */
@@ -467,37 +489,37 @@
 }
 
 .sa-perm.active {
-  color: #0f62fe;
-  border-color: #0f62fe;
-  background: #d0e2ff;
+  color: var(--sa-link);
+  border-color: var(--sa-link);
+  background: var(--sa-blue-bg);
 }
 
 .sa-perm.inactive {
-  color: #6f6f6f;
-  border-color: #c6c6c6;
-  background: #f4f4f4;
+  color: var(--sa-text-2);
+  border-color: var(--sa-field-border);
+  background: var(--sa-surface-2);
 }
 
 .sa-perm.inactive:hover {
-  background: #e8e8e8;
+  background: var(--sa-surface-4);
 }
 
 /* ─── SQL editor ─── */
 .sa-sql textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #c6c6c6;
-  background: #fff;
+  border: 1px solid var(--sa-field-border);
+  background: var(--sa-surface);
   font-size: 0.875rem;
   font-family: 'IBM Plex Mono', monospace;
-  color: #161616;
+  color: var(--sa-text-0);
   outline: none;
   resize: vertical;
 }
 
 .sa-sql textarea:focus {
-  border-color: #0f62fe;
-  box-shadow: 0 0 0 1px #0f62fe;
+  border-color: var(--sa-link);
+  box-shadow: 0 0 0 1px var(--sa-link);
 }
 
 /* ─── Toast ─── */
@@ -509,25 +531,25 @@
   padding: 0.6rem 1rem;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--sa-surface);
   font-family: 'IBM Plex Sans', sans-serif;
 }
 
 .sa-toast.success {
-  background: #24a148;
+  background: var(--sa-success);
 }
 
 .sa-toast.error {
-  background: #da1e28;
+  background: var(--sa-danger);
 }
 
 /* ─── Empty state ─── */
 .sa-empty {
-  background: #fff;
-  border: 1px solid #e0e0e0;
+  background: var(--sa-surface);
+  border: 1px solid var(--sa-surface-3);
   padding: 3rem;
   text-align: center;
-  color: #6f6f6f;
+  color: var(--sa-text-2);
   font-size: 0.9rem;
 }
 
@@ -540,19 +562,19 @@
 }
 
 .sa-storage-card {
-  background: #fff;
-  border: 1px solid #e0e0e0;
+  background: var(--sa-surface);
+  border: 1px solid var(--sa-surface-3);
   display: flex;
   flex-direction: column;
 }
 
 .sa-storage-header {
   padding: 0.85rem 1.25rem;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--sa-surface-3);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #fafafa;
+  background: var(--sa-surface-6);
 }
 
 .sa-storage-title {
@@ -561,7 +583,7 @@
   gap: 0.6rem;
   font-size: 0.95rem;
   font-weight: 700;
-  color: #161616;
+  color: var(--sa-text-0);
 }
 
 .sa-storage-body {
@@ -580,15 +602,168 @@
 .sa-storage-num {
   font-size: 2.25rem;
   font-weight: 700;
-  color: #0f62fe;
+  color: var(--sa-link);
   font-family: 'IBM Plex Mono', monospace;
   line-height: 1;
 }
 
 .sa-storage-desc {
   font-size: 0.875rem;
-  color: #525252;
+  color: var(--sa-text-1);
 }
+
+/* ═══════════════════════════════════════════════════════════
+   God Panel Design Tokens (IBM Carbon) — light + dark
+   همه رنگ‌های inline JSX از این متغیرهاfeeds می‌شوند؛
+   با تعویض مقدار در `html.dark` کل پنل دارک‌رند می‌شود.
+   ═══════════════════════════════════════════════════════════ */
+.sa-root {
+  --sa-text-0: #161616;      /* متن اصلی */
+  --sa-text-1: #525252;      /* متن ثانویه */
+  --sa-text-2: #6f6f6f;      /* متن کم‌رنگ */
+  --sa-text-3: #8d8d8d;      /* placeholder/حاشیه‌ای */
+  --sa-text-4: #a8a8a8;      /* بسیار کم‌رنگ */
+  --sa-link: #0f62fe;        /* آبی اصلی (لینک/فعال) */
+  --sa-link-strong: #0043ce;
+  --sa-danger: #da1e28;
+  --sa-danger-strong: #a2191f;
+  --sa-success: #198038;
+  --sa-success-bg: #defbe6;
+  --sa-warn-text: #8a3800;
+  --sa-warn-border: #f1c21b;
+  --sa-warn-bg: #fff8e1;
+  --sa-orange: #eb6200;
+  --sa-blue-bg: #d0e2ff;
+  --sa-blue-soft: #edf5ff;
+  --sa-purple: #8a3ffc;
+  --sa-purple-bg: #e8daff;
+  --sa-cyan: #1192e8;
+  --sa-red-soft: #fff1f1;
+  --sa-error-bg-2: #ffd7d9;
+  --sa-error-text-2: #752227;
+  --sa-surface: #ffffff;     /* سطح کارت/ورودی */
+  --sa-surface-2: #f4f4f4;   /* سطح دوم/هدر جدول */
+  --sa-surface-3: #e0e0e0;   /* خط جداکننده */
+  --sa-surface-4: #e8e8e8;   /* hover */
+  --sa-surface-5: #f9f9f9;   /* زیرپس‌زمینه */
+  --sa-surface-6: #fafafa;   /* هدر پنل */
+  --sa-field-border: #c6c6c6;
+  --sa-input-disabled: #e0e0e0;
+  --sa-on-blue: #ffffff;
+  --sa-on-danger: #ffffff;
+  --sa-hover: rgba(0, 0, 0, 0.05);
+  --sa-hairline: rgba(140, 140, 140, 0.25);
+  --sa-link-tint: rgba(15, 98, 254, 0.08);
+  --sa-danger-tint: rgba(218, 30, 40, 0.06);
+  --sa-warn-tint: rgba(241, 194, 27, 0.08);
+  --sa-callout-bg: #e5f6ff;
+  --sa-callout-text: #00539a;
+  --sa-callout-border: #99c9ef;
+}
+
+/* دارک — Carbon Gray 90/100 family */
+:is(html.dark, body.dark, .dark) .sa-root,
+html.dark .sa-root {
+  --sa-text-0: #f4f4f4;
+  --sa-text-1: #c6c6c6;
+  --sa-text-2: #a7a7a7;
+  --sa-text-3: #8d8d8d;
+  --sa-text-4: #6f6f6f;
+  --sa-link: #78a9ff;
+  --sa-link-strong: #a6c8ff;
+  --sa-danger: #fa4d56;
+  --sa-danger-strong: #ff8389;
+  --sa-success: #42be65;
+  --sa-success-bg: #0e3a21;
+  --sa-warn-text: #f1c21b;
+  --sa-warn-border: #8a6d1a;
+  --sa-warn-bg: #312a16;
+  --sa-orange: #ff832b;
+  --sa-blue-bg: #00356b;
+  --sa-blue-soft: #0a2c47;
+  --sa-purple: #be95ff;
+  --sa-purple-bg: #2a1744;
+  --sa-cyan: #38bdf8;
+  --sa-red-soft: #2d1215;
+  --sa-error-bg-2: #3a1216;
+  --sa-error-text-2: #ff8389;
+  --sa-surface: #111827;
+  --sa-surface-2: #1e293b;
+  --sa-surface-3: #334155;
+  --sa-surface-4: #334155;
+  --sa-surface-5: #0f172a;
+  --sa-surface-6: #1e293b;
+  --sa-field-border: #334155;
+  --sa-input-disabled: #334155;
+  --sa-on-blue: #ffffff;
+  --sa-on-danger: #ffffff;
+  --sa-hover: rgba(255, 255, 255, 0.07);
+  --sa-hairline: rgba(180, 180, 180, 0.18);
+  --sa-link-tint: rgba(120, 169, 255, 0.16);
+  --sa-danger-tint: rgba(250, 77, 86, 0.12);
+  --sa-warn-tint: rgba(241, 194, 27, 0.12);
+  --sa-callout-bg: #05355c;
+  --sa-callout-text: #9ed6ff;
+  --sa-callout-border: #38697a;
+}
+
+/* ─── helper classes for former inline colors ─── */
+.sa-txt-0 { color: var(--sa-text-0); }
+.sa-txt-1 { color: var(--sa-text-1); }
+.sa-txt-2 { color: var(--sa-text-2); }
+.sa-txt-3 { color: var(--sa-text-3); }
+.sa-txt-4 { color: var(--sa-text-4); }
+.sa-txt-link { color: var(--sa-link); }
+.sa-txt-danger { color: var(--sa-danger); }
+.sa-txt-success { color: var(--sa-success); }
+.sa-txt-warn { color: var(--sa-warn-text); }
+.sa-txt-orange { color: var(--sa-orange); }
+.sa-txt-purple { color: var(--sa-purple); }
+.sa-txt-cyan { color: var(--sa-cyan); }
+.sa-txt-strong { color: var(--sa-link-strong); }
+.sa-txt-error2 { color: var(--sa-error-text-2); }
+.sa-bg-surface { background: var(--sa-surface); }
+.sa-bg-surface-2 { background: var(--sa-surface-2); }
+.sa-bg-surface-5 { background: var(--sa-surface-5); }
+.sa-bg-surface-6 { background: var(--sa-surface-6); }
+.sa-bg-success { background: var(--sa-success-bg); }
+.sa-bg-danger { background: var(--sa-red-soft); }
+.sa-bg-warn { background: var(--sa-warn-bg); }
+.sa-bg-blue { background: var(--sa-blue-soft); }
+.sa-bg-blue2 { background: var(--sa-blue-bg); }
+.sa-bg-purple { background: var(--sa-purple-bg); }
+.sa-bg-error2 { background: var(--sa-error-bg-2); }
+.sa-bd-surface3 { border-color: var(--sa-surface-3); }
+.sa-bd-field { border-color: var(--sa-field-border); }
+.sa-bd-danger { border-color: var(--sa-danger); }
+.sa-bd-link { border-color: var(--sa-link); }
+.sa-bd-success { border-color: var(--sa-success); }
+.sa-bd-warn { border-color: var(--sa-warn-border); }
+.sa-bd-orange { border-color: var(--sa-orange); }
+.sa-bd-purple { border-color: var(--sa-purple); }
+.sa-bd-blue { border-color: var(--sa-blue-bg); }
+.sa-callout-blue {
+  background: var(--sa-callout-bg);
+  color: var(--sa-callout-text);
+  border: 1px solid var(--sa-callout-border);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+}
+
+.sa-on-primary { color: var(--sa-on-blue); }
+.sa-tint-link { background: rgba(15, 98, 254, 0.08); }
+:is(html.dark, body.dark, .dark) .sa-tint-link,
+html.dark .sa-tint-link { background: rgba(120, 169, 255, 0.14); }
+
+/* ─── sa-tag-purple (was missing) ─── */
+.sa-tag-purple {
+  color: var(--sa-purple);
+  border-color: var(--sa-purple);
+  background: var(--sa-purple-bg);
+}
+
 
 @media (max-width: 840px) {
   .sa-storage-grid {
@@ -606,388 +781,111 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   Comprehensive Dark Mode Support for SuperAdmin (Carbon Dark)
+   Dark Mode — همه از توکن‌های --sa-* تغذیه می‌شود؛
+   اینجا فقط موارد خاصِ ساختاری لازم است.
    ═══════════════════════════════════════════════════════════ */
-:is(html.dark, body.dark, .dark) .sa-root,
-html.dark .sa-root {
-  background: #0B0F19 !important;
-  color: #f4f4f4 !important;
+html.dark .sa-root,
+:is(body.dark, .dark) .sa-root {
+  background: #0b1120;
+  color: var(--sa-text-0);
 }
 
-:is(html.dark, body.dark, .dark) .sa-header,
-html.dark .sa-header {
-  border-color: #1E293B !important;
-}
+html.dark .sa-logo { background: var(--sa-link); color: #0b1120; }
+html.dark .sa-tab.active { color: var(--sa-link); border-bottom-color: var(--sa-link); }
+html.dark .sa-tab:hover { color: var(--sa-text-0); background: var(--sa-surface-2); }
 
-:is(html.dark, body.dark, .dark) .sa-logo,
-html.dark .sa-logo {
-  background: #1E293B !important;
-  color: #78a9ff !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-tabs,
-html.dark .sa-tabs {
-  border-color: #1E293B !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-tab,
-html.dark .sa-tab {
-  color: #94A3B8 !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-tab:hover,
-html.dark .sa-tab:hover {
-  color: #ffffff !important;
-  background: #1E293B !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-tab.active,
-html.dark .sa-tab.active {
-  color: #38BDF8 !important;
-  border-bottom-color: #38BDF8 !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-card,
-:is(html.dark, body.dark, .dark) .sa-stat,
-:is(html.dark, body.dark, .dark) .sa-tile,
-:is(html.dark, body.dark, .dark) .sa-panel,
-:is(html.dark, body.dark, .dark) .sa-admin-card,
-:is(html.dark, body.dark, .dark) .sa-storage-card,
-:is(html.dark, body.dark, .dark) .sa-empty,
-:is(html.dark, body.dark, .dark) .sa-modal-content,
-:is(html.dark, body.dark, .dark) .sa-table-wrap,
-:is(html.dark, body.dark, .dark) .sa-error-item,
-html.dark .sa-card,
-html.dark .sa-stat,
-html.dark .sa-tile,
-html.dark .sa-panel,
-html.dark .sa-admin-card,
-html.dark .sa-storage-card,
-html.dark .sa-empty,
-html.dark .sa-modal-content,
-html.dark .sa-table-wrap,
-html.dark .sa-error-item {
-  background: #111827 !important;
-  border-color: #1F2937 !important;
-  color: #F3F4F6 !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-storage-header,
-:is(html.dark, body.dark, .dark) .sa-panel-header,
-html.dark .sa-storage-header,
-html.dark .sa-panel-header {
-  background: #1E293B !important;
-  border-color: #334155 !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-stats,
-:is(html.dark, body.dark, .dark) .sa-tiles,
 html.dark .sa-stats,
-html.dark .sa-tiles {
-  background: #1F2937 !important;
-}
+html.dark .sa-tiles { background: var(--sa-surface-3); }
+html.dark .sa-stat,
+html.dark .sa-tile { background: var(--sa-surface); }
+html.dark .sa-tile:hover { background: var(--sa-surface-2); }
 
-:is(html.dark, body.dark, .dark) .sa-stat-value,
-:is(html.dark, body.dark, .dark) .sa-tile-name,
-:is(html.dark, body.dark, .dark) .sa-section-title,
-:is(html.dark, body.dark, .dark) .sa-panel-title,
-:is(html.dark, body.dark, .dark) .sa-storage-title,
-:is(html.dark, body.dark, .dark) .sa-admin-name,
-html.dark .sa-stat-value,
-html.dark .sa-tile-name,
-html.dark .sa-section-title,
-html.dark .sa-panel-title,
-html.dark .sa-storage-title,
-html.dark .sa-admin-name {
-  color: #F9FAFB !important;
-}
+html.dark .sa-table-wrap { background: var(--sa-surface); border-color: var(--sa-surface-3); }
+html.dark .sa-table th { background: var(--sa-surface-2); color: var(--sa-text-1); border-color: var(--sa-surface-3); }
+html.dark .sa-table td { background: var(--sa-surface); color: var(--sa-text-0); border-color: var(--sa-surface-3); }
+html.dark .sa-table tr:hover td { background: var(--sa-surface-2); }
 
-:is(html.dark, body.dark, .dark) .sa-stat-label,
-:is(html.dark, body.dark, .dark) .sa-stat-sub,
-:is(html.dark, body.dark, .dark) .sa-tile-desc,
-:is(html.dark, body.dark, .dark) .sa-tile-count,
-:is(html.dark, body.dark, .dark) .sa-admin-email,
-:is(html.dark, body.dark, .dark) .sa-storage-desc,
-:is(html.dark, body.dark, .dark) .sa-panel-desc,
-html.dark .sa-stat-label,
-html.dark .sa-stat-sub,
-html.dark .sa-tile-desc,
-html.dark .sa-tile-count,
-html.dark .sa-admin-email,
-html.dark .sa-storage-desc,
-html.dark .sa-panel-desc {
-  color: #9CA3AF !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-table,
-html.dark .sa-table {
-  background: #111827 !important;
-  color: #F3F4F6 !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-table th,
-html.dark .sa-table th {
-  background: #1E293B !important;
-  color: #E2E8F0 !important;
-  border-color: #334155 !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-table td,
-html.dark .sa-table td {
-  background: #111827 !important;
-  color: #F3F4F6 !important;
-  border-color: #1F2937 !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-table tr:hover td,
-html.dark .sa-table tr:hover td {
-  background: #1E293B !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-root input,
-:is(html.dark, body.dark, .dark) .sa-root select,
-:is(html.dark, body.dark, .dark) .sa-root textarea,
-:is(html.dark, body.dark, .dark) .sa-input,
-:is(html.dark, body.dark, .dark) .sa-select,
-:is(html.dark, body.dark, .dark) .sa-textarea,
-:is(html.dark, body.dark, .dark) .sa-search input,
-:is(html.dark, body.dark, .dark) .sa-sql textarea,
-html.dark .sa-root input,
-html.dark .sa-root select,
-html.dark .sa-root textarea,
+html.dark .sa-search input,
 html.dark .sa-input,
 html.dark .sa-select,
 html.dark .sa-textarea,
-html.dark .sa-search input,
 html.dark .sa-sql textarea {
-  background: #0F172A !important;
-  border-color: #334155 !important;
-  color: #F8FAFC !important;
+  background: var(--sa-surface);
+  border-color: var(--sa-field-border);
+  color: var(--sa-text-0);
 }
-
-:is(html.dark, body.dark, .dark) .sa-root input:focus,
-:is(html.dark, body.dark, .dark) .sa-root select:focus,
-:is(html.dark, body.dark, .dark) .sa-root textarea:focus,
-:is(html.dark, body.dark, .dark) .sa-search input:focus,
-html.dark .sa-root input:focus,
-html.dark .sa-root select:focus,
-html.dark .sa-root textarea:focus,
-html.dark .sa-search input:focus {
-  border-color: #38BDF8 !important;
-  box-shadow: 0 0 0 1px #38BDF8 !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-root input::placeholder,
-:is(html.dark, body.dark, .dark) .sa-root textarea::placeholder,
 html.dark .sa-root input::placeholder,
-html.dark .sa-root textarea::placeholder {
-  color: #64748B !important;
-}
+html.dark .sa-root textarea::placeholder,
+html.dark .sa-search input::placeholder { color: var(--sa-text-4); }
+html.dark .sa-root label { color: var(--sa-text-1); }
 
-:is(html.dark, body.dark, .dark) .sa-root label,
-html.dark .sa-root label {
-  color: #E2E8F0 !important;
-}
+html.dark .sa-btn-primary { background: var(--sa-link); color: #0b1120; }
+html.dark .sa-btn-primary:hover { background: var(--sa-link-strong); }
+html.dark .sa-btn-danger { background: var(--sa-danger); color: #fff; }
+html.dark .sa-btn-danger:hover { background: var(--sa-danger-strong); }
+html.dark .sa-btn-ghost { color: var(--sa-link); }
+html.dark .sa-btn-ghost:hover { background: var(--sa-hover); }
+html.dark .sa-perm.active { color: var(--sa-link); border-color: var(--sa-link); background: var(--sa-link-tint); }
+html.dark .sa-toast.success { background: #0e6027; color: #fff; }
+html.dark .sa-toast.error { background: #a2191f; color: #fff; }
+html.dark .sa-admin-avatar.normal { background: var(--sa-surface-2); color: var(--sa-text-0); }
 
-:is(html.dark, body.dark, .dark) .sa-btn-secondary,
-html.dark .sa-btn-secondary {
-  color: #F8FAFC !important;
-  border-color: #334155 !important;
-  background: #1E293B !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-btn-secondary:hover,
-html.dark .sa-btn-secondary:hover {
-  background: #334155 !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-btn-ghost,
-html.dark .sa-btn-ghost {
-  color: #38BDF8 !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-btn-ghost:hover,
-html.dark .sa-btn-ghost:hover {
-  background: #1E293B !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-perm.inactive,
-html.dark .sa-perm.inactive {
-  background: #1E293B !important;
-  border-color: #334155 !important;
-  color: #94A3B8 !important;
-}
-
-/* ─── Dark Mode Carbon Tags / Badges ─── */
-:is(html.dark, body.dark, .dark) .sa-tag-red,
-html.dark .sa-tag-red {
-  background: #4C0519 !important;
-  color: #FDA4AF !important;
-  border-color: #E11D48 !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-tag-green,
-html.dark .sa-tag-green {
-  background: #052E16 !important;
-  color: #86EFAC !important;
-  border-color: #16A34A !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-tag-blue,
-html.dark .sa-tag-blue {
-  background: #082F49 !important;
-  color: #7DD3FC !important;
-  border-color: #0284C7 !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-tag-orange,
-html.dark .sa-tag-orange {
-  background: #431407 !important;
-  color: #FDBA74 !important;
-  border-color: #EA580C !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-tag-yellow,
-html.dark .sa-tag-yellow {
-  background: #422006 !important;
-  color: #FDE047 !important;
-  border-color: #CA8A04 !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-tag-gray,
-html.dark .sa-tag-gray {
-  background: #1E293B !important;
-  color: #CBD5E1 !important;
-  border-color: #475569 !important;
-}
-
-/* ─── SuperAdmin Modal Box & Containers ─── */
+/* ─── Modal containers (همیشه داخل sa-root رندر می‌شوند) ─── */
 .sa-modal-box {
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--sa-surface-3);
   padding: 0.75rem;
-  background: #f4f4f4;
-  color: #161616;
+  background: var(--sa-surface-2);
+  color: var(--sa-text-0);
 }
-
 .sa-modal-box-blue {
-  border: 1px solid #0f62fe;
+  border: 1px solid var(--sa-link);
   padding: 0.75rem;
-  background: #edf5ff;
-  color: #0f62fe;
+  background: var(--sa-blue-soft);
+  color: var(--sa-link);
 }
 
-/* Force dark contrast on any inline dark text colors within SuperAdmin & Modals */
-:is(html.dark, body.dark, .dark) .sa-root [style*="color: #161616"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="color: rgb(22, 22, 22)"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="color: #000"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="color: black"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="color: #111"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="color: #222"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="color: #333"],
-:is(html.dark, body.dark, .dark) [role="dialog"] [style*="color: #161616"],
-:is(html.dark, body.dark, .dark) [role="dialog"] [style*="color: rgb(22, 22, 22)"],
-:is(html.dark, body.dark, .dark) [role="dialog"] [style*="color: #000"],
-:is(html.dark, body.dark, .dark) [role="dialog"] [style*="color: black"] {
-  color: #F8FAFC !important;
+/* ─── Modal portal (خارج sa-root) — توکن‌ها را از :root هم در دسترس بگذار ─── */
+:root {
+  --sa-text-0: #161616; --sa-text-1: #525252; --sa-text-2: #6f6f6f; --sa-text-3: #8d8d8d;
+  --sa-text-4: #a8a8a8; --sa-link: #0f62fe; --sa-link-strong: #0043ce; --sa-danger: #da1e28;
+  --sa-danger-strong: #a2191f; --sa-success: #198038; --sa-success-bg: #defbe6;
+  --sa-warn-text: #8a3800; --sa-warn-border: #f1c21b; --sa-warn-bg: #fff8e1;
+  --sa-orange: #eb6200; --sa-blue-bg: #d0e2ff; --sa-blue-soft: #edf5ff; --sa-purple: #8a3ffc;
+  --sa-purple-bg: #e8daff; --sa-cyan: #1192e8; --sa-red-soft: #fff1f1;
+  --sa-error-bg-2: #ffd7d9; --sa-error-text-2: #752227; --sa-surface: #ffffff;
+  --sa-surface-2: #f4f4f4; --sa-surface-3: #e0e0e0; --sa-surface-4: #e8e8e8;
+  --sa-surface-5: #f9f9f9; --sa-surface-6: #fafafa; --sa-field-border: #c6c6c6;
+  --sa-input-disabled: #e0e0e0; --sa-on-blue: #ffffff; --sa-on-danger: #ffffff;
+  --sa-hover: rgba(0, 0, 0, 0.05); --sa-hairline: rgba(140, 140, 140, 0.25);
+  --sa-link-tint: rgba(15, 98, 254, 0.08); --sa-danger-tint: rgba(218, 30, 40, 0.06);
+  --sa-warn-tint: rgba(241, 194, 27, 0.08); --sa-callout-bg: #e5f6ff;
+  --sa-callout-text: #00539a; --sa-callout-border: #99c9ef;
+}
+:is(html.dark, body.dark) {
+  --sa-text-0: #f4f4f4; --sa-text-1: #c6c6c6; --sa-text-2: #a7a7a7; --sa-text-3: #8d8d8d;
+  --sa-text-4: #6f6f6f; --sa-link: #78a9ff; --sa-link-strong: #a6c8ff; --sa-danger: #fa4d56;
+  --sa-danger-strong: #ff8389; --sa-success: #42be65; --sa-success-bg: #0e3a21;
+  --sa-warn-text: #f1c21b; --sa-warn-border: #8a6d1a; --sa-warn-bg: #312a16;
+  --sa-orange: #ff832b; --sa-blue-bg: #00356b; --sa-blue-soft: #0a2c47; --sa-purple: #be95ff;
+  --sa-purple-bg: #2a1744; --sa-cyan: #38bdf8; --sa-red-soft: #2d1215;
+  --sa-error-bg-2: #3a1216; --sa-error-text-2: #ff8389; --sa-surface: #111827;
+  --sa-surface-2: #1e293b; --sa-surface-3: #334155; --sa-surface-4: #334155;
+  --sa-surface-5: #0f172a; --sa-surface-6: #1e293b; --sa-field-border: #334155;
+  --sa-input-disabled: #334155; --sa-on-blue: #ffffff; --sa-on-danger: #ffffff;
+  --sa-hover: rgba(255, 255, 255, 0.07); --sa-hairline: rgba(180, 180, 180, 0.18);
+  --sa-link-tint: rgba(120, 169, 255, 0.16); --sa-danger-tint: rgba(250, 77, 86, 0.12);
+  --sa-warn-tint: rgba(241, 194, 27, 0.12); --sa-callout-bg: #05355c;
+  --sa-callout-text: #9ed6ff; --sa-callout-border: #38697a;
 }
 
-:is(html.dark, body.dark, .dark) .sa-root [style*="color: #525252"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="color: rgb(82, 82, 82)"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="color: #6f6f6f"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="color: rgb(111, 111, 111)"],
-:is(html.dark, body.dark, .dark) [role="dialog"] [style*="color: #525252"],
-:is(html.dark, body.dark, .dark) [role="dialog"] [style*="color: #6f6f6f"] {
-  color: #94A3B8 !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-root [style*="background: #fff"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="background: white"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="background: #ffffff"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="background-color: #fff"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="background-color: white"],
-:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: #fff"],
-:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: white"],
-:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: #ffffff"] {
-  background: #111827 !important;
-  color: #F8FAFC !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-root [style*="background: #f4f4f4"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="background: #f8f9fa"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="background: #f5f5f5"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="background: #e8e8e8"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="background: #fafafa"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="background: #fbfbfb"],
-:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: #f4f4f4"],
-:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: #f8f9fa"],
-:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: #f5f5f5"],
-:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: #fafafa"],
-:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: #fbfbfb"] {
-  background: #1E293B !important;
-  color: #F8FAFC !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-root [style*="background: #f8faff"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="background: #fdfefe"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="background: #edf5ff"],
-:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: #f8faff"],
-:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: #fdfefe"],
-:is(html.dark, body.dark, .dark) [role="dialog"] [style*="background: #edf5ff"] {
-  background: #0F172A !important;
-  color: #F8FAFC !important;
-  border-color: #0284C7 !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-root [style*="border: 1px solid #c6c6c6"],
-:is(html.dark, body.dark, .dark) .sa-root [style*="border: 1px solid #e0e0e0"],
+/* دیالگ‌های عمومی که داخل پنل گاد باز می‌شوند */
 :is(html.dark, body.dark, .dark) [role="dialog"] input,
 :is(html.dark, body.dark, .dark) [role="dialog"] select,
 :is(html.dark, body.dark, .dark) [role="dialog"] textarea {
-  background: #0F172A !important;
-  border-color: #334155 !important;
-  color: #FFFFFF !important;
+  background: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
 }
-
 :is(html.dark, body.dark, .dark) [role="dialog"] input::placeholder,
-:is(html.dark, body.dark, .dark) [role="dialog"] textarea::placeholder {
-  color: #64748B !important;
-}
-
-:is(html.dark, body.dark, .dark) [role="dialog"] .sa-modal-box {
-  background: #111827 !important;
-  border-color: #1F2937 !important;
-  color: #FFFFFF !important;
-}
-
-:is(html.dark, body.dark, .dark) [role="dialog"] .sa-modal-box-blue {
-  background: #082F49 !important;
-  border-color: #0284C7 !important;
-  color: #7DD3FC !important;
-}
-
-:is(html.dark, body.dark, .dark) [role="dialog"] [class*="bg-white"],
-:is(html.dark, body.dark, .dark) [role="dialog"] [class*="bg-[#fff"],
-:is(html.dark, body.dark, .dark) [role="dialog"] [class*="bg-slate-50"],
-:is(html.dark, body.dark, .dark) [role="dialog"] [class*="bg-gray-50"] {
-  background-color: #111827 !important;
-}
-
-:is(html.dark, body.dark, .dark) [role="dialog"] label {
-  color: #E2E8F0 !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-tile[style*="background: #d0e2ff"],
-:is(html.dark, body.dark, .dark) .sa-tile[style*="background: rgb(208, 226, 255)"],
-:is(html.dark, body.dark, .dark) .sa-tile.active {
-  background: #0369A1 !important;
-  border-color: #38BDF8 !important;
-}
-
-:is(html.dark, body.dark, .dark) .sa-tile[style*="background: #d0e2ff"] .sa-tile-name,
-:is(html.dark, body.dark, .dark) .sa-tile[style*="background: #d0e2ff"] .sa-tile-count,
-:is(html.dark, body.dark, .dark) .sa-tile[style*="background: rgb(208, 226, 255)"] .sa-tile-name,
-:is(html.dark, body.dark, .dark) .sa-tile[style*="background: rgb(208, 226, 255)"] .sa-tile-count {
-  color: #FFFFFF !important;
-}
-
-
+:is(html.dark, body.dark, .dark) [role="dialog"] textarea::placeholder { color: #64748b; }
+:is(html.dark, body.dark, .dark) [role="dialog"] label { color: #e2e8f0; }

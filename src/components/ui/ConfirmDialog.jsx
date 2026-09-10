@@ -45,7 +45,7 @@ export default function ConfirmDialog({
                   transition={{ duration: 0.5, delay: 0.1 }}
                 >
                   {allFilled ? (
-                    <div className="w-12 h-12 rounded-xl bg-teal/15 dark:bg-teal-500/20 text-teal flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-xl bg-teal/15 dark:bg-teal/20 text-teal flex items-center justify-center">
                       <CheckCircle2 size={32} />
                     </div>
                   ) : (

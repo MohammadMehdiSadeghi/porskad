@@ -639,7 +639,7 @@ export default function Support() {
                 href={`https://t.me/${telegramSupportId || "porskad_support"}`}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-1.5 bg-white dark:bg-slate-800 border-2 border-teal rounded-pill-sm px-3 py-1.5 text-xs font-bold text-teal-text dark:text-teal-300 hover:bg-teal hover:text-white transition-all"
+                className="flex items-center gap-1.5 bg-white dark:bg-slate-800 border-2 border-teal rounded-pill-sm px-3 py-1.5 text-xs font-bold text-teal-text dark:text-teal hover:bg-teal hover:text-white transition-all"
               >
                 ارسال پیام <ExternalLink size={12} />
               </a>
@@ -664,7 +664,7 @@ export default function Support() {
                   setMessage("سلام، تمایل دارم سقف تعداد فرم‌ها یا پاسخ‌های حسابم افزایش پیدا کند.");
                   setNewTicketModal(true);
                 }}
-                className="bg-white dark:bg-slate-800 border-2 border-orange rounded-pill-sm px-3 py-1.5 text-xs font-bold text-orange dark:text-orange-400 hover:bg-orange hover:text-white transition-all cursor-pointer"
+                className="bg-white dark:bg-slate-800 border-2 border-orange rounded-pill-sm px-3 py-1.5 text-xs font-bold text-orange dark:text-orange hover:bg-orange hover:text-white transition-all cursor-pointer"
               >
                 ثبت درخواست
               </button>
@@ -722,7 +722,7 @@ export default function Support() {
             <button
               onClick={() => setAdminFilter("archived")}
               className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors flex items-center gap-1 ${
-                adminFilter === "archived" ? "bg-purple-700 text-white" : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white"
+                adminFilter === "archived" ? "bg-purple text-white" : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white"
               }`}
             >
               <Archive size={12} />
@@ -788,7 +788,7 @@ export default function Support() {
           <button
             onClick={() => setUserFilter("archived")}
             className={`px-3.5 py-1 text-xs font-bold rounded-pill-sm transition-colors flex items-center gap-1 ${
-              userFilter === "archived" ? "bg-purple-700 text-white" : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white"
+              userFilter === "archived" ? "bg-purple text-white" : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white"
             }`}
           >
             <Archive size={12} />
@@ -823,7 +823,7 @@ export default function Support() {
                   key={group.userId}
                   className={`bg-white dark:bg-slate-900 border-2 transition-all duration-200 rounded-2xl p-4 sm:p-5 shadow-sm ${
                     group.openCount > 0
-                      ? "border-orange/60 hover:border-orange bg-orange/5 dark:bg-orange-950/20"
+                      ? "border-orange/60 hover:border-orange bg-orange/5 dark:bg-orange/20"
                       : "border-ink/15 dark:border-slate-800 hover:border-teal"
                   }`}
                 >
@@ -899,7 +899,7 @@ export default function Support() {
 
                       <span
                         className={`w-8 h-8 rounded-xl bg-ink/5 dark:bg-slate-800 hover:bg-ink/10 dark:hover:bg-slate-700 flex items-center justify-center text-navy dark:text-slate-300 transition-transform duration-200 ${
-                          isExpanded ? "rotate-180 bg-teal/15 text-teal dark:bg-teal-900/40 dark:text-teal-400" : ""
+                          isExpanded ? "rotate-180 bg-teal/15 text-teal dark:bg-teal/40 dark:text-teal" : ""
                         }`}
                         aria-label="باز و بستن تیکت‌ها"
                       >
@@ -920,7 +920,7 @@ export default function Support() {
                             key={t.id}
                             className={`rounded-xl p-4 sm:p-5 border-2 transition-all duration-200 ${
                               isArchived
-                                ? "bg-purple-50/40 dark:bg-purple-950/25 border-purple-200 dark:border-purple-800/40"
+                                ? "bg-purple/40 dark:bg-purple/25 border-purple dark:border-purple/40"
                                 : isClosed
                                 ? "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 opacity-90"
                                 : t.status === "open"
@@ -964,7 +964,7 @@ export default function Support() {
                                 const subInfo = parseSubscriptionInfo(t);
                                 if (!subInfo) return null;
                                 return (
-                                  <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange-50/70 dark:from-amber-950/40 dark:to-orange-950/30 border-2 border-amber-300 dark:border-amber-700/60 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sticker-sm">
+                                  <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange/70 dark:from-amber-950/40 dark:to-orange/30 border-2 border-amber-300 dark:border-amber-700/60 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sticker-sm">
                                     <div className="flex items-center gap-3">
                                       <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0 border border-amber-400/40">
                                         <Sparkles size={20} />
@@ -1007,9 +1007,9 @@ export default function Support() {
 
                               {/* پاسخ مدیر در صورت وجود */}
                               {t.admin_reply && (
-                                <div className="mt-2 p-4 rounded-xl bg-ecosystem-light/80 dark:bg-teal-950/40 border-2 border-teal/40 dark:border-teal-700/50 flex flex-col gap-2">
+                                <div className="mt-2 p-4 rounded-xl bg-ecosystem-light/80 dark:bg-teal/10 border-2 border-teal/40 dark:border-teal/30 flex flex-col gap-2">
                                   <div className="flex items-center justify-between">
-                                    <span className="text-xs font-black text-teal-text dark:text-teal-400 flex items-center gap-1.5">
+                                    <span className="text-xs font-black text-teal-text dark:text-teal flex items-center gap-1.5">
                                       <CheckCircle2 size={14} /> پاسخ پشتیبانی پرس‌کاد
                                     </span>
                                     {t.replied_at && (
@@ -1018,7 +1018,7 @@ export default function Support() {
                                       </span>
                                     )}
                                   </div>
-                                  <p className="text-sm font-semibold text-navy dark:text-teal-100 leading-7 whitespace-pre-wrap">
+                                  <p className="text-sm font-semibold text-navy dark:text-teal leading-7 whitespace-pre-wrap">
                                     {t.admin_reply}
                                   </p>
                                 </div>
@@ -1033,7 +1033,7 @@ export default function Support() {
                                   onClick={() => handleToggleStatus(t)}
                                   className={`text-xs ${
                                     isClosed
-                                      ? "text-teal dark:text-teal-400 hover:bg-teal/10"
+                                      ? "text-teal dark:text-teal hover:bg-teal/10"
                                       : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
                                   }`}
                                 >
@@ -1053,7 +1053,7 @@ export default function Support() {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleToggleAdminArchive(t)}
-                                  className="text-xs text-purple-700 dark:text-purple-400 hover:bg-purple-100/60 dark:hover:bg-purple-900/40"
+                                  className="text-xs text-purple dark:text-purple hover:bg-purple/60 dark:hover:bg-purple/40"
                                 >
                                   {isArchived ? (
                                     <>
@@ -1171,7 +1171,7 @@ export default function Support() {
                         const subInfo = parseSubscriptionInfo(t);
                         if (!subInfo) return null;
                         return (
-                          <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange-50/70 dark:from-amber-950/40 dark:to-orange-950/30 border-2 border-amber-300 dark:border-amber-700/60 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sticker-sm">
+                          <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange/70 dark:from-amber-950/40 dark:to-orange/30 border-2 border-amber-300 dark:border-amber-700/60 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sticker-sm">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0 border border-amber-400/40">
                                 <Sparkles size={20} />
@@ -1202,9 +1202,9 @@ export default function Support() {
 
                       {/* پاسخ پشتیبانی */}
                       {t.admin_reply && (
-                        <div className="mt-2 p-4 rounded-xl bg-ecosystem-light/80 dark:bg-teal-950/40 border-2 border-teal/40 dark:border-teal-700/50 flex flex-col gap-2">
+                        <div className="mt-2 p-4 rounded-xl bg-ecosystem-light/80 dark:bg-teal/10 border-2 border-teal/40 dark:border-teal/30 flex flex-col gap-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-black text-teal-text dark:text-teal-400 flex items-center gap-1.5">
+                            <span className="text-xs font-black text-teal-text dark:text-teal flex items-center gap-1.5">
                               <CheckCircle2 size={14} /> پاسخ پشتیبانی پرس‌کاد
                             </span>
                             {t.replied_at && (
@@ -1213,7 +1213,7 @@ export default function Support() {
                               </span>
                             )}
                           </div>
-                          <p className="text-sm font-semibold text-navy dark:text-teal-100 leading-7 whitespace-pre-wrap">
+                          <p className="text-sm font-semibold text-navy dark:text-teal leading-7 whitespace-pre-wrap">
                             {t.admin_reply}
                           </p>
                         </div>
@@ -1254,7 +1254,7 @@ export default function Support() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleToggleUserArchive(t)}
-                          className="text-xs text-purple-700 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40"
+                          className="text-xs text-purple dark:text-purple hover:bg-purple dark:hover:bg-purple/40"
                         >
                           {isArchived ? (
                             <>
@@ -1337,7 +1337,7 @@ export default function Support() {
       >
         <form onSubmit={handleSendReply} className="flex flex-col gap-4">
           <div className="bg-bg-lavender/50 dark:bg-slate-800/90 p-3 rounded-lg text-xs font-semibold text-ink dark:text-slate-200 leading-5 max-h-36 overflow-y-auto border border-ink/10 dark:border-slate-700">
-            <span className="font-black block text-navy dark:text-teal-300 mb-1">
+            <span className="font-black block text-navy dark:text-teal mb-1">
               پیام کاربر ({replyTicket?.profiles?.full_name || replyTicket?.profiles?.email || "کاربر"}):
             </span>
             {replyTicket?.message}
@@ -1433,7 +1433,7 @@ export default function Support() {
         title={`بازگشایی و ادامه تیکت: ${reopenModalTicket?.subject || ""}`}
       >
         <form onSubmit={handleUserReopenTicket} className="flex flex-col gap-4">
-          <div className="p-3 rounded-xl bg-teal/5 dark:bg-teal-950/40 border border-teal/20 dark:border-teal-800/40 text-xs font-semibold text-ink dark:text-teal-200 leading-relaxed">
+          <div className="p-3 rounded-xl bg-teal/5 dark:bg-teal/10 border border-teal/20 dark:border-teal/40 text-xs font-semibold text-ink dark:text-teal leading-relaxed">
             با ارسال پیام تکمیلی، وضعیت این تیکت مجدداً به <strong>«در انتظار پاسخ»</strong> تغییر یافته و در پنل مدیریت اعلان ارسال می‌شود.
           </div>
 

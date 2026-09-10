@@ -8,8 +8,8 @@ export const STICKER_THEMES = {
     bg: "bg-white dark:bg-slate-900",
   },
   teal: {
-    back: "bg-teal-alt dark:bg-teal-950",
-    border: "border-teal dark:border-teal-500",
+    back: "bg-teal-alt dark:bg-teal/10",
+    border: "border-teal dark:border-teal",
     bg: "bg-ecosystem-light dark:bg-[#0d2322]",
   },
   navy: {
@@ -28,8 +28,8 @@ export const STICKER_THEMES = {
     bg: "bg-college-light dark:bg-[#261705]",
   },
   ecosystem: {
-    back: "bg-ecosystem-dark dark:bg-teal-950",
-    border: "border-ecosystem-normal dark:border-teal-500",
+    back: "bg-ecosystem-dark dark:bg-teal/10",
+    border: "border-ecosystem-normal dark:border-teal",
     bg: "bg-ecosystem-light dark:bg-[#0d2322]",
   },
   male: {
@@ -48,8 +48,8 @@ export const STICKER_THEMES = {
     bg: "bg-college-light dark:bg-[#261705]",
   },
   club: {
-    back: "bg-club-dark dark:bg-purple-950",
-    border: "border-club-normal dark:border-purple-500",
+    back: "bg-club-dark dark:bg-purple",
+    border: "border-club-normal dark:border-purple",
     bg: "bg-club-light dark:bg-[#1e0d29]",
   },
 };

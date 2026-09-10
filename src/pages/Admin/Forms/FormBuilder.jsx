@@ -402,7 +402,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
 
           {/* ─── الگوهای آماده طیف لیکرت ─── */}
           {q.type === "likert" && (
-            <div className="flex flex-col gap-2 border-2 border-dashed border-teal/40 rounded-pill-md bg-teal/5 dark:bg-teal-950/20 p-3">
+            <div className="flex flex-col gap-2 border-2 border-dashed border-teal/40 rounded-pill-md bg-teal/5 dark:bg-teal/10 p-3">
               <span className="text-xs font-extrabold text-teal-text dark:text-teal flex items-center gap-1">
                 <Sliders size={14} /> الگوهای پیش‌فرض طیف لیکرت
               </span>
@@ -676,7 +676,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                   onClick={() => onChange({ display_mode: "buttons" })}
                   className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-pill-md border-2 text-xs font-bold transition-all cursor-pointer ${
                     (q.display_mode || "buttons") === "buttons"
-                      ? "border-teal bg-teal/10 dark:bg-teal-500/20 text-teal-text dark:text-teal"
+                      ? "border-teal bg-teal/10 dark:bg-teal/20 text-teal-text dark:text-teal"
                       : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink-subtle dark:text-slate-300 hover:border-teal/40"
                   }`}
                 >
@@ -687,7 +687,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                   onClick={() => onChange({ display_mode: "dropdown" })}
                   className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-pill-md border-2 text-xs font-bold transition-all cursor-pointer ${
                     q.display_mode === "dropdown"
-                      ? "border-teal bg-teal/10 dark:bg-teal-500/20 text-teal-text dark:text-teal"
+                      ? "border-teal bg-teal/10 dark:bg-teal/20 text-teal-text dark:text-teal"
                       : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink-subtle dark:text-slate-300 hover:border-teal/40"
                   }`}
                 >
@@ -748,7 +748,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
 
           {/* ─── گزینه صحیح (Correct Answer) ─── */}
           {isChoice && (
-            <div className="flex flex-col gap-2 border-2 border-dashed border-teal/40 dark:border-teal-500/40 rounded-pill-md bg-teal/5 dark:bg-teal-950/20 p-3">
+            <div className="flex flex-col gap-2 border-2 border-dashed border-teal/40 dark:border-teal/40 rounded-pill-md bg-teal/5 dark:bg-teal/10 p-3">
               <span className="text-xs font-extrabold text-teal-text dark:text-teal flex items-center gap-1">
                 <Target size={14} /> گزینه صحیح (برای نمره‌دهی)
               </span>
@@ -1578,7 +1578,7 @@ export default function FormBuilder() {
                       onClick={() => setFormField({ form_type: t.key })}
                       className={`flex-1 flex items-center gap-3 p-3 rounded-xl border-2 transition-all cursor-pointer ${
                         form.form_type === t.key
-                          ? "border-teal bg-teal/10 dark:bg-teal-500/15 shadow-sm"
+                          ? "border-teal bg-teal/10 dark:bg-teal/15 shadow-sm"
                           : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-teal/40"
                       }`}
                     >

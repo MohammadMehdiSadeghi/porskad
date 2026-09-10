@@ -1,14 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  Save,
-  RotateCcw,
-  Eye,
-  Wrench,
-  ToggleRight,
-  ToggleLeft,
-  Unlock,
-} from "lucide-react";
-import StickerCard from "../../components/ui/StickerCard";
+import { Save, RotateCcw, Wrench, ToggleLeft, Unlock, MonitorCog } from "lucide-react";
 import { useToast } from "../../components/ui/Toast";
 import { supabase } from "../../lib/supabaseClient";
 import {
@@ -24,41 +15,14 @@ import {
 } from "../../lib/userTabs";
 
 // ═══════════════════════════════════════════════════════
-// تب «کنترل تب‌های کاربری» در پنل گاد — سه حالت برای هر تب:
-// فعال / بروزرسانی (با متن آماده و قابل ویرایش) / غیرفعال
-// ذخیره از طریق RPC سوپرادمین update_system_settings
+// تب «کنترل تب‌های کاربری» در پنل گاد — هویت Carbon خودش،
+// نه دیزاین سایت. سه حالت: فعال / بروزرسانی / غیرفعال.
 // ═══════════════════════════════════════════════════════
 
-const MODES = [
-  {
-    id: TAB_STATE_ON,
-    label: "فعال",
-    icon: Unlock,
-    activeCls: "bg-teal border-teal-text text-white",
-    idleCls: "bg-ecosystem-light/70 border-teal/20 text-teal-text hover:bg-ecosystem-light",
-  },
-  {
-    id: TAB_STATE_MAINTENANCE,
-    label: "بروزرسانی",
-    icon: Wrench,
-    activeCls: "bg-orange border-[#C57A07] text-white",
-    idleCls: "bg-college-light/70 border-orange/25 text-college-dark hover:bg-college-light",
-  },
-  {
-    id: TAB_STATE_DISABLED,
-    label: "غیرفعال",
-    icon: ToggleLeft,
-    activeCls: "bg-magenta border-magenta-text text-white",
-    idleCls: "bg-female-light/70 border-magenta/25 text-magenta-text hover:bg-female-light",
-  },
-];
-
-const THEME_BY_TAB = {
-  forms: "white",
-  embed: "teal",
-  telegram: "navy",
-  support: "magenta",
-  profile: "orange",
+const MODE_META = {
+  [TAB_STATE_ON]: { label: "Active", tag: "sa-tag-green", Icon: Unlock },
+  [TAB_STATE_MAINTENANCE]: { label: "Maintenance", tag: "sa-tag-yellow", Icon: Wrench },
+  [TAB_STATE_DISABLED]: { label: "Disabled", tag: "sa-tag-red", Icon: ToggleLeft },
 };
 
 export default function UserTabsPanel() {
@@ -76,7 +40,7 @@ export default function UserTabsPanel() {
         if (!alive) return;
         if (!error && data) setCfg(normalizeUserTabsConfig(data[USER_TABS_SETTINGS_KEY]));
       } catch {
-        /* همان پیش‌فرضها می‌ماند */
+        /* defaults remain */
       } finally {
         if (alive) {
           setLoaded(true);
@@ -99,10 +63,6 @@ export default function UserTabsPanel() {
     setDirty(true);
   }
 
-  function useDefaultMessage(tabId) {
-    setTabMessage(tabId, DEFAULT_MAINTENANCE_MESSAGE);
-  }
-
   async function handleSave() {
     setSaving(true);
     try {
@@ -114,168 +74,152 @@ export default function UserTabsPanel() {
       setCfg(normalized);
       await loadUserTabsConfigFromDb();
       setDirty(false);
-      toast.push("وضعیت تب‌های کاربری ذخیره و برای همه کاربران اعمال شد.", "success");
+      toast.push("User tab states saved and applied to all users.", "success");
     } catch (e) {
-      toast.push("خطا در ذخیره تنظیمات: " + (e?.message || e), "error");
+      toast.push("Save failed: " + (e?.message || e), "error");
     } finally {
       setSaving(false);
     }
   }
 
-  async function handleResetAll() {
+  function handleResetAll() {
     setCfg(JSON.parse(JSON.stringify(DEFAULT_USER_TABS_CONFIG)));
     setDirty(true);
-    toast.push("پیش‌فرضها بارگذاری شد — برای اعمال، «ذخیره» را بزنید.", "info");
+    toast.push("Defaults loaded — press Save to apply.", "info");
   }
 
   if (!loaded) {
     return (
-      <div className="flex items-center justify-center py-16 text-slate-400 text-sm animate-pulse">
-        در حال بارگذاری تنظیمات تب‌ها…
+      <div style={{ padding: "3rem", textAlign: "center", color: "var(--sa-text-2)" }}>
+        Loading tab configuration…
       </div>
     );
   }
 
-  const blockedCount = USER_TABS.filter(
-    (t) => cfg[t.id]?.state && cfg[t.id].state !== TAB_STATE_ON,
-  ).length;
+  const blockedCount = USER_TABS.filter((t) => cfg[t.id]?.state && cfg[t.id].state !== TAB_STATE_ON).length;
 
   return (
-    <div className="space-y-4">
-      <StickerCard theme="navy" rotate="rotate-[-0.3deg]">
-        <div className="p-5 sm:p-6 text-white">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="min-w-0">
-              <h3 className="text-lg font-black flex items-center gap-2">
-                <Eye size={19} className="text-teal shrink-0" />
-                کنترل تب‌های پنل کاربری
-              </h3>
-              <p className="text-xs text-white/65 font-medium mt-1 leading-5">
-                وضعیت هر تبِ کاربری را تعیین کنید. حالت «بروزرسانی» پیام آماده نمایش می‌دهد؛
-                حالت «غیرفعال» تب را از منوی کاربران حذف می‌کند.
-              </p>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              {dirty && (
-                <span className="inline-flex items-center gap-1 bg-magenta text-white text-xs font-extrabold px-2.5 py-1 rounded-xl [corner-shape:squircle] rotate-[-1deg]">
-                  ● تغییر ذخیره‌نشده
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={handleResetAll}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-white/80 text-xs font-bold transition"
-              >
-                <RotateCcw size={12} />
-                پیش‌فرض همه
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving || !dirty}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal border border-teal-text text-white text-xs font-black hover:bg-teal-text disabled:opacity-50 disabled:cursor-not-allowed transition"
-              >
-                <Save size={12} />
-                {saving ? "در حال ذخیره…" : "ذخیره تنظیمات"}
-              </button>
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      {/* ─── Header strip ─── */}
+      <div className="sa-card">
+        <div className="sa-card-header" style={{ padding: "1rem 1.25rem 0.25rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+            <MonitorCog size={20} style={{ color: "var(--sa-link)" }} />
+            <div>
+              <div className="sa-section-title" style={{ margin: 0 }}>
+                User Tab Control
+              </div>
+              <div style={{ fontSize: "0.8rem", color: "var(--sa-text-1)" }}>
+                Enable, set maintenance mode, or hide each user-facing tab. Maintenance shows a
+                notification box; Disabled removes the tab from the user sidebar.
+              </div>
             </div>
           </div>
           {blockedCount > 0 && (
-            <div className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-orange/20 border border-orange/40 px-2.5 py-1 text-xs font-bold text-amber-100">
-              <Wrench size={12} />
-              {blockedCount} تب برای کاربران محدود شده است.
-            </div>
+            <span className="sa-tag sa-tag-orange">
+              {blockedCount} tab{blockedCount > 1 ? "s" : ""} restricted
+            </span>
           )}
         </div>
-      </StickerCard>
-
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        {USER_TABS.map((tab, i) => {
-          const entry = cfg[tab.id] || { state: TAB_STATE_ON, message: "" };
-          const st = MODES.find((m) => m.id === entry.state) || MODES[0];
-          const theme = THEME_BY_TAB[tab.id] || "white";
-          return (
-            <StickerCard
-              key={tab.id}
-              theme={theme}
-              rotate={i % 2 ? "rotate-[0.3deg]" : "rotate-[-0.3deg]"}
-            >
-              <div className="p-5 flex flex-col gap-4">
-                <div className="flex items-center justify-between gap-3 flex-wrap">
-                  <div className="min-w-0">
-                    <div className="text-sm font-black text-navy dark:text-white">{tab.label}</div>
-                    <code className="text-[0.6875rem] text-ink/50 dark:text-slate-400" dir="ltr">
-                      {tab.path}
-                    </code>
-                  </div>
-                  <span
-                    className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[0.6875rem] font-black [corner-shape:squircle] text-white ${st.id === TAB_STATE_ON ? "bg-teal" : st.id === TAB_STATE_MAINTENANCE ? "bg-orange" : "bg-magenta"}`}
-                  >
-                    <st.icon size={12} />
-                    {st.label}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
-                  {MODES.map((m) => {
-                    const on = entry.state === m.id;
-                    return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => setTabState(tab.id, m.id)}
-                        className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-[0.6875rem] font-black transition-all border active:scale-[0.98] [corner-shape:squircle] ${on ? m.activeCls : m.idleCls}`}
-                      >
-                        <m.icon size={13} />
-                        {m.label}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {entry.state === TAB_STATE_MAINTENANCE && (
-                  <div className="rounded-xl border-2 border-orange/40 bg-white/80 dark:bg-slate-900/70 p-3 space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[0.6875rem] font-black text-navy dark:text-white flex items-center gap-1">
-                        <ToggleRight size={12} className="text-orange" />
-                        متن پیام بروزرسانی (اختیاری)
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => useDefaultMessage(tab.id)}
-                        className="text-[0.625rem] font-bold text-orange hover:underline whitespace-nowrap"
-                      >
-                        استفاده از متن آماده
-                      </button>
-                    </div>
-                    <textarea
-                      rows={3}
-                      value={entry.message}
-                      onChange={(e) => setTabMessage(tab.id, e.target.value)}
-                      placeholder={DEFAULT_MAINTENANCE_MESSAGE}
-                      className="w-full bg-white dark:bg-slate-800 border border-navy/15 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-ink dark:text-white focus:border-teal focus:outline-none resize-y font-medium"
-                    />
-                  </div>
-                )}
-
-                <div className="text-[0.625rem] font-bold text-ink/55 dark:text-slate-400">
-                  {entry.state === TAB_STATE_DISABLED &&
-                    "تب از سایدبار کاربر حذف می‌شود؛ با باز کردن آدرس مستقیم، پیام «غیرفعال» نمایش داده می‌شود."}
-                  {entry.state === TAB_STATE_MAINTENANCE &&
-                    "تب در منو می‌ماند؛ کاربر با باکس «در حال بروزرسانی» مواجه می‌شود."}
-                  {entry.state === TAB_STATE_ON &&
-                    "تب برای همه کاربران عادی فعال و بدون محدودیت است."}
-                </div>
-              </div>
-            </StickerCard>
-          );
-        })}
+        <div className="sa-card-body" style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", paddingTop: "0.75rem" }}>
+          {dirty && (
+            <span style={{ alignSelf: "center", fontSize: "0.78rem", fontWeight: 600, color: "var(--sa-orange)", marginRight: "auto" }}>
+              ● Unsaved changes
+            </span>
+          )}
+          <button type="button" className="sa-btn sa-btn-secondary sa-btn-sm" onClick={handleResetAll}>
+            <RotateCcw size={13} style={{ display: "inline", verticalAlign: "-2px", marginLeft: "0.35rem" }} />
+            Reset defaults
+          </button>
+          <button
+            type="button"
+            className="sa-btn sa-btn-primary sa-btn-sm"
+            onClick={handleSave}
+            disabled={saving || !dirty}
+            style={{ opacity: saving || !dirty ? 0.6 : 1, cursor: saving || !dirty ? "not-allowed" : "pointer" }}
+          >
+            <Save size={13} style={{ display: "inline", verticalAlign: "-2px", marginLeft: "0.35rem" }} />
+            {saving ? "Saving…" : "Save configuration"}
+          </button>
+        </div>
       </div>
 
-      <p className="text-[0.625rem] font-medium text-ink/50 dark:text-slate-400 leading-5">
-        ⚙️ ذخیره از طریق تابع امن update_system_settings انجام می‌شود و پس از ذخیره، کاربر با
-        F5 یا جابه‌جایی تب وضعیت جدید را می‌بیند. پنل‌های مدیرتی (سوپرادمین) محدود نمی‌شوند.
-      </p>
+      {/* ─── Tab rows ─── */}
+      {USER_TABS.map((tab) => {
+        const entry = cfg[tab.id] || { state: TAB_STATE_ON, message: "" };
+        const meta = MODE_META[entry.state] || MODE_META[TAB_STATE_ON];
+        const StateIcon = meta.Icon;
+        return (
+          <div className="sa-card" key={tab.id} style={{ padding: "1rem 1.25rem" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.75rem" }}>
+              <div style={{ minWidth: "12rem", flex: "1 1 12rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: 700, fontSize: "0.95rem", color: "var(--sa-text-0)" }}>
+                  <StateIcon size={15} style={{ color: "var(--sa-text-2)" }} />
+                  {tab.label}
+                </div>
+                <code dir="ltr" style={{ fontSize: "0.75rem", color: "var(--sa-text-2)" }}>
+                  {tab.path}
+                </code>
+              </div>
+
+              <span className={`sa-tag ${meta.tag}`}>{meta.label}</span>
+
+              <div className="sa-perms" style={{ marginTop: 0, marginLeft: "auto" }}>
+                {[TAB_STATE_ON, TAB_STATE_MAINTENANCE, TAB_STATE_DISABLED].map((st) => (
+                  <button
+                    key={st}
+                    type="button"
+                    className={`sa-perm ${entry.state === st ? "active" : "inactive"}`}
+                    onClick={() => setTabState(tab.id, st)}
+                  >
+                    {MODE_META[st].label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {entry.state === TAB_STATE_MAINTENANCE && (
+              <div style={{ marginTop: "0.9rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--sa-text-1)" }}>
+                    Maintenance message (shown inside the notification box)
+                  </label>
+                  <button
+                    type="button"
+                    className="sa-btn sa-btn-ghost sa-btn-sm"
+                    onClick={() => setTabMessage(tab.id, DEFAULT_MAINTENANCE_MESSAGE)}
+                  >
+                    Use prepared text
+                  </button>
+                </div>
+                <textarea
+                  className="sa-textarea"
+                  rows={3}
+                  dir="rtl"
+                  value={entry.message}
+                  onChange={(e) => setTabMessage(tab.id, e.target.value)}
+                  placeholder={DEFAULT_MAINTENANCE_MESSAGE}
+                  style={{ width: "100%", fontFamily: "inherit" }}
+                />
+              </div>
+            )}
+
+            <div style={{ marginTop: "0.6rem", fontSize: "0.75rem", color: "var(--sa-text-2)" }}>
+              {entry.state === TAB_STATE_DISABLED &&
+                "Removed from the user sidebar; opening the URL directly shows the disabled notice."}
+              {entry.state === TAB_STATE_MAINTENANCE &&
+                "Tab stays in the sidebar; the user sees the maintenance notice box with your message."}
+              {entry.state === TAB_STATE_ON && "Tab is fully available to all regular users."}
+            </div>
+          </div>
+        );
+      })}
+
+      <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", lineHeight: 1.7 }}>
+        ⚙ Stored via the security-definer RPC <code dir="ltr">update_system_settings</code> (superadmin
+        only) under <code dir="ltr">user_tabs_config</code>. Users see the new state on refresh or tab
+        switch. Admin panels (Dashboard, Users, Settings, God Panel) are never gated.
+      </div>
     </div>
   );
 }

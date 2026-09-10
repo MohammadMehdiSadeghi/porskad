@@ -291,7 +291,7 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
                   }}
                   className={`flex items-center justify-center gap-2 p-3 border-2 rounded-pill-md font-bold transition-all cursor-pointer ${
                     selected
-                      ? "border-teal bg-teal/10 text-teal-text dark:text-teal dark:bg-teal-950/40"
+                      ? "border-teal bg-teal/10 text-teal-text dark:text-teal dark:bg-teal/10"
                       : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink dark:text-slate-200 hover:border-teal/50"
                   }`}
                 >
@@ -369,7 +369,7 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
                     }}
                     className={`relative flex items-center gap-3 p-3 border-2 rounded-pill-md font-bold transition-all cursor-pointer ${
                       selected
-                        ? "border-teal bg-teal/10 text-teal-text dark:text-teal dark:bg-teal-950/40"
+                        ? "border-teal bg-teal/10 text-teal-text dark:text-teal dark:bg-teal/10"
                         : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink dark:text-slate-200 hover:border-teal/50"
                     }`}
                   >

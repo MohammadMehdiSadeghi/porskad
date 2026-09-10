@@ -822,7 +822,7 @@ export default function Managers() {
           className={`px-3.5 py-1.5 rounded-pill-md text-xs sm:text-sm font-black transition-all flex items-center gap-2 cursor-pointer ${
             roleTab === "users"
               ? "bg-teal text-white shadow-xs"
-              : "bg-white dark:bg-slate-800 hover:bg-bg-lavender dark:hover:bg-slate-700 text-teal-text dark:text-teal-400 border border-teal/30 dark:border-teal-700/50"
+              : "bg-white dark:bg-slate-800 hover:bg-bg-lavender dark:hover:bg-slate-700 text-teal-text dark:text-teal border border-teal/30 dark:border-teal/30"
           }`}
         >
           <Users size={14} />
@@ -882,7 +882,7 @@ export default function Managers() {
                               isSuperAdminOrOwner
                                 ? "bg-orange text-white"
                                 : m.is_active
-                                ? "bg-teal/15 dark:bg-teal-950/50 text-teal-text dark:text-teal-300 border border-teal/30 dark:border-teal-700/50"
+                                ? "bg-teal/15 dark:bg-teal/10 text-teal-text dark:text-teal border border-teal/30 dark:border-teal/30"
                                 : "bg-bg-neutral dark:bg-slate-800 text-ink-subtle dark:text-slate-400"
                             }`}
                           >
@@ -943,7 +943,7 @@ export default function Managers() {
                             <BarChart3 size={12} className="text-orange shrink-0" />
                             باقیمانده سهمیه:
                           </span>
-                          <span className={`text-xs font-black ${remainingForms === 0 && !isSuperAdminOrOwner ? "text-magenta-text dark:text-pink-400" : "text-teal-text dark:text-teal-300"}`}>
+                          <span className={`text-xs font-black ${remainingForms === 0 && !isSuperAdminOrOwner ? "text-magenta-text dark:text-pink-400" : "text-teal-text dark:text-teal"}`}>
                             {isSuperAdminOrOwner ? "نامحدود" : `${faNum(remainingForms)} از ${faNum(maxForms)} فرم`}
                           </span>
                         </div>
@@ -1023,7 +1023,7 @@ export default function Managers() {
                       </div>
                       <p className="text-xs font-semibold text-ink-subtle dark:text-slate-400 mt-0.5" dir="ltr">{m.email}</p>
                       {m.phone && (
-                        <p className="text-xs font-bold text-teal-text dark:text-teal-300 mt-0.5 flex items-center gap-1" dir="ltr">
+                        <p className="text-xs font-bold text-teal-text dark:text-teal mt-0.5 flex items-center gap-1" dir="ltr">
                           <Phone size={11} /> {m.phone}
                         </p>
                       )}
@@ -1051,7 +1051,7 @@ export default function Managers() {
                       مالک کل — بدون محدودیت
                     </span>
                   ) : (
-                    <span className="text-xs font-bold text-teal dark:text-teal-300 bg-teal/10 dark:bg-teal-950/50 px-2.5 py-0.5 rounded-full">
+                    <span className="text-xs font-bold text-teal dark:text-teal bg-teal/10 dark:bg-teal/10 px-2.5 py-0.5 rounded-full">
                       قابل ویرایش دستی
                     </span>
                   )}
@@ -1071,7 +1071,7 @@ export default function Managers() {
                   </div>
                   <div className="bg-bg-neutral dark:bg-slate-800 p-2.5 rounded-xl text-center col-span-2 sm:col-span-1">
                     <span className="text-xs text-ink-subtle dark:text-slate-400 block font-semibold mb-0.5">باقیمانده فرم فعال</span>
-                    <strong className={`text-sm font-black ${remainingForms === 0 && !m.is_owner && m.max_forms < 999999 ? "text-magenta-text dark:text-pink-400" : "text-teal-text dark:text-teal-300"}`}>
+                    <strong className={`text-sm font-black ${remainingForms === 0 && !m.is_owner && m.max_forms < 999999 ? "text-magenta-text dark:text-pink-400" : "text-teal-text dark:text-teal"}`}>
                       {m.is_owner || m.max_forms >= 999999 || m.plan === "unlimited" ? "نامحدود ✨" : `${faNum(remainingForms)} فرم`}
                     </strong>
                   </div>
@@ -1105,7 +1105,7 @@ export default function Managers() {
                               onClick={() => handleSelectPresetPlanDirect(p.id)}
                               className={`p-2 rounded-xl border-2 text-right transition-all cursor-pointer ${
                                 isSel
-                                  ? "border-teal bg-teal/10 dark:bg-teal-950/40 text-teal-text dark:text-teal-300 font-black shadow-xs"
+                                  ? "border-teal bg-teal/10 dark:bg-teal/10 text-teal-text dark:text-teal font-black shadow-xs"
                                   : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy/70 dark:text-slate-300 hover:border-ink/30"
                               }`}
                             >
@@ -1353,7 +1353,7 @@ export default function Managers() {
                       onClick={() => handleChangeUserRole(m, "manager")}
                       className={`p-2.5 rounded-xl border-2 text-right transition-all cursor-pointer ${
                         m.role !== "admin"
-                          ? "border-teal bg-teal/10 dark:bg-teal-950/30 text-teal-text dark:text-teal-300 shadow-xs"
+                          ? "border-teal bg-teal/10 dark:bg-teal/10 text-teal-text dark:text-teal shadow-xs"
                           : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy/70 dark:text-slate-300 hover:border-ink/30"
                       }`}
                     >
@@ -1406,7 +1406,7 @@ export default function Managers() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className={m.is_active ? "!text-amber-700 dark:!text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30" : "!text-teal-text dark:!text-teal-300 hover:bg-teal/10"}
+                        className={m.is_active ? "!text-amber-700 dark:!text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30" : "!text-teal-text dark:!text-teal hover:bg-teal/10"}
                         onClick={() => handleDeactivate(m.id)}
                       >
                         {m.is_active ? "غیرفعال‌سازی کاربر" : "فعال‌سازی کاربر"}
@@ -1481,7 +1481,7 @@ export default function Managers() {
           </div>
 
           {/* دسترسی به ربات تلگرام */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-bg-lavender/50 dark:bg-slate-800/80 border-2 border-teal/20 dark:border-teal-700/40">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-bg-lavender/50 dark:bg-slate-800/80 border-2 border-teal/20 dark:border-teal/30">
             <div>
               <span className="block text-sm font-extrabold text-navy dark:text-slate-100">دسترسی به ربات تلگرام</span>
               <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400">
@@ -1536,7 +1536,7 @@ export default function Managers() {
 
           {/* دسترسی به بات تلگرام */}
           {!selectedManager?.is_owner && (
-            <div className="flex items-center justify-between p-3.5 rounded-xl bg-bg-lavender/50 dark:bg-slate-800/80 border-2 border-teal/20 dark:border-teal-700/40">
+            <div className="flex items-center justify-between p-3.5 rounded-xl bg-bg-lavender/50 dark:bg-slate-800/80 border-2 border-teal/20 dark:border-teal/30">
               <div>
                 <span className="block text-sm font-extrabold text-navy dark:text-slate-100">دسترسی به بات تلگرام</span>
                 <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400">
@@ -1670,7 +1670,7 @@ export default function Managers() {
                     onClick={() => handleSelectPresetPlanQuota(p.id)}
                     className={`p-2 rounded-xl border-2 text-right transition-all cursor-pointer ${
                       isSel
-                        ? "border-teal bg-teal/10 dark:bg-teal-950/40 text-teal-text dark:text-teal-300 font-black shadow-xs"
+                        ? "border-teal bg-teal/10 dark:bg-teal/10 text-teal-text dark:text-teal font-black shadow-xs"
                         : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy/70 dark:text-slate-300 hover:border-ink/30"
                     }`}
                   >

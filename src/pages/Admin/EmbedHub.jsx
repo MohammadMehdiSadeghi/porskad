@@ -113,7 +113,7 @@ function CopyButton({ text }) {
       className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
         copied
           ? "bg-green-100 text-green-700 border border-green-200 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-700"
-          : "bg-white text-ink/70 border border-ink/15 hover:text-teal-text hover:border-teal/30 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 dark:hover:text-teal-400"
+          : "bg-white text-ink/70 border border-ink/15 hover:text-teal-text hover:border-teal/30 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 dark:hover:text-teal"
       }`}
     >
       {copied ? <Check size={10} /> : <Copy size={10} />}

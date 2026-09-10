@@ -32,10 +32,10 @@ const THEMES = {
     rotate: "-rotate-[1deg] lg:-rotate-[2deg]",
     badgeRotate: "-rotate-[2.5deg]",
     back: "bg-teal-alt dark:bg-black/80",
-    border: "border-teal dark:border-teal-500/50",
+    border: "border-teal dark:border-teal/50",
     cardBg: "bg-[#F2FAF9] dark:bg-[#0C1F1E]",
-    text: "text-teal-text dark:text-teal-300",
-    badge: "border-teal-text text-teal-text dark:border-teal-500/50 dark:text-teal-300 dark:bg-slate-900/90",
+    text: "text-teal-text dark:text-teal",
+    badge: "border-teal-text text-teal-text dark:border-teal/50 dark:text-teal dark:bg-slate-900/90",
   },
 };
 

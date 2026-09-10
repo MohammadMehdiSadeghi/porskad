@@ -225,7 +225,7 @@ export default function Settings() {
                       href={`https://t.me/${settings.telegram_support_id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-teal dark:text-teal-400 font-bold hover:underline inline-flex items-center gap-0.5"
+                      className="text-teal dark:text-teal font-bold hover:underline inline-flex items-center gap-0.5"
                     >
                       تست لینک <ExternalLink size={12} />
                     </a>
@@ -239,11 +239,11 @@ export default function Settings() {
         {/* ۲. سقف‌های پیش‌فرض و محدودیت‌های سهمیه */}
         <StickerCard title="سقف‌ها و سهمیه‌های پیش‌فرض کاربران جدید">
           <div className="p-4 sm:p-6 space-y-5">
-            <div className="bg-teal/10 dark:bg-teal-950/40 border border-teal/20 dark:border-teal-700/60 rounded-2xl p-3.5 flex items-start gap-3">
-              <CheckCircle2 size={18} className="text-teal dark:text-teal-400 shrink-0 mt-0.5" />
+            <div className="bg-teal/10 dark:bg-teal/10 border border-teal/20 dark:border-teal/30 rounded-2xl p-3.5 flex items-start gap-3">
+              <CheckCircle2 size={18} className="text-teal dark:text-teal shrink-0 mt-0.5" />
               <div className="text-xs text-navy dark:text-slate-200 leading-relaxed">
-                <strong className="text-teal dark:text-teal-300">نحوه اعمال محدودیت‌ها:</strong> این مقادیر به عنوان سهمیه پایه به حساب تمام کاربران تازه ثبت‌نام‌شده اختصاص داده می‌شود. شما همچنین می‌توانید سهمیه هر کاربر را به صورت اختصاصی از بخش{" "}
-                <Link to="/admin/managers" className="text-teal dark:text-teal-400 font-black underline">
+                <strong className="text-teal dark:text-teal">نحوه اعمال محدودیت‌ها:</strong> این مقادیر به عنوان سهمیه پایه به حساب تمام کاربران تازه ثبت‌نام‌شده اختصاص داده می‌شود. شما همچنین می‌توانید سهمیه هر کاربر را به صورت اختصاصی از بخش{" "}
+                <Link to="/admin/managers" className="text-teal dark:text-teal font-black underline">
                   «مدیریت کاربران»
                 </Link>{" "}
                 یا پنل سوپرادمین به صورت دستی افزایش دهید یا تغییر دهید.
@@ -259,7 +259,7 @@ export default function Settings() {
                       <Layers size={16} className="text-teal" />
                       سقف پیش‌فرض فرم‌های همزمان فعال
                     </span>
-                    <span className="text-xs font-bold text-teal dark:text-teal-300 bg-teal/10 dark:bg-teal-950/50 px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-bold text-teal dark:text-teal bg-teal/10 dark:bg-teal/10 px-2 py-0.5 rounded-full">
                       پیش‌فرض: ۵ فرم
                     </span>
                   </div>
@@ -295,7 +295,7 @@ export default function Settings() {
                       <Inbox size={16} className="text-orange" />
                       سقف پیش‌فرض ورودی‌های ماهانه
                     </span>
-                    <span className="text-xs font-bold text-orange dark:text-orange/90 bg-orange/10 dark:bg-orange-950/50 px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-bold text-orange dark:text-orange/90 bg-orange/10 dark:bg-orange/50 px-2 py-0.5 rounded-full">
                       پیش‌فرض: ۱۰۰ ورودی
                     </span>
                   </div>
@@ -335,7 +335,7 @@ export default function Settings() {
                 <div
                   className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                     settings.registration_enabled
-                      ? "bg-teal/15 dark:bg-teal-950/50 text-teal dark:text-teal-300"
+                      ? "bg-teal/15 dark:bg-teal/10 text-teal dark:text-teal"
                       : "bg-magenta/15 dark:bg-pink-950/50 text-magenta dark:text-pink-400"
                   }`}
                 >

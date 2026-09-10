@@ -60,7 +60,7 @@ const PLAN_IDENTITY = {
     theme: "white",
     rotate: "md:rotate-[-0.6deg]",
     icon: Rocket,
-    iconWrap: "bg-ecosystem-light text-teal dark:bg-teal-950/60 dark:text-teal-300",
+    iconWrap: "bg-ecosystem-light text-teal dark:bg-teal/10 dark:text-teal",
     badgeColor: "gray",
   },
   pro: {
@@ -74,7 +74,7 @@ const PLAN_IDENTITY = {
     theme: "orange",
     rotate: "md:rotate-[-0.5deg]",
     icon: Building2,
-    iconWrap: "bg-college-light text-orange dark:bg-orange-950/60 dark:text-amber-300",
+    iconWrap: "bg-college-light text-orange dark:bg-orange/60 dark:text-amber-300",
     badgeColor: "orange",
   },
 };
@@ -101,7 +101,7 @@ const labelCls =
 function OverviewRow({ icon: Icon, label, value, hint }) {
   return (
     <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/70 dark:bg-slate-800/70 border border-ink/5 dark:border-slate-700">
-      <div className="w-8 h-8 rounded-xl bg-ecosystem-light text-teal dark:bg-teal-950/60 dark:text-teal-300 flex items-center justify-center shrink-0">
+      <div className="w-8 h-8 rounded-xl bg-ecosystem-light text-teal dark:bg-teal/10 dark:text-teal flex items-center justify-center shrink-0">
         <Icon size={15} />
       </div>
       <div className="min-w-0">
@@ -351,7 +351,7 @@ export default function PlansSettingsPanel() {
               </h3>
               <p className="text-xs font-semibold text-ink-subtle dark:text-slate-400 mt-1 leading-relaxed max-w-xl">
                 قیمت، سهمیه و امکانات هر طرح همین‌جا ویرایش می‌شود و با ذخیره، برای{" "}
-                <strong className="text-teal dark:text-teal-300">کل سامانه</strong> اعمال می‌گردد.
+                <strong className="text-teal dark:text-teal">کل سامانه</strong> اعمال می‌گردد.
               </p>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2.5">
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold text-ink-subtle dark:text-slate-500">
@@ -398,7 +398,7 @@ export default function PlansSettingsPanel() {
 
       {/* ─── راهنمای کوتاه ─── */}
       <div className="rounded-2xl border-2 border-navy/10 dark:border-slate-700 bg-bg-lavender/40 dark:bg-slate-800/80 p-3.5 flex items-start gap-3">
-        <Info size={16} className="text-teal dark:text-teal-300 shrink-0 mt-0.5" />
+        <Info size={16} className="text-teal dark:text-teal shrink-0 mt-0.5" />
         <p className="text-[11px] font-semibold text-navy dark:text-slate-300 leading-relaxed">
           تیک سبز کنار هر امکان یعنی در طرح{" "}
           <strong>وجود دارد</strong>؛ ضربدر یعنی در این طرح{" "}
@@ -429,7 +429,7 @@ export default function PlansSettingsPanel() {
                     <div className="min-w-0">
                       <h4 className="text-sm font-black text-navy dark:text-slate-100 truncate">
                         {p.name || planKey}
-                        {p.isPopular && <Sparkles size={12} className="inline mr-1 text-teal dark:text-teal-300" />}
+                        {p.isPopular && <Sparkles size={12} className="inline mr-1 text-teal dark:text-teal" />}
                       </h4>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <Badge color={p.badgeColor || idn.badgeColor} className="!text-[9px] !px-2 !py-0">
@@ -543,7 +543,7 @@ export default function PlansSettingsPanel() {
                 <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs font-bold text-navy dark:text-slate-300">
                   <label className="flex items-center gap-1.5 cursor-pointer">
                     <input type="checkbox" checked={Boolean(p.isPopular)} onChange={(e) => updateMeta(planKey, "isPopular", e.target.checked)} className="accent-teal w-4 h-4" />
-                    <Sparkles size={13} className="text-teal dark:text-teal-300" /> پیشنهاد ویژه
+                    <Sparkles size={13} className="text-teal dark:text-teal" /> پیشنهاد ویژه
                   </label>
                   <label className="flex items-center gap-1.5 cursor-pointer">
                     <input type="checkbox" checked={Boolean(p.isEnterprise)} onChange={(e) => updateMeta(planKey, "isEnterprise", e.target.checked)} className="accent-teal w-4 h-4" />
@@ -558,7 +558,7 @@ export default function PlansSettingsPanel() {
                       <ListChecks size={12} className="text-magenta" />
                       امکانات ({faNum((p.features || []).length)})
                     </label>
-                    <button type="button" onClick={() => addFeature(planKey)} className="text-[11px] font-black text-teal dark:text-teal-300 hover:underline flex items-center gap-0.5">
+                    <button type="button" onClick={() => addFeature(planKey)} className="text-[11px] font-black text-teal dark:text-teal hover:underline flex items-center gap-0.5">
                       <Plus size={13} /> افزودن
                     </button>
                   </div>

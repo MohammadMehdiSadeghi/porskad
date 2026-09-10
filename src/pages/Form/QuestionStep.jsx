@@ -18,12 +18,12 @@ function TelegramIcon({ className }) {
 }
 
 const STEP_THEMES = [
-  { bg: "bg-white dark:bg-[#131b2e]", border: "border-ink/10 dark:border-slate-700", label: "text-male-normal dark:text-teal-300", backBg: "bg-ink dark:bg-black" },
-  { bg: "bg-ecosystem-light dark:bg-[#0c2322]", border: "border-ecosystem-normal/20 dark:border-teal-500/30", label: "text-ecosystem-dark dark:text-teal-300", backBg: "bg-ecosystem-dark dark:bg-teal-950" },
+  { bg: "bg-white dark:bg-[#131b2e]", border: "border-ink/10 dark:border-slate-700", label: "text-male-normal dark:text-teal", backBg: "bg-ink dark:bg-black" },
+  { bg: "bg-ecosystem-light dark:bg-[#0c2322]", border: "border-ecosystem-normal/20 dark:border-teal/30", label: "text-ecosystem-dark dark:text-teal", backBg: "bg-ecosystem-dark dark:bg-teal/10" },
   { bg: "bg-male-light dark:bg-[#11182c]", border: "border-male-normal/10 dark:border-blue-500/30", label: "text-male-normal dark:text-blue-300", backBg: "bg-male-dark dark:bg-slate-950" },
   { bg: "bg-female-light dark:bg-[#250d18]", border: "border-female-normal/10 dark:border-pink-500/30", label: "text-female-dark dark:text-pink-300", backBg: "bg-female-dark dark:bg-pink-950" },
-  { bg: "bg-white dark:bg-[#131b2e]", border: "border-ink/10 dark:border-slate-700", label: "text-male-normal dark:text-teal-300", backBg: "bg-ink dark:bg-black" },
-  { bg: "bg-ecosystem-light dark:bg-[#0c2322]", border: "border-ecosystem-normal/20 dark:border-teal-500/30", label: "text-ecosystem-dark dark:text-teal-300", backBg: "bg-ecosystem-dark dark:bg-teal-950" },
+  { bg: "bg-white dark:bg-[#131b2e]", border: "border-ink/10 dark:border-slate-700", label: "text-male-normal dark:text-teal", backBg: "bg-ink dark:bg-black" },
+  { bg: "bg-ecosystem-light dark:bg-[#0c2322]", border: "border-ecosystem-normal/20 dark:border-teal/30", label: "text-ecosystem-dark dark:text-teal", backBg: "bg-ecosystem-dark dark:bg-teal/10" },
 ];
 function getStepTheme(i) { return STEP_THEMES[i % STEP_THEMES.length]; }
 
@@ -203,8 +203,8 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
             className={clsx("relative group flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 transition-all duration-200 cursor-pointer hover:-translate-y-px",
               disabled ? "opacity-40 cursor-not-allowed hover:translate-y-0" : "",
               selected
-                ? "border-ecosystem-normal bg-ecosystem-light dark:bg-teal-950/50 rotate-[-0.5deg]"
-                : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800/90 hover:border-ecosystem-normal/50 dark:hover:border-teal-500/50",
+                ? "border-ecosystem-normal bg-ecosystem-light dark:bg-teal/10 rotate-[-0.5deg]"
+                : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800/90 hover:border-ecosystem-normal/50 dark:hover:border-teal/50",
             )}>
             {selected && <div aria-hidden="true" className="absolute top-[2px] left-[2px] w-full h-full bg-ecosystem-dark/15 rounded-pill-md [corner-shape:squircle] pointer-events-none" />}
             {isMulti ? (
@@ -216,7 +216,7 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
                 selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 dark:border-slate-600 text-male-normal dark:text-slate-300 group-hover:border-ecosystem-normal",
               )}>{faNum(i + 1)}</span>
             )}
-            <span className={clsx("relative z-10 font-bold text-sm sm:text-base", selected ? "text-ecosystem-dark dark:text-teal-300" : "text-ink dark:text-slate-200")}>{opt}</span>
+            <span className={clsx("relative z-10 font-bold text-sm sm:text-base", selected ? "text-ecosystem-dark dark:text-teal" : "text-ink dark:text-slate-200")}>{opt}</span>
             {selected && <CheckIcon className="mr-auto text-ecosystem-normal shrink-0" />}
           </button>
         );
@@ -263,7 +263,7 @@ function PictureChoiceOptions({ options = [], value, onChange, maxSelections = 1
               className={clsx(
                 "group relative flex flex-col rounded-2xl border-2 overflow-hidden transition-all duration-200 cursor-pointer text-right hover:-translate-y-1 shadow-xs",
                 selected
-                  ? "border-teal bg-teal/10 dark:bg-teal-950/40 ring-2 ring-teal/30 scale-[1.02]"
+                  ? "border-teal bg-teal/10 dark:bg-teal/10 ring-2 ring-teal/30 scale-[1.02]"
                   : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-teal/50"
               )}
             >
@@ -332,7 +332,7 @@ function YesNoOptions({ value, onChange }) {
       {opts.map((o) => {
         const selected = value === o.label;
         const active = selected
-          ? o.theme === "ecosystem" ? "border-ecosystem-normal bg-ecosystem-light dark:bg-teal-950/50 text-ecosystem-dark dark:text-teal-300" : "border-female-normal bg-female-light dark:bg-pink-950/50 text-female-dark dark:text-pink-300"
+          ? o.theme === "ecosystem" ? "border-ecosystem-normal bg-ecosystem-light dark:bg-teal/10 text-ecosystem-dark dark:text-teal" : "border-female-normal bg-female-light dark:bg-pink-950/50 text-female-dark dark:text-pink-300"
           : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800/90 text-ink dark:text-slate-200";
         return (
           <button key={o.label} type="button" onClick={() => { onChange(o.label); }}
@@ -401,7 +401,7 @@ function NpsScale({ value, onChange, minLabel = "اصلاً احتمال ندا�
           const colorClass = n <= 6
             ? (selected ? "bg-amber-500 border-amber-600 text-white" : "hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30")
             : n <= 8
-            ? (selected ? "bg-teal border-teal-600 text-white" : "hover:border-teal/60 hover:bg-teal/5")
+            ? (selected ? "bg-teal border-teal text-white" : "hover:border-teal/60 hover:bg-teal/5")
             : (selected ? "bg-emerald-600 border-emerald-700 text-white" : "hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/30");
 
           return (
@@ -576,7 +576,7 @@ function RankingList({ options = [], value, onChange }) {
 // ─── متن توضیحی / بدون پاسخ (Statement) ───
 function StatementCard({ question, onAdvance }) {
   return (
-    <div className="flex flex-col gap-3 p-4 rounded-2xl bg-navy/5 dark:bg-slate-800/80 border-2 border-dashed border-teal/40 dark:border-teal-500/30 text-center items-center">
+    <div className="flex flex-col gap-3 p-4 rounded-2xl bg-navy/5 dark:bg-slate-800/80 border-2 border-dashed border-teal/40 dark:border-teal/30 text-center items-center">
       <div className="w-12 h-12 rounded-2xl bg-teal/15 text-teal flex items-center justify-center shadow-xs">
         <Info size={24} />
       </div>
@@ -671,9 +671,9 @@ function FileUploadBox({ question, value, onChange }) {
       />
 
       {value ? (
-        <div className="flex items-center justify-between p-4 rounded-2xl border-2 border-teal bg-teal/5 dark:bg-teal-950/30">
+        <div className="flex items-center justify-between p-4 rounded-2xl border-2 border-teal bg-teal/5 dark:bg-teal/10">
           <div className="flex items-center gap-3 truncate">
-            <div className="w-10 h-10 rounded-xl bg-teal/10 dark:bg-teal-900/40 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-teal/10 dark:bg-teal/40 flex items-center justify-center shrink-0">
               <FileCheck size={22} className="text-teal" />
             </div>
             <div className="truncate text-right">
@@ -804,7 +804,7 @@ export default function QuestionStep({ question, index, total, value, timeSpent,
               </span>
             )}
             {question.type === "statement" || question.type === "group" ? (
-              <span className="text-xs font-bold text-teal bg-teal/10 dark:bg-teal-950/40 rounded-pill-sm px-2 py-0.5">اطلاعاتی</span>
+              <span className="text-xs font-bold text-teal bg-teal/10 dark:bg-teal/10 rounded-pill-sm px-2 py-0.5">اطلاعاتی</span>
             ) : question.required ? (
               <span className="text-xs font-bold text-female-normal dark:text-pink-300 bg-female-light dark:bg-pink-950/40 rounded-pill-sm px-2 py-0.5 flex items-center gap-0.5">اجباری</span>
             ) : (

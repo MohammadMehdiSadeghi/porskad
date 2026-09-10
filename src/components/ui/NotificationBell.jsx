@@ -277,7 +277,7 @@ export default function NotificationBell() {
               >
                 {notifications.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 px-4 text-center gap-3 my-auto">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal/10 to-teal/5 border border-teal/10 dark:border-teal-500/20 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal/10 to-teal/5 border border-teal/10 dark:border-teal/20 flex items-center justify-center">
                       <Bell size={24} className="text-teal/40" />
                     </div>
                     <p className="text-sm font-black text-navy/70 dark:text-slate-200">اعلانی وجود ندارد</p>
@@ -294,7 +294,7 @@ export default function NotificationBell() {
 
                     if (n.type === "response") {
                       badgeLabel = "ثبت فرم";
-                      badgeClass = "bg-teal/15 text-teal border border-teal/20 dark:bg-teal-950/60 dark:text-teal-300";
+                      badgeClass = "bg-teal/15 text-teal border border-teal/20 dark:bg-teal/10 dark:text-teal";
                       IconComponent = Inbox;
                       iconColorClass = "text-teal";
                     } else if (n.type === "ticket_new") {
@@ -314,9 +314,9 @@ export default function NotificationBell() {
                       iconColorClass = "text-amber-600 dark:text-amber-400";
                     } else if (n.type === "ticket_reopen") {
                       badgeLabel = "بازگشایی تیکت";
-                      badgeClass = "bg-purple-500/15 text-purple-700 border border-purple-500/20 dark:bg-purple-950/60 dark:text-purple-300";
+                      badgeClass = "bg-purple/15 text-purple border border-purple/20 dark:bg-purple/60 dark:text-purple";
                       IconComponent = Unlock;
-                      iconColorClass = "text-purple-600 dark:text-purple-400";
+                      iconColorClass = "text-purple dark:text-purple";
                     }
 
                     return (
@@ -332,12 +332,12 @@ export default function NotificationBell() {
                         className={`group flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 border ${
                           n.read
                             ? "bg-white dark:bg-[#131B2E] border-black/5 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/80 opacity-80 hover:opacity-100"
-                            : "bg-gradient-to-l from-teal/10 via-white to-white dark:from-teal-950/40 dark:via-[#131B2E] dark:to-[#131B2E] border-teal/25 dark:border-teal-500/30 shadow-xs hover:from-teal/15"
+                            : "bg-gradient-to-l from-teal/10 via-white to-white dark:from-teal/40 dark:via-[#131B2E] dark:to-[#131B2E] border-teal/25 dark:border-teal/30 shadow-xs hover:from-teal/15"
                         }`}
                       >
                         <div
                           className={`shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shadow-2xs ${
-                            n.read ? "bg-ink/5 dark:bg-white/5" : "bg-gradient-to-br from-teal/20 to-teal/10 dark:from-teal-500/20 dark:to-teal-500/10 border border-teal/20"
+                            n.read ? "bg-ink/5 dark:bg-white/5" : "bg-gradient-to-br from-teal/20 to-teal/10 dark:from-teal/20 dark:to-teal/10 border border-teal/20"
                           }`}
                         >
                           <IconComponent size={16} className={iconColorClass} />

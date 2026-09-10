@@ -19,9 +19,7 @@ import {
   Database,
   Users,
   Shield,
-  Cloud,
   FileText,
-  Code,
   Eye,
   EyeOff,
   HardDrive,
@@ -92,9 +90,7 @@ const TABS = [
   { id: "users", label: "Users", icon: Users },
   { id: "admins", label: "Admins", icon: Shield },
   { id: "auth_logs", label: "Auth & Activity Logs", icon: Activity },
-  { id: "vercel", label: "Vercel", icon: Cloud },
   { id: "logs", label: "System Logs", icon: FileText },
-  { id: "query", label: "SQL", icon: Code },
 ];
 
 
@@ -137,10 +133,6 @@ export default function SuperAdmin() {
   const [admins, setAdmins] = useState([]);
   const [activityLog, setActivityLog] = useState([]);
   const [errorLog, setErrorLog] = useState([]);
-  const [vercelToken, setVercelToken] = useState(() => localStorage.getItem("sa_vxt") || "");
-  const [showVercelToken, setShowVercelToken] = useState(false);
-  const [vercelData, setVercelData] = useState({ deployments: [], projects: [] });
-  const [vercelLoading, setVercelLoading] = useState(false);
   const [storageData, setStorageData] = useState(null);
   const [storageLoading, setStorageLoading] = useState(false);
 
@@ -185,10 +177,6 @@ export default function SuperAdmin() {
   const [editForm, setEditForm] = useState({});
   const [detailModal, setDetailModal] = useState(null);
   const [impersonateModal, setImpersonateModal] = useState(null);
-  const [sqlQuery, setSqlQuery] = useState("");
-  const [sqlResult, setSqlResult] = useState(null);
-  const [sqlError, setSqlError] = useState(null);
-  const [sqlRunning, setSqlRunning] = useState(false);
   const [toast, setToast] = useState(null);
 
   // ─── همگام‌سازی تنظیمات انواع سوال با دیتابیس در ورود به پنل گاد ───
@@ -961,53 +949,6 @@ export default function SuperAdmin() {
     }
   }
 
-  // ─── SQL Query Runner ───
-  async function runSql() {
-    if (!sqlQuery.trim()) return;
-    setSqlRunning(true);
-    setSqlResult(null);
-    setSqlError(null);
-    try {
-      const { data, error } = await supabase.rpc("exec_sql", { query: sqlQuery });
-      if (error) throw error;
-      setSqlResult(data);
-      showToast("Query executed successfully");
-    } catch (err) {
-      setSqlError(err.message);
-      showToast("Query failed: " + err.message, "error");
-    } finally {
-      setSqlRunning(false);
-    }
-  }
-
-  // ─── Vercel API ───
-  async function loadVercel() {
-    if (!vercelToken) return;
-    setVercelLoading(true);
-    try {
-      localStorage.setItem("sa_vxt", vercelToken);
-      const [depRes, projRes] = await Promise.all([
-        fetch("https://api.vercel.com/v6/deployments?limit=10", {
-          headers: { Authorization: `Bearer ${vercelToken}` },
-        }),
-        fetch("https://api.vercel.com/v9/projects", {
-          headers: { Authorization: `Bearer ${vercelToken}` },
-        }),
-      ]);
-      const depData = depRes.ok ? await depRes.json() : { deployments: [] };
-      const projData = projRes.ok ? await projRes.json() : { projects: [] };
-      setVercelData({
-        deployments: depData.deployments || [],
-        projects: projData.projects || [],
-      });
-      showToast("Vercel data synchronized");
-    } catch (err) {
-      showToast("Vercel error: " + err.message, "error");
-    } finally {
-      setVercelLoading(false);
-    }
-  }
-
   // ─── Admin Action Proxy ───
   async function adminAction(action, payload = {}) {
     // 1. Try serverless API (/api/admin-user-management)
@@ -1319,21 +1260,21 @@ export default function SuperAdmin() {
           </div>
           <div>
             <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0 }}>Super Admin</h1>
-            <p style={{ fontSize: "0.8rem", color: "#525252", margin: 0 }}>
+            <p style={{ fontSize: "0.8rem", color: "var(--sa-text-1)", margin: 0 }}>
               System administration · God Mode
             </p>
           </div>
         </div>
         <div className="sa-header-right">
           <span className="sa-badge-online">Online</span>
-          <span style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>Auto-refresh: 30s</span>
+          <span style={{ fontSize: "0.85rem", color: "var(--sa-text-2)" }}>Auto-refresh: 30s</span>
           <div className="sa-avatar">{profile?.full_name?.[0]?.toUpperCase() || "G"}</div>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="sa-tabs">
-        {TABS.filter((t) => isCallerGod || t.id !== "query").map((t) => (
+        {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => {
@@ -1386,7 +1327,7 @@ export default function SuperAdmin() {
               {
                 label: "Auth Logs",
                 value: stats.authEvents,
-                highlight: "#8a3ffc",
+                highlight: "var(--sa-purple)",
                 onClick: () => setTab("auth_logs"),
               },
               { label: "Errors", value: stats.errors },
@@ -1397,7 +1338,7 @@ export default function SuperAdmin() {
                 sub: storageData?.database?.tables
                   ? `${storageData.database.tables.length} tables`
                   : "Postgres DB",
-                highlight: "#0f62fe",
+                highlight: "var(--sa-link)",
                 onClick: () => setTab("storage"),
               },
               {
@@ -1409,7 +1350,7 @@ export default function SuperAdmin() {
                 sub: storageData?.project?.source_pretty
                   ? `${storageData.project.source_pretty} (source)`
                   : "Filesystem",
-                highlight: "#198038",
+                highlight: "var(--sa-success)",
                 onClick: () => setTab("storage"),
               },
             ].map((s, i) => (
@@ -1471,7 +1412,7 @@ export default function SuperAdmin() {
                   <div key={e.id || i} className="sa-error-item">
                     <span
                       style={{
-                        color: "#da1e28",
+                        color: "var(--sa-danger)",
                         fontFamily: "'IBM Plex Mono', monospace",
                         fontSize: "0.85rem",
                       }}
@@ -1488,7 +1429,7 @@ export default function SuperAdmin() {
                     >
                       {e.message}
                     </span>
-                    <span style={{ color: "#6f6f6f", fontSize: "0.85rem" }}>
+                    <span style={{ color: "var(--sa-text-2)", fontSize: "0.85rem" }}>
                       {e.created_at ? new Date(e.created_at).toLocaleTimeString() : ""}
                     </span>
                   </div>
@@ -1515,7 +1456,7 @@ export default function SuperAdmin() {
               <div className="sa-section-title" style={{ margin: 0, fontSize: "1.1rem" }}>
                 System Settings & Global Limits
               </div>
-              <div style={{ fontSize: "0.8rem", color: "#525252" }}>
+              <div style={{ fontSize: "0.8rem", color: "var(--sa-text-1)" }}>
                 Configure platform defaults, Telegram support username, and quota caps.
               </div>
             </div>
@@ -1533,37 +1474,37 @@ export default function SuperAdmin() {
           <div className="sa-card" style={{ padding: "1.25rem" }}>
             <form onSubmit={saveSystemSettings} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
               <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#161616", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
                   Platform Title / Brand Name
                 </label>
                 <input
                   type="text"
                   value={sysSettings.site_title || ""}
                   onChange={(e) => setSysSettings({ ...sysSettings, site_title: e.target.value })}
-                  style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #c6c6c6", fontSize: "0.85rem", outline: "none" }}
+                  style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", outline: "none" }}
                   placeholder="Porskad"
                 />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#161616", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
                   Telegram Support Username
                 </label>
                 <input
                   type="text"
                   value={sysSettings.telegram_support_id || ""}
                   onChange={(e) => setSysSettings({ ...sysSettings, telegram_support_id: e.target.value })}
-                  style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #c6c6c6", fontSize: "0.85rem", fontFamily: "'IBM Plex Mono', monospace", outline: "none" }}
+                  style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", fontFamily: "'IBM Plex Mono', monospace", outline: "none" }}
                   placeholder="porskad_support"
                 />
-                <div style={{ fontSize: "0.85rem", color: "#6f6f6f", marginTop: "0.25rem" }}>
+                <div style={{ fontSize: "0.85rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
                   Used across the app to redirect client questions to your Telegram support.
                 </div>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div>
-                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#161616", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
                     Default Max Active Forms
                   </label>
                   <input
@@ -1572,15 +1513,15 @@ export default function SuperAdmin() {
                     max={50}
                     value={sysSettings.default_max_active_forms ?? 5}
                     onChange={(e) => setSysSettings({ ...sysSettings, default_max_active_forms: parseInt(e.target.value) || 5 })}
-                    style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #c6c6c6", fontSize: "0.85rem", outline: "none" }}
+                    style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", outline: "none" }}
                   />
-                  <div style={{ fontSize: "0.85rem", color: "#6f6f6f", marginTop: "0.25rem" }}>
+                  <div style={{ fontSize: "0.85rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
                     Global cap: max 5 active (published) forms per user at the same time.
                   </div>
                 </div>
 
                 <div>
-                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#161616", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
                     Default Monthly Responses Limit
                   </label>
                   <input
@@ -1589,9 +1530,9 @@ export default function SuperAdmin() {
                     max={50000}
                     value={sysSettings.default_max_monthly_responses ?? 100}
                     onChange={(e) => setSysSettings({ ...sysSettings, default_max_monthly_responses: parseInt(e.target.value) || 100 })}
-                    style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #c6c6c6", fontSize: "0.85rem", outline: "none" }}
+                    style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", outline: "none" }}
                   />
-                  <div style={{ fontSize: "0.85rem", color: "#6f6f6f", marginTop: "0.25rem" }}>
+                  <div style={{ fontSize: "0.85rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
                     100 responses per month per user. Consumed tokens are permanent upon delete.
                   </div>
                 </div>
@@ -1653,7 +1594,7 @@ export default function SuperAdmin() {
               <div className="sa-section-title" style={{ margin: 0, fontSize: "1.1rem" }}>
                 Form Field & Question Types Manager
               </div>
-              <div style={{ fontSize: "0.8rem", color: "#525252" }}>
+              <div style={{ fontSize: "0.8rem", color: "var(--sa-text-1)" }}>
                 Enable, disable, hide, rename, and customize all 20 question types across the platform.
               </div>
             </div>
@@ -1695,7 +1636,7 @@ export default function SuperAdmin() {
 
                 <div className="sa-card" style={{ padding: "0.85rem 1rem" }}>
                   <div className="sa-stat-label">Active & Available</div>
-                  <div className="sa-stat-value" style={{ fontSize: "1.5rem", color: "#198038" }}>
+                  <div className="sa-stat-value" style={{ fontSize: "1.5rem", color: "var(--sa-success)" }}>
                     {activeCount}
                   </div>
                   <div className="sa-stat-sub">Visible in Form Builder</div>
@@ -1703,7 +1644,7 @@ export default function SuperAdmin() {
 
                 <div className="sa-card" style={{ padding: "0.85rem 1rem" }}>
                   <div className="sa-stat-label">Hidden Fields</div>
-                  <div className="sa-stat-value" style={{ fontSize: "1.5rem", color: "#f1c21b" }}>
+                  <div className="sa-stat-value" style={{ fontSize: "1.5rem", color: "var(--sa-warn-border)" }}>
                     {hiddenCount}
                   </div>
                   <div className="sa-stat-sub">Hidden from new questions</div>
@@ -1711,7 +1652,7 @@ export default function SuperAdmin() {
 
                 <div className="sa-card" style={{ padding: "0.85rem 1rem" }}>
                   <div className="sa-stat-label">Disabled / Inactive</div>
-                  <div className="sa-stat-value" style={{ fontSize: "1.5rem", color: "#da1e28" }}>
+                  <div className="sa-stat-value" style={{ fontSize: "1.5rem", color: "var(--sa-danger)" }}>
                     {disabledCount}
                   </div>
                   <div className="sa-stat-sub">Completely disabled</div>
@@ -1736,7 +1677,7 @@ export default function SuperAdmin() {
             <div style={{ position: "relative", minWidth: 260, flex: 1 }}>
               <Search
                 size={14}
-                style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#8d8d8d" }}
+                style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--sa-text-3)" }}
               />
               <input
                 type="text"
@@ -1747,7 +1688,7 @@ export default function SuperAdmin() {
                   width: "100%",
                   padding: "0.45rem 0.75rem 0.45rem 2rem",
                   fontSize: "0.8rem",
-                  border: "1px solid #c6c6c6",
+                  border: "1px solid var(--sa-field-border)",
                   outline: "none",
                 }}
               />
@@ -1762,7 +1703,7 @@ export default function SuperAdmin() {
                     background: "none",
                     border: "none",
                     cursor: "pointer",
-                    color: "#8d8d8d",
+                    color: "var(--sa-text-3)",
                   }}
                 >
                   <X size={12} />
@@ -1822,7 +1763,7 @@ export default function SuperAdmin() {
 
             if (filteredKeys.length === 0) {
               return (
-                <div className="sa-card" style={{ padding: "3rem 1rem", textAlign: "center", color: "#6f6f6f" }}>
+                <div className="sa-card" style={{ padding: "3rem 1rem", textAlign: "center", color: "var(--sa-text-2)" }}>
                   <ListOrdered size={36} style={{ margin: "0 auto 0.5rem", opacity: 0.4 }} />
                   <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>No Question Types Match Your Filters</div>
                   <div style={{ fontSize: "0.8rem", marginTop: "0.25rem" }}>
@@ -1861,10 +1802,10 @@ export default function SuperAdmin() {
                             key={key}
                             style={{
                               opacity: !isEnabled ? 0.6 : 1,
-                              background: isHidden ? "rgba(241, 194, 27, 0.04)" : !isEnabled ? "rgba(218, 30, 40, 0.04)" : undefined,
+                              background: isHidden ? "var(--sa-warn-tint)" : !isEnabled ? "var(--sa-danger-tint)" : undefined,
                             }}
                           >
-                            <td style={{ color: "#8d8d8d", fontSize: "0.75rem", fontFamily: "monospace" }}>
+                            <td style={{ color: "var(--sa-text-3)", fontSize: "0.75rem", fontFamily: "monospace" }}>
                               {index + 1}
                             </td>
 
@@ -1875,13 +1816,13 @@ export default function SuperAdmin() {
                                     width: 30,
                                     height: 30,
                                     borderRadius: 4,
-                                    background: "#f4f4f4",
+                                    background: "var(--sa-surface-2)",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
                                     fontWeight: 800,
                                     fontSize: "0.75rem",
-                                    color: "#0f62fe",
+                                    color: "var(--sa-link)",
                                   }}
                                 >
                                   {Icon ? <Icon size={16} /> : meta.icon}
@@ -1890,7 +1831,7 @@ export default function SuperAdmin() {
                                   <div style={{ fontWeight: 700, fontSize: "0.85rem", fontFamily: "'IBM Plex Mono', monospace" }}>
                                     {key}
                                   </div>
-                                  <div style={{ fontSize: "0.72rem", color: "#6f6f6f", maxWidth: 260 }} title={meta.hint}>
+                                  <div style={{ fontSize: "0.72rem", color: "var(--sa-text-2)", maxWidth: 260 }} title={meta.hint}>
                                     {meta.hint}
                                   </div>
                                 </div>
@@ -1906,10 +1847,10 @@ export default function SuperAdmin() {
                                       fontSize: "0.65rem",
                                       fontWeight: 800,
                                       padding: "1px 4px",
-                                      background: "#edf5ff",
-                                      color: "#0f62fe",
+                                      background: "var(--sa-blue-soft)",
+                                      color: "var(--sa-link)",
                                       borderRadius: 2,
-                                      border: "1px solid #d0e2ff",
+                                      border: "1px solid var(--sa-blue-bg)",
                                     }}
                                   >
                                     Custom
@@ -1917,7 +1858,7 @@ export default function SuperAdmin() {
                                 )}
                               </div>
                               {defaultMeta.label !== meta.label && (
-                                <div style={{ fontSize: "0.72rem", color: "#8d8d8d" }}>
+                                <div style={{ fontSize: "0.72rem", color: "var(--sa-text-3)" }}>
                                   Default: {defaultMeta.label}
                                 </div>
                               )}
@@ -1933,16 +1874,16 @@ export default function SuperAdmin() {
                                   borderRadius: 2,
                                   background:
                                     meta.category === "choice"
-                                      ? "#f6f2ff"
+                                      ? "var(--sa-purple-bg)"
                                       : meta.category === "text"
-                                      ? "#e5f6ff"
-                                      : "#defbe6",
+                                      ? "var(--sa-blue-soft)"
+                                      : "var(--sa-success-bg)",
                                   color:
                                     meta.category === "choice"
-                                      ? "#6929c4"
+                                      ? "var(--sa-purple)"
                                       : meta.category === "text"
-                                      ? "#0043ce"
-                                      : "#0e6027",
+                                      ? "var(--sa-link-strong)"
+                                      : "var(--sa-success)",
                                 }}
                               >
                                 {meta.category}
@@ -1954,8 +1895,8 @@ export default function SuperAdmin() {
                                 onClick={() => handleToggleQField(key, "enabled")}
                                 style={{
                                   border: "none",
-                                  background: isEnabled ? "#defbe6" : "#ffd7d9",
-                                  color: isEnabled ? "#0e6027" : "#da1e28",
+                                  background: isEnabled ? "var(--sa-success-bg)" : "var(--sa-error-bg-2)",
+                                  color: isEnabled ? "var(--sa-success)" : "var(--sa-danger)",
                                   padding: "2px 8px",
                                   borderRadius: 12,
                                   fontSize: "0.75rem",
@@ -1972,7 +1913,7 @@ export default function SuperAdmin() {
                                     width: 6,
                                     height: 6,
                                     borderRadius: "50%",
-                                    background: isEnabled ? "#198038" : "#da1e28",
+                                    background: isEnabled ? "var(--sa-success)" : "var(--sa-danger)",
                                   }}
                                 />
                                 {isEnabled ? "Active" : "Disabled"}
@@ -1984,8 +1925,8 @@ export default function SuperAdmin() {
                                 onClick={() => handleToggleQField(key, "hidden")}
                                 style={{
                                   border: "none",
-                                  background: !isHidden ? "#e5f6ff" : "#fcf4d6",
-                                  color: !isHidden ? "#0043ce" : "#8a6d10",
+                                  background: !isHidden ? "var(--sa-blue-soft)" : "var(--sa-warn-bg)",
+                                  color: !isHidden ? "var(--sa-link-strong)" : "var(--sa-warn-text)",
                                   padding: "2px 8px",
                                   borderRadius: 12,
                                   fontSize: "0.75rem",
@@ -2037,14 +1978,14 @@ export default function SuperAdmin() {
           <div className="sa-card" style={{ padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-                <div style={{ padding: "0.5rem", borderRadius: "0.5rem", backgroundColor: "#0f62fe15", color: "#0f62fe" }}>
+                <div style={{ padding: "0.5rem", borderRadius: "0.5rem", backgroundColor: "var(--sa-link-tint)", color: "var(--sa-link)" }}>
                   <UploadCloud size={20} />
                 </div>
                 <div>
                   <div className="sa-section-title" style={{ margin: 0, fontSize: "1.05rem" }}>
                     Global File Upload Limits & Extension Constraints
                   </div>
-                  <div style={{ fontSize: "0.8rem", color: "#525252" }}>
+                  <div style={{ fontSize: "0.8rem", color: "var(--sa-text-1)" }}>
                     Configure maximum upload file sizes, permitted file categories, whitelist extensions, and blocked dangerous executables.
                   </div>
                 </div>
@@ -2081,14 +2022,14 @@ export default function SuperAdmin() {
                 gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
                 gap: "1rem",
                 padding: "1rem",
-                backgroundColor: "#f4f4f4",
+                backgroundColor: "var(--sa-surface-2)",
                 borderRadius: "0.5rem",
-                border: "1px solid #e0e0e0",
+                border: "1px solid var(--sa-surface-3)",
               }}
             >
               {/* Max Size in MB */}
               <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#161616", marginBottom: "0.35rem" }}>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "var(--sa-text-0)", marginBottom: "0.35rem" }}>
                   Maximum File Size (MB)
                 </label>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
@@ -2112,22 +2053,22 @@ export default function SuperAdmin() {
                         width: 70,
                         padding: "0.35rem 0.5rem",
                         borderRadius: "0.35rem",
-                        border: "1px solid #8d8d8d",
+                        border: "1px solid var(--sa-text-3)",
                         fontWeight: 700,
                         textAlign: "center",
                       }}
                     />
-                    <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#525252" }}>MB</span>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--sa-text-1)" }}>MB</span>
                   </div>
                 </div>
-                <div style={{ fontSize: "0.75rem", color: "#6f6f6f", marginTop: "0.35rem" }}>
+                <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.35rem" }}>
                   Current size limit: {filePolicy.maxFileSizeMb || 10} Megabytes ({((filePolicy.maxFileSizeMb || 10) * 1024 * 1024).toLocaleString()} bytes).
                 </div>
               </div>
 
               {/* Max Files Count */}
               <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#161616", marginBottom: "0.35rem" }}>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "var(--sa-text-0)", marginBottom: "0.35rem" }}>
                   Max Files Allowed Per Question
                 </label>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
@@ -2151,15 +2092,15 @@ export default function SuperAdmin() {
                         width: 70,
                         padding: "0.35rem 0.5rem",
                         borderRadius: "0.35rem",
-                        border: "1px solid #8d8d8d",
+                        border: "1px solid var(--sa-text-3)",
                         fontWeight: 700,
                         textAlign: "center",
                       }}
                     />
-                    <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#525252" }}>files</span>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--sa-text-1)" }}>files</span>
                   </div>
                 </div>
-                <div style={{ fontSize: "0.75rem", color: "#6f6f6f", marginTop: "0.35rem" }}>
+                <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.35rem" }}>
                   User can upload up to {filePolicy.maxFilesCount || 5} file(s) per file upload field.
                 </div>
               </div>
@@ -2167,7 +2108,7 @@ export default function SuperAdmin() {
 
             {/* Allowed Categories Presets */}
             <div>
-              <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#161616", marginBottom: "0.5rem" }}>
+              <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--sa-text-0)", marginBottom: "0.5rem" }}>
                 Allowed File Categories (Presets)
               </div>
               <div
@@ -2189,8 +2130,8 @@ export default function SuperAdmin() {
                         gap: "0.6rem",
                         padding: "0.75rem",
                         borderRadius: "0.5rem",
-                        border: `1.5px solid ${isChecked ? "#0f62fe" : "#e0e0e0"}`,
-                        backgroundColor: isChecked ? "#edf5ff" : "#ffffff",
+                        border: `1.5px solid ${isChecked ? "var(--sa-link)" : "var(--sa-surface-3)"}`,
+                        backgroundColor: isChecked ? "var(--sa-blue-soft)" : "var(--sa-surface)",
                         cursor: "pointer",
                         transition: "all 0.15s ease",
                       }}
@@ -2203,14 +2144,14 @@ export default function SuperAdmin() {
                       />
                       <div style={{ flex: 1 }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <span style={{ fontSize: "0.85rem", fontWeight: 700, color: isChecked ? "#0043ce" : "#161616" }}>
+                          <span style={{ fontSize: "0.85rem", fontWeight: 700, color: isChecked ? "var(--sa-link-strong)" : "var(--sa-text-0)" }}>
                             {preset.label}
                           </span>
-                          <span style={{ fontSize: "0.75rem", color: "#6f6f6f", direction: "ltr" }}>
+                          <span style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", direction: "ltr" }}>
                             ({preset.extensions.length} ext)
                           </span>
                         </div>
-                        <div style={{ fontSize: "0.75rem", color: "#525252", marginTop: "0.2rem" }}>
+                        <div style={{ fontSize: "0.75rem", color: "var(--sa-text-1)", marginTop: "0.2rem" }}>
                           {preset.description}
                         </div>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem", marginTop: "0.35rem" }}>
@@ -2221,8 +2162,8 @@ export default function SuperAdmin() {
                                 fontSize: "0.7rem",
                                 padding: "0.1rem 0.35rem",
                                 borderRadius: "0.25rem",
-                                backgroundColor: isChecked ? "#d0e2ff" : "#f4f4f4",
-                                color: isChecked ? "#0043ce" : "#525252",
+                                backgroundColor: isChecked ? "var(--sa-blue-bg)" : "var(--sa-surface-2)",
+                                color: isChecked ? "var(--sa-link-strong)" : "var(--sa-text-1)",
                                 fontFamily: "monospace",
                               }}
                             >
@@ -2230,7 +2171,7 @@ export default function SuperAdmin() {
                             </span>
                           ))}
                           {preset.extensions.length > 6 && (
-                            <span style={{ fontSize: "0.7rem", color: "#6f6f6f", alignSelf: "center" }}>
+                            <span style={{ fontSize: "0.7rem", color: "var(--sa-text-2)", alignSelf: "center" }}>
                               +{preset.extensions.length - 6} more
                             </span>
                           )}
@@ -2243,11 +2184,11 @@ export default function SuperAdmin() {
             </div>
 
             {/* Whitelist: Custom Allowed Extensions */}
-            <div style={{ padding: "0.85rem 1rem", backgroundColor: "#f9f9f9", borderRadius: "0.5rem", border: "1px solid #e0e0e0" }}>
-              <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#161616", marginBottom: "0.35rem" }}>
+            <div style={{ padding: "0.85rem 1rem", backgroundColor: "var(--sa-surface-5)", borderRadius: "0.5rem", border: "1px solid var(--sa-surface-3)" }}>
+              <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--sa-text-0)", marginBottom: "0.35rem" }}>
                 Custom Allowed Extensions (Whitelist)
               </div>
-              <div style={{ fontSize: "0.75rem", color: "#6f6f6f", marginBottom: "0.6rem" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginBottom: "0.6rem" }}>
                 Add custom formats not included in the presets above (e.g. psd, heic, ai, blend, dwg).
               </div>
               <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.6rem", flexWrap: "wrap" }}>
@@ -2265,7 +2206,7 @@ export default function SuperAdmin() {
                   style={{
                     padding: "0.4rem 0.6rem",
                     borderRadius: "0.35rem",
-                    border: "1px solid #8d8d8d",
+                    border: "1px solid var(--sa-text-3)",
                     fontSize: "0.85rem",
                     width: 220,
                   }}
@@ -2291,8 +2232,8 @@ export default function SuperAdmin() {
                       gap: "0.3rem",
                       padding: "0.2rem 0.5rem",
                       borderRadius: "0.35rem",
-                      backgroundColor: "#e8daff",
-                      color: "#6929c4",
+                      backgroundColor: "var(--sa-purple-bg)",
+                      color: "var(--sa-purple)",
                       fontSize: "0.8rem",
                       fontFamily: "monospace",
                       fontWeight: 600,
@@ -2305,7 +2246,7 @@ export default function SuperAdmin() {
                       style={{
                         background: "none",
                         border: "none",
-                        color: "#6929c4",
+                        color: "var(--sa-purple)",
                         cursor: "pointer",
                         padding: 0,
                         fontSize: "0.9rem",
@@ -2320,7 +2261,7 @@ export default function SuperAdmin() {
                   </span>
                 ))}
                 {(filePolicy.customAllowedExtensions || []).length === 0 && (
-                  <span style={{ fontSize: "0.75rem", color: "#8d8d8d", fontStyle: "italic" }}>
+                  <span style={{ fontSize: "0.75rem", color: "var(--sa-text-3)", fontStyle: "italic" }}>
                     No custom extensions added yet. Preset categories will be used.
                   </span>
                 )}
@@ -2331,18 +2272,18 @@ export default function SuperAdmin() {
             <div
               style={{
                 padding: "0.85rem 1rem",
-                backgroundColor: "#fff1f1",
+                backgroundColor: "var(--sa-red-soft)",
                 borderRadius: "0.5rem",
-                border: "1px solid #ffd7d9",
+                border: "1px solid var(--sa-error-bg-2)",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "0.25rem" }}>
-                <AlertTriangle size={15} color="#da1e28" />
-                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#da1e28" }}>
+                <AlertTriangle size={15} color="var(--sa-danger)" />
+                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-danger)" }}>
                   Blocked & Dangerous Executables (Strict Blacklist)
                 </span>
               </div>
-              <div style={{ fontSize: "0.75rem", color: "#752227", marginBottom: "0.6rem" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--sa-error-text-2)", marginBottom: "0.6rem" }}>
                 For security, files with these extensions are strictly rejected by the server and client validators even if their MIME type mimics safe documents.
               </div>
 
@@ -2361,7 +2302,7 @@ export default function SuperAdmin() {
                   style={{
                     padding: "0.4rem 0.6rem",
                     borderRadius: "0.35rem",
-                    border: "1px solid #ff8389",
+                    border: "1px solid var(--sa-error-text-2)",
                     fontSize: "0.85rem",
                     width: 220,
                   }}
@@ -2387,8 +2328,8 @@ export default function SuperAdmin() {
                       gap: "0.3rem",
                       padding: "0.2rem 0.5rem",
                       borderRadius: "0.35rem",
-                      backgroundColor: "#ffd7d9",
-                      color: "#a2191f",
+                      backgroundColor: "var(--sa-error-bg-2)",
+                      color: "var(--sa-danger-strong)",
                       fontSize: "0.8rem",
                       fontFamily: "monospace",
                       fontWeight: 700,
@@ -2401,7 +2342,7 @@ export default function SuperAdmin() {
                       style={{
                         background: "none",
                         border: "none",
-                        color: "#a2191f",
+                        color: "var(--sa-danger-strong)",
                         cursor: "pointer",
                         padding: 0,
                         fontSize: "0.9rem",
@@ -2440,7 +2381,7 @@ export default function SuperAdmin() {
               <div className="sa-section-title" style={{ margin: 0, fontSize: "1.1rem" }}>
                 System & Storage Usage
               </div>
-              <p style={{ margin: 0, fontSize: "0.8rem", color: "#525252" }}>
+              <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--sa-text-1)" }}>
                 Comprehensive breakdown of Supabase PostgreSQL database size and total project root filesystem
               </p>
             </div>
@@ -2460,7 +2401,7 @@ export default function SuperAdmin() {
             <div className="sa-storage-card">
               <div className="sa-storage-header">
                 <div className="sa-storage-title">
-                  <Database size={18} color="#0f62fe" />
+                  <Database size={18} color="var(--sa-link)" />
                   <span>PostgreSQL Database Storage</span>
                 </div>
                 <span className="sa-tag sa-tag-blue">
@@ -2484,7 +2425,7 @@ export default function SuperAdmin() {
                     fontSize: "0.8rem",
                     lineHeight: 1.6,
                     padding: "0.75rem",
-                    borderLeft: "3px solid #0f62fe",
+                    borderLeft: "3px solid var(--sa-link)",
                   }}
                 >
                   Includes all tables, B-tree indexes, system catalogs, activity logs, and metadata on Supabase database cluster.
@@ -2522,7 +2463,7 @@ export default function SuperAdmin() {
                             <td
                               style={{
                                 fontFamily: "'IBM Plex Mono', monospace",
-                                color: "#0f62fe",
+                                color: "var(--sa-link)",
                                 fontWeight: 600,
                               }}
                             >
@@ -2535,7 +2476,7 @@ export default function SuperAdmin() {
                           <tr>
                             <td
                               colSpan={3}
-                              style={{ textAlign: "center", color: "#6f6f6f", padding: "1rem" }}
+                              style={{ textAlign: "center", color: "var(--sa-text-2)", padding: "1rem" }}
                             >
                               Fetching table metrics...
                             </td>
@@ -2552,7 +2493,7 @@ export default function SuperAdmin() {
             <div className="sa-storage-card">
               <div className="sa-storage-header">
                 <div className="sa-storage-title">
-                  <FolderTree size={18} color="#198038" />
+                  <FolderTree size={18} color="var(--sa-success)" />
                   <span>Project Root Storage</span>
                 </div>
                 <span className="sa-tag sa-tag-green">Filesystem</span>
@@ -2560,7 +2501,7 @@ export default function SuperAdmin() {
 
               <div className="sa-storage-body">
                 <div className="sa-storage-metric">
-                  <div className="sa-storage-num" style={{ color: "#198038" }}>
+                  <div className="sa-storage-num" style={{ color: "var(--sa-success)" }}>
                     {storageData?.project?.full_pretty ||
                       storageData?.project?.source_pretty ||
                       "—"}
@@ -2591,7 +2532,7 @@ export default function SuperAdmin() {
                       style={{
                         fontSize: "0.85rem",
                         fontWeight: 700,
-                        color: "#0f62fe",
+                        color: "var(--sa-link)",
                         fontFamily: "'IBM Plex Mono', monospace",
                       }}
                     >
@@ -2670,7 +2611,7 @@ export default function SuperAdmin() {
                 key={t}
                 onClick={() => browseTable(t)}
                 className="sa-tile"
-                style={{ background: selectedTable === t ? "#d0e2ff" : undefined }}
+                style={{ background: selectedTable === t ? "var(--sa-blue-bg)" : undefined }}
               >
                 <div className="sa-tile-name">{t}</div>
                 <div className="sa-tile-count">
@@ -2692,7 +2633,7 @@ export default function SuperAdmin() {
               >
                 <span className="sa-section-title" style={{ margin: 0 }}>
                   {selectedTable}{" "}
-                  <span style={{ color: "#6f6f6f", fontWeight: 400 }}>
+                  <span style={{ color: "var(--sa-text-2)", fontWeight: 400 }}>
                     ({filteredData.length.toLocaleString()} rows)
                   </span>
                 </span>
@@ -2722,9 +2663,9 @@ export default function SuperAdmin() {
                           return (
                             <td key={c}>
                               {v === null || v === undefined ? (
-                                <span style={{ color: "#c6c6c6" }}>—</span>
+                                <span style={{ color: "var(--sa-field-border)" }}>—</span>
                               ) : typeof v === "boolean" ? (
-                                <span style={{ color: v ? "#24a148" : "#da1e28", display: "inline-flex", alignItems: "center" }}>
+                                <span style={{ color: v ? "var(--sa-success)" : "var(--sa-danger)", display: "inline-flex", alignItems: "center" }}>
                                   {v ? <Check size={13} /> : <X size={13} />}
                                 </span>
                               ) : typeof v === "object" ? (
@@ -2760,7 +2701,7 @@ export default function SuperAdmin() {
                             </button>
                             <button
                               className="sa-btn sa-btn-ghost sa-btn-sm"
-                              style={{ color: "#da1e28" }}
+                              style={{ color: "var(--sa-danger)" }}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 deleteRecord(selectedTable, r.id);
@@ -2776,7 +2717,7 @@ export default function SuperAdmin() {
                       <tr>
                         <td
                           colSpan={Math.max(1, tableCols.length + 1)}
-                          style={{ textAlign: "center", color: "#8d8d8d", padding: "2.5rem 1rem" }}
+                          style={{ textAlign: "center", color: "var(--sa-text-3)", padding: "2.5rem 1rem" }}
                         >
                           No records found in table "{selectedTable}".
                         </td>
@@ -2804,7 +2745,7 @@ export default function SuperAdmin() {
             <div className="sa-section-title" style={{ margin: 0 }}>
               System Users ({users.length.toLocaleString()})
             </div>
-            <div style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>
+            <div style={{ fontSize: "0.85rem", color: "var(--sa-text-2)" }}>
               Standard system users and managers. Permissions restricted from accessing peer records.
             </div>
           </div>
@@ -2844,7 +2785,7 @@ export default function SuperAdmin() {
                         style={{
                           fontFamily: "'IBM Plex Mono', monospace",
                           fontSize: "0.85rem",
-                          color: "#0f62fe",
+                          color: "var(--sa-link)",
                           fontWeight: 600,
                         }}
                       >
@@ -2878,17 +2819,17 @@ export default function SuperAdmin() {
                             fontWeight: 700,
                             color:
                               (r.monthly_responses_used || 0) >= (r.max_responses_per_month || 100)
-                                ? "#da1e28"
-                                : "#161616",
+                                ? "var(--sa-danger)"
+                                : "var(--sa-text-0)",
                           }}
                         >
                           {r.monthly_responses_used || 0} / {r.max_responses_per_month || 100}
                         </span>
                       </td>
-                      <td style={{ fontSize: "0.85rem", color: "#525252", fontFamily: "'IBM Plex Mono', monospace" }}>
+                      <td style={{ fontSize: "0.85rem", color: "var(--sa-text-1)", fontFamily: "'IBM Plex Mono', monospace" }}>
                         {r.quota_reset_at ? new Date(r.quota_reset_at).toLocaleDateString("en-US") : "30 days"}
                       </td>
-                      <td style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>
+                      <td style={{ fontSize: "0.85rem", color: "var(--sa-text-2)" }}>
                         {r.created_at ? new Date(r.created_at).toLocaleDateString("en-US") : "—"}
                       </td>
                       <td>
@@ -2910,7 +2851,7 @@ export default function SuperAdmin() {
                               alignItems: "center",
                               gap: "0.25rem",
                               fontWeight: 700,
-                              color: "#0f62fe",
+                              color: "var(--sa-link)",
                             }}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -2923,7 +2864,7 @@ export default function SuperAdmin() {
                           </button>
                           <button
                             className="sa-btn sa-btn-ghost sa-btn-sm"
-                            style={{ color: "#da1e28", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                            style={{ color: "var(--sa-danger)", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
                             onClick={(e) => {
                               e.stopPropagation();
                               handleResetUserQuota(r.id, r.full_name || r.email);
@@ -2966,7 +2907,7 @@ export default function SuperAdmin() {
             <div className="sa-section-title" style={{ margin: 0 }}>
               Super Administrators ({admins.length.toLocaleString()})
             </div>
-            <div style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>
+            <div style={{ fontSize: "0.85rem", color: "var(--sa-text-2)" }}>
               Administrators with full platform privileges. Primary god account is stealth-isolated.
             </div>
           </div>
@@ -2997,7 +2938,7 @@ export default function SuperAdmin() {
                       <div
                         style={{
                           fontSize: "0.85rem",
-                          color: "#0f62fe",
+                          color: "var(--sa-link)",
                           fontWeight: 600,
                           marginTop: "0.15rem",
                         }}
@@ -3023,7 +2964,7 @@ export default function SuperAdmin() {
                   <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
                     <button
                       className="sa-btn sa-btn-secondary sa-btn-sm"
-                      style={{ color: "#0f62fe", display: "inline-flex", alignItems: "center", gap: "0.25rem", fontWeight: 700 }}
+                      style={{ color: "var(--sa-link)", display: "inline-flex", alignItems: "center", gap: "0.25rem", fontWeight: 700 }}
                       onClick={() => openUserLogs(a)}
                       title="View activity timeline & logs"
                     >
@@ -3032,7 +2973,7 @@ export default function SuperAdmin() {
                     </button>
                     <button
                       className="sa-btn sa-btn-ghost sa-btn-sm"
-                      style={{ color: "#0f62fe" }}
+                      style={{ color: "var(--sa-link)" }}
                       onClick={() => {
                         setDetailModal(a);
                         setPasswordVisible(true);
@@ -3130,10 +3071,10 @@ export default function SuperAdmin() {
           >
             <div>
               <div className="sa-section-title" style={{ margin: 0, display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <Activity size={18} color="#0f62fe" />
+                <Activity size={18} color="var(--sa-link)" />
                 Authentication & Activity Audit Trail ({filteredAuthLogs.length.toLocaleString()})
               </div>
-              <div style={{ fontSize: "0.8rem", color: "#525252", marginTop: "0.2rem" }}>
+              <div style={{ fontSize: "0.8rem", color: "var(--sa-text-1)", marginTop: "0.2rem" }}>
                 Comprehensive activity monitor: Track user sign-ins, device details, security actions, and timestamps.
               </div>
             </div>
@@ -3218,74 +3159,74 @@ export default function SuperAdmin() {
               gap: "0.75rem",
             }}
           >
-            <div className="sa-card" style={{ padding: "0.75rem 1rem", borderTop: "3px solid #0f62fe" }}>
-              <div style={{ fontSize: "0.75rem", color: "#525252", fontWeight: 700, textTransform: "uppercase" }}>
+            <div className="sa-card" style={{ padding: "0.75rem 1rem", borderTop: "3px solid var(--sa-link)" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--sa-text-1)", fontWeight: 700, textTransform: "uppercase" }}>
                 Total Recorded Events
               </div>
-              <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "#161616", marginTop: "0.2rem" }}>
+              <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--sa-text-0)", marginTop: "0.2rem" }}>
                 {authLogs.length.toLocaleString()}
               </div>
-              <div style={{ fontSize: "0.7rem", color: "#6f6f6f", marginTop: "0.15rem" }}>
+              <div style={{ fontSize: "0.7rem", color: "var(--sa-text-2)", marginTop: "0.15rem" }}>
                 All auth sessions captured
               </div>
             </div>
 
-            <div className="sa-card" style={{ padding: "0.75rem 1rem", borderTop: "3px solid #8a3ffc" }}>
-              <div style={{ fontSize: "0.75rem", color: "#525252", fontWeight: 700, textTransform: "uppercase" }}>
+            <div className="sa-card" style={{ padding: "0.75rem 1rem", borderTop: "3px solid var(--sa-purple)" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--sa-text-1)", fontWeight: 700, textTransform: "uppercase" }}>
                 Unique Users
               </div>
-              <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "#8a3ffc", marginTop: "0.2rem" }}>
+              <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--sa-purple)", marginTop: "0.2rem" }}>
                 {authLogsGroupedByUser.length.toLocaleString()}
               </div>
-              <div style={{ fontSize: "0.7rem", color: "#6f6f6f", marginTop: "0.15rem" }}>
+              <div style={{ fontSize: "0.7rem", color: "var(--sa-text-2)", marginTop: "0.15rem" }}>
                 Active user accounts
               </div>
             </div>
 
-            <div className="sa-card" style={{ padding: "0.75rem 1rem", borderTop: "3px solid #1192e8" }}>
-              <div style={{ fontSize: "0.75rem", color: "#525252", fontWeight: 700, textTransform: "uppercase" }}>
+            <div className="sa-card" style={{ padding: "0.75rem 1rem", borderTop: "3px solid var(--sa-cyan)" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--sa-text-1)", fontWeight: 700, textTransform: "uppercase" }}>
                 Active in 24 Hours
               </div>
-              <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "#1192e8", marginTop: "0.2rem" }}>
+              <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--sa-cyan)", marginTop: "0.2rem" }}>
                 {activeLast24hCount.toLocaleString()}
               </div>
-              <div style={{ fontSize: "0.7rem", color: "#6f6f6f", marginTop: "0.15rem" }}>
+              <div style={{ fontSize: "0.7rem", color: "var(--sa-text-2)", marginTop: "0.15rem" }}>
                 Recent authentications
               </div>
             </div>
 
-            <div className="sa-card" style={{ padding: "0.75rem 1rem", borderTop: "3px solid #198038" }}>
-              <div style={{ fontSize: "0.75rem", color: "#525252", fontWeight: 700, textTransform: "uppercase" }}>
+            <div className="sa-card" style={{ padding: "0.75rem 1rem", borderTop: "3px solid var(--sa-success)" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--sa-text-1)", fontWeight: 700, textTransform: "uppercase" }}>
                 Total Logins
               </div>
-              <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "#198038", marginTop: "0.2rem" }}>
+              <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--sa-success)", marginTop: "0.2rem" }}>
                 {authLogs.filter((l) => l.action?.includes("login")).length.toLocaleString()}
               </div>
-              <div style={{ fontSize: "0.7rem", color: "#6f6f6f", marginTop: "0.15rem" }}>
+              <div style={{ fontSize: "0.7rem", color: "var(--sa-text-2)", marginTop: "0.15rem" }}>
                 Successful logins
               </div>
             </div>
 
-            <div className="sa-card" style={{ padding: "0.75rem 1rem", borderTop: "3px solid #da1e28" }}>
-              <div style={{ fontSize: "0.75rem", color: "#525252", fontWeight: 700, textTransform: "uppercase" }}>
+            <div className="sa-card" style={{ padding: "0.75rem 1rem", borderTop: "3px solid var(--sa-danger)" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--sa-text-1)", fontWeight: 700, textTransform: "uppercase" }}>
                 Registrations
               </div>
-              <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "#da1e28", marginTop: "0.2rem" }}>
+              <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--sa-danger)", marginTop: "0.2rem" }}>
                 {authLogs.filter((l) => l.action === "register").length.toLocaleString()}
               </div>
-              <div style={{ fontSize: "0.7rem", color: "#6f6f6f", marginTop: "0.15rem" }}>
+              <div style={{ fontSize: "0.7rem", color: "var(--sa-text-2)", marginTop: "0.15rem" }}>
                 New account signups
               </div>
             </div>
 
-            <div className="sa-card" style={{ padding: "0.75rem 1rem", borderTop: "3px solid #ff832b" }}>
-              <div style={{ fontSize: "0.75rem", color: "#525252", fontWeight: 700, textTransform: "uppercase" }}>
+            <div className="sa-card" style={{ padding: "0.75rem 1rem", borderTop: "3px solid var(--sa-orange)" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--sa-text-1)", fontWeight: 700, textTransform: "uppercase" }}>
                 Logouts
               </div>
-              <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "#ff832b", marginTop: "0.2rem" }}>
+              <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--sa-orange)", marginTop: "0.2rem" }}>
                 {authLogs.filter((l) => l.action === "logout").length.toLocaleString()}
               </div>
-              <div style={{ fontSize: "0.7rem", color: "#6f6f6f", marginTop: "0.15rem" }}>
+              <div style={{ fontSize: "0.7rem", color: "var(--sa-text-2)", marginTop: "0.15rem" }}>
                 Signout events
               </div>
             </div>
@@ -3296,7 +3237,7 @@ export default function SuperAdmin() {
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               {/* Row 1: View Mode Switcher */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
-                <div style={{ display: "flex", gap: "0.35rem", background: "#f4f4f4", padding: "0.25rem", border: "1px solid #e0e0e0" }}>
+                <div style={{ display: "flex", gap: "0.35rem", background: "var(--sa-surface-2)", padding: "0.25rem", border: "1px solid var(--sa-surface-3)" }}>
                   <button
                     onClick={() => setAuthLogsViewMode("stream")}
                     style={{
@@ -3305,8 +3246,8 @@ export default function SuperAdmin() {
                       fontWeight: 700,
                       border: "none",
                       cursor: "pointer",
-                      background: authLogsViewMode === "stream" ? "#0f62fe" : "transparent",
-                      color: authLogsViewMode === "stream" ? "#ffffff" : "#525252",
+                      background: authLogsViewMode === "stream" ? "var(--sa-link)" : "transparent",
+                      color: authLogsViewMode === "stream" ? "var(--sa-surface)" : "var(--sa-text-1)",
                       display: "inline-flex",
                       alignItems: "center",
                       gap: "0.35rem",
@@ -3323,8 +3264,8 @@ export default function SuperAdmin() {
                       fontWeight: 700,
                       border: "none",
                       cursor: "pointer",
-                      background: authLogsViewMode === "user_grouped" ? "#0f62fe" : "transparent",
-                      color: authLogsViewMode === "user_grouped" ? "#ffffff" : "#525252",
+                      background: authLogsViewMode === "user_grouped" ? "var(--sa-link)" : "transparent",
+                      color: authLogsViewMode === "user_grouped" ? "var(--sa-surface)" : "var(--sa-text-1)",
                       display: "inline-flex",
                       alignItems: "center",
                       gap: "0.35rem",
@@ -3337,7 +3278,7 @@ export default function SuperAdmin() {
 
                 {/* Timeframe selector */}
                 <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                  <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#525252" }}>Timeframe:</span>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--sa-text-1)" }}>Timeframe:</span>
                   {[
                     { id: "all", label: "All Time" },
                     { id: "24h", label: "Last 24h" },
@@ -3378,7 +3319,7 @@ export default function SuperAdmin() {
 
                 <div style={{ flex: 1, minWidth: "240px", marginLeft: "auto" }}>
                   <div style={{ position: "relative" }}>
-                    <Search size={13} color="#8d8d8d" style={{ position: "absolute", left: "0.6rem", top: "50%", transform: "translateY(-50%)" }} />
+                    <Search size={13} color="var(--sa-text-3)" style={{ position: "absolute", left: "0.6rem", top: "50%", transform: "translateY(-50%)" }} />
                     <input
                       type="text"
                       placeholder="Filter by Email, Name, Browser, OS..."
@@ -3387,7 +3328,7 @@ export default function SuperAdmin() {
                       style={{
                         width: "100%",
                         padding: "0.4rem 0.65rem 0.4rem 1.8rem",
-                        border: "1px solid #c6c6c6",
+                        border: "1px solid var(--sa-field-border)",
                         fontSize: "0.8rem",
                         fontFamily: "'IBM Plex Sans', sans-serif",
                         outline: "none",
@@ -3406,14 +3347,14 @@ export default function SuperAdmin() {
                 <span className="sa-section-title" style={{ margin: 0 }}>
                   Authentication Stream ({filteredAuthLogs.length})
                 </span>
-                <span style={{ fontSize: "0.8rem", color: "#6f6f6f" }}>
+                <span style={{ fontSize: "0.8rem", color: "var(--sa-text-2)" }}>
                   Click User Timeline to inspect complete activity history
                 </span>
               </div>
               <div className="sa-card-body">
                 {filteredAuthLogs.length === 0 ? (
-                  <div style={{ padding: "2.5rem 1rem", textAlign: "center", color: "#6f6f6f" }}>
-                    <Activity size={28} color="#a8a8a8" style={{ margin: "0 auto 0.5rem auto" }} />
+                  <div style={{ padding: "2.5rem 1rem", textAlign: "center", color: "var(--sa-text-2)" }}>
+                    <Activity size={28} color="var(--sa-text-4)" style={{ margin: "0 auto 0.5rem auto" }} />
                     <p style={{ margin: 0, fontWeight: 700, fontSize: "0.9rem" }}>No auth records match the criteria</p>
                     <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem" }}>
                       Logins and registrations will appear here automatically with their device details.
@@ -3444,16 +3385,16 @@ export default function SuperAdmin() {
                               {/* User */}
                               <td>
                                 <div>
-                                  <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#161616" }}>
+                                  <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "var(--sa-text-0)" }}>
                                     {r.email || (r.user_id ? `User: ${String(r.user_id).slice(0, 8)}...` : "Anonymous")}
                                   </div>
                                   {r.full_name && (
-                                    <div style={{ fontSize: "0.75rem", color: "#525252" }}>
+                                    <div style={{ fontSize: "0.75rem", color: "var(--sa-text-1)" }}>
                                       {r.full_name}
                                     </div>
                                   )}
                                   {isPhone && (
-                                    <div style={{ fontSize: "0.72rem", color: "#0f62fe", fontWeight: 600 }}>
+                                    <div style={{ fontSize: "0.72rem", color: "var(--sa-link)", fontWeight: 600 }}>
                                       {isPhone}
                                     </div>
                                   )}
@@ -3490,25 +3431,25 @@ export default function SuperAdmin() {
                               <td>
                                 <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.85rem" }}>
                                   {r.device === "Mobile" ? (
-                                    <Smartphone size={13} color="#525252" />
+                                    <Smartphone size={13} color="var(--sa-text-1)" />
                                   ) : r.device === "Tablet" ? (
-                                    <Tablet size={13} color="#525252" />
+                                    <Tablet size={13} color="var(--sa-text-1)" />
                                   ) : (
-                                    <Monitor size={13} color="#525252" />
+                                    <Monitor size={13} color="var(--sa-text-1)" />
                                   )}
                                   <span style={{ fontWeight: 600 }}>{r.device || "Desktop"}</span>
-                                  <span style={{ color: "#8d8d8d" }}>•</span>
-                                  <span style={{ color: "#525252" }}>{r.os || "—"}</span>
+                                  <span style={{ color: "var(--sa-text-3)" }}>•</span>
+                                  <span style={{ color: "var(--sa-text-1)" }}>{r.os || "—"}</span>
                                 </div>
                               </td>
 
                               {/* Browser */}
-                              <td style={{ fontSize: "0.85rem", color: "#161616", fontWeight: 600 }}>
+                              <td style={{ fontSize: "0.85rem", color: "var(--sa-text-0)", fontWeight: 600 }}>
                                 {r.browser || "—"}
                               </td>
 
                               {/* Timestamp */}
-                              <td style={{ fontSize: "0.82rem", color: "#525252", whiteSpace: "nowrap" }}>
+                              <td style={{ fontSize: "0.82rem", color: "var(--sa-text-1)", whiteSpace: "nowrap" }}>
                                 {r.created_at ? new Date(r.created_at).toLocaleString("en-US") : "—"}
                               </td>
 
@@ -3517,7 +3458,7 @@ export default function SuperAdmin() {
                                 <div style={{ display: "flex", gap: "0.25rem" }}>
                                   <button
                                     className="sa-btn sa-btn-ghost sa-btn-sm"
-                                    style={{ color: "#0f62fe", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                                    style={{ color: "var(--sa-link)", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
                                     onClick={() => {
                                       const matchingUser = users.find((u) => u.id === r.user_id || u.email === r.email) ||
                                         admins.find((a) => a.id === r.user_id || a.email === r.email) ||
@@ -3550,14 +3491,14 @@ export default function SuperAdmin() {
                   <span className="sa-section-title" style={{ margin: 0 }}>
                     User Activity Profiles ({authLogsGroupedByUser.length} Users)
                   </span>
-                  <div style={{ fontSize: "0.8rem", color: "#6f6f6f", marginTop: "0.15rem" }}>
+                  <div style={{ fontSize: "0.8rem", color: "var(--sa-text-2)", marginTop: "0.15rem" }}>
                     Track all sessions and activity volume per user account.
                   </div>
                 </div>
               </div>
               <div className="sa-card-body">
                 {authLogsGroupedByUser.length === 0 ? (
-                  <div style={{ padding: "2.5rem 1rem", textAlign: "center", color: "#6f6f6f" }}>
+                  <div style={{ padding: "2.5rem 1rem", textAlign: "center", color: "var(--sa-text-2)" }}>
                     No user auth data available.
                   </div>
                 ) : (
@@ -3583,16 +3524,16 @@ export default function SuperAdmin() {
                               {/* User Info */}
                               <td>
                                 <div>
-                                  <div style={{ fontWeight: 700, fontSize: "0.88rem", color: "#161616" }}>
+                                  <div style={{ fontWeight: 700, fontSize: "0.88rem", color: "var(--sa-text-0)" }}>
                                     {u.email || u.userKey}
                                   </div>
                                   {u.fullName && (
-                                    <div style={{ fontSize: "0.75rem", color: "#525252" }}>
+                                    <div style={{ fontSize: "0.75rem", color: "var(--sa-text-1)" }}>
                                       {u.fullName}
                                     </div>
                                   )}
                                   {u.phone && (
-                                    <div style={{ fontSize: "0.72rem", color: "#0f62fe", fontWeight: 600 }}>
+                                    <div style={{ fontSize: "0.72rem", color: "var(--sa-link)", fontWeight: 600 }}>
                                       {u.phone}
                                     </div>
                                   )}
@@ -3601,21 +3542,21 @@ export default function SuperAdmin() {
 
                               {/* Total hits */}
                               <td>
-                                <span style={{ fontWeight: 800, fontSize: "0.92rem", color: "#161616" }}>
+                                <span style={{ fontWeight: 800, fontSize: "0.92rem", color: "var(--sa-text-0)" }}>
                                   {u.count.toLocaleString()}
                                 </span>
                               </td>
 
                               {/* Devices */}
                               <td>
-                                <div style={{ fontSize: "0.78rem", color: "#525252" }}>
+                                <div style={{ fontSize: "0.78rem", color: "var(--sa-text-1)" }}>
                                   <div>{u.devicesList.join(", ") || "Desktop"}</div>
-                                  <div style={{ color: "#8d8d8d" }}>{u.browsersList.join(", ") || "—"}</div>
+                                  <div style={{ color: "var(--sa-text-3)" }}>{u.browsersList.join(", ") || "—"}</div>
                                 </div>
                               </td>
 
                               {/* Last Active */}
-                              <td style={{ fontSize: "0.8rem", color: "#161616", fontWeight: 600, whiteSpace: "nowrap" }}>
+                              <td style={{ fontSize: "0.8rem", color: "var(--sa-text-0)", fontWeight: 600, whiteSpace: "nowrap" }}>
                                 {new Date(u.last_seen).toLocaleString("en-US")}
                               </td>
 
@@ -3624,7 +3565,7 @@ export default function SuperAdmin() {
                                 <button
                                   className="sa-btn sa-btn-ghost sa-btn-sm"
                                   onClick={() => openUserLogs(matchingUser)}
-                                  style={{ color: "#0f62fe", display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.75rem" }}
+                                  style={{ color: "var(--sa-link)", display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.75rem" }}
                                 >
                                   <History size={12} />
                                   User Timeline
@@ -3638,122 +3579,6 @@ export default function SuperAdmin() {
                   </div>
                 )}
               </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ═══════════ Vercel ═══════════ */}
-      {tab === "vercel" && (
-        <div className="flex flex-col gap-4">
-          <div className="sa-card">
-            <div className="sa-card-body">
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <input
-                    type={showVercelToken ? "text" : "password"}
-                    value={vercelToken}
-                    onChange={(e) => setVercelToken(e.target.value)}
-                    placeholder="Vercel API Token"
-                    className="w-full bg-white border-2 border-ink/15 rounded-pill-md px-3 py-2 pl-9 text-xs font-semibold text-navy focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowVercelToken(!showVercelToken)}
-                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink/40 hover:text-navy transition-colors p-1 cursor-pointer"
-                    tabIndex={-1}
-                    aria-label={showVercelToken ? "Hide token" : "Show token"}
-                  >
-                    {showVercelToken ? <EyeOff size={14} /> : <Eye size={14} />}
-                  </button>
-                </div>
-                <button
-                  className="sa-btn sa-btn-primary"
-                  onClick={loadVercel}
-                  disabled={vercelLoading || !vercelToken}
-                >
-                  {vercelLoading ? "..." : "Connect"}
-                </button>
-              </div>
-            </div>
-          </div>
-          {vercelData.projects.length > 0 && (
-            <StickerCard theme="navy">
-              <div className="p-3.5">
-                <h3 className="text-xs font-extrabold text-navy mb-2">Projects</h3>
-                {vercelData.projects.map((p) => (
-                  <div
-                    key={p.id}
-                    className="flex items-center gap-2 py-1.5 border-b border-ink/10 last:border-0"
-                  >
-                    <span className="text-xs font-bold text-white flex-1">{p.name}</span>
-                    <Badge
-                      color={
-                        p.latestDeployments?.[0]?.state === "READY" ? "green" : "gray"
-                      }
-                    >
-                      {p.latestDeployments?.[0]?.state || "—"}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </StickerCard>
-          )}
-          {vercelData.deployments.length > 0 && (
-            <div className="overflow-x-auto border-2 border-ink/10 rounded-pill-md bg-white">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="bg-bg-lavender border-b-2 border-ink/10">
-                    <th className="text-left py-2 px-3 text-xs font-extrabold text-navy uppercase">
-                      Project
-                    </th>
-                    <th className="text-left py-2 px-3 text-xs font-extrabold text-navy uppercase">
-                      Status
-                    </th>
-                    <th className="text-left py-2 px-3 text-xs font-extrabold text-navy uppercase">
-                      Time
-                    </th>
-                    <th className="text-left py-2 px-3 text-xs font-extrabold text-navy uppercase">
-                      URL
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {vercelData.deployments.map((r, i) => (
-                    <tr
-                      key={r.id || i}
-                      className={`border-b border-ink/5 last:border-0 ${
-                        i % 2 ? "bg-bg-lavender/30" : ""
-                      }`}
-                    >
-                      <td className="py-2 px-3 font-bold text-navy">{r.name}</td>
-                      <td className="py-2 px-3">
-                        <Badge color={r.state === "READY" ? "green" : "gray"}>
-                          {r.state}
-                        </Badge>
-                      </td>
-                      <td className="py-2 px-3 text-xs font-semibold text-ink-subtle">
-                        {new Date(r.created).toLocaleString()}
-                      </td>
-                      <td className="py-2 px-3">
-                        <a
-                          href={`https://${r.url}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-xs font-bold text-teal-text hover:underline"
-                        >
-                          {r.url}
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-          {!vercelToken && (
-            <div className="bg-bg-lavender border-2 border-ink/10 rounded-pill-md p-6 text-center text-xs font-semibold text-ink-subtle">
-              Enter your Vercel API token to monitor deployments
             </div>
           )}
         </div>
@@ -3834,7 +3659,7 @@ export default function SuperAdmin() {
                         >
                           {r.details ? JSON.stringify(r.details).slice(0, 50) : "—"}
                         </td>
-                        <td style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>
+                        <td style={{ fontSize: "0.85rem", color: "var(--sa-text-2)" }}>
                           {r.created_at ? new Date(r.created_at).toLocaleString() : "—"}
                         </td>
                       </tr>
@@ -3846,9 +3671,9 @@ export default function SuperAdmin() {
           </div>
 
           {/* Errors */}
-          <div className="sa-card" style={{ borderColor: "#a2191f" }}>
+          <div className="sa-card" style={{ borderColor: "var(--sa-danger-strong)" }}>
             <div className="sa-card-header">
-              <span className="sa-section-title" style={{ margin: 0, color: "#da1e28" }}>
+              <span className="sa-section-title" style={{ margin: 0, color: "var(--sa-danger)" }}>
                 Error Log ({errorLog.length.toLocaleString()})
               </span>
               <button className="sa-btn sa-btn-ghost" onClick={loadErrors}>
@@ -3874,7 +3699,7 @@ export default function SuperAdmin() {
                             fontFamily: "'IBM Plex Mono', monospace",
                             fontSize: "0.85rem",
                             fontWeight: 600,
-                            color: "#da1e28",
+                            color: "var(--sa-danger)",
                           }}
                         >
                           {r.source}
@@ -3883,7 +3708,7 @@ export default function SuperAdmin() {
                         <td
                           style={{
                             fontSize: "0.85rem",
-                            color: "#6f6f6f",
+                            color: "var(--sa-text-2)",
                             maxWidth: 150,
                             overflow: "hidden",
                             textOverflow: "ellipsis",
@@ -3892,7 +3717,7 @@ export default function SuperAdmin() {
                         >
                           {r.url || "—"}
                         </td>
-                        <td style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>
+                        <td style={{ fontSize: "0.85rem", color: "var(--sa-text-2)" }}>
                           {r.created_at ? new Date(r.created_at).toLocaleString() : "—"}
                         </td>
                       </tr>
@@ -3902,134 +3727,6 @@ export default function SuperAdmin() {
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* ═══════════ SQL Runner ═══════════ */}
-      {tab === "query" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <div className="sa-card">
-            <div className="sa-card-body sa-sql">
-              <textarea
-                value={sqlQuery}
-                onChange={(e) => setSqlQuery(e.target.value)}
-                rows={3}
-                placeholder="SELECT * FROM forms LIMIT 10;"
-              />
-              <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
-                <button
-                  className="sa-btn sa-btn-primary"
-                  onClick={runSql}
-                  disabled={sqlRunning || !sqlQuery.trim()}
-                >
-                  {sqlRunning ? "Running..." : "Run Query"}
-                </button>
-                <button
-                  className="sa-btn sa-btn-secondary"
-                  onClick={() => {
-                    setSqlQuery("");
-                    setSqlResult(null);
-                    setSqlError(null);
-                  }}
-                >
-                  Clear
-                </button>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  gap: "0.25rem",
-                  marginTop: "0.5rem",
-                  flexWrap: "wrap",
-                }}
-              >
-                {tables.map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setSqlQuery(`SELECT * FROM ${t} LIMIT 20;`)}
-                    className="sa-perm inactive"
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-          {sqlError && (
-            <div
-              style={{
-                background: "#fff1f1",
-                border: "1px solid #a2191f",
-                padding: "0.5rem 0.75rem",
-                fontSize: "0.8rem",
-                fontWeight: 600,
-                color: "#a2191f",
-                fontFamily: "'IBM Plex Mono', monospace",
-              }}
-            >
-              {sqlError}
-            </div>
-          )}
-          {sqlResult && Array.isArray(sqlResult) && sqlResult.length > 0 && (
-            <div className="sa-table-wrap">
-              <table className="sa-table">
-                <thead>
-                  <tr>
-                    {Object.keys(sqlResult[0]).map((k) => (
-                      <th key={k}>{k}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {sqlResult.map((r, i) => (
-                    <tr key={i}>
-                      {Object.keys(sqlResult[0]).map((k) => {
-                        const v = r[k];
-                        return (
-                          <td key={k}>
-                            {v === null ? (
-                              <span style={{ color: "#c6c6c6" }}>—</span>
-                            ) : typeof v === "object" ? (
-                              <span
-                                style={{
-                                  fontSize: "0.85rem",
-                                  fontFamily: "'IBM Plex Mono', monospace",
-                                  maxWidth: 120,
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  display: "block",
-                                }}
-                              >
-                                {JSON.stringify(v).slice(0, 40)}
-                              </span>
-                            ) : (
-                              String(v).slice(0, 60)
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-          {sqlResult && !Array.isArray(sqlResult) && (
-            <pre
-              style={{
-                background: "#f4f4f4",
-                border: "1px solid #e0e0e0",
-                padding: "0.75rem",
-                fontSize: "0.8rem",
-                fontFamily: "'IBM Plex Mono', monospace",
-                overflow: "auto",
-                maxHeight: 400,
-                color: "#161616",
-              }}
-            >
-              {JSON.stringify(sqlResult, null, 2)}
-            </pre>
-          )}
         </div>
       )}
 
@@ -4045,7 +3742,7 @@ export default function SuperAdmin() {
             const inputStyle = {
               width: "100%",
               padding: "0.5rem 0.75rem",
-              border: "1px solid #c6c6c6",
+              border: "1px solid var(--sa-field-border)",
               fontSize: "0.8rem",
               fontFamily: "'IBM Plex Sans', sans-serif",
               outline: "none",
@@ -4057,7 +3754,7 @@ export default function SuperAdmin() {
                     display: "block",
                     fontSize: "0.85rem",
                     fontWeight: 700,
-                    color: "#525252",
+                    color: "var(--sa-text-1)",
                     marginBottom: "0.25rem",
                     textTransform: "uppercase",
                   }}
@@ -4113,7 +3810,7 @@ export default function SuperAdmin() {
               gap: "0.5rem",
               justifyContent: "flex-end",
               paddingTop: "0.5rem",
-              borderTop: "1px solid #e0e0e0",
+              borderTop: "1px solid var(--sa-surface-3)",
             }}
           >
             <button className="sa-btn sa-btn-primary" onClick={saveRecord}>
@@ -4191,14 +3888,14 @@ export default function SuperAdmin() {
                 ["Hidden From", `${detailModal.hidden_from?.length || 0} admins`],
               ].map(([label, value]) => (
                 <div key={label}>
-                  <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#6f6f6f" }}>
+                  <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--sa-text-2)" }}>
                     {label}
                   </span>
                   <div
                     style={{
                       fontSize: "0.8rem",
                       fontWeight: 600,
-                      color: label === "Phone Number" ? "#0f62fe" : "#161616",
+                      color: label === "Phone Number" ? "var(--sa-link)" : "var(--sa-text-0)",
                     }}
                   >
                     {value}
@@ -4210,13 +3907,13 @@ export default function SuperAdmin() {
             {/* Authentication & Security History */}
             <div className="sa-modal-box-blue">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0f62fe", textTransform: "uppercase", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
+                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-link)", textTransform: "uppercase", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
                   <Activity size={14} /> Recent Authentication History ({detailActivityHistory.length})
                 </span>
                 <button
                   type="button"
                   className="sa-btn sa-btn-ghost sa-btn-sm"
-                  style={{ fontSize: "0.75rem", color: "#0f62fe" }}
+                  style={{ fontSize: "0.75rem", color: "var(--sa-link)" }}
                   onClick={() => {
                     const targetUser = detailModal;
                     setDetailModal(null);
@@ -4228,7 +3925,7 @@ export default function SuperAdmin() {
               </div>
 
               {detailActivityLoading ? (
-                <div style={{ fontSize: "0.8rem", color: "#6f6f6f", padding: "0.5rem 0" }}>Loading activity history...</div>
+                <div style={{ fontSize: "0.8rem", color: "var(--sa-text-2)", padding: "0.5rem 0" }}>Loading activity history...</div>
               ) : detailActivityHistory.length === 0 ? (
                 <div className="sa-modal-box" style={{ fontSize: "0.8rem", borderStyle: "dashed" }}>
                   No dedicated auth logs recorded for this user yet.
@@ -4355,7 +4052,7 @@ export default function SuperAdmin() {
                   style={{
                     fontSize: "0.85rem",
                     fontWeight: 700,
-                    color: "#0f62fe",
+                    color: "var(--sa-link)",
                     textTransform: "uppercase",
                     display: "inline-flex",
                     alignItems: "center",
@@ -4372,7 +4069,7 @@ export default function SuperAdmin() {
               {/* Plan Selector & Quick Presets */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", marginBottom: "0.6rem" }}>
                 <div>
-                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "#161616", marginBottom: "0.2rem" }}>
+                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.2rem" }}>
                     Account Plan / Tier
                   </label>
                   <select
@@ -4416,8 +4113,8 @@ export default function SuperAdmin() {
                       fontSize: "0.85rem",
                       fontWeight: 700,
                       borderRadius: "0.35rem",
-                      border: "1px solid #8d8d8d",
-                      backgroundColor: "#fff",
+                      border: "1px solid var(--sa-text-3)",
+                      backgroundColor: "var(--sa-surface)",
                     }}
                   >
                     <option value="free">Free Plan (رایگان)</option>
@@ -4428,7 +4125,7 @@ export default function SuperAdmin() {
                 </div>
 
                 <div>
-                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "#161616", marginBottom: "0.2rem" }}>
+                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.2rem" }}>
                     Next Quota Renewal Date
                   </label>
                   <div style={{ display: "flex", gap: "0.3rem" }}>
@@ -4441,7 +4138,7 @@ export default function SuperAdmin() {
                         padding: "0.35rem 0.5rem",
                         fontSize: "0.8rem",
                         borderRadius: "0.35rem",
-                        border: "1px solid #8d8d8d",
+                        border: "1px solid var(--sa-text-3)",
                       }}
                     />
                     <button
@@ -4571,13 +4268,13 @@ export default function SuperAdmin() {
               <div
                 style={{
                   padding: "0.6rem 0.75rem",
-                  backgroundColor: "#ffffff",
+                  backgroundColor: "var(--sa-surface)",
                   borderRadius: "0.4rem",
-                  border: "1px solid #d0e2ff",
+                  border: "1px solid var(--sa-blue-bg)",
                   marginBottom: "0.6rem",
                 }}
               >
-                <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#0043ce", marginBottom: "0.4rem" }}>
+                <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--sa-link-strong)", marginBottom: "0.4rem" }}>
                   Custom Feature Overrides for this User:
                 </div>
                 <div
@@ -4625,7 +4322,7 @@ export default function SuperAdmin() {
                   justifyContent: "space-between",
                   alignItems: "center",
                   paddingTop: "0.4rem",
-                  borderTop: "1px solid rgba(140, 140, 140, 0.2)",
+                  borderTop: "1px solid var(--sa-hairline)",
                 }}
               >
                 <div style={{ fontSize: "0.8rem", opacity: 0.8 }}>
@@ -4637,8 +4334,8 @@ export default function SuperAdmin() {
                     type="button"
                     className="sa-btn sa-btn-secondary sa-btn-sm"
                     style={{
-                      color: "#da1e28",
-                      borderColor: "#da1e28",
+                      color: "var(--sa-danger)",
+                      borderColor: "var(--sa-danger)",
                       fontSize: "0.85rem",
                       display: "inline-flex",
                       alignItems: "center",
@@ -4686,7 +4383,7 @@ export default function SuperAdmin() {
                   style={{
                     fontSize: "0.85rem",
                     fontWeight: 700,
-                    color: "#0f62fe",
+                    color: "var(--sa-link)",
                     textTransform: "uppercase",
                     display: "inline-flex",
                     alignItems: "center",
@@ -4738,9 +4435,9 @@ export default function SuperAdmin() {
                     }}
                   >
                     {passwordVisible ? (
-                      <EyeOff size={14} color="#6f6f6f" />
+                      <EyeOff size={14} color="var(--sa-text-2)" />
                     ) : (
-                      <Eye size={14} color="#6f6f6f" />
+                      <Eye size={14} color="var(--sa-text-2)" />
                     )}
                   </button>
                 </div>
@@ -4862,11 +4559,11 @@ export default function SuperAdmin() {
                       gap: "0.35rem",
                     }}
                   >
-                    <Shield size={14} color="#0f62fe" />
+                    <Shield size={14} color="var(--sa-link)" />
                     System Role
                   </span>
                   {isCallerGod ? (
-                    <span style={{ fontSize: "0.8125rem", color: "#eb6200", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                    <span style={{ fontSize: "0.8125rem", color: "var(--sa-orange)", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
                       <Crown size={14} /> Primary God Control
                     </span>
                   ) : (
@@ -5012,7 +4709,7 @@ export default function SuperAdmin() {
                 >
                   Assigned Permissions
                 </span>
-                <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#0f62fe" }}>
+                <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--sa-link)" }}>
                   {detailModal.permissions?.length || 0} active
                 </span>
               </div>
@@ -5118,7 +4815,7 @@ export default function SuperAdmin() {
               </div>
             </div>
 
-            <div style={{ paddingTop: "0.5rem", borderTop: "1px solid rgba(140, 140, 140, 0.2)" }}>
+            <div style={{ paddingTop: "0.5rem", borderTop: "1px solid var(--sa-hairline)" }}>
               <button
                 className="sa-btn sa-btn-primary"
                 onClick={() => {
@@ -5218,7 +4915,7 @@ export default function SuperAdmin() {
                   style={{
                     width: "100%",
                     padding: "0.35rem 0.55rem",
-                    border: "1px solid #c6c6c6",
+                    border: "1px solid var(--sa-field-border)",
                     fontSize: "0.8rem",
                     fontFamily: "'IBM Plex Sans', sans-serif",
                     outline: "none",
@@ -5229,7 +4926,7 @@ export default function SuperAdmin() {
 
             {/* Logs Table */}
             {userLogsLoading ? (
-              <div style={{ padding: "2rem", textAlign: "center", color: "#6f6f6f" }}>
+              <div style={{ padding: "2rem", textAlign: "center", color: "var(--sa-text-2)" }}>
                 Loading activity & auth logs...
               </div>
             ) : filteredUserLogs.length === 0 ? (
@@ -5300,13 +4997,13 @@ export default function SuperAdmin() {
                           >
                             {log.details ? JSON.stringify(log.details) : (log.target_type ? `${log.target_type}/${log.target_id || ""}` : "—")}
                           </td>
-                          <td style={{ fontSize: "0.8rem", color: "#525252" }}>
+                          <td style={{ fontSize: "0.8rem", color: "var(--sa-text-1)" }}>
                             {log.device || log.browser ? `${log.device || "Desktop"} · ${log.browser || ""}` : "—"}
                           </td>
                           <td
                             style={{
                               fontSize: "0.8rem",
-                              color: "#525252",
+                              color: "var(--sa-text-1)",
                               whiteSpace: "nowrap",
                             }}
                           >
@@ -5331,7 +5028,7 @@ export default function SuperAdmin() {
       >
         {impersonateModal && (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            <p style={{ fontSize: "0.85rem", color: "#6f6f6f" }}>You will be logged in as:</p>
+            <p style={{ fontSize: "0.85rem", color: "var(--sa-text-2)" }}>You will be logged in as:</p>
             <div className="sa-modal-box">
               <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>
                 {impersonateModal.full_name || "—"}
@@ -5340,7 +5037,7 @@ export default function SuperAdmin() {
                 {impersonateModal.email}
               </div>
             </div>
-            <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "#da1e28", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+            <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--sa-danger)", display: "flex", alignItems: "center", gap: "0.35rem" }}>
               <AlertTriangle size={14} /> This action will be recorded in the security audit log.
             </p>
             <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginTop: "0.5rem" }}>
@@ -5386,9 +5083,9 @@ export default function SuperAdmin() {
                   padding: "0.45rem 0.65rem",
                   fontSize: "0.85rem",
                   fontFamily: "'IBM Plex Mono', monospace",
-                  background: "rgba(0,0,0,0.05)",
-                  border: "1px solid #c6c6c6",
-                  color: "#6f6f6f",
+                  background: "var(--sa-hover)",
+                  border: "1px solid var(--sa-field-border)",
+                  color: "var(--sa-text-2)",
                 }}
               />
             </div>
@@ -5407,7 +5104,7 @@ export default function SuperAdmin() {
                   width: "100%",
                   padding: "0.5rem 0.75rem",
                   fontSize: "0.85rem",
-                  border: "1px solid #c6c6c6",
+                  border: "1px solid var(--sa-field-border)",
                   outline: "none",
                 }}
               />
@@ -5426,7 +5123,7 @@ export default function SuperAdmin() {
                   width: "100%",
                   padding: "0.5rem 0.75rem",
                   fontSize: "0.85rem",
-                  border: "1px solid #c6c6c6",
+                  border: "1px solid var(--sa-field-border)",
                   outline: "none",
                 }}
               />
@@ -5443,7 +5140,7 @@ export default function SuperAdmin() {
                   width: "100%",
                   padding: "0.5rem 0.75rem",
                   fontSize: "0.85rem",
-                  border: "1px solid #c6c6c6",
+                  border: "1px solid var(--sa-field-border)",
                   outline: "none",
                 }}
               >

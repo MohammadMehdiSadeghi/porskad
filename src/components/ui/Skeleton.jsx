@@ -18,9 +18,9 @@ export default function Skeleton({ className = "", rounded = "rounded-lg", ...pr
 
 // ─── رنگ تم‌دار ملایم برای آیکون/بج‌ها ───
 const tint = {
-  teal: "bg-teal/20 dark:bg-teal-500/15",
+  teal: "bg-teal/20 dark:bg-teal/15",
   navy: "bg-navy/10 dark:bg-sky-400/10",
-  orange: "bg-orange/20 dark:bg-orange-500/15",
+  orange: "bg-orange/20 dark:bg-orange/15",
   magenta: "bg-magenta/15 dark:bg-pink-500/10",
 };
 
@@ -144,7 +144,7 @@ export function FormsListSkeleton() {
       <PageHeaderSkeleton titleW="w-20" btnW="w-24" />
 
       {/* بنر سهمیه */}
-      <div className="bg-white dark:bg-slate-800/90 border-2 border-teal/30 dark:border-teal-700/40 rounded-2xl [corner-shape:squircle] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 -rotate-[0.2deg]">
+      <div className="bg-white dark:bg-slate-800/90 border-2 border-teal/30 dark:border-teal/30/40 rounded-2xl [corner-shape:squircle] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 -rotate-[0.2deg]">
         <div className="flex items-center gap-3">
           <Skeleton className="w-10 h-10" rounded="rounded-xl" />
           <div className="space-y-1.5">
@@ -162,7 +162,7 @@ export function FormsListSkeleton() {
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <Skeleton className="flex-1 min-w-[200px] h-11" rounded="rounded-pill-md" />
         <div className="flex items-center gap-1 bg-white dark:bg-slate-800/90 border-2 border-ink/15 dark:border-slate-700 rounded-pill-md p-1 w-fit">
-          <Skeleton className="h-8 w-16 bg-teal/20 dark:bg-teal-500/15" rounded="rounded-pill-sm" />
+          <Skeleton className="h-8 w-16 bg-teal/20 dark:bg-teal/15" rounded="rounded-pill-sm" />
           <Skeleton className="h-8 w-14" rounded="rounded-pill-sm" />
           <Skeleton className="h-8 w-14" rounded="rounded-pill-sm" />
         </div>
@@ -218,7 +218,7 @@ export function ResponsesSkeleton() {
 
       <div className="flex items-center justify-between bg-white dark:bg-slate-800/90 border-2 border-ink/10 dark:border-slate-700 rounded-2xl [corner-shape:squircle] p-2.5">
         <div className="flex gap-1.5">
-          <Skeleton className="h-8 w-24 bg-teal/20 dark:bg-teal-500/15" rounded="rounded-xl" />
+          <Skeleton className="h-8 w-24 bg-teal/20 dark:bg-teal/15" rounded="rounded-xl" />
           <Skeleton className="h-8 w-24" rounded="rounded-xl" />
         </div>
         <Skeleton className="h-8 w-36" rounded="rounded-xl" />
@@ -252,7 +252,7 @@ export function FormBuilderSkeleton() {
         <div className="flex items-center gap-2">
           <Skeleton className="h-9 w-20" rounded="rounded-pill-md" />
           <Skeleton className="h-9 w-20" rounded="rounded-pill-md" />
-          <Skeleton className="h-9 w-24 bg-teal/25 dark:bg-teal-500/20" rounded="rounded-pill-md" />
+          <Skeleton className="h-9 w-24 bg-teal/25 dark:bg-teal/20" rounded="rounded-pill-md" />
         </div>
       </div>
 
@@ -267,7 +267,7 @@ export function FormBuilderSkeleton() {
                 <Skeleton className="h-3.5 flex-1" rounded="rounded-md" />
               </div>
             ))}
-            <Skeleton className="h-10 w-full mt-auto bg-teal/25 dark:bg-teal-500/20" rounded="rounded-xl" />
+            <Skeleton className="h-10 w-full mt-auto bg-teal/25 dark:bg-teal/20" rounded="rounded-xl" />
           </div>
         </StickerCard>
 
@@ -340,7 +340,7 @@ export function FormFillSkeleton() {
               </div>
               <div className="flex items-center justify-between pt-3 border-t-2 border-ink/10 dark:border-slate-800">
                 <Skeleton className="h-10 w-24" rounded="rounded-pill-md" />
-                <Skeleton className="h-11 w-36 bg-teal/25 dark:bg-teal-500/20" rounded="rounded-pill-md" />
+                <Skeleton className="h-11 w-36 bg-teal/25 dark:bg-teal/20" rounded="rounded-pill-md" />
               </div>
             </div>
           </StickerCard>

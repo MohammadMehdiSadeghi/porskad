@@ -78,7 +78,7 @@ function MiniChoiceOptions({ options, displayMode, maxSelections = 1, isDark }) 
             isDark ? "border-slate-700 bg-slate-800 text-slate-200" : "border-ink/15 bg-white text-ink"
           }`}>
             <span className={`w-4 h-4 shrink-0 flex items-center justify-center border text-xs font-bold ${
-              isDark ? "border-slate-600 text-teal-400 bg-slate-900" : "border-ink/20 text-navy bg-white"
+              isDark ? "border-slate-600 text-teal bg-slate-900" : "border-ink/20 text-navy bg-white"
             } ${isMulti ? "rounded" : "rounded-full"}`}>
               {faNum(i + 1)}
             </span>
@@ -353,7 +353,7 @@ export default function FormPreview({ form, questions }) {
     <div className="form-preview-container flex flex-col items-center w-full" data-preview-theme={previewTheme}>
       {/* هدر */}
       <div className={`w-full text-center py-1.5 rounded-t-2xl transition-colors ${
-        isDark ? "bg-slate-900 border-b border-slate-700 text-teal-400" : "bg-navy text-white"
+        isDark ? "bg-slate-900 border-b border-slate-700 text-teal" : "bg-navy text-white"
       }`}>
         <span className="text-xs font-bold flex items-center justify-center gap-1.5">
           <span>{isRegistration ? "پیش‌نمایش ثبت‌نامی" : "پیش‌نمایش مرحله‌ای"}</span>
