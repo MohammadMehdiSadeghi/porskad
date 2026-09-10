@@ -349,12 +349,6 @@ export default function Plans() {
                     {p.maxForms >= 999999 ? "نامحدود" : `${faNum(p.maxForms)} فرم فعال`}
                   </span>
                 </div>
-                <div className="flex items-center justify-between font-bold">
-                  <span className="text-ink/60 dark:text-slate-400">فضای آپلود فایل:</span>
-                  <span className="font-black text-navy dark:text-white">
-                    {p.storageMb >= 1024 ? `${faNum(p.storageMb / 1024)} گیگابایت` : `${faNum(p.storageMb)} مگابایت`}
-                  </span>
-                </div>
               </div>
 
               {/* لیست ویژگی‌ها */}

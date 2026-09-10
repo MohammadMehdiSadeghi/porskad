@@ -212,7 +212,6 @@ export default function PlansSettingsPanel() {
           priceYearly: Number(newPlan.priceYearly) || 0,
           maxForms: Number(newPlan.maxForms) || 10,
           monthlyResponsesLimit: Number(newPlan.monthlyResponsesLimit) || 1000,
-          storageMb: 512,
           isCustom: true,
           features: [
             { text: "همه امکانات طرح حرفه‌ای", included: true },
@@ -434,10 +433,6 @@ export default function PlansSettingsPanel() {
                   <div>
                     <label className={labelCls}>پاسخ در ماه</label>
                     <input className={`${inputCls} font-mono text-center`} type="number" min="10" step="10" dir="ltr" value={p.monthlyResponsesLimit ?? 100} onChange={(e) => updateMeta(planKey, "monthlyResponsesLimit", Number(e.target.value))} />
-                  </div>
-                  <div>
-                    <label className={labelCls}>فضا (مگابایت)</label>
-                    <input className={`${inputCls} font-mono text-center`} type="number" min="0" dir="ltr" value={p.storageMb ?? 100} onChange={(e) => updateMeta(planKey, "storageMb", Number(e.target.value))} />
                   </div>
                   <div>
                     <label className={labelCls}>رنگ بج</label>

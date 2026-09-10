@@ -17,7 +17,6 @@ export const DEFAULT_PLANS = {
     description: "شروع سریع برای ساخت فرم‌های ساده و آزمون‌های پایه",
     monthlyResponsesLimit: 100,
     maxForms: 5,
-    storageMb: 100, // 100 مگابایت
     features: [
       { text: "۱۰۰ پاسخ ماهانه", included: true },
       { text: "۵ فرم فعال همزمان", included: true },
@@ -51,12 +50,10 @@ export const DEFAULT_PLANS = {
     description: "فرم‌سازی پیشرفته، آزمون‌ساز با تصحیح خودکار، آپلود فایل و درگاه پرداخت",
     monthlyResponsesLimit: 4000, // سقف منصفانه ۴ هزار پاسخ
     maxForms: 50,
-    storageMb: 2048, // ۲ گیگابایت
     features: [
       { text: "همه امکانات طرح رایگان", included: true },
       { text: "۴,۰۰۰ پاسخ در ماه (استفاده منصفانه)", included: true },
       { text: "۵۰ فرم فعال همزمان", included: true },
-      { text: "۲ گیگابایت فضای آپلود فایل", included: true },
       { text: "افزودن شرط به پرسشنامه (Logic & Branching)", included: true },
       { text: "افزودن امتیاز و محاسبات به پرسشنامه (کوییز)", included: true },
       { text: "تعریف کلید و تصحیح خودکار آزمون", included: true },
@@ -84,12 +81,10 @@ export const DEFAULT_PLANS = {
     description: "تیم‌ها، احراز هویت پیامکی، وب‌هوک، متغیرهای مخفی و گزارش‌ساز چندلایه",
     monthlyResponsesLimit: 12000, // سقف منصفانه ۱۲ هزار پاسخ
     maxForms: 999999, // نامحدود
-    storageMb: 4096, // ۴ گیگابایت
     features: [
       { text: "همه امکانات طرح حرفه‌ای", included: true },
       { text: "۱۲,۰۰۰ پاسخ در ماه (استفاده منصفانه)", included: true },
       { text: "تعداد نامحدود فرم فعال", included: true },
-      { text: "۴ گیگابایت فضای آپلود فایل", included: true },
       { text: "احراز هویت پاسخ‌دهندگان از طریق پیامک (SMS OTP) و ایمیل", included: true },
       { text: "متغیرهای محاسباتی، فرمول‌نویسی و محاسبه‌گر پیشرفته", included: true },
       { text: "درج اطلاعات مخفی (Hidden Fields / URL parameters)", included: true },
