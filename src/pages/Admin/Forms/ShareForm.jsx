@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabaseClient";
 import Button from "../../../components/ui/Button";
+import Modal from "../../../components/ui/Modal";
 import Spinner from "../../../components/ui/Spinner";
 import { ShareFormSkeleton } from "../../../components/ui/Skeleton";
 import EmptyState from "../../../components/ui/EmptyState";
@@ -18,6 +19,7 @@ import {
   SearchX,
   ExternalLink,
   Globe,
+  AlertTriangle,
   Monitor,
   Maximize,
   PanelRightOpen,
@@ -28,10 +30,15 @@ import {
 } from "lucide-react";
 import SEO from "../../../components/ui/SEO";
 
-function CopyButton({ text }) {
+function CopyButton({ text, locked = false, onLocked }) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
+    // تا وقتی فرم منتشر نشده، کپی لینک/کد ممنوع — اول انتشار
+    if (locked) {
+      onLocked?.();
+      return;
+    }
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -63,12 +70,12 @@ function CopyButton({ text }) {
   );
 }
 
-function CodeBlock({ code, label }) {
+function CodeBlock({ code, label, locked = false, onLocked }) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <span className="text-xs font-bold text-ink/50">{label}</span>
-        <CopyButton text={code} />
+        <CopyButton text={code} locked={locked} onLocked={onLocked} />
       </div>
       <pre className="bg-gray-900 text-gray-100 rounded-xl px-4 py-3 text-xs font-mono overflow-x-auto whitespace-pre-wrap break-all" dir="ltr">
         {code}
@@ -80,11 +87,48 @@ function CodeBlock({ code, label }) {
 export default function ShareForm() {
   const { id } = useParams();
   const { push } = useToast();
-  const { user, isOwner, loading: authLoading } = useAuth();
+  const { user, isOwner, profile, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(null);
   const [activeTab, setActiveTab] = useState("inline");
   const [embedTheme, setEmbedTheme] = useState("default");
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+
+  function handleLockedCopy() {
+    push("تا فرم منتشر نشده، لینک و کد قابل کپی نیست — ابتدا منتشر کنید.", "warning");
+    setShowPublishModal(true);
+  }
+
+  // انتشار همان‌جایی از مودال «ابتدا منتشر کنید» (با بررسی سقف فرم‌های فعال)
+  async function publishNow() {
+    if (!form || form.published) return false;
+    if (!isOwner()) {
+      const { count, error: countError } = await supabase
+        .from("forms")
+        .select("id", { count: "exact", head: true })
+        .eq("published", true)
+        .eq("archived", false)
+        .is("deleted_at", null)
+        .neq("id", form.id);
+      const allowedMax = profile?.max_forms ?? 5;
+      if (!countError && allowedMax < 999999 && (count ?? 0) >= allowedMax) {
+        push(`سقف فرم‌های همزمان فعال (حداکثر ${allowedMax} فرم) تکمیل شده است.`, "error");
+        return false;
+      }
+    }
+    setPublishing(true);
+    const { error } = await supabase.from("forms").update({ published: true }).eq("id", form.id);
+    setPublishing(false);
+    if (error) {
+      push(error.message || "انتشار فرم ناموفق بود", "error");
+      return false;
+    }
+    setForm((f) => ({ ...f, published: true }));
+    setShowPublishModal(false);
+    push("فرم منتشر شد! حالا می‌توانید لینک را کپی کنید.");
+    return true;
+  }
 
   useEffect(() => {
     if (authLoading) return;
@@ -235,12 +279,18 @@ export default function ShareForm() {
           <Badge color={form.published ? "green" : "gray"}>
             {form.published ? "منتشر شده" : "پیش‌نویس"}
           </Badge>
-          <a href={directLink} target="_blank" rel="noopener noreferrer">
-            <Button variant="ghost" size="sm">
-              <ExternalLink size={14} />
-              مشاهده فرم
+          {form.published ? (
+            <a href={directLink} target="_blank" rel="noopener noreferrer">
+              <Button variant="ghost" size="sm">
+                <ExternalLink size={14} />
+                مشاهده فرم
+              </Button>
+            </a>
+          ) : (
+            <Button variant="ghost" size="sm" onClick={() => setShowPublishModal(true)}>
+              ▶ انتشار فرم
             </Button>
-          </a>
+          )}
         </div>
       </div>
 
@@ -251,7 +301,7 @@ export default function ShareForm() {
           <span className="text-xs font-bold text-ink/50 dark:text-slate-400 block">شناسه عمومی فرم</span>
           <span className="text-sm font-mono font-bold text-navy dark:text-slate-100" dir="ltr">{publicId}</span>
         </div>
-        <CopyButton text={publicId} />
+        <CopyButton text={publicId} locked={!form.published} onLocked={handleLockedCopy} />
       </div>
 
       {/* انتخاب تم خروجی کد و لینک */}
@@ -314,7 +364,7 @@ export default function ShareForm() {
               </h2>
               <p className="text-sm text-ink/50 mt-1">{active.description}</p>
             </div>
-            <CodeBlock code={active.code} label="کد Embed" />
+            <CodeBlock code={active.code} label="کد Embed" locked={!form.published} onLocked={handleLockedCopy} />
           </div>
         </StickerCard>
       </div>
@@ -370,6 +420,31 @@ export default function ShareForm() {
           </div>
         </StickerCard>
       </div>
+
+      {/* ─── مودال «ابتدا منتشر کنید» ─── */}
+      <Modal
+        open={showPublishModal}
+        onClose={() => setShowPublishModal(false)}
+        title="فرم هنوز منتشر نشده!"
+      >
+        <div className="flex flex-col gap-4 text-center items-center py-2">
+          <AlertTriangle size={44} className="text-amber-500" />
+          <h3 className="text-base font-black text-navy dark:text-white leading-7">
+            تا وقتی فرم «{form.title}» منتشر نشده، لینک و کد آن برای مخاطب‌ها کار نمی‌کند.
+          </h3>
+          <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 leading-6">
+            همین‌جا منتشرش کنید تا بلافاصله بتوانید لینک و کد امبد را کپی کنید.
+          </p>
+          <div className="flex flex-wrap gap-2 justify-center mt-2">
+            <Button variant="teal" size="sm" disabled={publishing} onClick={publishNow}>
+              {publishing ? "در حال انتشار..." : "▶ انتشار فرم"}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setShowPublishModal(false)}>
+              انصراف
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

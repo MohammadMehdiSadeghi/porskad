@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useRef, useState } from "react";
-import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
+import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from "lucide-react";
 
 const ToastContext = createContext(null);
 
@@ -8,6 +8,7 @@ let toastId = 0;
 const TOAST_STYLES = {
   success: { Icon: CheckCircle2, border: "border-teal-text", title: "text-teal-text", iconColor: "text-teal" },
   error: { Icon: AlertCircle, border: "border-magenta-text", title: "text-magenta-text", iconColor: "text-magenta" },
+  warning: { Icon: AlertTriangle, border: "border-amber-400", title: "text-amber-600", iconColor: "text-amber-500" },
   info: { Icon: Info, border: "border-navy", title: "text-navy", iconColor: "text-navy" },
 };
 

@@ -1500,12 +1500,16 @@ export default function FormBuilder() {
           {dirty && <Badge color="orange" rotate="rotate-[2deg]">• تغییرات</Badge>}
         </div>
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <Button variant="white" size="sm" onClick={async () => {
+            if (!form.published) {
+              push("فرم هنوز منتشر نشده — ابتدا از «تنظیمات فرم» منتشرش کنید تا لینک کار کند.", "warning");
+              return;
+            }
+            const ok = await copyToClipboard(publicUrl);
+            push(ok ? "لینک کپی شد!" : publicUrl, ok ? "success" : "info");
+          }}><Link2 size={14} /> کپی لینک</Button>
           {form.published && (
             <>
-              <Button variant="white" size="sm" onClick={async () => {
-                const ok = await copyToClipboard(publicUrl);
-                push(ok ? "لینک کپی شد!" : publicUrl, ok ? "success" : "info");
-              }}><Link2 size={14} /> کپی لینک</Button>
               <Button as="a" href={`/f/${form.slug}`} target="_blank" variant="white" size="sm">
                 <Eye size={14} /> پیش‌نمایش
               </Button>

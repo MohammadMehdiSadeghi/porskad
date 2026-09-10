@@ -115,6 +115,7 @@ export default function FormsList() {
   const [showTypeModal, setShowTypeModal] = useState(false);
   const [newFormTheme, setNewFormTheme] = useState("light");
   const [showQuotaModal, setShowQuotaModal] = useState(false);
+  const [publishPromptForm, setPublishPromptForm] = useState(null);
   const [actionModalForm, setActionModalForm] = useState(null);
 
   // ─── Undo state ───
@@ -243,6 +244,7 @@ export default function FormsList() {
     setBusy(false);
     setShowTypeModal(false);
     push(isRegistration ? "فرم ثبت‌نامی ساخته شد!" : "فرم جدید ساخته شد!");
+    push("فرم فعلاً پیش‌نویس است — بعد از انتشار، لینک آن قابل کپی و بازدید می‌شود.", "warning", 5500);
     navigate(`/admin/forms/${createdFormData.id}`);
   }
 
@@ -273,6 +275,35 @@ export default function FormsList() {
     push(form.published ? "فرم از انتشار خارج شد" : "فرم منتشر شد!");
     setForms((fs) => fs.map((f) => (f.id === form.id ? { ...f, published: !form.published } : f)));
     setActionModalForm((prev) => (prev && prev.id === form.id ? { ...prev, published: !form.published } : prev));
+  }
+
+  // انتشار فرم (بدون toggle) — برای مودال «ابتدا منتشر کنید»
+  async function publishNow(form) {
+    if (!form || form.published) return false;
+    if (!hasPermission("publish_form")) {
+      push("شما مجوز انتشار فرم ندارید.", "error");
+      return false;
+    }
+    if (!isOwner()) {
+      const activePublishedCount = forms.filter(
+        (f) => f.published && !f.archived && !f.deleted_at && f.id !== form.id
+      ).length;
+      const allowedMax = profile?.max_forms ?? 5;
+      if (allowedMax < 999999 && activePublishedCount >= allowedMax) {
+        setShowQuotaModal(true);
+        push(`سقف فرم‌های همزمان فعال (حداکثر ${faNum(allowedMax)} فرم) تکمیل شده است. لطفاً ابتدا یکی از فرم‌های فعال را غیرفعال یا بایگانی کنید.`, "error");
+        return false;
+      }
+    }
+    const { error } = await supabase.from("forms").update({ published: true }).eq("id", form.id);
+    if (error) {
+      push(error.message || "انتشار فرم ناموفق بود", "error");
+      return false;
+    }
+    push("فرم منتشر شد!");
+    setForms((fs) => fs.map((f) => (f.id === form.id ? { ...f, published: true } : f)));
+    setActionModalForm((prev) => (prev && prev.id === form.id ? { ...prev, published: true } : prev));
+    return true;
   }
 
   async function duplicate(form) {
@@ -386,6 +417,12 @@ export default function FormsList() {
   }
 
   async function share(form) {
+    // تا وقتی فرم منتشر نشده، لینک عمومی کار نمی‌کند — اجازه کپی داده نمی‌شود
+    if (!form.published) {
+      push("ابتدا فرم را منتشر کنید، بعد از آن لینک قابل کپی است.", "warning");
+      setPublishPromptForm(form);
+      return;
+    }
     const url = `${window.location.origin}/f/${form.slug}`;
     const ok = await copyToClipboard(url);
     push(ok ? "لینک فرم کپی شد!" : `لینک: ${url}`, ok ? "success" : "info");
@@ -1060,6 +1097,48 @@ export default function FormsList() {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* ─── Publish Required Modal (کپی لینک قبل از انتشار) ─── */}
+      <Modal
+        open={Boolean(publishPromptForm)}
+        onClose={() => setPublishPromptForm(null)}
+        title="فرم هنوز منتشر نشده!"
+      >
+        {publishPromptForm && (
+          <div className="flex flex-col gap-4 text-center items-center py-2">
+            <AlertTriangle size={44} className="text-amber-500" />
+            <h3 className="text-base font-black text-navy dark:text-white leading-7">
+              برای کپی کردن لینک، ابتدا باید فرم «{publishPromptForm.title}» را منتشر کنید.
+            </h3>
+            <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 leading-6">
+              تا وقتی فرم منتشر نشده، لینک آن برای مخاطب‌ها باز نمی‌شود؛ پس کپی لینک کمکی نمی‌کند. همین‌جا منتشرش کنیم؟
+            </p>
+            <div className="flex flex-wrap gap-2 justify-center mt-2">
+              <Button
+                variant="teal"
+                size="sm"
+                disabled={busy || !hasPermission("publish_form")}
+                onClick={async () => {
+                  const f = publishPromptForm;
+                  const fresh = forms.find((x) => x.id === f.id) || f;
+                  const done = await publishNow(fresh);
+                  if (done) {
+                    setPublishPromptForm(null);
+                    const url = `${window.location.origin}/f/${f.slug}`;
+                    const ok = await copyToClipboard(url);
+                    push(ok ? "فرم منتشر شد و لینک کپی شد!" : `لینک: ${url}`, ok ? "success" : "info");
+                  }
+                }}
+              >
+                ▶ انتشار و کپی لینک
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setPublishPromptForm(null)}>
+                انصراف
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* ─── Undo Toast ─── */}
