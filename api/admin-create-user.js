@@ -35,15 +35,25 @@ export default async function handler(req, res) {
 
     const adminClient = createClient(supabaseUrl, serviceKey);
 
-    // بررسی دسترسی مالک
+    // بررسی دسترسی: مالک یا هر سوپرادمین (نقش admin) مجاز به ایجاد کاربر عادی است
     const { data: prof } = await adminClient
       .from("profiles")
       .select("is_owner")
       .eq("id", user.id)
       .maybeSingle();
 
-    if (!prof?.is_owner) {
-      return res.status(403).json({ error: "Only owners can create managers" });
+    const { data: callerRoles } = await adminClient
+      .from("user_roles")
+      .select("role_id, active")
+      .eq("user_id", user.id)
+      .eq("active", true);
+
+    const isCallerSuperAdmin = Boolean(
+      prof?.is_owner ||
+      (Array.isArray(callerRoles) && callerRoles.some((r) => r.role_id === "admin"))
+    );
+    if (!isCallerSuperAdmin) {
+      return res.status(403).json({ error: "فقط سوپرادمین‌ها می‌توانند کاربر ایجاد کنند" });
     }
 
     const { email, password, fullName } = req.body || {};

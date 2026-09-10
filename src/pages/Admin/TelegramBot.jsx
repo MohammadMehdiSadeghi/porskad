@@ -32,7 +32,8 @@ export default function TelegramBot() {
   const { user, profile, isOwner, hasPermission } = useAuth();
   const canManage =
     isOwner() ||
-    (hasPermission("manage_telegram") && profile?.can_use_telegram === true);
+    hasPermission("manage_telegram") ||
+    profile?.can_use_telegram !== false;
   const [tab, setTab] = useState("config");
   const [loading, setLoading] = useState(true);
   const [showHelpModal, setShowHelpModal] = useState(false);

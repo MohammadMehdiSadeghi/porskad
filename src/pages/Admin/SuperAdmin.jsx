@@ -115,7 +115,10 @@ export default function SuperAdmin() {
   const [search, setSearch] = useState("");
   const refreshRef = useRef(null);
 
-  const isCallerGod = Boolean(isOwner() || profile?.is_owner || isPrimaryGodEmail(user?.email));
+  // نکته مهم: گاد اصلی فقط مالکِ واقعی است (ایمیل‌های ثابت) — نه هر سوپرادمین.
+  // سوپرادمین‌های ثانویه به صفحه دسترسی کامل دارند ولی مدیریت نقش/مجوز
+  // سوپرادمین‌های دیگر و دیدن حساب گاد مخصوص گاد اصلی است.
+  const isCallerGod = Boolean(isPrimaryGodEmail(user?.email));
 
   // ─── State ───
   const [dbStats, setDbStats] = useState({});
@@ -1495,7 +1498,7 @@ export default function SuperAdmin() {
 
       {/* Tabs */}
       <div className="sa-tabs">
-        {TABS.map((t) => (
+        {TABS.filter((t) => isCallerGod || t.id !== "query").map((t) => (
           <button
             key={t.id}
             onClick={() => {

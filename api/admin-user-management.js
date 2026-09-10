@@ -46,17 +46,20 @@ export default async function handler(req, res) {
       .from("user_roles")
       .select("role_id, active")
       .eq("user_id", user.id)
-      .eq("active", true)
-      .maybeSingle();
+      .eq("active", true);
 
-    const isSuperAdmin = prof?.is_owner || roleData?.role_id === "admin";
+    const isSuperAdmin = Boolean(
+      prof?.is_owner ||
+      (Array.isArray(roleData) && roleData.some((r) => r.role_id === "admin"))
+    );
     if (!isSuperAdmin) {
       return res.status(403).json({ error: "فقط سوپرادمین مجاز به انجام این عملیات است" });
     }
 
     const PRIMARY_GOD_EMAILS = ["superadmin@gmailc.com", "superadmin@gmail.com"];
     const requesterEmail = user.email?.toLowerCase()?.trim();
-    const isCallerPrimaryGod = Boolean(prof?.is_owner || isSuperAdmin || PRIMARY_GOD_EMAILS.includes(requesterEmail));
+    // نکته: «گاد اصلی» فقط مالک دیتابیس یا ایمیل‌های ثابت است — نه هر سوپرادمین
+    const isCallerPrimaryGod = Boolean(prof?.is_owner || PRIMARY_GOD_EMAILS.includes(requesterEmail));
 
     const { action, target_user_id, new_password, new_email } = req.body || {};
 
@@ -67,12 +70,33 @@ export default async function handler(req, res) {
     // استتار و محافظت از اکانت اصلی در برابر سوپرادمین ثانویه
     const { data: targetProf } = await adminClient
       .from("profiles")
-      .select("id, email")
+      .select("id, email, is_owner")
       .eq("id", target_user_id)
       .maybeSingle();
 
     if (targetProf && PRIMARY_GOD_EMAILS.includes(targetProf.email?.toLowerCase()?.trim()) && !isCallerPrimaryGod) {
       return res.status(403).json({ error: "کاربر مورد نظر یافت نشد یا دسترسی به آن امکان‌پذیر نیست" });
+    }
+
+    // تشخیص سوپرادمین بودنِ هدف (برای محافظت فقط-گاد)
+    const { data: targetRoles } = await adminClient
+      .from("user_roles")
+      .select("role_id, active")
+      .eq("user_id", target_user_id)
+      .eq("active", true);
+
+    const targetIsSuperAdmin = Boolean(
+      targetProf?.is_owner ||
+      (Array.isArray(targetRoles) && targetRoles.some((r) => r.role_id === "admin")) ||
+      (targetProf && PRIMARY_GOD_EMAILS.includes(targetProf.email?.toLowerCase()?.trim()))
+    );
+
+    // سوپرادمین‌ها فقط از سوی گاد اصلی قابل مدیریت هستند
+    const godOnlyActions = ["update_role", "reset_password", "update_email", "impersonate"];
+    if (targetIsSuperAdmin && !isCallerPrimaryGod && godOnlyActions.includes(action)) {
+      return res.status(403).json({
+        error: "مدیریت سوپرادمین‌ها (حذف، تنزل، تغییر نقش و رمز) فقط توسط صاحب اصلی سیستم امکان‌پذیر است",
+      });
     }
 
     // ۳. تغییر رمز عبور کاربر
@@ -139,9 +163,9 @@ export default async function handler(req, res) {
       });
     }
 
-    // ۶. ارتقا یا تنزل نقش کاربر (صاحب اصلی / سوپرادمین)
+    // ۶. ارتقا یا تنزل نقش کاربر (صاحب اصلی / سوپرادمین) — فقط گاد اصلی
     if (action === "update_role") {
-      if (!isCallerPrimaryGod && !prof?.is_owner) {
+      if (!isCallerPrimaryGod) {
         return res.status(403).json({ error: "فقط صاحب اصلی سیستم مجاز به تغییر نقش کاربران است" });
       }
       const { new_role } = req.body || {};
@@ -163,7 +187,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: roleErr.message });
       }
 
-      // ۳. به‌روزرسانی سهمیه و پلن متناسب با نقش
+      // ۳. به‌روزرسانی سهمیه، پلن و تمام امکانات متناسب با نقش
       if (roleToSet === "admin") {
         await adminClient
           .from("profiles")
@@ -173,6 +197,11 @@ export default async function handler(req, res) {
             plan: "enterprise",
             can_use_telegram: true,
             can_export_excel: true,
+            can_use_logic: true,
+            can_upload_files: true,
+            can_use_sms: true,
+            can_use_webhooks: true,
+            can_remove_branding: true,
           })
           .eq("id", target_user_id);
 

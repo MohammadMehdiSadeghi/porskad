@@ -124,17 +124,22 @@ export function AuthProvider({ children }) {
   const fetchRole = useCallback(async (uid) => {
     if (!supabase || !uid) return null;
     try {
+      // نکته: ممکن است کاربر چند ردیف نقش فعال داشته باشد؛ به‌جای maybeSingle
+      // (که با چند ردیف خطا می‌دهد) همه را می‌خوانیم و admin را ترجیح می‌دهیم
       const { data, error } = await supabase
         .from("user_roles")
         .select("role_id, active")
         .eq("user_id", uid)
-        .eq("active", true)
-        .maybeSingle();
+        .eq("active", true);
       if (error) {
         console.error("Error fetching role:", error);
         return null;
       }
-      return data?.role_id ?? null;
+      if (Array.isArray(data) && data.length > 0) {
+        if (data.some((r) => r.role_id === "admin")) return "admin";
+        return data[0].role_id ?? null;
+      }
+      return null;
     } catch (err) {
       console.error("fetchRole error:", err);
       return null;
@@ -196,6 +201,11 @@ export function AuthProvider({ children }) {
             pProfile.is_owner = true;
             pProfile.can_use_telegram = true;
             pProfile.can_export_excel = true;
+            pProfile.can_use_logic = true;
+            pProfile.can_upload_files = true;
+            pProfile.can_use_sms = true;
+            pProfile.can_use_webhooks = true;
+            pProfile.can_remove_branding = true;
             pProfile.max_forms = 999999;
             pProfile.max_responses_per_month = 999999;
             pProfile.plan = "enterprise";
@@ -524,11 +534,31 @@ export function AuthProvider({ children }) {
     }
   }
 
+  // بررسی سمت کلاینت: حذف/غیرفعال‌سازی سوپرادمین‌ها فقط توسط گاد اصلی
+  async function assertGodCanManageTarget(managerId, actionLabel) {
+    if (!managerId || isPrimaryGodEmail(user?.email)) return;
+    try {
+      const [{ data: prof }, { data: roles }] = await Promise.all([
+        supabase.from("profiles").select("is_owner").eq("id", managerId).maybeSingle(),
+        supabase.from("user_roles").select("role_id, active").eq("user_id", managerId).eq("active", true),
+      ]);
+      const targetIsSuper =
+        prof?.is_owner === true || (Array.isArray(roles) && roles.some((r) => r.role_id === "admin"));
+      if (targetIsSuper) {
+        throw new Error(`${actionLabel} سوپرادمین‌ها فقط توسط صاحب اصلی سیستم امکان‌پذیر است.`);
+      }
+    } catch (err) {
+      if (err.message && err.message.includes("صاحب اصلی")) throw err;
+      // در صورت خطای خواندن، سمت دیتابیس محافظت می‌کند
+    }
+  }
+
   async function setManagerActive(managerId, active) {
     // بررسی سمت کلاینت: owner قابل غیرفعال کردن نیست
     if (profile?.is_owner && managerId === user?.id) {
       throw new Error("امکان غیرفعال کردن صاحب اصلی سایت وجود ندارد.");
     }
+    await assertGodCanManageTarget(managerId, "تغییر وضعیت");
     try {
       // استفاده از تابع محافظت‌شده سمت سرور
       const { error } = await supabase.rpc("set_manager_active", {
@@ -547,6 +577,7 @@ export function AuthProvider({ children }) {
     if (profile?.is_owner && managerId === user?.id) {
       throw new Error("امکان حذف صاحب اصلی سایت وجود ندارد.");
     }
+    await assertGodCanManageTarget(managerId, "حذف");
     // حذف auth user سمت سرور انجام می‌شود و پروفایل/نقش‌ها cascade می‌شوند
     const { error } = await supabase.rpc("delete_manager", {
       p_user_id: managerId,

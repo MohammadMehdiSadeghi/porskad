@@ -168,6 +168,8 @@ export default function Managers() {
   const { listManagers, createManager, updateManager, deactivateManager, activateManager, deleteManager, isOwner, user, session, hasPermission, updateUserQuota, resetUserQuota } = useAuth();
   const canManage = isOwner() || hasPermission("manage_managers");
   const canView = isOwner() || hasPermission("manage_managers") || hasPermission("view_admins");
+  // گاد اصلی: تنها کسی که می‌تواند سوپرادمین‌ها را حذف، تنزل یا ارتقا دهد
+  const isGod = isPrimaryGodEmail(user?.email);
   const [loading, setLoading] = useState(true);
   const [managers, setManagers] = useState([]);
   const [roleTab, setRoleTab] = useState("all"); // "all" | "admins" | "users"
@@ -394,6 +396,11 @@ export default function Managers() {
 
   async function handleChangeUserRole(targetUser, newRole) {
     if (!targetUser || targetUser.is_owner) return;
+    // تغییر نقش سوپرادمین‌ها (حتی حذف/تنزل) فقط توسط گاد اصلی
+    if (!isGod) {
+      push("تغییر نقش سوپرادمین‌ها فقط توسط صاحب اصلی سیستم امکان‌پذیر است.", "error");
+      return;
+    }
     const isPromoting = newRole === "admin";
     if (!confirm(isPromoting ? `آیا از ارتقای «${targetUser.full_name || targetUser.email}» به سطح سوپر ادمین (SuperAdmin) اطمینان دارید؟` : `آیا از تغییر نقش «${targetUser.full_name || targetUser.email}» به کاربر عادی اطمینان دارید؟`)) return;
     
@@ -1330,8 +1337,8 @@ export default function Managers() {
                 )}
               </div>
 
-              {/* تعیین نقش و سطح دسترسی کاربر */}
-              {!m.is_owner && isOwner() && (
+              {/* تعیین نقش و سطح دسترسی کاربر — فقط گاد اصلی */}
+              {!m.is_owner && isGod && (
                 <div className="bg-white dark:bg-slate-900 border-2 border-ink/10 dark:border-slate-700 rounded-2xl p-3.5 flex flex-col gap-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black text-navy dark:text-slate-100 flex items-center gap-1.5">
@@ -1394,7 +1401,8 @@ export default function Managers() {
                       <Edit size={13} className="ml-1" /> ویرایش مشخصات
                     </Button>
 
-                    {!m.is_owner && (
+                    {/* غیرفعال/فعال‌سازی کاربر — سوپرادمین‌ها فقط توسط گاد اصلی */}
+                    {!m.is_owner && (isGod || m.role !== "admin") && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -1405,7 +1413,8 @@ export default function Managers() {
                       </Button>
                     )}
 
-                    {!m.is_owner && (
+                    {/* حذف کاربر — سوپرادمین‌ها فقط توسط گاد اصلی */}
+                    {!m.is_owner && (isGod || m.role !== "admin") && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -1546,8 +1555,9 @@ export default function Managers() {
             </div>
           )}
 
-          {/* تنظیم رمز عبور */}
-          <div className="p-3.5 rounded-xl bg-bg-neutral/70 dark:bg-slate-800 border border-ink/10 dark:border-slate-700 flex flex-col gap-2.5">
+          {/* تنظیم رمز عبور — برای سوپرادمین‌ها فقط توسط گاد اصلی */}
+          {!selectedManager?.is_owner && (isGod || selectedManager?.role !== "admin") && (
+            <div className="p-3.5 rounded-xl bg-bg-neutral/70 dark:bg-slate-800 border border-ink/10 dark:border-slate-700 flex flex-col gap-2.5">
             <span className="block text-xs font-extrabold text-navy dark:text-slate-100">تغییر رمز عبور کاربر</span>
             <div>
               <label className="block text-xs font-bold text-ink-subtle dark:text-slate-400 mb-1">تعیین رمز عبور جدید (اختیاری):</label>
@@ -1571,7 +1581,8 @@ export default function Managers() {
                 </button>
               </div>
             </div>
-          </div>
+            </div>
+          )}
 
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="teal" size="sm" onClick={async () => {

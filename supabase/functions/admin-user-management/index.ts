@@ -59,12 +59,13 @@ serve(async (req) => {
     // Check admin role via user_roles
     const { data: roleData } = await supabaseAdmin
       .from("user_roles")
-      .select("role_id")
+      .select("role_id, active")
       .eq("user_id", user.id)
-      .eq("active", true)
-      .maybeSingle();
+      .eq("active", true);
 
-    const isAdmin = isOwner || roleData?.role_id === "admin";
+    const isAdmin =
+      isOwner ||
+      (Array.isArray(roleData) && roleData.some((r) => r.role_id === "admin"));
 
     if (!isAdmin) {
       return new Response(
@@ -73,7 +74,42 @@ serve(async (req) => {
       );
     }
 
+    // گاد اصلی = مالک دیتابیس یا ایمیل‌های ثابت (نه هر سوپرادمین)
+    const PRIMARY_GOD_EMAILS = ["superadmin@gmailc.com", "superadmin@gmail.com"];
+    const callerEmail = user.email?.toLowerCase()?.trim();
+    const isCallerPrimaryGod = Boolean(isOwner || PRIMARY_GOD_EMAILS.includes(callerEmail));
+
     const { action, target_user_id, new_password, new_email, email, password, full_name } = await req.json();
+
+    // محافظت از سوپرادمین‌ها: فقط گاد اصلی می‌تواند آن‌ها را مدیریت کند
+    if (target_user_id) {
+      const { data: targetProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("id, email, is_owner")
+        .eq("id", target_user_id)
+        .maybeSingle();
+
+      if (targetProfile) {
+        const targetEmail = targetProfile.email?.toLowerCase()?.trim();
+        const { data: targetRoles } = await supabaseAdmin
+          .from("user_roles")
+          .select("role_id, active")
+          .eq("user_id", target_user_id)
+          .eq("active", true);
+        const targetIsSuperAdmin = Boolean(
+          targetProfile.is_owner ||
+          (Array.isArray(targetRoles) && targetRoles.some((r) => r.role_id === "admin")) ||
+          PRIMARY_GOD_EMAILS.includes(targetEmail)
+        );
+
+        if (targetIsSuperAdmin && !isCallerPrimaryGod) {
+          return new Response(
+            JSON.stringify({ error: "کاربر مورد نظر یافت نشد یا دسترسی به آن امکان‌پذیر نیست" }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+    }
 
     // ─── create_user: ایجاد مدیر جدید ───
     if (action === "create_user") {
@@ -113,10 +149,10 @@ serve(async (req) => {
           created_by: user.id,
         }, { onConflict: "id" });
 
-      // اختصاص نقش admin (با service_role)
+      // کاربران ایجادشده از این مسیر، کاربر عادی هستند (نه سوپرادمین)
       await supabaseAdmin
         .from("user_roles")
-        .upsert({ user_id: userId, role_id: "admin", active: true }, { onConflict: "user_id" });
+        .upsert({ user_id: userId, role_id: "manager", active: true }, { onConflict: "user_id,role_id" });
 
       // لاگ فعالیت (فقط اینجا — Managers.jsx لاگ نمیزنه)
       await supabaseAdmin.from("activity_log").insert({
