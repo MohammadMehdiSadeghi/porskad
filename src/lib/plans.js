@@ -1,5 +1,8 @@
 // ══════════════════════════════════════════════════════════════
 // طرح‌ها و تعرفه‌های اشتراک پرس‌کاد (منطبق با پرس‌لاین)
+// منبع حقیقت: جدول system_settings با کلید plans_config
+// (پنل «مدیریت اشتراک‌ها» در /admin/plans-settings آن را ویرایش می‌کند)
+// localStorage فقط به‌عنوان کش محلی برای رندر همزمان استفاده می‌شود.
 // ══════════════════════════════════════════════════════════════
 import { supabase } from "./supabaseClient.js";
 
@@ -103,12 +106,58 @@ export const DEFAULT_PLANS = {
 };
 
 export const PLANS = DEFAULT_PLANS;
-export const PLAN_ORDER = ["free", "pro", "enterprise"];
+export const PLANS_CONFIG_KEY = "porskad_plans_config";
+const PLANS_DB_KEY = "plans_config";
 
-const PLANS_CONFIG_KEY = "porskad_plans_config";
+// کلیدهای جای‌رفتهٔ پلن → نام ستون در پروفایل (برای نگاشت امکانات به پرچم‌ها)
+export const PLAN_FEATURE_COLUMNS = {
+  telegram: "can_use_telegram",
+  excel: "can_export_excel",
+  logic: "can_use_logic",
+  file_upload: "can_upload_files",
+  sms: "can_use_sms",
+  webhook: "can_use_webhooks",
+  branding: "can_remove_branding",
+};
 
 /**
- * دریافت لیست کامل طرح‌ها با در نظر گرفتن شخصی‌سازی‌های سوپرادمین
+ * لیست کلید طرح‌ها — همیشه شامل سه طرح پایه و هر طرح سفارشی‌ای
+ * که سوپرادمین در پنل مدیریت اشتراک‌ها ساخته است.
+ */
+export function getPlanIds(config) {
+  const cfg = config || getPlansSnapshot();
+  const base = ["free", "pro", "enterprise"];
+  const extras = Object.keys(cfg).filter((k) => !k.startsWith("_") && !base.includes(k));
+  const all = [...base, ...extras];
+  if (Array.isArray(cfg._planOrder) && cfg._planOrder.length) {
+    const ordered = cfg._planOrder.filter((k) => all.includes(k));
+    const rest = all.filter((k) => !ordered.includes(k));
+    return [...ordered, ...rest];
+  }
+  return all;
+}
+
+// سازگاری با نام قبلی
+export const PLAN_ORDER = ["free", "pro", "enterprise"];
+
+function sanitizeConfig(raw) {
+  const out = {};
+  for (const key of Object.keys(DEFAULT_PLANS)) {
+    out[key] = { ...DEFAULT_PLANS[key], ...(raw[key] || {}) };
+    out[key].id = key;
+  }
+  for (const key of Object.keys(raw)) {
+    if (key.startsWith("_")) continue; // متادیتای داخلی مثل _planOrder
+    if (DEFAULT_PLANS[key]) continue;
+    out[key] = { ...raw[key] };
+    out[key].id = key;
+  }
+  return out;
+}
+
+/**
+ * دریافت همزمان طرح‌ها از کش محلی (sync).
+ * برای کامپوننت‌هایی که نمی‌توانند await کنند.
  */
 export function getEffectivePlans() {
   try {
@@ -116,13 +165,7 @@ export function getEffectivePlans() {
       const raw = localStorage.getItem(PLANS_CONFIG_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === "object") {
-          return {
-            free: { ...DEFAULT_PLANS.free, ...(parsed.free || {}) },
-            pro: { ...DEFAULT_PLANS.pro, ...(parsed.pro || {}) },
-            enterprise: { ...DEFAULT_PLANS.enterprise, ...(parsed.enterprise || {}) },
-          };
-        }
+        if (parsed && typeof parsed === "object") return sanitizeConfig(parsed);
       }
     }
   } catch (e) {
@@ -131,10 +174,16 @@ export function getEffectivePlans() {
   return DEFAULT_PLANS;
 }
 
+// reference به snapshot فعلی (همان آبجکت ذخیره‌شده در کش)
+function getPlansSnapshot() {
+  return getEffectivePlans();
+}
+
 /**
- * ذخیره تنظیمات شخصی‌سازی‌شده طرح‌ها توسط سوپرادمین
+ * ذخیره تنظیمات طرح‌ها (کش محلی + رویداد تغییر + sync با دیتابیس)
+ * @returns {Promise<{ok:boolean, error?:string}>}
  */
-export function savePlansConfig(config) {
+export async function savePlansConfig(config, { persistToDb = true } = {}) {
   try {
     if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
       localStorage.setItem(PLANS_CONFIG_KEY, JSON.stringify(config));
@@ -142,13 +191,35 @@ export function savePlansConfig(config) {
     }
   } catch (e) {
     console.error("Failed to save plans config:", e);
+    return { ok: false, error: e.message };
+  }
+
+  if (!persistToDb) return { ok: true };
+
+  try {
+    const { error } = await supabase.from("system_settings").upsert(
+      {
+        key: PLANS_DB_KEY,
+        value: config,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "key" }
+    );
+    if (error) {
+      console.warn("Plans saved locally but DB sync failed:", error.message);
+      return { ok: true, dbError: error.message };
+    }
+    return { ok: true };
+  } catch (e) {
+    console.warn("Plans DB sync threw:", e);
+    return { ok: true, dbError: e.message };
   }
 }
 
 /**
- * بازنشانی طرح‌ها به مقادیر پیش‌فرض
+ * بازنشانی طرح‌ها به مقادیر پیش‌فرض کارخانه (محلی + دیتابیس)
  */
-export function resetPlansConfig() {
+export async function resetPlansConfig() {
   try {
     if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
       localStorage.removeItem(PLANS_CONFIG_KEY);
@@ -157,6 +228,52 @@ export function resetPlansConfig() {
   } catch (e) {
     console.error("Failed to reset plans config:", e);
   }
+  try {
+    await supabase.from("system_settings").delete().eq("key", PLANS_DB_KEY);
+    return { ok: true };
+  } catch (e) {
+    return { ok: true, dbError: e.message };
+  }
+}
+
+/**
+ * بارگذاری طرح‌ها از دیتابیس و به‌روزرسانی کش محلی.
+ * اگر کاربر دسترسی خواندن نداشته باشد یا جدول خالی باشد، کش فعلی برمی‌گردد.
+ */
+export async function loadPlansConfig() {
+  try {
+    const { data, error } = await supabase
+      .from("system_settings")
+      .select("value")
+      .eq("key", PLANS_DB_KEY)
+      .maybeSingle();
+    if (error || !data || !data.value) return getEffectivePlans();
+    const config = sanitizeConfig(data.value);
+    if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+      localStorage.setItem(PLANS_CONFIG_KEY, JSON.stringify(config));
+      window.dispatchEvent(new CustomEvent("porskad:plans_changed", { detail: config }));
+    }
+    return config;
+  } catch (e) {
+    console.warn("Could not load plans from database:", e);
+    return getEffectivePlans();
+  }
+}
+
+/**
+ * اعمال یک کانفیگ روی state محلی (کش + رویداد) بدون نوشتن در دیتابیس.
+ */
+export function applyPlansConfig(config) {
+  const sanitized = sanitizeConfig(config || {});
+  try {
+    if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+      localStorage.setItem(PLANS_CONFIG_KEY, JSON.stringify(sanitized));
+      window.dispatchEvent(new CustomEvent("porskad:plans_changed", { detail: sanitized }));
+    }
+  } catch (e) {
+    console.error("Failed to apply plans config:", e);
+  }
+  return sanitized;
 }
 
 /**
@@ -164,11 +281,44 @@ export function resetPlansConfig() {
  */
 export function getPlan(planId) {
   const currentPlans = getEffectivePlans();
-  if (!planId) return currentPlans.free;
+  if (!planId) return currentPlans.free || DEFAULT_PLANS.free;
   const key = String(planId).toLowerCase();
+  if (currentPlans[key]) return currentPlans[key];
   if (key === "unlimited" || key === "enterprise") return currentPlans.enterprise;
   if (key === "pro" || key === "professional") return currentPlans.pro;
   return currentPlans.free || DEFAULT_PLANS.free;
+}
+
+/**
+ * شمارش زندهٔ کاربران هر طرح از جدول profiles (برای پنل مدیریت اشتراک‌ها).
+ * فقط سوپرادمین‌ها به کل ردیف‌ها دسترسی دارند (RLS 0064).
+ */
+export async function fetchLivePlanUserCounts() {
+  try {
+    const { data: ownerRows, error: ownerErr } = await supabase
+      .from("profiles")
+      .select("plan", { count: "exact", head: true })
+      .eq("is_owner", true);
+    const { data: rows, error } = await supabase
+      .from("profiles")
+      .select("plan")
+      .neq("is_owner", true);
+    if (error || !rows) return { ok: false, counts: {}, total: 0 };
+
+    const counts = {};
+    for (const r of rows) {
+      const key = String(r.plan || "free").toLowerCase();
+      counts[key] = (counts[key] || 0) + 1;
+    }
+    return {
+      ok: true,
+      counts,
+      owners: ownerErr ? 0 : (ownerRows?.length ?? 0) || 0,
+      total: rows.length,
+    };
+  } catch (e) {
+    return { ok: false, counts: {}, total: 0 };
+  }
 }
 
 /**

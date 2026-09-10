@@ -84,6 +84,8 @@ import {
   getEffectivePlans,
   savePlansConfig,
   resetPlansConfig,
+  loadPlansConfig,
+  getPlanIds,
   DEFAULT_PLANS,
   PLAN_ORDER,
 } from "../../lib/plans";
@@ -189,6 +191,22 @@ export default function SuperAdmin() {
   const [plansConfig, setPlansConfig] = useState(() => getEffectivePlans());
   const [plansSaving, setPlansSaving] = useState(false);
   const [newPlanFeatureInput, setNewPlanFeatureInput] = useState({ planId: "free", text: "", included: true });
+
+  // بارگذاری طرح‌ها از دیتابیس (منبع حقیقت مشترک با پنل مدیریت اشتراک‌ها)
+  useEffect(() => {
+    let alive = true;
+    loadPlansConfig().then((cfg) => {
+      if (alive && cfg) setPlansConfig(JSON.parse(JSON.stringify(cfg)));
+    });
+    function onPlansChanged(e) {
+      if (e.detail) setPlansConfig(JSON.parse(JSON.stringify(e.detail)));
+    }
+    window.addEventListener("porskad:plans_changed", onPlansChanged);
+    return () => {
+      alive = false;
+      window.removeEventListener("porskad:plans_changed", onPlansChanged);
+    };
+  }, []);
 
   // ─── Modals ───
   const [editModal, setEditModal] = useState(null);
@@ -631,30 +649,21 @@ export default function SuperAdmin() {
   // ─── Dynamic Plans & Pricing Handlers ───
   async function handleSavePlansConfig() {
     setPlansSaving(true);
-    try {
-      savePlansConfig(plansConfig);
-      try {
-        await supabase
-          .from("system_settings")
-          .upsert(
-            { key: "plans_config", value: plansConfig, updated_at: new Date().toISOString() },
-            { onConflict: "key" }
-          );
-      } catch (dbErr) {
-        console.warn("Could not sync plans to database:", dbErr);
-      }
+    const res = await savePlansConfig(plansConfig);
+    setPlansSaving(false);
+    if (res.ok && !res.dbError) {
       showToast("Plans & pricing packages saved successfully");
-    } catch (err) {
-      showToast("Error saving plans: " + err.message, "error");
-    } finally {
-      setPlansSaving(false);
+    } else if (res.ok) {
+      showToast("Saved locally, but database sync failed: " + res.dbError, "warning");
+    } else {
+      showToast("Error saving plans: " + res.error, "error");
     }
   }
 
   async function handleResetPlansConfig() {
     if (!confirm("Reset all 3 plans and features to factory defaults?")) return;
-    resetPlansConfig();
-    setPlansConfig(DEFAULT_PLANS);
+    await resetPlansConfig();
+    setPlansConfig(JSON.parse(JSON.stringify(DEFAULT_PLANS)));
     showToast("Plans configuration reset to defaults");
   }
 
@@ -1856,7 +1865,7 @@ export default function SuperAdmin() {
               alignItems: "start",
             }}
           >
-            {PLAN_ORDER.map((planKey) => {
+            {getPlanIds(plansConfig).map((planKey) => {
               const p = plansConfig[planKey] || DEFAULT_PLANS[planKey];
               return (
                 <div

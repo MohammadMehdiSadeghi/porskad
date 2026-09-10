@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../components/ui/Toast";
-import { getEffectivePlans, PLAN_ORDER, getPlan } from "../../lib/plans";
+import { getEffectivePlans, getPlanIds, getPlan, loadPlansConfig } from "../../lib/plans";
 import { faNum, faDate } from "../../lib/utils";
 import { supabase } from "../../lib/supabaseClient";
 import Button from "../../components/ui/Button";
@@ -52,6 +52,8 @@ export default function Plans() {
       if (e.detail) setPlans(e.detail);
     }
     window.addEventListener("porskad:plans_changed", handlePlansChanged);
+    // بارگذاری کانفیگ مشترک از دیتابیس (منبع حقیقت)
+    loadPlansConfig().then((cfg) => cfg && setPlans(cfg));
     return () => window.removeEventListener("porskad:plans_changed", handlePlansChanged);
   }, []);
 
@@ -286,7 +288,7 @@ export default function Plans() {
 
       {/* کارت‌های ۳ گانه تعرفه‌ها */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-        {PLAN_ORDER.map((planKey) => {
+        {getPlanIds(plans).map((planKey) => {
           const p = plans[planKey] || getPlan(planKey);
           const isCurrent = currentPlan.id === p.id && !isGod;
           const isYearly = billingCycle === "yearly";
