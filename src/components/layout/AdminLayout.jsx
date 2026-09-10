@@ -23,8 +23,6 @@ import {
   X,
   Settings,
   Crown,
-  Sparkles,
-  Zap,
 } from "lucide-react";
 import NotificationBell from "../ui/NotificationBell";
 import ThemeToggle from "../ui/ThemeToggle";
@@ -65,7 +63,6 @@ export default function AdminLayout() {
         { to: "/admin/managers", label: "مدیریت کاربران", icon: Users, end: false },
         { to: "/admin/settings", label: "تنظیمات سامانه", icon: Settings, end: false },
         { to: "/admin/support", label: "تیکت‌های پشتیبانی", icon: Headphones, end: false },
-        { to: "/admin/plans", label: "طرح‌ها و ارتقا", icon: Sparkles, end: false },
         { to: "/admin/superadmin", label: "سوپرادمین (God)", icon: Shield, end: false },
         { to: "/admin/profile", label: "پروفایل", icon: User, end: false },
       ]
