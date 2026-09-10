@@ -8,8 +8,7 @@ import Button from "../../components/ui/Button";
 import StickerCard from "../../components/ui/StickerCard";
 import SEO from "../../components/ui/SEO";
 import { faNum } from "../../lib/utils";
-import { getPlan } from "../../lib/plans";
-import { Crown, Lock, Key, Mail, Eye, EyeOff, Zap } from "lucide-react";
+import { Crown, Lock, Key, Mail, Eye, EyeOff } from "lucide-react";
 
 export default function Profile() {
   const { user, profile, changePassword, updateProfile } = useAuth();
@@ -185,26 +184,12 @@ export default function Profile() {
               </div>
             </div>
 
-            {/* شماره موبایل و طرح فعال */}
-            <div className="flex flex-wrap items-center justify-between gap-2 border-y border-ink/10 dark:border-slate-700/60 py-2.5">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-ink-subtle">شماره موبایل:</span>
-                <span className="text-sm font-mono font-bold text-navy" dir="ltr">
-                  {profile?.phone || "ثبت نشده"}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-ink-subtle">طرح فعلی:</span>
-                <span className={`text-xs font-black px-2.5 py-1 rounded-full border ${
-                  profile?.is_owner || profile?.plan === "enterprise"
-                    ? "bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-950/40 dark:text-purple-300"
-                    : profile?.plan === "pro"
-                    ? "bg-teal/15 text-teal border-teal/30"
-                    : "bg-ink/5 text-ink/70 border-ink/15 dark:text-slate-300"
-                }`}>
-                  {profile?.is_owner ? "سازمانی نامحدود (مالک)" : (getPlan(profile?.plan).name || "رایگان")}
-                </span>
-              </div>
+            {/* شماره موبایل */}
+            <div className="flex items-center gap-2 border-y border-ink/10 dark:border-slate-700/60 py-2.5">
+              <span className="text-sm font-bold text-ink-subtle">شماره موبایل:</span>
+              <span className="text-sm font-mono font-bold text-navy" dir="ltr">
+                {profile?.phone || "ثبت نشده"}
+              </span>
             </div>
 
             {/* سهمیه و وضعیت امکانات */}
@@ -246,16 +231,10 @@ export default function Profile() {
 
             {!profile?.is_owner && (
               <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-ink/10 dark:border-slate-700">
-                <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400">نیاز به امکانات بیشتر یا ارتقای پلن؟</span>
-                <div className="flex items-center gap-2">
-                  <Button as={Link} to="/admin/plans" variant="teal" size="sm">
-                    <Zap size={13} className="ml-1" />
-                    طرح‌ها و ارتقای حساب
-                  </Button>
-                  <Button as={Link} to="/admin/support" variant="ghost" size="sm">
-                    پشتیبانی
-                  </Button>
-                </div>
+                <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400">نیاز به ظرفیت بیشتر دارید؟</span>
+                <Button as={Link} to="/admin/support" variant="teal" size="sm">
+                  درخواست افزایش سهمیه
+                </Button>
               </div>
             )}
           </div>
