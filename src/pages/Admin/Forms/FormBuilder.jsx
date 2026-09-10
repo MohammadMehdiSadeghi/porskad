@@ -1091,7 +1091,6 @@ export default function FormBuilder() {
         max_responses_limit: f.max_responses_limit || f.settings?.max_responses_limit || "",
         prevent_duplicate: f.prevent_duplicate ?? f.settings?.prevent_duplicate ?? false,
         auth_mode: f.auth_mode || f.settings?.auth_mode || "none",
-        geotagging: f.geotagging ?? f.settings?.geotagging ?? false,
         time_limit_seconds: f.time_limit_seconds || f.settings?.time_limit_seconds || "",
       });
 
@@ -1197,7 +1196,6 @@ export default function FormBuilder() {
         max_responses_limit: form.max_responses_limit ? Number(form.max_responses_limit) : null,
         prevent_duplicate: !!form.prevent_duplicate,
         auth_mode: form.auth_mode || "none",
-        geotagging: !!form.geotagging,
         time_limit_seconds: form.time_limit_seconds ? Number(form.time_limit_seconds) : null,
       };
 
@@ -1792,20 +1790,7 @@ export default function FormBuilder() {
                     />
                     <div className="flex flex-col">
                       <span className="text-xs font-black text-navy dark:text-slate-100">جلوگیری از ثبت پاسخ تکراری</span>
-                      <span className="text-[10px] text-ink/50 dark:text-slate-400">یک پاسخ به ازای هر کاربر</span>
-                    </div>
-                  </label>
-
-                  <label className="flex items-center gap-2.5 cursor-pointer select-none bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-ink/10 dark:border-slate-700">
-                    <input
-                      type="checkbox"
-                      checked={!!form.geotagging}
-                      onChange={(e) => setFormField({ geotagging: e.target.checked })}
-                      className="w-4 h-4 text-teal rounded border-ink/30 focus:ring-teal cursor-pointer"
-                    />
-                    <div className="flex flex-col">
-                      <span className="text-xs font-black text-navy dark:text-slate-100">ثبت موقعیت مکانی (GPS)</span>
-                      <span className="text-[10px] text-ink/50 dark:text-slate-400">درخواست و ذخیره مختصات جغرافیایی پاسخ‌دهنده</span>
+                      <span className="text-[10px] text-ink/50 dark:text-slate-400">یک پاسخ به ازای هر مرورگر/دستگاه</span>
                     </div>
                   </label>
                 </div>

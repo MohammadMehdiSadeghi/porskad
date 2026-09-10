@@ -1,27 +1,28 @@
 import { createClient } from "@supabase/supabase-js";
 
-const ipRequests = new Map();
+const formSendRequests = new Map();
 const CLEANUP_INTERVAL = 60 * 60 * 1000;
 if (typeof setInterval !== "undefined") {
   setInterval(() => {
     const now = Date.now();
-    for (const [ip, data] of ipRequests.entries()) {
+    for (const [key, data] of formSendRequests.entries()) {
       if (now - data.firstRequest > CLEANUP_INTERVAL) {
-        ipRequests.delete(ip);
+        formSendRequests.delete(key);
       }
     }
   }, CLEANUP_INTERVAL);
 }
 
-function isRateLimited(ip) {
+// ⚠️ Rate limit بر اساس شناسه فرم — بدون استفاده از IP (حریم خصوصی)
+function isRateLimited(key) {
   const now = Date.now();
-  const data = ipRequests.get(ip);
+  const data = formSendRequests.get(key);
   if (!data) {
-    ipRequests.set(ip, { count: 1, firstRequest: now });
+    formSendRequests.set(key, { count: 1, firstRequest: now });
     return false;
   }
   if (now - data.firstRequest > 60 * 1000) {
-    ipRequests.set(ip, { count: 1, firstRequest: now });
+    formSendRequests.set(key, { count: 1, firstRequest: now });
     return false;
   }
   if (data.count >= 30) {
@@ -47,14 +48,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    const clientIp = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.socket?.remoteAddress || "unknown";
-    if (isRateLimited(clientIp)) {
-      return res.status(429).json({ error: "Too many requests" });
-    }
-
     const { form_id, response_id } = req.body;
     if (!form_id || !response_id) {
       return res.status(400).json({ error: "Missing form_id or response_id" });
+    }
+    if (isRateLimited(String(form_id))) {
+      return res.status(429).json({ error: "Too many requests" });
     }
 
     // ─── اتصال به Supabase ───

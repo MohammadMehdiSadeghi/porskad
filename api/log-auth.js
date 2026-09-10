@@ -25,7 +25,7 @@ function parseUserAgent(ua = "") {
   // مرورگر
   if (/edg/i.test(ua)) browser = "Edge";
   else if (/chrome|crios/i.test(ua) && !/opr|opera|edg/i.test(ua)) browser = "Chrome";
-  else if (/firefox|fxios/i.test(ua)) browser = "Firefox";
+  else if (/firefox|fxios/i.test(ua) && !/chrome|crios/i.test(ua)) browser = "Firefox";
   else if (/safari/i.test(ua) && !/chrome|crios/i.test(ua)) browser = "Safari";
   else if (/opr|opera/i.test(ua)) browser = "Opera";
   else if (/samsungbrowser/i.test(ua)) browser = "Samsung Browser";
@@ -50,33 +50,25 @@ export default async function handler(req, res) {
     browser = autoBrowser,
     os = autoOs,
     device = autoDevice,
-    ip: passedIp,
   } = req.body || {};
 
-  // ۱. استخراج آدرس IP کلاینت از هدرهای پراکسی، Vercel یا کلاینت
-  const forwarded = req.headers["x-forwarded-for"];
-  let rawIp = forwarded ? forwarded.split(",")[0].trim() : (req.headers["x-real-ip"] || req.socket?.remoteAddress || "");
-  rawIp = rawIp.replace(/^::ffff:/i, "");
-
-  // اگر IP لوکال بود و کلاینت IP عمومی فرستاده بود، از IP عمومی استفاده کن
-  let clientIp = rawIp;
-  if ((!clientIp || clientIp === "127.0.0.1" || clientIp === "::1" || clientIp === "localhost") && passedIp) {
-    clientIp = String(passedIp).trim();
-  }
-  if (!clientIp) clientIp = "127.0.0.1";
-
-  // ۲. استخراج موقعیت مکانی از هدرهای شبکه
-  const country = req.headers["x-vercel-ip-country"] || req.headers["cf-ipcountry"] || details?.country || null;
-  const city = req.headers["x-vercel-ip-city"] ? decodeURIComponent(req.headers["x-vercel-ip-city"]) : details?.city || null;
-
-  const enrichedDetails = {
-    ...(typeof details === "object" ? details : { raw: details }),
-    country,
-    city,
-  };
+  // ⚠️ حریم خصوصی: هیچ IP یا موقعیت مکانی (کشور/شهر) عمداً استخراج و ذخیره نمی‌شود.
+  // فقط مرورگر، سیستم‌عامل و نوع دستگاه لاگ می‌شود.
 
   const effectiveUserId = userId || user_id || null;
   const effectiveEmail = email ? String(email).trim().toLowerCase() : null;
+
+  // حذف هرگونه داده حساس احتمالی که کلاینت فرستاده باشد
+  const safeDetails = { ...(typeof details === "object" ? details : { raw: details }) };
+  delete safeDetails.ip;
+  delete safeDetails.client_ip;
+  delete safeDetails.ip_address;
+  delete safeDetails.country;
+  delete safeDetails.city;
+  delete safeDetails.location;
+  delete safeDetails.lat;
+  delete safeDetails.lng;
+  delete safeDetails.phone;
 
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
@@ -89,13 +81,12 @@ export default async function handler(req, res) {
       await supabaseAdmin.from("auth_logs").insert({
         user_id: effectiveUserId,
         email: effectiveEmail,
-        ip_address: clientIp,
         action,
         device,
         browser,
         os,
         user_agent: uaString,
-        details: enrichedDetails,
+        details: safeDetails,
       });
 
       // ۲. درج در activity_log جهت سازگاری
@@ -105,8 +96,7 @@ export default async function handler(req, res) {
           action,
           target_type: "auth",
           target_id: effectiveUserId ? String(effectiveUserId) : null,
-          details: { email: effectiveEmail, ip: clientIp, browser, os, device, country, city },
-          ip_address: clientIp,
+          details: { email: effectiveEmail, browser, os, device },
           user_agent: uaString,
         });
       } catch {}
@@ -117,9 +107,6 @@ export default async function handler(req, res) {
 
   return res.status(200).json({
     ok: true,
-    ip: clientIp,
-    country,
-    city,
     device,
     browser,
     os,

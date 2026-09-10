@@ -50,7 +50,6 @@ import {
   Monitor,
   Tablet,
   Radio,
-  MapPin,
   ExternalLink,
   History,
   UserPlus,
@@ -871,7 +870,7 @@ export default function SuperAdmin() {
     }
   }
 
-  // ─── Auth & IP Logs ───
+  // ─── Auth Logs (مرورگر/دستگاه — بدون IP) ───
   async function loadAuthLogs() {
     setAuthLogsLoading(true);
     try {
@@ -910,7 +909,6 @@ export default function SuperAdmin() {
             id: String(a.id),
             user_id: a.user_id,
             email: a.details?.email,
-            ip_address: a.ip_address || a.details?.ip,
             action: a.action,
             device: a.details?.device || "Desktop",
             browser: a.details?.browser || "Browser",
@@ -1044,7 +1042,7 @@ export default function SuperAdmin() {
     logic_rules: ["id", "form_id", "action_type", "priority", "created_at"],
     system_settings: ["key", "value", "updated_at"],
     support_tickets: ["id", "user_id", "subject", "status", "created_at"],
-    auth_logs: ["id", "user_id", "email", "action", "ip_address", "created_at"],
+    auth_logs: ["id", "user_id", "email", "action", "device", "browser", "os", "created_at"],
     activity_log: ["id", "user_id", "action", "target_type", "created_at"],
     error_log: ["id", "source", "message", "created_at"],
   };
@@ -1409,13 +1407,10 @@ export default function SuperAdmin() {
       (l.email && l.email.toLowerCase().includes(q)) ||
       (l.full_name && l.full_name.toLowerCase().includes(q)) ||
       (l.phone && l.phone.toLowerCase().includes(q)) ||
-      (l.ip_address && l.ip_address.toLowerCase().includes(q)) ||
       (l.action && l.action.toLowerCase().includes(q)) ||
       (l.browser && l.browser.toLowerCase().includes(q)) ||
       (l.os && l.os.toLowerCase().includes(q)) ||
       (l.device && l.device.toLowerCase().includes(q)) ||
-      (l.details?.city && String(l.details.city).toLowerCase().includes(q)) ||
-      (l.details?.country && String(l.details.country).toLowerCase().includes(q)) ||
       JSON.stringify(l.details || {}).toLowerCase().includes(q)
     );
   }, [authLogs, authLogsTimeframe, authLogsFilter, authLogsSearch]);
@@ -1435,7 +1430,6 @@ export default function SuperAdmin() {
       (l) =>
         (l.action && l.action.toLowerCase().includes(q)) ||
         (l.target_type && l.target_type.toLowerCase().includes(q)) ||
-        (l.ip_address && l.ip_address.toLowerCase().includes(q)) ||
         (l.browser && l.browser.toLowerCase().includes(q)) ||
         (l.os && l.os.toLowerCase().includes(q)) ||
         (l.device && l.device.toLowerCase().includes(q)) ||
@@ -1558,9 +1552,8 @@ export default function SuperAdmin() {
               { label: "Responses", value: stats.responses },
               { label: "Users", value: stats.users, sub: `${stats.activeUsers} active` },
               {
-                label: "Auth & IP Logs",
+                label: "Auth Logs",
                 value: stats.authEvents,
-                sub: `${stats.uniqueIps} unique IPs`,
                 highlight: "#8a3ffc",
                 onClick: () => setTab("auth_logs"),
               },
@@ -3611,7 +3604,7 @@ export default function SuperAdmin() {
                 Authentication & Activity Audit Trail ({filteredAuthLogs.length.toLocaleString()})
               </div>
               <div style={{ fontSize: "0.8rem", color: "#525252", marginTop: "0.2rem" }}>
-                Comprehensive security monitor: Track user sign-ins, device footprints, security actions, and timestamps.
+                Comprehensive activity monitor: Track user sign-ins, device details, security actions, and timestamps.
               </div>
             </div>
 
@@ -3631,7 +3624,7 @@ export default function SuperAdmin() {
                 className="sa-btn sa-btn-secondary"
                 onClick={() => {
                   try {
-                    const headers = ["ID", "Email", "Full Name", "Phone", "Action", "Device", "OS", "Browser", "Country", "City", "Timestamp"];
+                    const headers = ["ID", "Email", "Full Name", "Phone", "Action", "Device", "OS", "Browser", "Timestamp"];
                     const rows = filteredAuthLogs.map((l) => [
                       `"${l.id || ""}"`,
                       `"${l.email || ""}"`,
@@ -3641,8 +3634,6 @@ export default function SuperAdmin() {
                       `"${l.device || ""}"`,
                       `"${l.os || ""}"`,
                       `"${l.browser || ""}"`,
-                      `"${l.details?.country || ""}"`,
-                      `"${l.details?.city || ""}"`,
                       `"${l.created_at ? new Date(l.created_at).toISOString() : ""}"`,
                     ]);
                     const csvContent = "\uFEFF" + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
@@ -3860,7 +3851,7 @@ export default function SuperAdmin() {
                     <Search size={13} color="#8d8d8d" style={{ position: "absolute", left: "0.6rem", top: "50%", transform: "translateY(-50%)" }} />
                     <input
                       type="text"
-                      placeholder="Filter by Email, Name, Browser, OS, City..."
+                      placeholder="Filter by Email, Name, Browser, OS..."
                       value={authLogsSearch}
                       onChange={(e) => setAuthLogsSearch(e.target.value)}
                       style={{
@@ -3907,7 +3898,6 @@ export default function SuperAdmin() {
                           <th>Action</th>
                           <th>Device & OS</th>
                           <th>Browser</th>
-                          <th>Location</th>
                           <th>Timestamp</th>
                           <th>Inspect</th>
                         </tr>
@@ -3918,7 +3908,6 @@ export default function SuperAdmin() {
                           const isLogin = r.action?.includes("login");
                           const isLogout = r.action === "logout";
                           const isPhone = r.phone || r.details?.phone;
-                          const hasGeo = r.details?.city || r.details?.country;
 
                           return (
                             <tr key={r.id || i}>
@@ -3986,18 +3975,6 @@ export default function SuperAdmin() {
                               {/* Browser */}
                               <td style={{ fontSize: "0.85rem", color: "#161616", fontWeight: 600 }}>
                                 {r.browser || "—"}
-                              </td>
-
-                              {/* Location */}
-                              <td>
-                                {hasGeo ? (
-                                  <span style={{ fontSize: "0.8rem", color: "#161616", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
-                                    <MapPin size={11} color="#0f62fe" />
-                                    {[r.details.city, r.details.country].filter(Boolean).join(", ")}
-                                  </span>
-                                ) : (
-                                  <span style={{ color: "#c6c6c6", fontSize: "0.8rem" }}>—</span>
-                                )}
                               </td>
 
                               {/* Timestamp */}

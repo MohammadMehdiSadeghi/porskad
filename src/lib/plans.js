@@ -65,7 +65,7 @@ export const DEFAULT_PLANS = {
       { text: "اطلاع‌رسانی ایمیلی و تلگرامی به طراح و پاسخ‌دهنده", included: true },
       { text: "سفارشی‌سازی کامل صفحه پایان و پیام خروج", included: true },
       { text: "زیردامنه و لینک اختصاصی فرم", included: true },
-      { text: "جلوگیری از ثبت چندباره پاسخ (IP / Fingerprint)", included: true },
+      { text: "جلوگیری از ثبت چندباره پاسخ (مرورگر و دستگاه)", included: true },
       { text: "تنظیم سقف و ظرفیت ثبت پاسخ (فرم نوبت‌دهی)", included: true },
       { text: "دکمه چت مستقیم واتساپ با پاسخ‌دهنده", included: true },
       { text: "احراز هویت پیامکی و OTP پاسخ‌دهنده", included: false },
@@ -94,7 +94,6 @@ export const DEFAULT_PLANS = {
       { text: "متغیرهای محاسباتی، فرمول‌نویسی و محاسبه‌گر پیشرفته", included: true },
       { text: "درج اطلاعات مخفی (Hidden Fields / URL parameters)", included: true },
       { text: "اطلاع‌رسانی پیامکی (SMS) به پاسخ‌دهنده و طراح", included: true },
-      { text: "ثبت موقعیت مکانی پاسخ‌دهندگان (Geo-tagging)", included: true },
       { text: "وب‌هوک اختصاصی (Webhook) برای ارسال پاسخ‌ها به سیستم مشتری", included: true },
       { text: "هدایت پاسخ‌دهنده به صفحه دلخواه (Redirect on Submit)", included: true },
       { text: "یکپارچگی با Google Sheets و Zapier", included: true },
@@ -372,7 +371,6 @@ export function canUserAccessFeature(profile, featureKey) {
     case "respondent_auth":
     case "sms_notification":
     case "hidden_fields":
-    case "geotagging":
     case "webhook":
     case "redirect_url":
     case "google_sheets":

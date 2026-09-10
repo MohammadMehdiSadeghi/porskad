@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Rate limiting ساده بر اساس IP در حافظه (حداکثر ۵ ثبت‌نام در ساعت به ازای هر IP)
+// Rate limiting ساده بر اساس ایمیل در حافظه (حداکثر ۵ ثبت‌نام در ساعت به ازای هر ایمیل)
+// ⚠️ عمداً از IP استفاده نمی‌شود — هیچ آدرس IP در این سامانه ثبت یا پردازش نمی‌شود.
 const registerRateLimitMap = new Map();
 
 export default async function handler(req, res) {
@@ -8,23 +9,19 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // ۱. بررسی Rate limit
-  const clientIp = (
-    req.headers["x-forwarded-for"] ||
-    req.socket?.remoteAddress ||
-    "unknown"
-  ).split(",")[0].trim();
+  // ۱. بررسی Rate limit (بر اساس ایمیل — بدون IP)
+  const rateLimitKey = String((req.body && req.body.email) || "unknown").trim().toLowerCase();
 
   const now = Date.now();
   const windowMs = 60 * 60 * 1000; // ۱ ساعت
   const maxAttempts = 5;
 
-  const userAttempts = registerRateLimitMap.get(clientIp) || [];
+  const userAttempts = registerRateLimitMap.get(rateLimitKey) || [];
   const recentAttempts = userAttempts.filter((t) => now - t < windowMs);
 
   if (recentAttempts.length >= maxAttempts) {
     return res.status(429).json({
-      error: "تعداد درخواست‌های ثبت‌نام از این آدرس بیش از حد مجاز است. لطفاً ۱ ساعت دیگر مجدداً تلاش کنید.",
+      error: "تعداد درخواست‌های ثبت‌نام با این ایمیل بیش از حد مجاز است. لطفاً ۱ ساعت دیگر مجدداً تلاش کنید.",
     });
   }
 
@@ -76,7 +73,7 @@ export default async function handler(req, res) {
 
     // ثبت تلاش در نرخ‌سنج
     recentAttempts.push(now);
-    registerRateLimitMap.set(clientIp, recentAttempts);
+    registerRateLimitMap.set(rateLimitKey, recentAttempts);
 
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email: email.trim(),
@@ -110,7 +107,7 @@ export default async function handler(req, res) {
           .upsert({ user_id: data.user.id, role_id: "manager", active: true }, { onConflict: "user_id,role_id" });
       } catch {}
 
-      // ثبت لاگ ثبت‌نام همراه با IP در auth_logs و activity_log
+      // ثبت لاگ ثبت‌نام — فقط مرورگر/سیستم‌عامل/دستگاه (بدون IP و موقعیت)
       try {
         const ua = req.headers["user-agent"] || "";
         let browser = "Other";
@@ -125,13 +122,12 @@ export default async function handler(req, res) {
 
         if (/edg/i.test(ua)) browser = "Edge";
         else if (/chrome|crios/i.test(ua) && !/opr|opera|edg/i.test(ua)) browser = "Chrome";
-        else if (/firefox|fxios/i.test(ua)) browser = "Firefox";
+        else if (/firefox|fxios/i.test(ua) && !/chrome|crios/i.test(ua)) browser = "Firefox";
         else if (/safari/i.test(ua) && !/chrome|crios/i.test(ua)) browser = "Safari";
 
         await supabaseAdmin.from("auth_logs").insert({
           user_id: data.user.id,
           email: email.trim().toLowerCase(),
-          ip_address: clientIp.replace(/^::ffff:/i, ""),
           action: "register",
           device,
           browser,
@@ -139,7 +135,6 @@ export default async function handler(req, res) {
           user_agent: ua,
           details: {
             full_name: fullName?.trim() || email.split("@")[0],
-            phone: cleanPhone,
             method: "api_registration",
           },
         });

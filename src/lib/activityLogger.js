@@ -1,51 +1,5 @@
-// ─── Activity & Auth Security Logger — ثبت فعالیت‌ها، ورودها و لاگ IP برای سوپرادمین ───
+// ─── Activity & Auth Logger — ثبت فعالیت‌ها و ورود‌ها (فقط مرورگر/سیستم‌عامل/دستگاه — بدون IP و موقعیت) ───
 import { supabase } from "./supabaseClient";
-
-let cachedClientIp = null;
-let cachedGeo = null;
-
-/**
- * دریافت سریع آدرس IP و موقعیت تقریبی از کلاینت (با کَش در حافظه و sessionStorage)
- */
-export async function getClientPublicIp() {
-  if (cachedClientIp) return { ip: cachedClientIp, geo: cachedGeo };
-  if (typeof window !== "undefined") {
-    const saved = sessionStorage.getItem("porskad_client_ip");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed?.ip) {
-          cachedClientIp = parsed.ip;
-          cachedGeo = parsed.geo || null;
-          return { ip: cachedClientIp, geo: cachedGeo };
-        }
-      } catch {}
-    }
-  }
-
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 2000);
-
-    const res = await fetch("https://api.ipify.org?format=json", {
-      signal: controller.signal,
-    });
-    clearTimeout(timer);
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data?.ip) {
-        cachedClientIp = data.ip;
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem("porskad_client_ip", JSON.stringify({ ip: data.ip, geo: null }));
-        }
-        return { ip: data.ip, geo: null };
-      }
-    }
-  } catch {}
-
-  return { ip: null, geo: null };
-}
 
 /**
  * تشخیص مرورگر، سیستم‌عامل و نوع دستگاه
@@ -81,14 +35,14 @@ export function parseUserAgent(ua = "") {
 }
 
 /**
- * ثبت لاگ احراز هویت (ورود، ثبت‌نام، خروج) همراه با IP در بک‌اند و دیتابیس
+ * ثبت لاگ احراز هویت (ورود، ثبت‌نام، خروج) — فقط مرورگر/سیستم‌عامل/دستگاه
  * کاملاً ناهمگام و بدون مسدودسازی روند برنامه یا پاسخ به فرم‌ها
+ * ⚠️ عمداً هیچ IP یا موقعیت مکانی ثبت نمی‌شود
  */
 export async function logAuthEvent({ userId = null, email = null, action = "login", details = null } = {}) {
   try {
     const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
     const { browser, os, device } = parseUserAgent(ua);
-    const { ip: clientIp } = await getClientPublicIp().catch(() => ({ ip: null }));
 
     const payload = {
       userId,
@@ -97,8 +51,7 @@ export async function logAuthEvent({ userId = null, email = null, action = "logi
       browser,
       os,
       device,
-      ip: clientIp,
-      details: details ? { ...details, client_ip: clientIp } : { client_ip: clientIp },
+      details: details ? { ...details } : {},
     };
 
     let serverSuccess = false;
@@ -121,7 +74,6 @@ export async function logAuthEvent({ userId = null, email = null, action = "logi
         await supabase.rpc("log_auth_event", {
           p_user_id: userId,
           p_email: email,
-          p_ip_address: clientIp || "127.0.0.1",
           p_action: action,
           p_device: device,
           p_browser: browser,
@@ -135,7 +87,6 @@ export async function logAuthEvent({ userId = null, email = null, action = "logi
           await supabase.from("auth_logs").insert({
             user_id: userId,
             email,
-            ip_address: clientIp || "127.0.0.1",
             action,
             device,
             browser,
@@ -159,16 +110,20 @@ export async function logActivity(action, targetType = null, targetId = null, de
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { ip } = await getClientPublicIp().catch(() => ({ ip: null }));
 
+    const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+    const info = parseUserAgent(ua);
     await supabase.from("activity_log").insert({
       user_id: user.id,
       action,
       target_type: targetType,
       target_id: targetId ? String(targetId) : null,
-      details: details || null,
-      ip_address: ip,
-      user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+      details: {
+        ...info,
+        device: getDeviceInfo(),
+        ...(details || {}),
+      },
+      user_agent: ua || null,
     });
   } catch (err) {
     // silently fail

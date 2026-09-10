@@ -259,7 +259,7 @@ export function AuthProvider({ children }) {
     });
     if (error) throw error;
 
-    // ثبت لاگ ورود همراه با IP کلاینت در پس‌زمینه
+    // ثبت لاگ ورود در پس‌زمینه (فقط مرورگر/سیستم‌عامل/دستگاه — بدون IP)
     if (data?.user) {
       logAuthEvent({
         userId: data.user.id,
@@ -297,7 +297,7 @@ export function AuthProvider({ children }) {
             userId: loginData.user.id,
             email: loginData.user.email || email,
             action: "login_after_register",
-            details: { phone: cleanPhone, method: "api_auto_login" },
+            details: { method: "api_auto_login" },
           });
           return loginData;
         }
@@ -341,7 +341,7 @@ export function AuthProvider({ children }) {
           userId: data.user.id,
           email: data.user.email || email,
           action: "register",
-          details: { phone: cleanPhone, full_name: fullName, method: "supabase_signup" },
+          details: { full_name: fullName, method: "supabase_signup" },
         });
       }
     } catch {}

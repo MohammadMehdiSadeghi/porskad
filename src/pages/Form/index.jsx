@@ -279,21 +279,6 @@ export default function FormFill() {
   const goBack = useCallback(() => { if (step <= -1) return; accrueTime(); setDir(-1); setStep((s) => findPrevVisibleStep(s)); }, [step, accrueTime, findPrevVisibleStep]);
 
   const [redirectCountdown, setRedirectCountdown] = useState(null);
-  const [userLocation, setUserLocation] = useState(null);
-
-  // دریافت اختیاری موقعیت مکانی در صورت فعال بودن Geotagging
-  useEffect(() => {
-    const isGeotagging = form?.geotagging ?? form?.settings?.geotagging;
-    if (isGeotagging && typeof navigator !== "undefined" && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy });
-        },
-        (err) => console.warn("Geolocation permission error:", err),
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    }
-  }, [form]);
 
   const doSubmit = useCallback(async () => {
     setShowConfirm(false);
@@ -332,7 +317,6 @@ export default function FormFill() {
               response_id: responseId,
               submitted_at: nowIso,
               answers: rows,
-              location: userLocation,
             }),
             mode: "no-cors",
           }).catch((e) => console.warn("Webhook dispatch error:", e));
@@ -360,7 +344,7 @@ export default function FormFill() {
       }
     } catch (err) { console.error(err); setSubmitError("ثبت جواب ناموفق بود؛ دوباره تلاش کن."); }
     finally { setSubmitting(false); }
-  }, [submitting, honeypot, form, visibleQuestions, questions, answers, times, startedAt, slug, total, userLocation]);
+  }, [submitting, honeypot, form, visibleQuestions, questions, answers, times, startedAt, slug, total]);
 
   useEffect(() => { if (formEnded && step >= 0 && step < total) { accrueTime(); setDir(1); setStep(total); } }, [formEnded]);
 
