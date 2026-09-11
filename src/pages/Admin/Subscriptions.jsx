@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Check, X, Crown, Sparkles, Building2, Ticket, ShieldCheck } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { getEffectivePlans, getPlanIds, getPlan } from "../../lib/plans";
+import {
+  buildSubscriptionActivationMessage,
+  SUBSCRIPTION_DURATIONS as DURATIONS,
+} from "../../lib/ticketCategories";
 import { faNum } from "../../lib/utils";
 import StickerCard from "../../components/ui/StickerCard";
 import Button from "../../components/ui/Button";
@@ -16,9 +20,10 @@ import SEO from "../../components/ui/SEO";
 // دوره → هدایت به /admin/support با subject/message آماده در
 // کوئری‌استرینگ → مودال تیکت پشتیبانی خودبه‌خود با متن
 // پر شده باز می‌شود و کاربر فقط «ارسال پیام» را می‌زند.
-// تیکت برای مدیر (سوپرادمین) می‌آید؛ مدیر شماره کارت را در
-// پاسخ می‌فرستد و پس از واریز با دکمهٔ «تایید و فعال‌سازی
-// فوری اشتراک» طرح را فعال می‌کند.
+// متن تیکت فقط «درخواست فعال‌سازی» است (بدون درخواست شماره
+// کارت). مدیر اول «شماره کارت» را می‌فرستد، کاربر فیش را
+// برمی‌گرداند، و بعد مدیر با دکمه‌های «تایید و فعال‌سازی»
+// یا «رد درخواست» تصمیم نهایی را می‌گیرد.
 // ════════════════════════════════════════════════════════
 
 const PLAN_ICONS = {
@@ -33,35 +38,7 @@ const PLAN_THEMES = {
   enterprise: "navy",
 };
 
-const DURATIONS = [
-  { days: 30, label: "۱ ماهه (۳۰ روز)" },
-  { days: 90, label: "۳ ماهه (۹۰ روز)" },
-  { days: 180, label: "۶ ماهه (۱۸۰ روز)" },
-  { days: 365, label: "۱ ساله (۳۶۵ روز)" },
-];
-
 const fmtToman = (rial) => `${faNum(Math.round((rial || 0) / 10))} تومان`;
-
-// فرمت پیام باید دقیقاً با پارسر Support.jsx هماهنگ بماند
-// (نشانگرها: «طرح درخواستی:»، «شناسه برچسب:»، «دوره اشتراک:»، «مبلغ فاکتور:»)
-export function buildSubscriptionTicketMessage(plan, dur) {
-  const priceRial = dur.days === 365 ? plan.priceYearly : plan.priceMonthly * Math.round(dur.days / 30);
-  const subject = `درخواست ارتقای اشتراک به طرح ${plan.name} (${dur.label})`;
-  const message = [
-    "با سلام،",
-    "",
-    "درخواست خرید/ارتقای اشتراک را ثبت می‌کنم:",
-    "",
-    `• طرح درخواستی: ${plan.name}`,
-    `• شناسه طرح: ${plan.id}`,
-    `• دوره اشتراک: ${dur.label}`,
-    `• مبلغ فاکتور: ${fmtToman(priceRial)}`,
-    "",
-    "لطفاً شماره کارت بانکی را برای واریز پیام کنید.",
-    "پس از واریز، فیش را همین‌جا می‌فرستم. با تشکر 🙏",
-  ].join("\n");
-  return { subject, message };
-}
 
 export default function Subscriptions() {
   const { profile, isOwner } = useAuth();
@@ -76,9 +53,11 @@ export default function Subscriptions() {
   // «ثبت درخواست و ارسال تیکت» → رفتن به صفحه تیکت‌ها با متن آماده
   function goToTicketWithRequest() {
     if (!buyPlan) return;
-    const { subject, message } = buildSubscriptionTicketMessage(buyPlan, duration);
+    const { subject, message } = buildSubscriptionActivationMessage(buyPlan, duration);
     setBuyPlan(null);
-    navigate(`/admin/support?subject=${encodeURIComponent(subject)}&message=${encodeURIComponent(message)}`);
+    navigate(
+      `/admin/support?category=subscription&subject=${encodeURIComponent(subject)}&message=${encodeURIComponent(message)}`
+    );
   }
 
   return (

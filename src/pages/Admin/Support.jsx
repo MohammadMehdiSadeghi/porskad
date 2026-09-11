@@ -12,7 +12,14 @@ import Modal from "../../components/ui/Modal";
 import EmptyState from "../../components/ui/EmptyState";
 import SEO from "../../components/ui/SEO";
 import { faDateTime, faRelative, faNum } from "../../lib/utils";
-import { upgradeUserSubscription } from "../../lib/plans";
+import { upgradeUserSubscription, getEffectivePlans } from "../../lib/plans";
+import {
+  TICKET_CATEGORIES,
+  CATEGORY_LABELS,
+  PAYMENT_FLOW,
+  SUBSCRIPTION_DURATIONS,
+  buildSubscriptionActivationMessage,
+} from "../../lib/ticketCategories";
 import {
   MessageSquare,
   Send,
@@ -39,6 +46,9 @@ import {
   AlertTriangle,
   Edit3,
   Sparkles,
+  CreditCard,
+  XCircle,
+  Receipt,
 } from "lucide-react";
 
 export default function Support() {
@@ -84,6 +94,9 @@ export default function Support() {
 
   // کاربر: ساخت تیکت جدید
   const [newTicketModal, setNewTicketModal] = useState(false);
+  const [category, setCategory] = useState("question");
+  const [subPlanId, setSubPlanId] = useState("");
+  const [subDurationDays, setSubDurationDays] = useState(30);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -93,13 +106,54 @@ export default function Support() {
   const [replyText, setReplyText] = useState("");
   const [closeOnReply, setCloseOnReply] = useState(false);
   const [replying, setReplying] = useState(false);
+  // وقتی مدیر با یک اقدام خاص (ارسال کارت/رد) پاسخ می‌دهد، وضعیت پرداخت هم ست می‌شود
+  const [pendingPaymentStatus, setPendingPaymentStatus] = useState(null);
+
+  // طرح‌های پولی برای سلکت تیکت اشتراک
+  const paidPlans = useMemo(() => {
+    const plans = getEffectivePlans();
+    return Object.values(plans).filter(
+      (p) => p && !String(p.id).startsWith("_") && p.id !== "free" && (p.priceMonthly || 0) > 0
+    );
+  }, []);
+
+  function fillSubTicket(planId, days) {
+    const plan = paidPlans.find((p) => p.id === planId) || paidPlans[0];
+    const dur = SUBSCRIPTION_DURATIONS.find((d) => d.days === Number(days)) || SUBSCRIPTION_DURATIONS[0];
+    if (!plan) return;
+    const { subject: s, message: m } = buildSubscriptionActivationMessage(plan, dur);
+    setSubject(s);
+    setMessage(m);
+  }
+
+  function handleCategoryChange(val) {
+    setCategory(val);
+    if (val === "subscription") {
+      const pid = subPlanId || paidPlans[0]?.id || "";
+      setSubPlanId(pid);
+      fillSubTicket(pid, subDurationDays);
+    } else {
+      setSubject("");
+      setMessage("");
+    }
+  }
 
   useEffect(() => {
     const subjParam = searchParams.get("subject");
     const msgParam = searchParams.get("message");
+    const catParam = searchParams.get("category");
     if (subjParam) {
+      if (catParam) setCategory(catParam);
       setSubject(subjParam);
-      if (msgParam) setMessage(msgParam);
+      if (msgParam) {
+        setMessage(msgParam);
+        // اگر تیکت اشتراک از صفحه اشتراک‌ها آمده، سلکت‌ها را هم ست کن
+        const pid = msgParam.match(/شناسه طرح:\s*([a-zA-Z0-9_-]+)/)?.[1];
+        const durLabel = msgParam.match(/دوره اشتراک:\s*([^\n]+)/)?.[1] || "";
+        const dur = SUBSCRIPTION_DURATIONS.find((d) => durLabel.includes(d.label.slice(0, 4)));
+        if (pid) setSubPlanId(pid);
+        if (dur) setSubDurationDays(dur.days);
+      }
       setNewTicketModal(true);
       // پاک‌سازی کوئری تا با رفرش/بازگشت، مودال تکراری باز نشود
       setSearchParams({}, { replace: true });
@@ -229,9 +283,11 @@ export default function Support() {
     try {
       const { error } = await supabase.from("support_tickets").insert({
         user_id: user.id,
+        category,
         subject: subject.trim(),
         message: message.trim(),
         status: "open",
+        ...(category === "subscription" ? { payment_status: "pending_card" } : {}),
         archived_by_user: false,
         archived_by_admin: false,
       });
@@ -241,6 +297,7 @@ export default function Support() {
       push("تیکت شما ارسال شد. به زودی پاسخ داده می‌شود.", "success");
       setSubject("");
       setMessage("");
+      setCategory("question");
       setNewTicketModal(false);
       loadTickets();
     } catch (err) {
@@ -266,6 +323,7 @@ export default function Support() {
           status: newStatus,
           replied_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
+          ...(pendingPaymentStatus ? { payment_status: pendingPaymentStatus } : {}),
         })
         .eq("id", replyTicket.id);
 
@@ -275,6 +333,7 @@ export default function Support() {
       setReplyTicket(null);
       setReplyText("");
       setCloseOnReply(false);
+      setPendingPaymentStatus(null);
       loadTickets();
     } catch (err) {
       console.error(err);
@@ -432,6 +491,93 @@ export default function Support() {
   // ─── فعال‌سازی مستقیم اشتراک کاربر از روی تیکت توسط مدیر ───
   const [activatingPlanTicketId, setActivatingPlanTicketId] = useState(null);
 
+  // ارسال پاسخِ اقدام‌محور (شماره کارت / رد درخواست) + ثبت وضعیت پرداخت
+  async function sendSubscriptionAction(ticket, action) {
+    const info = parseSubscriptionInfo(ticket);
+    if (!info) return;
+
+    let replyText, newPayment;
+    if (action === "card") {
+      const cardNumber = window.prompt(
+        "شماره کارت را وارد کنید (در پاسخ به کاربر ارسال می‌شود):",
+        ""
+      );
+      if (!cardNumber || !cardNumber.trim()) return;
+      const card = cardNumber.trim().replace(/[\u200c-\u200f\s]/g, "").replace(/(\d{4})(?=\d)/g, "$1 ");
+      const bankName = window.prompt("نام بانک (اختیاری):", "")?.trim() || "";
+      replyText = [
+        "با سلام و احترام،",
+        "",
+        `برای فعال‌سازی طرح «${info.planName}» (${info.durationLabel})${info.amount ? ` — مبلغ ${info.amount}` : ""}، لطفاً مبلغ را به شماره کارت زیر واریز کنید:`,
+        "",
+        `🏦 بانک: ${bankName || "—"}`,
+        `💳 شماره کارت: ${card}`,
+        "",
+        "پس از واریز، همین‌جا اعلام کنید (در صورت امکان تصویر فیش واریز را هم بفرستید) تا اشتراک‌تان فعال شود.",
+      ].join("\n");
+      newPayment = "card_sent";
+    } else if (action === "rejected") {
+      const reason = window.prompt("دلیل رد درخواست (برای کاربر ارسال می‌شود):", "")?.trim();
+      if (reason === undefined) return;
+      replyText = [
+        "با سلام و احترام،",
+        "",
+        "متأسفانه با درخواست فعال‌سازی اشتراک شما موافقت نشد.",
+        reason ? `\nدلیل: ${reason}` : "",
+        "",
+        "در صورت نیاز به راهنمایی بیشتر، همین تیکت را بازگشایی کنید. با تشکر 🙏",
+      ].filter(Boolean).join("\n");
+      newPayment = "rejected";
+    } else {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("support_tickets")
+        .update({
+          admin_reply: replyText,
+          payment_status: newPayment,
+          status: "answered",
+          replied_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", ticket.id);
+      if (error) throw error;
+      push(action === "card" ? "شماره کارت برای کاربر ارسال شد 💳" : "درخواست رد شد و به کاربر اطلاع داده شد", "success");
+      loadTickets(true);
+    } catch (err) {
+      console.error("Subscription action error:", err);
+      push("خطا در ارسال پاسخ: " + err.message, "error");
+    }
+  }
+
+  // کاربر: اعلام واریز (پاسخ به شماره کارت)
+  async function handleConfirmPayment(ticket) {
+    const note = window.prompt("در صورت نیاز توضیح واریز (تاریخ/کد پیگیری):", "")?.trim();
+    if (note === undefined) return;
+    const stamp = new Date().toLocaleDateString("fa-IR");
+    const updatedMessage = `${ticket.message}\n\n─── اعلام واریز توسط کاربر (${stamp}) ───${note ? `\n${note}` : ""}`;
+    try {
+      const { error } = await supabase
+        .from("support_tickets")
+        .update({
+          message: updatedMessage,
+          payment_status: "awaiting_payment",
+          status: "open",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", ticket.id);
+      if (error) throw error;
+      push("اعلام واریز شما ثبت شد؛ منتظر فعال‌سازی باشید ✅", "success");
+      loadTickets(true);
+    } catch (err) {
+      console.error("Confirm payment error:", err);
+      push("خطا در ثبت اعلام واریز: " + err.message, "error");
+    }
+  }
+
+  // مدیر: تایید واریز = فعال‌سازی طرح + پاسخ «فعال شد»
   async function handleDirectActivateSubscription(ticket) {
     const info = parseSubscriptionInfo(ticket);
     if (!info) return;
@@ -451,6 +597,7 @@ export default function Support() {
         .from("support_tickets")
         .update({
           admin_reply: autoReply,
+          payment_status: "approved",
           status: "answered",
           replied_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -936,6 +1083,11 @@ export default function Support() {
                                 <div className="flex flex-col gap-1">
                                   <div className="flex items-center gap-2 flex-wrap">
                                     <h4 className="font-black text-navy dark:text-white text-base">{t.subject}</h4>
+                                    {t.category && t.category !== "question" && (
+                                      <Badge color={t.category === "subscription" ? "orange" : t.category === "bug" ? "red" : t.category === "feature_request" ? "purple" : "gray"}>
+                                        {CATEGORY_LABELS[t.category] || t.category}
+                                      </Badge>
+                                    )}
                                     <Badge
                                       color={
                                         isClosed
@@ -961,42 +1113,66 @@ export default function Support() {
                                 </span>
                               </div>
 
-                              {/* 💎 باکس اختصاصی درخواست خرید/ارتقای اشتراک */}
+                              {/* 💎 باکس جریان خرید اشتراک (مدیر) */}
                               {isSubscriptionTicket(t) && (() => {
                                 const subInfo = parseSubscriptionInfo(t);
                                 if (!subInfo) return null;
+                                const flowKey = t.payment_status || "pending_card";
+                                const flow = PAYMENT_FLOW[flowKey];
                                 return (
-                                  <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange/70 dark:from-amber-950/40 dark:to-orange/30 border-2 border-amber-300 dark:border-amber-700/60 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sticker-sm">
-                                    <div className="flex items-center gap-3">
-                                      <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0 border border-amber-400/40">
-                                        <Sparkles size={20} />
-                                      </div>
-                                      <div>
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-xs font-black text-navy dark:text-amber-200">
-                                            💎 درخواست ارتقای اشتراک به طرح: {subInfo.planName}
-                                          </span>
-                                          <Badge color="orange">{subInfo.durationLabel}</Badge>
+                                  <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange/70 dark:from-amber-950/40 dark:to-orange/30 border-2 border-amber-300 dark:border-amber-700/60 rounded-2xl flex flex-col gap-3 shadow-sticker-sm">
+                                    <div className="flex flex-wrap items-center justify-between gap-3">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0 border border-amber-400/40">
+                                          <Sparkles size={20} />
                                         </div>
-                                        {subInfo.amount && (
-                                          <div className="text-xs font-bold text-amber-800 dark:text-amber-400 mt-0.5">
-                                            مبلغ فاکتور: {subInfo.amount}
+                                        <div>
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-xs font-black text-navy dark:text-amber-200">
+                                              💎 درخواست فعال‌سازی اشتراک — طرح: {subInfo.planName}
+                                            </span>
+                                            <Badge color="orange">{subInfo.durationLabel}</Badge>
                                           </div>
-                                        )}
+                                          {subInfo.amount && (
+                                            <div className="text-xs font-bold text-amber-800 dark:text-amber-400 mt-0.5">
+                                              مبلغ فاکتور: {subInfo.amount}
+                                            </div>
+                                          )}
+                                        </div>
                                       </div>
+                                      <Badge color={flow.color}>{flow.label}</Badge>
                                     </div>
 
-                                    {isOwner() && (
-                                      <Button
-                                        variant="teal"
-                                        size="sm"
-                                        disabled={activatingPlanTicketId === t.id}
-                                        onClick={() => handleDirectActivateSubscription(t)}
-                                        className="text-xs font-black px-4 py-2 shadow-sticker-sm"
-                                      >
-                                        <CheckCircle2 size={14} />
-                                        {activatingPlanTicketId === t.id ? "در حال فعال‌سازی..." : "تایید و فعال‌سازی فوری اشتراک"}
-                                      </Button>
+                                    {/* سه اقدام مدیر: شماره کارت → فعال‌سازی → رد */}
+                                    {flowKey !== "approved" && flowKey !== "rejected" && (
+                                      <div className="flex flex-wrap gap-2 border-t-2 border-dashed border-amber-300/70 dark:border-amber-700/50 pt-3">
+                                        {flowKey !== "card_sent" && flowKey !== "awaiting_payment" && (
+                                          <Button variant="navy" size="sm" onClick={() => sendSubscriptionAction(t, "card")} className="text-xs font-black">
+                                            <CreditCard size={14} className="ml-1" /> ارسال شماره کارت
+                                          </Button>
+                                        )}
+                                        {flowKey === "awaiting_payment" && (
+                                          <Badge color="green">کاربر اعلام واریز کرد — پس از بررسی فیش، فعال کنید</Badge>
+                                        )}
+                                        <Button
+                                          variant="teal"
+                                          size="sm"
+                                          disabled={activatingPlanTicketId === t.id}
+                                          onClick={() => handleDirectActivateSubscription(t)}
+                                          className="text-xs font-black"
+                                        >
+                                          <CheckCircle2 size={14} className="ml-1" />
+                                          {activatingPlanTicketId === t.id ? "در حال فعال‌سازی..." : "تایید و فعال‌سازی اشتراک"}
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => sendSubscriptionAction(t, "rejected")}
+                                          className="text-xs font-black text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                                        >
+                                          <XCircle size={14} className="ml-1" /> رد درخواست
+                                        </Button>
+                                      </div>
                                     )}
                                   </div>
                                 );
@@ -1146,6 +1322,11 @@ export default function Support() {
                       <div className="flex flex-wrap items-start justify-between gap-2 border-b border-ink/10 dark:border-slate-700 pb-3">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-black text-navy dark:text-white text-base">{t.subject}</h3>
+                          {t.category && t.category !== "question" && (
+                            <Badge color={t.category === "subscription" ? "orange" : t.category === "bug" ? "red" : t.category === "feature_request" ? "purple" : "gray"}>
+                              {CATEGORY_LABELS[t.category] || t.category}
+                            </Badge>
+                          )}
                           <Badge
                             color={
                               isClosed
@@ -1168,31 +1349,52 @@ export default function Support() {
                         </span>
                       </div>
 
-                      {/* 💎 باکس اختصاصی درخواست خرید/ارتقای اشتراک */}
+                      {/* 💎 باکس جریان خرید اشتراک (کاربر) */}
                       {isSubscriptionTicket(t) && (() => {
                         const subInfo = parseSubscriptionInfo(t);
                         if (!subInfo) return null;
+                        const flowKey = t.payment_status || "pending_card";
+                        const flow = PAYMENT_FLOW[flowKey];
                         return (
-                          <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange/70 dark:from-amber-950/40 dark:to-orange/30 border-2 border-amber-300 dark:border-amber-700/60 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sticker-sm">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0 border border-amber-400/40">
-                                <Sparkles size={20} />
-                              </div>
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs font-black text-navy dark:text-amber-200">
-                                    💎 درخواست ارتقای اشتراک به طرح: {subInfo.planName}
-                                  </span>
-                                  <Badge color="orange">{subInfo.durationLabel}</Badge>
+                          <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange/70 dark:from-amber-950/40 dark:to-orange/30 border-2 border-amber-300 dark:border-amber-700/60 rounded-2xl flex flex-col gap-3 shadow-sticker-sm">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0 border border-amber-400/40">
+                                  <Sparkles size={20} />
                                 </div>
-                                {subInfo.amount && (
-                                  <div className="text-xs font-bold text-amber-800 dark:text-amber-400 mt-0.5">
-                                    مبلغ فاکتور: {subInfo.amount}
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-black text-navy dark:text-amber-200">
+                                      💎 درخواست فعال‌سازی اشتراک — طرح: {subInfo.planName}
+                                    </span>
+                                    <Badge color="orange">{subInfo.durationLabel}</Badge>
                                   </div>
-                                )}
+                                  {subInfo.amount && (
+                                    <div className="text-xs font-bold text-amber-800 dark:text-amber-400 mt-0.5">
+                                      مبلغ فاکتور: {subInfo.amount}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
+                              <Badge color={flow.color}>{flow.label}</Badge>
                             </div>
-                            <Badge color="blue">در حال بررسی و فعال‌سازی توسط مدیریت</Badge>
+
+                            {/* اقدام کاربر بعد از دریافت شماره کارت */}
+                            {flowKey === "card_sent" && (
+                              <div className="border-t-2 border-dashed border-amber-300/70 dark:border-amber-700/50 pt-3 flex flex-wrap items-center justify-between gap-2">
+                                <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300">
+                                  شماره کارت در پاسخ پشتیبانی بالاست؛ پس از واریز اعلام کنید تا فعال‌سازی انجام شود.
+                                </span>
+                                <Button variant="teal" size="sm" onClick={() => handleConfirmPayment(t)} className="text-xs font-black">
+                                  <Receipt size={14} className="ml-1" /> من واریز کردم — اعلام آمادگی فعال‌سازی
+                                </Button>
+                              </div>
+                            )}
+                            {flowKey === "awaiting_payment" && (
+                              <p className="text-[11px] font-bold text-teal-text dark:text-teal">
+                                اعلام واریز شما ثبت شد ✅ — به‌زودی بررسی و اشتراک فعال می‌شود.
+                              </p>
+                            )}
                           </div>
                         );
                       })()}
@@ -1285,14 +1487,72 @@ export default function Support() {
         title="ارسال پیام به پشتیبانی"
       >
         <form onSubmit={handleCreateTicket} className="flex flex-col gap-4">
+          {/* دسته‌بندی موضوع */}
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-extrabold text-navy dark:text-slate-200">موضوع تیکت</span>
+            <select
+              value={category}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+              className="w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 focus:border-teal rounded-pill-md px-3.5 py-2 text-sm font-semibold text-ink dark:text-slate-100 focus:outline-none"
+            >
+              {TICKET_CATEGORIES.map((c) => (
+                <option key={c.id} value={c.id}>{c.label}</option>
+              ))}
+            </select>
+            <span className="text-[11px] font-medium text-ink-subtle dark:text-slate-400">
+              {TICKET_CATEGORIES.find((c) => c.id === category)?.hint}
+            </span>
+          </label>
+
+          {/* انتخاب طرح و دوره فقط برای تیکت اشتراک */}
+          {category === "subscription" && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-2xl border-2 border-orange/40 bg-college-light/60 dark:bg-slate-800/80">
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs font-extrabold text-navy dark:text-slate-200">نوع اشتراک (طرح)</span>
+                <select
+                  value={subPlanId || paidPlans[0]?.id || ""}
+                  onChange={(e) => {
+                    setSubPlanId(e.target.value);
+                    fillSubTicket(e.target.value, subDurationDays);
+                  }}
+                  className="bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 focus:border-teal rounded-pill-md px-3 py-1.5 text-sm font-semibold text-ink dark:text-slate-100 focus:outline-none"
+                >
+                  {paidPlans.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name} — {faNum(Math.round((p.priceMonthly || 0) / 10))} تومان/ماه</option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs font-extrabold text-navy dark:text-slate-200">دوره</span>
+                <select
+                  value={subDurationDays}
+                  onChange={(e) => {
+                    setSubDurationDays(Number(e.target.value));
+                    fillSubTicket(subPlanId, e.target.value);
+                  }}
+                  className="bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 focus:border-teal rounded-pill-md px-3 py-1.5 text-sm font-semibold text-ink dark:text-slate-100 focus:outline-none"
+                >
+                  {SUBSCRIPTION_DURATIONS.map((d) => (
+                    <option key={d.days} value={d.days}>{d.label}</option>
+                  ))}
+                </select>
+              </label>
+              <p className="sm:col-span-2 text-[11px] font-bold text-orange leading-5">
+                با انتخاب طرح و دوره، متن درخواست فعال‌سازی به‌صورت خودکار نوشته می‌شود — فقط «ارسال پیام» را بزنید.
+              </p>
+            </div>
+          )}
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-extrabold text-navy dark:text-slate-200">
+              {category === "subscription" ? "موضوع (خودکار — قابل ویرایش)" : "موضوع آزاد"}
+            </span>
             <input
               type="text"
               required
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder="مثلاً: سوال در مورد خروجی اکسل یا افزایش سهمیه"
+              placeholder={category === "subscription" ? "" : "مثلاً: سوال در مورد خروجی اکسل یا افزایش سهمیه"}
               className="w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 focus:border-teal rounded-pill-md px-3.5 py-2 text-sm font-semibold text-ink dark:text-slate-100 focus:outline-none"
             />
           </label>

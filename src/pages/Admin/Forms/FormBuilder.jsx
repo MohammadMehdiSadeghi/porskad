@@ -7,6 +7,7 @@ import Badge from "../../../components/ui/Badge";
 import Spinner from "../../../components/ui/Spinner";
 import { FormBuilderSkeleton } from "../../../components/ui/Skeleton";
 import { useToast } from "../../../components/ui/Toast";
+import Modal from "../../../components/ui/Modal";
 import { useAuth } from "../../../context/AuthContext";
 import { QUESTION_TYPES, QUESTION_TYPE_ORDER, QUESTION_CATEGORIES, makeQuestion, resolveQuestion, LEGACY_TYPE_MAP, getAvailableQuestionCategories, getEffectiveQuestionType, loadQuestionTypesConfigFromDb } from "../../../lib/questionTypes";
 import { QUESTION_TYPE_ICONS } from "../../../lib/questionIcons";
@@ -1040,6 +1041,10 @@ export default function FormBuilder() {
   const navigate = useNavigate();
   const { push } = useToast();
   const { user, profile, isOwner, loading: authLoading } = useAuth();
+  const { hasPermission } = useAuth();
+
+  // پاپ‌آپ «ذخیره شد — منتشر کنید؟» بعد از ثبت/ویرایش فرمِ منتشرنشده
+  const [showPublishPrompt, setShowPublishPrompt] = useState(false);
 
   // گیت امکانات پیشرفته: فقط طرح سازمانی (و مدیرکل/نامحدود)
   const accountPlan = String(profile?.plan || "").toLowerCase();
@@ -1462,6 +1467,13 @@ export default function FormBuilder() {
       setForm((f) => ({ ...f, ...pForm }));
       setDirty(false);
       push("همه‌چیز ذخیره شد", "success");
+
+      // فرم منتشرنشده → پاپ‌آپ «ذخیره شد؛ منتشر کنید؟»
+      if (!pForm.published) {
+        setShowPublishPrompt(true);
+      } else {
+        navigate("/admin/forms");
+      }
     } catch (err) {
       console.error("Save form error:", err);
       push("ذخیره ناموفق بود: " + (err.message || "خطای ناشناخته"), "error");
