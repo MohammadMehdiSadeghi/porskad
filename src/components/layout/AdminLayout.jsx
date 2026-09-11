@@ -85,6 +85,7 @@ export default function AdminLayout() {
         { to: "/admin/embed", label: "اشتراک‌گذاری", icon: Share2, end: false, tabId: "embed" },
         { to: "/admin/telegram", label: "اتصال به تلگرام", icon: Bot, end: false, tabId: "telegram" },
         { to: "/admin/support", label: "پشتیبانی", icon: Headphones, end: false, tabId: "support" },
+        { to: "/admin/subscriptions", label: "اشتراک‌ها", icon: Crown, end: false, tabId: "subscriptions" },
         { to: "/admin/profile", label: "پروفایل و سهمیه", icon: User, end: false, tabId: "profile" },
       ].filter((item) => tabsCfg[item.tabId]?.state !== TAB_STATE_DISABLED);
 
@@ -99,6 +100,7 @@ export default function AdminLayout() {
     if (path.startsWith("/admin/embed")) return "embed";
     if (path.startsWith("/admin/telegram")) return "telegram";
     if (path.startsWith("/admin/support")) return "support";
+    if (path.startsWith("/admin/subscriptions")) return "subscriptions";
     if (path.startsWith("/admin/profile")) return "profile";
     return null;
   })();

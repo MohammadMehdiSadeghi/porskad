@@ -19,6 +19,7 @@ export const USER_TABS = [
   { id: "telegram", label: "اتصال به تلگرام",  path: "/admin/telegram" },
   { id: "support",  label: "پشتیبانی",         path: "/admin/support" },
   { id: "profile",  label: "پروفایل و سهمیه",  path: "/admin/profile" },
+  { id: "subscriptions", label: "اشتراک‌ها",        path: "/admin/subscriptions" },
 ];
 
 export const TAB_STATE_ON = "on";
