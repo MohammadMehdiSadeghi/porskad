@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Check, X, Crown, Sparkles, Building2, Ticket, ShieldCheck } from "lucide-react";
-import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../context/AuthContext";
 import { getEffectivePlans, getPlanIds, getPlan } from "../../lib/plans";
 import { faNum } from "../../lib/utils";
@@ -9,12 +9,16 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import Modal from "../../components/ui/Modal";
 import SEO from "../../components/ui/SEO";
-import { useToast } from "../../components/ui/Toast";
 
 // ════════════════════════════════════════════════════════
 // صفحه «اشتراک‌ها» — کاربر طرح فعلی‌اش را می‌بیند و برای
-// خرید/ارتقا تیکت می‌فرستد (تیکت category=subscription که
-// پنل پشتیبانی به‌صورت اختصاصی پارس و فعال‌سازی می‌کند).
+// خرید/ارتقا دکمه «خرید اشتراک» را می‌زند → مودال انتخاب
+// دوره → هدایت به /admin/support با subject/message آماده در
+// کوئری‌استرینگ → مودال تیکت پشتیبانی خودبه‌خود با متن
+// پر شده باز می‌شود و کاربر فقط «ارسال پیام» را می‌زند.
+// تیکت برای مدیر (سوپرادمین) می‌آید؛ مدیر شماره کارت را در
+// پاسخ می‌فرستد و پس از واریز با دکمهٔ «تایید و فعال‌سازی
+// فوری اشتراک» طرح را فعال می‌کند.
 // ════════════════════════════════════════════════════════
 
 const PLAN_ICONS = {
@@ -38,54 +42,43 @@ const DURATIONS = [
 
 const fmtToman = (rial) => `${faNum(Math.round((rial || 0) / 10))} تومان`;
 
+// فرمت پیام باید دقیقاً با پارسر Support.jsx هماهنگ بماند
+// (نشانگرها: «طرح درخواستی:»، «شناسه برچسب:»، «دوره اشتراک:»، «مبلغ فاکتور:»)
+export function buildSubscriptionTicketMessage(plan, dur) {
+  const priceRial = dur.days === 365 ? plan.priceYearly : plan.priceMonthly * Math.round(dur.days / 30);
+  const subject = `درخواست ارتقای اشتراک به طرح ${plan.name} (${dur.label})`;
+  const message = [
+    "با سلام،",
+    "",
+    "درخواست خرید/ارتقای اشتراک را ثبت می‌کنم:",
+    "",
+    `• طرح درخواستی: ${plan.name}`,
+    `• شناسه طرح: ${plan.id}`,
+    `• دوره اشتراک: ${dur.label}`,
+    `• مبلغ فاکتور: ${fmtToman(priceRial)}`,
+    "",
+    "لطفاً شماره کارت بانکی را برای واریز پیام کنید.",
+    "پس از واریز، فیش را همین‌جا می‌فرستم. با تشکر 🙏",
+  ].join("\n");
+  return { subject, message };
+}
+
 export default function Subscriptions() {
-  const { user, profile, isOwner } = useAuth();
-  const toast = useToast();
+  const { profile, isOwner } = useAuth();
+  const navigate = useNavigate();
   const plans = useMemo(() => getEffectivePlans(), []);
   const planIds = useMemo(() => getPlanIds(plans), [plans]);
   const currentPlan = getPlan(profile?.plan);
 
   const [buyPlan, setBuyPlan] = useState(null); // plan object of open modal
   const [duration, setDuration] = useState(DURATIONS[0]);
-  const [submitting, setSubmitting] = useState(false);
 
-  async function handleRequestUpgrade() {
-    if (!user || !buyPlan) return;
-    setSubmitting(true);
-    try {
-      const priceRial = duration.days === 365 ? buyPlan.priceYearly : buyPlan.priceMonthly * Math.round(duration.days / 30);
-      const subject = `درخواست ارتقای اشتراک به طرح ${buyPlan.name} (${duration.label})`;
-      const message = [
-        "با سلام،",
-        "",
-        "درخواست خرید/ارتقای اشتراک را ثبت می‌کنم:",
-        "",
-        `• طرح درخواستی: ${buyPlan.name}`,
-        `• شناسه طرح: ${buyPlan.id}`,
-        `• دوره اشتراک: ${duration.label}`,
-        `• مبلغ فاکتور: ${fmtToman(priceRial)}`,
-        "",
-        `کاربر: ${profile?.full_name || user.email}`,
-        "لطفاً پس از هماهنگی و پرداخت، اشتراک را فعال فرمایید.",
-      ].join("\n");
-
-      const { error } = await supabase.from("support_tickets").insert({
-        user_id: user.id,
-        subject,
-        message,
-        status: "open",
-        archived_by_user: false,
-        archived_by_admin: false,
-      });
-      if (error) throw error;
-
-      toast.push("درخواست شما به‌صورت تیکت ثبت شد. به‌زودی از طریق پشتیبانی هماهنگ می‌شود. 💎", "success");
-      setBuyPlan(null);
-    } catch (err) {
-      toast.push("خطا در ثبت درخواست: " + (err.message || err), "error");
-    } finally {
-      setSubmitting(false);
-    }
+  // «ثبت درخواست و ارسال تیکت» → رفتن به صفحه تیکت‌ها با متن آماده
+  function goToTicketWithRequest() {
+    if (!buyPlan) return;
+    const { subject, message } = buildSubscriptionTicketMessage(buyPlan, duration);
+    setBuyPlan(null);
+    navigate(`/admin/support?subject=${encodeURIComponent(subject)}&message=${encodeURIComponent(message)}`);
   }
 
   return (
@@ -209,7 +202,7 @@ export default function Subscriptions() {
                       }}
                     >
                       <Crown size={15} />
-                      <span>خرید / ارتقا به {plan.name}</span>
+                      <span>خرید اشتراک — {plan.name}</span>
                     </Button>
                   )}
                 </div>
@@ -220,16 +213,16 @@ export default function Subscriptions() {
       </div>
 
       <div className="text-[11px] font-medium text-ink/45 dark:text-slate-500 leading-6 px-1">
-        💡 با ثبت درخواست، یک تیکت «ارتقای اشتراک» در پنل پشتیبانی ساخته می‌شود. کارشناسان پرس‌کاد مبلغ و روش پرداخت را
-        برایتان می‌فرستند و پس از واریز، اشتراک به‌صورت دستی فعال می‌شود.
+        💡 با زدن «خرید اشتراک» و انتخاب دوره، شما به صفحهٔ تیکت‌ها می‌روید؛ متن درخواست آماده پر شده است و فقط کافی
+        است «ارسال پیام» را بزنید. پشتیبانی شماره کارت را برایتان می‌فرستد و پس از واریز، اشتراک‌تان فعال می‌شود.
       </div>
 
       {/* مودال انتخاب دوره */}
-      <Modal open={Boolean(buyPlan)} onClose={() => !submitting && setBuyPlan(null)} title={buyPlan ? `ارتقا به طرح ${buyPlan.name}` : ""}>
+      <Modal open={Boolean(buyPlan)} onClose={() => setBuyPlan(null)} title={buyPlan ? `خرید اشتراک — طرح ${buyPlan.name}` : ""}>
         {buyPlan && (
           <div className="flex flex-col gap-4">
             <div className="text-sm font-bold text-ink dark:text-slate-200 leading-7">
-              دورهٔ اشتراک را انتخاب کنید — درخواست نهایی به‌صورت تیکت برای پشتیبانی ارسال می‌شود.
+              دورهٔ اشتراک را انتخاب کنید — در مرحلهٔ بعد، تیکت درخواست با متن آماده برایتان باز می‌شود.
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {DURATIONS.map((d) => {
@@ -255,10 +248,11 @@ export default function Subscriptions() {
               })}
             </div>
             <div className="flex items-center gap-2 pt-1">
-              <Button variant="primary" className="flex-1 justify-center" disabled={submitting} onClick={handleRequestUpgrade}>
-                {submitting ? "در حال ثبت تیکت..." : "✅ ثبت درخواست و ارسال تیکت"}
+              <Button variant="primary" className="flex-1 justify-center" onClick={goToTicketWithRequest}>
+                <Ticket size={15} />
+                <span>ادامه — رفتن به تیکت و ارسال درخواست</span>
               </Button>
-              <Button variant="ghost" disabled={submitting} onClick={() => setBuyPlan(null)}>
+              <Button variant="ghost" onClick={() => setBuyPlan(null)}>
                 انصراف
               </Button>
             </div>

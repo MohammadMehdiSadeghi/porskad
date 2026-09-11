@@ -42,7 +42,7 @@ import {
 } from "lucide-react";
 
 export default function Support() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, isOwner } = useAuth();
   const { push } = useToast();
   const [loading, setLoading] = useState(true);
@@ -101,8 +101,10 @@ export default function Support() {
       setSubject(subjParam);
       if (msgParam) setMessage(msgParam);
       setNewTicketModal(true);
+      // پاک‌سازی کوئری تا با رفرش/بازگشت، مودال تکراری باز نشود
+      setSearchParams({}, { replace: true });
     }
-  }, [searchParams]);
+  }, [searchParams, setSearchParams]);
 
   // توابع کمکی بررسی آرشیو با فالبک localStorage
   const isArchivedByAdmin = useCallback((t) => {
