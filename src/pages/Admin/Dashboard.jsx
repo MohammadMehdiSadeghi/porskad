@@ -170,7 +170,7 @@ export default function Dashboard() {
       />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-xl sm:text-3xl font-black text-navy">داشبورد</h1>
+          <h1 className="text-xl sm:text-3xl font-black text-navy">داشبورد کل</h1>
           <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-1">
             نمای کلی فرم‌ها و پاسخ‌ها
             <span className="live-dot inline-block w-1.5 h-1.5 rounded-full bg-teal mr-1.5 align-middle" />
