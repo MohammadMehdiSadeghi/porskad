@@ -1039,7 +1039,15 @@ export default function FormBuilder() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { push } = useToast();
-  const { user, isOwner, loading: authLoading } = useAuth();
+  const { user, profile, isOwner, loading: authLoading } = useAuth();
+
+  // گیت امکانات پیشرفته: فقط طرح سازمانی (و مدیرکل/نامحدود)
+  const accountPlan = String(profile?.plan || "").toLowerCase();
+  const enterpriseOnly =
+    isOwner() ||
+    accountPlan === "enterprise" ||
+    accountPlan === "unlimited" ||
+    (profile?.max_forms ?? 0) >= 999999;
 
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -1087,10 +1095,8 @@ export default function FormBuilder() {
         ...f,
         redirect_url: f.redirect_url || f.settings?.redirect_url || "",
         webhook_url: f.webhook_url || f.settings?.webhook_url || "",
-        whatsapp_number: f.whatsapp_number || f.settings?.whatsapp_number || "",
         max_responses_limit: f.max_responses_limit || f.settings?.max_responses_limit || "",
         prevent_duplicate: f.prevent_duplicate ?? f.settings?.prevent_duplicate ?? false,
-        auth_mode: f.auth_mode || f.settings?.auth_mode || "none",
         time_limit_seconds: f.time_limit_seconds || f.settings?.time_limit_seconds || "",
       });
 
@@ -1192,10 +1198,8 @@ export default function FormBuilder() {
       const advancedSettings = {
         redirect_url: form.redirect_url || "",
         webhook_url: form.webhook_url || "",
-        whatsapp_number: form.whatsapp_number || "",
         max_responses_limit: form.max_responses_limit ? Number(form.max_responses_limit) : null,
         prevent_duplicate: !!form.prevent_duplicate,
-        auth_mode: form.auth_mode || "none",
         time_limit_seconds: form.time_limit_seconds ? Number(form.time_limit_seconds) : null,
       };
 
@@ -1696,18 +1700,29 @@ export default function FormBuilder() {
               </Field>
             </div>
 
-            {/* ─── امکانات و قابلیت‌های پیشرفته طرح‌ها ─── */}
+            {/* ─── امکانات و قابلیت‌های پیشرفته — فقط طرح سازمانی ─── */}
             <div className="border-t-2 border-dashed border-navy/15 pt-4">
-              <div className="bg-bg-lavender/30 dark:bg-slate-800/50 border-2 border-dashed border-teal/40 rounded-2xl p-4 sm:p-5 flex flex-col gap-4">
+              <div className={`border-2 rounded-2xl p-4 sm:p-5 flex flex-col gap-4 ${enterpriseOnly ? "border-teal/40 bg-bg-lavender/30 dark:bg-slate-800/50" : "border-dashed border-orange/50 bg-orange/5 dark:bg-orange/10"}`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Zap size={18} className="text-teal" />
+                    <Zap size={18} className={enterpriseOnly ? "text-teal" : "text-orange"} />
                     <span className="text-sm font-black text-navy dark:text-white">امکانات و قابلیت‌های پیشرفته فرم</span>
                   </div>
-                  <span className="text-[11px] font-bold text-teal bg-teal/10 px-2.5 py-1 rounded-full border border-teal/20">طرح‌های حرفه‌ای و سازمانی</span>
+                  {enterpriseOnly ? (
+                    <span className="text-[11px] font-bold text-teal bg-teal/10 px-2.5 py-1 rounded-full border border-teal/20">طرح سازمانی ✦ فعال</span>
+                  ) : (
+                    <span className="text-[11px] font-bold text-orange bg-orange/10 px-2.5 py-1 rounded-full border border-orange/25">🔒 مخصوص طرح سازمانی</span>
+                  )}
                 </div>
 
-                <div className="grid sm:grid-cols-2 gap-4">
+                {!enterpriseOnly && (
+                  <div className="text-xs font-bold text-orange leading-6 bg-white/70 dark:bg-slate-900/40 border border-orange/25 rounded-xl p-3">
+                    برای استفاده از این قابلیت‌ها (هدایت خودکار، وب‌هوک، سقف پاسخ، زمان‌سنج و جلوگیری از تکرار) اشتراک
+                    «سازمانی» لازم است. از بخش «اشتراک‌ها» درخواست ارتقا بدهید.
+                  </div>
+                )}
+
+                <div className={`grid sm:grid-cols-2 gap-4 ${enterpriseOnly ? "" : "opacity-50 pointer-events-none select-none"}`}>
                   {/* هدایت بعد از ثبت (Redirect URL) */}
                   <Field label={<><Globe size={13} className="text-teal" /> انتقال به آدرس اینترنتی دیگر (Redirect URL)</>} hint="پس از ثبت موفق، کاربر به این آدرس منتقل می‌شود.">
                     <input
@@ -1732,18 +1747,6 @@ export default function FormBuilder() {
                     />
                   </Field>
 
-                  {/* دکمه چت واتس‌اپ روی فرم */}
-                  <Field label={<><MessageCircle size={13} className="text-teal" /> چت واتس‌اپ روی فرم (پشتیبانی زنده)</>} hint="شماره موبایل همراه با پیش‌شماره کشور (مثلاً: 989123456789)">
-                    <input
-                      type="text"
-                      dir="ltr"
-                      value={form.whatsapp_number || ""}
-                      onChange={(e) => setFormField({ whatsapp_number: e.target.value })}
-                      placeholder="989123456789"
-                      className={`${inputCls} !py-2 !text-xs text-left`}
-                    />
-                  </Field>
-
                   {/* سقف تعداد پاسخ (نوبت‌دهی و ظرفیت) */}
                   <Field label={<><ShieldCheck size={13} className="text-teal" /> سقف تعداد پاسخ (نوبت‌دهی و ظرفیت)</>} hint="پس از رسیدن به این تعداد، فرم به طور خودکار غیرفعال می‌شود (خالی = نامحدود).">
                     <input
@@ -1754,20 +1757,6 @@ export default function FormBuilder() {
                       placeholder="مثلاً: ۵۰"
                       className={`${inputCls} !py-2 !text-xs`}
                     />
-                  </Field>
-
-                  {/* شیوه احراز هویت پاسخ‌دهندگان */}
-                  <Field label={<><Lock size={13} className="text-teal" /> احراز هویت پاسخ‌دهندگان</>} hint="الزام پاسخ‌دهنده به احراز هویت قبل از ورود به فرم">
-                    <select
-                      value={form.auth_mode || "none"}
-                      onChange={(e) => setFormField({ auth_mode: e.target.value })}
-                      className={`${inputCls} !py-2 !text-xs cursor-pointer`}
-                    >
-                      <option value="none">بدون احراز هویت (عمومی و آزاد)</option>
-                      <option value="national_id">ثبت و اعتبارسنجی کد ملی</option>
-                      <option value="sms_otp">کد تایید پیامکی (OTP)</option>
-                      <option value="email">تایید آدرس ایمیل</option>
-                    </select>
                   </Field>
 
                   {/* محدودیت زمانی کل فرم (آزمون‌ساز) */}

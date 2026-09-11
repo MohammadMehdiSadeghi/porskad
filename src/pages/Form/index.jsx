@@ -354,7 +354,6 @@ export default function FormFill() {
 
   const progressValue = step < 0 ? 0 : currentVisibleIndex;
   const approxMinutes = useMemo(() => Math.max(1, Math.round(visibleTotal * 0.4)), [visibleTotal]);
-  const whatsappNum = form?.whatsapp_number || form?.settings?.whatsapp_number;
 
   if (loading) return <FormFillSkeleton />;
   if (unavailable) return <NotAvailable message={unavailable} />;
@@ -431,21 +430,6 @@ export default function FormFill() {
           </StickerCard>
         </div>
       </main>
-
-      {/* دکمه شناور چت واتس‌اپ */}
-      {whatsappNum && (
-        <a
-          href={`https://wa.me/${whatsappNum.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`سلام، درباره فرم ${form.title} سوال داشتم.`)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="fixed bottom-4 left-4 z-50 bg-[#25D366] text-white p-3.5 rounded-full shadow-lg hover:scale-110 transition-all flex items-center justify-center cursor-pointer"
-          title="پشتیبانی واتس‌اپ"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.97.529 1.771.821 2.796.821 3.183 0 5.768-2.586 5.769-5.766.001-3.182-2.585-5.769-5.769-5.769zm10.005 5.868c-.012 5.548-4.512 10.051-10.061 10.051-1.761 0-3.415-.461-4.88-1.267l-5.626 1.475 1.503-5.485c-.88-1.521-1.385-3.279-1.385-5.148.012-5.549 4.513-10.052 10.062-10.052 5.549 0 10.063 4.503 10.063 10.052z"/>
-          </svg>
-        </a>
-      )}
 
       <ConfirmDialog open={showConfirm} onConfirm={doSubmit} onCancel={() => setShowConfirm(false)} unfilledFields={confirmUnfilled} totalRequired={visibleQuestions.filter((q) => q.required).length} filledCount={visibleQuestions.filter((q) => q.required && answers[q.id] != null && String(answers[q.id]).trim() !== "").length} />
     </div>
