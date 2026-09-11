@@ -287,7 +287,6 @@ export default function Support() {
         subject: subject.trim(),
         message: message.trim(),
         status: "open",
-        ...(category === "subscription" ? { payment_status: "pending_card" } : {}),
         archived_by_user: false,
         archived_by_admin: false,
       });
@@ -498,23 +497,23 @@ export default function Support() {
 
     let replyText, newPayment;
     if (action === "card") {
-      const cardNumber = window.prompt(
-        "شماره کارت را وارد کنید (در پاسخ به کاربر ارسال می‌شود):",
-        ""
-      );
-      if (!cardNumber || !cardNumber.trim()) return;
-      const card = cardNumber.trim().replace(/[\u200c-\u200f\s]/g, "").replace(/(\d{4})(?=\d)/g, "$1 ");
-      const bankName = window.prompt("نام بانک (اختیاری):", "")?.trim() || "";
-      replyText = [
-        "با سلام و احترام،",
+      // متن راهنمای پرداخت کاملاً دست مدیر است: شماره کارت، لینک پرداخت،
+      // درگاه یا هر روش دیگر — پیش‌فرض فقط یک قالب قابل ویرایش است
+      const template = [
+        "با سلام و احترام,",
         "",
-        `برای فعال‌سازی طرح «${info.planName}» (${info.durationLabel})${info.amount ? ` — مبلغ ${info.amount}` : ""}، لطفاً مبلغ را به شماره کارت زیر واریز کنید:`,
+        `برای فعال‌سازی طرح «${info.planName}» (${info.durationLabel})${info.amount ? ` — مبلغ ${info.amount}` : ""}، لطفاً مبلغ را واریز و در همین تیکت اعلام کنید:`,
         "",
-        `🏦 بانک: ${bankName || "—"}`,
-        `💳 شماره کارت: ${card}`,
+        "• روش پرداخت: ",
         "",
         "پس از واریز، همین‌جا اعلام کنید (در صورت امکان تصویر فیش واریز را هم بفرستید) تا اشتراک‌تان فعال شود.",
       ].join("\n");
+      const typed = window.prompt(
+        "متن راهنمای پرداخت برای کاربر (قابل ویرایش — شماره کارت، لینک پرداخت یا هر روش دیگری که می‌خواهید):",
+        template
+      );
+      if (typed === null || !typed.trim()) return;
+      replyText = typed.trim();
       newPayment = "card_sent";
     } else if (action === "rejected") {
       const reason = window.prompt("دلیل رد درخواست (برای کاربر ارسال می‌شود):", "")?.trim();
@@ -544,7 +543,7 @@ export default function Support() {
         })
         .eq("id", ticket.id);
       if (error) throw error;
-      push(action === "card" ? "شماره کارت برای کاربر ارسال شد 💳" : "درخواست رد شد و به کاربر اطلاع داده شد", "success");
+      push(action === "card" ? "راهنمای پرداخت برای کاربر ارسال شد 💳" : "درخواست رد شد و به کاربر اطلاع داده شد", "success");
       loadTickets(true);
     } catch (err) {
       console.error("Subscription action error:", err);
@@ -1117,7 +1116,7 @@ export default function Support() {
                               {isSubscriptionTicket(t) && (() => {
                                 const subInfo = parseSubscriptionInfo(t);
                                 if (!subInfo) return null;
-                                const flowKey = t.payment_status || "pending_card";
+                                const flowKey = t.payment_status || "";
                                 const flow = PAYMENT_FLOW[flowKey];
                                 return (
                                   <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange/70 dark:from-amber-950/40 dark:to-orange/30 border-2 border-amber-300 dark:border-amber-700/60 rounded-2xl flex flex-col gap-3 shadow-sticker-sm">
@@ -1140,15 +1139,15 @@ export default function Support() {
                                           )}
                                         </div>
                                       </div>
-                                      <Badge color={flow.color}>{flow.label}</Badge>
+                                      {flow && <Badge color={flow.color}>{flow.label}</Badge>}
                                     </div>
 
-                                    {/* سه اقدام مدیر: شماره کارت → فعال‌سازی → رد */}
+                                    {/* سه اقدام مدیر: ارسال راهنمای پرداخت → فعال‌سازی → رد */}
                                     {flowKey !== "approved" && flowKey !== "rejected" && (
                                       <div className="flex flex-wrap gap-2 border-t-2 border-dashed border-amber-300/70 dark:border-amber-700/50 pt-3">
                                         {flowKey !== "card_sent" && flowKey !== "awaiting_payment" && (
                                           <Button variant="navy" size="sm" onClick={() => sendSubscriptionAction(t, "card")} className="text-xs font-black">
-                                            <CreditCard size={14} className="ml-1" /> ارسال شماره کارت
+                                            <CreditCard size={14} className="ml-1" /> ارسال راهنمای پرداخت
                                           </Button>
                                         )}
                                         {flowKey === "awaiting_payment" && (
@@ -1353,7 +1352,7 @@ export default function Support() {
                       {isSubscriptionTicket(t) && (() => {
                         const subInfo = parseSubscriptionInfo(t);
                         if (!subInfo) return null;
-                        const flowKey = t.payment_status || "pending_card";
+                        const flowKey = t.payment_status || "";
                         const flow = PAYMENT_FLOW[flowKey];
                         return (
                           <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange/70 dark:from-amber-950/40 dark:to-orange/30 border-2 border-amber-300 dark:border-amber-700/60 rounded-2xl flex flex-col gap-3 shadow-sticker-sm">
@@ -1376,14 +1375,14 @@ export default function Support() {
                                   )}
                                 </div>
                               </div>
-                              <Badge color={flow.color}>{flow.label}</Badge>
+                              {flow && <Badge color={flow.color}>{flow.label}</Badge>}
                             </div>
 
-                            {/* اقدام کاربر بعد از دریافت شماره کارت */}
+                            {/* اقدام کاربر بعد از دریافت راهنمای پرداخت */}
                             {flowKey === "card_sent" && (
                               <div className="border-t-2 border-dashed border-amber-300/70 dark:border-amber-700/50 pt-3 flex flex-wrap items-center justify-between gap-2">
                                 <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300">
-                                  شماره کارت در پاسخ پشتیبانی بالاست؛ پس از واریز اعلام کنید تا فعال‌سازی انجام شود.
+                                  راهنمای پرداخت در پاسخ پشتیبانی ارسال شده است؛ پس از واریز اعلام کنید تا فعال‌سازی انجام شود.
                                 </span>
                                 <Button variant="teal" size="sm" onClick={() => handleConfirmPayment(t)} className="text-xs font-black">
                                   <Receipt size={14} className="ml-1" /> من واریز کردم — اعلام آمادگی فعال‌سازی

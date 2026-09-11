@@ -18,10 +18,11 @@ export const CATEGORY_LABELS = Object.fromEntries(
 );
 
 // وضعیت‌های جریان پرداختِ تیکت اشتراک
+// (اسم وضعیت‌ها خنثی است: ارسال راهنمای پرداخت می‌تواند شماره کارت،
+//  لینک درگاه یا هر روش دیگری باشد — متن دست مدیر است)
 export const PAYMENT_FLOW = {
-  pending_card: { label: "در انتظار ارسال شماره کارت", color: "orange" },
-  card_sent: { label: "شماره کارت ارسال شد — در انتظار واریز", color: "male" },
-  awaiting_payment: { label: "کاربر فیش واریز را فرستاد", color: "amber" },
+  card_sent: { label: "راهنمای پرداخت ارسال شد — در انتظار واریز", color: "male" },
+  awaiting_payment: { label: "کاربر اعلام واریز کرد", color: "amber" },
   approved: { label: "اشتراک فعال شد", color: "green" },
   rejected: { label: "درخواست رد شد", color: "red" },
 };
@@ -38,7 +39,7 @@ export const SUBSCRIPTION_DURATIONS = [
 /**
  * متن استاندارد «درخواست فعال‌سازی اشتراک».
  * عمداً هیچ درخواستی برای «شماره کارت بفرستید» ندارد؛ کاربر فقط
- * درخواست فعال‌سازی می‌دهد و مدیر خودش شماره کارت را می‌فرستد.
+ * درخواست فعال‌سازی می‌دهد و مدیر خودش روش پرداخت را تعیین می‌کند.
  */
 export function buildSubscriptionActivationMessage(plan, dur) {
   const priceRial =
