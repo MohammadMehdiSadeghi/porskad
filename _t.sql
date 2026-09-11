@@ -1,0 +1,1 @@
+select coalesce(string_agg(column_name::text,','),'-') as v from information_schema.columns where table_schema='public' and table_name='telegram_send_log';

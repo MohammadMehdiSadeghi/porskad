@@ -23,6 +23,7 @@ import {
   Plus,
   Bot,
   HelpCircle,
+  Search,
 } from "lucide-react";
 
 const inputCls =
@@ -37,6 +38,8 @@ export default function TelegramBot() {
   const [tab, setTab] = useState("config");
   const [loading, setLoading] = useState(true);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [configSearch, setConfigSearch] = useState("");
+  const [linkSearch, setLinkSearch] = useState("");
 
   // ─── Config ───
   const [configs, setConfigs] = useState([]);
@@ -91,15 +94,15 @@ export default function TelegramBot() {
 
       let allForms = formsRes.data || [];
 
-      // سوپرامین همه را می‌بیند و باید بداند هر فرم مال چه کسی است
+      // سوپرامین همه را می‌بیند و باید بداند هر فرم/توکن مال چه کسی است
       // (برای اینکه موقع لینک‌کردن بین فرم‌های هم‌اسم کاربرهای مختلف
-      // اشتباه نزند). بقیه فقط فرم‌های خودشان.
+      // اشتباه نزند و بداند هر توکن را چه کسی اضافه کرده). بقیه فقط
+      // موارد خودشان.
       if (isOwner()) {
-        const ownerIds = new Set(
-          allForms
-            .map((f) => f.created_by || f.manager_id)
-            .filter((x) => !!x),
-        );
+        const ownerIds = new Set([
+          ...allForms.map((f) => f.created_by || f.manager_id),
+          ...(configRes.data || []).map((c) => c.user_id),
+        ].filter((x) => !!x));
         if (ownerIds.size > 0) {
           const { data: ownerRows } = await supabase
             .from("profiles")
@@ -357,6 +360,22 @@ export default function TelegramBot() {
     configs.map((c) => [c.id, c.chat_title || c.chat_id]),
   );
 
+  // ─── جستجو در توکن‌ها و لینک‌ها ───
+  const cq = configSearch.trim().toLowerCase();
+  const matchQ = (s) => (s || "").toLowerCase().includes(cq);
+  const filteredConfigs = configs.filter(
+    (c) => !cq || matchQ(c.chat_title) || matchQ(c.chat_id) || matchQ(ownerNames[c.user_id]),
+  );
+  const lq = linkSearch.trim().toLowerCase();
+  const matchL = (s) => (s || "").toLowerCase().includes(lq);
+  const filteredLinks = links.filter(
+    (l) =>
+      !lq ||
+      matchL(formTitleById[l.form_id]) ||
+      matchL(configLabelById[l.config_id]) ||
+      matchL(ownerNames[linkOwnerById[l.form_id]]),
+  );
+
   const TABS = [
     { id: "config", label: "تنظیمات ربات", icon: Settings },
     { id: "links", label: "لینک فرم‌ها", icon: Link2 },
@@ -571,11 +590,35 @@ export default function TelegramBot() {
           {/* لیست تنظیمات */}
           {configs.length > 0 && (
             <div>
-              <h2 className="text-base sm:text-lg font-extrabold text-navy dark:text-slate-100 mb-3">
-                تنظیمات ذخیره‌شده ({faNum(configs.length)})
-              </h2>
+              <div className="flex items-center gap-3 mb-3">
+                <h2 className="text-base sm:text-lg font-extrabold text-navy dark:text-slate-100 shrink-0">
+                  تنظیمات ذخیره‌شده ({faNum(filteredConfigs.length)})
+                </h2>
+                <div className="relative flex-1 max-w-xs mr-auto">
+                  <Search
+                    size={14}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-subtle"
+                  />
+                  <input
+                    type="text"
+                    value={configSearch}
+                    onChange={(e) => setConfigSearch(e.target.value)}
+                    placeholder={
+                      isOwner()
+                        ? "جستجو در عنوان، چت یا نام کاربر..."
+                        : "جستجو در عنوان یا چت..."
+                    }
+                    className={inputCls + " !py-1.5 !pr-9 text-xs"}
+                  />
+                </div>
+              </div>
+              {filteredConfigs.length === 0 ? (
+                <p className="text-xs font-bold text-ink-subtle py-4 text-center">
+                  موردی با این جستجو پیدا نشد
+                </p>
+              ) : (
               <div className="flex flex-col gap-3">
-                {configs.map((cfg) => (
+                {filteredConfigs.map((cfg) => (
                   <StickerCard key={cfg.id} theme="white">
                     <div className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
                       <div className="flex-1 min-w-0">
@@ -599,6 +642,22 @@ export default function TelegramBot() {
                         >
                           Token: {cfg.bot_token.slice(0, 20)}...
                         </div>
+                        {/* برای سوپرامین: چه کسی و کِی اضافه کرده */}
+                        {isOwner() && (
+                          <div className="mt-1 flex items-center flex-wrap gap-x-2 text-[10px] font-extrabold text-brand-purple">
+                            <span>
+                              👤 {ownerNames[cfg.user_id] || "کاربر حذف‌شده"}
+                            </span>
+                            <span className="text-ink-subtle font-bold">
+                              {cfg.created_at
+                                ? new Date(cfg.created_at).toLocaleString("fa-IR", {
+                                    dateStyle: "short",
+                                    timeStyle: "short",
+                                  })
+                                : ""}
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         <Button
@@ -633,6 +692,7 @@ export default function TelegramBot() {
                   </StickerCard>
                 ))}
               </div>
+              )}
             </div>
           )}
         </div>
@@ -751,9 +811,33 @@ export default function TelegramBot() {
               {/* لیست لینک‌ها */}
               {links.length > 0 ? (
                 <div>
-                  <h2 className="text-base sm:text-lg font-extrabold text-navy dark:text-slate-100 mb-3">
-                    لینک‌های فعال ({faNum(links.length)})
-                  </h2>
+                  <div className="flex items-center gap-3 mb-3">
+                    <h2 className="text-base sm:text-lg font-extrabold text-navy dark:text-slate-100 shrink-0">
+                      لینک‌های فعال ({faNum(filteredLinks.length)})
+                    </h2>
+                    <div className="relative flex-1 max-w-xs mr-auto">
+                      <Search
+                        size={14}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-subtle"
+                      />
+                      <input
+                        type="text"
+                        value={linkSearch}
+                        onChange={(e) => setLinkSearch(e.target.value)}
+                        placeholder={
+                          isOwner()
+                            ? "جستجو در فرم، چت یا نام کاربر..."
+                            : "جستجو در فرم یا چت..."
+                        }
+                        className={inputCls + " !py-1.5 !pr-9 text-xs"}
+                      />
+                    </div>
+                  </div>
+                  {filteredLinks.length === 0 ? (
+                    <p className="text-xs font-bold text-ink-subtle py-4 text-center">
+                      موردی با این جستجو پیدا نشد
+                    </p>
+                  ) : (
                   <div>
                     <StickerCard theme="white">
                       <div className="overflow-x-auto">
@@ -775,7 +859,7 @@ export default function TelegramBot() {
                             </tr>
                           </thead>
                           <tbody>
-                            {links.map((link, i) => (
+                            {filteredLinks.map((link, i) => (
                               <tr
                                 key={link.id}
                                 className={`${
@@ -836,6 +920,7 @@ export default function TelegramBot() {
                       </div>
                     </StickerCard>
                   </div>
+                  )}
                 </div>
               ) : (
                 <EmptyState
