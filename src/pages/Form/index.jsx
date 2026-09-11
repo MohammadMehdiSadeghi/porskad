@@ -6,7 +6,7 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import ProgressBar from "../../components/ui/ProgressBar";
 import Spinner from "../../components/ui/Spinner";
-import { FormFillSkeleton } from "../../components/ui/Skeleton";
+
 import Logo from "../../components/ui/Logo";
 import { supabase } from "../../lib/supabaseClient";
 import { normalizeAnswerValue, validateAnswer } from "../../lib/validators";
@@ -356,7 +356,14 @@ export default function FormFill() {
   const approxMinutes = useMemo(() => Math.max(1, Math.round(visibleTotal * 0.4)), [visibleTotal]);
   const whatsappNum = form?.whatsapp_number || form?.settings?.whatsapp_number;
 
-  if (loading) return <FormFillSkeleton />;
+  // لودینگ اولیه فرم — اسپینر (اسکلتون فقط برای بخش‌های داخلی)
+  if (loading) {
+    return (
+      <div className="min-h-dvh dot-pattern bg-ecosystem-light dark:bg-[#0B0F19] flex items-center justify-center" dir="rtl">
+        <Spinner label="در حال بارگذاری فرم..." />
+      </div>
+    );
+  }
   if (unavailable) return <NotAvailable message={unavailable} />;
   if (!form) return null;
   if (formType === "registration") return <RegistrationForm form={form} questions={questions} logicRules={logicRules} hiddenFields={hiddenFields} slug={slug} />;

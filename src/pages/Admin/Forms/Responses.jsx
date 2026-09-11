@@ -4,7 +4,6 @@ import { supabase } from "../../../lib/supabaseClient";
 import Button from "../../../components/ui/Button";
 import Badge from "../../../components/ui/Badge";
 import Spinner from "../../../components/ui/Spinner";
-import { ResponsesSkeleton } from "../../../components/ui/Skeleton";
 import EmptyState from "../../../components/ui/EmptyState";
 import StickerCard from "../../../components/ui/StickerCard";
 import { useToast } from "../../../components/ui/Toast";
@@ -1279,7 +1278,8 @@ export default function Responses() {
     load();
   }
 
-  if (loading) return <ResponsesSkeleton />;
+  // لودینگ اولیه — اسپینر
+  if (loading) return <Spinner className="py-24" label="در حال بارگذاری پاسخ‌ها..." />;
 
   if (!form) {
     return (

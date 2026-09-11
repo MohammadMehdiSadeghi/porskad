@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { NavLink, Navigate, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Spinner from "../ui/Spinner";
-import { DashboardSkeleton } from "../ui/Skeleton";
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
 import { useToast } from "../ui/Toast";
@@ -52,10 +51,11 @@ export default function AdminLayout() {
   const [savingPhone, setSavingPhone] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
+  // لودینگ اولیه پنل — اسپینر ساده (اسکلتون فقط برای تب‌هاست)
   if (loading) {
     return (
-      <div className="min-h-screen bg-bg-neutral dark:bg-[#0B0F19] p-6">
-        <DashboardSkeleton />
+      <div className="min-h-screen flex items-center justify-center bg-bg-neutral dark:bg-[#0B0F19]">
+        <Spinner label="در حال بارگذاری پنل..." />
       </div>
     );
   }

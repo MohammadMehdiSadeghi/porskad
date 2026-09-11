@@ -7,7 +7,6 @@ import StickerCard from "../../components/ui/StickerCard";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import Spinner from "../../components/ui/Spinner";
-import { TableSkeleton } from "../../components/ui/Skeleton";
 import Modal from "../../components/ui/Modal";
 import EmptyState from "../../components/ui/EmptyState";
 import SEO from "../../components/ui/SEO";
@@ -583,7 +582,8 @@ export default function Support() {
     };
   }, [tickets, isArchivedByUser]);
 
-  if (loading) return <TableSkeleton rows={6} cols={4} />;
+  // لودینگ اولیه — اسپینر
+  if (loading) return <Spinner className="py-24" label="در حال بارگذاری تیکت‌ها..." />;
 
   return (
     <div className="flex flex-col gap-6 max-w-5xl mx-auto">

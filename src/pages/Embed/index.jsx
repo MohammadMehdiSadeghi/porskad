@@ -9,7 +9,6 @@ import { faNum, faDuration, parseUserAgent } from "../../lib/utils";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import RegistrationForm from "../../components/form/RegistrationForm";
 import QuestionStep from "../Form/QuestionStep";
-import { FormFillSkeleton } from "../../components/ui/Skeleton";
 
 
 // ─── پیام‌های postMessage به سایت میزبان ───
@@ -957,7 +956,15 @@ export default function EmbedForm() {
 
   const isRegistration = schema?.form_type === "registration";
 
-  if (loading) return <div className="min-h-[100dvh] bg-transparent"><CloseButton /><FormFillSkeleton /></div>;
+  // لودینگ اولیه — اسپینر داخل iframe (بدون اسکلتون)
+  if (loading) {
+    return (
+      <div className="min-h-[100dvh] bg-transparent flex items-center justify-center" dir="rtl">
+        <CloseButton />
+        <Spinner label="در حال بارگذاری..." />
+      </div>
+    );
+  }
   if (error) return <div className="min-h-[100dvh] flex items-center justify-center p-4 bg-transparent"><CloseButton />      <div className="relative max-w-sm w-full">
       <div aria-hidden="true" className="absolute top-2 left-2 w-full h-full bg-male-normal rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
       <div className="relative z-10 bg-white border-2 border-male-normal rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-4 sm:p-5 text-center">

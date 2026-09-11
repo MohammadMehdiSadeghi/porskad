@@ -3,7 +3,6 @@ import { useAuth, isPrimaryGodEmail } from "../../context/AuthContext";
 import { useToast } from "../../components/ui/Toast";
 import { ALL_PERMISSIONS } from "../../context/AuthContext";
 import Spinner from "../../components/ui/Spinner";
-import { TableSkeleton } from "../../components/ui/Skeleton";
 import EmptyState from "../../components/ui/EmptyState";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
@@ -742,7 +741,8 @@ export default function Managers() {
     }
   }
 
-  if (loading) return <TableSkeleton rows={6} cols={4} />;
+  // لودینگ اولیه — اسپینر
+  if (loading) return <Spinner className="py-24" label="در حال بارگذاری کاربران..." />;
 
   if (!canView) {
     return (

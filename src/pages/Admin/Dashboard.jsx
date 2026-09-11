@@ -7,7 +7,6 @@ import StickerCard from "../../components/ui/StickerCard";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import Spinner from "../../components/ui/Spinner";
-import { DashboardSkeleton } from "../../components/ui/Skeleton";
 import EmptyState from "../../components/ui/EmptyState";
 import { useToast } from "../../components/ui/Toast";
 import { Inbox } from "lucide-react";
@@ -159,7 +158,8 @@ export default function Dashboard() {
 
   const formTitleById = useMemo(() => Object.fromEntries(forms.map((f) => [f.id, f.title])), [forms]);
 
-  if (loading) return <DashboardSkeleton />;
+  // لودینگ اولیه — اسپینر
+  if (loading) return <Spinner className="py-24" label="در حال بارگذاری داشبورد..." />;
 
   return (      <div className="flex flex-col gap-6">
       <SEO

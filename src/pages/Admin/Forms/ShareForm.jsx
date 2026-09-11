@@ -4,7 +4,6 @@ import { supabase } from "../../../lib/supabaseClient";
 import Button from "../../../components/ui/Button";
 import Modal from "../../../components/ui/Modal";
 import Spinner from "../../../components/ui/Spinner";
-import { ShareFormSkeleton } from "../../../components/ui/Skeleton";
 import EmptyState from "../../../components/ui/EmptyState";
 import StickerCard from "../../../components/ui/StickerCard";
 import Badge from "../../../components/ui/Badge";
@@ -155,7 +154,8 @@ export default function ShareForm() {
     load();
   }, [id, user?.id, isOwner, authLoading, push]);
 
-  if (loading) return <ShareFormSkeleton />;
+  // لودینگ اولیه — اسپینر
+  if (loading) return <Spinner className="py-24" label="در حال بارگذاری اشتراک‌گذاری..." />;
   if (!form) {
     return (
       <EmptyState

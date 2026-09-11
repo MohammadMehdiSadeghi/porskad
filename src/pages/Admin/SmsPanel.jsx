@@ -8,7 +8,7 @@ import StatCard from "../../components/ui/StatCard";
 import StickerCard from "../../components/ui/StickerCard";
 import EmptyState from "../../components/ui/EmptyState";
 import Spinner from "../../components/ui/Spinner";
-import { TableSkeleton, DashboardSkeleton } from "../../components/ui/Skeleton";
+import { TableSkeleton } from "../../components/ui/Skeleton";
 import SEO from "../../components/ui/SEO";
 import {
   MessageSquare,
@@ -118,7 +118,8 @@ export default function SmsPanel() {
     { id: "settings", label: "تنظیمات پیامک", icon: Settings },
   ];
 
-  if (loading) return <DashboardSkeleton />;
+  // لودینگ اولیه — اسپینر
+  if (loading) return <Spinner className="py-24" label="در حال بارگذاری پنل پیامک..." />;
 
   return (
     <div className="flex flex-col gap-6">
