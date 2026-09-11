@@ -124,7 +124,7 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
         browser: ua.browser,
         os: ua.os,
         userAgent: navigator.userAgent,
-        referrer: document.referrer || null,
+        referrerUrl: document.referrer || null,
         hiddenFields,
       };
 
