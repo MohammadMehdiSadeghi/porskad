@@ -48,7 +48,9 @@ export default function TelegramBot() {
   const [editingConfig, setEditingConfig] = useState(null);
 
   // ─── Form Links ───
-  const [forms, setForms] = useState([]);
+  const [forms, setForms] = useState([]); // همه فرم‌های دامنه کاربر (برای عنوان لاگ/جدول)
+  const [activeForms, setActiveForms] = useState([]); // فقط فعال، برای انتخاب‌گر
+  const [ownerNames, setOwnerNames] = useState({}); // userId → نمایشی (سوپرامین)
   const [links, setLinks] = useState([]);
   const [selectedFormId, setSelectedFormId] = useState("");
   const [selectedConfigId, setSelectedConfigId] = useState("");
@@ -68,6 +70,9 @@ export default function TelegramBot() {
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
+      // عنوان لاگ/جدول‌ها باید برای لینک‌های قدیمی هم پیدا شود، پس همهٔ
+      // فرم‌ها را می‌گیریم و «فعال‌ها» (منتشر + نه آرشیو + نه زباله‌دان) را
+      // جدا می‌کنیم؛ آرشیو/پیش‌نویس/زباله‌دان هرگز در انتخاب‌گر دیده نمی‌شود.
       const [configRes, formsRes, linksRes] = await Promise.all([
         supabase
           .from("telegram_config")
@@ -75,7 +80,9 @@ export default function TelegramBot() {
           .order("created_at", { ascending: false }),
         supabase
           .from("forms")
-          .select("id, title, published, manager_id, created_by")
+          .select(
+            "id, title, published, archived, deleted_at, manager_id, created_by",
+          )
           .order("created_at", { ascending: false }),
         supabase
           .from("telegram_form_links")
@@ -83,12 +90,46 @@ export default function TelegramBot() {
       ]);
 
       let allForms = formsRes.data || [];
-      if (!isOwner() && user?.id) {
-        allForms = allForms.filter(
-          (f) => f.manager_id === user.id || f.created_by === user.id,
+
+      // سوپرامین همه را می‌بیند و باید بداند هر فرم مال چه کسی است
+      // (برای اینکه موقع لینک‌کردن بین فرم‌های هم‌اسم کاربرهای مختلف
+      // اشتباه نزند). بقیه فقط فرم‌های خودشان.
+      if (isOwner()) {
+        const ownerIds = new Set(
+          allForms
+            .map((f) => f.created_by || f.manager_id)
+            .filter((x) => !!x),
         );
+        if (ownerIds.size > 0) {
+          const { data: ownerRows } = await supabase
+            .from("profiles")
+            .select("id, email, full_name")
+            .in("id", [...ownerIds]);
+          setOwnerNames(
+            Object.fromEntries(
+              (ownerRows || []).map((p) => [
+                p.id,
+                p.full_name || p.email || "کاربر حذف‌شده",
+              ]),
+            ),
+          );
+        } else setOwnerNames({});
+      } else {
+        if (user?.id) {
+          allForms = allForms.filter(
+            (f) => f.manager_id === user.id || f.created_by === user.id,
+          );
+        }
+        setOwnerNames({});
       }
       const userFormIds = new Set(allForms.map((f) => f.id));
+
+      // انتخاب‌گر ربات فقط فرم‌های فعال: منتشرشده + نه آرشیو + نه زباله‌دان
+      setActiveForms(
+        allForms.filter(
+          (f) => f.published && !f.archived && !f.deleted_at,
+        ),
+      );
 
       let allConfigs = configRes.data || [];
       if (
@@ -247,6 +288,11 @@ export default function TelegramBot() {
       showToast("فرم و تنظیمات تلگرام را انتخاب کنید", "error");
       return;
     }
+    // فقط فرم فعال (منتشر + نه آرشیو + نه زباله‌دان) قابل لینک‌کردن است
+    if (!activeForms.some((f) => f.id === selectedFormId)) {
+      showToast("این فرم فعال نیست — فقط فرم‌های فعال قابل لینک‌کردن‌اند", "error");
+      return;
+    }
     try {
       const { error } = await supabase.from("telegram_form_links").insert({
         form_id: selectedFormId,
@@ -301,7 +347,12 @@ export default function TelegramBot() {
   }
 
   // ─── Helpers ───
+  const ownerOf = (f) => f.created_by || f.manager_id || "";
   const formTitleById = Object.fromEntries(forms.map((f) => [f.id, f.title]));
+  // فرمِ آرشیو/حذف‌شده ممکن است لینک قدیمی داشته باشد → عنوان در جدول خالی نماند
+  const linkOwnerById = Object.fromEntries(
+    forms.map((f) => [f.id, ownerOf(f)]),
+  );
   const configLabelById = Object.fromEntries(
     configs.map((c) => [c.id, c.chat_title || c.chat_id]),
   );
@@ -619,18 +670,47 @@ export default function TelegramBot() {
                         <label className="block text-xs font-bold text-navy dark:text-slate-200 mb-1">
                           فرم
                         </label>
-                        <select
-                          value={selectedFormId}
-                          onChange={(e) => setSelectedFormId(e.target.value)}
-                          className={inputCls}
-                        >
-                          <option value="">انتخاب فرم...</option>
-                          {forms.map((f) => (
-                            <option key={f.id} value={f.id}>
-                              {f.title} {f.published ? "" : "(غيرمنتشر)"}
-                            </option>
-                          ))}
-                        </select>
+                        {activeForms.length === 0 ? (
+                          <div className={inputCls + " opacity-60"}>
+                            فرم فعالی ندارید
+                          </div>
+                        ) : (
+                          <select
+                            value={selectedFormId}
+                            onChange={(e) =>
+                              setSelectedFormId(e.target.value)
+                            }
+                            className={inputCls}
+                          >
+                            <option value="">انتخاب فرم...</option>
+                            {isOwner()
+                              ? // سوپرامین: اول کاربر، بعد فرم‌های فعال او
+                                Object.entries(
+                                  activeForms.reduce((g, f) => {
+                                    const who =
+                                      ownerNames[ownerOf(f)] ||
+                                      "کاربر حذف‌شده";
+                                    (g[who] = g[who] || []).push(f);
+                                    return g;
+                                  }, {}),
+                                )
+                                  .sort((a, b) => a[0].localeCompare(b[0], "fa"))
+                                  .map(([who, list]) => (
+                                    <optgroup key={who} label={who}>
+                                      {list.map((f) => (
+                                        <option key={f.id} value={f.id}>
+                                          {f.title}
+                                        </option>
+                                      ))}
+                                    </optgroup>
+                                  ))
+                              : activeForms.map((f) => (
+                                  <option key={f.id} value={f.id}>
+                                    {f.title}
+                                  </option>
+                                ))}
+                          </select>
+                        )}
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-navy dark:text-slate-200 mb-1">
@@ -706,6 +786,12 @@ export default function TelegramBot() {
                               >
                                 <td className="px-4 py-3 font-bold text-ink dark:text-slate-200">
                                   {formTitleById[link.form_id] || "—"}
+                                  {isSuperAdmin() &&
+                                    linkOwnerById[link.form_id] && (
+                                      <span className="block text-[10px] font-extrabold text-brand-purple">
+                                        👤 {ownerNames[linkOwnerById[link.form_id]]}
+                                      </span>
+                                    )}
                                 </td>
                                 <td className="px-4 py-3 font-semibold text-ink-subtle dark:text-slate-400">
                                   {configLabelById[link.config_id] || "—"}
