@@ -12,11 +12,12 @@ import EmptyState from "../../components/ui/EmptyState";
 import { useToast } from "../../components/ui/Toast";
 import { Inbox } from "lucide-react";
 import { faNum, faRelative, faDuration, DEVICE_FA } from "../../lib/utils";
+import { getPlan } from "../../lib/plans";
 import SEO from "../../components/ui/SEO";
 
 
 export default function Dashboard() {
-  const { user, isOwner, loading: authLoading } = useAuth();
+  const { user, profile, isOwner, loading: authLoading } = useAuth();
   const { push } = useToast();
   const [loading, setLoading] = useState(true);
   const [forms, setForms] = useState([]);
@@ -25,6 +26,7 @@ export default function Dashboard() {
     forms: 0,
     responses: 0,
     complete: 0,
+    today: 0,
     avgDuration: null,
   });
   const [durationUnit, setDurationUnit] = useState(() => {
@@ -101,16 +103,39 @@ export default function Dashboard() {
 
     let exactResponsesCount = 0;
     let exactCompleteCount = 0;
+    let todayCount = 0;
     let respList = [];
 
     if (isSuper || formIds.length > 0) {
-      const [respCountRes, compCountRes, recentRes] = await Promise.all([
-        totalRespQuery,
-        totalCompQuery,
-        recentQuery,
-      ]);
+      // شمارش پاسخ‌های امروز (مبدأ تهران ≈ UTC+3:30 — سرور ۳:۳۰ بامداد)
+      const tehranNow = new Date(Date.now() + 3.5 * 3600 * 1000);
+      const dayStartUtc = new Date(
+        Date.UTC(
+          tehranNow.getUTCFullYear(),
+          tehranNow.getUTCMonth(),
+          tehranNow.getUTCDate(),
+        ),
+      ).getTime() - 3.5 * 3600 * 1000;
+      let todayQuery = supabase
+        .from("responses")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", new Date(dayStartUtc).toISOString());
+      if (!isSuper) {
+        todayQuery =
+          formIds.length > 0
+            ? todayQuery.in("form_id", formIds)
+            : todayQuery.eq("form_id", "00000000-0000-0000-0000-000000000000");
+      }
+      const [respCountRes, compCountRes, recentRes, todayRes] =
+        await Promise.all([
+          totalRespQuery,
+          totalCompQuery,
+          recentQuery,
+          todayQuery,
+        ]);
       exactResponsesCount = respCountRes?.count ?? 0;
       exactCompleteCount = compCountRes?.count ?? 0;
+      todayCount = todayRes?.count ?? 0;
       respList = recentRes?.data ?? [];
     }
 
@@ -118,11 +143,12 @@ export default function Dashboard() {
     const durations = completeList.map((r) => r.duration_seconds).filter((d) => d > 0);
 
     setForms(formList);
-    setRecent(respList.slice(0, 8));
+    setRecent(respList.slice(0, 5)); // فقط ۵ آخرین ورودی — برای دیدن
     setStats({
       forms: formList.length,
       responses: exactResponsesCount,
       complete: exactCompleteCount,
+      today: todayCount,
       avgDuration: durations.length
         ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
         : null,
@@ -159,6 +185,14 @@ export default function Dashboard() {
 
   const formTitleById = useMemo(() => Object.fromEntries(forms.map((f) => [f.id, f.title])), [forms]);
 
+  // ─── داده‌های مشتق: اشتراک + آخرین فرم ───
+  const plan = getPlan(profile?.plan);
+  const quotaLimit = profile?.max_responses_per_month ?? plan.monthlyResponsesLimit ?? 100;
+  const quotaUsed = profile?.monthly_responses_used ?? 0;
+  const quotaUnlimited = quotaLimit >= 999999;
+  const quotaPct = quotaUnlimited ? 0 : Math.min(Math.round((quotaUsed / quotaLimit) * 100), 100);
+  const latestForm = forms[0] ?? null; // forms از قبل newest-first مرتب شده
+
   if (loading) return <DashboardSkeleton />;
 
   return (      <div className="flex flex-col gap-6">
@@ -183,22 +217,72 @@ export default function Dashboard() {
 
       {/* آمار کلی */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
-        <StatCard theme="teal" label="فرم‌ها" value={faNum(stats.forms)} caption="کل فرم‌ها" />
-        <StatCard theme="orange" label="پاسخ‌ها" value={faNum(stats.responses)} caption="ثبت‌شدگان" />
-        <StatCard theme="navy" label="تکمیل" value={faNum(stats.complete)} caption="کامل پر شده" />
-        <StatCard
-          theme="magenta"
-          label={durationUnit === "min" ? "میانگین زمان (دقیقه)" : "میانگین زمان (ثانیه)"}
-          value={formattedDuration}
-          caption={durationCaption}
-          onClick={toggleDurationUnit}
-          title="برای تبدیل واحد به دقیقه یا ثانیه کلیک کنید"
-        />
+        {/* وضعیت اشتراک */}
+        <StickerCard theme="white" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none" className="p-4 flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-black text-ink-subtle">وضعیت اشتراک</span>
+            <Badge color={plan.id === "free" ? "gray" : plan.id === "pro" ? "teal" : "purple"}>
+              {plan.name}
+            </Badge>
+          </div>
+          <div className="text-2xl font-black text-navy leading-none">
+            {faNum(quotaUsed)}
+            <span className="text-sm font-bold text-ink-subtle"> / {faNum(quotaLimit)}</span>
+          </div>
+          <div className="h-2 rounded-full bg-ink/10 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${quotaPct >= 100 ? "bg-magenta" : quotaPct >= 80 ? "bg-orange" : "bg-teal"}`}
+              style={{ width: `${Math.min(quotaPct, 100)}%` }}
+            />
+          </div>
+          <div className="text-[11px] font-semibold text-ink-subtle">
+            {quotaUnlimited
+              ? "پاسخ ماهانه — نامحدود"
+              : quotaPct >= 100
+                ? "سقف ماهانه پر شده!"
+                : `${faNum(quotaPct)}٪ سقف ماهانه مصرف شده`}
+          </div>
+          {!isOwner() && (
+            <Link to="/admin/subscriptions" className="text-[11px] font-black text-teal hover:underline">
+              ارتقای اشتراک ←
+            </Link>
+          )}
+        </StickerCard>
+
+        <StatCard theme="orange" label="تعداد کل ورودی‌ها" value={faNum(stats.responses)} caption="مجموع پاسخ‌های همه فرم‌ها" />
+        <StatCard theme="navy" label="ورودی‌های امروز" value={faNum(stats.today)} caption="از نیمه‌شب به وقت تهران" />
+
+        {/* آخرین فرم — فقط یکی */}
+        <StickerCard theme="white" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none" className="p-4 flex flex-col gap-1.5">
+          <span className="text-xs font-black text-ink-subtle">آخرین فرم</span>
+          {latestForm ? (
+            <>
+              <Link
+                to={`/admin/forms/${latestForm.id}`}
+                className="text-base font-black text-navy hover:text-teal truncate leading-snug"
+                title={latestForm.title}
+              >
+                {latestForm.title}
+              </Link>
+              <div className="flex items-center gap-2 mt-auto">
+                {latestForm.published ? <Badge color="green">منتشر</Badge> : <Badge color="gray">پیش‌نویس</Badge>}
+                <span className="text-[11px] font-semibold text-ink-subtle">{faRelative(latestForm.created_at)}</span>
+              </div>
+            </>
+          ) : (
+            <Link to="/admin/forms" className="text-sm font-bold text-teal hover:underline mt-auto">
+              هنوز فرمی نساخته‌اید — بسازید ←
+            </Link>
+          )}
+        </StickerCard>
       </div>
 
-      {/* آخرین پاسخ‌ها */}
+      {/* آخرین ورودی‌ها — فقط ۵ تا، صرفاً برای دیدن */}
       <div>
-        <h2 className="text-lg sm:text-xl font-black text-navy mb-3 sm:mb-4">آخرین پاسخ‌ها</h2>
+        <h2 className="text-lg sm:text-xl font-black text-navy mb-3 sm:mb-4">
+          آخرین ورودی‌ها
+          <span className="text-xs font-bold text-ink-subtle mr-2">(۵ مورد اخیر — برای دیدن وضعیت)</span>
+        </h2>
         {recent.length === 0 ? (
           <EmptyState
             icon={<Inbox size={48} />}

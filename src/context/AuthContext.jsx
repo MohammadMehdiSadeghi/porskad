@@ -257,7 +257,15 @@ export function AuthProvider({ children }) {
       email,
       password,
     });
-    if (error) throw error;
+    if (error) {
+      // لاگ تلاش ناموفق (برای تشخیص brute-force در تب سلامت گود)
+      logAuthEvent({
+        email: email || null,
+        action: "failed_login",
+        details: { reason: error.message?.slice(0, 120) || "unknown" },
+      });
+      throw error;
+    }
 
     // ثبت لاگ ورود در پس‌زمینه (فقط مرورگر/سیستم‌عامل/دستگاه — بدون IP)
     if (data?.user) {

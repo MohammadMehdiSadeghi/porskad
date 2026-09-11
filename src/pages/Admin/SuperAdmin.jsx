@@ -59,6 +59,7 @@ import {
   UploadCloud,
   Plus,
   Trash2,
+  HeartPulse,
 } from "lucide-react";
 import {
   QUESTION_TYPES,
@@ -91,6 +92,7 @@ const TABS = [
   { id: "admins", label: "Admins", icon: Shield },
   { id: "auth_logs", label: "Auth & Activity Logs", icon: Activity },
   { id: "logs", label: "System Logs", icon: FileText },
+  { id: "health", label: "Health", icon: HeartPulse },
 ];
 
 
@@ -144,6 +146,64 @@ export default function SuperAdmin() {
   const [authLogsTimeframe, setAuthLogsTimeframe] = useState("all");
   const [authLogsViewMode, setAuthLogsViewMode] = useState("stream");
   const [userLogsTab, setUserLogsTab] = useState("all");
+
+  // ─── Health Tab State ───
+  const [health, setHealth] = useState(null);
+  const [healthLoading, setHealthLoading] = useState(false);
+
+  async function loadHealth() {
+    setHealthLoading(true);
+    try {
+      const dayAgo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+      const weekAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+      const [
+        { count: signups24 },
+        { count: signups7 },
+        { data: authRecent },
+        { data: tgRecent },
+        { data: ticketsOpen },
+        { data: quotaRows },
+      ] = await Promise.all([
+        supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", dayAgo),
+        supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", weekAgo),
+        supabase.from("auth_logs").select("action, created_at").gte("created_at", dayAgo).limit(5000),
+        supabase.from("telegram_send_log").select("status, error_message, created_at").order("created_at", { ascending: false }).limit(200),
+        supabase.from("support_tickets").select("id, subject, created_at").eq("status", "open").order("created_at", { ascending: true }).limit(50),
+        supabase.from("profiles").select("id, full_name, email, plan, max_responses_per_month, monthly_responses_used").eq("is_active", true).not("monthly_responses_used", "is", null),
+      ]);
+
+      const logs = authRecent?.data || [];
+      const logins = logs.filter((l) => l.action === "login" || l.action === "login_after_register").length;
+      const failed = logs.filter((l) => l.action === "failed_login" || l.action === "login_failed").length;
+
+      const tg = tgRecent?.data || [];
+      const tgFailed = tg.filter((t) => t.status === "failed").length;
+      const lastFail = tg.find((t) => t.status === "failed");
+
+      const q = quotaRows?.data || [];
+      const nearQuota = q
+        .filter((u) => (u.max_responses_per_month ?? 0) > 0 && (u.max_responses_per_month ?? 0) < 999999 && (u.monthly_responses_used ?? 0) / u.max_responses_per_month >= 0.8)
+        .sort((a, b) => (b.monthly_responses_used / b.max_responses_per_month) - (a.monthly_responses_used / a.max_responses_per_month))
+        .slice(0, 8);
+
+      setHealth({
+        signups24: signups24 ?? 0,
+        signups7: signups7 ?? 0,
+        logins24: logins,
+        failed24: failed,
+        tgTotal: tg.length,
+        tgFailed,
+        lastTgFail: lastFail || null,
+        openTickets: ticketsOpen?.data || [],
+        nearQuota,
+        checkedAt: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.error("loadHealth:", err);
+    } finally {
+      setHealthLoading(false);
+    }
+  }
 
   // ─── System Settings State ───
   const [sysSettings, setSysSettings] = useState({
@@ -1303,6 +1363,7 @@ export default function SuperAdmin() {
               if (t.id === "database" && !selectedTable) {
                 browseTable("forms");
               }
+              if (t.id === "health") loadHealth();
             }}
             className={`sa-tab ${tab === t.id ? "active" : ""}`}
           >
@@ -3605,7 +3666,210 @@ export default function SuperAdmin() {
         </div>
       )}
 
-      {/* ═══════════ Logs ═══════════ */}
+      {/* ═══════════ Health ═══════════ */}
+      {tab === "health" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div className="flex gap-2 items-center" style={{ justifyContent: "space-between", flexWrap: "wrap" }}>
+            <div className="sa-section-title" style={{ margin: 0 }}>
+              System Health Overview
+            </div>
+            <div className="flex gap-2 items-center">
+              {health?.checkedAt && (
+                <span style={{ fontSize: "0.8rem", color: "var(--sa-text-2)" }}>
+                  Last check: {new Date(health.checkedAt).toLocaleString("fa-IR")}
+                </span>
+              )}
+              <button className="sa-btn sa-btn-primary" onClick={loadHealth} disabled={healthLoading}>
+                <HeartPulse size={14} /> {healthLoading ? "Checking..." : "Refresh"}
+              </button>
+            </div>
+          </div>
+
+          {!health ? (
+            <div className="sa-card" style={{ padding: "1.25rem" }}>
+              {healthLoading ? "Running health checks..." : "Press Refresh to run health checks."}
+            </div>
+          ) : (
+            <>
+              {/* KPI tiles */}
+              <div className="sa-stats">
+                <div className="sa-stat">
+                  <div className="sa-stat-label">Signups (24h)</div>
+                  <div className="sa-stat-value">{health.signups24.toLocaleString()}</div>
+                  <div className="sa-stat-sub">{health.signups7.toLocaleString()} in last 7 days</div>
+                </div>
+                <div className="sa-stat">
+                  <div className="sa-stat-label">Logins (24h)</div>
+                  <div className="sa-stat-value">{health.logins24.toLocaleString()}</div>
+                  <div className="sa-stat-sub">successful sessions</div>
+                </div>
+                <div className="sa-stat">
+                  <div className="sa-stat-label">Failed Logins (24h)</div>
+                  <div
+                    className="sa-stat-value"
+                    style={{ color: health.failed24 > 10 ? "var(--sa-danger)" : "var(--sa-success)" }}
+                  >
+                    {health.failed24.toLocaleString()}
+                  </div>
+                  <div className="sa-stat-sub">{health.failed24 > 10 ? "possible brute-force — check Auth Logs" : "normal range"}</div>
+                </div>
+                <div className="sa-stat">
+                  <div className="sa-stat-label">Telegram Sends (last 200)</div>
+                  <div
+                    className="sa-stat-value"
+                    style={{ color: health.tgFailed > 0 ? "var(--sa-warning, #d97706)" : "var(--sa-success)" }}
+                  >
+                    {health.tgFailed.toLocaleString()}
+                  </div>
+                  <div className="sa-stat-sub">failed of {health.tgTotal.toLocaleString()} recent sends</div>
+                </div>
+                <div className="sa-stat">
+                  <div className="sa-stat-label">Open Tickets</div>
+                  <div
+                    className="sa-stat-value"
+                    style={{ color: health.openTickets.length > 0 ? "var(--sa-purple)" : "var(--sa-success)" }}
+                  >
+                    {health.openTickets.length.toLocaleString()}
+                  </div>
+                  <div className="sa-stat-sub">
+                    {health.openTickets.length > 0 ? "waiting for reply" : "inbox clear"}
+                  </div>
+                </div>
+                <div className="sa-stat">
+                  <div className="sa-stat-label">Users Near Quota</div>
+                  <div className="sa-stat-value">{health.nearQuota.length.toLocaleString()}</div>
+                  <div className="sa-stat-sub">≥80% of monthly limit — upsell candidates</div>
+                </div>
+              </div>
+
+              {/* Telegram delivery health */}
+              <div className="sa-card">
+                <div className="sa-card-header">
+                  <span className="sa-section-title" style={{ margin: 0 }}>
+                    Telegram Delivery
+                  </span>
+                </div>
+                <div className="sa-card-body">
+                  {health.tgFailed === 0 ? (
+                    <div style={{ color: "var(--sa-success)", fontWeight: 700 }}>
+                      ✓ No failed sends in the last {health.tgTotal} attempts
+                    </div>
+                  ) : (
+                    <div>
+                      <div style={{ color: "var(--sa-danger)", fontWeight: 700, marginBottom: "0.5rem" }}>
+                        ✗ {health.tgFailed} failed send(s) — latest:
+                      </div>
+                      <div style={{ fontSize: "0.85rem", color: "var(--sa-text-2)" }}>
+                        {health.lastTgFail?.error_message || "unknown error"} —{" "}
+                        {health.lastTgFail?.created_at ? new Date(health.lastTgFail.created_at).toLocaleString("fa-IR") : ""}
+                      </div>
+                      <button className="sa-btn sa-btn-ghost" style={{ marginTop: "0.75rem" }} onClick={() => setTab("database")}>
+                        Inspect telegram_send_log
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Open tickets */}
+              <div className="sa-card">
+                <div className="sa-card-header">
+                  <span className="sa-section-title" style={{ margin: 0 }}>
+                    Open Support Tickets ({health.openTickets.length})
+                  </span>
+                </div>
+                <div className="sa-card-body">
+                  {health.openTickets.length === 0 ? (
+                    <div style={{ color: "var(--sa-text-2)" }}>No open tickets 🎉</div>
+                  ) : (
+                    <div className="sa-table-wrap">
+                      <table className="sa-table">
+                        <thead>
+                          <tr>
+                            <th>Subject</th>
+                            <th>Waiting Since</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {health.openTickets.map((t) => (
+                            <tr key={t.id}>
+                              <td style={{ fontWeight: 600 }}>{t.subject}</td>
+                              <td>{new Date(t.created_at).toLocaleString("fa-IR")}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Users near quota */}
+              <div className="sa-card">
+                <div className="sa-card-header">
+                  <span className="sa-section-title" style={{ margin: 0 }}>
+                    Users Near / Over Monthly Quota
+                  </span>
+                </div>
+                <div className="sa-card-body">
+                  {health.nearQuota.length === 0 ? (
+                    <div style={{ color: "var(--sa-text-2)" }}>Nobody is close to their limit.</div>
+                  ) : (
+                    <div className="sa-table-wrap">
+                      <table className="sa-table">
+                        <thead>
+                          <tr>
+                            <th>User</th>
+                            <th>Plan</th>
+                            <th>Used / Limit</th>
+                            <th>Usage</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {health.nearQuota.map((u) => {
+                            const pct = Math.min(Math.round(((u.monthly_responses_used || 0) / u.max_responses_per_month) * 100), 999);
+                            return (
+                              <tr key={u.id}>
+                                <td style={{ fontWeight: 600 }}>{u.full_name || u.email}</td>
+                                <td>{u.plan || "free"}</td>
+                                <td>
+                                  {(u.monthly_responses_used || 0).toLocaleString()} /{" "}
+                                  {u.max_responses_per_month.toLocaleString()}
+                                </td>
+                                <td>
+                                  <div
+                                    style={{
+                                      height: 8,
+                                      borderRadius: 4,
+                                      background: "var(--sa-bg-3, rgba(120,120,120,.2))",
+                                      overflow: "hidden",
+                                      minWidth: 120,
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        height: "100%",
+                                        width: `${Math.min(pct, 100)}%`,
+                                        background: pct >= 100 ? "var(--sa-danger)" : "#d97706",
+                                      }}
+                                    />
+                                  </div>
+                                  <span style={{ fontSize: "0.75rem", color: "var(--sa-text-2)" }}>{pct.toLocaleString()}%</span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {tab === "logs" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div className="flex gap-2">

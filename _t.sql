@@ -1,1 +1,1 @@
-select coalesce(string_agg(column_name::text,','),'-') as v from information_schema.columns where table_schema='public' and table_name='telegram_send_log';
+select coalesce(string_agg(jsonb_object_keys(v)::text,','),'-') as v from (select to_jsonb(p.*) as v from public.get_database_storage_stats() p limit 1) x;
