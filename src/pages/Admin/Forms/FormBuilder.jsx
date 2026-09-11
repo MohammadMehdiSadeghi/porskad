@@ -14,7 +14,7 @@ import { QUESTION_TYPE_ICONS } from "../../../lib/questionIcons";
 import ConditionBuilder from "../../../components/logic/ConditionBuilder";
 import { makeCondition, makeConditionGroup, makeJumpAction, GROUP_OPERATORS } from "../../../lib/logic/types";
 import { faNum, slugify, copyToClipboard } from "../../../lib/utils";
-import { Link2, BarChart3, Share2, Puzzle, Settings, FileText, AlignLeft, ArrowRight, Eye, Save, Target, Check, ChevronDown, ChevronUp, LayoutGrid, Trash2, X, Sun, Moon, Monitor, Image, Sliders, Gauge, Grid, ListOrdered, Info, Layers, Upload, CreditCard, Globe, Lock, MapPin, Send, MessageCircle, Clock, ShieldCheck, Zap, Sparkles } from "lucide-react";
+import { Link2, BarChart3, Share2, Puzzle, Settings, FileText, AlignLeft, ArrowRight, Eye, Save, Target, Check, ChevronDown, ChevronUp, LayoutGrid, Trash2, X, Sun, Moon, Monitor, Image, Sliders, Gauge, Grid, ListOrdered, Info, Layers, Upload, CreditCard, Globe, Lock, MapPin, Send, MessageCircle, Clock, ShieldCheck, Zap, Sparkles, AlertTriangle, Rocket } from "lucide-react";
 import FormPreview from "../../../components/form/FormPreview";
 import { logActivity } from "../../../lib/activityLogger";
 import SEO from "../../../components/ui/SEO";
@@ -1045,6 +1045,8 @@ export default function FormBuilder() {
 
   // پاپ‌آپ «ذخیره شد — منتشر کنید؟» بعد از ثبت/ویرایش فرمِ منتشرنشده
   const [showPublishPrompt, setShowPublishPrompt] = useState(false);
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [publishing, setPublishing] = useState(false);
 
   // گیت امکانات پیشرفته: فقط طرح سازمانی (و مدیرکل/نامحدود)
   const accountPlan = String(profile?.plan || "").toLowerCase();
@@ -1482,6 +1484,54 @@ export default function FormBuilder() {
     }
   }
 
+  // انتشار فرم از پاپ‌آپ «ذخیره شد؛ منتشر کنید؟» — همان گاردهای فهرست فرم‌ها
+  async function publishFromPrompt() {
+    if (!id || publishing) return;
+    if (!hasPermission("publish_form")) {
+      push("شما مجوز انتشار فرم ندارید.", "error");
+      return;
+    }
+    try {
+      // سقف فرم‌های فعال طرح (مدیرکل معاف)
+      if (!isOwner()) {
+        const { count, error: cntErr } = await supabase
+          .from("forms")
+          .select("id", { count: "exact", head: true })
+          .eq("published", true)
+          .eq("archived", false)
+          .is("deleted_at", null)
+          .neq("id", id)
+          .eq("manager_id", user.id);
+        if (!cntErr) {
+          const allowedMax = profile?.max_forms ?? 5;
+          if (allowedMax < 999999 && (count ?? 0) >= allowedMax) {
+            push(`سقف فرم‌های همزمان فعال (حداکثر ${faNum(allowedMax)} فرم) تکمیل شده است. لطفاً ابتدا یکی از فرم‌های فعال را غیرفعال یا بایگانی کنید.`, "error");
+            return;
+          }
+        }
+      }
+      setPublishing(true);
+      const { error } = await supabase.from("forms").update({ published: true }).eq("id", id);
+      if (error) {
+        push(error.message || "انتشار فرم ناموفق بود", "error");
+        return;
+      }
+      setForm((f) => ({ ...f, published: true }));
+      setShowPublishPrompt(false);
+      push("فرم منتشر شد! 🎉", "success");
+      // حالا لینک عمومی آماده است → نمایش لینک
+      setShowLinkModal(true);
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  // «بعداً» / بستن پاپ‌آپ → رفتن به صفحه همه فرم‌ها
+  function dismissPublishPrompt() {
+    setShowPublishPrompt(false);
+    navigate("/admin/forms");
+  }
+
   if (loading) return <FormBuilderSkeleton />;
 
   if (notFound) {
@@ -1499,6 +1549,7 @@ export default function FormBuilder() {
   }
 
   return (
+    <>
     <div className="flex flex-col lg:flex-row gap-5 max-w-7xl mx-auto">
       {/* ─── ستون اصلی: ویرایشگر ─── */}
       <div className="flex flex-col gap-5 flex-1 min-w-0">
@@ -1903,5 +1954,61 @@ export default function FormBuilder() {
         </Button>
       </div>
     </div>
+
+    {/* ─── پاپ‌آپ «ذخیره شد؛ منتشر کنید؟» (فرم منتشرنشده) ─── */}
+    <Modal open={showPublishPrompt} onClose={dismissPublishPrompt} title="فرم ذخیره شد ✅">
+      <div className="p-5 sm:p-6">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="w-11 h-11 rounded-2xl bg-orange/10 border-2 border-orange/30 flex items-center justify-center shrink-0">
+            <AlertTriangle size={20} className="text-orange" />
+          </div>
+          <p className="text-sm leading-6 text-navy/80 dark:text-slate-300 pt-1">
+            «{form.title || "بدون عنوان"}» با موفقیت <b>ذخیره شد</b>، اما هنوز{" "}
+            <b className="text-orange">منتشر نشده</b> است و لینک آن برای کسی باز نمی‌شود.
+            برای دریافت پاسخ، همین حالا منتشرش کنید.
+          </p>
+        </div>
+        <div className="flex flex-col-reverse sm:flex-row gap-2.5">
+          <Button variant="white" size="lg" onClick={dismissPublishPrompt} className="flex-1 justify-center">
+            بعداً — رفتن به فهرست فرم‌ها
+          </Button>
+          <Button variant="teal" size="lg" onClick={publishFromPrompt} disabled={publishing} className="flex-1 justify-center">
+            {publishing ? "در حال انتشار…" : "🚀 انتشار فرم"}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+
+    {/* ─── مودال «لینک فرم منتشر شد» ─── */}
+    <Modal open={showLinkModal} onClose={() => { setShowLinkModal(false); navigate("/admin/forms"); }} title="فرم منتشر شد 🎉">
+      <div className="p-5 sm:p-6">
+        <p className="text-sm leading-6 text-navy/80 dark:text-slate-300 mb-3">
+          فرم «{form.title}» الان عمومی است. لینک زیر را کپی کنید و برای پاسخ‌دهندگان بفرستید:
+        </p>
+        <div className="flex items-center gap-2 rounded-2xl border-2 border-teal/40 bg-teal/5 p-3">
+          <code dir="ltr" className="flex-1 min-w-0 truncate text-sm font-bold text-navy dark:text-white">{publicUrl}</code>
+          <Button
+            variant="teal"
+            size="sm"
+            onClick={async () => {
+              const ok = await copyToClipboard(publicUrl);
+              push(ok ? "لینک کپی شد!" : publicUrl, ok ? "success" : "info");
+            }}
+            className="shrink-0"
+          >
+            <Link2 size={14} /> کپی لینک
+          </Button>
+        </div>
+        <div className="flex flex-col-reverse sm:flex-row gap-2.5 mt-4">
+          <Button variant="white" size="lg" onClick={() => { setShowLinkModal(false); navigate("/admin/forms"); }} className="flex-1 justify-center">
+            رفتن به فهرست فرم‌ها
+          </Button>
+          <Button as="a" href={`/f/${form.slug}`} target="_blank" variant="navy" size="lg" className="flex-1 justify-center">
+            <Eye size={16} /> مشاهده فرم
+          </Button>
+        </div>
+      </div>
+    </Modal>
+    </>
   );
 }
