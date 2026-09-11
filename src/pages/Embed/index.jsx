@@ -13,6 +13,9 @@ import { FormFillSkeleton } from "../../components/ui/Skeleton";
 
 
 // ─── پیام‌های postMessage به سایت میزبان ───
+// هدف "*" عمدی است: سایت میزبان هر دامنه‌ای می‌تواند باشد و مبدأ از
+// داخل iframe قابل‌فهمیدن نیست؛ در عوض این پیام‌ها فقط رویداد عمومی
+// فرم (submit/resize/step) حمل می‌کنند — هیچ توکن یا داده حساسی نیست.
 function postToParent(type, data = {}) {
   try {
     window.parent.postMessage({ type, formId: data.formId, ...data }, "*");

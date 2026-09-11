@@ -183,6 +183,10 @@
 
   // ─── گوش دادن به پیام‌های iframe ───
   window.addEventListener("message", function (e) {
+    // فقط پیام‌های همان مبدأ میزبان فرم (جایی که خود iframe لود شده) را بپذیر
+    try {
+      if (BASE && e.origin !== new URL(BASE).origin) return;
+    } catch (_) { /* BASE نسبی/نامعتبر — بدون گارد */ }
     var d = e.data;
     if (!d || !d.type) return;
 

@@ -68,33 +68,32 @@ export async function logAuthEvent({ userId = null, email = null, action = "logi
       }
     } catch {}
 
-    // ۲. فالبک مستقیم Supabase RPC در صورت عدم موفقیت API سرورلس (مثلاً در حالت لوکال dev)
+    // ۲. فالبک مستقیم Supabase در صورت عدم موفقیت API سرورلس (مثلاً در حالت لوکال dev)
+    // توجه: supabase.rpc خطا throw نمی‌کند؛ باید error را دستی چک کنیم.
+    // (log_auth_event از anon بسته است — fallback: درج مستقیم با policy insert)
     if (!serverSuccess && supabase) {
-      try {
-        await supabase.rpc("log_auth_event", {
-          p_user_id: userId,
-          p_email: email,
-          p_action: action,
-          p_device: device,
-          p_browser: browser,
-          p_os: os,
-          p_user_agent: ua,
-          p_details: details || {},
-        });
-      } catch {
-        // فالبک درج مستقیم در جدول
-        try {
-          await supabase.from("auth_logs").insert({
-            user_id: userId,
-            email,
-            action,
-            device,
-            browser,
-            os,
-            user_agent: ua,
-            details: details || {},
-          });
-        } catch {}
+      const directRow = {
+        user_id: userId,
+        email,
+        action,
+        device,
+        browser,
+        os,
+        user_agent: ua,
+        details: details || {},
+      };
+      let { error: rpcErr } = await supabase.rpc("log_auth_event", {
+        p_user_id: userId,
+        p_email: email,
+        p_action: action,
+        p_device: device,
+        p_browser: browser,
+        p_os: os,
+        p_user_agent: ua,
+        p_details: details || {},
+      });
+      if (rpcErr) {
+        await supabase.from("auth_logs").insert(directRow);
       }
     }
   } catch (err) {
