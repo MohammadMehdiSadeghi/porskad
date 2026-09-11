@@ -786,7 +786,7 @@ export default function TelegramBot() {
                               >
                                 <td className="px-4 py-3 font-bold text-ink dark:text-slate-200">
                                   {formTitleById[link.form_id] || "—"}
-                                  {isSuperAdmin() &&
+                                  {isOwner() &&
                                     linkOwnerById[link.form_id] && (
                                       <span className="block text-[10px] font-extrabold text-brand-purple">
                                         👤 {ownerNames[linkOwnerById[link.form_id]]}
