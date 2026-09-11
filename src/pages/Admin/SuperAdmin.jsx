@@ -8,6 +8,7 @@ import { supabase } from "../../lib/supabaseClient";
 import SEO from "../../components/ui/SEO";
 import Modal from "../../components/ui/Modal";
 import Spinner from "../../components/ui/Spinner";
+import { TableSkeleton } from "../../components/ui/Skeleton";
 import StickerCard from "../../components/ui/StickerCard";
 import Badge from "../../components/ui/Badge";
 import "./superadmin-ibm.css";
@@ -1220,9 +1221,8 @@ export default function SuperAdmin() {
     );
   }, [tableData, search]);
 
-  // لودینگ اولیه — اسپینر
   if (loading) {
-    return <Spinner className="py-24" label="در حال بارگذاری پنل مدیریت..." />;
+    return <TableSkeleton rows={8} cols={5} />;
   }
 
   // Access check
