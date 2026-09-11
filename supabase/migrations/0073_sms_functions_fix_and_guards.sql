@@ -4,9 +4,11 @@
 -- ستون‌های واقعی: sms_settings(amoot_token,...,updated_by) / sms_outbox(created_by)
 -- ══════════════════════════════════════════════════════════════════════
 
+DROP FUNCTION IF EXISTS public.get_active_sms_settings();
+
 -- ۱) get_active_sms_settings — ستون ghalt: api_token → amoot_token
 CREATE OR REPLACE FUNCTION public.get_active_sms_settings()
-RETURNS TABLE(id uuid, api_token text, line_number text, sender_name text, is_active boolean)
+RETURNS TABLE(id integer, api_token text, line_number text, sender_name text, is_active boolean)
 LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
@@ -47,31 +49,44 @@ $$;
 
 DROP FUNCTION IF EXISTS public.save_sms_settings(text, text, text);
 
--- ۳) save_sms_settings — ستون ghalt: created_by → updated_by + حذف درج api_token
+-- ۳) save_sms_settings — UPSERT روی رکورد واحد (سخت‌افزار جدول: id=1 ثابت)
+--     نسخه‌های قبلی INSERT می‌کردند → duplicate key (id=1) و می‌سوخت.
 CREATE OR REPLACE FUNCTION public.save_sms_settings(
   p_amoot_token text, p_line_number text, p_sender_name text
 )
-RETURNS uuid
+RETURNS integer
 LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
-DECLARE v_id uuid;
+DECLARE v_id integer;
 BEGIN
   IF NOT public.is_superadmin() THEN
     RAISE EXCEPTION 'not authorized: superadmin only';
   END IF;
-  UPDATE public.sms_settings SET is_active = false WHERE is_active = true;
   INSERT INTO public.sms_settings (
-    amoot_token, line_number, sender_name, is_active, updated_by, updated_at
+    id, amoot_token, line_number, sender_name, is_active, updated_by, updated_at
   ) VALUES (
-    p_amoot_token, p_line_number, p_sender_name, true, auth.uid(), now()
-  ) RETURNING id INTO v_id;
+    1, p_amoot_token, p_line_number, p_sender_name, true, auth.uid(), now()
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    amoot_token  = EXCLUDED.amoot_token,
+    line_number  = EXCLUDED.line_number,
+    sender_name  = EXCLUDED.sender_name,
+    is_active    = true,
+    updated_by   = EXCLUDED.updated_by,
+    updated_at   = EXCLUDED.updated_at
+  RETURNING id INTO v_id;
   RETURN v_id;
 END;
 $$;
 
--- ۴) log_auth_event: از public/anon پس گرفته شود (fallback لاگین؛ لاگین
---    همیشه با anon انجام می‌شود ولی این تابع خودش اقلیت احراز را می‌نویسد)
---    توجه: مسیر اصلی از api/auth-log.js (سرور) است؛ این فالبک پس از لاگین است.
+-- ─── بازگرداندن revoke (DROP+CREATE grant پیش‌فرض PUBLIC را برمی‌گرداند) ───
+REVOKE EXECUTE ON FUNCTION public.get_active_sms_settings() FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.get_sms_stats()           FROM public, anon;
+REVOKE EXECUTE ON FUNCTION public.save_sms_settings(text,text,text) FROM public, anon;
+
+-- ۴) log_auth_event: از public/anon پس گرفته شد؛ فقط authenticated
+--    (مسیر اصلی لاگ از api/log-auth.js با سرویس‌کلید است؛ فالبک کلاینت هم
+--     در activityLogger به درج مستقیم با policy anon تغییر کرد)
 REVOKE EXECUTE ON FUNCTION public.log_auth_event(uuid,text,text,text,text,text,text,jsonb) FROM public, anon;
 GRANT  EXECUTE ON FUNCTION public.log_auth_event(uuid,text,text,text,text,text,text,jsonb) TO authenticated;
