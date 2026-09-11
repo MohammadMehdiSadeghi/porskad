@@ -32,12 +32,9 @@ import Settings from "./pages/Admin/Settings";
 import AuthGuard from "./components/guards/AuthGuard";
 import { useAuth } from "./context/AuthContext";
 
-// هدایت هوشمند داشبورد: اگر مالک نبود، مستقیماً به فرم‌ها برود
+// داشبورد برای همهٔ نقش‌ها فعال است؛ Dashboard خودش داده‌ها را
+// بر اساس مالکیت فرم (manager_id/created_by) فیلتر می‌کند.
 function AdminIndex() {
-  const { isOwner } = useAuth();
-  if (!isOwner()) {
-    return <Navigate to="/admin/forms" replace />;
-  }
   return <Dashboard />;
 }
 

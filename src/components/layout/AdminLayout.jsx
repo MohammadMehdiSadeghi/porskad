@@ -81,6 +81,7 @@ export default function AdminLayout() {
         { to: "/admin/profile", label: "پروفایل", icon: User, end: false },
       ]
     : [
+        { to: "/admin", label: "داشبورد", icon: LayoutDashboard, end: true },
         { to: "/admin/forms", label: "فرم‌های من", icon: FileText, end: false, tabId: "forms" },
         { to: "/admin/embed", label: "اشتراک‌گذاری", icon: Share2, end: false, tabId: "embed" },
         { to: "/admin/telegram", label: "اتصال به تلگرام", icon: Bot, end: false, tabId: "telegram" },
