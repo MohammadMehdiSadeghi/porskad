@@ -3997,7 +3997,7 @@ export default function SuperAdmin() {
               ...trashItems.map((t) => ({
                 key: "t-" + t.id,
                 kind: t.entity_type,
-                kindFa: { response: "ورودی", ticket: "تیکت", tg_config: "ربات", tg_link: "لینک ربات" }[t.entity_type] || t.entity_type,
+                kindFa: { response: "ورودی", ticket: "تیکت", tg_config: "ربات", tg_link: "لینک ربات", question: "سوال", form: "فرم" }[t.entity_type] || t.entity_type,
                 label: t.label,
                 at: t.deleted_at,
                 expires: t.expires_at,
