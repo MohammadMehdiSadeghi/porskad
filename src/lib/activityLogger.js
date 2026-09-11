@@ -119,7 +119,6 @@ export async function logActivity(action, targetType = null, targetId = null, de
       target_id: targetId ? String(targetId) : null,
       details: {
         ...info,
-        device: getDeviceInfo(),
         ...(details || {}),
       },
       user_agent: ua || null,

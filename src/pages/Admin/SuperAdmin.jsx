@@ -525,6 +525,27 @@ export default function SuperAdmin() {
     showToast(isAlreadyDisabled ? `Question type '${typeKey}' re-enabled` : `Question type '${typeKey}' disabled & hidden`);
   }
 
+  async function handleResetUserQuota(targetUserId, targetUserName) {
+    if (
+      !confirm(
+        `Reset monthly response quota for ${
+          targetUserName || targetUserId
+        }? Consumed tokens will reset to 0 and cycle will reset to 30 days.`
+      )
+    )
+      return;
+    try {
+      const { error } = await supabase.rpc("reset_user_monthly_quota", {
+        p_user_id: targetUserId,
+      });
+      if (error) throw error;
+      showToast("User quota reset successfully");
+      await loadUsers();
+    } catch (err) {
+      showToast("Failed to reset quota: " + err.message, "error");
+    }
+  }
+
   async function handleResetAllQ() {
     if (!confirm("Are you sure you want to reset ALL 20 question types to factory defaults?")) return;
     await resetQuestionTypesConfig();

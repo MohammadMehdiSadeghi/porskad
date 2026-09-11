@@ -620,7 +620,10 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
                     if (file) {
                       const check = validateUploadedFile(file, q);
                       if (!check.isValid) {
-                        setErrors((prev) => ({ ...prev, [q.id]: check.error }));
+                        setFieldErrors((prev) => ({
+                          ...prev,
+                          [q.id]: check.error,
+                        }));
                         e.target.value = "";
                         return;
                       }
