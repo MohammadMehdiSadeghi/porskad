@@ -186,7 +186,14 @@ BEGIN
     END IF;
   END LOOP;
 
-  RETURN jsonb_build_object('ok', true, 'responseId', v_response_id);
+  -- هر دو نام کلید را برمی‌گردانیم: ثبت‌نام/امبد `responseId` (camel) و
+  -- فرم عمومی `response_id` (snake) — نبودِ دومی باعث می‌شد ارسال تلگرام
+  -- در فرم‌های ثبت‌نام بی‌صدا رد شود (undefined).
+  RETURN jsonb_build_object(
+    'ok', true,
+    'responseId', v_response_id,
+    'response_id', v_response_id
+  );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
