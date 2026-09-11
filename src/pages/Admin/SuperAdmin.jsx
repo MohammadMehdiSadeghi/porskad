@@ -93,6 +93,7 @@ const TABS = [
   { id: "auth_logs", label: "Auth & Activity Logs", icon: Activity },
   { id: "logs", label: "System Logs", icon: FileText },
   { id: "health", label: "Health", icon: HeartPulse },
+  { id: "trash", label: "Trash", icon: Trash2 },
 ];
 
 
@@ -151,6 +152,13 @@ export default function SuperAdmin() {
   const [health, setHealth] = useState(null);
   const [healthLoading, setHealthLoading] = useState(false);
 
+  // ─── Trash Tab State ───
+  const [trashItems, setTrashItems] = useState([]);
+  const [trashedForms, setTrashedForms] = useState([]);
+  const [trashedUsers, setTrashedUsers] = useState([]);
+  const [trashLoading, setTrashLoading] = useState(false);
+  const [trashUserFilter, setTrashUserFilter] = useState("all");
+
   async function loadHealth() {
     setHealthLoading(true);
     try {
@@ -203,6 +211,96 @@ export default function SuperAdmin() {
     } finally {
       setHealthLoading(false);
     }
+  }
+
+  async function loadTrash() {
+    setTrashLoading(true);
+    try {
+      const [trashRes, formsRes, usersRes] = await Promise.all([
+        supabase
+          .from("trash")
+          .select("*")
+          .is("restored_at", null)
+          .order("deleted_at", { ascending: false })
+          .limit(500),
+        // فرم‌ها soft-delete هستند؛ خودشان در سطل هم لیست می‌شوند
+        supabase
+          .from("forms")
+          .select("id,title,created_by,manager_id,deleted_at,deleted_by")
+          .not("deleted_at", "is", null)
+          .order("deleted_at", { ascending: false }),
+        // «حذف کاربر» در این سامانه = غیرفعال‌سازی؛ آن‌ها هم سطل‌اند
+        supabase
+          .from("profiles")
+          .select("id,full_name,email,is_active,deactivated_by,deactivated_at")
+          .eq("is_active", false)
+          .order("deactivated_at", { ascending: false, nullsFirst: false }),
+      ]);
+      setTrashItems(trashRes.data || []);
+      setTrashedForms(formsRes.data || []);
+      setTrashedUsers(usersRes.data || []);
+    } catch (err) {
+      console.error("loadTrash:", err);
+    } finally {
+      setTrashLoading(false);
+    }
+  }
+
+  async function restoreTrashItem(item) {
+    if (!confirm("این مورد بازیابی شود؟")) return;
+    const { data, error } = await supabase.rpc("restore_from_trash", {
+      p_trash_id: item.id,
+    });
+    if (error) {
+      alert("خطا در بازیابی: " + error.message);
+      return;
+    }
+    if (data === "conflict") {
+      alert("این مورد قبلاً در همان جایگاه وجود دارد (تعارض شناسه).");
+      return;
+    }
+    if (data !== "restored") {
+      alert("بازیابی نشد: " + data);
+      return;
+    }
+    loadTrash();
+  }
+
+  async function restoreForm(formId) {
+    if (!confirm("این فرم بازگردانی شود؟")) return;
+    const { error } = await supabase
+      .from("forms")
+      .update({ deleted_at: null })
+      .eq("id", formId);
+    if (error) {
+      alert("خطا: " + error.message);
+      return;
+    }
+    loadTrash();
+  }
+
+  async function restoreUser(userId) {
+    if (!confirm("این کاربر فعال/بازگردانی شود؟")) return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_active: true })
+      .eq("id", userId);
+    if (error) {
+      alert("خطا: " + error.message);
+      return;
+    }
+    loadTrash();
+  }
+
+  async function purgeExpiredTrash() {
+    if (!confirm("مواد منقضی‌شده (بیش از ۳۰ روز) برای همیشه پاک شوند؟")) return;
+    const { data, error } = await supabase.rpc("purge_expired_trash");
+    if (error) {
+      alert("خطا: " + error.message);
+      return;
+    }
+    alert((data || 0) + " مورد برای همیشه پاک شد.");
+    loadTrash();
   }
 
   // ─── System Settings State ───
@@ -1364,6 +1462,7 @@ export default function SuperAdmin() {
                 browseTable("forms");
               }
               if (t.id === "health") loadHealth();
+              if (t.id === "trash") loadTrash();
             }}
             className={`sa-tab ${tab === t.id ? "active" : ""}`}
           >
@@ -3867,6 +3966,148 @@ export default function SuperAdmin() {
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {/* ═══════════ Trash (سطل زباله ۳۰ روزه) ═══════════ */}
+      {tab === "trash" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div className="flex gap-2 items-center" style={{ justifyContent: "space-between", flexWrap: "wrap" }}>
+            <div className="sa-section-title" style={{ margin: 0 }}>
+              <Trash2 size={18} style={{ verticalAlign: "middle", marginLeft: 6 }} />
+              سطل زباله — هر حذف تا ۳۰ روز قابل بازیابی
+            </div>
+            <div className="flex gap-2">
+              <button type="button" className="sa-btn sa-btn-ghost" onClick={loadTrash} disabled={trashLoading}>
+                {trashLoading ? "…" : "رفرش"}
+              </button>
+              <button type="button" className="sa-btn sa-btn-ghost" onClick={purgeExpiredTrash} disabled={trashLoading}>
+                پاکسازی منقضی‌شده‌ها
+              </button>
+            </div>
+          </div>
+
+          {(() => {
+            const nameOf = (id) => {
+              const u = users.find((x) => x.id === id);
+              return u ? u.full_name || u.email : null;
+            };
+            const dayMs = 86400000;
+            const all = [
+              ...trashItems.map((t) => ({
+                key: "t-" + t.id,
+                kind: t.entity_type,
+                kindFa: { response: "ورودی", ticket: "تیکت", tg_config: "ربات", tg_link: "لینک ربات" }[t.entity_type] || t.entity_type,
+                label: t.label,
+                at: t.deleted_at,
+                expires: t.expires_at,
+                ownerId: t.user_id,
+                byId: t.deleted_by,
+                byName: t.deleted_by_name,
+                restore: () => restoreTrashItem(t),
+              })),
+              ...trashedForms.map((f) => ({
+                key: "f-" + f.id,
+                kind: "form",
+                kindFa: "فرم",
+                label: "فرم «" + (f.title || "?") + "»",
+                at: f.deleted_at,
+                expires: new Date(new Date(f.deleted_at).getTime() + 30 * dayMs).toISOString(),
+                ownerId: f.created_by || f.manager_id,
+                byId: f.deleted_by,
+                byName: null,
+                restore: () => restoreForm(f.id),
+              })),
+              ...trashedUsers.map((u) => ({
+                key: "u-" + u.id,
+                kind: "user",
+                kindFa: "کاربر",
+                label: "حساب کاربر «" + (u.full_name || u.email || "?") + "»",
+                at: u.deactivated_at || u.created_at,
+                expires: u.deactivated_at || u.created_at
+                  ? new Date(new Date(u.deactivated_at || u.created_at).getTime() + 30 * dayMs).toISOString()
+                  : null,
+                ownerId: u.id,
+                byId: u.deactivated_by,
+                byName: null,
+                restore: () => restoreUser(u.id),
+              })),
+            ].sort((a, b) => new Date(b.at) - new Date(a.at));
+
+            // گزینه‌های فیلتر «بر اساس کاربر»
+            const ownerIds = [...new Set(all.map((i) => i.ownerId).filter(Boolean))];
+            const ownerLabel = (id) => nameOf(id) || "کاربر حذف‌شده (" + String(id).slice(0, 8) + "…)";
+            const visible = trashUserFilter === "all" ? all : all.filter((i) => i.ownerId === trashUserFilter);
+
+            const daysLeft = (exp) =>
+              exp ? Math.max(0, Math.ceil((new Date(exp) - Date.now()) / dayMs)) : null;
+            const whoDeleted = (i) => {
+              if (!i.byId) return "نامشخص";
+              if (i.byId === i.ownerId) return "خودش";
+              return nameOf(i.byId) || i.byName || String(i.byId).slice(0, 8);
+            };
+
+            return (
+              <>
+                <div className="sa-card">
+                  <div className="flex gap-2 items-center" style={{ flexWrap: "wrap" }}>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>کاربر:</span>
+                    <select
+                      className="sa-input"
+                      style={{ maxWidth: 320 }}
+                      value={trashUserFilter}
+                      onChange={(e) => setTrashUserFilter(e.target.value)}
+                    >
+                      <option value="all">همه کاربران ({all.length} مورد)</option>
+                      {ownerIds
+                        .sort((a, b) => (ownerLabel(a) || "").localeCompare(ownerLabel(b) || "", "fa"))
+                        .map((id) => (
+                          <option key={id} value={id}>
+                            {ownerLabel(id)} ({all.filter((i) => i.ownerId === id).length})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+
+                {trashLoading && <div className="sa-card">در حال بارگذاری…</div>}
+
+                {!trashLoading && visible.length === 0 && (
+                  <div className="sa-card" style={{ textAlign: "center", opacity: 0.7 }}>
+                    سطل زباله خالی است 🧹
+                  </div>
+                )}
+
+                {!trashLoading &&
+                  visible.map((i) => {
+                    const dl = daysLeft(i.expires);
+                    return (
+                      <div key={i.key} className="sa-card" style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
+                        <span className="sa-badge" style={{ flexShrink: 0 }}>{i.kindFa}</span>
+                        <div style={{ flex: 1, minWidth: 220 }}>
+                          <div style={{ fontWeight: 700, fontSize: "0.92rem" }}>{i.label}</div>
+                          <div style={{ fontSize: "0.78rem", opacity: 0.75 }}>
+                            مالک: {i.ownerId ? ownerLabel(i.ownerId) : "—"} · حذف:{" "}
+                            {whoDeleted(i) === "خودش" ? (
+                              <b style={{ color: "#d97706" }}>خودش</b>
+                            ) : (
+                              whoDeleted(i)
+                            )}{" "}
+                            · {new Date(i.at).toLocaleString("fa-IR")}
+                          </div>
+                        </div>
+                        <span style={{ fontSize: "0.78rem", fontWeight: 700, color: dl === null ? "#64748b" : dl <= 5 ? "#dc2626" : "#059669", flexShrink: 0 }}>
+                          {dl === null ? "بدون انقضا" : dl + " روز مانده"}
+                        </span>
+                        <button type="button" className="sa-btn sa-btn-ghost" onClick={i.restore} style={{ flexShrink: 0 }}>
+                          ↩️ بازیابی
+                        </button>
+                      </div>
+                    );
+                  })}
+              </>
+            );
+          })()}
         </div>
       )}
 
