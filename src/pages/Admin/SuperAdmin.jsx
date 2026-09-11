@@ -62,6 +62,21 @@ import {
   HeartPulse,
 } from "lucide-react";
 import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import {
   QUESTION_TYPES,
   QUESTION_TYPE_ORDER,
   QUESTION_CATEGORIES,
@@ -95,6 +110,9 @@ const TABS = [
   { id: "health", label: "Health", icon: HeartPulse },
   { id: "trash", label: "Trash", icon: Trash2 },
 ];
+
+const HC = ["#6366f1", "#10b981", "#f59e0b", "#ec4899", "#3b82f6", "#14b8a6"];
+const PLAN_FA = { free: "رایگان", pro: "حرفه‌ای", enterprise: "سازمانی" };
 
 
 // ══════════════════════════════════════════════════════════════
@@ -162,8 +180,10 @@ export default function SuperAdmin() {
   async function loadHealth() {
     setHealthLoading(true);
     try {
-      const dayAgo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
-      const weekAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+      const dayMs = 24 * 3600 * 1000;
+      const dayAgo = new Date(Date.now() - dayMs).toISOString();
+      const weekAgo = new Date(Date.now() - 7 * dayMs).toISOString();
+      const fortnightAgo = new Date(Date.now() - 14 * dayMs).toISOString();
       const [
         { count: signups24 },
         { count: signups7 },
@@ -171,6 +191,12 @@ export default function SuperAdmin() {
         { data: tgRecent },
         { data: ticketsOpen },
         { data: quotaRows },
+        { data: signups14 },
+        { data: resp14 },
+        { data: forms14 },
+        { data: logins14 },
+        { data: failed14 },
+        { data: planRows },
       ] = await Promise.all([
         supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", dayAgo),
         supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", weekAgo),
@@ -178,6 +204,12 @@ export default function SuperAdmin() {
         supabase.from("telegram_send_log").select("status, error_message, created_at").order("created_at", { ascending: false }).limit(200),
         supabase.from("support_tickets").select("id, subject, created_at").eq("status", "open").order("created_at", { ascending: true }).limit(50),
         supabase.from("profiles").select("id, full_name, email, plan, max_responses_per_month, monthly_responses_used").eq("is_active", true).not("monthly_responses_used", "is", null),
+        supabase.from("profiles").select("created_at").gte("created_at", fortnightAgo).limit(5000),
+        supabase.from("responses").select("created_at").gte("created_at", fortnightAgo).limit(20000),
+        supabase.from("forms").select("created_at").gte("created_at", fortnightAgo).limit(5000),
+        supabase.from("auth_logs").select("created_at").in("action", ["login", "login_after_register"]).gte("created_at", fortnightAgo).limit(20000),
+        supabase.from("auth_logs").select("created_at").in("action", ["failed_login", "login_failed"]).gte("created_at", fortnightAgo).limit(20000),
+        supabase.from("profiles").select("plan").eq("is_active", true).limit(5000),
       ]);
 
       const logs = authRecent?.data || [];
@@ -194,6 +226,49 @@ export default function SuperAdmin() {
         .sort((a, b) => (b.monthly_responses_used / b.max_responses_per_month) - (a.monthly_responses_used / a.max_responses_per_month))
         .slice(0, 8);
 
+      // ─── سری ۱۴ روزه (مبدأ تهران) برای نمودارها ───
+      const TZ_OFF = 3.5 * 3600 * 1000;
+      const dayKey = (iso) => new Date(new Date(iso).getTime() + TZ_OFF).toISOString().slice(0, 10);
+      const buckets = [];
+      const bmap = {};
+      for (let i = 13; i >= 0; i--) {
+        const d = new Date(Date.now() - i * dayMs + TZ_OFF).toISOString().slice(0, 10);
+        const b = { date: d, signups: 0, responses: 0, forms: 0, logins: 0, failed: 0 };
+        bmap[d] = b;
+        buckets.push(b);
+      }
+      const tally = (rows, field) => {
+        for (const r of rows || []) {
+          const b = bmap[dayKey(r.created_at)];
+          if (b) b[field] += 1;
+        }
+      };
+      tally(signups14?.data, "signups");
+      tally(resp14?.data, "responses");
+      tally(forms14?.data, "forms");
+      tally(logins14?.data, "logins");
+      tally(failed14?.data, "failed");
+      const labels = ["۱۳ روز", "۱۲", "۱۱", "۱۰", "۹", "۸", "۷", "۶", "۵", "۴", "۳", "۲", "دیروز", "امروز"];
+      const series = buckets.map((b, i) => ({ ...b, label: labels[i] }));
+
+      // ─── توزیع پلن‌ها ───
+      const planCounts = {};
+      for (const r of planRows?.data || []) {
+        const p = r.plan || "free";
+        planCounts[p] = (planCounts[p] || 0) + 1;
+      }
+      const planDist = Object.entries(planCounts)
+        .map(([plan, count]) => ({ plan, name: PLAN_FA[plan] || plan, count }))
+        .sort((a, b) => b.count - a.count);
+
+      // ─── رشد خالص (تفاضل ۷ روز اول/دوم) ───
+      const sumRange = (field, from, to) => series.slice(from, to).reduce((s, d) => s + d[field], 0);
+      const growth = {
+        signups: sumRange("signups", 7, 14) - sumRange("signups", 0, 7),
+        responses: sumRange("responses", 7, 14) - sumRange("responses", 0, 7),
+        logins: sumRange("logins", 7, 14) - sumRange("logins", 0, 7),
+      };
+
       setHealth({
         signups24: signups24 ?? 0,
         signups7: signups7 ?? 0,
@@ -204,6 +279,9 @@ export default function SuperAdmin() {
         lastTgFail: lastFail || null,
         openTickets: ticketsOpen?.data || [],
         nearQuota,
+        series,
+        planDist,
+        growth,
         checkedAt: new Date().toISOString(),
       });
     } catch (err) {
@@ -3795,12 +3873,26 @@ export default function SuperAdmin() {
                 <div className="sa-stat">
                   <div className="sa-stat-label">Signups (24h)</div>
                   <div className="sa-stat-value">{health.signups24.toLocaleString()}</div>
-                  <div className="sa-stat-sub">{health.signups7.toLocaleString()} in last 7 days</div>
+                  <div className="sa-stat-sub">
+                    {health.signups7.toLocaleString()} in last 7 days
+                    {health.growth.signups !== 0 && (
+                      <span style={{ color: health.growth.signups > 0 ? "var(--sa-success)" : "var(--sa-danger)", fontWeight: 700 }}>
+                        {" "}{health.growth.signups > 0 ? "▲" : "▼"} {Math.abs(health.growth.signups).toLocaleString()} هفتگی
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="sa-stat">
                   <div className="sa-stat-label">Logins (24h)</div>
                   <div className="sa-stat-value">{health.logins24.toLocaleString()}</div>
-                  <div className="sa-stat-sub">successful sessions</div>
+                  <div className="sa-stat-sub">
+                    successful sessions
+                    {health.growth.logins !== 0 && (
+                      <span style={{ color: health.growth.logins > 0 ? "var(--sa-success)" : "var(--sa-danger)", fontWeight: 700 }}>
+                        {" "}{health.growth.logins > 0 ? "▲" : "▼"} {Math.abs(health.growth.logins).toLocaleString()} هفتگی
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="sa-stat">
                   <div className="sa-stat-label">Failed Logins (24h)</div>
@@ -3838,6 +3930,146 @@ export default function SuperAdmin() {
                   <div className="sa-stat-label">Users Near Quota</div>
                   <div className="sa-stat-value">{health.nearQuota.length.toLocaleString()}</div>
                   <div className="sa-stat-sub">≥80% of monthly limit — upsell candidates</div>
+                </div>
+              </div>
+
+              {/* ─── نمودارها ─── */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "1rem" }}>
+                {/* فعالیت ۱۴ روز */}
+                <div className="sa-card" style={{ gridColumn: "1 / -1" }}>
+                  <div className="sa-card-header">
+                    <span className="sa-section-title" style={{ margin: 0 }}>
+                      📈 فعالیت ۱۴ روز اخیر (مبدأ تهران)
+                    </span>
+                  </div>
+                  <div className="sa-card-body">
+                    <div dir="ltr" style={{ width: "100%", height: 240 }}>
+                      <ResponsiveContainer>
+                        <AreaChart data={health.series} margin={{ top: 5, right: 8, left: -18, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="hResp" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#6366f1" stopOpacity={0.35} />
+                              <stop offset="100%" stopColor="#6366f1" stopOpacity={0.02} />
+                            </linearGradient>
+                            <linearGradient id="hSign" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#10b981" stopOpacity={0.35} />
+                              <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(120,120,140,.18)" />
+                          <XAxis dataKey="label" tick={{ fontSize: 11, fill: "var(--sa-text-2, #64748b)" }} interval={1} />
+                          <YAxis tick={{ fontSize: 11, fill: "var(--sa-text-2, #64748b)" }} allowDecimals={false} />
+                          <Tooltip
+                            contentStyle={{ background: "var(--sa-surface)", border: "1px solid var(--sa-field-border)", borderRadius: 10, fontSize: "0.8rem", direction: "rtl" }}
+                            labelFormatter={(l) => `روز: ${l}`}
+                          />
+                          <Legend wrapperStyle={{ fontSize: "0.78rem" }} />
+                          <Area type="monotone" dataKey="responses" name="ورودی‌ها" stroke="#6366f1" strokeWidth={2} fill="url(#hResp)" />
+                          <Area type="monotone" dataKey="signups" name="ثبت‌نام" stroke="#10b981" strokeWidth={2} fill="url(#hSign)" />
+                          <Area type="monotone" dataKey="forms" name="فرم‌های جدید" stroke="#f59e0b" strokeWidth={2} fill="transparent" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ورودی روزانه */}
+                <div className="sa-card">
+                  <div className="sa-card-header">
+                    <span className="sa-section-title" style={{ margin: 0 }}>
+                      📊 ورودی روزانه
+                    </span>
+                    <span style={{ fontSize: "0.78rem", color: "var(--sa-text-2)" }}>
+                      مجموع ۱۴ روز: {health.series.reduce((s, d) => s + d.responses, 0).toLocaleString()}
+                      {health.growth.responses !== 0 && (
+                        <b style={{ color: health.growth.responses > 0 ? "var(--sa-success)" : "var(--sa-danger)", marginInlineStart: 6 }}>
+                          {health.growth.responses > 0 ? "▲" : "▼"} {Math.abs(health.growth.responses).toLocaleString()} هفتگی
+                        </b>
+                      )}
+                    </span>
+                  </div>
+                  <div className="sa-card-body">
+                    <div dir="ltr" style={{ width: "100%", height: 190 }}>
+                      <ResponsiveContainer>
+                        <BarChart data={health.series} margin={{ top: 5, right: 8, left: -22, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(120,120,140,.18)" vertical={false} />
+                          <XAxis dataKey="label" tick={{ fontSize: 10, fill: "var(--sa-text-2, #64748b)" }} interval={1} />
+                          <YAxis tick={{ fontSize: 10, fill: "var(--sa-text-2, #64748b)" }} allowDecimals={false} />
+                          <Tooltip
+                            contentStyle={{ background: "var(--sa-surface)", border: "1px solid var(--sa-field-border)", borderRadius: 10, fontSize: "0.8rem", direction: "rtl" }}
+                            formatter={(v) => [`${v.toLocaleString()} ورودی`, ""]}
+                            labelFormatter={(l) => `روز: ${l}`}
+                          />
+                          <Bar dataKey="responses" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+
+                {/* امنیت ورود */}
+                <div className="sa-card">
+                  <div className="sa-card-header">
+                    <span className="sa-section-title" style={{ margin: 0 }}>
+                      🔐 ورود موفق در برابر ناموفق
+                    </span>
+                  </div>
+                  <div className="sa-card-body">
+                    <div dir="ltr" style={{ width: "100%", height: 190 }}>
+                      <ResponsiveContainer>
+                        <BarChart data={health.series} margin={{ top: 5, right: 8, left: -22, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(120,120,140,.18)" vertical={false} />
+                          <XAxis dataKey="label" tick={{ fontSize: 10, fill: "var(--sa-text-2, #64748b)" }} interval={1} />
+                          <YAxis tick={{ fontSize: 10, fill: "var(--sa-text-2, #64748b)" }} allowDecimals={false} />
+                          <Tooltip
+                            contentStyle={{ background: "var(--sa-surface)", border: "1px solid var(--sa-field-border)", borderRadius: 10, fontSize: "0.8rem", direction: "rtl" }}
+                            labelFormatter={(l) => `روز: ${l}`}
+                          />
+                          <Legend wrapperStyle={{ fontSize: "0.78rem" }} />
+                          <Bar dataKey="logins" name="موفق" stackId="a" fill="#10b981" />
+                          <Bar dataKey="failed" name="ناموفق" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+
+                {/* توزیع پلن */}
+                <div className="sa-card">
+                  <div className="sa-card-header">
+                    <span className="sa-section-title" style={{ margin: 0 }}>
+                      💎 توزیع اشتراک کاربران فعال
+                    </span>
+                  </div>
+                  <div className="sa-card-body">
+                    {health.planDist.length === 0 ? (
+                      <div style={{ color: "var(--sa-text-2)" }}>داده‌ای نیست.</div>
+                    ) : (
+                      <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+                        <div dir="ltr" style={{ width: 150, height: 150 }}>
+                          <ResponsiveContainer>
+                            <PieChart>
+                              <Pie data={health.planDist} dataKey="count" nameKey="name" cx="50%" cy="50%" innerRadius={38} outerRadius={62} paddingAngle={3}>
+                                {health.planDist.map((_, i) => (
+                                  <Cell key={i} fill={HC[i % HC.length]} />
+                                ))}
+                              </Pie>
+                              <Tooltip contentStyle={{ background: "var(--sa-surface)", border: "1px solid var(--sa-field-border)", borderRadius: 10, fontSize: "0.8rem", direction: "rtl" }} formatter={(v, n) => [`${v.toLocaleString()} کاربر`, n]} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 130 }}>
+                          {health.planDist.map((p, i) => (
+                            <div key={p.plan} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.85rem" }}>
+                              <span style={{ width: 10, height: 10, borderRadius: 3, background: HC[i % HC.length], flexShrink: 0 }} />
+                              <span style={{ fontWeight: 600 }}>{p.name}</span>
+                              <span style={{ marginInlineStart: "auto", color: "var(--sa-text-2)" }}>{p.count.toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
