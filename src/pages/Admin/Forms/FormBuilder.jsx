@@ -1763,6 +1763,22 @@ export default function FormBuilder() {
               </Field>
             </div>
 
+            {/* ─── تنظیمات عمومی پاسخ‌دهی ─── */}
+            <div className="border-t-2 border-dashed border-navy/15 pt-4">
+              <label className="flex items-center gap-2.5 cursor-pointer select-none bg-white dark:bg-slate-800 p-3 rounded-xl border-2 border-ink/10 dark:border-slate-700 hover:border-teal/50 transition-colors max-w-sm">
+                <input
+                  type="checkbox"
+                  checked={!!form.prevent_duplicate}
+                  onChange={(e) => setFormField({ prevent_duplicate: e.target.checked })}
+                  className="w-4 h-4 text-teal rounded border-ink/30 focus:ring-teal cursor-pointer"
+                />
+                <div className="flex flex-col">
+                  <span className="text-xs font-black text-navy dark:text-slate-100">جلوگیری از ثبت پاسخ تکراری</span>
+                  <span className="text-[10px] text-ink/50 dark:text-slate-400">یک پاسخ به ازای هر مرورگر / دستگاه</span>
+                </div>
+              </label>
+            </div>
+
             {/* ─── امکانات و قابلیت‌های پیشرفته — فقط طرح سازمانی ─── */}
             <div className="border-t-2 border-dashed border-navy/15 pt-4">
               <div className={`border-2 rounded-2xl p-4 sm:p-5 flex flex-col gap-4 ${enterpriseOnly ? "border-teal/40 bg-bg-lavender/30 dark:bg-slate-800/50" : "border-dashed border-orange/50 bg-orange/5 dark:bg-orange/10"}`}>
@@ -1780,7 +1796,7 @@ export default function FormBuilder() {
 
                 {!enterpriseOnly && (
                   <div className="text-xs font-bold text-orange leading-6 bg-white/70 dark:bg-slate-900/40 border border-orange/25 rounded-xl p-3">
-                    برای استفاده از این قابلیت‌ها (هدایت خودکار، وب‌هوک، سقف پاسخ، زمان‌سنج و جلوگیری از تکرار) اشتراک
+                    برای استفاده از این قابلیت‌ها (هدایت خودکار، وب‌هوک، سقف پاسخ و زمان‌سنج) اشتراک
                     «سازمانی» لازم است. از بخش «اشتراک‌ها» درخواست ارتقا بدهید.
                   </div>
                 )}
@@ -1833,22 +1849,6 @@ export default function FormBuilder() {
                       className={`${inputCls} !py-2 !text-xs`}
                     />
                   </Field>
-                </div>
-
-                {/* چک‌باکس‌های قابلیت‌های تکمیلی */}
-                <div className="grid sm:grid-cols-2 gap-3 pt-2 border-t border-ink/10 dark:border-slate-700">
-                  <label className="flex items-center gap-2.5 cursor-pointer select-none bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-ink/10 dark:border-slate-700">
-                    <input
-                      type="checkbox"
-                      checked={!!form.prevent_duplicate}
-                      onChange={(e) => setFormField({ prevent_duplicate: e.target.checked })}
-                      className="w-4 h-4 text-teal rounded border-ink/30 focus:ring-teal cursor-pointer"
-                    />
-                    <div className="flex flex-col">
-                      <span className="text-xs font-black text-navy dark:text-slate-100">جلوگیری از ثبت پاسخ تکراری</span>
-                      <span className="text-[10px] text-ink/50 dark:text-slate-400">یک پاسخ به ازای هر مرورگر/دستگاه</span>
-                    </div>
-                  </label>
                 </div>
               </div>
             </div>
