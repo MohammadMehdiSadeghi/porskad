@@ -327,6 +327,119 @@ export default async function handler(req, res) {
       });
     }
 
+    // ۸. انتقال مالکیت کامل فرم به یک حساب کاربری دیگر
+    if (action === "transfer_form") {
+      const { form_id, target_user_id, from_user_id } = req.body || {};
+      if (!form_id || !target_user_id) {
+        return res.status(400).json({ error: "شناسه فرم و حساب کاربری مقصد الزامی است" });
+      }
+
+      if (from_user_id && from_user_id === target_user_id) {
+        return res.status(400).json({ error: "حساب کاربری مبدأ و مقصد نمی‌توانند یکسان باشند" });
+      }
+
+      // دریافت اطلاعات فرم
+      const { data: formRecord, error: formErr } = await adminClient
+        .from("forms")
+        .select("id, title, slug, created_by, manager_id, published, archived, deleted_at")
+        .eq("id", form_id)
+        .single();
+
+      if (formErr || !formRecord) {
+        return res.status(404).json({ error: "فرم مورد نظر یافت نشد" });
+      }
+
+      const currentOwnerId = formRecord.manager_id || formRecord.created_by;
+      if (currentOwnerId === target_user_id) {
+        return res.status(400).json({ error: "این فرم در حال حاضر متعلق به همین کاربر است" });
+      }
+
+      // دریافت اطلاعات کاربر مقصد
+      const { data: targetProfile, error: targetErr } = await adminClient
+        .from("profiles")
+        .select("id, email, full_name, is_owner, plan, max_forms")
+        .eq("id", target_user_id)
+        .single();
+
+      if (targetErr || !targetProfile) {
+        return res.status(404).json({ error: "کاربر مقصد در سیستم یافت نشد" });
+      }
+
+      // دریافت اطلاعات کاربر مبدأ جهت ثبت در لاگ سیستم
+      const { data: prevProfile } = await adminClient
+        .from("profiles")
+        .select("id, email, full_name")
+        .eq("id", currentOwnerId)
+        .maybeSingle();
+
+      // بررسی سقف فرم‌های فعال کاربر مقصد برای جلوگیری از خطای تریگر پایگاه داده
+      if (formRecord.published && !formRecord.archived && !formRecord.deleted_at && !targetProfile.is_owner) {
+        const { count: activeCount } = await adminClient
+          .from("forms")
+          .select("id", { count: "exact", head: true })
+          .or(`created_by.eq.${target_user_id},manager_id.eq.${target_user_id}`)
+          .eq("published", true)
+          .is("deleted_at", null)
+          .neq("archived", true);
+
+        const curMax = targetProfile.max_forms ?? 5;
+        if (curMax < 999999 && (activeCount ?? 0) >= curMax) {
+          // ارتقای سهمیه کاربر مقصد تا سقف تریگر دیتابیس مانع انتقال نشود
+          await adminClient
+            .from("profiles")
+            .update({ max_forms: (activeCount ?? 0) + 2 })
+            .eq("id", target_user_id);
+        }
+      }
+
+      // اعمال انتقال فرم با به روزرسانی همزمان manager_id و created_by
+      const { data: updatedForm, error: updateErr } = await adminClient
+        .from("forms")
+        .update({
+          manager_id: target_user_id,
+          created_by: target_user_id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", form_id)
+        .select("id, title, slug, manager_id, created_by, updated_at")
+        .single();
+
+      if (updateErr) {
+        return res.status(400).json({ error: "خطا در انتقال فرم: " + updateErr.message });
+      }
+
+      // ثبت در activity_log
+      try {
+        await adminClient.from("activity_log").insert({
+          user_id: user.id,
+          action: "transfer_form_ownership",
+          target_type: "form",
+          target_id: form_id,
+          details: {
+            form_id,
+            form_title: formRecord.title,
+            form_slug: formRecord.slug,
+            previous_owner_id: currentOwnerId,
+            previous_owner_email: prevProfile?.email,
+            previous_owner_name: prevProfile?.full_name,
+            target_user_id,
+            target_user_email: targetProfile.email,
+            target_user_name: targetProfile.full_name,
+            transferred_by: requesterEmail,
+          },
+        });
+      } catch (logErr) {
+        console.warn("Failed to log transfer_form activity:", logErr);
+      }
+
+      return res.status(200).json({
+        success: true,
+        form: updatedForm,
+        previous_user: prevProfile,
+        target_user: targetProfile,
+      });
+    }
+
     return res.status(400).json({ error: `عملیات ناشناخته: ${action}` });
   } catch (err) {
     console.error("Admin user management error:", err);

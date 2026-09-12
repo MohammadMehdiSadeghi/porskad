@@ -60,6 +60,7 @@ import {
   Plus,
   Trash2,
   HeartPulse,
+  ArrowRightLeft,
 } from "lucide-react";
 import {
   AreaChart,
@@ -417,6 +418,19 @@ export default function SuperAdmin() {
   const [impersonateLoading, setImpersonateLoading] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [toast, setToast] = useState(null);
+
+  // ─── Transfer Form Ownership Modal State ───
+  const [transferModalOpen, setTransferModalOpen] = useState(false);
+  const [transferFromUserId, setTransferFromUserId] = useState("");
+  const [transferFormId, setTransferFormId] = useState("");
+  const [transferToUserId, setTransferToUserId] = useState("");
+  const [userFormsList, setUserFormsList] = useState([]);
+  const [userFormsLoading, setUserFormsLoading] = useState(false);
+  const [transferSubmitting, setTransferSubmitting] = useState(false);
+  const [transferSuccessInfo, setTransferSuccessInfo] = useState(null);
+  const [allTransferUsers, setAllTransferUsers] = useState([]);
+  const [transferUsersLoading, setTransferUsersLoading] = useState(false);
+  const [transferSearchQuery, setTransferSearchQuery] = useState("");
 
   // ─── همگام‌سازی تنظیمات انواع سوال با دیتابیس در ورود به پنل گاد ───
   useEffect(() => {
@@ -1297,6 +1311,123 @@ export default function SuperAdmin() {
     }
   }
 
+  // ─── Form Transfer Ownership ───
+  async function loadTransferUsers() {
+    setTransferUsersLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, phone, plan, is_owner, max_forms")
+        .order("full_name", { ascending: true });
+      if (error) throw error;
+      setAllTransferUsers(data || []);
+    } catch (err) {
+      console.error("Failed to load transfer users:", err);
+      // Fallback: merge admins and users
+      setAllTransferUsers([...admins, ...users]);
+    } finally {
+      setTransferUsersLoading(false);
+    }
+  }
+
+  async function loadFormsForFromUser(fromUid) {
+    if (!fromUid) {
+      setUserFormsList([]);
+      setTransferFormId("");
+      return;
+    }
+    setUserFormsLoading(true);
+    try {
+      const [{ data: formsData, error: formsErr }, { data: countsData }] = await Promise.all([
+        supabase
+          .from("forms")
+          .select("id, title, slug, published, archived, created_at, manager_id, created_by, deleted_at")
+          .or(`manager_id.eq.${fromUid},created_by.eq.${fromUid}`)
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false }),
+        supabase.rpc("get_form_response_counts"),
+      ]);
+      if (formsErr) throw formsErr;
+      const counts = countsData || {};
+      const list = (formsData || []).map((f) => ({
+        ...f,
+        response_count: counts[f.id] || 0,
+      }));
+      setUserFormsList(list);
+    } catch (err) {
+      console.error("Failed to load user forms:", err);
+      showToast("خطا در بارگذاری فرم‌های کاربر: " + err.message, "error");
+    } finally {
+      setUserFormsLoading(false);
+    }
+  }
+
+  function openTransferModal(initialForm = null) {
+    setTransferSuccessInfo(null);
+    setTransferModalOpen(true);
+    loadTransferUsers();
+
+    if (initialForm) {
+      const ownerId = initialForm.manager_id || initialForm.created_by;
+      setTransferFromUserId(ownerId || "");
+      setTransferFormId(initialForm.id);
+      setTransferToUserId("");
+      if (ownerId) {
+        loadFormsForFromUser(ownerId);
+      }
+    } else {
+      setTransferFromUserId("");
+      setTransferFormId("");
+      setTransferToUserId("");
+      setUserFormsList([]);
+    }
+  }
+
+  async function handleExecuteTransfer() {
+    if (!transferFromUserId) {
+      showToast("لطفاً حساب کاربری مبدأ (فیلد ۱) را انتخاب کنید", "error");
+      return;
+    }
+    if (!transferFormId) {
+      showToast("لطفاً فرم مورد نظر برای انتقال (فیلد ۲) را انتخاب کنید", "error");
+      return;
+    }
+    if (!transferToUserId) {
+      showToast("لطفاً حساب کاربری مقصد (فیلد ۳) را انتخاب کنید", "error");
+      return;
+    }
+    if (transferFromUserId === transferToUserId) {
+      showToast("حساب کاربری مبدأ و مقصد نمی‌توانند یکسان باشند", "error");
+      return;
+    }
+
+    setTransferSubmitting(true);
+    try {
+      const res = await adminAction("transfer_form", {
+        form_id: transferFormId,
+        target_user_id: transferToUserId,
+        from_user_id: transferFromUserId,
+      });
+
+      if (res?.success) {
+        showToast("فرم با موفقیت به حساب مقصد منتقل شد و تمام مشخصات به نام کاربر جدید ثبت گردید!", "success");
+        setTransferSuccessInfo(res);
+        if (selectedTable === "forms") {
+          browseTable("forms");
+        }
+        loadDbStats();
+        // همچنین فرم‌های کاربر مبدأ را دوباره بارگذاری می‌کنیم تا فرم منتقل‌شده دیگر نشان داده نشود
+        loadFormsForFromUser(transferFromUserId);
+      } else {
+        throw new Error(res?.error || "خطا در انتقال فرم");
+      }
+    } catch (err) {
+      showToast("خطا در انتقال فرم: " + err.message, "error");
+    } finally {
+      setTransferSubmitting(false);
+    }
+  }
+
   // ─── Admin Permission Editor ───
   async function toggleAdminPermission(userId, permId, currentPerms) {
     if (!isCallerGod) {
@@ -1565,28 +1696,54 @@ export default function SuperAdmin() {
       </div>
 
       {/* Search + Actions */}
-      <div className="sa-search">
+      <div className="sa-search" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.6rem" }}>
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search records, users, logs..."
+          style={{ flex: 1, minWidth: 220 }}
         />
-        {selectedTable && (
-          <div className="sa-actions">
-            <button className="sa-btn sa-btn-primary" onClick={() => openEdit(selectedTable)}>
-              + Create
-            </button>
-            <button className="sa-btn sa-btn-secondary" onClick={() => exportTable(selectedTable)}>
-              Export
-            </button>
-            {selectedTable === "responses" && (
-              <button className="sa-btn sa-btn-danger" onClick={() => purgeResponses()}>
-                Purge All
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+          <button
+            type="button"
+            className="sa-btn"
+            onClick={() => openTransferModal()}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: "0.85rem",
+              border: "none",
+              boxShadow: "0 2px 8px rgba(99, 102, 241, 0.35)",
+              padding: "0.5rem 0.85rem",
+              borderRadius: "0.375rem",
+              cursor: "pointer",
+            }}
+            title="انتقال فرم بین دو حساب کاربری در سیستم"
+          >
+            <ArrowRightLeft size={15} />
+            انتقال فرم بین اکانت‌ها
+          </button>
+          {selectedTable && (
+            <div className="sa-actions">
+              <button className="sa-btn sa-btn-primary" onClick={() => openEdit(selectedTable)}>
+                + Create
               </button>
-            )}
-          </div>
-        )}
+              <button className="sa-btn sa-btn-secondary" onClick={() => exportTable(selectedTable)}>
+                Export
+              </button>
+              {selectedTable === "responses" && (
+                <button className="sa-btn sa-btn-danger" onClick={() => purgeResponses()}>
+                  Purge All
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ═══════════ Dashboard ═══════════ */}
@@ -2972,6 +3129,20 @@ export default function SuperAdmin() {
                             >
                               Edit
                             </button>
+                            {selectedTable === "forms" && (
+                              <button
+                                className="sa-btn sa-btn-ghost sa-btn-sm"
+                                style={{ color: "var(--sa-purple)", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openTransferModal(r);
+                                }}
+                                title="انتقال این فرم به اکانت دیگر"
+                              >
+                                <ArrowRightLeft size={12} />
+                                انتقال
+                              </button>
+                            )}
                             <button
                               className="sa-btn sa-btn-ghost sa-btn-sm"
                               style={{ color: "var(--sa-danger)" }}
@@ -6053,6 +6224,535 @@ export default function SuperAdmin() {
             </div>
           </form>
         )}
+      </Modal>
+
+      {/* ═══════════ Transfer Form Ownership Modal (3 Fields) ═══════════ */}
+      <Modal
+        open={transferModalOpen}
+        onClose={() => {
+          if (!transferSubmitting) {
+            setTransferModalOpen(false);
+            setTransferSuccessInfo(null);
+          }
+        }}
+        title="انتقال فرم به حساب دیگر (Transfer Form Ownership)"
+      >
+        <div dir="rtl" style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: "1.25rem", minWidth: "320px", maxWidth: "620px" }}>
+          {/* Header Info */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.75rem",
+              padding: "0.75rem 1rem",
+              backgroundColor: "rgba(99, 102, 241, 0.08)",
+              border: "1px solid rgba(99, 102, 241, 0.25)",
+              borderRadius: "0.6rem",
+            }}
+          >
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#fff",
+                flexShrink: 0,
+              }}
+            >
+              <ArrowRightLeft size={20} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "var(--sa-text-0)" }}>
+                انتقال کامل فرم بین کاربران
+              </div>
+              <div style={{ fontSize: "0.8rem", color: "var(--sa-text-1)", marginTop: "0.15rem" }}>
+                سه فیلد زیر را تکمیل کنید: از فلان اکانت، فلان فرم انتخاب و به فلان اکانت منتقل می‌شود.
+              </div>
+            </div>
+          </div>
+
+          {/* Success State Screen */}
+          {transferSuccessInfo ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", padding: "1rem 0" }}>
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "1.5rem",
+                  backgroundColor: "rgba(16, 185, 129, 0.08)",
+                  border: "1.5px solid rgba(16, 185, 129, 0.3)",
+                  borderRadius: "0.75rem",
+                }}
+              >
+                <div
+                  style={{
+                    width: 52,
+                    height: 52,
+                    margin: "0 auto 0.75rem",
+                    borderRadius: "50%",
+                    backgroundColor: "#10b981",
+                    color: "#fff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 4px 12px rgba(16, 185, 129, 0.35)",
+                  }}
+                >
+                  <Check size={28} />
+                </div>
+                <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#10b981", margin: 0 }}>
+                  فرم با موفقیت منتقل شد!
+                </h3>
+                <p style={{ fontSize: "0.875rem", color: "var(--sa-text-1)", marginTop: "0.35rem" }}>
+                  مالکیت و کلیه دسترسی‌های این فرم اکنون به نام کاربر مقصد ثبت شد.
+                </p>
+
+                <div
+                  style={{
+                    backgroundColor: "var(--sa-surface-1)",
+                    border: "1px solid var(--sa-surface-3)",
+                    borderRadius: "0.5rem",
+                    padding: "0.85rem 1rem",
+                    marginTop: "1rem",
+                    fontSize: "0.85rem",
+                    textAlign: "right",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.45rem",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "var(--sa-text-2)" }}>عنوان فرم:</span>
+                    <span style={{ fontWeight: 700 }}>{transferSuccessInfo.form?.title || "—"}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "var(--sa-text-2)" }}>لینک عمومی:</span>
+                    <span style={{ fontFamily: "monospace", direction: "ltr", color: "var(--sa-link)" }}>
+                      /f/{transferSuccessInfo.form?.slug}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "var(--sa-text-2)" }}>حساب مبدأ:</span>
+                    <span>{transferSuccessInfo.previous_user?.full_name || transferSuccessInfo.previous_user?.email || "—"}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "var(--sa-text-2)" }}>مالک جدید (حساب مقصد):</span>
+                    <span style={{ fontWeight: 700, color: "#10b981" }}>
+                      {transferSuccessInfo.target_user?.full_name || transferSuccessInfo.target_user?.email || "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+                <button
+                  type="button"
+                  className="sa-btn sa-btn-secondary"
+                  onClick={() => {
+                    setTransferSuccessInfo(null);
+                    setTransferFormId("");
+                    if (transferFromUserId) {
+                      loadFormsForFromUser(transferFromUserId);
+                    }
+                  }}
+                >
+                  انتقال یک فرم دیگر
+                </button>
+                <button
+                  type="button"
+                  className="sa-btn sa-btn-primary"
+                  onClick={() => {
+                    setTransferModalOpen(false);
+                    setTransferSuccessInfo(null);
+                  }}
+                >
+                  بستن
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Filter / Search for user lists */}
+              <div>
+                <input
+                  type="text"
+                  value={transferSearchQuery}
+                  onChange={(e) => setTransferSearchQuery(e.target.value)}
+                  placeholder="جستجوی سریع در نام، ایمیل یا شماره کاربران..."
+                  style={{
+                    width: "100%",
+                    padding: "0.45rem 0.75rem",
+                    fontSize: "0.82rem",
+                    borderRadius: "0.4rem",
+                    border: "1px solid var(--sa-field-border)",
+                    backgroundColor: "var(--sa-surface-1)",
+                    color: "var(--sa-text-0)",
+                    outline: "none",
+                  }}
+                />
+              </div>
+
+              {/* فیلد ۱: از اکانت (حساب مبدأ) */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  <span
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
+                      backgroundColor: "#6366f1",
+                      color: "#fff",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "0.75rem",
+                      fontWeight: 800,
+                    }}
+                  >
+                    ۱
+                  </span>
+                  از اکانت (حساب کاربری مبدأ):
+                </label>
+                <select
+                  value={transferFromUserId}
+                  onChange={(e) => {
+                    const uid = e.target.value;
+                    setTransferFromUserId(uid);
+                    setTransferFormId("");
+                    loadFormsForFromUser(uid);
+                  }}
+                  disabled={transferSubmitting || transferUsersLoading}
+                  style={{
+                    width: "100%",
+                    padding: "0.55rem 0.75rem",
+                    fontSize: "0.85rem",
+                    borderRadius: "0.45rem",
+                    border: "1.5px solid var(--sa-field-border)",
+                    backgroundColor: "var(--sa-surface)",
+                    color: "var(--sa-text-0)",
+                    outline: "none",
+                  }}
+                >
+                  <option value="">-- انتخاب حساب کاربری مبدأ --</option>
+                  {allTransferUsers
+                    .filter((u) => {
+                      if (!transferSearchQuery) return true;
+                      const q = transferSearchQuery.toLowerCase();
+                      return (
+                        u.full_name?.toLowerCase().includes(q) ||
+                        u.email?.toLowerCase().includes(q) ||
+                        u.phone?.includes(q)
+                      );
+                    })
+                    .map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.full_name || "بدون نام"} ({u.email || u.phone || "بدون تماس"}) {u.is_owner ? "👑 مالک" : `[${u.plan || "رایگان"}]`}
+                      </option>
+                    ))}
+                </select>
+                {transferFromUserId && (
+                  <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.15rem" }}>
+                    حساب مبدأ انتخاب شد. فرم‌های این کاربر در فیلد دوم نمایش داده می‌شوند.
+                  </div>
+                )}
+              </div>
+
+              {/* فیلد ۲: فلان فرم (انتخاب فرم) */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  <span
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
+                      backgroundColor: "#8b5cf6",
+                      color: "#fff",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "0.75rem",
+                      fontWeight: 800,
+                    }}
+                  >
+                    ۲
+                  </span>
+                  فلان فرم (انتخاب فرم جهت انتقال):
+                </label>
+
+                {!transferFromUserId ? (
+                  <div
+                    style={{
+                      padding: "0.6rem 0.85rem",
+                      backgroundColor: "var(--sa-surface-1)",
+                      border: "1px dashed var(--sa-surface-3)",
+                      borderRadius: "0.45rem",
+                      fontSize: "0.82rem",
+                      color: "var(--sa-text-2)",
+                    }}
+                  >
+                    لطفاً ابتدا حساب کاربری مبدأ را در فیلد ۱ انتخاب نمایید.
+                  </div>
+                ) : userFormsLoading ? (
+                  <div
+                    style={{
+                      padding: "0.6rem 0.85rem",
+                      backgroundColor: "var(--sa-surface-1)",
+                      borderRadius: "0.45rem",
+                      fontSize: "0.82rem",
+                      color: "var(--sa-link)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                    }}
+                  >
+                    <RefreshCw size={14} className="animate-spin" />
+                    در حال بارگذاری فرم‌های کاربر مبدأ...
+                  </div>
+                ) : userFormsList.length === 0 ? (
+                  <div
+                    style={{
+                      padding: "0.6rem 0.85rem",
+                      backgroundColor: "rgba(239, 68, 68, 0.06)",
+                      border: "1px solid rgba(239, 68, 68, 0.2)",
+                      borderRadius: "0.45rem",
+                      fontSize: "0.82rem",
+                      color: "var(--sa-danger)",
+                    }}
+                  >
+                    این حساب کاربری هیچ فرمی ندارد یا تمامی فرم‌های آن حذف شده‌اند.
+                  </div>
+                ) : (
+                  <select
+                    value={transferFormId}
+                    onChange={(e) => setTransferFormId(e.target.value)}
+                    disabled={transferSubmitting}
+                    style={{
+                      width: "100%",
+                      padding: "0.55rem 0.75rem",
+                      fontSize: "0.85rem",
+                      borderRadius: "0.45rem",
+                      border: "1.5px solid var(--sa-field-border)",
+                      backgroundColor: "var(--sa-surface)",
+                      color: "var(--sa-text-0)",
+                      outline: "none",
+                    }}
+                  >
+                    <option value="">-- انتخاب فرم مورد نظر ({userFormsList.length} فرم موجود) --</option>
+                    {userFormsList.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {f.title || "فرم بدون عنوان"} (اسلاگ: {f.slug} — {f.response_count} پاسخ — {f.published ? "فعال" : "پیش‌نویس"})
+                      </option>
+                    ))}
+                  </select>
+                )}
+
+                {/* پیش‌نمایش جزئیات فرم انتخاب‌شده */}
+                {(() => {
+                  const selForm = userFormsList.find((f) => f.id === transferFormId);
+                  if (!selForm) return null;
+                  return (
+                    <div
+                      style={{
+                        backgroundColor: "var(--sa-surface-1)",
+                        border: "1px solid var(--sa-surface-3)",
+                        borderRadius: "0.5rem",
+                        padding: "0.75rem 0.9rem",
+                        marginTop: "0.25rem",
+                        fontSize: "0.82rem",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "0.35rem",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontWeight: 700, color: "var(--sa-text-0)" }}>{selForm.title}</span>
+                        <span
+                          className={`sa-tag ${selForm.published ? "sa-tag-green" : "sa-tag-gray"}`}
+                          style={{ fontSize: "0.7rem" }}
+                        >
+                          {selForm.published ? "فعال و آنلاین" : "پیش‌نویس"}
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", color: "var(--sa-text-2)", fontSize: "0.78rem" }}>
+                        <span>اسلاگ عمومی:</span>
+                        <a
+                          href={`/f/${selForm.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ fontFamily: "monospace", direction: "ltr", color: "var(--sa-link)", textDecoration: "none" }}
+                        >
+                          /f/{selForm.slug} ↗
+                        </a>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", color: "var(--sa-text-2)", fontSize: "0.78rem" }}>
+                        <span>پاسخ‌های ثبت‌شده:</span>
+                        <span style={{ fontWeight: 700, color: "var(--sa-text-0)" }}>{selForm.response_count} پاسخ</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* فیلد ۳: به اکانت (حساب مقصد) */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  <span
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
+                      backgroundColor: "#10b981",
+                      color: "#fff",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "0.75rem",
+                      fontWeight: 800,
+                    }}
+                  >
+                    ۳
+                  </span>
+                  به اکانت (حساب کاربری مقصد / مالک جدید):
+                </label>
+                <select
+                  value={transferToUserId}
+                  onChange={(e) => setTransferToUserId(e.target.value)}
+                  disabled={transferSubmitting || transferUsersLoading}
+                  style={{
+                    width: "100%",
+                    padding: "0.55rem 0.75rem",
+                    fontSize: "0.85rem",
+                    borderRadius: "0.45rem",
+                    border: "1.5px solid var(--sa-field-border)",
+                    backgroundColor: "var(--sa-surface)",
+                    color: "var(--sa-text-0)",
+                    outline: "none",
+                  }}
+                >
+                  <option value="">-- انتخاب حساب کاربری مقصد --</option>
+                  {allTransferUsers
+                    .filter((u) => u.id !== transferFromUserId)
+                    .filter((u) => {
+                      if (!transferSearchQuery) return true;
+                      const q = transferSearchQuery.toLowerCase();
+                      return (
+                        u.full_name?.toLowerCase().includes(q) ||
+                        u.email?.toLowerCase().includes(q) ||
+                        u.phone?.includes(q)
+                      );
+                    })
+                    .map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.full_name || "بدون نام"} ({u.email || u.phone || "بدون تماس"}) {u.is_owner ? "👑 مالک" : `[${u.plan || "رایگان"}]`}
+                      </option>
+                    ))}
+                </select>
+
+                {/* پیش‌نمایش جزئیات کاربر مقصد */}
+                {(() => {
+                  const targetUser = allTransferUsers.find((u) => u.id === transferToUserId);
+                  if (!targetUser) return null;
+                  return (
+                    <div
+                      style={{
+                        backgroundColor: "rgba(16, 185, 129, 0.06)",
+                        border: "1px solid rgba(16, 185, 129, 0.2)",
+                        borderRadius: "0.5rem",
+                        padding: "0.75rem 0.9rem",
+                        marginTop: "0.25rem",
+                        fontSize: "0.82rem",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 700, color: "#10b981" }}>
+                          {targetUser.full_name || "بدون نام"}
+                        </div>
+                        <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", direction: "ltr", textAlign: "right" }}>
+                          {targetUser.email || targetUser.phone}
+                        </div>
+                      </div>
+                      <span className="sa-tag sa-tag-green" style={{ fontSize: "0.7rem" }}>
+                        پلن: {targetUser.plan || "free"}
+                      </span>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* تضمین امنیتی و راهنمای انتقال بدون باگ */}
+              <div
+                style={{
+                  backgroundColor: "var(--sa-surface-1)",
+                  borderRight: "3px solid #6366f1",
+                  borderRadius: "0.4rem",
+                  padding: "0.7rem 0.85rem",
+                  fontSize: "0.78rem",
+                  color: "var(--sa-text-1)",
+                  lineHeight: 1.6,
+                }}
+              >
+                <div style={{ fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.2rem" }}>
+                  اطلاعات پس از انتقال:
+                </div>
+                <div>• تمامی مشخصات و فیلدهای مالکیت فرم (manager_id و created_by) به نام کاربر مقصد تغییر می‌یابد.</div>
+                <div>• دسترسی فرم‌ساز، ویرایش سوالات، استخراج اکسل و مشاهده پاسخ‌ها به پنل کاربر مقصد منتقل می‌شود.</div>
+                <div>• لینک عمومی فرم و پاسخ‌های ثبت‌شده از قبل هیچ‌گونه تغییری نخواهند کرد.</div>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: "flex", gap: "0.6rem", justifyContent: "flex-end", marginTop: "0.5rem" }}>
+                <button
+                  type="button"
+                  className="sa-btn sa-btn-secondary"
+                  disabled={transferSubmitting}
+                  onClick={() => setTransferModalOpen(false)}
+                >
+                  انصراف
+                </button>
+                <button
+                  type="button"
+                  className="sa-btn"
+                  disabled={
+                    !transferFromUserId ||
+                    !transferFormId ||
+                    !transferToUserId ||
+                    transferSubmitting
+                  }
+                  onClick={handleExecuteTransfer}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.4rem",
+                    background:
+                      !transferFromUserId || !transferFormId || !transferToUserId || transferSubmitting
+                        ? "var(--sa-surface-3)"
+                        : "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+                    color: "#fff",
+                    fontWeight: 700,
+                    fontSize: "0.85rem",
+                    border: "none",
+                    cursor:
+                      !transferFromUserId || !transferFormId || !transferToUserId || transferSubmitting
+                        ? "not-allowed"
+                        : "pointer",
+                    padding: "0.55rem 1.1rem",
+                    borderRadius: "0.375rem",
+                    boxShadow: "0 2px 8px rgba(99, 102, 241, 0.35)",
+                  }}
+                >
+                  <ArrowRightLeft size={16} />
+                  {transferSubmitting ? "در حال انتقال فرم..." : "تایید و انتقال قطعی فرم"}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </Modal>
     </div>
   );

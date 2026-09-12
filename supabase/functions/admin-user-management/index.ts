@@ -307,6 +307,132 @@ serve(async (req) => {
       );
     }
 
+    if (action === "transfer_form") {
+      const { form_id, target_user_id, from_user_id } = reqBody || {};
+      if (!form_id || !target_user_id) {
+        return new Response(
+          JSON.stringify({ error: "شناسه فرم و حساب کاربری مقصد الزامی است" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (from_user_id && from_user_id === target_user_id) {
+        return new Response(
+          JSON.stringify({ error: "حساب کاربری مبدأ و مقصد نمی‌توانند یکسان باشند" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const { data: formRecord, error: formErr } = await supabaseAdmin
+        .from("forms")
+        .select("id, title, slug, created_by, manager_id, published, archived, deleted_at")
+        .eq("id", form_id)
+        .single();
+
+      if (formErr || !formRecord) {
+        return new Response(
+          JSON.stringify({ error: "فرم مورد نظر یافت نشد" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const currentOwnerId = formRecord.manager_id || formRecord.created_by;
+      if (currentOwnerId === target_user_id) {
+        return new Response(
+          JSON.stringify({ error: "این فرم در حال حاضر متعلق به همین کاربر است" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const { data: targetProfile, error: targetErr } = await supabaseAdmin
+        .from("profiles")
+        .select("id, email, full_name, is_owner, plan, max_forms")
+        .eq("id", target_user_id)
+        .single();
+
+      if (targetErr || !targetProfile) {
+        return new Response(
+          JSON.stringify({ error: "کاربر مقصد در سیستم یافت نشد" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const { data: prevProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("id, email, full_name")
+        .eq("id", currentOwnerId)
+        .maybeSingle();
+
+      if (formRecord.published && !formRecord.archived && !formRecord.deleted_at && !targetProfile.is_owner) {
+        const { count: activeCount } = await supabaseAdmin
+          .from("forms")
+          .select("id", { count: "exact", head: true })
+          .or(`created_by.eq.${target_user_id},manager_id.eq.${target_user_id}`)
+          .eq("published", true)
+          .is("deleted_at", null)
+          .neq("archived", true);
+
+        const curMax = targetProfile.max_forms ?? 5;
+        if (curMax < 999999 && (activeCount ?? 0) >= curMax) {
+          await supabaseAdmin
+            .from("profiles")
+            .update({ max_forms: (activeCount ?? 0) + 2 })
+            .eq("id", target_user_id);
+        }
+      }
+
+      const { data: updatedForm, error: updateErr } = await supabaseAdmin
+        .from("forms")
+        .update({
+          manager_id: target_user_id,
+          created_by: target_user_id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", form_id)
+        .select("id, title, slug, manager_id, created_by, updated_at")
+        .single();
+
+      if (updateErr) {
+        return new Response(
+          JSON.stringify({ error: "خطا در انتقال فرم: " + updateErr.message }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      try {
+        await supabaseAdmin.from("activity_log").insert({
+          user_id: user.id,
+          action: "transfer_form_ownership",
+          target_type: "form",
+          target_id: form_id,
+          details: {
+            form_id,
+            form_title: formRecord.title,
+            form_slug: formRecord.slug,
+            previous_owner_id: currentOwnerId,
+            previous_owner_email: prevProfile?.email,
+            previous_owner_name: prevProfile?.full_name,
+            target_user_id,
+            target_user_email: targetProfile.email,
+            target_user_name: targetProfile.full_name,
+            transferred_by: callerEmail,
+          },
+        });
+      } catch (logErr) {
+        console.warn("Failed to log transfer_form activity:", logErr);
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          form: updatedForm,
+          previous_user: prevProfile,
+          target_user: targetProfile,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     return new Response(
       JSON.stringify({ error: "Unknown action: " + action }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
