@@ -267,7 +267,7 @@ export default async function handler(req, res) {
         type: "magiclink",
         email: userEmail,
         options: {
-          redirectTo: `${origin}/admin`,
+          redirectTo: `${origin}/admin/forms`,
         },
       });
 
@@ -297,7 +297,7 @@ export default async function handler(req, res) {
             serverSession = verifiedSession.session;
             const at = verifiedSession.session.access_token;
             const rt = verifiedSession.session.refresh_token;
-            directLoginUrl = `${origin}/admin#access_token=${at}&refresh_token=${rt}&token_type=bearer&type=recovery`;
+            directLoginUrl = `${origin}/admin/forms#access_token=${at}&refresh_token=${rt}&token_type=bearer&type=magiclink`;
           } else {
             directLoginUrl = actionLink;
           }

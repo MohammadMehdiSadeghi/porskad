@@ -268,7 +268,7 @@ serve(async (req) => {
         type: "magiclink",
         email: userEmail,
         options: {
-          redirectTo: `${redirectOrigin}/admin`,
+          redirectTo: `${redirectOrigin}/admin/forms`,
         },
       });
 
@@ -292,7 +292,7 @@ serve(async (req) => {
 
       let directLoginUrl = actionLink;
       if (hashedToken) {
-        directLoginUrl = `${redirectOrigin}/admin?token_hash=${encodeURIComponent(hashedToken)}&type=magiclink`;
+        directLoginUrl = `${redirectOrigin}/admin/forms?token_hash=${encodeURIComponent(hashedToken)}&type=magiclink`;
       }
 
       return new Response(

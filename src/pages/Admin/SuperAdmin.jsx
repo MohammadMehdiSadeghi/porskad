@@ -102,6 +102,7 @@ const TABS = [
   { id: "settings", label: "Settings", icon: Settings },
   { id: "question_types", label: "Form Questions", icon: ListOrdered },
   { id: "user_tabs", label: "User Tabs Control", icon: LayoutDashboard },
+  { id: "transfer", label: "Form Transfer", icon: ArrowRightLeft },
   { id: "storage", label: "Storage", icon: HardDrive },
   { id: "database", label: "Database", icon: Database },
   { id: "users", label: "Users", icon: Users },
@@ -113,7 +114,7 @@ const TABS = [
 ];
 
 const HC = ["#6366f1", "#10b981", "#f59e0b", "#ec4899", "#3b82f6", "#14b8a6"];
-const PLAN_FA = { free: "رایگان", pro: "حرفه‌ای", enterprise: "سازمانی" };
+const PLAN_EN = { free: "Free", pro: "Pro", enterprise: "Enterprise", unlimited: "Unlimited" };
 
 
 // ══════════════════════════════════════════════════════════════
@@ -249,17 +250,17 @@ export default function SuperAdmin() {
       tally(forms14?.data, "forms");
       tally(logins14?.data, "logins");
       tally(failed14?.data, "failed");
-      const labels = ["۱۳ روز", "۱۲", "۱۱", "۱۰", "۹", "۸", "۷", "۶", "۵", "۴", "۳", "۲", "دیروز", "امروز"];
+      const labels = ["13d ago", "12d", "11d", "10d", "9d", "8d", "7d", "6d", "5d", "4d", "3d", "2d", "Yesterday", "Today"];
       const series = buckets.map((b, i) => ({ ...b, label: labels[i] }));
 
-      // ─── توزیع پلن‌ها ───
+      // ─── Plan Distribution ───
       const planCounts = {};
       for (const r of planRows?.data || []) {
         const p = r.plan || "free";
         planCounts[p] = (planCounts[p] || 0) + 1;
       }
       const planDist = Object.entries(planCounts)
-        .map(([plan, count]) => ({ plan, name: PLAN_FA[plan] || plan, count }))
+        .map(([plan, count]) => ({ plan, name: PLAN_EN[plan] || plan, count }))
         .sort((a, b) => b.count - a.count);
 
       // ─── رشد خالص (تفاضل ۷ روز اول/دوم) ───
@@ -326,59 +327,59 @@ export default function SuperAdmin() {
   }
 
   async function restoreTrashItem(item) {
-    if (!confirm("این مورد بازیابی شود؟")) return;
+    if (!confirm("Restore this item?")) return;
     const { data, error } = await supabase.rpc("restore_from_trash", {
       p_trash_id: item.id,
     });
     if (error) {
-      alert("خطا در بازیابی: " + error.message);
+      alert("Error restoring item: " + error.message);
       return;
     }
     if (data === "conflict") {
-      alert("این مورد قبلاً در همان جایگاه وجود دارد (تعارض شناسه).");
+      alert("This item already exists in the same location (ID conflict).");
       return;
     }
     if (data !== "restored") {
-      alert("بازیابی نشد: " + data);
+      alert("Could not restore item: " + data);
       return;
     }
     loadTrash();
   }
 
   async function restoreForm(formId) {
-    if (!confirm("این فرم بازگردانی شود؟")) return;
+    if (!confirm("Restore this form?")) return;
     const { error } = await supabase
       .from("forms")
       .update({ deleted_at: null })
       .eq("id", formId);
     if (error) {
-      alert("خطا: " + error.message);
+      alert("Error: " + error.message);
       return;
     }
     loadTrash();
   }
 
   async function restoreUser(userId) {
-    if (!confirm("این کاربر فعال/بازگردانی شود؟")) return;
+    if (!confirm("Re-activate and restore this user?")) return;
     const { error } = await supabase
       .from("profiles")
       .update({ is_active: true })
       .eq("id", userId);
     if (error) {
-      alert("خطا: " + error.message);
+      alert("Error: " + error.message);
       return;
     }
     loadTrash();
   }
 
   async function purgeExpiredTrash() {
-    if (!confirm("مواد منقضی‌شده (بیش از ۳۰ روز) برای همیشه پاک شوند؟")) return;
+    if (!confirm("Permanently purge expired items older than 30 days?")) return;
     const { data, error } = await supabase.rpc("purge_expired_trash");
     if (error) {
-      alert("خطا: " + error.message);
+      alert("Error: " + error.message);
       return;
     }
-    alert((data || 0) + " مورد برای همیشه پاک شد.");
+    alert((data || 0) + " items permanently purged.");
     loadTrash();
   }
 
@@ -1282,14 +1283,14 @@ export default function SuperAdmin() {
       }
     }
 
-    throw new Error("سرویس مدیریت کاربران در دسترس نیست. لطفاً متغیرهای محیطی یا سرورلس را بررسی کنید.");
+    throw new Error("User management service is unavailable. Please check environment variables or serverless function.");
   }
 
   // ─── Impersonate User ───
   async function doImpersonate(targetUserId) {
     try {
       setImpersonateLoading(true);
-      showToast("در حال آماده‌سازی نشست ورود به اکانت کاربر...");
+      showToast("Preparing direct login session for user...");
       const res = await adminAction("impersonate", { target_user_id: targetUserId });
       if (res?.redirect_url || res?.magic_link) {
         const url = res.redirect_url || res.magic_link;
@@ -1299,14 +1300,14 @@ export default function SuperAdmin() {
           fullName: impersonateModal?.full_name,
           session: res.session || null,
         });
-        showToast("لینک ورود مستقیم تولید شد", "success");
+        showToast("Direct login link generated successfully", "success");
       } else if (res?.user) {
-        showToast(`اطلاعات کاربر ${res.user.full_name || res.user.email} واکشی شد اما لینک ورود مستقیم در دسترس نیست`, "error");
+        showToast(`User ${res.user.full_name || res.user.email} found, but direct login link is unavailable`, "error");
       } else {
-        showToast("خطا: لینک ورود تولید نشد", "error");
+        showToast("Error: Failed to generate login link", "error");
       }
     } catch (err) {
-      showToast("خطا در ورود به اکانت کاربر: " + err.message, "error");
+      showToast("Error logging into user account: " + err.message, "error");
     } finally {
       setImpersonateLoading(false);
     }
@@ -1316,22 +1317,44 @@ export default function SuperAdmin() {
   async function handleInstantSwitchToUser() {
     if (!impersonateResult?.session?.access_token) return;
     try {
-      showToast("در حال ورود به اکانت کاربر در همین مرورگر...", "info");
+      showToast("Switching to user account in this browser...", "info");
       const { error } = await supabase.auth.setSession({
         access_token: impersonateResult.session.access_token,
         refresh_token: impersonateResult.session.refresh_token || "",
       });
       if (error) throw error;
-      showToast("با موفقیت وارد حساب کاربر شدید!", "success");
+      showToast("Successfully switched to user account!", "success");
       setTimeout(() => {
         window.location.href = "/admin/forms";
       }, 300);
     } catch (err) {
-      showToast("خطا در سوئیچ نشست: " + err.message, "error");
+      showToast("Session switch error: " + err.message, "error");
     }
   }
 
   // ─── Form Transfer Ownership ───
+  const [recentTransfers, setRecentTransfers] = useState([]);
+  const [recentTransfersLoading, setRecentTransfersLoading] = useState(false);
+
+  async function loadRecentTransfers() {
+    setRecentTransfersLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("activity_log")
+        .select("*")
+        .eq("action", "transfer_form_ownership")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (!error && data) {
+        setRecentTransfers(data);
+      }
+    } catch (err) {
+      console.error("Failed to load recent transfers:", err);
+    } finally {
+      setRecentTransfersLoading(false);
+    }
+  }
+
   async function loadTransferUsers() {
     setTransferUsersLoading(true);
     try {
@@ -1343,7 +1366,6 @@ export default function SuperAdmin() {
       setAllTransferUsers(data || []);
     } catch (err) {
       console.error("Failed to load transfer users:", err);
-      // Fallback: merge admins and users
       setAllTransferUsers([...admins, ...users]);
     } finally {
       setTransferUsersLoading(false);
@@ -1376,7 +1398,7 @@ export default function SuperAdmin() {
       setUserFormsList(list);
     } catch (err) {
       console.error("Failed to load user forms:", err);
-      showToast("خطا در بارگذاری فرم‌های کاربر: " + err.message, "error");
+      showToast("Error loading user forms: " + err.message, "error");
     } finally {
       setUserFormsLoading(false);
     }
@@ -1405,19 +1427,19 @@ export default function SuperAdmin() {
 
   async function handleExecuteTransfer() {
     if (!transferFromUserId) {
-      showToast("لطفاً حساب کاربری مبدأ (فیلد ۱) را انتخاب کنید", "error");
+      showToast("Please select the source account (Field 1)", "error");
       return;
     }
     if (!transferFormId) {
-      showToast("لطفاً فرم مورد نظر برای انتقال (فیلد ۲) را انتخاب کنید", "error");
+      showToast("Please select the form to transfer (Field 2)", "error");
       return;
     }
     if (!transferToUserId) {
-      showToast("لطفاً حساب کاربری مقصد (فیلد ۳) را انتخاب کنید", "error");
+      showToast("Please select the destination account (Field 3)", "error");
       return;
     }
     if (transferFromUserId === transferToUserId) {
-      showToast("حساب کاربری مبدأ و مقصد نمی‌توانند یکسان باشند", "error");
+      showToast("Source and destination accounts cannot be the same", "error");
       return;
     }
 
@@ -1430,19 +1452,19 @@ export default function SuperAdmin() {
       });
 
       if (res?.success) {
-        showToast("فرم با موفقیت به حساب مقصد منتقل شد و تمام مشخصات به نام کاربر جدید ثبت گردید!", "success");
+        showToast("Form transferred successfully! Ownership updated to new account.", "success");
         setTransferSuccessInfo(res);
         if (selectedTable === "forms") {
           browseTable("forms");
         }
         loadDbStats();
-        // همچنین فرم‌های کاربر مبدأ را دوباره بارگذاری می‌کنیم تا فرم منتقل‌شده دیگر نشان داده نشود
         loadFormsForFromUser(transferFromUserId);
+        loadRecentTransfers();
       } else {
-        throw new Error(res?.error || "خطا در انتقال فرم");
+        throw new Error(res?.error || "Failed to transfer form");
       }
     } catch (err) {
-      showToast("خطا در انتقال فرم: " + err.message, "error");
+      showToast("Error transferring form: " + err.message, "error");
     } finally {
       setTransferSubmitting(false);
     }
@@ -1706,6 +1728,10 @@ export default function SuperAdmin() {
               }
               if (t.id === "health") loadHealth();
               if (t.id === "trash") loadTrash();
+              if (t.id === "transfer") {
+                loadTransferUsers();
+                loadRecentTransfers();
+              }
             }}
             className={`sa-tab ${tab === t.id ? "active" : ""}`}
           >
@@ -2814,6 +2840,597 @@ export default function SuperAdmin() {
 
       {/* ═══════════ Storage & System ═══════════ */}
       {tab === "user_tabs" && <UserTabsPanel />}
+
+      {/* ═══════════ Form Ownership Transfer Tab ═══════════ */}
+      {tab === "transfer" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }} dir="ltr">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}>
+            <div>
+              <div className="sa-section-title" style={{ margin: 0, fontSize: "1.15rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <ArrowRightLeft size={20} color="#6366f1" />
+                Form Ownership Transfer
+              </div>
+              <p style={{ margin: "0.2rem 0 0", fontSize: "0.82rem", color: "var(--sa-text-1)" }}>
+                Transfer any form between accounts with zero downtime, preserved public URLs, and automatic quota adjustments.
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button
+                type="button"
+                className="sa-btn sa-btn-secondary"
+                onClick={() => {
+                  loadTransferUsers();
+                  loadRecentTransfers();
+                  if (transferFromUserId) loadFormsForFromUser(transferFromUserId);
+                }}
+                disabled={transferUsersLoading || recentTransfersLoading}
+              >
+                <RefreshCw size={14} className={transferUsersLoading || recentTransfersLoading ? "animate-spin" : ""} />
+                Refresh Data
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))", gap: "1.25rem", alignItems: "start" }}>
+            {/* Transfer Control Engine Card */}
+            <div className="sa-card" style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+              <div className="sa-card-header" style={{ paddingBottom: "0.5rem", borderBottom: "1px solid var(--sa-border)" }}>
+                <span className="sa-section-title" style={{ margin: 0, fontSize: "0.95rem" }}>
+                  Ownership Transfer Engine
+                </span>
+                <span className="sa-tag sa-tag-purple" style={{ fontSize: "0.72rem" }}>
+                  3 Required Fields
+                </span>
+              </div>
+
+              {transferSuccessInfo ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "1rem", padding: "1rem 0" }}>
+                  <div
+                    style={{
+                      textAlign: "center",
+                      padding: "1.5rem",
+                      backgroundColor: "rgba(16, 185, 129, 0.08)",
+                      border: "1.5px solid rgba(16, 185, 129, 0.3)",
+                      borderRadius: "0.75rem",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 52,
+                        height: 52,
+                        margin: "0 auto 0.75rem",
+                        borderRadius: "50%",
+                        backgroundColor: "#10b981",
+                        color: "#fff",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow: "0 4px 12px rgba(16, 185, 129, 0.35)",
+                      }}
+                    >
+                      <Check size={28} />
+                    </div>
+                    <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#10b981", margin: 0 }}>
+                      Form Transferred Successfully!
+                    </h3>
+                    <p style={{ fontSize: "0.85rem", color: "var(--sa-text-1)", marginTop: "0.35rem" }}>
+                      Ownership and all managerial permissions have been securely reassigned to the target user.
+                    </p>
+
+                    <div
+                      style={{
+                        backgroundColor: "var(--sa-surface-1)",
+                        border: "1px solid var(--sa-surface-3)",
+                        borderRadius: "0.5rem",
+                        padding: "0.85rem 1rem",
+                        marginTop: "1rem",
+                        fontSize: "0.85rem",
+                        textAlign: "left",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "0.45rem",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ color: "var(--sa-text-2)" }}>Form Title:</span>
+                        <span style={{ fontWeight: 700 }}>{transferSuccessInfo.form?.title || "—"}</span>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ color: "var(--sa-text-2)" }}>Public Slug:</span>
+                        <span style={{ fontFamily: "monospace", color: "var(--sa-link)" }}>
+                          /f/{transferSuccessInfo.form?.slug}
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ color: "var(--sa-text-2)" }}>Previous Owner:</span>
+                        <span>{transferSuccessInfo.previous_user?.full_name || transferSuccessInfo.previous_user?.email || "—"}</span>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ color: "var(--sa-text-2)" }}>New Owner:</span>
+                        <span style={{ fontWeight: 700, color: "#10b981" }}>
+                          {transferSuccessInfo.target_user?.full_name || transferSuccessInfo.target_user?.email || "—"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+                    <button
+                      type="button"
+                      className="sa-btn sa-btn-primary"
+                      onClick={() => {
+                        setTransferSuccessInfo(null);
+                        setTransferFormId("");
+                        if (transferFromUserId) {
+                          loadFormsForFromUser(transferFromUserId);
+                        }
+                      }}
+                    >
+                      Transfer Another Form
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "1.15rem" }}>
+                  {/* Quick User Search Filter */}
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--sa-text-1)", marginBottom: "0.25rem" }}>
+                      Search Users
+                    </label>
+                    <input
+                      type="text"
+                      value={transferSearchQuery}
+                      onChange={(e) => setTransferSearchQuery(e.target.value)}
+                      placeholder="Filter accounts by name, email, or phone number..."
+                      style={{
+                        width: "100%",
+                        padding: "0.45rem 0.75rem",
+                        fontSize: "0.82rem",
+                        borderRadius: "0.4rem",
+                        border: "1px solid var(--sa-field-border)",
+                        backgroundColor: "var(--sa-surface-1)",
+                        color: "var(--sa-text-0)",
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+
+                  {/* FIELD 1: Source Account (From User) */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                    <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                      <span
+                        style={{
+                          width: 22,
+                          height: 22,
+                          borderRadius: "50%",
+                          backgroundColor: "#6366f1",
+                          color: "#fff",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "0.75rem",
+                          fontWeight: 800,
+                        }}
+                      >
+                        1
+                      </span>
+                      From Account (Source User):
+                    </label>
+                    <select
+                      value={transferFromUserId}
+                      onChange={(e) => {
+                        const uid = e.target.value;
+                        setTransferFromUserId(uid);
+                        setTransferFormId("");
+                        loadFormsForFromUser(uid);
+                      }}
+                      disabled={transferSubmitting || transferUsersLoading}
+                      style={{
+                        width: "100%",
+                        padding: "0.55rem 0.75rem",
+                        fontSize: "0.85rem",
+                        borderRadius: "0.45rem",
+                        border: "1.5px solid var(--sa-field-border)",
+                        backgroundColor: "var(--sa-surface)",
+                        color: "var(--sa-text-0)",
+                        outline: "none",
+                      }}
+                    >
+                      <option value="">-- Select Source User Account --</option>
+                      {allTransferUsers
+                        .filter((u) => {
+                          if (u.id === transferFromUserId) return true;
+                          if (!transferSearchQuery) return true;
+                          const q = transferSearchQuery.toLowerCase().trim();
+                          return (
+                            u.full_name?.toLowerCase().includes(q) ||
+                            u.email?.toLowerCase().includes(q) ||
+                            (u.phone && u.phone.includes(q))
+                          );
+                        })
+                        .map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.full_name || "Unnamed"} ({u.email || u.phone || "No contact"}) {u.is_owner ? "👑 Owner" : `[${u.plan || "Free"}]`}
+                          </option>
+                        ))}
+                    </select>
+                    {transferFromUserId && (
+                      <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.15rem" }}>
+                        Source user selected. Their forms are populated in Step 2 below.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* FIELD 2: Select Form to Transfer */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                    <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                      <span
+                        style={{
+                          width: 22,
+                          height: 22,
+                          borderRadius: "50%",
+                          backgroundColor: "#8b5cf6",
+                          color: "#fff",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "0.75rem",
+                          fontWeight: 800,
+                        }}
+                      >
+                        2
+                      </span>
+                      Form to Transfer:
+                    </label>
+
+                    {!transferFromUserId ? (
+                      <div
+                        style={{
+                          padding: "0.6rem 0.85rem",
+                          backgroundColor: "var(--sa-surface-1)",
+                          border: "1px dashed var(--sa-surface-3)",
+                          borderRadius: "0.45rem",
+                          fontSize: "0.82rem",
+                          color: "var(--sa-text-2)",
+                        }}
+                      >
+                        Please select the source account in Step 1 first.
+                      </div>
+                    ) : userFormsLoading ? (
+                      <div
+                        style={{
+                          padding: "0.6rem 0.85rem",
+                          backgroundColor: "var(--sa-surface-1)",
+                          borderRadius: "0.45rem",
+                          fontSize: "0.82rem",
+                          color: "var(--sa-link)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                        }}
+                      >
+                        <RefreshCw size={14} className="animate-spin" />
+                        Loading user forms...
+                      </div>
+                    ) : userFormsList.length === 0 ? (
+                      <div
+                        style={{
+                          padding: "0.6rem 0.85rem",
+                          backgroundColor: "rgba(239, 68, 68, 0.06)",
+                          border: "1px solid rgba(239, 68, 68, 0.2)",
+                          borderRadius: "0.45rem",
+                          fontSize: "0.82rem",
+                          color: "var(--sa-danger)",
+                        }}
+                      >
+                        This user has no active forms to transfer.
+                      </div>
+                    ) : (
+                      <select
+                        value={transferFormId}
+                        onChange={(e) => setTransferFormId(e.target.value)}
+                        disabled={transferSubmitting}
+                        style={{
+                          width: "100%",
+                          padding: "0.55rem 0.75rem",
+                          fontSize: "0.85rem",
+                          borderRadius: "0.45rem",
+                          border: "1.5px solid var(--sa-field-border)",
+                          backgroundColor: "var(--sa-surface)",
+                          color: "var(--sa-text-0)",
+                          outline: "none",
+                        }}
+                      >
+                        <option value="">-- Select Form to Transfer ({userFormsList.length} forms available) --</option>
+                        {userFormsList.map((f) => (
+                          <option key={f.id} value={f.id}>
+                            {f.title || "Untitled Form"} (/f/{f.slug} — {f.response_count} responses — {f.published ? "Published" : "Draft"})
+                          </option>
+                        ))}
+                      </select>
+                    )}
+
+                    {/* Selected Form Preview */}
+                    {(() => {
+                      const selForm = userFormsList.find((f) => f.id === transferFormId);
+                      if (!selForm) return null;
+                      return (
+                        <div
+                          style={{
+                            backgroundColor: "var(--sa-surface-1)",
+                            border: "1px solid var(--sa-surface-3)",
+                            borderRadius: "0.5rem",
+                            padding: "0.75rem 0.9rem",
+                            marginTop: "0.25rem",
+                            fontSize: "0.82rem",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "0.35rem",
+                          }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ fontWeight: 700, color: "var(--sa-text-0)" }}>{selForm.title}</span>
+                            <span
+                              className={`sa-tag ${selForm.published ? "sa-tag-green" : "sa-tag-gray"}`}
+                              style={{ fontSize: "0.7rem" }}
+                            >
+                              {selForm.published ? "Published & Active" : "Draft"}
+                            </span>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", color: "var(--sa-text-2)", fontSize: "0.78rem" }}>
+                            <span>Public URL:</span>
+                            <a
+                              href={`/f/${selForm.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ fontFamily: "monospace", color: "var(--sa-link)", textDecoration: "none" }}
+                            >
+                              /f/{selForm.slug} ↗
+                            </a>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", color: "var(--sa-text-2)", fontSize: "0.78rem" }}>
+                            <span>Recorded Responses:</span>
+                            <span style={{ fontWeight: 700, color: "var(--sa-text-0)" }}>{selForm.response_count} entries</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* FIELD 3: Target Account (To User) */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                    <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                      <span
+                        style={{
+                          width: 22,
+                          height: 22,
+                          borderRadius: "50%",
+                          backgroundColor: "#10b981",
+                          color: "#fff",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "0.75rem",
+                          fontWeight: 800,
+                        }}
+                      >
+                        3
+                      </span>
+                      To Account (Destination User / New Owner):
+                    </label>
+                    <select
+                      value={transferToUserId}
+                      onChange={(e) => setTransferToUserId(e.target.value)}
+                      disabled={transferSubmitting || transferUsersLoading}
+                      style={{
+                        width: "100%",
+                        padding: "0.55rem 0.75rem",
+                        fontSize: "0.85rem",
+                        borderRadius: "0.45rem",
+                        border: "1.5px solid var(--sa-field-border)",
+                        backgroundColor: "var(--sa-surface)",
+                        color: "var(--sa-text-0)",
+                        outline: "none",
+                      }}
+                    >
+                      <option value="">-- Select Destination User Account --</option>
+                      {allTransferUsers
+                        .filter((u) => u.id !== transferFromUserId)
+                        .filter((u) => {
+                          if (u.id === transferToUserId) return true;
+                          if (!transferSearchQuery) return true;
+                          const q = transferSearchQuery.toLowerCase().trim();
+                          return (
+                            u.full_name?.toLowerCase().includes(q) ||
+                            u.email?.toLowerCase().includes(q) ||
+                            (u.phone && u.phone.includes(q))
+                          );
+                        })
+                        .map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.full_name || "Unnamed"} ({u.email || u.phone || "No contact"}) {u.is_owner ? "👑 Owner" : `[${u.plan || "Free"}]`}
+                          </option>
+                        ))}
+                    </select>
+
+                    {/* Target User Preview */}
+                    {(() => {
+                      const targetUser = allTransferUsers.find((u) => u.id === transferToUserId);
+                      if (!targetUser) return null;
+                      return (
+                        <div
+                          style={{
+                            backgroundColor: "rgba(16, 185, 129, 0.06)",
+                            border: "1px solid rgba(16, 185, 129, 0.2)",
+                            borderRadius: "0.5rem",
+                            padding: "0.75rem 0.9rem",
+                            marginTop: "0.25rem",
+                            fontSize: "0.82rem",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontWeight: 700, color: "#10b981" }}>
+                              {targetUser.full_name || "Unnamed"}
+                            </div>
+                            <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)" }}>
+                              {targetUser.email || targetUser.phone}
+                            </div>
+                          </div>
+                          <span className="sa-tag sa-tag-green" style={{ fontSize: "0.7rem" }}>
+                            Plan: {targetUser.plan || "Free"} · Max forms: {targetUser.max_forms || 5}
+                          </span>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Transfer Guarantees Note */}
+                  <div
+                    style={{
+                      backgroundColor: "var(--sa-surface-1)",
+                      borderLeft: "3px solid #6366f1",
+                      borderRadius: "0.4rem",
+                      padding: "0.75rem 0.9rem",
+                      fontSize: "0.78rem",
+                      color: "var(--sa-text-1)",
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.2rem" }}>
+                      Transfer Guarantees:
+                    </div>
+                    <div>• Full ownership (manager_id and created_by) transferred atomically.</div>
+                    <div>• Target user inherits full builder, editing, Excel export, and responses access.</div>
+                    <div>• Public submission URLs (/f/:slug, embed) and existing responses remain fully intact.</div>
+                    <div>• Previous owner's personal Telegram bot links unlinked for security.</div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.5rem" }}>
+                    <button
+                      type="button"
+                      className="sa-btn"
+                      disabled={
+                        !transferFromUserId ||
+                        !transferFormId ||
+                        !transferToUserId ||
+                        transferSubmitting
+                      }
+                      onClick={handleExecuteTransfer}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "0.4rem",
+                        background:
+                          !transferFromUserId || !transferFormId || !transferToUserId || transferSubmitting
+                            ? "var(--sa-surface-3)"
+                            : "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+                        color: "#fff",
+                        fontWeight: 700,
+                        fontSize: "0.9rem",
+                        border: "none",
+                        cursor:
+                          !transferFromUserId || !transferFormId || !transferToUserId || transferSubmitting
+                            ? "not-allowed"
+                            : "pointer",
+                        padding: "0.65rem 1.4rem",
+                        borderRadius: "0.45rem",
+                        boxShadow: "0 3px 10px rgba(99, 102, 241, 0.4)",
+                      }}
+                    >
+                      <ArrowRightLeft size={16} />
+                      {transferSubmitting ? "Transferring Form..." : "Transfer Ownership Now"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Recent Transfers & Info Sidecard */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+              <div className="sa-card">
+                <div className="sa-card-header" style={{ paddingBottom: "0.5rem", borderBottom: "1px solid var(--sa-border)" }}>
+                  <span className="sa-section-title" style={{ margin: 0, fontSize: "0.95rem" }}>
+                    Recent Ownership Transfers
+                  </span>
+                  <span style={{ fontSize: "0.75rem", color: "var(--sa-text-2)" }}>
+                    {recentTransfers.length} logged
+                  </span>
+                </div>
+
+                {recentTransfersLoading ? (
+                  <div style={{ padding: "1.5rem", textAlign: "center", color: "var(--sa-text-2)" }}>
+                    <RefreshCw size={18} className="animate-spin" style={{ margin: "0 auto 0.5rem" }} />
+                    Loading recent audit entries...
+                  </div>
+                ) : recentTransfers.length === 0 ? (
+                  <div style={{ padding: "1.5rem", textAlign: "center", color: "var(--sa-text-2)", fontSize: "0.85rem" }}>
+                    No form ownership transfers recorded yet.
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "0.5rem" }}>
+                    {recentTransfers.map((item) => (
+                      <div
+                        key={item.id}
+                        style={{
+                          padding: "0.75rem",
+                          backgroundColor: "var(--sa-surface-1)",
+                          borderRadius: "0.45rem",
+                          border: "1px solid var(--sa-surface-3)",
+                          fontSize: "0.8rem",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "0.3rem",
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontWeight: 700, color: "var(--sa-text-0)" }}>
+                            {item.details?.form_title || "Untitled Form"}
+                          </span>
+                          <span style={{ fontSize: "0.72rem", color: "var(--sa-text-2)" }}>
+                            {new Date(item.created_at).toLocaleString("en-US")}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: "0.75rem", color: "var(--sa-text-1)" }}>
+                          From: <b>{item.details?.previous_owner_email || item.details?.previous_owner_id?.slice(0, 8) || "—"}</b>
+                          {" → "}
+                          To: <b style={{ color: "#10b981" }}>{item.details?.target_user_email || item.details?.target_user_id?.slice(0, 8) || "—"}</b>
+                        </div>
+                        <div style={{ fontSize: "0.7rem", color: "var(--sa-text-2)" }}>
+                          Transferred by: {item.details?.transferred_by || "SuperAdmin"}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Transfer Policies & FAQ */}
+              <div className="sa-card">
+                <div className="sa-card-header" style={{ paddingBottom: "0.5rem", borderBottom: "1px solid var(--sa-border)" }}>
+                  <span className="sa-section-title" style={{ margin: 0, fontSize: "0.95rem" }}>
+                    Transfer Policies & Rules
+                  </span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", fontSize: "0.8rem", color: "var(--sa-text-1)", lineHeight: 1.6 }}>
+                  <div>
+                    <strong style={{ color: "var(--sa-text-0)" }}>Auto Quota Bump:</strong> If target user is at their active form quota limit, the system automatically expands their allowance so PostgreSQL triggers never throw an error.
+                  </div>
+                  <div>
+                    <strong style={{ color: "var(--sa-text-0)" }}>Child Records:</strong> Questions, logic rules, answers, and responses are tied to form ID and remain 100% attached to the form under the new owner.
+                  </div>
+                  <div>
+                    <strong style={{ color: "var(--sa-text-0)" }}>Audit Logging:</strong> All transfer events are written to <code>activity_log</code> with target email, previous email, and caller identity.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {tab === "storage" && (
 
@@ -4221,11 +4838,11 @@ export default function SuperAdmin() {
                   </div>
                 </div>
 
-                {/* امنیت ورود */}
+                {/* Login Security */}
                 <div className="sa-card">
                   <div className="sa-card-header">
                     <span className="sa-section-title" style={{ margin: 0 }}>
-                      🔐 ورود موفق در برابر ناموفق
+                      🔐 Successful vs Failed Logins
                     </span>
                   </div>
                   <div className="sa-card-body">
@@ -4236,28 +4853,28 @@ export default function SuperAdmin() {
                           <XAxis dataKey="label" tick={{ fontSize: 10, fill: "var(--sa-text-2, #64748b)" }} interval={1} />
                           <YAxis tick={{ fontSize: 10, fill: "var(--sa-text-2, #64748b)" }} allowDecimals={false} />
                           <Tooltip
-                            contentStyle={{ background: "var(--sa-surface)", border: "1px solid var(--sa-field-border)", borderRadius: 10, fontSize: "0.8rem", direction: "rtl" }}
-                            labelFormatter={(l) => `روز: ${l}`}
+                            contentStyle={{ background: "var(--sa-surface)", border: "1px solid var(--sa-field-border)", borderRadius: 10, fontSize: "0.8rem", direction: "ltr" }}
+                            labelFormatter={(l) => `Day: ${l}`}
                           />
                           <Legend wrapperStyle={{ fontSize: "0.78rem" }} />
-                          <Bar dataKey="logins" name="موفق" stackId="a" fill="#10b981" />
-                          <Bar dataKey="failed" name="ناموفق" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="logins" name="Success" stackId="a" fill="#10b981" />
+                          <Bar dataKey="failed" name="Failed" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
                 </div>
 
-                {/* توزیع پلن */}
+                {/* Plan Distribution */}
                 <div className="sa-card">
                   <div className="sa-card-header">
                     <span className="sa-section-title" style={{ margin: 0 }}>
-                      💎 توزیع اشتراک کاربران فعال
+                      💎 Active User Plan Distribution
                     </span>
                   </div>
                   <div className="sa-card-body">
                     {health.planDist.length === 0 ? (
-                      <div style={{ color: "var(--sa-text-2)" }}>داده‌ای نیست.</div>
+                      <div style={{ color: "var(--sa-text-2)" }}>No data available.</div>
                     ) : (
                       <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
                         <div dir="ltr" style={{ width: 150, height: 150 }}>
@@ -4268,7 +4885,7 @@ export default function SuperAdmin() {
                                   <Cell key={i} fill={HC[i % HC.length]} />
                                 ))}
                               </Pie>
-                              <Tooltip contentStyle={{ background: "var(--sa-surface)", border: "1px solid var(--sa-field-border)", borderRadius: 10, fontSize: "0.8rem", direction: "rtl" }} formatter={(v, n) => [`${v.toLocaleString()} کاربر`, n]} />
+                              <Tooltip contentStyle={{ background: "var(--sa-surface)", border: "1px solid var(--sa-field-border)", borderRadius: 10, fontSize: "0.8rem", direction: "ltr" }} formatter={(v, n) => [`${v.toLocaleString()} users`, n]} />
                             </PieChart>
                           </ResponsiveContainer>
                         </div>
@@ -4415,20 +5032,20 @@ export default function SuperAdmin() {
         </div>
       )}
 
-      {/* ═══════════ Trash (سطل زباله ۳۰ روزه) ═══════════ */}
+      {/* ═══════════ Trash (30-day retention) ═══════════ */}
       {tab === "trash" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div className="flex gap-2 items-center" style={{ justifyContent: "space-between", flexWrap: "wrap" }}>
             <div className="sa-section-title" style={{ margin: 0 }}>
-              <Trash2 size={18} style={{ verticalAlign: "middle", marginLeft: 6 }} />
-              سطل زباله — هر حذف تا ۳۰ روز قابل بازیابی
+              <Trash2 size={18} style={{ verticalAlign: "middle", marginRight: 6 }} />
+              Recycle Bin — Deleted items recoverable for 30 days
             </div>
             <div className="flex gap-2">
               <button type="button" className="sa-btn sa-btn-ghost" onClick={loadTrash} disabled={trashLoading}>
-                {trashLoading ? "…" : "رفرش"}
+                {trashLoading ? "…" : "Refresh"}
               </button>
               <button type="button" className="sa-btn sa-btn-ghost" onClick={purgeExpiredTrash} disabled={trashLoading}>
-                پاکسازی منقضی‌شده‌ها
+                Purge Expired Items
               </button>
             </div>
           </div>
@@ -4443,7 +5060,7 @@ export default function SuperAdmin() {
               ...trashItems.map((t) => ({
                 key: "t-" + t.id,
                 kind: t.entity_type,
-                kindFa: { response: "ورودی", ticket: "تیکت", tg_config: "ربات", tg_link: "لینک ربات", question: "سوال", form: "فرم" }[t.entity_type] || t.entity_type,
+                kindFa: { response: "Response", ticket: "Ticket", tg_config: "Bot", tg_link: "Bot Link", question: "Question", form: "Form" }[t.entity_type] || t.entity_type,
                 label: t.label,
                 at: t.deleted_at,
                 expires: t.expires_at,
@@ -4455,8 +5072,8 @@ export default function SuperAdmin() {
               ...trashedForms.map((f) => ({
                 key: "f-" + f.id,
                 kind: "form",
-                kindFa: "فرم",
-                label: "فرم «" + (f.title || "?") + "»",
+                kindFa: "Form",
+                label: "Form \"" + (f.title || "?") + "\"",
                 at: f.deleted_at,
                 expires: new Date(new Date(f.deleted_at).getTime() + 30 * dayMs).toISOString(),
                 ownerId: f.created_by || f.manager_id,
@@ -4467,8 +5084,8 @@ export default function SuperAdmin() {
               ...trashedUsers.map((u) => ({
                 key: "u-" + u.id,
                 kind: "user",
-                kindFa: "کاربر",
-                label: "حساب کاربر «" + (u.full_name || u.email || "?") + "»",
+                kindFa: "User",
+                label: "User Account \"" + (u.full_name || u.email || "?") + "\"",
                 at: u.deactivated_at || u.created_at,
                 expires: u.deactivated_at || u.created_at
                   ? new Date(new Date(u.deactivated_at || u.created_at).getTime() + 30 * dayMs).toISOString()
@@ -4480,16 +5097,16 @@ export default function SuperAdmin() {
               })),
             ].sort((a, b) => new Date(b.at) - new Date(a.at));
 
-            // گزینه‌های فیلتر «بر اساس کاربر»
+            // User filter options
             const ownerIds = [...new Set(all.map((i) => i.ownerId).filter(Boolean))];
-            const ownerLabel = (id) => nameOf(id) || "کاربر حذف‌شده (" + String(id).slice(0, 8) + "…)";
+            const ownerLabel = (id) => nameOf(id) || "Deleted User (" + String(id).slice(0, 8) + "…)";
             const visible = trashUserFilter === "all" ? all : all.filter((i) => i.ownerId === trashUserFilter);
 
             const daysLeft = (exp) =>
               exp ? Math.max(0, Math.ceil((new Date(exp) - Date.now()) / dayMs)) : null;
             const whoDeleted = (i) => {
-              if (!i.byId) return "نامشخص";
-              if (i.byId === i.ownerId) return "خودش";
+              if (!i.byId) return "Unknown";
+              if (i.byId === i.ownerId) return "Self";
               return nameOf(i.byId) || i.byName || String(i.byId).slice(0, 8);
             };
 
@@ -4497,16 +5114,16 @@ export default function SuperAdmin() {
               <>
                 <div className="sa-card">
                   <div className="flex gap-2 items-center" style={{ flexWrap: "wrap" }}>
-                    <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>کاربر:</span>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>Filter by User:</span>
                     <select
                       className="sa-input"
                       style={{ maxWidth: 320 }}
                       value={trashUserFilter}
                       onChange={(e) => setTrashUserFilter(e.target.value)}
                     >
-                      <option value="all">همه کاربران ({all.length} مورد)</option>
+                      <option value="all">All Users ({all.length} items)</option>
                       {ownerIds
-                        .sort((a, b) => (ownerLabel(a) || "").localeCompare(ownerLabel(b) || "", "fa"))
+                        .sort((a, b) => (ownerLabel(a) || "").localeCompare(ownerLabel(b) || "", "en"))
                         .map((id) => (
                           <option key={id} value={id}>
                             {ownerLabel(id)} ({all.filter((i) => i.ownerId === id).length})
@@ -4516,11 +5133,11 @@ export default function SuperAdmin() {
                   </div>
                 </div>
 
-                {trashLoading && <div className="sa-card">در حال بارگذاری…</div>}
+                {trashLoading && <div className="sa-card">Loading trash…</div>}
 
                 {!trashLoading && visible.length === 0 && (
                   <div className="sa-card" style={{ textAlign: "center", opacity: 0.7 }}>
-                    سطل زباله خالی است 🧹
+                    Recycle bin is empty 🧹
                   </div>
                 )}
 
@@ -4533,20 +5150,20 @@ export default function SuperAdmin() {
                         <div style={{ flex: 1, minWidth: 220 }}>
                           <div style={{ fontWeight: 700, fontSize: "0.92rem" }}>{i.label}</div>
                           <div style={{ fontSize: "0.78rem", opacity: 0.75 }}>
-                            مالک: {i.ownerId ? ownerLabel(i.ownerId) : "—"} · حذف:{" "}
-                            {whoDeleted(i) === "خودش" ? (
-                              <b style={{ color: "#d97706" }}>خودش</b>
+                            Owner: {i.ownerId ? ownerLabel(i.ownerId) : "—"} · Deleted by:{" "}
+                            {whoDeleted(i) === "Self" ? (
+                              <b style={{ color: "#d97706" }}>Self</b>
                             ) : (
                               whoDeleted(i)
                             )}{" "}
-                            · {new Date(i.at).toLocaleString("fa-IR")}
+                            · {new Date(i.at).toLocaleString("en-US")}
                           </div>
                         </div>
                         <span style={{ fontSize: "0.78rem", fontWeight: 700, color: dl === null ? "#64748b" : dl <= 5 ? "#dc2626" : "#059669", flexShrink: 0 }}>
-                          {dl === null ? "بدون انقضا" : dl + " روز مانده"}
+                          {dl === null ? "No expiry" : dl + " days left"}
                         </span>
                         <button type="button" className="sa-btn sa-btn-ghost" onClick={i.restore} style={{ flexShrink: 0 }}>
-                          ↩️ بازیابی
+                          ↩️ Restore
                         </button>
                       </div>
                     );
@@ -5089,10 +5706,10 @@ export default function SuperAdmin() {
                       backgroundColor: "var(--sa-surface)",
                     }}
                   >
-                    <option value="free">Free Plan (رایگان)</option>
-                    <option value="pro">Pro Plan (حرفه‌ای)</option>
-                    <option value="enterprise">Enterprise Plan (سازمانی)</option>
-                    <option value="unlimited">Unlimited / VIP (نامحدود اختصاصی)</option>
+                    <option value="free">Free Plan</option>
+                    <option value="pro">Pro Plan</option>
+                    <option value="enterprise">Enterprise Plan</option>
+                    <option value="unlimited">Unlimited / VIP Plan</option>
                   </select>
                 </div>
 
@@ -6000,21 +6617,21 @@ export default function SuperAdmin() {
           setImpersonateResult(null);
           setCopiedLink(false);
         }}
-        title="ورود به عنوان کاربر (Login as User)"
+        title="Impersonate User (Login As)"
       >
         {impersonateModal && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem", direction: "rtl", textAlign: "right" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem", direction: "ltr", textAlign: "left" }}>
             {impersonateResult ? (
               <>
                 <div style={{ padding: "0.75rem 1rem", borderRadius: "8px", background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.3)", color: "#10b981", fontSize: "0.9rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.5rem" }}>
                   <Check size={18} />
-                  <span>نشست ورود مستقیم به اکانت {impersonateResult.fullName || impersonateResult.email} آماده است!</span>
+                  <span>Direct login session ready for {impersonateResult.fullName || impersonateResult.email}!</span>
                 </div>
 
                 <div style={{ padding: "0.75rem", borderRadius: "8px", background: "rgba(245, 158, 11, 0.08)", border: "1px solid rgba(245, 158, 11, 0.25)", color: "#d97706", fontSize: "0.82rem", lineHeight: 1.6 }}>
-                  💡 <strong>توصیه مهم برای حفظ نشست سوپرادمین:</strong>
+                  💡 <strong>Recommendation for preserving your SuperAdmin session:</strong>
                   <br />
-                  اگر این لینک را در همین تب یا پنجره باز کنید، نشست سوپرادمین فعلی شما به این کاربر تغییر می‌کند. برای جلوگیری از این موضوع و بررسی هم‌زمان، پیشنهاد می‌شود <strong>لینک زیر را کپی کنید و در یک پنجره ناشناس (Incognito / Private)</strong> باز کنید.
+                  Opening this link in the current window will switch your active session to this user. To inspect simultaneously without affecting your admin session, <strong>copy the link below and open it in an Incognito / Private window</strong>.
                 </div>
 
                 <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
@@ -6032,12 +6649,12 @@ export default function SuperAdmin() {
                     onClick={() => {
                       navigator.clipboard.writeText(impersonateResult.url);
                       setCopiedLink(true);
-                      showToast("لینک اختصاصی کپی شد");
+                      showToast("Link copied to clipboard");
                       setTimeout(() => setCopiedLink(false), 2500);
                     }}
                   >
                     {copiedLink ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
-                    <span>{copiedLink ? "کپی شد!" : "کپی لینک"}</span>
+                    <span>{copiedLink ? "Copied!" : "Copy Link"}</span>
                   </button>
                 </div>
 
@@ -6062,7 +6679,7 @@ export default function SuperAdmin() {
                       onClick={handleInstantSwitchToUser}
                     >
                       <LogIn size={15} />
-                      ورود فوری در همین صفحه
+                      Instant Switch (This Window)
                     </button>
                   )}
                   <a
@@ -6073,7 +6690,7 @@ export default function SuperAdmin() {
                     style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
                   >
                     <ExternalLink size={14} />
-                    ورود مستقیم در تب جدید
+                    Open in New Tab
                   </a>
                   <button
                     className="sa-btn sa-btn-secondary"
@@ -6083,23 +6700,23 @@ export default function SuperAdmin() {
                       setCopiedLink(false);
                     }}
                   >
-                    بستن
+                    Close
                   </button>
                 </div>
               </>
             ) : (
               <>
-                <p style={{ fontSize: "0.85rem", color: "var(--sa-text-2)" }}>شما در حال ورود به اکانت کاربر زیر هستید:</p>
+                <p style={{ fontSize: "0.85rem", color: "var(--sa-text-2)" }}>You are about to log in as the following user:</p>
                 <div className="sa-modal-box">
                   <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>
                     {impersonateModal.full_name || "—"}
                   </div>
-                  <div style={{ fontSize: "0.85rem", opacity: 0.8, direction: "ltr", textAlign: "right" }}>
+                  <div style={{ fontSize: "0.85rem", opacity: 0.8, direction: "ltr", textAlign: "left" }}>
                     {impersonateModal.email}
                   </div>
                 </div>
                 <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--sa-danger)", display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                  <AlertTriangle size={14} /> این اقدام در گزارش‌های امنیتی سیستم (Audit Log) ثبت خواهد شد.
+                  <AlertTriangle size={14} /> This action will be recorded in the system audit log.
                 </p>
                 <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginTop: "0.5rem" }}>
                   <button
@@ -6107,7 +6724,7 @@ export default function SuperAdmin() {
                     disabled={impersonateLoading}
                     onClick={() => doImpersonate(impersonateModal.id)}
                   >
-                    {impersonateLoading ? "در حال ایجاد نشست..." : "تایید و ساخت لینک ورود"}
+                    {impersonateLoading ? "Generating session..." : "Confirm & Generate Link"}
                   </button>
                   <button
                     className="sa-btn sa-btn-secondary"
@@ -6117,7 +6734,7 @@ export default function SuperAdmin() {
                       setImpersonateResult(null);
                     }}
                   >
-                    انصراف
+                    Cancel
                   </button>
                 </div>
               </>
@@ -6163,14 +6780,14 @@ export default function SuperAdmin() {
 
             <div>
               <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, marginBottom: "0.25rem" }}>
-                Persian Display Name (عنوان نمایشی فارسی)
+                Display Name
               </label>
               <input
                 type="text"
                 value={qEditForm.label}
                 onChange={(e) => setQEditForm({ ...qEditForm, label: e.target.value })}
                 required
-                placeholder="مثلاً: ماتریسی (جدول سوالات)"
+                placeholder="e.g. Matrix / Grid Question"
                 style={{
                   width: "100%",
                   padding: "0.5rem 0.75rem",
@@ -6183,13 +6800,13 @@ export default function SuperAdmin() {
 
             <div>
               <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, marginBottom: "0.25rem" }}>
-                Description / Hint (توضیحات و راهنما)
+                Description / Hint
               </label>
               <input
                 type="text"
                 value={qEditForm.hint}
                 onChange={(e) => setQEditForm({ ...qEditForm, hint: e.target.value })}
-                placeholder="مثلاً: چند سوال با گزینه‌های یکسان در جدول"
+                placeholder="e.g. Multiple sub-questions with shared columns"
                 style={{
                   width: "100%",
                   padding: "0.5rem 0.75rem",
@@ -6202,7 +6819,7 @@ export default function SuperAdmin() {
 
             <div>
               <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, marginBottom: "0.25rem" }}>
-                Category (دسته‌بندی)
+                Category
               </label>
               <select
                 value={qEditForm.category}
@@ -6215,9 +6832,9 @@ export default function SuperAdmin() {
                   outline: "none",
                 }}
               >
-                <option value="choice">سوالات گزینه‌ای و مقیاسی (choice)</option>
-                <option value="text">سوالات متنی و اطلاعات تماس (text)</option>
-                <option value="advanced">پیشرفته، رسانه و ساختار فرم (advanced)</option>
+                <option value="choice">Choice & Rating (choice)</option>
+                <option value="text">Text & Contact Info (text)</option>
+                <option value="advanced">Advanced, Media & Structure (advanced)</option>
               </select>
             </div>
 
@@ -6278,9 +6895,9 @@ export default function SuperAdmin() {
             setTransferSuccessInfo(null);
           }
         }}
-        title="انتقال فرم به حساب دیگر (Transfer Form Ownership)"
+        title="Transfer Form Ownership"
       >
-        <div dir="rtl" style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: "1.25rem", minWidth: "320px", maxWidth: "620px" }}>
+        <div dir="ltr" style={{ textAlign: "left", display: "flex", flexDirection: "column", gap: "1.25rem", minWidth: "320px", maxWidth: "620px" }}>
           {/* Header Info */}
           <div
             style={{
@@ -6310,10 +6927,10 @@ export default function SuperAdmin() {
             </div>
             <div>
               <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "var(--sa-text-0)" }}>
-                انتقال کامل فرم بین کاربران
+                Form Ownership Transfer
               </div>
               <div style={{ fontSize: "0.8rem", color: "var(--sa-text-1)", marginTop: "0.15rem" }}>
-                سه فیلد زیر را تکمیل کنید: از فلان اکانت، فلان فرم انتخاب و به فلان اکانت منتقل می‌شود.
+                Complete the 3 fields below: Select source account, choose form, and designate target account.
               </div>
             </div>
           </div>
@@ -6347,10 +6964,10 @@ export default function SuperAdmin() {
                   <Check size={28} />
                 </div>
                 <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#10b981", margin: 0 }}>
-                  فرم با موفقیت منتقل شد!
+                  Form Transferred Successfully!
                 </h3>
                 <p style={{ fontSize: "0.875rem", color: "var(--sa-text-1)", marginTop: "0.35rem" }}>
-                  مالکیت و کلیه دسترسی‌های این فرم اکنون به نام کاربر مقصد ثبت شد.
+                  Ownership and all managerial permissions have been securely reassigned to the target user.
                 </p>
 
                 <div
@@ -6361,28 +6978,28 @@ export default function SuperAdmin() {
                     padding: "0.85rem 1rem",
                     marginTop: "1rem",
                     fontSize: "0.85rem",
-                    textAlign: "right",
+                    textAlign: "left",
                     display: "flex",
                     flexDirection: "column",
                     gap: "0.45rem",
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ color: "var(--sa-text-2)" }}>عنوان فرم:</span>
+                    <span style={{ color: "var(--sa-text-2)" }}>Form Title:</span>
                     <span style={{ fontWeight: 700 }}>{transferSuccessInfo.form?.title || "—"}</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ color: "var(--sa-text-2)" }}>لینک عمومی:</span>
-                    <span style={{ fontFamily: "monospace", direction: "ltr", color: "var(--sa-link)" }}>
+                    <span style={{ color: "var(--sa-text-2)" }}>Public URL:</span>
+                    <span style={{ fontFamily: "monospace", color: "var(--sa-link)" }}>
                       /f/{transferSuccessInfo.form?.slug}
                     </span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ color: "var(--sa-text-2)" }}>حساب مبدأ:</span>
+                    <span style={{ color: "var(--sa-text-2)" }}>Previous Owner:</span>
                     <span>{transferSuccessInfo.previous_user?.full_name || transferSuccessInfo.previous_user?.email || "—"}</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ color: "var(--sa-text-2)" }}>مالک جدید (حساب مقصد):</span>
+                    <span style={{ color: "var(--sa-text-2)" }}>New Owner:</span>
                     <span style={{ fontWeight: 700, color: "#10b981" }}>
                       {transferSuccessInfo.target_user?.full_name || transferSuccessInfo.target_user?.email || "—"}
                     </span>
@@ -6402,7 +7019,7 @@ export default function SuperAdmin() {
                     }
                   }}
                 >
-                  انتقال یک فرم دیگر
+                  Transfer Another Form
                 </button>
                 <button
                   type="button"
@@ -6412,7 +7029,7 @@ export default function SuperAdmin() {
                     setTransferSuccessInfo(null);
                   }}
                 >
-                  بستن
+                  Close
                 </button>
               </div>
             </div>
@@ -6424,7 +7041,7 @@ export default function SuperAdmin() {
                   type="text"
                   value={transferSearchQuery}
                   onChange={(e) => setTransferSearchQuery(e.target.value)}
-                  placeholder="جستجوی سریع در نام، ایمیل یا شماره کاربران..."
+                  placeholder="Filter accounts by name, email, or phone number..."
                   style={{
                     width: "100%",
                     padding: "0.45rem 0.75rem",
@@ -6438,7 +7055,7 @@ export default function SuperAdmin() {
                 />
               </div>
 
-              {/* فیلد ۱: از اکانت (حساب مبدأ) */}
+              {/* FIELD 1: Source Account (From User) */}
               <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
                 <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
                   <span
@@ -6455,9 +7072,9 @@ export default function SuperAdmin() {
                       fontWeight: 800,
                     }}
                   >
-                    ۱
+                    1
                   </span>
-                  از اکانت (حساب کاربری مبدأ):
+                  From Account (Source User):
                 </label>
                 <select
                   value={transferFromUserId}
@@ -6479,33 +7096,32 @@ export default function SuperAdmin() {
                     outline: "none",
                   }}
                 >
-                  <option value="">-- انتخاب حساب کاربری مبدأ --</option>
+                  <option value="">-- Select Source User Account --</option>
                   {allTransferUsers
                     .filter((u) => {
                       if (u.id === transferFromUserId) return true;
                       if (!transferSearchQuery) return true;
                       const q = transferSearchQuery.toLowerCase().trim();
-                      const qEng = q.replace(/[۰-۹]/g, (d) => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
                       return (
                         u.full_name?.toLowerCase().includes(q) ||
                         u.email?.toLowerCase().includes(q) ||
-                        (u.phone && (u.phone.includes(q) || u.phone.includes(qEng)))
+                        (u.phone && u.phone.includes(q))
                       );
                     })
                     .map((u) => (
                       <option key={u.id} value={u.id}>
-                        {u.full_name || "بدون نام"} ({u.email || u.phone || "بدون تماس"}) {u.is_owner ? "👑 مالک" : `[${u.plan || "رایگان"}]`}
+                        {u.full_name || "Unnamed"} ({u.email || u.phone || "No contact"}) {u.is_owner ? "👑 Owner" : `[${u.plan || "Free"}]`}
                       </option>
                     ))}
                 </select>
                 {transferFromUserId && (
                   <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.15rem" }}>
-                    حساب مبدأ انتخاب شد. فرم‌های این کاربر در فیلد دوم نمایش داده می‌شوند.
+                    Source user selected. Their forms are populated in Step 2 below.
                   </div>
                 )}
               </div>
 
-              {/* فیلد ۲: فلان فرم (انتخاب فرم) */}
+              {/* FIELD 2: Select Form to Transfer */}
               <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
                 <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
                   <span
@@ -6522,9 +7138,9 @@ export default function SuperAdmin() {
                       fontWeight: 800,
                     }}
                   >
-                    ۲
+                    2
                   </span>
-                  فلان فرم (انتخاب فرم جهت انتقال):
+                  Form to Transfer:
                 </label>
 
                 {!transferFromUserId ? (
@@ -6538,7 +7154,7 @@ export default function SuperAdmin() {
                       color: "var(--sa-text-2)",
                     }}
                   >
-                    لطفاً ابتدا حساب کاربری مبدأ را در فیلد ۱ انتخاب نمایید.
+                    Please select the source account in Step 1 first.
                   </div>
                 ) : userFormsLoading ? (
                   <div
@@ -6554,7 +7170,7 @@ export default function SuperAdmin() {
                     }}
                   >
                     <RefreshCw size={14} className="animate-spin" />
-                    در حال بارگذاری فرم‌های کاربر مبدأ...
+                    Loading user forms...
                   </div>
                 ) : userFormsList.length === 0 ? (
                   <div
@@ -6567,7 +7183,7 @@ export default function SuperAdmin() {
                       color: "var(--sa-danger)",
                     }}
                   >
-                    این حساب کاربری هیچ فرمی ندارد یا تمامی فرم‌های آن حذف شده‌اند.
+                    This user has no active forms to transfer.
                   </div>
                 ) : (
                   <select
@@ -6585,16 +7201,16 @@ export default function SuperAdmin() {
                       outline: "none",
                     }}
                   >
-                    <option value="">-- انتخاب فرم مورد نظر ({userFormsList.length} فرم موجود) --</option>
+                    <option value="">-- Select Form to Transfer ({userFormsList.length} forms available) --</option>
                     {userFormsList.map((f) => (
                       <option key={f.id} value={f.id}>
-                        {f.title || "فرم بدون عنوان"} (اسلاگ: {f.slug} — {f.response_count} پاسخ — {f.published ? "فعال" : "پیش‌نویس"})
+                        {f.title || "Untitled Form"} (/f/{f.slug} — {f.response_count} responses — {f.published ? "Published" : "Draft"})
                       </option>
                     ))}
                   </select>
                 )}
 
-                {/* پیش‌نمایش جزئیات فرم انتخاب‌شده */}
+                {/* Selected Form Preview */}
                 {(() => {
                   const selForm = userFormsList.find((f) => f.id === transferFormId);
                   if (!selForm) return null;
@@ -6618,30 +7234,30 @@ export default function SuperAdmin() {
                           className={`sa-tag ${selForm.published ? "sa-tag-green" : "sa-tag-gray"}`}
                           style={{ fontSize: "0.7rem" }}
                         >
-                          {selForm.published ? "فعال و آنلاین" : "پیش‌نویس"}
+                          {selForm.published ? "Published & Active" : "Draft"}
                         </span>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", color: "var(--sa-text-2)", fontSize: "0.78rem" }}>
-                        <span>اسلاگ عمومی:</span>
+                        <span>Public URL:</span>
                         <a
                           href={`/f/${selForm.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={{ fontFamily: "monospace", direction: "ltr", color: "var(--sa-link)", textDecoration: "none" }}
+                          style={{ fontFamily: "monospace", color: "var(--sa-link)", textDecoration: "none" }}
                         >
                           /f/{selForm.slug} ↗
                         </a>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", color: "var(--sa-text-2)", fontSize: "0.78rem" }}>
-                        <span>پاسخ‌های ثبت‌شده:</span>
-                        <span style={{ fontWeight: 700, color: "var(--sa-text-0)" }}>{selForm.response_count} پاسخ</span>
+                        <span>Recorded Responses:</span>
+                        <span style={{ fontWeight: 700, color: "var(--sa-text-0)" }}>{selForm.response_count} entries</span>
                       </div>
                     </div>
                   );
                 })()}
               </div>
 
-              {/* فیلد ۳: به اکانت (حساب مقصد) */}
+              {/* FIELD 3: Target Account (To User) */}
               <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
                 <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
                   <span
@@ -6658,9 +7274,9 @@ export default function SuperAdmin() {
                       fontWeight: 800,
                     }}
                   >
-                    ۳
+                    3
                   </span>
-                  به اکانت (حساب کاربری مقصد / مالک جدید):
+                  To Account (Destination User / New Owner):
                 </label>
                 <select
                   value={transferToUserId}
@@ -6677,28 +7293,27 @@ export default function SuperAdmin() {
                     outline: "none",
                   }}
                 >
-                  <option value="">-- انتخاب حساب کاربری مقصد --</option>
+                  <option value="">-- Select Destination User Account --</option>
                   {allTransferUsers
                     .filter((u) => u.id !== transferFromUserId)
                     .filter((u) => {
                       if (u.id === transferToUserId) return true;
                       if (!transferSearchQuery) return true;
                       const q = transferSearchQuery.toLowerCase().trim();
-                      const qEng = q.replace(/[۰-۹]/g, (d) => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
                       return (
                         u.full_name?.toLowerCase().includes(q) ||
                         u.email?.toLowerCase().includes(q) ||
-                        (u.phone && (u.phone.includes(q) || u.phone.includes(qEng)))
+                        (u.phone && u.phone.includes(q))
                       );
                     })
                     .map((u) => (
                       <option key={u.id} value={u.id}>
-                        {u.full_name || "بدون نام"} ({u.email || u.phone || "بدون تماس"}) {u.is_owner ? "👑 مالک" : `[${u.plan || "رایگان"}]`}
+                        {u.full_name || "Unnamed"} ({u.email || u.phone || "No contact"}) {u.is_owner ? "👑 Owner" : `[${u.plan || "Free"}]`}
                       </option>
                     ))}
                 </select>
 
-                {/* پیش‌نمایش جزئیات کاربر مقصد */}
+                {/* Target User Preview */}
                 {(() => {
                   const targetUser = allTransferUsers.find((u) => u.id === transferToUserId);
                   if (!targetUser) return null;
@@ -6718,38 +7333,39 @@ export default function SuperAdmin() {
                     >
                       <div>
                         <div style={{ fontWeight: 700, color: "#10b981" }}>
-                          {targetUser.full_name || "بدون نام"}
+                          {targetUser.full_name || "Unnamed"}
                         </div>
-                        <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", direction: "ltr", textAlign: "right" }}>
+                        <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)" }}>
                           {targetUser.email || targetUser.phone}
                         </div>
                       </div>
                       <span className="sa-tag sa-tag-green" style={{ fontSize: "0.7rem" }}>
-                        پلن: {targetUser.plan || "free"}
+                        Plan: {targetUser.plan || "Free"} · Max forms: {targetUser.max_forms || 5}
                       </span>
                     </div>
                   );
                 })()}
               </div>
 
-              {/* تضمین امنیتی و راهنمای انتقال بدون باگ */}
+              {/* Transfer Guarantees Note */}
               <div
                 style={{
                   backgroundColor: "var(--sa-surface-1)",
-                  borderRight: "3px solid #6366f1",
+                  borderLeft: "3px solid #6366f1",
                   borderRadius: "0.4rem",
-                  padding: "0.7rem 0.85rem",
+                  padding: "0.75rem 0.9rem",
                   fontSize: "0.78rem",
                   color: "var(--sa-text-1)",
                   lineHeight: 1.6,
                 }}
               >
                 <div style={{ fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.2rem" }}>
-                  اطلاعات پس از انتقال:
+                  Transfer Guarantees:
                 </div>
-                <div>• تمامی مشخصات و فیلدهای مالکیت فرم (manager_id و created_by) به نام کاربر مقصد تغییر می‌یابد.</div>
-                <div>• دسترسی فرم‌ساز، ویرایش سوالات، استخراج اکسل و مشاهده پاسخ‌ها به پنل کاربر مقصد منتقل می‌شود.</div>
-                <div>• لینک عمومی فرم و پاسخ‌های ثبت‌شده از قبل هیچ‌گونه تغییری نخواهند کرد.</div>
+                <div>• Full ownership (manager_id and created_by) transferred atomically.</div>
+                <div>• Target user inherits full builder, editing, Excel export, and responses access.</div>
+                <div>• Public submission URLs (/f/:slug, embed) and existing responses remain fully intact.</div>
+                <div>• Previous owner's personal Telegram bot links unlinked for security.</div>
               </div>
 
               {/* Action Buttons */}
@@ -6760,7 +7376,7 @@ export default function SuperAdmin() {
                   disabled={transferSubmitting}
                   onClick={() => setTransferModalOpen(false)}
                 >
-                  انصراف
+                  Cancel
                 </button>
                 <button
                   type="button"
@@ -6794,7 +7410,7 @@ export default function SuperAdmin() {
                   }}
                 >
                   <ArrowRightLeft size={16} />
-                  {transferSubmitting ? "در حال انتقال فرم..." : "تایید و انتقال قطعی فرم"}
+                  {transferSubmitting ? "Transferring Form..." : "Transfer Ownership Now"}
                 </button>
               </div>
             </>

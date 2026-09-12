@@ -182,6 +182,18 @@ export function AuthProvider({ children }) {
       return;
     }
 
+    // بررسی اولیه وجود توکن در آدرس قبل از هرگونه رندر یا فایر شدن INITIAL_SESSION
+    const rawHashOnInit = typeof window !== "undefined" ? window.location.hash : "";
+    const rawSearchOnInit = typeof window !== "undefined" ? window.location.search : "";
+    const hasIncomingTokenOnInit = Boolean(
+      rawHashOnInit && (rawHashOnInit.includes("access_token=") || rawHashOnInit.includes("refresh_token=")) ||
+      rawSearchOnInit && (
+        rawSearchOnInit.includes("token_hash=") ||
+        rawSearchOnInit.includes("impersonate_token=") ||
+        rawSearchOnInit.includes("code=")
+      )
+    );
+
     let lastLoadedUid = null;
     const {
       data: { subscription },
@@ -222,6 +234,14 @@ export function AuthProvider({ children }) {
           setRole(isSuperAdmin ? "admin" : pRole);
           setPermissions(permsData);
           setError(null);
+
+          // پس از اطمینان کامل از اعمال کاربر در استیت، آدرس را در صورت نیاز تمیز می‌کنیم
+          if (typeof window !== "undefined" && hasIncomingTokenOnInit) {
+            try {
+              const cleanUrl = window.location.pathname;
+              window.history.replaceState({}, document.title, cleanUrl);
+            } catch {}
+          }
         } catch (err) {
           console.error("handleAuthChange error:", err);
           setError(err.message || "Authentication error");
@@ -235,18 +255,26 @@ export function AuthProvider({ children }) {
         setPermissions([]);
         setProfile(null);
         setError(null);
-        setLoading(false);
+        // نکته حیاتی: اگر توکنی در آدرس در حال پردازش است، INITIAL_SESSION با مقدار null نباید لودینگ را ببندد
+        if (!hasIncomingTokenOnInit) {
+          setLoading(false);
+        }
       }
     });
 
     // تایید و اعمال نشست در صورت وجود توکن در آدرس (ورود مستقیم سوپرادمین / Impersonate / MagicLink)
-    let hasIncomingToken = false;
-    if (typeof window !== "undefined") {
+    let hasIncomingToken = hasIncomingTokenOnInit;
+    if (typeof window !== "undefined" && hasIncomingTokenOnInit) {
+      setLoading(true);
+
+      // تایم‌اوت محافظ: اگر به هر دلیل توکن نامعتبر بود، لودینگ بعد از ۸ ثانیه آزاد شود
+      const fallbackSafetyTimer = setTimeout(() => {
+        setLoading(false);
+      }, 8000);
+
       // ۱. بررسی access_token در هش URL (#access_token=...&refresh_token=...)
       const rawHash = window.location.hash;
       if (rawHash && (rawHash.includes("access_token=") || rawHash.includes("refresh_token="))) {
-        hasIncomingToken = true;
-        setLoading(true);
         const hashParams = new URLSearchParams(rawHash.replace(/^#/, ""));
         const at = hashParams.get("access_token");
         const rt = hashParams.get("refresh_token");
@@ -257,17 +285,15 @@ export function AuthProvider({ children }) {
               refresh_token: rt || "",
             })
             .then(({ data: sData, error: sErr }) => {
-              if (!sErr && sData?.session) {
-                // پاک‌سازی هش از URL بدون رفرش
-                const cleanUrl = window.location.pathname + window.location.search;
-                window.history.replaceState({}, document.title, cleanUrl);
-              } else {
+              if (sErr) {
                 console.warn("setSession from hash error:", sErr);
+                clearTimeout(fallbackSafetyTimer);
                 setLoading(false);
               }
             })
             .catch((err) => {
               console.warn("setSession catch:", err);
+              clearTimeout(fallbackSafetyTimer);
               setLoading(false);
             });
         }
@@ -279,53 +305,43 @@ export function AuthProvider({ children }) {
       const authCode = urlParams.get("code");
 
       if (tokenHash) {
-        hasIncomingToken = true;
-        setLoading(true);
         supabase.auth
           .verifyOtp({
             token_hash: tokenHash,
             type: urlParams.get("type") || "magiclink",
           })
           .then(({ data: vData, error: vErr }) => {
-            if (!vErr && vData?.session) {
-              const cleanUrl = new URL(window.location.href);
-              cleanUrl.searchParams.delete("token_hash");
-              cleanUrl.searchParams.delete("impersonate_token");
-              cleanUrl.searchParams.delete("type");
-              window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search);
-            } else {
+            if (vErr) {
               console.warn("verifyOtp error:", vErr);
+              clearTimeout(fallbackSafetyTimer);
               setLoading(false);
             }
           })
           .catch((err) => {
             console.warn("verifyOtp from url error:", err);
+            clearTimeout(fallbackSafetyTimer);
             setLoading(false);
           });
       } else if (authCode) {
-        hasIncomingToken = true;
-        setLoading(true);
         supabase.auth
           .exchangeCodeForSession(authCode)
           .then(({ data: cData, error: cErr }) => {
-            if (!cErr && cData?.session) {
-              const cleanUrl = new URL(window.location.href);
-              cleanUrl.searchParams.delete("code");
-              window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search);
-            } else {
+            if (cErr) {
               console.warn("exchangeCode error:", cErr);
+              clearTimeout(fallbackSafetyTimer);
               setLoading(false);
             }
           })
           .catch((err) => {
             console.warn("exchangeCode from url error:", err);
+            clearTimeout(fallbackSafetyTimer);
             setLoading(false);
           });
       }
     }
 
     // ۳. فقط در صورتی که هیچ توکنی در آدرس در حال پردازش نیست، getSession را فال‌بک کن
-    if (!hasIncomingToken) {
+    if (!hasIncomingTokenOnInit) {
       supabase.auth
         .getSession()
         .then(({ data }) => {
