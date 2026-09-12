@@ -15,9 +15,18 @@ import {
 } from "../../lib/userTabs";
 
 // ═══════════════════════════════════════════════════════
-// تب «کنترل تب‌های کاربری» در پنل گاد — هویت Carbon خودش،
-// نه دیزاین سایت. سه حالت: فعال / بروزرسانی / غیرفعال.
+// User Tabs Control in God Panel — Carbon design identity.
+// Three states: Active / Maintenance / Disabled.
 // ═══════════════════════════════════════════════════════
+
+const TAB_LABELS_EN = {
+  forms: "My Forms",
+  embed: "Embed & Share",
+  telegram: "Telegram Integration",
+  support: "Support & Tickets",
+  profile: "Profile & Quota",
+  subscriptions: "Subscriptions",
+};
 
 const MODE_META = {
   [TAB_STATE_ON]: { label: "Active", tag: "sa-tag-green", Icon: Unlock },
@@ -155,7 +164,7 @@ export default function UserTabsPanel() {
               <div style={{ minWidth: "12rem", flex: "1 1 12rem" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: 700, fontSize: "0.95rem", color: "var(--sa-text-0)" }}>
                   <StateIcon size={15} style={{ color: "var(--sa-text-2)" }} />
-                  {tab.label}
+                  {TAB_LABELS_EN[tab.id] || tab.label}
                 </div>
                 <code dir="ltr" style={{ fontSize: "0.75rem", color: "var(--sa-text-2)" }}>
                   {tab.path}
