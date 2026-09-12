@@ -75,14 +75,19 @@ serve(async (req) => {
     }
 
     // گاد اصلی = مالک دیتابیس یا ایمیل‌های ثابت (نه هر سوپرادمین)
-    const PRIMARY_GOD_EMAILS = ["superadmin@gmailc.com", "superadmin@gmail.com"];
+    const PRIMARY_GOD_EMAILS = [
+      "superadmin@gmailc.com",
+      "superadmin@gmail.com",
+      "mohammad12345sadeghi@gmail.com",
+      "artinerfan1388@gmail.com",
+    ];
     const callerEmail = user.email?.toLowerCase()?.trim();
     const isCallerPrimaryGod = Boolean(isOwner || PRIMARY_GOD_EMAILS.includes(callerEmail));
 
-    const { action, target_user_id, new_password, new_email, email, password, full_name } = await req.json();
+    const { action, target_user_id, new_password, new_email, email, password, full_name, origin } = await req.json();
 
-    // محافظت از سوپرادمین‌ها: فقط گاد اصلی می‌تواند آن‌ها را مدیریت کند
-    if (target_user_id) {
+    // محافظت از سوپرادمین‌ها: تغییر نقش و رمز فقط توسط گاد اصلی مجاز است (ورود نظارتی مجاز است)
+    if (target_user_id && action !== "impersonate") {
       const { data: targetProfile } = await supabaseAdmin
         .from("profiles")
         .select("id, email, is_owner")
@@ -104,7 +109,7 @@ serve(async (req) => {
 
         if (targetIsSuperAdmin && !isCallerPrimaryGod) {
           return new Response(
-            JSON.stringify({ error: "کاربر مورد نظر یافت نشد یا دسترسی به آن امکان‌پذیر نیست" }),
+            JSON.stringify({ error: "مدیریت سوپرادمین‌ها فقط توسط صاحب اصلی سیستم امکان‌پذیر است" }),
             { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
@@ -234,8 +239,23 @@ serve(async (req) => {
     }
 
     if (action === "impersonate") {
-      const { data: targetAuthUser } = await supabaseAdmin.auth.admin.getUserById(target_user_id);
-      const userEmail = targetAuthUser?.user?.email;
+      let { data: targetAuthUser } = await supabaseAdmin.auth.admin.getUserById(target_user_id);
+      let userEmail = targetAuthUser?.user?.email;
+
+      if (!userEmail && targetAuthUser?.user?.phone) {
+        const rawPhone = targetAuthUser.user.phone.replace(/\D/g, "");
+        const genEmail = `user_${rawPhone || target_user_id.slice(0, 8)}@porskad.ir`;
+        try {
+          const { data: updatedAuth } = await supabaseAdmin.auth.admin.updateUserById(target_user_id, {
+            email: genEmail,
+            email_confirm: true,
+          });
+          if (updatedAuth?.user?.email) {
+            userEmail = updatedAuth.user.email;
+          }
+        } catch (_) {}
+      }
+
       if (!userEmail) {
         return new Response(
           JSON.stringify({ error: "کاربر یا ایمیل مربوطه یافت نشد" }),
@@ -268,11 +288,19 @@ serve(async (req) => {
       });
 
       const actionLink = linkData?.properties?.action_link;
+      const hashedToken = linkData?.properties?.hashed_token;
+
+      let directLoginUrl = actionLink;
+      if (hashedToken) {
+        directLoginUrl = `${redirectOrigin}/admin?token_hash=${encodeURIComponent(hashedToken)}&type=magiclink`;
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
-          redirect_url: actionLink,
+          redirect_url: directLoginUrl,
           magic_link: actionLink,
+          token_hash: hashedToken,
           email: userEmail,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }

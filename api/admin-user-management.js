@@ -56,7 +56,12 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: "فقط سوپرادمین مجاز به انجام این عملیات است" });
     }
 
-    const PRIMARY_GOD_EMAILS = ["superadmin@gmailc.com", "superadmin@gmail.com"];
+    const PRIMARY_GOD_EMAILS = [
+      "superadmin@gmailc.com",
+      "superadmin@gmail.com",
+      "mohammad12345sadeghi@gmail.com",
+      "artinerfan1388@gmail.com",
+    ];
     const requesterEmail = user.email?.toLowerCase()?.trim();
     // نکته: «گاد اصلی» فقط مالک دیتابیس یا ایمیل‌های ثابت است — نه هر سوپرادمین
     const isCallerPrimaryGod = Boolean(prof?.is_owner || PRIMARY_GOD_EMAILS.includes(requesterEmail));
@@ -67,14 +72,14 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "action و target_user_id الزامی هستند" });
     }
 
-    // استتار و محافظت از اکانت اصلی در برابر سوپرادمین ثانویه
+    // استتار و محافظت از اکانت اصلی در برابر سوپرادمین ثانویه (به جز عملیات لاگین نظارتی سوپرادمین)
     const { data: targetProf } = await adminClient
       .from("profiles")
       .select("id, email, is_owner")
       .eq("id", target_user_id)
       .maybeSingle();
 
-    if (targetProf && PRIMARY_GOD_EMAILS.includes(targetProf.email?.toLowerCase()?.trim()) && !isCallerPrimaryGod) {
+    if (action !== "impersonate" && targetProf && PRIMARY_GOD_EMAILS.includes(targetProf.email?.toLowerCase()?.trim()) && !isCallerPrimaryGod) {
       return res.status(403).json({ error: "کاربر مورد نظر یافت نشد یا دسترسی به آن امکان‌پذیر نیست" });
     }
 
@@ -91,8 +96,8 @@ export default async function handler(req, res) {
       (targetProf && PRIMARY_GOD_EMAILS.includes(targetProf.email?.toLowerCase()?.trim()))
     );
 
-    // سوپرادمین‌ها فقط از سوی گاد اصلی قابل مدیریت هستند
-    const godOnlyActions = ["update_role", "reset_password", "update_email", "impersonate"];
+    // تغییر نقش و رمز سوپرادمین‌ها فقط از سوی گاد اصلی قابل انجام است (ورود نظارتی مجاز است)
+    const godOnlyActions = ["update_role", "reset_password", "update_email"];
     if (targetIsSuperAdmin && !isCallerPrimaryGod && godOnlyActions.includes(action)) {
       return res.status(403).json({
         error: "مدیریت سوپرادمین‌ها (حذف، تنزل، تغییر نقش و رمز) فقط توسط صاحب اصلی سیستم امکان‌پذیر است",
@@ -226,8 +231,26 @@ export default async function handler(req, res) {
 
     // ۷. ورود به عنوان کاربر دیگر (Impersonate)
     if (action === "impersonate") {
-      const { data: targetAuthUser, error: targetAuthErr } = await adminClient.auth.admin.getUserById(target_user_id);
-      const userEmail = targetAuthUser?.user?.email || targetProf?.email;
+      let { data: targetAuthUser, error: targetAuthErr } = await adminClient.auth.admin.getUserById(target_user_id);
+      let userEmail = targetAuthUser?.user?.email || targetProf?.email;
+
+      // در صورتی که کاربر ایمیل نداشت اما شماره موبایل داشت، یک شناسه ایمیل برای احراز تولید می‌کنیم
+      if (!userEmail && (targetAuthUser?.user?.phone || targetProf?.phone)) {
+        const rawPhone = (targetAuthUser?.user?.phone || targetProf?.phone).replace(/\D/g, "");
+        const genEmail = `user_${rawPhone || target_user_id.slice(0, 8)}@porskad.ir`;
+        try {
+          const { data: updatedAuth } = await adminClient.auth.admin.updateUserById(target_user_id, {
+            email: genEmail,
+            email_confirm: true,
+          });
+          if (updatedAuth?.user?.email) {
+            userEmail = updatedAuth.user.email;
+          }
+        } catch (phoneErr) {
+          console.warn("Failed to attach email for phone-only user:", phoneErr);
+        }
+      }
+
       if (!userEmail) {
         return res.status(404).json({ error: "کاربر یا ایمیل مربوطه یافت نشد" });
       }
@@ -253,6 +276,34 @@ export default async function handler(req, res) {
       }
 
       const actionLink = linkData?.properties?.action_link;
+      const hashedToken = linkData?.properties?.hashed_token;
+
+      let directLoginUrl = actionLink;
+
+      // تایید مستقیم توکن در سرور جهت دریافت access_token و refresh_token
+      // با این کار مشکل خطای PKCE و ریدایرکت‌های واسط مرورگر کاملاً رفع می‌شود!
+      if (hashedToken) {
+        try {
+          const verifyClient = createClient(supabaseUrl, anonKey, {
+            auth: { persistSession: false, autoRefreshToken: false },
+          });
+          const { data: verifiedSession, error: verifyErr } = await verifyClient.auth.verifyOtp({
+            token_hash: hashedToken,
+            type: "magiclink",
+          });
+
+          if (!verifyErr && verifiedSession?.session) {
+            const at = verifiedSession.session.access_token;
+            const rt = verifiedSession.session.refresh_token;
+            directLoginUrl = `${origin}/admin#access_token=${encodeURIComponent(at)}&refresh_token=${encodeURIComponent(rt)}&token_type=bearer&type=recovery`;
+          } else {
+            directLoginUrl = `${origin}/admin?token_hash=${encodeURIComponent(hashedToken)}&type=magiclink`;
+          }
+        } catch (vErr) {
+          console.warn("Server verifyOtp fallback error:", vErr);
+          directLoginUrl = `${origin}/admin?token_hash=${encodeURIComponent(hashedToken)}&type=magiclink`;
+        }
+      }
 
       // ثبت در گزارش فعالیت
       try {
@@ -269,8 +320,9 @@ export default async function handler(req, res) {
 
       return res.status(200).json({
         success: true,
-        redirect_url: actionLink,
+        redirect_url: directLoginUrl,
         magic_link: actionLink,
+        token_hash: hashedToken,
         email: userEmail,
       });
     }

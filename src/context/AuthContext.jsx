@@ -4,7 +4,12 @@ import { logAuthEvent } from "../lib/activityLogger";
 
 const AuthContext = createContext(null);
 
-export const PRIMARY_GOD_EMAILS = ["superadmin@gmailc.com", "superadmin@gmail.com"];
+export const PRIMARY_GOD_EMAILS = [
+  "superadmin@gmailc.com",
+  "superadmin@gmail.com",
+  "mohammad12345sadeghi@gmail.com",
+  "artinerfan1388@gmail.com",
+];
 
 export function isPrimaryGodEmail(email) {
   if (!email) return false;
@@ -233,6 +238,28 @@ export function AuthProvider({ children }) {
         setLoading(false);
       }
     });
+
+    // تایید مستقیم در صورت وجود token_hash در آدرس (ورود مستقیم سوپرادمین)
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tokenHash = urlParams.get("token_hash") || urlParams.get("impersonate_token");
+      if (tokenHash) {
+        supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: urlParams.get("type") || "magiclink",
+        }).then(({ data: vData, error: vErr }) => {
+          if (!vErr && vData?.session) {
+            const cleanUrl = new URL(window.location.href);
+            cleanUrl.searchParams.delete("token_hash");
+            cleanUrl.searchParams.delete("impersonate_token");
+            cleanUrl.searchParams.delete("type");
+            window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search);
+          }
+        }).catch((err) => {
+          console.warn("verifyOtp from url error:", err);
+        });
+      }
+    }
 
     // Get initial session fallback
     supabase.auth.getSession().then(({ data }) => {
