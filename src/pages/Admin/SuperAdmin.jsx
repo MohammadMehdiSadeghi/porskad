@@ -413,6 +413,9 @@ export default function SuperAdmin() {
   const [editForm, setEditForm] = useState({});
   const [detailModal, setDetailModal] = useState(null);
   const [impersonateModal, setImpersonateModal] = useState(null);
+  const [impersonateResult, setImpersonateResult] = useState(null);
+  const [impersonateLoading, setImpersonateLoading] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const [toast, setToast] = useState(null);
 
   // ─── همگام‌سازی تنظیمات انواع سوال با دیتابیس در ورود به پنل گاد ───
@@ -1219,7 +1222,7 @@ export default function SuperAdmin() {
           "Content-Type": "application/json",
           Authorization: session?.access_token ? `Bearer ${session.access_token}` : "",
         },
-        body: JSON.stringify({ action, ...payload }),
+        body: JSON.stringify({ action, origin: window.location.origin, ...payload }),
       });
       if (res.ok) {
         const json = await res.json();
@@ -1240,7 +1243,18 @@ export default function SuperAdmin() {
       }
     }
 
-    // 2. RPC fallback for impersonation
+    // 2. Fallback to Supabase Edge Function if deployed
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-user-management", {
+        body: { action, origin: window.location.origin, ...payload },
+      });
+      if (!error && data && !data.error) return data;
+      if (data?.error && action !== "impersonate") throw new Error(data.error);
+    } catch (edgeErr) {
+      console.warn("Edge function admin-user-management error:", edgeErr);
+    }
+
+    // 3. RPC fallback for impersonation
     if (action === "impersonate" && payload.target_user_id) {
       try {
         const { data: rpcData, error: rpcErr } = await supabase.rpc("impersonate_user", {
@@ -1254,32 +1268,32 @@ export default function SuperAdmin() {
       }
     }
 
-    // 3. Fallback to Supabase Edge Function if deployed
-    const { data, error } = await supabase.functions.invoke("superadmin-action", {
-      body: { action, ...payload },
-    });
-    if (error) throw error;
-    if (data?.error) throw new Error(data.error);
-    return data;
+    throw new Error("سرویس مدیریت کاربران در دسترس نیست. لطفاً متغیرهای محیطی یا سرورلس را بررسی کنید.");
   }
 
   // ─── Impersonate User ───
   async function doImpersonate(targetUserId) {
     try {
-      showToast("Generating impersonation session...");
+      setImpersonateLoading(true);
+      showToast("در حال آماده‌سازی نشست ورود به اکانت کاربر...");
       const res = await adminAction("impersonate", { target_user_id: targetUserId });
       if (res?.redirect_url || res?.magic_link) {
         const url = res.redirect_url || res.magic_link;
-        window.open(url, "_blank");
-        showToast("Logged in as user in a new tab");
+        setImpersonateResult({
+          url,
+          email: res.email || impersonateModal?.email,
+          fullName: impersonateModal?.full_name,
+        });
+        showToast("لینک ورود مستقیم تولید شد", "success");
       } else if (res?.user) {
-        showToast(`Impersonating ${res.user.full_name || res.user.email}`);
+        showToast(`اطلاعات کاربر ${res.user.full_name || res.user.email} واکشی شد اما لینک ورود مستقیم در دسترس نیست`, "error");
       } else {
-        showToast("Impersonation link generated");
+        showToast("خطا: لینک ورود تولید نشد", "error");
       }
-      setImpersonateModal(null);
     } catch (err) {
-      showToast("Impersonation failed: " + err.message, "error");
+      showToast("خطا در ورود به اکانت کاربر: " + err.message, "error");
+    } finally {
+      setImpersonateLoading(false);
     }
   }
 
@@ -3240,6 +3254,15 @@ export default function SuperAdmin() {
                     >
                       Edit / Change Role
                     </button>
+                    {isCallerGod && (
+                      <button
+                        className="sa-btn sa-btn-ghost sa-btn-sm"
+                        onClick={() => setImpersonateModal(a)}
+                        title="ورود مستقیم به حساب این مدیر"
+                      >
+                        Login as
+                      </button>
+                    )}
                     {isCallerGod && !a.is_owner && (
                       <button
                         className="sa-btn sa-btn-danger sa-btn-sm"
@@ -5781,34 +5804,110 @@ export default function SuperAdmin() {
       {/* ═══════════ Login As Modal ═══════════ */}
       <Modal
         open={!!impersonateModal}
-        onClose={() => setImpersonateModal(null)}
-        title="Login as User"
+        onClose={() => {
+          setImpersonateModal(null);
+          setImpersonateResult(null);
+          setCopiedLink(false);
+        }}
+        title="ورود به عنوان کاربر (Login as User)"
       >
         {impersonateModal && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            <p style={{ fontSize: "0.85rem", color: "var(--sa-text-2)" }}>You will be logged in as:</p>
-            <div className="sa-modal-box">
-              <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>
-                {impersonateModal.full_name || "—"}
-              </div>
-              <div style={{ fontSize: "0.85rem", opacity: 0.8 }}>
-                {impersonateModal.email}
-              </div>
-            </div>
-            <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--sa-danger)", display: "flex", alignItems: "center", gap: "0.35rem" }}>
-              <AlertTriangle size={14} /> This action will be recorded in the security audit log.
-            </p>
-            <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginTop: "0.5rem" }}>
-              <button
-                className="sa-btn sa-btn-primary"
-                onClick={() => doImpersonate(impersonateModal.id)}
-              >
-                Confirm Login
-              </button>
-              <button className="sa-btn sa-btn-secondary" onClick={() => setImpersonateModal(null)}>
-                Cancel
-              </button>
-            </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem", direction: "rtl", textAlign: "right" }}>
+            {impersonateResult ? (
+              <>
+                <div style={{ padding: "0.75rem 1rem", borderRadius: "8px", background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.3)", color: "#10b981", fontSize: "0.9rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <Check size={18} />
+                  <span>نشست ورود مستقیم به اکانت {impersonateResult.fullName || impersonateResult.email} آماده است!</span>
+                </div>
+
+                <div style={{ padding: "0.75rem", borderRadius: "8px", background: "rgba(245, 158, 11, 0.08)", border: "1px solid rgba(245, 158, 11, 0.25)", color: "#d97706", fontSize: "0.82rem", lineHeight: 1.6 }}>
+                  💡 <strong>توصیه مهم برای حفظ نشست سوپرادمین:</strong>
+                  <br />
+                  اگر این لینک را در همین تب یا پنجره باز کنید، نشست سوپرادمین فعلی شما به این کاربر تغییر می‌کند. برای جلوگیری از این موضوع و بررسی هم‌زمان، پیشنهاد می‌شود <strong>لینک زیر را کپی کنید و در یک پنجره ناشناس (Incognito / Private)</strong> باز کنید.
+                </div>
+
+                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                  <input
+                    type="text"
+                    readOnly
+                    value={impersonateResult.url}
+                    style={{ flex: 1, padding: "0.5rem 0.75rem", fontSize: "0.8rem", borderRadius: "6px", border: "1px solid var(--sa-border)", background: "var(--sa-bg-2)", color: "var(--sa-text-1)", direction: "ltr" }}
+                    onClick={(e) => e.target.select()}
+                  />
+                  <button
+                    type="button"
+                    className="sa-btn sa-btn-secondary"
+                    style={{ whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: "0.35rem" }}
+                    onClick={() => {
+                      navigator.clipboard.writeText(impersonateResult.url);
+                      setCopiedLink(true);
+                      showToast("لینک اختصاصی کپی شد");
+                      setTimeout(() => setCopiedLink(false), 2500);
+                    }}
+                  >
+                    {copiedLink ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
+                    <span>{copiedLink ? "کپی شد!" : "کپی لینک"}</span>
+                  </button>
+                </div>
+
+                <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginTop: "0.5rem" }}>
+                  <a
+                    href={impersonateResult.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="sa-btn sa-btn-primary"
+                    style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.35rem" }}
+                  >
+                    <ExternalLink size={14} />
+                    ورود مستقیم در تب جدید
+                  </a>
+                  <button
+                    className="sa-btn sa-btn-secondary"
+                    onClick={() => {
+                      setImpersonateModal(null);
+                      setImpersonateResult(null);
+                      setCopiedLink(false);
+                    }}
+                  >
+                    بستن
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p style={{ fontSize: "0.85rem", color: "var(--sa-text-2)" }}>شما در حال ورود به اکانت کاربر زیر هستید:</p>
+                <div className="sa-modal-box">
+                  <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>
+                    {impersonateModal.full_name || "—"}
+                  </div>
+                  <div style={{ fontSize: "0.85rem", opacity: 0.8, direction: "ltr", textAlign: "right" }}>
+                    {impersonateModal.email}
+                  </div>
+                </div>
+                <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--sa-danger)", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                  <AlertTriangle size={14} /> این اقدام در گزارش‌های امنیتی سیستم (Audit Log) ثبت خواهد شد.
+                </p>
+                <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginTop: "0.5rem" }}>
+                  <button
+                    className="sa-btn sa-btn-primary"
+                    disabled={impersonateLoading}
+                    onClick={() => doImpersonate(impersonateModal.id)}
+                  >
+                    {impersonateLoading ? "در حال ایجاد نشست..." : "تایید و ساخت لینک ورود"}
+                  </button>
+                  <button
+                    className="sa-btn sa-btn-secondary"
+                    disabled={impersonateLoading}
+                    onClick={() => {
+                      setImpersonateModal(null);
+                      setImpersonateResult(null);
+                    }}
+                  >
+                    انصراف
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
       </Modal>

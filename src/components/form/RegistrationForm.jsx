@@ -44,7 +44,7 @@ function DropdownChoice({ options = [], value, onChange, placeholder = "یک گ�
   );
 }
 
-export default function RegistrationForm({ form, questions, logicRules = [], hiddenFields = {}, slug }) {
+export default function RegistrationForm({ form, questions, logicRules = [], hiddenFields = {}, slug, isEmbed = false, formId }) {
   const [answers, setAnswers] = useState({});
   const [fieldErrors, setFieldErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -148,10 +148,18 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
         throw rpcError;
       }
 
-      const responseId = data?.response_id;
+      const responseId = data?.response_id || data?.responseId;
 
       if (responseId) {
         sendToTelegram(form.id, responseId);
+      }
+
+      if (isEmbed) {
+        try {
+          const fid = formId || form.public_id || form.id;
+          window.parent.postMessage({ type: "pcode:submitted", formId: fid, responseId }, "*");
+          window.parent.postMessage({ type: "porskad-submit", formId: fid, responseId }, "*");
+        } catch (_) {}
       }
 
       localStorage.setItem(`porskad_submitted_${form.id}`, new Date().toISOString());
@@ -668,7 +676,7 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
 
   if (submitted) {
     return (
-      <div className="min-h-dvh flex items-center justify-center p-4">
+      <div className={isEmbed ? "w-full flex items-center justify-center p-3" : "min-h-dvh flex items-center justify-center p-4"}>
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md">
           <StickerCard theme="teal" radius="rounded-[1.5rem]">
             <div className="p-8 flex flex-col items-center text-center gap-4">
@@ -690,8 +698,8 @@ export default function RegistrationForm({ form, questions, logicRules = [], hid
   }
 
   return (
-    <div className="min-h-dvh dot-pattern bg-ecosystem-light dark:bg-[#0B0F19] text-ink dark:text-slate-100 p-4 transition-colors duration-200 relative">
-      <SEO title={form.title} />
+    <div className={isEmbed ? "w-full bg-transparent text-ink dark:text-slate-100 p-2 sm:p-4 transition-colors duration-200 relative" : "min-h-dvh dot-pattern bg-ecosystem-light dark:bg-[#0B0F19] text-ink dark:text-slate-100 p-4 transition-colors duration-200 relative"}>
+      {!isEmbed && <SEO title={form.title} />}
       <main className="max-w-xl mx-auto">
         <StickerCard theme="white" radius="rounded-[1.5rem]">
           <div className="p-6">

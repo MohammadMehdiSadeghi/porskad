@@ -232,12 +232,19 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "کاربر یا ایمیل مربوطه یافت نشد" });
       }
 
-      const origin = req.headers.origin || (req.headers.host ? `https://${req.headers.host}` : "https://porskad.ir");
+      const requestOrigin = req.body?.origin || req.headers.origin;
+      let origin = requestOrigin;
+      if (!origin && req.headers.host) {
+        const proto = req.headers["x-forwarded-proto"] || (req.headers.host.includes("localhost") || req.headers.host.includes("127.0.0.1") ? "http" : "https");
+        origin = `${proto}://${req.headers.host}`;
+      }
+      if (!origin) origin = "https://porskad.ir";
+
       const { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
         type: "magiclink",
         email: userEmail,
         options: {
-          redirectTo: `${origin}/dashboard`,
+          redirectTo: `${origin}/admin`,
         },
       });
 
@@ -246,6 +253,19 @@ export default async function handler(req, res) {
       }
 
       const actionLink = linkData?.properties?.action_link;
+
+      // ثبت در گزارش فعالیت
+      try {
+        await adminClient.from("activity_log").insert({
+          user_id: user.id,
+          action: "impersonate_user",
+          target_type: "user",
+          target_id: target_user_id,
+          details: { target_email: userEmail, impersonated_by: requesterEmail },
+        });
+      } catch (logErr) {
+        console.warn("Failed to log impersonate activity:", logErr);
+      }
 
       return res.status(200).json({
         success: true,

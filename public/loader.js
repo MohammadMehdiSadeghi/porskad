@@ -42,9 +42,9 @@
     }
 
     var iframe = document.createElement("iframe");
-    var theme = customTheme || (container && container.getAttribute ? container.getAttribute("data-pcode-theme") : "") || "";
     var themeParam = theme ? "?theme=" + encodeURIComponent(theme) : "";
-    iframe.src = BASE + "/embed/" + encodeURIComponent(formId) + themeParam;
+    var modeParam = mode ? (themeParam ? "&mode=" + encodeURIComponent(mode) : "?mode=" + encodeURIComponent(mode)) : "";
+    iframe.src = BASE + "/embed/" + encodeURIComponent(formId) + themeParam + modeParam;
     iframe.setAttribute("data-form-id", formId);
     iframe.setAttribute("data-pcode-iframe", formId);
     iframe.setAttribute("frameborder", "0");
@@ -183,17 +183,34 @@
 
   // ─── گوش دادن به پیام‌های iframe ───
   window.addEventListener("message", function (e) {
-    // فقط پیام‌های همان مبدأ میزبان فرم (جایی که خود iframe لود شده) را بپذیر
-    try {
-      if (BASE && e.origin !== new URL(BASE).origin) return;
-    } catch (_) { /* BASE نسبی/نامعتبر — بدون گارد */ }
     var d = e.data;
     if (!d || !d.type) return;
 
-    if (d.type === "pcode:resize") {
+    // بررسی ایمن مبدأ یا تطابق با iframe ایجاد شده
+    var isKnownSource = false;
+    if (window.__pcodeInstances) {
+      for (var k in window.__pcodeInstances) {
+        if (window.__pcodeInstances[k] && window.__pcodeInstances[k].iframe && window.__pcodeInstances[k].iframe.contentWindow === e.source) {
+          isKnownSource = true;
+          break;
+        }
+      }
+    }
+    if (!isKnownSource) {
+      try {
+        if (BASE && e.origin && e.origin !== new URL(BASE).origin) return;
+      } catch (_) {}
+    }
+
+    if (d.type === "pcode:resize" || d.type === "porskad-resize") {
       var iframe = (d.formId ? document.querySelector('iframe[data-form-id="' + d.formId + '"]') : null) || document.querySelector('iframe[data-pcode-iframe]');
-      if (iframe && d.height && d.height > 100) {
-        iframe.style.height = (d.height + 20) + "px";
+      var rawH = typeof d.height === "number" ? d.height : parseInt(d.height, 10);
+      if (iframe && rawH && rawH > 100) {
+        var targetH = Math.max(Math.round(rawH), 160);
+        var currentH = parseInt(iframe.style.height || 0, 10);
+        if (Math.abs(currentH - targetH) > 4) {
+          iframe.style.height = targetH + "px";
+        }
       }
     }
 

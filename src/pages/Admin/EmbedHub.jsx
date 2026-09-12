@@ -217,7 +217,7 @@ function FormEmbedCard({ form, baseUrl, index }) {
     inline: `<div data-pcode-form="${publicId}"${themeAttr}></div>\n<script src="${baseUrl}/loader.js" async></script>`,
     popup: `<button data-pcode-popup="${publicId}"${themeAttr}>باز کردن فرم</button>\n<script src="${baseUrl}/loader.js" async></script>`,
     popover: `<script>\n  window.PorsCode = window.PorsCode || {};\n  window.PorsCode.popover = {\n    formId: "${publicId}",${popoverThemeLine}\n    position: "bottom-right"\n  };\n</script>\n<script src="${baseUrl}/loader.js" async></script>`,
-    iframe: `<iframe src="${baseUrl}/embed/${publicId}${themeQuery}" width="100%" height="600" frameborder="0"></iframe>`,
+    iframe: `<iframe src="${baseUrl}/embed/${publicId}${themeQuery}" width="100%" height="600" frameborder="0" allow="camera; microphone; autoplay" style="border:none;background:transparent;"></iframe>`,
     link: `${baseUrl}/f/${form.slug}${themeQuery}`,
   };
 

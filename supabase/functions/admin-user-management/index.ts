@@ -233,6 +233,52 @@ serve(async (req) => {
       );
     }
 
+    if (action === "impersonate") {
+      const { data: targetAuthUser } = await supabaseAdmin.auth.admin.getUserById(target_user_id);
+      const userEmail = targetAuthUser?.user?.email;
+      if (!userEmail) {
+        return new Response(
+          JSON.stringify({ error: "کاربر یا ایمیل مربوطه یافت نشد" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const redirectOrigin = origin || "https://porskad.ir";
+      const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
+        email: userEmail,
+        options: {
+          redirectTo: `${redirectOrigin}/admin`,
+        },
+      });
+
+      if (linkErr) {
+        return new Response(
+          JSON.stringify({ error: linkErr.message }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      await supabaseAdmin.from("activity_log").insert({
+        user_id: user.id,
+        action: "impersonate_user",
+        target_type: "user",
+        target_id: target_user_id,
+        details: { target_email: userEmail, impersonated_by: callerEmail },
+      });
+
+      const actionLink = linkData?.properties?.action_link;
+      return new Response(
+        JSON.stringify({
+          success: true,
+          redirect_url: actionLink,
+          magic_link: actionLink,
+          email: userEmail,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     return new Response(
       JSON.stringify({ error: "Unknown action: " + action }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }

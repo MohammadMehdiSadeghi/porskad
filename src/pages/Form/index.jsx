@@ -291,12 +291,26 @@ export default function FormFill() {
     try {
       const ua = parseUserAgent(); const nowIso = new Date().toISOString();
       const responseId = generateUuid();
-      const { error: respError } = await supabase.from("responses").insert({
+      const respPayload = {
         id: responseId,
-        form_id: form.id, is_complete: true, started_at: new Date(startedAt ?? Date.now()).toISOString(), submitted_at: nowIso,
+        form_id: form.id,
+        is_complete: true,
+        started_at: new Date(startedAt ?? Date.now()).toISOString(),
+        submitted_at: nowIso,
         duration_seconds: startedAt ? Math.round((Date.now() - startedAt) / 1000) : null,
-        device: ua.device, browser: ua.browser, os: ua.os, user_agent: navigator.userAgent, referer: document.referrer || null,
-      });
+        device: ua.device,
+        browser: ua.browser,
+        os: ua.os,
+        user_agent: navigator.userAgent,
+        referrer_url: document.referrer || null,
+      };
+      let { error: respError } = await supabase.from("responses").insert(respPayload);
+      if (respError && respError.message && respError.message.includes("referrer_url")) {
+        delete respPayload.referrer_url;
+        respPayload.referer = document.referrer || null;
+        const retry = await supabase.from("responses").insert(respPayload);
+        respError = retry.error;
+      }
       if (respError) throw respError;
       const rows = visibleQuestions.filter((q) => { const v = answers[q.id]; return !(v === undefined || v === null || String(v ?? "").trim() === ""); }).map((q) => ({ response_id: responseId, question_id: q.id, value: normalizeAnswerValue(q, answers[q.id]), time_spent_seconds: Math.round(times[q.id] ?? 0) }));
       if (rows.length) { const { error: ansError } = await supabase.from("answers").insert(rows); if (ansError) throw ansError; }

@@ -21,22 +21,38 @@ import { FormFillSkeleton } from "../../components/ui/Skeleton";
 // فرم (submit/resize/step) حمل می‌کنند — هیچ توکن یا داده حساسی نیست.
 function postToParent(type, data = {}) {
   try {
-    window.parent.postMessage({ type, formId: data.formId, ...data }, "*");
+    const payload = { type, formId: data.formId, ...data };
+    window.parent.postMessage(payload, "*");
+    if (type === "pcode:resize") {
+      window.parent.postMessage({ type: "porskad-resize", height: data.height, formId: data.formId }, "*");
+    }
+    if (type === "pcode:submitted") {
+      window.parent.postMessage({ type: "porskad-submit", formId: data.formId, responseId: data.responseId }, "*");
+    }
   } catch { /* ignore */ }
 }
 
 // ─── گزارش ارتفاع به سایت میزبان ───
 function useAutoResize(formId) {
   useEffect(() => {
+    let lastHeight = 0;
     function reportHeight() {
-      const height = document.body.scrollHeight;
-      postToParent("pcode:resize", { formId: formId || window.__pcodeFormId, height });
+      const root = document.getElementById("pcode-embed-root");
+      const height = root ? Math.max(root.scrollHeight, root.offsetHeight) : document.body.scrollHeight;
+      if (height > 50 && Math.abs(height - lastHeight) >= 6) {
+        lastHeight = height;
+        postToParent("pcode:resize", { formId: formId || window.__pcodeFormId, height: Math.round(height) });
+      }
     }
-    reportHeight();
+    const t1 = setTimeout(reportHeight, 50);
+    const t2 = setTimeout(reportHeight, 350);
     const observer = new ResizeObserver(reportHeight);
-    observer.observe(document.body);
+    const target = document.getElementById("pcode-embed-root") || document.body;
+    observer.observe(target);
     window.addEventListener("resize", reportHeight);
     return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
       observer.disconnect();
       window.removeEventListener("resize", reportHeight);
     };
@@ -56,6 +72,12 @@ function handleClose() {
 }
 
 function CloseButton() {
+  const isPopupOrPopover = typeof window !== "undefined" && (
+    new URLSearchParams(window.location.search).get("mode") === "popup" ||
+    new URLSearchParams(window.location.search).get("mode") === "popover" ||
+    new URLSearchParams(window.location.search).get("close") === "1"
+  );
+  if (!isPopupOrPopover) return null;
   return (
     <button
       onClick={handleClose}
@@ -418,19 +440,64 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
           answersObj[q.id] = normalizeAnswerValue(q, v);
         }
       }
-      const { data, error: rpcError } = await supabase.rpc("submit_public_response", {
-        p_form_public_id: formId, p_answers: answersObj, p_meta: meta, p_times: {},
-      });
-      if (rpcError) throw rpcError;
+
+      const targetPublicId = schema?.public_id || schema?.id || formId;
+      let responseId = null;
+      try {
+        const { data, error: rpcError } = await supabase.rpc("submit_public_response", {
+          p_form_public_id: targetPublicId, p_answers: answersObj, p_meta: meta, p_times: {},
+        });
+        if (!rpcError && (data?.responseId || data?.response_id)) {
+          responseId = data?.responseId || data?.response_id;
+        } else if (rpcError) {
+          console.warn("RPC submit error, trying direct fallback:", rpcError);
+        }
+      } catch (rpcErr) {
+        console.warn("RPC submit exception, trying direct fallback:", rpcErr);
+      }
+
+      if (!responseId) {
+        const formUuid = schema?.uuid_id || schema?.id;
+        if (formUuid) {
+          const { data: respData, error: respErr } = await supabase
+            .from("responses")
+            .insert({
+              form_id: formUuid,
+              is_complete: true,
+              started_at: meta.startedAt,
+              submitted_at: meta.completedAt,
+              device: meta.device,
+              browser: meta.browser,
+              os: meta.os,
+              user_agent: meta.userAgent,
+              referrer_url: meta.referrerUrl,
+            })
+            .select("id")
+            .single();
+          if (respErr) throw respErr;
+          responseId = respData.id;
+
+          const rows = visibleQuestions
+            .filter((q) => answersObj[q.id] !== undefined)
+            .map((q) => ({
+              response_id: responseId,
+              question_id: q.id,
+              value: answersObj[q.id],
+              time_spent_seconds: 0,
+            }));
+          if (rows.length) {
+            await supabase.from("answers").insert(rows);
+          }
+        }
+      }
 
       if (hasScoring(visibleQuestions)) {
         const score = calculateScore(visibleQuestions, answers);
         setScoreResult(score);
       }
 
-      postToParent("pcode:submitted", { formId, responseId: data?.responseId });
-      // مهم: باید UUID یا public_id فرم رو بفرستیم (telegram-send هر دو رو ساپورت می‌کنه)
-      sendToTelegram(schema?.uuid_id || schema?.id || formId, data?.responseId);
+      postToParent("pcode:submitted", { formId, responseId });
+      sendToTelegram(schema?.uuid_id || schema?.id || formId, responseId);
       setSubmitted(true);
     } catch (err) {
       console.error("Submit error:", err);
@@ -694,25 +761,35 @@ export default function EmbedForm() {
         }
 
         if (!loadedSchema) {
-          // Direct fallback query
-          const { data: fData } = await supabase
-            .from("forms")
-            .select("*")
-            .or(`public_id.eq.${formId},id.eq.${formId},slug.eq.${formId}`)
+          // Direct fallback query — امن در برابر خطای 22P02 تایپ UUID در Postgres
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(formId);
+          let query = supabase.from("forms").select("*");
+          if (isUuid) {
+            query = query.or(`id.eq.${formId},public_id.eq.${formId},slug.eq.${formId}`);
+          } else {
+            query = query.or(`public_id.eq.${formId},slug.eq.${formId}`);
+          }
+
+          const { data: fData } = await query
+            .eq("published", true)
+            .eq("archived", false)
+            .is("deleted_at", null)
             .maybeSingle();
 
           if (fData) {
             const [{ data: qData }, { data: lData }] = await Promise.all([
-              supabase.from("questions").select("*").eq("form_id", fData.id).order("position", { ascending: true }),
+              supabase.from("questions").select("*").eq("form_id", fData.id).is("deleted_at", null).order("position", { ascending: true }),
               supabase.from("logic_rules").select("*").eq("form_id", fData.id).order("priority"),
             ]);
 
             loadedSchema = {
               id: fData.id,
+              public_id: fData.public_id || fData.id,
+              uuid_id: fData.id,
               title: fData.title,
               description: fData.description,
               slug: fData.slug,
-              form_type: fData.form_type,
+              form_type: fData.form_type || "step_by_step",
               default_theme: fData.default_theme || "light",
               welcome_title: fData.welcome_title,
               welcome_message: fData.welcome_message,
@@ -923,20 +1000,65 @@ export default function EmbedForm() {
         startedAt: new Date(startedAt ?? Date.now()).toISOString(), completedAt: nowIso,
       };
 
-      const { data, error: rpcError } = await supabase.rpc("submit_public_response", {
-        p_form_public_id: formId, p_answers: answersObj, p_meta: meta, p_times: times || {},
-      });
+      const targetPublicId = schema?.public_id || schema?.id || formId;
+      let responseId = null;
+      try {
+        const { data, error: rpcError } = await supabase.rpc("submit_public_response", {
+          p_form_public_id: targetPublicId, p_answers: answersObj, p_meta: meta, p_times: times || {},
+        });
+        if (!rpcError && (data?.responseId || data?.response_id)) {
+          responseId = data?.responseId || data?.response_id;
+        } else if (rpcError) {
+          console.warn("RPC submit error, trying direct fallback:", rpcError);
+        }
+      } catch (rpcErr) {
+        console.warn("RPC submit exception, trying direct fallback:", rpcErr);
+      }
 
-      if (rpcError) throw rpcError;
+      if (!responseId) {
+        const formUuid = schema?.uuid_id || schema?.id;
+        if (formUuid) {
+          const { data: respData, error: respErr } = await supabase
+            .from("responses")
+            .insert({
+              form_id: formUuid,
+              is_complete: true,
+              duration_seconds: duration,
+              device: meta.device,
+              browser: meta.browser,
+              os: meta.os,
+              user_agent: meta.userAgent,
+              referrer_url: meta.referrerUrl,
+              submitted_at: nowIso,
+            })
+            .select("id")
+            .single();
+          if (respErr) throw respErr;
+          responseId = respData.id;
+
+          const rows = visibleQuestions
+            .filter((q) => answersObj[q.id] !== undefined)
+            .map((q) => ({
+              response_id: responseId,
+              question_id: q.id,
+              value: answersObj[q.id],
+              time_spent_seconds: Math.round(times[q.id] ?? 0),
+            }));
+          if (rows.length) {
+            await supabase.from("answers").insert(rows);
+          }
+        } else {
+          throw new Error("شناسه فرم برای ثبت پیدا نشد");
+        }
+      }
 
       if (hasScoring(visibleQuestions)) {
         const score = calculateScore(visibleQuestions, answers);
         setScoreResult(score);
       }
 
-      postToParent("pcode:submitted", { formId, responseId: data?.responseId });
-      // مهم: باید UUID یا public_id فرم رو بفرستیم (telegram-send هر دو رو ساپورت می‌کنه)
-      sendToTelegram(schema?.uuid_id || schema?.id || formId, data?.responseId);
+      postToParent("pcode:submitted", { formId, responseId });
+      sendToTelegram(schema?.uuid_id || schema?.id || formId, responseId);
       setDir(1);
       setStep(total);
     } catch (err) {
@@ -962,24 +1084,51 @@ export default function EmbedForm() {
   }, [step, currentQuestion, visibleQuestions]);
 
   const isRegistration = schema?.form_type === "registration";
+  const isInIframe = typeof window !== "undefined" && window.parent && window.parent !== window;
 
-  if (loading) return <div className="min-h-[100dvh] bg-transparent"><CloseButton /><FormFillSkeleton /></div>;
-  if (error) return <div className="min-h-[100dvh] flex items-center justify-center p-4 bg-transparent"><CloseButton />      <div className="relative max-w-sm w-full">
-      <div aria-hidden="true" className="absolute top-2 left-2 w-full h-full bg-male-normal rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
-      <div className="relative z-10 bg-white border-2 border-male-normal rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-4 sm:p-5 text-center">
-        <p className="text-sm sm:text-base font-black text-male-normal">{error}</p>
+  if (loading) {
+    return (
+      <div id="pcode-embed-root" className={`${isInIframe ? "w-full py-6" : "min-h-[100dvh]"} bg-transparent`}>
+        <CloseButton />
+        <FormFillSkeleton />
       </div>
-    </div>
-  </div>;
+    );
+  }
+  if (error) {
+    return (
+      <div id="pcode-embed-root" className={`${isInIframe ? "w-full py-6" : "min-h-[100dvh]"} flex items-center justify-center p-4 bg-transparent`}>
+        <CloseButton />
+        <div className="relative max-w-sm w-full">
+          <div aria-hidden="true" className="absolute top-2 left-2 w-full h-full bg-male-normal rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
+          <div className="relative z-10 bg-white border-2 border-male-normal rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-4 sm:p-5 text-center">
+            <p className="text-sm sm:text-base font-black text-male-normal">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (!schema) return null;
 
   if (isRegistration) {
-    return <RegistrationForm form={schema} questions={questions} logicRules={logicRules} slug={schema.slug || formId} />;
+    return (
+      <div id="pcode-embed-root" className={`${isInIframe ? "w-full" : "min-h-[100dvh]"} bg-transparent`}>
+        <CloseButton />
+        <RegistrationForm
+          form={schema}
+          questions={questions}
+          logicRules={logicRules}
+          slug={schema.slug || formId}
+          isEmbed={true}
+          formId={schema.public_id || schema.id || formId}
+        />
+        {schema.showBranding && <BrandingBadge formId={formId} />}
+      </div>
+    );
   }
 
   // ─── فرم مرحله‌ای embed — طراحی رکاد ───
   return (
-    <div className="min-h-[100dvh] font-sans bg-transparent text-ink dark:text-slate-100" dir="rtl">
+    <div id="pcode-embed-root" className={`${isInIframe ? "w-full" : "min-h-[100dvh]"} font-sans bg-transparent text-ink dark:text-slate-100`} dir="rtl">
       <CloseButton />
       {/* هدر باریک */}
       <div className="w-full max-w-xl mx-auto px-5 py-3 text-center">
