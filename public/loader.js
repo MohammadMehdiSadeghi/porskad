@@ -42,6 +42,7 @@
     }
 
     var iframe = document.createElement("iframe");
+    var theme = customTheme || (container.getAttribute && (container.getAttribute("data-pcode-theme") || container.getAttribute("data-theme"))) || "";
     var themeParam = theme ? "?theme=" + encodeURIComponent(theme) : "";
     var modeParam = mode ? (themeParam ? "&mode=" + encodeURIComponent(mode) : "?mode=" + encodeURIComponent(mode)) : "";
     iframe.src = BASE + "/embed/" + encodeURIComponent(formId) + themeParam + modeParam;

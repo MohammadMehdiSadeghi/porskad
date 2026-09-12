@@ -778,7 +778,7 @@ export default function EmbedForm() {
 
           if (fData) {
             const [{ data: qData }, { data: lData }] = await Promise.all([
-              supabase.from("questions").select("*").eq("form_id", fData.id).is("deleted_at", null).order("position", { ascending: true }),
+              supabase.from("questions").select("*").eq("form_id", fData.id).order("position", { ascending: true }),
               supabase.from("logic_rules").select("*").eq("form_id", fData.id).order("priority"),
             ]);
 
