@@ -282,6 +282,7 @@ export default async function handler(req, res) {
 
       // تایید مستقیم توکن در سرور جهت دریافت access_token و refresh_token
       // با این کار مشکل خطای PKCE و ریدایرکت‌های واسط مرورگر کاملاً رفع می‌شود!
+      let serverSession = null;
       if (hashedToken) {
         try {
           const verifyClient = createClient(supabaseUrl, anonKey, {
@@ -293,15 +294,16 @@ export default async function handler(req, res) {
           });
 
           if (!verifyErr && verifiedSession?.session) {
+            serverSession = verifiedSession.session;
             const at = verifiedSession.session.access_token;
             const rt = verifiedSession.session.refresh_token;
-            directLoginUrl = `${origin}/admin#access_token=${encodeURIComponent(at)}&refresh_token=${encodeURIComponent(rt)}&token_type=bearer&type=recovery`;
+            directLoginUrl = `${origin}/admin#access_token=${at}&refresh_token=${rt}&token_type=bearer&type=recovery`;
           } else {
-            directLoginUrl = `${origin}/admin?token_hash=${encodeURIComponent(hashedToken)}&type=magiclink`;
+            directLoginUrl = actionLink;
           }
         } catch (vErr) {
           console.warn("Server verifyOtp fallback error:", vErr);
-          directLoginUrl = `${origin}/admin?token_hash=${encodeURIComponent(hashedToken)}&type=magiclink`;
+          directLoginUrl = actionLink;
         }
       }
 
@@ -324,6 +326,7 @@ export default async function handler(req, res) {
         magic_link: actionLink,
         token_hash: hashedToken,
         email: userEmail,
+        session: serverSession,
       });
     }
 

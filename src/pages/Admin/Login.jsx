@@ -46,6 +46,24 @@ export default function Login() {
     loadTelegramSupport();
   }, []);
 
+  const hasIncomingToken = typeof window !== "undefined" && (
+    window.location.hash.includes("access_token=") ||
+    window.location.search.includes("token_hash=") ||
+    window.location.search.includes("impersonate_token=") ||
+    window.location.search.includes("code=")
+  );
+
+  if (hasIncomingToken && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-bg-neutral dark:bg-[#0B0F19]" dir="rtl">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-teal border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm font-bold text-navy dark:text-white">در حال ورود به حساب کاربری...</span>
+        </div>
+      </div>
+    );
+  }
+
   if (user) {
     return <Navigate to={isOwner() ? "/admin" : "/admin/forms"} replace />;
   }

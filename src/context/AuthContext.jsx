@@ -239,38 +239,106 @@ export function AuthProvider({ children }) {
       }
     });
 
-    // تایید مستقیم در صورت وجود token_hash در آدرس (ورود مستقیم سوپرادمین)
+    // تایید و اعمال نشست در صورت وجود توکن در آدرس (ورود مستقیم سوپرادمین / Impersonate / MagicLink)
+    let hasIncomingToken = false;
     if (typeof window !== "undefined") {
+      // ۱. بررسی access_token در هش URL (#access_token=...&refresh_token=...)
+      const rawHash = window.location.hash;
+      if (rawHash && (rawHash.includes("access_token=") || rawHash.includes("refresh_token="))) {
+        hasIncomingToken = true;
+        setLoading(true);
+        const hashParams = new URLSearchParams(rawHash.replace(/^#/, ""));
+        const at = hashParams.get("access_token");
+        const rt = hashParams.get("refresh_token");
+        if (at) {
+          supabase.auth
+            .setSession({
+              access_token: at,
+              refresh_token: rt || "",
+            })
+            .then(({ data: sData, error: sErr }) => {
+              if (!sErr && sData?.session) {
+                // پاک‌سازی هش از URL بدون رفرش
+                const cleanUrl = window.location.pathname + window.location.search;
+                window.history.replaceState({}, document.title, cleanUrl);
+              } else {
+                console.warn("setSession from hash error:", sErr);
+                setLoading(false);
+              }
+            })
+            .catch((err) => {
+              console.warn("setSession catch:", err);
+              setLoading(false);
+            });
+        }
+      }
+
+      // ۲. بررسی token_hash یا کد ورود در کوئری URL (?token_hash=... یا ?code=...)
       const urlParams = new URLSearchParams(window.location.search);
       const tokenHash = urlParams.get("token_hash") || urlParams.get("impersonate_token");
+      const authCode = urlParams.get("code");
+
       if (tokenHash) {
-        supabase.auth.verifyOtp({
-          token_hash: tokenHash,
-          type: urlParams.get("type") || "magiclink",
-        }).then(({ data: vData, error: vErr }) => {
-          if (!vErr && vData?.session) {
-            const cleanUrl = new URL(window.location.href);
-            cleanUrl.searchParams.delete("token_hash");
-            cleanUrl.searchParams.delete("impersonate_token");
-            cleanUrl.searchParams.delete("type");
-            window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search);
-          }
-        }).catch((err) => {
-          console.warn("verifyOtp from url error:", err);
-        });
+        hasIncomingToken = true;
+        setLoading(true);
+        supabase.auth
+          .verifyOtp({
+            token_hash: tokenHash,
+            type: urlParams.get("type") || "magiclink",
+          })
+          .then(({ data: vData, error: vErr }) => {
+            if (!vErr && vData?.session) {
+              const cleanUrl = new URL(window.location.href);
+              cleanUrl.searchParams.delete("token_hash");
+              cleanUrl.searchParams.delete("impersonate_token");
+              cleanUrl.searchParams.delete("type");
+              window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search);
+            } else {
+              console.warn("verifyOtp error:", vErr);
+              setLoading(false);
+            }
+          })
+          .catch((err) => {
+            console.warn("verifyOtp from url error:", err);
+            setLoading(false);
+          });
+      } else if (authCode) {
+        hasIncomingToken = true;
+        setLoading(true);
+        supabase.auth
+          .exchangeCodeForSession(authCode)
+          .then(({ data: cData, error: cErr }) => {
+            if (!cErr && cData?.session) {
+              const cleanUrl = new URL(window.location.href);
+              cleanUrl.searchParams.delete("code");
+              window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search);
+            } else {
+              console.warn("exchangeCode error:", cErr);
+              setLoading(false);
+            }
+          })
+          .catch((err) => {
+            console.warn("exchangeCode from url error:", err);
+            setLoading(false);
+          });
       }
     }
 
-    // Get initial session fallback
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        setLoading(false);
-      }
-    }).catch((err) => {
-      console.error("getSession error:", err);
-      setError(err.message || "Session error");
-      setLoading(false);
-    });
+    // ۳. فقط در صورتی که هیچ توکنی در آدرس در حال پردازش نیست، getSession را فال‌بک کن
+    if (!hasIncomingToken) {
+      supabase.auth
+        .getSession()
+        .then(({ data }) => {
+          if (!data.session) {
+            setLoading(false);
+          }
+        })
+        .catch((err) => {
+          console.error("getSession error:", err);
+          setError(err.message || "Session error");
+          setLoading(false);
+        });
+    }
 
     return () => {
       if (subscription) {

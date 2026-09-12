@@ -1297,6 +1297,7 @@ export default function SuperAdmin() {
           url,
           email: res.email || impersonateModal?.email,
           fullName: impersonateModal?.full_name,
+          session: res.session || null,
         });
         showToast("لینک ورود مستقیم تولید شد", "success");
       } else if (res?.user) {
@@ -1308,6 +1309,25 @@ export default function SuperAdmin() {
       showToast("خطا در ورود به اکانت کاربر: " + err.message, "error");
     } finally {
       setImpersonateLoading(false);
+    }
+  }
+
+  // ─── Instant Switch to User in Current Tab ───
+  async function handleInstantSwitchToUser() {
+    if (!impersonateResult?.session?.access_token) return;
+    try {
+      showToast("در حال ورود به اکانت کاربر در همین مرورگر...", "info");
+      const { error } = await supabase.auth.setSession({
+        access_token: impersonateResult.session.access_token,
+        refresh_token: impersonateResult.session.refresh_token || "",
+      });
+      if (error) throw error;
+      showToast("با موفقیت وارد حساب کاربر شدید!", "success");
+      setTimeout(() => {
+        window.location.href = "/admin/forms";
+      }, 300);
+    } catch (err) {
+      showToast("خطا در سوئیچ نشست: " + err.message, "error");
     }
   }
 
@@ -6021,13 +6041,36 @@ export default function SuperAdmin() {
                   </button>
                 </div>
 
-                <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginTop: "0.5rem" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", justifyContent: "flex-end", marginTop: "0.5rem" }}>
+                  {impersonateResult.session?.access_token && (
+                    <button
+                      type="button"
+                      className="sa-btn"
+                      style={{
+                        background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                        color: "#fff",
+                        border: "none",
+                        fontWeight: 700,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "0.35rem",
+                        cursor: "pointer",
+                        padding: "0.5rem 0.9rem",
+                        borderRadius: "0.375rem",
+                        boxShadow: "0 2px 8px rgba(16, 185, 129, 0.3)",
+                      }}
+                      onClick={handleInstantSwitchToUser}
+                    >
+                      <LogIn size={15} />
+                      ورود فوری در همین صفحه
+                    </button>
+                  )}
                   <a
                     href={impersonateResult.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="sa-btn sa-btn-primary"
-                    style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.35rem" }}
+                    style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
                   >
                     <ExternalLink size={14} />
                     ورود مستقیم در تب جدید
