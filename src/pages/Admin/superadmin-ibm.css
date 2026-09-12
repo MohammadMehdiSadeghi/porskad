@@ -614,16 +614,16 @@
 
 /* ═══════════════════════════════════════════════════════════
    God Panel Design Tokens (IBM Carbon) — light + dark
-   همه رنگ‌های inline JSX از این متغیرهاfeeds می‌شوند؛
-   با تعویض مقدار در `html.dark` کل پنل دارک‌رند می‌شود.
+   All inline JSX colors feed from these variables;
+   toggling value on `html.dark` re-renders entire panel in dark mode.
    ═══════════════════════════════════════════════════════════ */
 .sa-root {
-  --sa-text-0: #161616;      /* متن اصلی */
-  --sa-text-1: #525252;      /* متن ثانویه */
-  --sa-text-2: #6f6f6f;      /* متن کم‌رنگ */
-  --sa-text-3: #8d8d8d;      /* placeholder/حاشیه‌ای */
-  --sa-text-4: #a8a8a8;      /* بسیار کم‌رنگ */
-  --sa-link: #0f62fe;        /* آبی اصلی (لینک/فعال) */
+  --sa-text-0: #161616;      /* Primary text */
+  --sa-text-1: #525252;      /* Secondary text */
+  --sa-text-2: #6f6f6f;      /* Subdued text */
+  --sa-text-3: #8d8d8d;      /* Placeholder / border text */
+  --sa-text-4: #a8a8a8;      /* Very faint text */
+  --sa-link: #0f62fe;        /* Primary blue (link / active) */
   --sa-link-strong: #0043ce;
   --sa-danger: #da1e28;
   --sa-danger-strong: #a2191f;
@@ -641,12 +641,12 @@
   --sa-red-soft: #fff1f1;
   --sa-error-bg-2: #ffd7d9;
   --sa-error-text-2: #752227;
-  --sa-surface: #ffffff;     /* سطح کارت/ورودی */
-  --sa-surface-2: #f4f4f4;   /* سطح دوم/هدر جدول */
-  --sa-surface-3: #e0e0e0;   /* خط جداکننده */
-  --sa-surface-4: #e8e8e8;   /* hover */
-  --sa-surface-5: #f9f9f9;   /* زیرپس‌زمینه */
-  --sa-surface-6: #fafafa;   /* هدر پنل */
+  --sa-surface: #ffffff;     /* Card / input surface */
+  --sa-surface-2: #f4f4f4;   /* Secondary surface / table header */
+  --sa-surface-3: #e0e0e0;   /* Divider line */
+  --sa-surface-4: #e8e8e8;   /* Hover surface */
+  --sa-surface-5: #f9f9f9;   /* Sub-background */
+  --sa-surface-6: #fafafa;   /* Panel header */
   --sa-field-border: #c6c6c6;
   --sa-input-disabled: #e0e0e0;
   --sa-on-blue: #ffffff;
@@ -659,9 +659,12 @@
   --sa-callout-bg: #e5f6ff;
   --sa-callout-text: #00539a;
   --sa-callout-border: #99c9ef;
+  --sa-border: #c6c6c6;
+  --sa-surface-1: #ffffff;
+  --sa-bg-2: #f4f4f4;
 }
 
-/* دارک — Carbon Gray 90/100 family */
+/* Dark — Carbon Gray 90/100 family */
 :is(html.dark, body.dark, .dark) .sa-root,
 html.dark .sa-root {
   --sa-text-0: #f4f4f4;
@@ -705,6 +708,9 @@ html.dark .sa-root {
   --sa-callout-bg: #05355c;
   --sa-callout-text: #9ed6ff;
   --sa-callout-border: #38697a;
+  --sa-border: #334155;
+  --sa-surface-1: #111827;
+  --sa-bg-2: #1e293b;
 }
 
 /* ─── helper classes for former inline colors ─── */
@@ -781,8 +787,8 @@ html.dark .sa-tint-link { background: rgba(120, 169, 255, 0.14); }
 }
 
 /* ═══════════════════════════════════════════════════════════
-   Dark Mode — همه از توکن‌های --sa-* تغذیه می‌شود؛
-   اینجا فقط موارد خاصِ ساختاری لازم است.
+   Dark Mode — all fed from --sa-* tokens;
+   only structural exceptions required here.
    ═══════════════════════════════════════════════════════════ */
 html.dark .sa-root,
 :is(body.dark, .dark) .sa-root {
@@ -830,7 +836,7 @@ html.dark .sa-toast.success { background: #0e6027; color: #fff; }
 html.dark .sa-toast.error { background: #a2191f; color: #fff; }
 html.dark .sa-admin-avatar.normal { background: var(--sa-surface-2); color: var(--sa-text-0); }
 
-/* ─── Modal containers (همیشه داخل sa-root رندر می‌شوند) ─── */
+/* ─── Modal containers (always rendered inside sa-root) ─── */
 .sa-modal-box {
   border: 1px solid var(--sa-surface-3);
   padding: 0.75rem;
@@ -844,7 +850,7 @@ html.dark .sa-admin-avatar.normal { background: var(--sa-surface-2); color: var(
   color: var(--sa-link);
 }
 
-/* ─── Modal portal (خارج sa-root) — توکن‌ها را از :root هم در دسترس بگذار ─── */
+/* ─── Modal portal (outside sa-root) — make tokens available from :root ─── */
 :root {
   --sa-text-0: #161616; --sa-text-1: #525252; --sa-text-2: #6f6f6f; --sa-text-3: #8d8d8d;
   --sa-text-4: #a8a8a8; --sa-link: #0f62fe; --sa-link-strong: #0043ce; --sa-danger: #da1e28;
@@ -860,6 +866,7 @@ html.dark .sa-admin-avatar.normal { background: var(--sa-surface-2); color: var(
   --sa-link-tint: rgba(15, 98, 254, 0.08); --sa-danger-tint: rgba(218, 30, 40, 0.06);
   --sa-warn-tint: rgba(241, 194, 27, 0.08); --sa-callout-bg: #e5f6ff;
   --sa-callout-text: #00539a; --sa-callout-border: #99c9ef;
+  --sa-border: #c6c6c6; --sa-surface-1: #ffffff; --sa-bg-2: #f4f4f4;
 }
 :is(html.dark, body.dark) {
   --sa-text-0: #f4f4f4; --sa-text-1: #c6c6c6; --sa-text-2: #a7a7a7; --sa-text-3: #8d8d8d;
@@ -876,9 +883,10 @@ html.dark .sa-admin-avatar.normal { background: var(--sa-surface-2); color: var(
   --sa-link-tint: rgba(120, 169, 255, 0.16); --sa-danger-tint: rgba(250, 77, 86, 0.12);
   --sa-warn-tint: rgba(241, 194, 27, 0.12); --sa-callout-bg: #05355c;
   --sa-callout-text: #9ed6ff; --sa-callout-border: #38697a;
+  --sa-border: #334155; --sa-surface-1: #111827; --sa-bg-2: #1e293b;
 }
 
-/* دیالگ‌های عمومی که داخل پنل گاد باز می‌شوند */
+/* Generic dialogs opened inside God panel */
 :is(html.dark, body.dark, .dark) [role="dialog"] input,
 :is(html.dark, body.dark, .dark) [role="dialog"] select,
 :is(html.dark, body.dark, .dark) [role="dialog"] textarea {

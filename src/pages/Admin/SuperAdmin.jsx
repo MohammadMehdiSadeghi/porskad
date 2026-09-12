@@ -127,9 +127,9 @@ export default function SuperAdmin() {
   const [search, setSearch] = useState("");
   const refreshRef = useRef(null);
 
-  // نکته مهم: گاد اصلی فقط مالکِ واقعی است (ایمیل‌های ثابت) — نه هر سوپرادمین.
-  // سوپرادمین‌های ثانویه به صفحه دسترسی کامل دارند ولی مدیریت نقش/مجوز
-  // سوپرادمین‌های دیگر و دیدن حساب گاد مخصوص گاد اصلی است.
+  // IMPORTANT NOTE: Primary God is the true owner (fixed emails) — not arbitrary superadmins.
+  // Secondary superadmins have full page access, but role/permission management
+  // of other superadmins and viewing the God account is restricted to the Primary God.
   const isCallerGod = Boolean(isPrimaryGodEmail(user?.email));
 
   // ─── State ───
@@ -228,7 +228,7 @@ export default function SuperAdmin() {
         .sort((a, b) => (b.monthly_responses_used / b.max_responses_per_month) - (a.monthly_responses_used / a.max_responses_per_month))
         .slice(0, 8);
 
-      // ─── سری ۱۴ روزه (مبدأ تهران) برای نمودارها ───
+      // ─── 14-day series (Tehran origin) for charts ───
       const TZ_OFF = 3.5 * 3600 * 1000;
       const dayKey = (iso) => new Date(new Date(iso).getTime() + TZ_OFF).toISOString().slice(0, 10);
       const buckets = [];
@@ -263,7 +263,7 @@ export default function SuperAdmin() {
         .map(([plan, count]) => ({ plan, name: PLAN_EN[plan] || plan, count }))
         .sort((a, b) => b.count - a.count);
 
-      // ─── رشد خالص (تفاضل ۷ روز اول/دوم) ───
+      // ─── Net Growth (delta between 1st and 2nd 7-day windows) ───
       const sumRange = (field, from, to) => series.slice(from, to).reduce((s, d) => s + d[field], 0);
       const growth = {
         signups: sumRange("signups", 7, 14) - sumRange("signups", 0, 7),
@@ -303,13 +303,13 @@ export default function SuperAdmin() {
           .is("restored_at", null)
           .order("deleted_at", { ascending: false })
           .limit(500),
-        // فرم‌ها soft-delete هستند؛ خودشان در سطل هم لیست می‌شوند
+        // Forms are soft-deleted; listed in trash bin
         supabase
           .from("forms")
           .select("id,title,created_by,manager_id,deleted_at,deleted_by")
           .not("deleted_at", "is", null)
           .order("deleted_at", { ascending: false }),
-        // «حذف کاربر» در این سامانه = غیرفعال‌سازی؛ آن‌ها هم سطل‌اند
+        // User deletion in this system = deactivation; also listed in trash
         supabase
           .from("profiles")
           .select("id,full_name,email,is_active,deactivated_by,deactivated_at")
@@ -420,8 +420,7 @@ export default function SuperAdmin() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [toast, setToast] = useState(null);
 
-  // ─── Transfer Form Ownership Modal State ───
-  const [transferModalOpen, setTransferModalOpen] = useState(false);
+  // ─── Form Ownership Transfer State ───
   const [transferFromUserId, setTransferFromUserId] = useState("");
   const [transferFormId, setTransferFormId] = useState("");
   const [transferToUserId, setTransferToUserId] = useState("");
@@ -433,7 +432,7 @@ export default function SuperAdmin() {
   const [transferUsersLoading, setTransferUsersLoading] = useState(false);
   const [transferSearchQuery, setTransferSearchQuery] = useState("");
 
-  // ─── همگام‌سازی تنظیمات انواع سوال با دیتابیس در ورود به پنل گاد ───
+  // ─── Synchronize question type settings with database on God Panel load ───
   useEffect(() => {
     loadQuestionTypesConfigFromDb().then((cfg) => setQConfig(cfg || {}));
     const onCfg = (e) => setQConfig(e.detail || {});
@@ -965,13 +964,13 @@ export default function SuperAdmin() {
     }
   }
 
-  // ─── Auth Logs (مرورگر/دستگاه — بدون IP) ───
+  // ─── Auth Logs (Browser/Device — without IP) ───
   async function loadAuthLogs() {
     setAuthLogsLoading(true);
     try {
       let data = null;
 
-      // ۱. تلاش برای دریافت از طریق RPC بهینه‌شده get_all_auth_logs
+      // 1. Attempt to fetch via optimized RPC get_all_auth_logs
       try {
         const { data: rpcData, error: rpcErr } = await supabase.rpc("get_all_auth_logs", { p_limit: 350 });
         if (!rpcErr && rpcData && Array.isArray(rpcData)) {
@@ -979,7 +978,7 @@ export default function SuperAdmin() {
         }
       } catch {}
 
-      // ۲. فالبک به کوئری مستقیم جدول auth_logs
+      // 2. Fallback to direct query on auth_logs table
       if (!data || data.length === 0) {
         const { data: tableData, error: tableErr } = await supabase
           .from("auth_logs")
@@ -991,7 +990,7 @@ export default function SuperAdmin() {
         }
       }
 
-      // ۳. فالبک استخراج لاگ‌های احراز هویت از activity_log در صورت نیاز
+      // 3. Fallback to extracting auth logs from activity_log if needed
       if (!data || data.length === 0) {
         const { data: actLogs } = await supabase
           .from("activity_log")
@@ -1404,27 +1403,6 @@ export default function SuperAdmin() {
     }
   }
 
-  function openTransferModal(initialForm = null) {
-    setTransferSuccessInfo(null);
-    setTransferModalOpen(true);
-    loadTransferUsers();
-
-    if (initialForm) {
-      const ownerId = initialForm.manager_id || initialForm.created_by;
-      setTransferFromUserId(ownerId || "");
-      setTransferFormId(initialForm.id);
-      setTransferToUserId("");
-      if (ownerId) {
-        loadFormsForFromUser(ownerId);
-      }
-    } else {
-      setTransferFromUserId("");
-      setTransferFormId("");
-      setTransferToUserId("");
-      setUserFormsList([]);
-    }
-  }
-
   async function handleExecuteTransfer() {
     if (!transferFromUserId) {
       showToast("Please select the source account (Field 1)", "error");
@@ -1531,7 +1509,7 @@ export default function SuperAdmin() {
   }
 
   // ─── Stats & Metrics ───
-  // ─── Grouped by User (تفکیک فعالیت‌های هر کاربر به صورت یکپارچه) ───
+  // ─── Grouped by User (unified breakdown of user activities) ───
   const authLogsGroupedByUser = useMemo(() => {
     const map = {};
     authLogs.forEach((l) => {
@@ -1595,7 +1573,7 @@ export default function SuperAdmin() {
   const filteredAuthLogs = useMemo(() => {
     let list = authLogs;
 
-    // فیلتر بازه زمانی
+    // Timeframe filter
     if (authLogsTimeframe !== "all") {
       const now = Date.now();
       const cutoffMap = {
@@ -1607,7 +1585,7 @@ export default function SuperAdmin() {
       list = list.filter((l) => new Date(l.created_at).getTime() >= cutoff);
     }
 
-    // فیلتر عملیات
+    // Operation filter
     if (authLogsFilter !== "all") {
       if (authLogsFilter === "login") {
         list = list.filter((l) => l.action?.includes("login"));
@@ -1750,46 +1728,21 @@ export default function SuperAdmin() {
           placeholder="Search records, users, logs..."
           style={{ flex: 1, minWidth: 220 }}
         />
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-          <button
-            type="button"
-            className="sa-btn"
-            onClick={() => openTransferModal()}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.4rem",
-              background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
-              color: "#fff",
-              fontWeight: 700,
-              fontSize: "0.85rem",
-              border: "none",
-              boxShadow: "0 2px 8px rgba(99, 102, 241, 0.35)",
-              padding: "0.5rem 0.85rem",
-              borderRadius: "0.375rem",
-              cursor: "pointer",
-            }}
-            title="انتقال فرم بین دو حساب کاربری در سیستم"
-          >
-            <ArrowRightLeft size={15} />
-            انتقال فرم بین اکانت‌ها
-          </button>
-          {selectedTable && (
-            <div className="sa-actions">
-              <button className="sa-btn sa-btn-primary" onClick={() => openEdit(selectedTable)}>
-                + Create
+        {selectedTable && (
+          <div className="sa-actions">
+            <button className="sa-btn sa-btn-primary" onClick={() => openEdit(selectedTable)}>
+              + Create
+            </button>
+            <button className="sa-btn sa-btn-secondary" onClick={() => exportTable(selectedTable)}>
+              Export
+            </button>
+            {selectedTable === "responses" && (
+              <button className="sa-btn sa-btn-danger" onClick={() => purgeResponses()}>
+                Purge All
               </button>
-              <button className="sa-btn sa-btn-secondary" onClick={() => exportTable(selectedTable)}>
-                Export
-              </button>
-              {selectedTable === "responses" && (
-                <button className="sa-btn sa-btn-danger" onClick={() => purgeResponses()}>
-                  Purge All
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ═══════════ Dashboard ═══════════ */}
@@ -2847,10 +2800,10 @@ export default function SuperAdmin() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}>
             <div>
               <div className="sa-section-title" style={{ margin: 0, fontSize: "1.15rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <ArrowRightLeft size={20} color="#6366f1" />
+                <ArrowRightLeft size={20} color="var(--sa-link)" />
                 Form Ownership Transfer
               </div>
-              <p style={{ margin: "0.2rem 0 0", fontSize: "0.82rem", color: "var(--sa-text-1)" }}>
+              <p style={{ margin: "0.2rem 0 0", fontSize: "0.8125rem", color: "var(--sa-text-1)" }}>
                 Transfer any form between accounts with zero downtime, preserved public URLs, and automatic quota adjustments.
               </p>
             </div>
@@ -2873,8 +2826,8 @@ export default function SuperAdmin() {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))", gap: "1.25rem", alignItems: "start" }}>
             {/* Transfer Control Engine Card */}
-            <div className="sa-card" style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-              <div className="sa-card-header" style={{ paddingBottom: "0.5rem", borderBottom: "1px solid var(--sa-border)" }}>
+            <div className="sa-card">
+              <div className="sa-card-header">
                 <span className="sa-section-title" style={{ margin: 0, fontSize: "0.95rem" }}>
                   Ownership Transfer Engine
                 </span>
@@ -2883,539 +2836,477 @@ export default function SuperAdmin() {
                 </span>
               </div>
 
-              {transferSuccessInfo ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: "1rem", padding: "1rem 0" }}>
-                  <div
-                    style={{
-                      textAlign: "center",
-                      padding: "1.5rem",
-                      backgroundColor: "rgba(16, 185, 129, 0.08)",
-                      border: "1.5px solid rgba(16, 185, 129, 0.3)",
-                      borderRadius: "0.75rem",
-                    }}
-                  >
+              <div className="sa-card-body">
+                {transferSuccessInfo ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                     <div
                       style={{
-                        width: 52,
-                        height: 52,
-                        margin: "0 auto 0.75rem",
-                        borderRadius: "50%",
-                        backgroundColor: "#10b981",
-                        color: "#fff",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        boxShadow: "0 4px 12px rgba(16, 185, 129, 0.35)",
+                        textAlign: "center",
+                        padding: "1.5rem",
+                        backgroundColor: "var(--sa-success-bg, rgba(25, 128, 56, 0.08))",
+                        border: "1px solid var(--sa-success)",
+                        borderRadius: "0.25rem",
                       }}
                     >
-                      <Check size={28} />
-                    </div>
-                    <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#10b981", margin: 0 }}>
-                      Form Transferred Successfully!
-                    </h3>
-                    <p style={{ fontSize: "0.85rem", color: "var(--sa-text-1)", marginTop: "0.35rem" }}>
-                      Ownership and all managerial permissions have been securely reassigned to the target user.
-                    </p>
-
-                    <div
-                      style={{
-                        backgroundColor: "var(--sa-surface-1)",
-                        border: "1px solid var(--sa-surface-3)",
-                        borderRadius: "0.5rem",
-                        padding: "0.85rem 1rem",
-                        marginTop: "1rem",
-                        fontSize: "0.85rem",
-                        textAlign: "left",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "0.45rem",
-                      }}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span style={{ color: "var(--sa-text-2)" }}>Form Title:</span>
-                        <span style={{ fontWeight: 700 }}>{transferSuccessInfo.form?.title || "—"}</span>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span style={{ color: "var(--sa-text-2)" }}>Public Slug:</span>
-                        <span style={{ fontFamily: "monospace", color: "var(--sa-link)" }}>
-                          /f/{transferSuccessInfo.form?.slug}
-                        </span>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span style={{ color: "var(--sa-text-2)" }}>Previous Owner:</span>
-                        <span>{transferSuccessInfo.previous_user?.full_name || transferSuccessInfo.previous_user?.email || "—"}</span>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span style={{ color: "var(--sa-text-2)" }}>New Owner:</span>
-                        <span style={{ fontWeight: 700, color: "#10b981" }}>
-                          {transferSuccessInfo.target_user?.full_name || transferSuccessInfo.target_user?.email || "—"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-                    <button
-                      type="button"
-                      className="sa-btn sa-btn-primary"
-                      onClick={() => {
-                        setTransferSuccessInfo(null);
-                        setTransferFormId("");
-                        if (transferFromUserId) {
-                          loadFormsForFromUser(transferFromUserId);
-                        }
-                      }}
-                    >
-                      Transfer Another Form
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "1.15rem" }}>
-                  {/* Quick User Search Filter */}
-                  <div>
-                    <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, color: "var(--sa-text-1)", marginBottom: "0.25rem" }}>
-                      Search Users
-                    </label>
-                    <input
-                      type="text"
-                      value={transferSearchQuery}
-                      onChange={(e) => setTransferSearchQuery(e.target.value)}
-                      placeholder="Filter accounts by name, email, or phone number..."
-                      style={{
-                        width: "100%",
-                        padding: "0.45rem 0.75rem",
-                        fontSize: "0.82rem",
-                        borderRadius: "0.4rem",
-                        border: "1px solid var(--sa-field-border)",
-                        backgroundColor: "var(--sa-surface-1)",
-                        color: "var(--sa-text-0)",
-                        outline: "none",
-                      }}
-                    />
-                  </div>
-
-                  {/* FIELD 1: Source Account (From User) */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                    <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                      <span
-                        style={{
-                          width: 22,
-                          height: 22,
-                          borderRadius: "50%",
-                          backgroundColor: "#6366f1",
-                          color: "#fff",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: "0.75rem",
-                          fontWeight: 800,
-                        }}
-                      >
-                        1
-                      </span>
-                      From Account (Source User):
-                    </label>
-                    <select
-                      value={transferFromUserId}
-                      onChange={(e) => {
-                        const uid = e.target.value;
-                        setTransferFromUserId(uid);
-                        setTransferFormId("");
-                        loadFormsForFromUser(uid);
-                      }}
-                      disabled={transferSubmitting || transferUsersLoading}
-                      style={{
-                        width: "100%",
-                        padding: "0.55rem 0.75rem",
-                        fontSize: "0.85rem",
-                        borderRadius: "0.45rem",
-                        border: "1.5px solid var(--sa-field-border)",
-                        backgroundColor: "var(--sa-surface)",
-                        color: "var(--sa-text-0)",
-                        outline: "none",
-                      }}
-                    >
-                      <option value="">-- Select Source User Account --</option>
-                      {allTransferUsers
-                        .filter((u) => {
-                          if (u.id === transferFromUserId) return true;
-                          if (!transferSearchQuery) return true;
-                          const q = transferSearchQuery.toLowerCase().trim();
-                          return (
-                            u.full_name?.toLowerCase().includes(q) ||
-                            u.email?.toLowerCase().includes(q) ||
-                            (u.phone && u.phone.includes(q))
-                          );
-                        })
-                        .map((u) => (
-                          <option key={u.id} value={u.id}>
-                            {u.full_name || "Unnamed"} ({u.email || u.phone || "No contact"}) {u.is_owner ? "👑 Owner" : `[${u.plan || "Free"}]`}
-                          </option>
-                        ))}
-                    </select>
-                    {transferFromUserId && (
-                      <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.15rem" }}>
-                        Source user selected. Their forms are populated in Step 2 below.
-                      </div>
-                    )}
-                  </div>
-
-                  {/* FIELD 2: Select Form to Transfer */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                    <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                      <span
-                        style={{
-                          width: 22,
-                          height: 22,
-                          borderRadius: "50%",
-                          backgroundColor: "#8b5cf6",
-                          color: "#fff",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: "0.75rem",
-                          fontWeight: 800,
-                        }}
-                      >
-                        2
-                      </span>
-                      Form to Transfer:
-                    </label>
-
-                    {!transferFromUserId ? (
                       <div
                         style={{
-                          padding: "0.6rem 0.85rem",
-                          backgroundColor: "var(--sa-surface-1)",
-                          border: "1px dashed var(--sa-surface-3)",
-                          borderRadius: "0.45rem",
-                          fontSize: "0.82rem",
-                          color: "var(--sa-text-2)",
-                        }}
-                      >
-                        Please select the source account in Step 1 first.
-                      </div>
-                    ) : userFormsLoading ? (
-                      <div
-                        style={{
-                          padding: "0.6rem 0.85rem",
-                          backgroundColor: "var(--sa-surface-1)",
-                          borderRadius: "0.45rem",
-                          fontSize: "0.82rem",
-                          color: "var(--sa-link)",
+                          width: 48,
+                          height: 48,
+                          margin: "0 auto 0.75rem",
+                          borderRadius: "50%",
+                          backgroundColor: "var(--sa-success)",
+                          color: "#fff",
                           display: "flex",
                           alignItems: "center",
-                          gap: "0.5rem",
+                          justifyContent: "center",
                         }}
                       >
-                        <RefreshCw size={14} className="animate-spin" />
-                        Loading user forms...
+                        <Check size={24} />
                       </div>
-                    ) : userFormsList.length === 0 ? (
+                      <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--sa-success)", margin: 0 }}>
+                        Form Transferred Successfully!
+                      </h3>
+                      <p style={{ fontSize: "0.8125rem", color: "var(--sa-text-1)", marginTop: "0.35rem" }}>
+                        Ownership and all managerial permissions have been securely reassigned to the target user.
+                      </p>
+
                       <div
                         style={{
-                          padding: "0.6rem 0.85rem",
-                          backgroundColor: "rgba(239, 68, 68, 0.06)",
-                          border: "1px solid rgba(239, 68, 68, 0.2)",
-                          borderRadius: "0.45rem",
-                          fontSize: "0.82rem",
-                          color: "var(--sa-danger)",
+                          backgroundColor: "var(--sa-surface-2)",
+                          border: "1px solid var(--sa-surface-3)",
+                          borderRadius: "0.25rem",
+                          padding: "0.85rem 1rem",
+                          marginTop: "1rem",
+                          fontSize: "0.8125rem",
+                          textAlign: "left",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "0.45rem",
                         }}
                       >
-                        This user has no active forms to transfer.
-                      </div>
-                    ) : (
-                      <select
-                        value={transferFormId}
-                        onChange={(e) => setTransferFormId(e.target.value)}
-                        disabled={transferSubmitting}
-                        style={{
-                          width: "100%",
-                          padding: "0.55rem 0.75rem",
-                          fontSize: "0.85rem",
-                          borderRadius: "0.45rem",
-                          border: "1.5px solid var(--sa-field-border)",
-                          backgroundColor: "var(--sa-surface)",
-                          color: "var(--sa-text-0)",
-                          outline: "none",
-                        }}
-                      >
-                        <option value="">-- Select Form to Transfer ({userFormsList.length} forms available) --</option>
-                        {userFormsList.map((f) => (
-                          <option key={f.id} value={f.id}>
-                            {f.title || "Untitled Form"} (/f/{f.slug} — {f.response_count} responses — {f.published ? "Published" : "Draft"})
-                          </option>
-                        ))}
-                      </select>
-                    )}
-
-                    {/* Selected Form Preview */}
-                    {(() => {
-                      const selForm = userFormsList.find((f) => f.id === transferFormId);
-                      if (!selForm) return null;
-                      return (
-                        <div
-                          style={{
-                            backgroundColor: "var(--sa-surface-1)",
-                            border: "1px solid var(--sa-surface-3)",
-                            borderRadius: "0.5rem",
-                            padding: "0.75rem 0.9rem",
-                            marginTop: "0.25rem",
-                            fontSize: "0.82rem",
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "0.35rem",
-                          }}
-                        >
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <span style={{ fontWeight: 700, color: "var(--sa-text-0)" }}>{selForm.title}</span>
-                            <span
-                              className={`sa-tag ${selForm.published ? "sa-tag-green" : "sa-tag-gray"}`}
-                              style={{ fontSize: "0.7rem" }}
-                            >
-                              {selForm.published ? "Published & Active" : "Draft"}
-                            </span>
-                          </div>
-                          <div style={{ display: "flex", justifyContent: "space-between", color: "var(--sa-text-2)", fontSize: "0.78rem" }}>
-                            <span>Public URL:</span>
-                            <a
-                              href={`/f/${selForm.slug}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ fontFamily: "monospace", color: "var(--sa-link)", textDecoration: "none" }}
-                            >
-                              /f/{selForm.slug} ↗
-                            </a>
-                          </div>
-                          <div style={{ display: "flex", justifyContent: "space-between", color: "var(--sa-text-2)", fontSize: "0.78rem" }}>
-                            <span>Recorded Responses:</span>
-                            <span style={{ fontWeight: 700, color: "var(--sa-text-0)" }}>{selForm.response_count} entries</span>
-                          </div>
+                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                          <span style={{ color: "var(--sa-text-2)" }}>Form Title:</span>
+                          <span style={{ fontWeight: 700 }}>{transferSuccessInfo.form?.title || "—"}</span>
                         </div>
-                      );
-                    })()}
-                  </div>
-
-                  {/* FIELD 3: Target Account (To User) */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                    <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                      <span
-                        style={{
-                          width: 22,
-                          height: 22,
-                          borderRadius: "50%",
-                          backgroundColor: "#10b981",
-                          color: "#fff",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: "0.75rem",
-                          fontWeight: 800,
-                        }}
-                      >
-                        3
-                      </span>
-                      To Account (Destination User / New Owner):
-                    </label>
-                    <select
-                      value={transferToUserId}
-                      onChange={(e) => setTransferToUserId(e.target.value)}
-                      disabled={transferSubmitting || transferUsersLoading}
-                      style={{
-                        width: "100%",
-                        padding: "0.55rem 0.75rem",
-                        fontSize: "0.85rem",
-                        borderRadius: "0.45rem",
-                        border: "1.5px solid var(--sa-field-border)",
-                        backgroundColor: "var(--sa-surface)",
-                        color: "var(--sa-text-0)",
-                        outline: "none",
-                      }}
-                    >
-                      <option value="">-- Select Destination User Account --</option>
-                      {allTransferUsers
-                        .filter((u) => u.id !== transferFromUserId)
-                        .filter((u) => {
-                          if (u.id === transferToUserId) return true;
-                          if (!transferSearchQuery) return true;
-                          const q = transferSearchQuery.toLowerCase().trim();
-                          return (
-                            u.full_name?.toLowerCase().includes(q) ||
-                            u.email?.toLowerCase().includes(q) ||
-                            (u.phone && u.phone.includes(q))
-                          );
-                        })
-                        .map((u) => (
-                          <option key={u.id} value={u.id}>
-                            {u.full_name || "Unnamed"} ({u.email || u.phone || "No contact"}) {u.is_owner ? "👑 Owner" : `[${u.plan || "Free"}]`}
-                          </option>
-                        ))}
-                    </select>
-
-                    {/* Target User Preview */}
-                    {(() => {
-                      const targetUser = allTransferUsers.find((u) => u.id === transferToUserId);
-                      if (!targetUser) return null;
-                      return (
-                        <div
-                          style={{
-                            backgroundColor: "rgba(16, 185, 129, 0.06)",
-                            border: "1px solid rgba(16, 185, 129, 0.2)",
-                            borderRadius: "0.5rem",
-                            padding: "0.75rem 0.9rem",
-                            marginTop: "0.25rem",
-                            fontSize: "0.82rem",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          <div>
-                            <div style={{ fontWeight: 700, color: "#10b981" }}>
-                              {targetUser.full_name || "Unnamed"}
-                            </div>
-                            <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)" }}>
-                              {targetUser.email || targetUser.phone}
-                            </div>
-                          </div>
-                          <span className="sa-tag sa-tag-green" style={{ fontSize: "0.7rem" }}>
-                            Plan: {targetUser.plan || "Free"} · Max forms: {targetUser.max_forms || 5}
+                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                          <span style={{ color: "var(--sa-text-2)" }}>Public Slug:</span>
+                          <span style={{ fontFamily: "monospace", color: "var(--sa-link)" }}>
+                            /f/{transferSuccessInfo.form?.slug}
                           </span>
                         </div>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Transfer Guarantees Note */}
-                  <div
-                    style={{
-                      backgroundColor: "var(--sa-surface-1)",
-                      borderLeft: "3px solid #6366f1",
-                      borderRadius: "0.4rem",
-                      padding: "0.75rem 0.9rem",
-                      fontSize: "0.78rem",
-                      color: "var(--sa-text-1)",
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    <div style={{ fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.2rem" }}>
-                      Transfer Guarantees:
+                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                          <span style={{ color: "var(--sa-text-2)" }}>Previous Owner:</span>
+                          <span>{transferSuccessInfo.previous_user?.full_name || transferSuccessInfo.previous_user?.email || "—"}</span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                          <span style={{ color: "var(--sa-text-2)" }}>New Owner:</span>
+                          <span style={{ fontWeight: 700, color: "var(--sa-success)" }}>
+                            {transferSuccessInfo.target_user?.full_name || transferSuccessInfo.target_user?.email || "—"}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div>• Full ownership (manager_id and created_by) transferred atomically.</div>
-                    <div>• Target user inherits full builder, editing, Excel export, and responses access.</div>
-                    <div>• Public submission URLs (/f/:slug, embed) and existing responses remain fully intact.</div>
-                    <div>• Previous owner's personal Telegram bot links unlinked for security.</div>
-                  </div>
 
-                  {/* Submit Button */}
-                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.5rem" }}>
-                    <button
-                      type="button"
-                      className="sa-btn"
-                      disabled={
-                        !transferFromUserId ||
-                        !transferFormId ||
-                        !transferToUserId ||
-                        transferSubmitting
-                      }
-                      onClick={handleExecuteTransfer}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "0.4rem",
-                        background:
-                          !transferFromUserId || !transferFormId || !transferToUserId || transferSubmitting
-                            ? "var(--sa-surface-3)"
-                            : "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
-                        color: "#fff",
-                        fontWeight: 700,
-                        fontSize: "0.9rem",
-                        border: "none",
-                        cursor:
-                          !transferFromUserId || !transferFormId || !transferToUserId || transferSubmitting
-                            ? "not-allowed"
-                            : "pointer",
-                        padding: "0.65rem 1.4rem",
-                        borderRadius: "0.45rem",
-                        boxShadow: "0 3px 10px rgba(99, 102, 241, 0.4)",
-                      }}
-                    >
-                      <ArrowRightLeft size={16} />
-                      {transferSubmitting ? "Transferring Form..." : "Transfer Ownership Now"}
-                    </button>
+                    <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+                      <button
+                        type="button"
+                        className="sa-btn sa-btn-primary"
+                        onClick={() => {
+                          setTransferSuccessInfo(null);
+                          setTransferFormId("");
+                          if (transferFromUserId) {
+                            loadFormsForFromUser(transferFromUserId);
+                          }
+                        }}
+                      >
+                        Transfer Another Form
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+                    {/* Quick User Search Filter */}
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "var(--sa-text-1)", marginBottom: "0.35rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                        Search Users
+                      </label>
+                      <input
+                        type="text"
+                        value={transferSearchQuery}
+                        onChange={(e) => setTransferSearchQuery(e.target.value)}
+                        placeholder="Filter accounts by name, email, or phone number..."
+                        className="sa-input"
+                      />
+                    </div>
+
+                    {/* FIELD 1: Source Account (From User) */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                      <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.45rem" }}>
+                        <span
+                          style={{
+                            width: 20,
+                            height: 20,
+                            borderRadius: "50%",
+                            backgroundColor: "var(--sa-link)",
+                            color: "#fff",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "0.7rem",
+                            fontWeight: 700,
+                          }}
+                        >
+                          1
+                        </span>
+                        From Account (Source User):
+                      </label>
+                      <select
+                        className="sa-select"
+                        value={transferFromUserId}
+                        onChange={(e) => {
+                          const uid = e.target.value;
+                          setTransferFromUserId(uid);
+                          setTransferFormId("");
+                          loadFormsForFromUser(uid);
+                        }}
+                        disabled={transferSubmitting || transferUsersLoading}
+                      >
+                        <option value="">-- Select Source User Account --</option>
+                        {allTransferUsers
+                          .filter((u) => {
+                            if (u.id === transferFromUserId) return true;
+                            if (!transferSearchQuery) return true;
+                            const q = transferSearchQuery.toLowerCase().trim();
+                            return (
+                              u.full_name?.toLowerCase().includes(q) ||
+                              u.email?.toLowerCase().includes(q) ||
+                              (u.phone && u.phone.includes(q))
+                            );
+                          })
+                          .map((u) => (
+                            <option key={u.id} value={u.id}>
+                              {u.full_name || "Unnamed"} ({u.email || u.phone || "No contact"}) {u.is_owner ? "👑 Owner" : `[${u.plan || "Free"}]`}
+                            </option>
+                          ))}
+                      </select>
+                      {transferFromUserId && (
+                        <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.15rem" }}>
+                          Source user selected. Their forms are populated in Step 2 below.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* FIELD 2: Select Form to Transfer */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                      <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.45rem" }}>
+                        <span
+                          style={{
+                            width: 20,
+                            height: 20,
+                            borderRadius: "50%",
+                            backgroundColor: "var(--sa-purple)",
+                            color: "#fff",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "0.7rem",
+                            fontWeight: 700,
+                          }}
+                        >
+                          2
+                        </span>
+                        Form to Transfer:
+                      </label>
+
+                      {!transferFromUserId ? (
+                        <div
+                          style={{
+                            padding: "0.65rem 0.85rem",
+                            backgroundColor: "var(--sa-surface-2)",
+                            border: "1px dashed var(--sa-surface-3)",
+                            borderRadius: "0.25rem",
+                            fontSize: "0.8125rem",
+                            color: "var(--sa-text-2)",
+                          }}
+                        >
+                          Please select the source account in Step 1 first.
+                        </div>
+                      ) : userFormsLoading ? (
+                        <div
+                          style={{
+                            padding: "0.65rem 0.85rem",
+                            backgroundColor: "var(--sa-surface-2)",
+                            borderRadius: "0.25rem",
+                            fontSize: "0.8125rem",
+                            color: "var(--sa-link)",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.5rem",
+                          }}
+                        >
+                          <RefreshCw size={14} className="animate-spin" />
+                          Loading user forms...
+                        </div>
+                      ) : userFormsList.length === 0 ? (
+                        <div
+                          style={{
+                            padding: "0.65rem 0.85rem",
+                            backgroundColor: "var(--sa-danger-tint)",
+                            border: "1px solid var(--sa-danger)",
+                            borderRadius: "0.25rem",
+                            fontSize: "0.8125rem",
+                            color: "var(--sa-danger)",
+                          }}
+                        >
+                          This user has no active forms to transfer.
+                        </div>
+                      ) : (
+                        <select
+                          className="sa-select"
+                          value={transferFormId}
+                          onChange={(e) => setTransferFormId(e.target.value)}
+                          disabled={transferSubmitting}
+                        >
+                          <option value="">-- Select Form to Transfer ({userFormsList.length} forms available) --</option>
+                          {userFormsList.map((f) => (
+                            <option key={f.id} value={f.id}>
+                              {f.title || "Untitled Form"} (/f/{f.slug} — {f.response_count} responses — {f.published ? "Published" : "Draft"})
+                            </option>
+                          ))}
+                        </select>
+                      )}
+
+                      {/* Selected Form Preview */}
+                      {(() => {
+                        const selForm = userFormsList.find((f) => f.id === transferFormId);
+                        if (!selForm) return null;
+                        return (
+                          <div
+                            style={{
+                              backgroundColor: "var(--sa-surface-2)",
+                              border: "1px solid var(--sa-surface-3)",
+                              borderRadius: "0.25rem",
+                              padding: "0.75rem 0.9rem",
+                              marginTop: "0.25rem",
+                              fontSize: "0.8125rem",
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "0.35rem",
+                            }}
+                          >
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <span style={{ fontWeight: 700, color: "var(--sa-text-0)" }}>{selForm.title}</span>
+                              <span
+                                className={`sa-tag ${selForm.published ? "sa-tag-green" : "sa-tag-gray"}`}
+                                style={{ fontSize: "0.7rem" }}
+                              >
+                                {selForm.published ? "Published & Active" : "Draft"}
+                              </span>
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "space-between", color: "var(--sa-text-2)", fontSize: "0.78rem" }}>
+                              <span>Public URL:</span>
+                              <a
+                                href={`/f/${selForm.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ fontFamily: "monospace", color: "var(--sa-link)", textDecoration: "none" }}
+                              >
+                                /f/{selForm.slug} ↗
+                              </a>
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "space-between", color: "var(--sa-text-2)", fontSize: "0.78rem" }}>
+                              <span>Recorded Responses:</span>
+                              <span style={{ fontWeight: 700, color: "var(--sa-text-0)" }}>{selForm.response_count} entries</span>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    {/* FIELD 3: Target Account (To User) */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                      <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.45rem" }}>
+                        <span
+                          style={{
+                            width: 20,
+                            height: 20,
+                            borderRadius: "50%",
+                            backgroundColor: "var(--sa-success)",
+                            color: "#fff",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "0.7rem",
+                            fontWeight: 700,
+                          }}
+                        >
+                          3
+                        </span>
+                        To Account (Destination User / New Owner):
+                      </label>
+                      <select
+                        className="sa-select"
+                        value={transferToUserId}
+                        onChange={(e) => setTransferToUserId(e.target.value)}
+                        disabled={transferSubmitting || transferUsersLoading}
+                      >
+                        <option value="">-- Select Destination User Account --</option>
+                        {allTransferUsers
+                          .filter((u) => u.id !== transferFromUserId)
+                          .filter((u) => {
+                            if (u.id === transferToUserId) return true;
+                            if (!transferSearchQuery) return true;
+                            const q = transferSearchQuery.toLowerCase().trim();
+                            return (
+                              u.full_name?.toLowerCase().includes(q) ||
+                              u.email?.toLowerCase().includes(q) ||
+                              (u.phone && u.phone.includes(q))
+                            );
+                          })
+                          .map((u) => (
+                            <option key={u.id} value={u.id}>
+                              {u.full_name || "Unnamed"} ({u.email || u.phone || "No contact"}) {u.is_owner ? "👑 Owner" : `[${u.plan || "Free"}]`}
+                            </option>
+                          ))}
+                      </select>
+
+                      {/* Target User Preview */}
+                      {(() => {
+                        const targetUser = allTransferUsers.find((u) => u.id === transferToUserId);
+                        if (!targetUser) return null;
+                        return (
+                          <div
+                            style={{
+                              backgroundColor: "var(--sa-success-bg, rgba(25, 128, 56, 0.06))",
+                              border: "1px solid var(--sa-success)",
+                              borderRadius: "0.25rem",
+                              padding: "0.75rem 0.9rem",
+                              marginTop: "0.25rem",
+                              fontSize: "0.8125rem",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                            }}
+                          >
+                            <div>
+                              <div style={{ fontWeight: 700, color: "var(--sa-success)" }}>
+                                {targetUser.full_name || "Unnamed"}
+                              </div>
+                              <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)" }}>
+                                {targetUser.email || targetUser.phone}
+                              </div>
+                            </div>
+                            <span className="sa-tag sa-tag-green" style={{ fontSize: "0.7rem" }}>
+                              Plan: {targetUser.plan || "Free"} · Max forms: {targetUser.max_forms || 5}
+                            </span>
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    {/* Transfer Guarantees Note */}
+                    <div className="sa-callout" style={{ fontSize: "0.8125rem", lineHeight: 1.6 }}>
+                      <div style={{ fontWeight: 700, marginBottom: "0.25rem", color: "var(--sa-callout-text)" }}>
+                        Transfer Guarantees:
+                      </div>
+                      <div>• Full ownership (manager_id and created_by) transferred atomically.</div>
+                      <div>• Target user inherits full builder, editing, Excel export, and responses access.</div>
+                      <div>• Public submission URLs (/f/:slug, embed) and existing responses remain fully intact.</div>
+                      <div>• Previous owner's personal Telegram bot links unlinked for security.</div>
+                    </div>
+
+                    {/* Submit Button */}
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.5rem" }}>
+                      <button
+                        type="button"
+                        className="sa-btn sa-btn-primary"
+                        disabled={
+                          !transferFromUserId ||
+                          !transferFormId ||
+                          !transferToUserId ||
+                          transferSubmitting
+                        }
+                        onClick={handleExecuteTransfer}
+                        style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem" }}
+                      >
+                        <ArrowRightLeft size={16} />
+                        {transferSubmitting ? "Transferring Form..." : "Transfer Ownership Now"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Recent Transfers & Info Sidecard */}
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
               <div className="sa-card">
-                <div className="sa-card-header" style={{ paddingBottom: "0.5rem", borderBottom: "1px solid var(--sa-border)" }}>
+                <div className="sa-card-header">
                   <span className="sa-section-title" style={{ margin: 0, fontSize: "0.95rem" }}>
                     Recent Ownership Transfers
                   </span>
-                  <span style={{ fontSize: "0.75rem", color: "var(--sa-text-2)" }}>
+                  <span className="sa-tag sa-tag-gray" style={{ fontSize: "0.72rem" }}>
                     {recentTransfers.length} logged
                   </span>
                 </div>
 
-                {recentTransfersLoading ? (
-                  <div style={{ padding: "1.5rem", textAlign: "center", color: "var(--sa-text-2)" }}>
-                    <RefreshCw size={18} className="animate-spin" style={{ margin: "0 auto 0.5rem" }} />
-                    Loading recent audit entries...
-                  </div>
-                ) : recentTransfers.length === 0 ? (
-                  <div style={{ padding: "1.5rem", textAlign: "center", color: "var(--sa-text-2)", fontSize: "0.85rem" }}>
-                    No form ownership transfers recorded yet.
-                  </div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "0.5rem" }}>
-                    {recentTransfers.map((item) => (
-                      <div
-                        key={item.id}
-                        style={{
-                          padding: "0.75rem",
-                          backgroundColor: "var(--sa-surface-1)",
-                          borderRadius: "0.45rem",
-                          border: "1px solid var(--sa-surface-3)",
-                          fontSize: "0.8rem",
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "0.3rem",
-                        }}
-                      >
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <span style={{ fontWeight: 700, color: "var(--sa-text-0)" }}>
-                            {item.details?.form_title || "Untitled Form"}
-                          </span>
-                          <span style={{ fontSize: "0.72rem", color: "var(--sa-text-2)" }}>
-                            {new Date(item.created_at).toLocaleString("en-US")}
-                          </span>
+                <div className="sa-card-body">
+                  {recentTransfersLoading ? (
+                    <div style={{ padding: "1rem", textAlign: "center", color: "var(--sa-text-2)" }}>
+                      <RefreshCw size={18} className="animate-spin" style={{ margin: "0 auto 0.5rem" }} />
+                      Loading recent audit entries...
+                    </div>
+                  ) : recentTransfers.length === 0 ? (
+                    <div style={{ padding: "1rem", textAlign: "center", color: "var(--sa-text-2)", fontSize: "0.85rem" }}>
+                      No form ownership transfers recorded yet.
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                      {recentTransfers.map((item) => (
+                        <div
+                          key={item.id}
+                          style={{
+                            padding: "0.75rem",
+                            backgroundColor: "var(--sa-surface-2)",
+                            borderRadius: "0.25rem",
+                            border: "1px solid var(--sa-surface-3)",
+                            fontSize: "0.8125rem",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "0.3rem",
+                          }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ fontWeight: 700, color: "var(--sa-text-0)" }}>
+                              {item.details?.form_title || "Untitled Form"}
+                            </span>
+                            <span style={{ fontSize: "0.72rem", color: "var(--sa-text-2)" }}>
+                              {new Date(item.created_at).toLocaleString("en-US")}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: "0.75rem", color: "var(--sa-text-1)" }}>
+                            From: <b>{item.details?.previous_owner_email || item.details?.previous_owner_id?.slice(0, 8) || "—"}</b>
+                            {" → "}
+                            To: <b style={{ color: "var(--sa-success)" }}>{item.details?.target_user_email || item.details?.target_user_id?.slice(0, 8) || "—"}</b>
+                          </div>
+                          <div style={{ fontSize: "0.7rem", color: "var(--sa-text-2)" }}>
+                            Transferred by: {item.details?.transferred_by || "SuperAdmin"}
+                          </div>
                         </div>
-                        <div style={{ fontSize: "0.75rem", color: "var(--sa-text-1)" }}>
-                          From: <b>{item.details?.previous_owner_email || item.details?.previous_owner_id?.slice(0, 8) || "—"}</b>
-                          {" → "}
-                          To: <b style={{ color: "#10b981" }}>{item.details?.target_user_email || item.details?.target_user_id?.slice(0, 8) || "—"}</b>
-                        </div>
-                        <div style={{ fontSize: "0.7rem", color: "var(--sa-text-2)" }}>
-                          Transferred by: {item.details?.transferred_by || "SuperAdmin"}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Transfer Policies & FAQ */}
               <div className="sa-card">
-                <div className="sa-card-header" style={{ paddingBottom: "0.5rem", borderBottom: "1px solid var(--sa-border)" }}>
+                <div className="sa-card-header">
                   <span className="sa-section-title" style={{ margin: 0, fontSize: "0.95rem" }}>
                     Transfer Policies & Rules
                   </span>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", fontSize: "0.8rem", color: "var(--sa-text-1)", lineHeight: 1.6 }}>
+                <div className="sa-card-body" style={{ display: "flex", flexDirection: "column", gap: "0.6rem", fontSize: "0.8125rem", color: "var(--sa-text-1)", lineHeight: 1.6 }}>
                   <div>
                     <strong style={{ color: "var(--sa-text-0)" }}>Auto Quota Bump:</strong> If target user is at their active form quota limit, the system automatically expands their allowance so PostgreSQL triggers never throw an error.
                   </div>
@@ -3766,20 +3657,6 @@ export default function SuperAdmin() {
                             >
                               Edit
                             </button>
-                            {selectedTable === "forms" && (
-                              <button
-                                className="sa-btn sa-btn-ghost sa-btn-sm"
-                                style={{ color: "var(--sa-purple)", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openTransferModal(r);
-                                }}
-                                title="انتقال این فرم به اکانت دیگر"
-                              >
-                                <ArrowRightLeft size={12} />
-                                انتقال
-                              </button>
-                            )}
                             <button
                               className="sa-btn sa-btn-ghost sa-btn-sm"
                               style={{ color: "var(--sa-danger)" }}
@@ -4066,7 +3943,7 @@ export default function SuperAdmin() {
                       <button
                         className="sa-btn sa-btn-ghost sa-btn-sm"
                         onClick={() => setImpersonateModal(a)}
-                        title="ورود مستقیم به حساب این مدیر"
+                        title="Direct login to this manager's account"
                       >
                         Login as
                       </button>
@@ -4708,7 +4585,7 @@ export default function SuperAdmin() {
                     {health.signups7.toLocaleString()} in last 7 days
                     {health.growth.signups !== 0 && (
                       <span style={{ color: health.growth.signups > 0 ? "var(--sa-success)" : "var(--sa-danger)", fontWeight: 700 }}>
-                        {" "}{health.growth.signups > 0 ? "▲" : "▼"} {Math.abs(health.growth.signups).toLocaleString()} هفتگی
+                        {" "}{health.growth.signups > 0 ? "▲" : "▼"} {Math.abs(health.growth.signups).toLocaleString()} weekly
                       </span>
                     )}
                   </div>
@@ -4720,7 +4597,7 @@ export default function SuperAdmin() {
                     successful sessions
                     {health.growth.logins !== 0 && (
                       <span style={{ color: health.growth.logins > 0 ? "var(--sa-success)" : "var(--sa-danger)", fontWeight: 700 }}>
-                        {" "}{health.growth.logins > 0 ? "▲" : "▼"} {Math.abs(health.growth.logins).toLocaleString()} هفتگی
+                        {" "}{health.growth.logins > 0 ? "▲" : "▼"} {Math.abs(health.growth.logins).toLocaleString()} weekly
                       </span>
                     )}
                   </div>
@@ -4764,13 +4641,13 @@ export default function SuperAdmin() {
                 </div>
               </div>
 
-              {/* ─── نمودارها ─── */}
+              {/* ─── Charts ─── */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "1rem" }}>
-                {/* فعالیت ۱۴ روز */}
+                {/* 14-day activity */}
                 <div className="sa-card" style={{ gridColumn: "1 / -1" }}>
                   <div className="sa-card-header">
                     <span className="sa-section-title" style={{ margin: 0 }}>
-                      📈 فعالیت ۱۴ روز اخیر (مبدأ تهران)
+                      📈 14-Day Activity Trend (Tehran Origin)
                     </span>
                   </div>
                   <div className="sa-card-body">
@@ -4791,30 +4668,30 @@ export default function SuperAdmin() {
                           <XAxis dataKey="label" tick={{ fontSize: 11, fill: "var(--sa-text-2, #64748b)" }} interval={1} />
                           <YAxis tick={{ fontSize: 11, fill: "var(--sa-text-2, #64748b)" }} allowDecimals={false} />
                           <Tooltip
-                            contentStyle={{ background: "var(--sa-surface)", border: "1px solid var(--sa-field-border)", borderRadius: 10, fontSize: "0.8rem", direction: "rtl" }}
-                            labelFormatter={(l) => `روز: ${l}`}
+                            contentStyle={{ background: "var(--sa-surface)", border: "1px solid var(--sa-field-border)", borderRadius: 10, fontSize: "0.8rem", direction: "ltr" }}
+                            labelFormatter={(l) => `Date: ${l}`}
                           />
                           <Legend wrapperStyle={{ fontSize: "0.78rem" }} />
-                          <Area type="monotone" dataKey="responses" name="ورودی‌ها" stroke="#6366f1" strokeWidth={2} fill="url(#hResp)" />
-                          <Area type="monotone" dataKey="signups" name="ثبت‌نام" stroke="#10b981" strokeWidth={2} fill="url(#hSign)" />
-                          <Area type="monotone" dataKey="forms" name="فرم‌های جدید" stroke="#f59e0b" strokeWidth={2} fill="transparent" />
+                          <Area type="monotone" dataKey="responses" name="Responses" stroke="#6366f1" strokeWidth={2} fill="url(#hResp)" />
+                          <Area type="monotone" dataKey="signups" name="Signups" stroke="#10b981" strokeWidth={2} fill="url(#hSign)" />
+                          <Area type="monotone" dataKey="forms" name="New Forms" stroke="#f59e0b" strokeWidth={2} fill="transparent" />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
                 </div>
 
-                {/* ورودی روزانه */}
+                {/* Daily responses */}
                 <div className="sa-card">
                   <div className="sa-card-header">
                     <span className="sa-section-title" style={{ margin: 0 }}>
-                      📊 ورودی روزانه
+                      📊 Daily Responses
                     </span>
                     <span style={{ fontSize: "0.78rem", color: "var(--sa-text-2)" }}>
-                      مجموع ۱۴ روز: {health.series.reduce((s, d) => s + d.responses, 0).toLocaleString()}
+                      14-Day Total: {health.series.reduce((s, d) => s + d.responses, 0).toLocaleString()}
                       {health.growth.responses !== 0 && (
                         <b style={{ color: health.growth.responses > 0 ? "var(--sa-success)" : "var(--sa-danger)", marginInlineStart: 6 }}>
-                          {health.growth.responses > 0 ? "▲" : "▼"} {Math.abs(health.growth.responses).toLocaleString()} هفتگی
+                          {health.growth.responses > 0 ? "▲" : "▼"} {Math.abs(health.growth.responses).toLocaleString()} weekly
                         </b>
                       )}
                     </span>
@@ -4827,9 +4704,9 @@ export default function SuperAdmin() {
                           <XAxis dataKey="label" tick={{ fontSize: 10, fill: "var(--sa-text-2, #64748b)" }} interval={1} />
                           <YAxis tick={{ fontSize: 10, fill: "var(--sa-text-2, #64748b)" }} allowDecimals={false} />
                           <Tooltip
-                            contentStyle={{ background: "var(--sa-surface)", border: "1px solid var(--sa-field-border)", borderRadius: 10, fontSize: "0.8rem", direction: "rtl" }}
-                            formatter={(v) => [`${v.toLocaleString()} ورودی`, ""]}
-                            labelFormatter={(l) => `روز: ${l}`}
+                            contentStyle={{ background: "var(--sa-surface)", border: "1px solid var(--sa-field-border)", borderRadius: 10, fontSize: "0.8rem", direction: "ltr" }}
+                            formatter={(v) => [`${v.toLocaleString()} responses`, ""]}
+                            labelFormatter={(l) => `Date: ${l}`}
                           />
                           <Bar dataKey="responses" fill="#6366f1" radius={[4, 4, 0, 0]} />
                         </BarChart>
@@ -6885,539 +6762,6 @@ export default function SuperAdmin() {
           </form>
         )}
       </Modal>
-
-      {/* ═══════════ Transfer Form Ownership Modal (3 Fields) ═══════════ */}
-      <Modal
-        open={transferModalOpen}
-        onClose={() => {
-          if (!transferSubmitting) {
-            setTransferModalOpen(false);
-            setTransferSuccessInfo(null);
-          }
-        }}
-        title="Transfer Form Ownership"
-      >
-        <div dir="ltr" style={{ textAlign: "left", display: "flex", flexDirection: "column", gap: "1.25rem", minWidth: "320px", maxWidth: "620px" }}>
-          {/* Header Info */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.75rem",
-              padding: "0.75rem 1rem",
-              backgroundColor: "rgba(99, 102, 241, 0.08)",
-              border: "1px solid rgba(99, 102, 241, 0.25)",
-              borderRadius: "0.6rem",
-            }}
-          >
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: "50%",
-                background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#fff",
-                flexShrink: 0,
-              }}
-            >
-              <ArrowRightLeft size={20} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "var(--sa-text-0)" }}>
-                Form Ownership Transfer
-              </div>
-              <div style={{ fontSize: "0.8rem", color: "var(--sa-text-1)", marginTop: "0.15rem" }}>
-                Complete the 3 fields below: Select source account, choose form, and designate target account.
-              </div>
-            </div>
-          </div>
-
-          {/* Success State Screen */}
-          {transferSuccessInfo ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", padding: "1rem 0" }}>
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "1.5rem",
-                  backgroundColor: "rgba(16, 185, 129, 0.08)",
-                  border: "1.5px solid rgba(16, 185, 129, 0.3)",
-                  borderRadius: "0.75rem",
-                }}
-              >
-                <div
-                  style={{
-                    width: 52,
-                    height: 52,
-                    margin: "0 auto 0.75rem",
-                    borderRadius: "50%",
-                    backgroundColor: "#10b981",
-                    color: "#fff",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    boxShadow: "0 4px 12px rgba(16, 185, 129, 0.35)",
-                  }}
-                >
-                  <Check size={28} />
-                </div>
-                <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#10b981", margin: 0 }}>
-                  Form Transferred Successfully!
-                </h3>
-                <p style={{ fontSize: "0.875rem", color: "var(--sa-text-1)", marginTop: "0.35rem" }}>
-                  Ownership and all managerial permissions have been securely reassigned to the target user.
-                </p>
-
-                <div
-                  style={{
-                    backgroundColor: "var(--sa-surface-1)",
-                    border: "1px solid var(--sa-surface-3)",
-                    borderRadius: "0.5rem",
-                    padding: "0.85rem 1rem",
-                    marginTop: "1rem",
-                    fontSize: "0.85rem",
-                    textAlign: "left",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "0.45rem",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ color: "var(--sa-text-2)" }}>Form Title:</span>
-                    <span style={{ fontWeight: 700 }}>{transferSuccessInfo.form?.title || "—"}</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ color: "var(--sa-text-2)" }}>Public URL:</span>
-                    <span style={{ fontFamily: "monospace", color: "var(--sa-link)" }}>
-                      /f/{transferSuccessInfo.form?.slug}
-                    </span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ color: "var(--sa-text-2)" }}>Previous Owner:</span>
-                    <span>{transferSuccessInfo.previous_user?.full_name || transferSuccessInfo.previous_user?.email || "—"}</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ color: "var(--sa-text-2)" }}>New Owner:</span>
-                    <span style={{ fontWeight: 700, color: "#10b981" }}>
-                      {transferSuccessInfo.target_user?.full_name || transferSuccessInfo.target_user?.email || "—"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-                <button
-                  type="button"
-                  className="sa-btn sa-btn-secondary"
-                  onClick={() => {
-                    setTransferSuccessInfo(null);
-                    setTransferFormId("");
-                    if (transferFromUserId) {
-                      loadFormsForFromUser(transferFromUserId);
-                    }
-                  }}
-                >
-                  Transfer Another Form
-                </button>
-                <button
-                  type="button"
-                  className="sa-btn sa-btn-primary"
-                  onClick={() => {
-                    setTransferModalOpen(false);
-                    setTransferSuccessInfo(null);
-                  }}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* Filter / Search for user lists */}
-              <div>
-                <input
-                  type="text"
-                  value={transferSearchQuery}
-                  onChange={(e) => setTransferSearchQuery(e.target.value)}
-                  placeholder="Filter accounts by name, email, or phone number..."
-                  style={{
-                    width: "100%",
-                    padding: "0.45rem 0.75rem",
-                    fontSize: "0.82rem",
-                    borderRadius: "0.4rem",
-                    border: "1px solid var(--sa-field-border)",
-                    backgroundColor: "var(--sa-surface-1)",
-                    color: "var(--sa-text-0)",
-                    outline: "none",
-                  }}
-                />
-              </div>
-
-              {/* FIELD 1: Source Account (From User) */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                  <span
-                    style={{
-                      width: 22,
-                      height: 22,
-                      borderRadius: "50%",
-                      backgroundColor: "#6366f1",
-                      color: "#fff",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "0.75rem",
-                      fontWeight: 800,
-                    }}
-                  >
-                    1
-                  </span>
-                  From Account (Source User):
-                </label>
-                <select
-                  value={transferFromUserId}
-                  onChange={(e) => {
-                    const uid = e.target.value;
-                    setTransferFromUserId(uid);
-                    setTransferFormId("");
-                    loadFormsForFromUser(uid);
-                  }}
-                  disabled={transferSubmitting || transferUsersLoading}
-                  style={{
-                    width: "100%",
-                    padding: "0.55rem 0.75rem",
-                    fontSize: "0.85rem",
-                    borderRadius: "0.45rem",
-                    border: "1.5px solid var(--sa-field-border)",
-                    backgroundColor: "var(--sa-surface)",
-                    color: "var(--sa-text-0)",
-                    outline: "none",
-                  }}
-                >
-                  <option value="">-- Select Source User Account --</option>
-                  {allTransferUsers
-                    .filter((u) => {
-                      if (u.id === transferFromUserId) return true;
-                      if (!transferSearchQuery) return true;
-                      const q = transferSearchQuery.toLowerCase().trim();
-                      return (
-                        u.full_name?.toLowerCase().includes(q) ||
-                        u.email?.toLowerCase().includes(q) ||
-                        (u.phone && u.phone.includes(q))
-                      );
-                    })
-                    .map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.full_name || "Unnamed"} ({u.email || u.phone || "No contact"}) {u.is_owner ? "👑 Owner" : `[${u.plan || "Free"}]`}
-                      </option>
-                    ))}
-                </select>
-                {transferFromUserId && (
-                  <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.15rem" }}>
-                    Source user selected. Their forms are populated in Step 2 below.
-                  </div>
-                )}
-              </div>
-
-              {/* FIELD 2: Select Form to Transfer */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                  <span
-                    style={{
-                      width: 22,
-                      height: 22,
-                      borderRadius: "50%",
-                      backgroundColor: "#8b5cf6",
-                      color: "#fff",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "0.75rem",
-                      fontWeight: 800,
-                    }}
-                  >
-                    2
-                  </span>
-                  Form to Transfer:
-                </label>
-
-                {!transferFromUserId ? (
-                  <div
-                    style={{
-                      padding: "0.6rem 0.85rem",
-                      backgroundColor: "var(--sa-surface-1)",
-                      border: "1px dashed var(--sa-surface-3)",
-                      borderRadius: "0.45rem",
-                      fontSize: "0.82rem",
-                      color: "var(--sa-text-2)",
-                    }}
-                  >
-                    Please select the source account in Step 1 first.
-                  </div>
-                ) : userFormsLoading ? (
-                  <div
-                    style={{
-                      padding: "0.6rem 0.85rem",
-                      backgroundColor: "var(--sa-surface-1)",
-                      borderRadius: "0.45rem",
-                      fontSize: "0.82rem",
-                      color: "var(--sa-link)",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                    }}
-                  >
-                    <RefreshCw size={14} className="animate-spin" />
-                    Loading user forms...
-                  </div>
-                ) : userFormsList.length === 0 ? (
-                  <div
-                    style={{
-                      padding: "0.6rem 0.85rem",
-                      backgroundColor: "rgba(239, 68, 68, 0.06)",
-                      border: "1px solid rgba(239, 68, 68, 0.2)",
-                      borderRadius: "0.45rem",
-                      fontSize: "0.82rem",
-                      color: "var(--sa-danger)",
-                    }}
-                  >
-                    This user has no active forms to transfer.
-                  </div>
-                ) : (
-                  <select
-                    value={transferFormId}
-                    onChange={(e) => setTransferFormId(e.target.value)}
-                    disabled={transferSubmitting}
-                    style={{
-                      width: "100%",
-                      padding: "0.55rem 0.75rem",
-                      fontSize: "0.85rem",
-                      borderRadius: "0.45rem",
-                      border: "1.5px solid var(--sa-field-border)",
-                      backgroundColor: "var(--sa-surface)",
-                      color: "var(--sa-text-0)",
-                      outline: "none",
-                    }}
-                  >
-                    <option value="">-- Select Form to Transfer ({userFormsList.length} forms available) --</option>
-                    {userFormsList.map((f) => (
-                      <option key={f.id} value={f.id}>
-                        {f.title || "Untitled Form"} (/f/{f.slug} — {f.response_count} responses — {f.published ? "Published" : "Draft"})
-                      </option>
-                    ))}
-                  </select>
-                )}
-
-                {/* Selected Form Preview */}
-                {(() => {
-                  const selForm = userFormsList.find((f) => f.id === transferFormId);
-                  if (!selForm) return null;
-                  return (
-                    <div
-                      style={{
-                        backgroundColor: "var(--sa-surface-1)",
-                        border: "1px solid var(--sa-surface-3)",
-                        borderRadius: "0.5rem",
-                        padding: "0.75rem 0.9rem",
-                        marginTop: "0.25rem",
-                        fontSize: "0.82rem",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "0.35rem",
-                      }}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontWeight: 700, color: "var(--sa-text-0)" }}>{selForm.title}</span>
-                        <span
-                          className={`sa-tag ${selForm.published ? "sa-tag-green" : "sa-tag-gray"}`}
-                          style={{ fontSize: "0.7rem" }}
-                        >
-                          {selForm.published ? "Published & Active" : "Draft"}
-                        </span>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", color: "var(--sa-text-2)", fontSize: "0.78rem" }}>
-                        <span>Public URL:</span>
-                        <a
-                          href={`/f/${selForm.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ fontFamily: "monospace", color: "var(--sa-link)", textDecoration: "none" }}
-                        >
-                          /f/{selForm.slug} ↗
-                        </a>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", color: "var(--sa-text-2)", fontSize: "0.78rem" }}>
-                        <span>Recorded Responses:</span>
-                        <span style={{ fontWeight: 700, color: "var(--sa-text-0)" }}>{selForm.response_count} entries</span>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-
-              {/* FIELD 3: Target Account (To User) */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                <label style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                  <span
-                    style={{
-                      width: 22,
-                      height: 22,
-                      borderRadius: "50%",
-                      backgroundColor: "#10b981",
-                      color: "#fff",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "0.75rem",
-                      fontWeight: 800,
-                    }}
-                  >
-                    3
-                  </span>
-                  To Account (Destination User / New Owner):
-                </label>
-                <select
-                  value={transferToUserId}
-                  onChange={(e) => setTransferToUserId(e.target.value)}
-                  disabled={transferSubmitting || transferUsersLoading}
-                  style={{
-                    width: "100%",
-                    padding: "0.55rem 0.75rem",
-                    fontSize: "0.85rem",
-                    borderRadius: "0.45rem",
-                    border: "1.5px solid var(--sa-field-border)",
-                    backgroundColor: "var(--sa-surface)",
-                    color: "var(--sa-text-0)",
-                    outline: "none",
-                  }}
-                >
-                  <option value="">-- Select Destination User Account --</option>
-                  {allTransferUsers
-                    .filter((u) => u.id !== transferFromUserId)
-                    .filter((u) => {
-                      if (u.id === transferToUserId) return true;
-                      if (!transferSearchQuery) return true;
-                      const q = transferSearchQuery.toLowerCase().trim();
-                      return (
-                        u.full_name?.toLowerCase().includes(q) ||
-                        u.email?.toLowerCase().includes(q) ||
-                        (u.phone && u.phone.includes(q))
-                      );
-                    })
-                    .map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.full_name || "Unnamed"} ({u.email || u.phone || "No contact"}) {u.is_owner ? "👑 Owner" : `[${u.plan || "Free"}]`}
-                      </option>
-                    ))}
-                </select>
-
-                {/* Target User Preview */}
-                {(() => {
-                  const targetUser = allTransferUsers.find((u) => u.id === transferToUserId);
-                  if (!targetUser) return null;
-                  return (
-                    <div
-                      style={{
-                        backgroundColor: "rgba(16, 185, 129, 0.06)",
-                        border: "1px solid rgba(16, 185, 129, 0.2)",
-                        borderRadius: "0.5rem",
-                        padding: "0.75rem 0.9rem",
-                        marginTop: "0.25rem",
-                        fontSize: "0.82rem",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontWeight: 700, color: "#10b981" }}>
-                          {targetUser.full_name || "Unnamed"}
-                        </div>
-                        <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)" }}>
-                          {targetUser.email || targetUser.phone}
-                        </div>
-                      </div>
-                      <span className="sa-tag sa-tag-green" style={{ fontSize: "0.7rem" }}>
-                        Plan: {targetUser.plan || "Free"} · Max forms: {targetUser.max_forms || 5}
-                      </span>
-                    </div>
-                  );
-                })()}
-              </div>
-
-              {/* Transfer Guarantees Note */}
-              <div
-                style={{
-                  backgroundColor: "var(--sa-surface-1)",
-                  borderLeft: "3px solid #6366f1",
-                  borderRadius: "0.4rem",
-                  padding: "0.75rem 0.9rem",
-                  fontSize: "0.78rem",
-                  color: "var(--sa-text-1)",
-                  lineHeight: 1.6,
-                }}
-              >
-                <div style={{ fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.2rem" }}>
-                  Transfer Guarantees:
-                </div>
-                <div>• Full ownership (manager_id and created_by) transferred atomically.</div>
-                <div>• Target user inherits full builder, editing, Excel export, and responses access.</div>
-                <div>• Public submission URLs (/f/:slug, embed) and existing responses remain fully intact.</div>
-                <div>• Previous owner's personal Telegram bot links unlinked for security.</div>
-              </div>
-
-              {/* Action Buttons */}
-              <div style={{ display: "flex", gap: "0.6rem", justifyContent: "flex-end", marginTop: "0.5rem" }}>
-                <button
-                  type="button"
-                  className="sa-btn sa-btn-secondary"
-                  disabled={transferSubmitting}
-                  onClick={() => setTransferModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="sa-btn"
-                  disabled={
-                    !transferFromUserId ||
-                    !transferFormId ||
-                    !transferToUserId ||
-                    transferSubmitting
-                  }
-                  onClick={handleExecuteTransfer}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "0.4rem",
-                    background:
-                      !transferFromUserId || !transferFormId || !transferToUserId || transferSubmitting
-                        ? "var(--sa-surface-3)"
-                        : "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
-                    color: "#fff",
-                    fontWeight: 700,
-                    fontSize: "0.85rem",
-                    border: "none",
-                    cursor:
-                      !transferFromUserId || !transferFormId || !transferToUserId || transferSubmitting
-                        ? "not-allowed"
-                        : "pointer",
-                    padding: "0.55rem 1.1rem",
-                    borderRadius: "0.375rem",
-                    boxShadow: "0 2px 8px rgba(99, 102, 241, 0.35)",
-                  }}
-                >
-                  <ArrowRightLeft size={16} />
-                  {transferSubmitting ? "Transferring Form..." : "Transfer Ownership Now"}
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </Modal>
     </div>
   );
 }
-
