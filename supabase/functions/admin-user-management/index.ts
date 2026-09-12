@@ -400,6 +400,12 @@ serve(async (req) => {
       }
 
       try {
+        await supabaseAdmin.from("telegram_form_links").delete().eq("form_id", form_id);
+      } catch (tgErr) {
+        console.warn("Failed to delete old telegram_form_links:", tgErr);
+      }
+
+      try {
         await supabaseAdmin.from("activity_log").insert({
           user_id: user.id,
           action: "transfer_form_ownership",

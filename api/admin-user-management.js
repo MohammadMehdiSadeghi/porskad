@@ -408,6 +408,13 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "خطا در انتقال فرم: " + updateErr.message });
       }
 
+      // حذف لینک‌های تلگرام قبلی متصل به این فرم جهت حفظ حریم خصوصی پاسخ‌های کاربر جدید
+      try {
+        await adminClient.from("telegram_form_links").delete().eq("form_id", form_id);
+      } catch (tgErr) {
+        console.warn("Failed to delete old telegram_form_links:", tgErr);
+      }
+
       // ثبت در activity_log
       try {
         await adminClient.from("activity_log").insert({

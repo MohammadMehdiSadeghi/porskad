@@ -6439,12 +6439,14 @@ export default function SuperAdmin() {
                   <option value="">-- انتخاب حساب کاربری مبدأ --</option>
                   {allTransferUsers
                     .filter((u) => {
+                      if (u.id === transferFromUserId) return true;
                       if (!transferSearchQuery) return true;
-                      const q = transferSearchQuery.toLowerCase();
+                      const q = transferSearchQuery.toLowerCase().trim();
+                      const qEng = q.replace(/[۰-۹]/g, (d) => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
                       return (
                         u.full_name?.toLowerCase().includes(q) ||
                         u.email?.toLowerCase().includes(q) ||
-                        u.phone?.includes(q)
+                        (u.phone && (u.phone.includes(q) || u.phone.includes(qEng)))
                       );
                     })
                     .map((u) => (
@@ -6636,12 +6638,14 @@ export default function SuperAdmin() {
                   {allTransferUsers
                     .filter((u) => u.id !== transferFromUserId)
                     .filter((u) => {
+                      if (u.id === transferToUserId) return true;
                       if (!transferSearchQuery) return true;
-                      const q = transferSearchQuery.toLowerCase();
+                      const q = transferSearchQuery.toLowerCase().trim();
+                      const qEng = q.replace(/[۰-۹]/g, (d) => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
                       return (
                         u.full_name?.toLowerCase().includes(q) ||
                         u.email?.toLowerCase().includes(q) ||
-                        u.phone?.includes(q)
+                        (u.phone && (u.phone.includes(q) || u.phone.includes(qEng)))
                       );
                     })
                     .map((u) => (
