@@ -1412,14 +1412,13 @@ export default function SuperAdmin() {
     try {
       const { data, error } = await supabase
         .from("forms")
-        .select("id, title, slug, published, archived, created_at, manager_id, created_by")
+        .select("*")
         .order("created_at", { ascending: false })
         .limit(500);
-      if (error) throw error;
+      if (error) console.warn("loadAllSystemForms warning:", error);
       setAllSystemForms(data || []);
     } catch (err) {
       console.error("Failed to load system forms:", err);
-      showToast("Error loading system forms: " + err.message, "error");
     } finally {
       setAllSystemFormsLoading(false);
     }
@@ -1432,7 +1431,6 @@ export default function SuperAdmin() {
         .from("profiles")
         .select("id, full_name, email, phone, plan, is_owner, max_forms")
         .order("full_name", { ascending: true });
-      if (error) throw error;
 
       let list = data || [];
 
@@ -1485,81 +1483,44 @@ export default function SuperAdmin() {
     }
     setUserFormsLoading(true);
     try {
-      let formsData = [];
+      // 1. Fetch forms safely using select(*) to avoid column schema errors
+      const { data, error } = await supabase
+        .from("forms")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-      // Strategy 1: PostgREST .or() filter
-      try {
-        const { data, error } = await supabase
-          .from("forms")
-          .select("id, title, slug, published, archived, created_at, manager_id, created_by")
-          .or(`manager_id.eq.${fromUid},created_by.eq.${fromUid}`)
-          .order("created_at", { ascending: false });
-
-        if (!error && data && data.length > 0) {
-          formsData = data;
-        }
-      } catch (e) {
-        console.warn("Strategy 1 failed:", e);
+      if (error) {
+        console.warn("loadFormsForFromUser select(*) warning:", error);
       }
 
-      // Strategy 2: Parallel queries for manager_id and created_by
-      if (formsData.length === 0) {
-        try {
-          const [{ data: mForms }, { data: cForms }] = await Promise.all([
-            supabase
-              .from("forms")
-              .select("id, title, slug, published, archived, created_at, manager_id, created_by")
-              .eq("manager_id", fromUid)
-              .order("created_at", { ascending: false }),
-            supabase
-              .from("forms")
-              .select("id, title, slug, published, archived, created_at, manager_id, created_by")
-              .eq("created_by", fromUid)
-              .order("created_at", { ascending: false }),
-          ]);
-          const map = new Map();
-          (mForms || []).forEach((f) => map.set(f.id, f));
-          (cForms || []).forEach((f) => map.set(f.id, f));
-          formsData = Array.from(map.values());
-        } catch (e) {
-          console.warn("Strategy 2 failed:", e);
-        }
-      }
+      const all = data || [];
+      const uidStr = String(fromUid).toLowerCase().trim();
 
-      // Strategy 3: In-memory filter on recent system forms
-      if (formsData.length === 0) {
-        try {
-          const { data: allForms } = await supabase
-            .from("forms")
-            .select("id, title, slug, published, archived, created_at, manager_id, created_by")
-            .order("created_at", { ascending: false })
-            .limit(1000);
+      // 2. Filter in memory for this user ID (manager_id, created_by, or user_id)
+      const userForms = all.filter((f) => {
+        if (f.deleted_at) return false;
+        const mId = f.manager_id ? String(f.manager_id).toLowerCase().trim() : "";
+        const cId = f.created_by ? String(f.created_by).toLowerCase().trim() : "";
+        const uId = f.user_id ? String(f.user_id).toLowerCase().trim() : "";
+        return mId === uidStr || cId === uidStr || uId === uidStr;
+      });
 
-          if (allForms && allForms.length > 0) {
-            formsData = allForms.filter(
-              (f) => String(f.manager_id) === String(fromUid) || String(f.created_by) === String(fromUid)
-            );
-          }
-        } catch (e) {
-          console.warn("Strategy 3 failed:", e);
-        }
-      }
-
-      // Safe response count fetch (never throws)
+      // 3. Safe response count fetch (never throws)
       let counts = {};
       try {
         const { data: cData } = await supabase.rpc("get_form_response_counts");
         counts = cData || {};
       } catch {}
 
-      const list = formsData.map((f) => ({
+      const list = userForms.map((f) => ({
         ...f,
-        response_count: counts[f.id] || 0,
+        response_count: counts[f.id] ?? 0,
       }));
+
       setUserFormsList(list);
     } catch (err) {
-      console.error("Failed to load user forms:", err);
-      showToast("Error loading user forms: " + err.message, "error");
+      console.error("loadFormsForFromUser error:", err);
+      showToast("Error loading forms: " + (err?.message || err), "error");
     } finally {
       setUserFormsLoading(false);
     }
