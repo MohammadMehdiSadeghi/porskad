@@ -9,7 +9,7 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import StickerCard from "../../components/ui/StickerCard";
 import Modal from "../../components/ui/Modal";
-import { Plus, Edit, Edit3, Trash2, Crown, Users, User, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings, Eye, EyeOff, Sliders, Bot, Copy, Calendar, CheckCircle, XCircle, Phone, Mail, RotateCcw, Save, Info, Sparkles, Zap, Layers, Check } from "lucide-react";
+import { Plus, Edit, Edit3, Trash2, Crown, Users, User, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings, Eye, EyeOff, Sliders, Bot, Copy, Calendar, CheckCircle, XCircle, Phone, Mail, RotateCcw, Save, Info, Sparkles, Zap, Layers, Check, Search, X } from "lucide-react";
 import SEO from "../../components/ui/SEO";
 import { supabase } from "../../lib/supabaseClient";
 import { logActivity } from "../../lib/activityLogger";
@@ -173,6 +173,7 @@ export default function Managers() {
   const [loading, setLoading] = useState(true);
   const [managers, setManagers] = useState([]);
   const [roleTab, setRoleTab] = useState("all"); // "all" | "admins" | "users"
+  const [searchQuery, setSearchQuery] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedManager, setSelectedManager] = useState(null);
@@ -785,63 +786,124 @@ export default function Managers() {
         </div>
       </div>
 
-      {/* تب‌های تفکیک ادمین‌ها و کاربران */}
-      <div className="flex items-center gap-2 border-b-2 border-ink/10 dark:border-slate-800 pb-3 flex-wrap">
-        <button
-          type="button"
-          onClick={() => setRoleTab("all")}
-          className={`px-3.5 py-1.5 rounded-pill-md text-xs sm:text-sm font-black transition-all flex items-center gap-2 cursor-pointer ${
-            roleTab === "all"
-              ? "bg-navy dark:bg-slate-700 text-white shadow-xs"
-              : "bg-white dark:bg-slate-800 hover:bg-bg-lavender dark:hover:bg-slate-700 text-navy/70 dark:text-slate-300 border border-navy/10 dark:border-slate-700"
-          }`}
-        >
-          <span>همه اعضا</span>
-          <Badge color={roleTab === "all" ? "orange" : "gray"}>{managers.length}</Badge>
-        </button>
+      {/* تب‌های تفکیک ادمین‌ها و کاربران + نوار جستجو */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 border-b-2 border-ink/10 dark:border-slate-800 pb-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setRoleTab("all")}
+            className={`px-3.5 py-1.5 rounded-pill-md text-xs sm:text-sm font-black transition-all flex items-center gap-2 cursor-pointer ${
+              roleTab === "all"
+                ? "bg-navy dark:bg-slate-700 text-white shadow-xs"
+                : "bg-white dark:bg-slate-800 hover:bg-bg-lavender dark:hover:bg-slate-700 text-navy/70 dark:text-slate-300 border border-navy/10 dark:border-slate-700"
+            }`}
+          >
+            <span>همه اعضا</span>
+            <Badge color={roleTab === "all" ? "orange" : "gray"}>{managers.length}</Badge>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setRoleTab("admins")}
-          className={`px-3.5 py-1.5 rounded-pill-md text-xs sm:text-sm font-black transition-all flex items-center gap-2 cursor-pointer ${
-            roleTab === "admins"
-              ? "bg-amber-600 text-white shadow-xs"
-              : "bg-white dark:bg-slate-800 hover:bg-bg-lavender dark:hover:bg-slate-700 text-amber-900 dark:text-amber-400 border border-amber-300 dark:border-amber-700/50"
-          }`}
-        >
-          <Shield size={14} />
-          <span>مدیران و ادمین‌ها</span>
-          <Badge color={roleTab === "admins" ? "yellow" : "gray"}>
-            {managers.filter((m) => m.is_owner || m.role === "admin").length}
-          </Badge>
-        </button>
+          <button
+            type="button"
+            onClick={() => setRoleTab("admins")}
+            className={`px-3.5 py-1.5 rounded-pill-md text-xs sm:text-sm font-black transition-all flex items-center gap-2 cursor-pointer ${
+              roleTab === "admins"
+                ? "bg-amber-600 text-white shadow-xs"
+                : "bg-white dark:bg-slate-800 hover:bg-bg-lavender dark:hover:bg-slate-700 text-amber-900 dark:text-amber-400 border border-amber-300 dark:border-amber-700/50"
+            }`}
+          >
+            <Shield size={14} />
+            <span>مدیران و ادمین‌ها</span>
+            <Badge color={roleTab === "admins" ? "yellow" : "gray"}>
+              {managers.filter((m) => m.is_owner || m.role === "admin").length}
+            </Badge>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setRoleTab("users")}
-          className={`px-3.5 py-1.5 rounded-pill-md text-xs sm:text-sm font-black transition-all flex items-center gap-2 cursor-pointer ${
-            roleTab === "users"
-              ? "bg-teal text-white shadow-xs"
-              : "bg-white dark:bg-slate-800 hover:bg-bg-lavender dark:hover:bg-slate-700 text-teal-text dark:text-teal border border-teal/30 dark:border-teal/30"
-          }`}
-        >
-          <Users size={14} />
-          <span>کاربران عادی</span>
-          <Badge color={roleTab === "users" ? "green" : "gray"}>
-            {managers.filter((m) => !m.is_owner && m.role !== "admin").length}
-          </Badge>
-        </button>
+          <button
+            type="button"
+            onClick={() => setRoleTab("users")}
+            className={`px-3.5 py-1.5 rounded-pill-md text-xs sm:text-sm font-black transition-all flex items-center gap-2 cursor-pointer ${
+              roleTab === "users"
+                ? "bg-teal text-white shadow-xs"
+                : "bg-white dark:bg-slate-800 hover:bg-bg-lavender dark:hover:bg-slate-700 text-teal-text dark:text-teal border border-teal/30 dark:border-teal/30"
+            }`}
+          >
+            <Users size={14} />
+            <span>کاربران عادی</span>
+            <Badge color={roleTab === "users" ? "green" : "gray"}>
+              {managers.filter((m) => !m.is_owner && m.role !== "admin").length}
+            </Badge>
+          </button>
+        </div>
+
+        {/* فیلد جستجوی کاربران */}
+        <div className="relative w-full md:w-80">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="جستجو در نام، ایمیل، شماره یا طرح..."
+            className="w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 focus:border-teal rounded-pill-md pl-8 pr-9 py-2 text-xs sm:text-sm font-semibold text-ink dark:text-slate-100 focus:outline-none transition-all placeholder:text-ink-subtle dark:placeholder:text-slate-400"
+          />
+          <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 dark:text-slate-500 pointer-events-none" />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink/40 dark:text-slate-400 hover:text-ink dark:hover:text-white p-1 rounded-full cursor-pointer transition-colors"
+              title="پاک کردن جستجو"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* لیست کاربران */}
       {(() => {
+        const q = searchQuery.trim().toLowerCase();
         const displayedManagers = managers.filter((m) => {
           if (roleTab === "admins") return m.is_owner || m.role === "admin";
           if (roleTab === "users") return !m.is_owner && m.role !== "admin";
+
+          if (q) {
+            const name = (m.full_name || "").toLowerCase();
+            const email = (m.email || "").toLowerCase();
+            const phone = (m.phone || "").toLowerCase();
+            const plan = (m.plan || "").toLowerCase();
+            const role = m.is_owner
+              ? "مدیر کل owner god"
+              : m.role === "admin"
+              ? "ادمین سوپرادمین admin superadmin"
+              : "کاربر عادی user member";
+
+            return (
+              name.includes(q) ||
+              email.includes(q) ||
+              phone.includes(q) ||
+              plan.includes(q) ||
+              role.includes(q)
+            );
+          }
+
           return true;
         });
 
         if (displayedManagers.length === 0) {
+          if (searchQuery.trim()) {
+            return (
+              <EmptyState
+                icon={<Search size={48} />}
+                title={`کاربری با عبارت «${searchQuery}» یافت نشد`}
+                subtitle="نام، ایمیل، شماره تماس یا طرح دیگری را امتحان کنید یا جستجو را پاک کنید."
+                action={
+                  <Button variant="outline" size="sm" onClick={() => setSearchQuery("")}>
+                    پاک کردن فیلتر جستجو
+                  </Button>
+                }
+              />
+            );
+          }
+
           return (
             <EmptyState
               icon={roleTab === "admins" ? <Shield size={48} /> : <Users size={48} />}
@@ -853,7 +915,22 @@ export default function Managers() {
         }
 
         return (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 lg:gap-5">
+          <div className="flex flex-col gap-4">
+            {searchQuery.trim() && (
+              <div className="flex items-center justify-between text-xs font-bold text-ink-subtle dark:text-slate-400 bg-slate-50 dark:bg-slate-800/60 px-4 py-2.5 rounded-xl border border-ink/10 dark:border-slate-700">
+                <span>
+                  نتیجه جستجو برای <strong className="text-navy dark:text-slate-200">«{searchQuery}»</strong>: {faNum(displayedManagers.length)} کاربر
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="text-teal hover:underline cursor-pointer"
+                >
+                  پاک کردن جستجو
+                </button>
+              </div>
+            )}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 lg:gap-5">
             {displayedManagers.map((m) => {
               const isSuperAdmin = m.role === "admin";
               const isSuperAdminOrOwner = m.is_owner || isSuperAdmin;
@@ -971,6 +1048,7 @@ export default function Managers() {
                 </div>
               );
             })}
+            </div>
           </div>
         );
       })()}
