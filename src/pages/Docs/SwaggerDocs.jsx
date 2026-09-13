@@ -261,24 +261,24 @@ print(response.json())`
                 <span className="font-semibold text-slate-700 dark:text-slate-200">
                   Your Token ({userEmail}):
                 </span>
-                <span className="font-mono bg-slate-100 dark:bg-slate-800 text-teal-600 dark:text-teal-400 px-2 py-0.5 rounded border border-teal-500/20 text-xs select-all">
+                <span className="font-mono bg-slate-100 dark:bg-slate-800 text-teal-600 dark:text-teal-400 px-2 py-0.5 rounded border border-teal-500/20 text-xs select-all max-w-[220px] sm:max-w-xs truncate inline-block align-middle">
                   {showToken ? token : `${token.substring(0, 16)}••••••••••••••••`}
                 </span>
                 <button
                   onClick={() => setShowToken(!showToken)}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
                   title={showToken ? "Hide token" : "Show full token"}
                 >
                   {showToken ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
                 <button
                   onClick={handleCopyToken}
-                  className="bg-teal-600 hover:bg-teal-700 text-white px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1 transition-all"
+                  className="bg-teal-600 hover:bg-teal-700 text-white px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer shadow-xs"
                 >
                   {copiedToken ? <Check size={12} /> : <Copy size={12} />}
                   <span>{copiedToken ? "Copied!" : "Copy"}</span>
                 </button>
-                <span className="hidden md:inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
+                <span className="hidden md:inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-500/20">
                   <ShieldCheck size={12} />
                   Auto-authorized in Swagger
                 </span>
@@ -296,7 +296,7 @@ print(response.json())`
                 setShowSnippets(!showSnippets);
                 if (showQuestionTypes) setShowQuestionTypes(false);
               }}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${
+              className={`text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
                 showSnippets
                   ? "bg-slate-900 text-white dark:bg-teal-600"
                   : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"
@@ -312,7 +312,7 @@ print(response.json())`
                 setShowQuestionTypes(!showQuestionTypes);
                 if (showSnippets) setShowSnippets(false);
               }}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${
+              className={`text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
                 showQuestionTypes
                   ? "bg-slate-900 text-white dark:bg-teal-600"
                   : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"
@@ -323,6 +323,28 @@ print(response.json())`
               {showQuestionTypes ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>
           </div>
+        </div>
+
+        {/* HTTP Header Guide Callout */}
+        <div className="max-w-7xl mx-auto mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-400">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-bold text-slate-800 dark:text-slate-200">HTTP Header:</span>
+            <code className="bg-slate-100 dark:bg-slate-800 text-teal-600 dark:text-teal-400 font-mono px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+              Authorization: Bearer &lt;TOKEN&gt;
+            </code>
+            <code className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 hidden sm:inline-block">
+              Content-Type: application/json
+            </code>
+          </div>
+          {token && (
+            <button
+              onClick={() => handleCopyCode(`Authorization: Bearer ${token}`)}
+              className="text-[11px] font-semibold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <Copy size={11} />
+              <span>Copy Full Header String</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -429,8 +451,16 @@ print(response.json())`
         .dark .swagger-ui { filter: invert(0.88) hue-rotate(180deg); }
         .dark .swagger-ui img { filter: invert(1) hue-rotate(180deg); }
         .swagger-ui .scheme-container { background: transparent !important; box-shadow: none !important; padding: 5px 0 !important; }
+        .swagger-ui .wrapper { padding: 0 !important; max-width: 100% !important; }
+        .swagger-ui .col-12 { padding: 0 !important; }
         .swagger-ui .opblock { border-radius: 12px !important; margin: 0 0 12px !important; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05) !important; }
         .swagger-ui .opblock-summary { border-radius: 12px !important; }
+        .swagger-ui .btn.authorize { background-color: #0d9488 !important; border-color: #0d9488 !important; color: white !important; border-radius: 8px !important; }
+        .swagger-ui .btn.authorize svg { fill: white !important; }
+        .swagger-ui .btn.execute { background-color: #2563eb !important; border-color: #2563eb !important; color: white !important; border-radius: 8px !important; }
+        .swagger-ui .btn.try-out__btn { border-radius: 8px !important; }
+        .swagger-ui select { border-radius: 8px !important; }
+        .swagger-ui input[type=text] { border-radius: 8px !important; }
       `}</style>
     </div>
   );

@@ -98,8 +98,16 @@ function EmbeddedSwaggerUI({ token }) {
         .dark .swagger-ui { filter: invert(0.88) hue-rotate(180deg); }
         .dark .swagger-ui img { filter: invert(1) hue-rotate(180deg); }
         .swagger-ui .scheme-container { background: transparent !important; box-shadow: none !important; padding: 5px 0 !important; }
+        .swagger-ui .wrapper { padding: 0 !important; max-width: 100% !important; }
+        .swagger-ui .col-12 { padding: 0 !important; }
         .swagger-ui .opblock { border-radius: 14px !important; margin: 0 0 12px !important; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.06) !important; }
         .swagger-ui .opblock-summary { border-radius: 14px !important; }
+        .swagger-ui .btn.authorize { background-color: #0d9488 !important; border-color: #0d9488 !important; color: white !important; border-radius: 8px !important; }
+        .swagger-ui .btn.authorize svg { fill: white !important; }
+        .swagger-ui .btn.execute { background-color: #2563eb !important; border-color: #2563eb !important; color: white !important; border-radius: 8px !important; }
+        .swagger-ui .btn.try-out__btn { border-radius: 8px !important; }
+        .swagger-ui select { border-radius: 8px !important; }
+        .swagger-ui input[type=text] { border-radius: 8px !important; }
       `}</style>
       {loading && (
         <div className="absolute inset-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xs flex flex-col items-center justify-center gap-3 z-10">
@@ -335,6 +343,39 @@ print(response.json())`,
                 <span>{copiedToken ? "کپی شد" : "کپی توکن"}</span>
               </Button>
             </div>
+          </div>
+
+          {/* راهنمای سریع و کاربردی ارسال هدرها */}
+          <div className="mt-4 pt-3 border-t-2 border-teal/20 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-black text-navy dark:text-teal-200 flex items-center gap-1">
+                <ShieldCheck size={14} className="text-teal" />
+                <span>فرمت ارسال در هدر درخواست‌ها:</span>
+              </span>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="font-bold text-ink-subtle dark:text-slate-400">Authorization:</span>
+                <code className="bg-white/90 dark:bg-slate-900 text-teal font-mono px-2 py-0.5 rounded border border-teal/30 font-bold" dir="ltr">
+                  Bearer {token ? `${token.substring(0, 10)}...` : "<TOKEN>"}
+                </code>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5 hidden sm:flex">
+                <span className="font-bold text-ink-subtle dark:text-slate-400">Content-Type:</span>
+                <code className="bg-white/90 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-mono px-2 py-0.5 rounded border border-teal/30 font-bold" dir="ltr">
+                  application/json
+                </code>
+              </div>
+            </div>
+
+            {token && (
+              <button
+                type="button"
+                onClick={() => handleCopyText(`Authorization: Bearer ${token}`, "auth_header")}
+                className="text-xs font-bold text-teal hover:underline flex items-center gap-1 cursor-pointer bg-white/60 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-teal/20"
+              >
+                {copiedLink === "auth_header" ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
+                <span>{copiedLink === "auth_header" ? "کپی شد" : "کپی کل هدر Authorization"}</span>
+              </button>
+            )}
           </div>
         </StickerCard>
       </div>
@@ -768,6 +809,142 @@ print(response.json())`,
                     <code className="text-teal font-mono font-bold" dir="ltr">Authorization: Bearer &lt;TOKEN&gt;</code>{" "}
                     در تمام متدهای اختصاصی فرستاده شود.
                   </p>
+                </div>
+              </StickerCard>
+
+              {/* کارت راهنمای ساختار و نحوه ارسال هدرها (HTTP Request Headers) */}
+              <StickerCard theme="white">
+                <div className="p-5 sm:p-6 flex flex-col gap-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-ink/5 dark:border-slate-800 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2.5 bg-teal/10 text-teal rounded-xl">
+                        <ShieldCheck size={20} />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-navy dark:text-white">
+                          ساختار هدرهای الزامی جهت ارسال درخواست (HTTP Request Headers)
+                        </h4>
+                        <p className="text-xs text-ink-subtle dark:text-slate-400 mt-0.5">
+                          مشخصات هدرهایی که باید در درخواست‌های وب‌سرویس به همراه توکن احراز هویت ارسال شوند
+                        </p>
+                      </div>
+                    </div>
+
+                    {token && (
+                      <Button
+                        variant="white"
+                        size="sm"
+                        onClick={() => handleCopyText(`Authorization: Bearer ${token}`, "copy_full_auth")}
+                        className="flex items-center gap-1.5 text-xs"
+                      >
+                        {copiedLink === "copy_full_auth" ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
+                        <span>{copiedLink === "copy_full_auth" ? "کپی شد" : "کپی هدر احراز هویت شما"}</span>
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* جدول و کارت‌های تفکیکی هدرها با دکمه‌های کپی مستقیم */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* هدر ۱: Authorization */}
+                    <div className="p-4 rounded-xl border-2 border-teal/20 bg-teal/5 dark:bg-slate-900/60 flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge color="teal">هدر ۱ (امنیتی و الزامی)</Badge>
+                          <span className="text-xs font-black text-navy dark:text-white">Authorization</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyText("Authorization", "h_auth_key")}
+                          className="text-[11px] font-bold text-teal hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          {copiedLink === "h_auth_key" ? <Check size={11} className="text-emerald-500" /> : <Copy size={11} />}
+                          <span>کپی کلید (Key)</span>
+                        </button>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5 text-xs">
+                        <span className="text-ink-subtle dark:text-slate-400 font-bold">فرمت مقدار (Value):</span>
+                        <div className="flex items-center justify-between bg-white dark:bg-slate-950 p-2 rounded-lg border border-teal/20 font-mono text-xs dir-ltr">
+                          <span className="truncate text-teal font-bold select-all">
+                            Bearer {token ? `${token.substring(0, 16)}...` : "<YOUR_TOKEN>"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyText(`Bearer ${token || "YOUR_TOKEN"}`, "h_auth_val")}
+                            className="text-xs text-ink-subtle hover:text-teal shrink-0 ml-2 cursor-pointer p-1"
+                            title="کپی مقدار کامل"
+                          >
+                            {copiedLink === "h_auth_val" ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <p className="text-[11px] text-ink-subtle dark:text-slate-400 leading-5">
+                        ⚠️ <strong>نکته مهم:</strong> حتماً باید کلمه <code className="text-teal font-mono font-bold" dir="ltr">Bearer</code> با یک فاصله انگلیسی قبل از رشته توکن قرار گیرد.
+                      </p>
+                    </div>
+
+                    {/* هدر ۲: Content-Type */}
+                    <div className="p-4 rounded-xl border-2 border-ink/10 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge color="blue">هدر ۲ (فرمت داده‌ها)</Badge>
+                          <span className="text-xs font-black text-navy dark:text-white">Content-Type</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyText("Content-Type", "h_ct_key")}
+                          className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          {copiedLink === "h_ct_key" ? <Check size={11} className="text-emerald-500" /> : <Copy size={11} />}
+                          <span>کپی کلید (Key)</span>
+                        </button>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5 text-xs">
+                        <span className="text-ink-subtle dark:text-slate-400 font-bold">فرمت مقدار (Value):</span>
+                        <div className="flex items-center justify-between bg-white dark:bg-slate-950 p-2 rounded-lg border border-ink/10 dark:border-slate-800 font-mono text-xs dir-ltr">
+                          <span className="text-blue-600 dark:text-blue-400 font-bold select-all">
+                            application/json
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyText("application/json", "h_ct_val")}
+                            className="text-xs text-ink-subtle hover:text-blue-600 shrink-0 ml-2 cursor-pointer p-1"
+                            title="کپی مقدار"
+                          >
+                            {copiedLink === "h_ct_val" ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <p className="text-[11px] text-ink-subtle dark:text-slate-400 leading-5">
+                        برای درخواست‌های متد <code className="font-bold text-navy dark:text-slate-200">POST</code> و <code className="font-bold text-navy dark:text-slate-200">PUT</code> که دارای بدنه (Body) با فرمت JSON هستند.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* راهنمای Postman و Insomnia */}
+                  <div className="p-4 rounded-xl bg-blue-500/5 dark:bg-blue-950/20 border-2 border-blue-500/20 flex flex-col gap-2.5 text-xs text-ink-subtle dark:text-slate-300">
+                    <span className="font-black text-navy dark:text-blue-300 flex items-center gap-1.5">
+                      <Sparkles size={15} className="text-blue-500" />
+                      <span>راهنمای تنظیم توکن در Postman / Insomnia / Thunder Client:</span>
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      <div className="p-3 bg-white/70 dark:bg-slate-900/70 rounded-lg border border-blue-500/20 leading-6">
+                        <strong className="text-navy dark:text-slate-100 block mb-1">روش اول (تب Headers دستی):</strong>
+                        ۱. در نرم‌افزار به تب <strong>Headers</strong> بروید.<br />
+                        ۲. در ستون Key مقدار <code className="text-teal font-mono font-bold" dir="ltr">Authorization</code> را بنویسید.<br />
+                        ۳. در ستون Value مقدار <code className="text-teal font-mono font-bold" dir="ltr">Bearer &lt;TOKEN&gt;</code> را قرار دهید.
+                      </div>
+                      <div className="p-3 bg-white/70 dark:bg-slate-900/70 rounded-lg border border-blue-500/20 leading-6">
+                        <strong className="text-navy dark:text-slate-100 block mb-1">روش دوم (تب Auth خودکار):</strong>
+                        ۱. به تب <strong>Auth</strong> یا <strong>Authorization</strong> بروید.<br />
+                        ۲. نوع Type را روی <strong className="text-teal">Bearer Token</strong> بگذارید.<br />
+                        ۳. فقط توکن خود را در فیلد Token وارد کنید (نرم‌افزار خودش کلمه Bearer را اضافه می‌کند).
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </StickerCard>
 
