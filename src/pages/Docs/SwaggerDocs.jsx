@@ -1,22 +1,73 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Code2, ArrowRight, Copy, Check, Download, ExternalLink, ShieldCheck, Terminal, BookOpen, Layers } from "lucide-react";
+import { supabase } from "../../lib/supabaseClient";
+import { QUESTION_TYPES, QUESTION_CATEGORIES } from "../../lib/questionTypes";
 import SEO from "../../components/ui/SEO";
+import {
+  Code2,
+  ArrowRight,
+  Copy,
+  Check,
+  Download,
+  Key,
+  Layers,
+  Terminal,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+  ShieldCheck,
+  FileJson,
+  Eye,
+  EyeOff
+} from "lucide-react";
 
 export default function SwaggerDocs() {
   const containerRef = useRef(null);
-  const [copied, setCopied] = useState(false);
+  const swaggerInstanceRef = useRef(null);
+
+  // وضعیت توکن و احراز هویت
+  const [token, setToken] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [showToken, setShowToken] = useState(false);
+  const [copiedToken, setCopiedToken] = useState(false);
+  const [copiedCurl, setCopiedCurl] = useState(false);
   const [specLoading, setSpecLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("swagger"); // "swagger" | "guide"
 
-  const openApiUrl = `${window.location.origin}/openapi.json`;
+  // باز/بسته بودن بخش‌های کمکی (برای اینکه صفحه شلوغ نشود)
+  const [showSnippets, setShowSnippets] = useState(false);
+  const [showQuestionTypes, setShowQuestionTypes] = useState(false);
+  const [selectedLang, setSelectedLang] = useState("curl"); // "curl" | "js" | "python"
 
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const baseUrl = `${origin}/api/v1`;
+
+  // ۱. دریافت توکن نشست کاربر (در صورت لاگین بودن)
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          setToken(session.access_token);
+          setUserEmail(session.user?.email || "کاربر لاگین‌شده");
+
+          // اگر قبلاً سوئیگر لود شده بود، توکن را تزریق کن
+          if (swaggerInstanceRef.current) {
+            swaggerInstanceRef.current.preauthorizeApiKey("BearerAuth", `Bearer ${session.access_token}`);
+          }
+        }
+      } catch (err) {
+        console.error("Auth check failed:", err);
+      }
+    }
+    checkAuth();
+  }, []);
+
+  // ۲. راه‌اندازی کتابخانه رسمی Swagger UI
   useEffect(() => {
     let isMounted = true;
 
-    // بارگذاری CSS سوئگر
-    const existingCss = document.getElementById("swagger-ui-css");
-    if (!existingCss) {
+    // بارگذاری استایل Swagger
+    if (!document.getElementById("swagger-ui-css")) {
       const link = document.createElement("link");
       link.id = "swagger-ui-css";
       link.rel = "stylesheet";
@@ -24,10 +75,9 @@ export default function SwaggerDocs() {
       document.head.appendChild(link);
     }
 
-    // بارگذاری اسکریپت Swagger UI Bundle
     function initSwagger() {
       if (window.SwaggerUIBundle && containerRef.current && isMounted) {
-        window.SwaggerUIBundle({
+        const ui = window.SwaggerUIBundle({
           url: "/openapi.json",
           domNode: containerRef.current,
           deepLinking: true,
@@ -45,7 +95,14 @@ export default function SwaggerDocs() {
           tryItOutEnabled: true,
           persistAuthorization: true,
           onComplete: () => {
-            if (isMounted) setSpecLoading(false);
+            if (isMounted) {
+              setSpecLoading(false);
+              swaggerInstanceRef.current = ui;
+              // اعمال خودکار توکن در صورت وجود
+              if (token) {
+                ui.preauthorizeApiKey("BearerAuth", `Bearer ${token}`);
+              }
+            }
           },
         });
       }
@@ -54,46 +111,86 @@ export default function SwaggerDocs() {
     if (window.SwaggerUIBundle) {
       initSwagger();
     } else {
-      const existingScript = document.getElementById("swagger-ui-script");
-      if (!existingScript) {
-        const script = document.createElement("script");
-        script.id = "swagger-ui-script";
-        script.src = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js";
-        script.async = true;
-        script.onload = () => {
-          initSwagger();
-        };
-        document.body.appendChild(script);
-      } else {
-        existingScript.addEventListener("load", initSwagger);
-      }
+      const script = document.createElement("script");
+      script.id = "swagger-ui-script";
+      script.src = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js";
+      script.async = true;
+      script.onload = () => {
+        initSwagger();
+      };
+      document.body.appendChild(script);
     }
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [token]);
 
-  function handleCopySpecUrl() {
-    navigator.clipboard.writeText(openApiUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  function handleCopyToken() {
+    if (!token) return;
+    navigator.clipboard.writeText(token);
+    setCopiedToken(true);
+    setTimeout(() => setCopiedToken(false), 2000);
   }
+
+  function handleCopySnippet(code) {
+    navigator.clipboard.writeText(code);
+    setCopiedCurl(true);
+    setTimeout(() => setCopiedCurl(false), 2000);
+  }
+
+  const codeSnippets = {
+    curl: `# دریافت لیست فرم‌ها
+curl -X GET "${baseUrl}/forms" \\
+  -H "Authorization: Bearer ${token ? token.substring(0, 15) + "..." : "YOUR_ACCESS_TOKEN"}" \\
+  -H "Accept: application/json"
+
+# ساخت یک فرم جدید
+curl -X POST "${baseUrl}/forms" \\
+  -H "Authorization: Bearer ${token ? token.substring(0, 15) + "..." : "YOUR_ACCESS_TOKEN"}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"title": "فرم تست پلتفرم", "form_type": "step_by_step"}'`,
+
+    js: `// ارسال درخواست در جاوااسکریپت (Fetch)
+const TOKEN = "${token ? token.substring(0, 15) + "..." : "YOUR_ACCESS_TOKEN"}";
+
+async function getMyForms() {
+  const res = await fetch("${baseUrl}/forms", {
+    headers: {
+      "Authorization": \`Bearer \${TOKEN}\`,
+      "Accept": "application/json"
+    }
+  });
+  const data = await res.json();
+  console.log("فرم‌ها:", data.forms);
+}
+
+getMyForms();`,
+
+    python: `# فراخوانی در پایتون (requests)
+import requests
+
+TOKEN = "${token ? token.substring(0, 15) + "..." : "YOUR_ACCESS_TOKEN"}"
+headers = {"Authorization": f"Bearer {TOKEN}", "Accept": "application/json"}
+
+res = requests.get("${baseUrl}/forms", headers=headers)
+print(res.json())`
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0B0F19] text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
       <SEO
-        title="مستندات OpenAPI و Swagger — وب‌سرویس پرس‌کاد"
-        description="مستندات جامع وب‌سرویس استاندارد پرس‌کاد برای توسعه‌دهندگان، ساخت و مدیریت فرم‌ها و ثبت پاسخ‌ها."
+        title="مستندات یکپارچه Swagger و وب‌سرویس — پرس‌کاد"
+        description="تمامی مستندات، تست زنده، توکن احراز هویت و انواع سوالات در یک صفحه واحد."
       />
 
-      {/* هدر بالای صفحه مستندات */}
-      <header className="sticky top-0 z-50 bg-navy dark:bg-[#0E1526] text-white border-b border-white/10 px-4 lg:px-8 py-3.5 shadow-md">
+      {/* هدر بالای صفحه */}
+      <header className="sticky top-0 z-50 bg-navy dark:bg-[#0E1526] text-white border-b border-white/10 px-4 lg:px-8 py-3 shadow-md">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Link
               to="/admin"
-              className="flex items-center gap-1.5 text-xs font-bold text-white/70 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-all"
+              className="flex items-center gap-1.5 text-xs font-bold text-white/80 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-all"
             >
               <ArrowRight size={15} />
               <span>بازگشت به پنل</span>
@@ -106,125 +203,170 @@ export default function SwaggerDocs() {
                 پرس<span className="text-teal">کاد</span>
               </span>
               <span className="text-xs font-bold bg-teal/25 text-teal border border-teal/40 px-2.5 py-0.5 rounded-full">
-                Swagger v1.0
+                مستندات جامع REST API
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setActiveTab(activeTab === "swagger" ? "guide" : "swagger")}
-              className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${
-                activeTab === "guide"
-                  ? "bg-teal text-white"
-                  : "bg-white/10 text-white/90 hover:bg-white/20"
-              }`}
-            >
-              {activeTab === "guide" ? <Code2 size={14} /> : <BookOpen size={14} />}
-              <span>{activeTab === "guide" ? "نمایش کنسول Swagger" : "راهنمای فارسی وب‌سرویس"}</span>
-            </button>
-
-            <button
-              onClick={handleCopySpecUrl}
-              className="text-xs font-bold bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all"
-              title="کپی لینک مستقیم فایل openapi.json برای Postman یا Insomnia"
-            >
-              {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
-              <span className="hidden sm:inline">{copied ? "کپی شد!" : "کپی لینک OpenAPI JSON"}</span>
-            </button>
-
             <a
               href="/openapi.json"
               target="_blank"
               rel="noopener noreferrer"
               download="porskad-openapi.json"
-              className="text-xs font-bold bg-white/10 hover:bg-white/20 text-white p-2 rounded-lg transition-all"
-              title="دانلود فایل JSON مستندات"
+              className="text-xs font-bold bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all"
+              title="دانلود فایل JSON جهت ایمپورت در Postman"
             >
-              <Download size={15} />
+              <Download size={14} />
+              <span className="hidden sm:inline">دانلود فایل OpenAPI JSON</span>
             </a>
           </div>
         </div>
       </header>
 
-      {/* بنر راهنمای سریع */}
-      <div className="bg-gradient-to-r from-teal/15 via-indigo-500/10 to-teal/10 border-b border-teal/20 px-4 py-3 text-xs font-medium text-slate-700 dark:text-slate-300">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <ShieldCheck size={16} className="text-teal shrink-0" />
-            <span>
-              <strong>راهنمای تست:</strong> برای امتحان اندپوینت‌ها (Try it out)، روی دکمه سبز{" "}
-              <strong className="text-emerald-600 dark:text-emerald-400">Authorize</strong> کلیک کرده و توکن حساب کاربری
-              خود را در قالب <code className="bg-white dark:bg-slate-800 px-1 py-0.5 rounded text-teal">Bearer &lt;TOKEN&gt;</code> وارد کنید.
-            </span>
+      {/* بخش وضعیت توکن و احراز هویت (در بالای همین صفحه) */}
+      <div className="bg-white dark:bg-[#0E1526] border-b border-slate-200 dark:border-slate-800 px-4 py-3.5 shadow-xs">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-xs">
+            <div className="p-1.5 bg-teal/15 text-teal rounded-lg">
+              <Key size={16} />
+            </div>
+            {token ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-bold text-slate-700 dark:text-slate-200">توکن حساب شما ({userEmail}):</span>
+                <span className="font-mono bg-slate-100 dark:bg-slate-800 text-teal px-2 py-0.5 rounded border border-teal/20 text-xs select-all">
+                  {showToken ? token : `${token.substring(0, 16)}••••••••••••••••`}
+                </span>
+                <button
+                  onClick={() => setShowToken(!showToken)}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
+                  title={showToken ? "مخفی کردن" : "نمایش کامل"}
+                >
+                  {showToken ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+                <button
+                  onClick={handleCopyToken}
+                  className="bg-teal text-white hover:bg-teal-text px-2.5 py-1 rounded text-xs font-bold flex items-center gap-1 transition-all"
+                >
+                  {copiedToken ? <Check size={13} /> : <Copy size={13} />}
+                  <span>{copiedToken ? "کپی شد" : "کپی توکن"}</span>
+                </button>
+                <span className="hidden md:inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
+                  <ShieldCheck size={12} />
+                  توکن به صورت خودکار در سوئیگر فعال شد
+                </span>
+              </div>
+            ) : (
+              <span className="text-slate-500 dark:text-slate-400">
+                شما لاگین نیستید. برای تست زنده ریکوئست‌ها، می‌توانید در پنل لاگین کنید یا روی دکمه سبز رنگ <strong>Authorize</strong> کلیک کنید.
+              </span>
+            )}
           </div>
-          <Link
-            to="/admin/api-docs"
-            className="text-teal hover:underline font-bold flex items-center gap-1 shrink-0"
-          >
-            <span>مشاهده و کپی توکن من در پنل</span>
-            <ExternalLink size={12} />
-          </Link>
+
+          {/* دکمه‌های آکاردئونی برای نمایش نمونه کدها و انواع سوال */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setShowSnippets(!showSnippets);
+                if (showQuestionTypes) setShowQuestionTypes(false);
+              }}
+              className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${
+                showSnippets
+                  ? "bg-navy text-white dark:bg-teal"
+                  : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"
+              }`}
+            >
+              <Terminal size={14} />
+              <span>نمونه کدهای اتصال</span>
+              {showSnippets ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+
+            <button
+              onClick={() => {
+                setShowQuestionTypes(!showQuestionTypes);
+                if (showSnippets) setShowSnippets(false);
+              }}
+              className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${
+                showQuestionTypes
+                  ? "bg-navy text-white dark:bg-teal"
+                  : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"
+              }`}
+            >
+              <Layers size={14} />
+              <span>راهنمای ۲۰ نوع سوال</span>
+              {showQuestionTypes ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* محتوای تب راهنما یا سوئگر */}
-      {activeTab === "guide" ? (
-        <div className="max-w-5xl mx-auto w-full p-4 sm:p-6 lg:p-8 space-y-6">
-          <div className="bg-white dark:bg-[#0E1526] rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-            <h2 className="text-lg font-black text-navy dark:text-white mb-3 flex items-center gap-2">
-              <Terminal size={20} className="text-teal" />
-              <span>راهنمای اتصال پلتفرم شما به پرس‌کاد</span>
-            </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
-              با استفاده از وب‌سرویس RESTful پرس‌کاد، می‌توانید بدون درگیر شدن با ساختار پایگاه داده و به‌صورت کاملاً امن و محرمانه،
-              تمامی فرآیندهای فرم‌ساز را در اپلیکیشن اختصاصی یا وب‌سایت خود داشته باشید.
-            </p>
+      {/* بخش آکاردئونی بازشونده: نمونه کدها */}
+      {showSnippets && (
+        <div className="max-w-7xl mx-auto w-full px-4 pt-4">
+          <div className="bg-white dark:bg-[#0E1526] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h3 className="text-sm font-black text-navy dark:text-white flex items-center gap-2">
+                <Terminal size={16} className="text-teal" />
+                <span>نمونه کد فراخوانی در پلتفرم شما</span>
+              </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-              <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div className="font-bold text-sm text-navy dark:text-white mb-1">۱. احراز هویت با Bearer Token</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  تمامی درخواست‌های مدیریتی نیاز به هدر <code className="text-teal font-mono">Authorization: Bearer &lt;TOKEN&gt;</code> دارند.
-                </div>
-              </div>
-
-              <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div className="font-bold text-sm text-navy dark:text-white mb-1">۲. ساخت و ویرایش فرم‌ها (CRUD)</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  با متدهای <code className="text-emerald-600 font-bold">GET</code>, <code className="text-blue-600 font-bold">POST</code>, <code className="text-amber-600 font-bold">PUT</code>, <code className="text-rose-600 font-bold">DELETE</code> فرم‌ها و سوالات خود را مدیریت کنید.
-                </div>
-              </div>
-
-              <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div className="font-bold text-sm text-navy dark:text-white mb-1">۳. ثبت پاسخ و کدهای امبد</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  پاسخ‌های کاربران را دریافت کرده یا از کدهای Iframe و اسکریپت آماده برای تعبیه فرم استفاده نمایید.
-                </div>
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                {["curl", "js", "python"].map((l) => (
+                  <button
+                    key={l}
+                    onClick={() => setSelectedLang(l)}
+                    className={`px-2.5 py-1 text-xs font-bold rounded ${
+                      selectedLang === l ? "bg-teal text-white" : "text-slate-600 dark:text-slate-300"
+                    }`}
+                  >
+                    {l.toUpperCase()}
+                  </button>
+                ))}
               </div>
             </div>
-          </div>
 
-          <div className="bg-white dark:bg-[#0E1526] rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-            <h3 className="text-base font-black text-navy dark:text-white mb-3 flex items-center gap-2">
-              <Layers size={18} className="text-teal" />
-              <span>نمونه درخواست دریافت لیست فرم‌ها (cURL)</span>
-            </h3>
-            <pre className="bg-slate-900 text-slate-100 p-4 rounded-xl text-xs font-mono overflow-x-auto text-left dir-ltr">
-{`curl -X GET "${window.location.origin}/api/v1/forms" \\
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
-  -H "Accept: application/json"`}
-            </pre>
+            <div className="relative">
+              <button
+                onClick={() => handleCopySnippet(codeSnippets[selectedLang])}
+                className="absolute top-2.5 left-2.5 bg-white/10 hover:bg-white/20 text-white text-xs px-2.5 py-1 rounded flex items-center gap-1 transition-all"
+              >
+                {copiedCurl ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                <span>{copiedCurl ? "کپی شد" : "کپی"}</span>
+              </button>
+              <pre className="bg-slate-900 text-slate-100 p-4 pt-8 rounded-xl text-xs font-mono overflow-x-auto text-left dir-ltr">
+                {codeSnippets[selectedLang]}
+              </pre>
+            </div>
           </div>
         </div>
-      ) : null}
+      )}
 
-      {/* کانتینر رندر Swagger UI */}
-      <main className={`flex-1 max-w-7xl mx-auto w-full p-4 lg:p-6 ${activeTab === "guide" ? "hidden" : ""}`}>
+      {/* بخش آکاردئونی بازشونده: متادیتای ۲۰ نوع سوال */}
+      {showQuestionTypes && (
+        <div className="max-w-7xl mx-auto w-full px-4 pt-4">
+          <div className="bg-white dark:bg-[#0E1526] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+            <h3 className="text-sm font-black text-navy dark:text-white mb-3 flex items-center gap-2">
+              <Layers size={16} className="text-teal" />
+              <span>فهرست و نام‌های سیستمی ۲۰ نوع سوال پرس‌کاد</span>
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 text-xs">
+              {Object.entries(QUESTION_TYPES).map(([key, item]) => (
+                <div key={key} className="p-2.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <div className="font-bold text-navy dark:text-white mb-0.5">{item.label}</div>
+                  <code className="text-[11px] font-mono text-teal font-bold">{key}</code>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* بدنه اصلی: کنسول زنده Swagger UI */}
+      <main className="flex-1 max-w-7xl mx-auto w-full p-4 lg:p-6">
         {specLoading && (
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-500">
             <div className="w-8 h-8 border-3 border-teal border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm font-bold">در حال بارگذاری مستندات تعاملی Swagger...</span>
+            <span className="text-sm font-bold">در حال بارگذاری کنسول Swagger...</span>
           </div>
         )}
 
@@ -234,16 +376,16 @@ export default function SwaggerDocs() {
         />
       </main>
 
-      {/* استایل‌های سفارشی برای سازگاری سوئگر با ظاهر برنامه */}
+      {/* استایل‌های سفارشی سوئگر */}
       <style>{`
         .swagger-ui .topbar { display: none !important; }
         .swagger-ui { font-family: inherit !important; }
-        .swagger-ui .info { margin: 20px 0 !important; }
-        .swagger-ui .info .title { font-size: 24px !important; color: #1e293b !important; }
+        .swagger-ui .info { margin: 15px 0 !important; }
+        .swagger-ui .info .title { font-size: 22px !important; color: #1e293b !important; }
         .dark .swagger-ui .info .title { color: #f8fafc !important; }
         .dark .swagger-ui { filter: invert(0.88) hue-rotate(180deg); }
         .dark .swagger-ui img { filter: invert(1) hue-rotate(180deg); }
-        .swagger-ui .scheme-container { background: transparent !important; box-shadow: none !important; padding: 10px 0 !important; }
+        .swagger-ui .scheme-container { background: transparent !important; box-shadow: none !important; padding: 5px 0 !important; }
       `}</style>
     </div>
   );
