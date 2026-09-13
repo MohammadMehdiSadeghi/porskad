@@ -860,27 +860,44 @@ export default function Managers() {
 
       {/* لیست کاربران */}
       {(() => {
-        const q = searchQuery.trim().toLowerCase();
+        const rawQ = searchQuery.trim();
+        const q = rawQ.toLowerCase();
+        // تبدیل ارقام فارسی و عربی به انگلیسی برای تطبیق دقیق شماره تماس
+        const qEn = rawQ
+          .replace(/[۰-۹]/g, (d) => "۰۱۲۳۴۵۶۷۸۹".indexOf(d))
+          .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d))
+          .toLowerCase();
+
+        const PLAN_FA_MAP = {
+          free: "رایگان پایه",
+          pro: "حرفه‌ای پیشرفته",
+          enterprise: "سازمانی شرکتی",
+          unlimited: "نامحدود ویژه",
+        };
+
         const displayedManagers = managers.filter((m) => {
           if (roleTab === "admins") return m.is_owner || m.role === "admin";
           if (roleTab === "users") return !m.is_owner && m.role !== "admin";
 
           if (q) {
-            const name = (m.full_name || "").toLowerCase();
-            const email = (m.email || "").toLowerCase();
-            const phone = (m.phone || "").toLowerCase();
-            const plan = (m.plan || "").toLowerCase();
+            const name = String(m.full_name || "").toLowerCase();
+            const email = String(m.email || "").toLowerCase();
+            const phone = String(m.phone || "").toLowerCase();
+            const planKey = String(m.plan || "free").toLowerCase();
+            const planFa = PLAN_FA_MAP[planKey] || "";
             const role = m.is_owner
-              ? "مدیر کل owner god"
+              ? "مدیر کل owner god اصلی"
               : m.role === "admin"
-              ? "ادمین سوپرادمین admin superadmin"
-              : "کاربر عادی user member";
+              ? "ادمین سوپرادمین admin superadmin ارشد"
+              : "کاربر عادی user member معمولی";
 
             return (
               name.includes(q) ||
               email.includes(q) ||
               phone.includes(q) ||
-              plan.includes(q) ||
+              phone.includes(qEn) ||
+              planKey.includes(q) ||
+              planFa.includes(q) ||
               role.includes(q)
             );
           }

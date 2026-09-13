@@ -440,8 +440,8 @@ export default function Support() {
 
       if (error) throw error;
 
-      // در صورت وجود کد تخفیف اعمال‌شده، افزایش سقف استفاده
-      if (appliedDiscount?.code) {
+      // در صورت وجود کد تخفیف اعمال‌شده در تیکت اشتراک، افزایش سقف استفاده
+      if (category === "subscription" && appliedDiscount?.code) {
         await incrementDiscountCodeUsage(appliedDiscount.code);
       }
 
