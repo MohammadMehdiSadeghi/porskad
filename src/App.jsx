@@ -29,6 +29,7 @@ import Subscriptions from "./pages/Admin/Subscriptions";
 import SuperAdmin from "./pages/Admin/SuperAdmin";
 import Support from "./pages/Admin/Support";
 import Settings from "./pages/Admin/Settings";
+import WebServiceDocs from "./pages/Admin/WebServiceDocs";
 import SwaggerDocs from "./pages/Docs/SwaggerDocs";
 import AuthGuard from "./components/guards/AuthGuard";
 import { useAuth } from "./context/AuthContext";
@@ -141,7 +142,8 @@ export default function App() {
                 <Route path="support" element={<Support />} />
                 <Route path="subscriptions" element={<Subscriptions />} />
                 <Route path="profile" element={<Profile />} />
-                <Route path="api-docs" element={<Navigate to="/admin/profile?tab=developer" replace />} />
+                <Route path="web-service" element={<WebServiceDocs />} />
+                <Route path="api-docs" element={<Navigate to="/admin/web-service" replace />} />
 
                 {/* بخش‌های اختصاصی مالک و سوپرادمین */}
                 <Route path="managers" element={<AuthGuard ownerOnly={true}><Managers /></AuthGuard>} />
