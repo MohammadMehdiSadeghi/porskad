@@ -49,7 +49,14 @@ import {
   CreditCard,
   XCircle,
   Receipt,
+  Tag,
+  AlertCircle,
 } from "lucide-react";
+import {
+  validateDiscountCode,
+  incrementDiscountCodeUsage,
+  loadDiscountCodes,
+} from "../../lib/discounts";
 
 export default function Support() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -101,6 +108,18 @@ export default function Support() {
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // کدهای تخفیف در مودال تیکت
+  const [discountCodes, setDiscountCodes] = useState([]);
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState(null);
+  const [couponError, setCouponError] = useState(null);
+
+  useEffect(() => {
+    loadDiscountCodes().then((codes) => {
+      if (Array.isArray(codes)) setDiscountCodes(codes);
+    });
+  }, []);
+
   // ادمین: پاسخ به تیکت
   const [replyTicket, setReplyTicket] = useState(null);
   const [replyText, setReplyText] = useState("");
@@ -117,26 +136,132 @@ export default function Support() {
     );
   }, []);
 
-  function fillSubTicket(planId, days) {
-    const plan = paidPlans.find((p) => p.id === planId) || paidPlans[0];
-    const dur = SUBSCRIPTION_DURATIONS.find((d) => d.days === Number(days)) || SUBSCRIPTION_DURATIONS[0];
-    if (!plan) return;
-    const { subject: s, message: m } = buildSubscriptionActivationMessage(plan, dur);
-    setSubject(s);
-    setMessage(m);
-  }
+  // محاسبه قیمت ریالی برای طرح و دوره مشخص
+  const calculateSubPriceRial = useCallback(
+    (planId, durationDays) => {
+      const plan = paidPlans.find((p) => p.id === planId) || paidPlans[0];
+      if (!plan) return 0;
+      const days = Number(durationDays) || 30;
+      if (days === 365) {
+        return plan.priceYearly || 0;
+      }
+      const months = Math.max(1, Math.round(days / 30));
+      return (plan.priceMonthly || 0) * months;
+    },
+    [paidPlans]
+  );
+
+  const fillSubTicket = useCallback(
+    (planId, days, discount = appliedDiscount) => {
+      const plan = paidPlans.find((p) => p.id === planId) || paidPlans[0];
+      const dur = SUBSCRIPTION_DURATIONS.find((d) => d.days === Number(days)) || SUBSCRIPTION_DURATIONS[0];
+      if (!plan) return;
+      const { subject: s, message: m } = buildSubscriptionActivationMessage(plan, dur, discount);
+      setSubject(s);
+      setMessage(m);
+    },
+    [paidPlans, appliedDiscount]
+  );
+
+  // اعمال کد تخفیف در مودال تیکت
+  const handleApplyCoupon = useCallback(
+    (codeToTest, overridePlanId, overrideDurationDays) => {
+      const c = (codeToTest || couponInput).trim();
+      if (!c) {
+        setCouponError("لطفاً کد تخفیف را وارد کنید.");
+        setAppliedDiscount(null);
+        return;
+      }
+      const pid = overridePlanId || subPlanId || paidPlans[0]?.id || "";
+      const durDays = overrideDurationDays || subDurationDays || 30;
+      const priceRial = calculateSubPriceRial(pid, durDays);
+      const result = validateDiscountCode(c, pid, priceRial, discountCodes.length > 0 ? discountCodes : null);
+
+      if (result.valid) {
+        setAppliedDiscount(result.discount);
+        setCouponError(null);
+        fillSubTicket(pid, durDays, result.discount);
+        push(`کد تخفیف ${result.discount.code} با موفقیت اعمال شد`, "success");
+      } else {
+        setCouponError(result.error || "کد تخفیف معتبر نیست.");
+        setAppliedDiscount(null);
+        fillSubTicket(pid, durDays, null);
+      }
+    },
+    [couponInput, subPlanId, subDurationDays, paidPlans, discountCodes, calculateSubPriceRial, fillSubTicket, push]
+  );
+
+  // حذف کد تخفیف
+  const handleRemoveCoupon = useCallback(() => {
+    setAppliedDiscount(null);
+    setCouponInput("");
+    setCouponError(null);
+    fillSubTicket(subPlanId, subDurationDays, null);
+  }, [subPlanId, subDurationDays, fillSubTicket]);
+
+  // تغییر طرح در سلکتور تیکت
+  const onPlanChange = (newPid) => {
+    setSubPlanId(newPid);
+    if (appliedDiscount?.code) {
+      const priceRial = calculateSubPriceRial(newPid, subDurationDays);
+      const res = validateDiscountCode(appliedDiscount.code, newPid, priceRial, discountCodes.length > 0 ? discountCodes : null);
+      if (res.valid) {
+        setAppliedDiscount(res.discount);
+        fillSubTicket(newPid, subDurationDays, res.discount);
+      } else {
+        setAppliedDiscount(null);
+        setCouponError(res.error || "کد تخفیف برای این طرح معتبر نیست.");
+        fillSubTicket(newPid, subDurationDays, null);
+      }
+    } else {
+      fillSubTicket(newPid, subDurationDays, null);
+    }
+  };
+
+  // تغییر دوره در سلکتور تیکت
+  const onDurationChange = (newDays) => {
+    const days = Number(newDays);
+    setSubDurationDays(days);
+    if (appliedDiscount?.code) {
+      const priceRial = calculateSubPriceRial(subPlanId, days);
+      const res = validateDiscountCode(appliedDiscount.code, subPlanId, priceRial, discountCodes.length > 0 ? discountCodes : null);
+      if (res.valid) {
+        setAppliedDiscount(res.discount);
+        fillSubTicket(subPlanId, days, res.discount);
+      } else {
+        setAppliedDiscount(null);
+        setCouponError(res.error || "کد تخفیف برای این دوره معتبر نیست.");
+        fillSubTicket(subPlanId, days, null);
+      }
+    } else {
+      fillSubTicket(subPlanId, days, null);
+    }
+  };
 
   function handleCategoryChange(val) {
     setCategory(val);
     if (val === "subscription") {
       const pid = subPlanId || paidPlans[0]?.id || "";
       setSubPlanId(pid);
-      fillSubTicket(pid, subDurationDays);
+      fillSubTicket(pid, subDurationDays, appliedDiscount);
     } else {
       setSubject("");
       setMessage("");
+      setAppliedDiscount(null);
+      setCouponInput("");
+      setCouponError(null);
     }
   }
+
+  const handleOpenNewTicket = useCallback(() => {
+    setCategory("question");
+    setSubject("");
+    setMessage("");
+    setCouponInput("");
+    setAppliedDiscount(null);
+    setCouponError(null);
+    setNewTicketModal(true);
+  }, []);
 
   useEffect(() => {
     const subjParam = searchParams.get("subject");
@@ -153,12 +278,26 @@ export default function Support() {
         const dur = SUBSCRIPTION_DURATIONS.find((d) => durLabel.includes(d.label.slice(0, 4)));
         if (pid) setSubPlanId(pid);
         if (dur) setSubDurationDays(dur.days);
+
+        // استخراج کد تخفیف اعمال‌شده در صورت ارسال از صفحه اشتراک‌ها
+        const discMatch =
+          msgParam.match(/کد تخفیف اعمال‌شده:\s*([^\n\r]+)/)?.[1] ||
+          subjParam.match(/\[کد تخفیف:\s*([^\]]+)\]/)?.[1];
+        if (discMatch) {
+          const cCode = discMatch.trim().toUpperCase();
+          setCouponInput(cCode);
+          const pRial = calculateSubPriceRial(pid || "pro", dur?.days || 30);
+          const valRes = validateDiscountCode(cCode, pid || "pro", pRial);
+          if (valRes.valid) {
+            setAppliedDiscount(valRes.discount);
+          }
+        }
       }
       setNewTicketModal(true);
       // پاک‌سازی کوئری تا با رفرش/بازگشت، مودال تکراری باز نشود
       setSearchParams({}, { replace: true });
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, calculateSubPriceRial]);
 
   // توابع کمکی بررسی آرشیو با فالبک localStorage
   const isArchivedByAdmin = useCallback((t) => {
@@ -192,7 +331,12 @@ export default function Support() {
     const planMatch = msg.match(/•\s*طرح درخواستی:\s*([^\n]+)/) || (t.subject && t.subject.match(/طرح\s+([^\(\n]+)/));
     const planIdMatch = msg.match(/•\s*شناسه طرح:\s*([a-zA-Z0-9_-]+)/);
     const durationMatch = msg.match(/•\s*دوره اشتراک:\s*([^\n]+)/);
-    const amountMatch = msg.match(/•\s*مبلغ فاکتور:\s*([^\n]+)/);
+    const amountMatch = msg.match(/•\s*(?:مبلغ نهایی پس از تخفیف|مبلغ فاکتور):\s*([^\n]+)/);
+    const basePriceMatch = msg.match(/•\s*مبلغ پایه طرح:\s*([^\n]+)/);
+    const discountCodeMatch =
+      msg.match(/•\s*کد تخفیف اعمال‌شده:\s*([^\n]+)/) ||
+      (t.subject && t.subject.match(/\[کد تخفیف:\s*([^\]]+)\]/));
+    const discountAmountMatch = msg.match(/•\s*مبلغ تخفیف:\s*([^\n]+)/);
 
     let planId = planIdMatch ? planIdMatch[1].trim().toLowerCase() : "pro";
     if (!planIdMatch) {
@@ -212,6 +356,9 @@ export default function Support() {
       durationLabel: durationMatch ? durationMatch[1].trim() : "۱ ماهه (۳۰ روز)",
       durationDays,
       amount: amountMatch ? amountMatch[1].trim() : "",
+      basePrice: basePriceMatch ? basePriceMatch[1].trim() : "",
+      discountCode: discountCodeMatch ? discountCodeMatch[1].trim() : "",
+      discountAmount: discountAmountMatch ? discountAmountMatch[1].trim() : "",
     };
   }, [isSubscriptionTicket]);
 
@@ -293,10 +440,18 @@ export default function Support() {
 
       if (error) throw error;
 
+      // در صورت وجود کد تخفیف اعمال‌شده، افزایش سقف استفاده
+      if (appliedDiscount?.code) {
+        await incrementDiscountCodeUsage(appliedDiscount.code);
+      }
+
       push("تیکت شما ارسال شد. به زودی پاسخ داده می‌شود.", "success");
       setSubject("");
       setMessage("");
       setCategory("question");
+      setCouponInput("");
+      setAppliedDiscount(null);
+      setCouponError(null);
       setNewTicketModal(false);
       loadTickets();
     } catch (err) {
@@ -762,7 +917,7 @@ export default function Support() {
           <Button
             variant="teal"
             size="sm"
-            onClick={() => setNewTicketModal(true)}
+            onClick={handleOpenNewTicket}
           >
             + ارسال تیکت جدید
           </Button>
@@ -1126,17 +1281,31 @@ export default function Support() {
                                           <Sparkles size={20} />
                                         </div>
                                         <div>
-                                          <div className="flex items-center gap-2">
+                                          <div className="flex items-center gap-2 flex-wrap">
                                             <span className="text-xs font-black text-navy dark:text-amber-200">
                                               💎 درخواست فعال‌سازی اشتراک — طرح: {subInfo.planName}
                                             </span>
                                             <Badge color="orange">{subInfo.durationLabel}</Badge>
                                           </div>
-                                          {subInfo.amount && (
-                                            <div className="text-xs font-bold text-amber-800 dark:text-amber-400 mt-0.5">
-                                              مبلغ فاکتور: {subInfo.amount}
-                                            </div>
-                                          )}
+                                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                                            {subInfo.basePrice && (
+                                              <span className="text-xs font-medium text-ink-subtle dark:text-slate-400 line-through">
+                                                پایه: {subInfo.basePrice}
+                                              </span>
+                                            )}
+                                            {subInfo.amount && (
+                                              <div className="text-xs font-bold text-amber-800 dark:text-amber-400">
+                                                مبلغ فاکتور: {subInfo.amount}
+                                              </div>
+                                            )}
+                                            {subInfo.discountCode && (
+                                              <span className="inline-flex items-center gap-1 text-xs font-black px-2 py-0.5 rounded-pill bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                                                <Tag size={12} />
+                                                <span>کد تخفیف: {subInfo.discountCode}</span>
+                                                {subInfo.discountAmount && <span>({subInfo.discountAmount})</span>}
+                                              </span>
+                                            )}
+                                          </div>
                                         </div>
                                       </div>
                                       {flow && <Badge color={flow.color}>{flow.label}</Badge>}
@@ -1291,7 +1460,7 @@ export default function Support() {
             }
             action={
               userFilter !== "archived" && (
-                <Button variant="teal" size="sm" onClick={() => setNewTicketModal(true)}>
+                <Button variant="teal" size="sm" onClick={handleOpenNewTicket}>
                   + ارسال تیکت جدید
                 </Button>
               )
@@ -1362,17 +1531,31 @@ export default function Support() {
                                   <Sparkles size={20} />
                                 </div>
                                 <div>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-2 flex-wrap">
                                     <span className="text-xs font-black text-navy dark:text-amber-200">
                                       💎 درخواست فعال‌سازی اشتراک — طرح: {subInfo.planName}
                                     </span>
                                     <Badge color="orange">{subInfo.durationLabel}</Badge>
                                   </div>
-                                  {subInfo.amount && (
-                                    <div className="text-xs font-bold text-amber-800 dark:text-amber-400 mt-0.5">
-                                      مبلغ فاکتور: {subInfo.amount}
-                                    </div>
-                                  )}
+                                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                                    {subInfo.basePrice && (
+                                      <span className="text-xs font-medium text-ink-subtle dark:text-slate-400 line-through">
+                                        پایه: {subInfo.basePrice}
+                                      </span>
+                                    )}
+                                    {subInfo.amount && (
+                                      <div className="text-xs font-bold text-amber-800 dark:text-amber-400">
+                                        مبلغ فاکتور: {subInfo.amount}
+                                      </div>
+                                    )}
+                                    {subInfo.discountCode && (
+                                      <span className="inline-flex items-center gap-1 text-xs font-black px-2 py-0.5 rounded-pill bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                                        <Tag size={12} />
+                                        <span>کد تخفیف: {subInfo.discountCode}</span>
+                                        {subInfo.discountAmount && <span>({subInfo.discountAmount})</span>}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                               {flow && <Badge color={flow.color}>{flow.label}</Badge>}
@@ -1498,46 +1681,162 @@ export default function Support() {
                 <option key={c.id} value={c.id}>{c.label}</option>
               ))}
             </select>
-            <span className="text-[11px] font-medium text-ink-subtle dark:text-slate-400">
+            <span className="text-xs font-medium text-ink-subtle dark:text-slate-400">
               {TICKET_CATEGORIES.find((c) => c.id === category)?.hint}
             </span>
           </label>
 
-          {/* انتخاب طرح و دوره فقط برای تیکت اشتراک */}
+          {/* راهنمای دسته‌بندی و کد تخفیف برای سایر موضوعات */}
+          {category !== "subscription" && (
+            <div className="text-xs font-semibold text-ink-subtle dark:text-slate-400 flex flex-wrap items-center justify-between gap-2 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-ink/10 dark:border-slate-700">
+              <span className="flex items-center gap-1.5">
+                <Tag size={13} className="text-teal shrink-0" />
+                <span>کد تخفیف خرید یا ارتقای اشتراک دارید؟</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => handleCategoryChange("subscription")}
+                className="text-teal hover:underline font-bold cursor-pointer shrink-0"
+              >
+                تغییر به تیکت اشتراک و اعمال کد
+              </button>
+            </div>
+          )}
+
+          {/* انتخاب طرح، دوره و کد تخفیف برای تیکت اشتراک */}
           {category === "subscription" && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-2xl border-2 border-orange/40 bg-college-light/60 dark:bg-slate-800/80">
-              <label className="flex flex-col gap-1.5">
-                <span className="text-xs font-extrabold text-navy dark:text-slate-200">نوع اشتراک (طرح)</span>
-                <select
-                  value={subPlanId || paidPlans[0]?.id || ""}
-                  onChange={(e) => {
-                    setSubPlanId(e.target.value);
-                    fillSubTicket(e.target.value, subDurationDays);
-                  }}
-                  className="bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 focus:border-teal rounded-pill-md px-3 py-1.5 text-sm font-semibold text-ink dark:text-slate-100 focus:outline-none"
-                >
-                  {paidPlans.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name} — {faNum(Math.round((p.priceMonthly || 0) / 10))} تومان/ماه</option>
-                  ))}
-                </select>
-              </label>
-              <label className="flex flex-col gap-1.5">
-                <span className="text-xs font-extrabold text-navy dark:text-slate-200">دوره</span>
-                <select
-                  value={subDurationDays}
-                  onChange={(e) => {
-                    setSubDurationDays(Number(e.target.value));
-                    fillSubTicket(subPlanId, e.target.value);
-                  }}
-                  className="bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 focus:border-teal rounded-pill-md px-3 py-1.5 text-sm font-semibold text-ink dark:text-slate-100 focus:outline-none"
-                >
-                  {SUBSCRIPTION_DURATIONS.map((d) => (
-                    <option key={d.days} value={d.days}>{d.label}</option>
-                  ))}
-                </select>
-              </label>
-              <p className="sm:col-span-2 text-[11px] font-bold text-orange leading-5">
-                با انتخاب طرح و دوره، متن درخواست فعال‌سازی به‌صورت خودکار نوشته می‌شود — فقط «ارسال پیام» را بزنید.
+            <div className="flex flex-col gap-3 p-3.5 rounded-2xl border-2 border-orange/40 bg-college-light/60 dark:bg-slate-800/80">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-extrabold text-navy dark:text-slate-200">نوع اشتراک (طرح)</span>
+                  <select
+                    value={subPlanId || paidPlans[0]?.id || ""}
+                    onChange={(e) => onPlanChange(e.target.value)}
+                    className="bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 focus:border-teal rounded-pill-md px-3 py-1.5 text-sm font-semibold text-ink dark:text-slate-100 focus:outline-none"
+                  >
+                    {paidPlans.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} — {faNum(Math.round((p.priceMonthly || 0) / 10))} تومان/ماه
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-extrabold text-navy dark:text-slate-200">دوره</span>
+                  <select
+                    value={subDurationDays}
+                    onChange={(e) => onDurationChange(e.target.value)}
+                    className="bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 focus:border-teal rounded-pill-md px-3 py-1.5 text-sm font-semibold text-ink dark:text-slate-100 focus:outline-none"
+                  >
+                    {SUBSCRIPTION_DURATIONS.map((d) => (
+                      <option key={d.days} value={d.days}>{d.label}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              {/* 🏷️ بخش کد تخفیف درون تیکت اشتراک */}
+              <div className="p-3 bg-white dark:bg-slate-900/90 border-2 border-dashed border-teal/40 dark:border-teal/30 rounded-xl flex flex-col gap-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 text-xs font-black text-navy dark:text-slate-200">
+                    <Tag size={14} className="text-teal" />
+                    <span>کد تخفیف دارید؟</span>
+                  </div>
+                  {appliedDiscount && (
+                    <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-800">
+                      کد فعال: {appliedDiscount.code}
+                    </span>
+                  )}
+                </div>
+
+                {!appliedDiscount ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      dir="ltr"
+                      value={couponInput}
+                      onChange={(e) => {
+                        setCouponInput(e.target.value.toUpperCase());
+                        setCouponError(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleApplyCoupon(couponInput);
+                        }
+                      }}
+                      placeholder="مثلاً PRO50 یا WELCOME20"
+                      className="flex-1 bg-slate-50 dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 rounded-pill-md px-3 py-1.5 text-xs sm:text-sm font-black uppercase tracking-wider focus:border-teal focus:outline-none"
+                    />
+                    <Button
+                      type="button"
+                      variant="teal"
+                      size="sm"
+                      onClick={() => handleApplyCoupon(couponInput)}
+                      className="text-xs shrink-0"
+                    >
+                      اعمال کد
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between gap-2 p-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 rounded-lg text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                      <span>
+                        کد <span className="font-mono font-black">{appliedDiscount.code}</span> اعمال شد
+                        ({faNum(appliedDiscount.discountAmountToman.toLocaleString("fa-IR"))} تومان تخفیف)
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoupon}
+                      className="text-rose-600 dark:text-rose-400 hover:underline text-xs font-black cursor-pointer mr-auto shrink-0"
+                    >
+                      حذف کد
+                    </button>
+                  </div>
+                )}
+
+                {couponError && (
+                  <div className="flex items-center gap-1 text-xs font-bold text-rose-600 dark:text-rose-400">
+                    <AlertCircle size={13} className="shrink-0" />
+                    <span>{couponError}</span>
+                  </div>
+                )}
+
+                {/* محاسبه زنده مبالغ */}
+                {(() => {
+                  const currentPlan = paidPlans.find((p) => p.id === (subPlanId || paidPlans[0]?.id)) || paidPlans[0];
+                  const origRial = calculateSubPriceRial(currentPlan?.id, subDurationDays);
+                  const origToman = Math.round(origRial / 10);
+                  const discToman = appliedDiscount?.discountAmountToman || 0;
+                  const finalToman = Math.max(0, origToman - discToman);
+
+                  return (
+                    <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-ink/10 dark:border-slate-800">
+                      <span className="text-ink-subtle dark:text-slate-400">
+                        مبلغ فاکتور:{" "}
+                        {appliedDiscount && (
+                          <span className="line-through text-ink/40 dark:text-slate-500 ml-1.5">
+                            {faNum(origToman.toLocaleString("fa-IR"))}
+                          </span>
+                        )}
+                        <span className="text-navy dark:text-teal font-black text-sm">
+                          {finalToman === 0 ? "رایگان" : `${faNum(finalToman.toLocaleString("fa-IR"))} تومان`}
+                        </span>
+                      </span>
+                      {appliedDiscount && (
+                        <span className="text-emerald-600 dark:text-emerald-400 text-xs font-extrabold">
+                          تخفیف: {faNum(discToman.toLocaleString("fa-IR"))} تومان
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <p className="text-xs font-bold text-orange leading-5">
+                با انتخاب طرح، دوره و کد تخفیف، متن درخواست و صورت‌حساب به‌صورت خودکار نوشته می‌شود — فقط «ارسال پیام» را بزنید.
               </p>
             </div>
           )}
