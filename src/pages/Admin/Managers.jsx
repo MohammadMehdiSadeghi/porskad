@@ -1021,23 +1021,23 @@ export default function Managers() {
                       </div>
 
                       {/* اطلاعات فشرده: تاریخ عضویت و باقیمانده سهمیه */}
-                      <div className="bg-bg-lavender/50 dark:bg-slate-800/80 rounded-xl p-2.5 flex flex-col gap-1.5 border border-navy/5 dark:border-slate-700 text-xs font-semibold">
-                        <div className="flex items-center justify-between text-ink-subtle dark:text-slate-400">
-                          <span className="flex items-center gap-1 text-xs">
-                            <Calendar size={12} className="text-teal shrink-0" />
-                            تاریخ عضویت:
+                      <div className="bg-bg-lavender/50 dark:bg-slate-800/80 rounded-xl p-2 flex flex-col gap-1.5 border border-navy/5 dark:border-slate-700">
+                        <div className="flex items-center justify-between text-ink-subtle dark:text-slate-400 whitespace-nowrap gap-1">
+                          <span className="flex items-center gap-1 text-[11px] font-bold shrink-0">
+                            <Calendar size={11} className="text-teal shrink-0" />
+                            <span>تاریخ عضویت:</span>
                           </span>
-                          <strong className="text-navy dark:text-slate-200 text-xs">
+                          <strong className="text-navy dark:text-slate-200 text-[11px] font-black shrink-0">
                             {faDate(m.created_at)}
                           </strong>
                         </div>
 
-                        <div className="flex items-center justify-between text-ink-subtle dark:text-slate-400 pt-1 border-t border-navy/5 dark:border-slate-700/80">
-                          <span className="flex items-center gap-1 text-xs">
-                            <BarChart3 size={12} className="text-orange shrink-0" />
-                            باقیمانده سهمیه:
+                        <div className="flex items-center justify-between text-ink-subtle dark:text-slate-400 pt-1 border-t border-navy/5 dark:border-slate-700/80 whitespace-nowrap gap-1">
+                          <span className="flex items-center gap-1 text-[11px] font-bold shrink-0">
+                            <BarChart3 size={11} className="text-orange shrink-0" />
+                            <span>باقی‌مانده سهمیه:</span>
                           </span>
-                          <span className={`text-xs font-black ${remainingForms === 0 && !isSuperAdminOrOwner ? "text-magenta-text dark:text-pink-400" : "text-teal-text dark:text-teal"}`}>
+                          <span className={`text-[11px] font-black shrink-0 ${remainingForms === 0 && !isSuperAdminOrOwner ? "text-magenta-text dark:text-pink-400" : "text-teal-text dark:text-teal"}`}>
                             {isSuperAdminOrOwner ? "نامحدود" : `${faNum(remainingForms)} از ${faNum(maxForms)} فرم`}
                           </span>
                         </div>
