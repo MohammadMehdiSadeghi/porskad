@@ -1,4 +1,5 @@
 import * as XLSX from "xlsx";
+import { faDate } from "./utils";
 
 export function downloadExcel(filename, header, rows, dates = {}) {
   const wb = XLSX.utils.book_new();
@@ -18,8 +19,8 @@ export function downloadExcel(filename, header, rows, dates = {}) {
     [""],
     ["تعداد کل پاسخ‌ها", rows.length],
     ["تعداد پاسخ‌های کامل", dates?.completeCount ?? rows.filter((r) => r[2] === "بله").length],
-    ["تاریخ اولین پاسخ", rows.length ? (dates.firstSubmittedAt ?? new Date().toLocaleDateString("fa-IR")) : "—"],
-    ["تاریخ آخرین پاسخ", rows.length ? (dates.lastSubmittedAt ?? new Date().toLocaleDateString("fa-IR")) : "—"],
+    ["تاریخ اولین پاسخ", rows.length ? (dates.firstSubmittedAt ?? faDate(new Date())) : "—"],
+    ["تاریخ آخرین پاسخ", rows.length ? (dates.lastSubmittedAt ?? faDate(new Date())) : "—"],
   ];
   const ws2 = XLSX.utils.aoa_to_sheet(summaryData);
   ws2["!cols"] = [{ wch: 20 }, { wch: 15 }];

@@ -7,7 +7,7 @@ import { isValidIranPhone, normalizeIranPhone, isValidEmail } from "../../lib/va
 import Button from "../../components/ui/Button";
 import StickerCard from "../../components/ui/StickerCard";
 import SEO from "../../components/ui/SEO";
-import { faNum } from "../../lib/utils";
+import { faNum, faDate } from "../../lib/utils";
 import { Crown, Lock, Key, Mail, Eye, EyeOff } from "lucide-react";
 
 export default function Profile() {
@@ -225,7 +225,7 @@ export default function Profile() {
 
             {!profile?.is_owner && profile?.quota_reset_at && (
               <div className="text-[11px] font-semibold text-ink-subtle dark:text-slate-400 text-center bg-navy/5 dark:bg-slate-800/50 py-1.5 px-3 rounded-lg">
-                🔄 تاریخ تمدید خودکار سهمیه ماهانه: <span className="font-bold text-navy dark:text-slate-200">{new Date(profile.quota_reset_at).toLocaleDateString("fa-IR")}</span>
+                🔄 تاریخ تمدید خودکار سهمیه ماهانه: <span className="font-bold text-navy dark:text-slate-200">{faDate(profile.quota_reset_at)}</span>
               </div>
             )}
 

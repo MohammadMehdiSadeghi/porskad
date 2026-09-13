@@ -13,6 +13,7 @@ import { downloadCsv } from "../../../lib/csv";
 import { downloadExcel } from "../../../lib/excel";
 import {
   faNum,
+  faDate,
   faDateTime,
   faDuration,
   DEVICE_FA,
@@ -1165,10 +1166,8 @@ export default function Responses() {
   const stats = useMemo(() => {
     const complete = responses.filter((r) => r.is_complete);
     const durations = complete.map((r) => r.duration_seconds).filter((d) => d > 0);
-    const now = new Date();
-    const localDateStr = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    const todayStr = localDateStr(now);
-    const today = responses.filter((r) => localDateStr(new Date(r.submitted_at || r.created_at)) === todayStr);
+    const todayStr = faDate(new Date());
+    const today = responses.filter((r) => faDate(r.submitted_at || r.created_at) === todayStr);
 
     // آمار نمره‌دهی
     let scoreStats = null;
@@ -1199,7 +1198,7 @@ export default function Responses() {
     };
   }, [responses, questions, answersByResponse]);
 
-  // ─── داده نمودار روند (۳۰ روز اخیر) ───
+  // ─── داده نمودار روند (۳۰ روز اخیر بر اساس تاریخ شمسی ایران) ───
   const trendData = useMemo(() => {
     const days = 30;
     const now = new Date();
@@ -1207,14 +1206,12 @@ export default function Responses() {
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(d.getDate() - i);
-      const key = `${d.getMonth() + 1}/${d.getDate()}`;
-      buckets.push({ date: key, count: 0 });
+      const label = new Intl.DateTimeFormat("fa-IR", { timeZone: "Asia/Tehran", month: "numeric", day: "numeric" }).format(d);
+      buckets.push({ key: faDate(d), date: label, count: 0 });
     }
-    const dateStr = (d) => `${d.getMonth() + 1}/${d.getDate()}`;
     for (const r of responses) {
-      const d = new Date(r.submitted_at || r.created_at);
-      const key = dateStr(d);
-      const bucket = buckets.find((b) => b.date === key);
+      const rKey = faDate(r.submitted_at || r.created_at);
+      const bucket = buckets.find((b) => b.key === rKey);
       if (bucket) bucket.count++;
     }
     return buckets;
@@ -1249,7 +1246,7 @@ export default function Responses() {
         return a.value;
       });
       return [
-        r.id, r.submitted_at ? new Date(r.submitted_at).toLocaleString("fa-IR") : "",
+        r.id, r.submitted_at ? faDateTime(r.submitted_at) : "",
         r.is_complete ? "بله" : "خیر", r.duration_seconds ?? "",
         DEVICE_FA[r.device] ?? r.device ?? "", r.browser ?? "", r.os ?? "",
         ...vals,
@@ -1261,8 +1258,8 @@ export default function Responses() {
         .map((r) => new Date(r.submitted_at || r.created_at))
         .filter((d) => !isNaN(d));
       const dates = {
-        firstSubmittedAt: times.length ? times.reduce((a, b) => (a < b ? a : b)).toLocaleDateString("fa-IR") : null,
-        lastSubmittedAt: times.length ? times.reduce((a, b) => (a > b ? a : b)).toLocaleDateString("fa-IR") : null,
+        firstSubmittedAt: times.length ? faDate(times.reduce((a, b) => (a < b ? a : b))) : null,
+        lastSubmittedAt: times.length ? faDate(times.reduce((a, b) => (a > b ? a : b))) : null,
         completeCount: filtered.filter((r) => r.is_complete).length,
       };
       downloadExcel(`${form?.slug ?? "form"}-responses.xlsx`, header, rows, dates);

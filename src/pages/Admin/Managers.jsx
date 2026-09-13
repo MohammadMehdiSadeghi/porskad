@@ -13,7 +13,7 @@ import { Plus, Edit, Edit3, Trash2, Crown, Users, User, ChevronDown, ChevronUp, 
 import SEO from "../../components/ui/SEO";
 import { supabase } from "../../lib/supabaseClient";
 import { logActivity } from "../../lib/activityLogger";
-import { faNum } from "../../lib/utils";
+import { faNum, faDate } from "../../lib/utils";
 import { DEFAULT_PLANS, getEffectivePlans } from "../../lib/plans";
 
 // ─── دسته‌بندی مجوزها ───
@@ -934,7 +934,7 @@ export default function Managers() {
                             تاریخ عضویت:
                           </span>
                           <strong className="text-navy dark:text-slate-200 text-xs">
-                            {new Date(m.created_at).toLocaleDateString("fa-IR")}
+                            {faDate(m.created_at)}
                           </strong>
                         </div>
 
@@ -1035,7 +1035,7 @@ export default function Managers() {
                 </div>
 
                 <div className="flex items-center justify-between text-xs font-semibold text-ink-subtle dark:text-slate-400 pt-2 border-t border-navy/5 dark:border-slate-700">
-                  <span className="flex items-center gap-1"><Calendar size={12} className="text-ink/40 dark:text-slate-400" /> تاریخ عضویت: <strong className="text-navy dark:text-slate-200">{new Date(m.created_at).toLocaleDateString("fa-IR")}</strong></span>
+                  <span className="flex items-center gap-1"><Calendar size={12} className="text-ink/40 dark:text-slate-400" /> تاریخ عضویت: <strong className="text-navy dark:text-slate-200">{faDate(m.created_at)}</strong></span>
                   <span>کد شناسه: <code className="text-xs text-navy dark:text-slate-300 bg-white dark:bg-slate-900 px-1 py-0.5 rounded border border-ink/10 dark:border-slate-700 font-mono" dir="ltr">{m.id.slice(0, 8)}</code></span>
                 </div>
               </div>
@@ -1169,7 +1169,7 @@ export default function Managers() {
                         />
                         <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400">
                           {userEditQuotaResetAt
-                            ? `شمسی: ${new Date(userEditQuotaResetAt).toLocaleDateString("fa-IR")}`
+                            ? `شمسی: ${faDate(userEditQuotaResetAt)}`
                             : "نامحدود یا بدون تاریخ انقضا"}
                         </span>
                       </div>
@@ -1734,7 +1734,7 @@ export default function Managers() {
               />
               <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400">
                 {quotaResetAt
-                  ? `شمسی: ${new Date(quotaResetAt).toLocaleDateString("fa-IR")}`
+                  ? `شمسی: ${faDate(quotaResetAt)}`
                   : "نامحدود یا بدون تاریخ انقضا"}
               </span>
             </div>
@@ -1855,7 +1855,7 @@ export default function Managers() {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-ink-subtle dark:text-slate-400">تاریخ پایان دوره و ریست بعدی:</span>
-              <span className="font-mono text-navy dark:text-slate-100" dir="ltr">{quotaModal?.quota_reset_at ? new Date(quotaModal.quota_reset_at).toLocaleDateString("fa-IR") : "—"}</span>
+              <span className="font-mono text-navy dark:text-slate-100" dir="ltr">{quotaModal?.quota_reset_at ? faDate(quotaModal.quota_reset_at) : "—"}</span>
             </div>
             {canManage && (
               <div className="pt-1.5 flex justify-end">

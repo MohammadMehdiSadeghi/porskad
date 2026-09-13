@@ -5,34 +5,125 @@ export function faNum(n) {
   return String(n ?? "").replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[d]);
 }
 
-// ─── تاریخ و ساعت شمسی ───
+// ─── منطقه زمانی و تقویم ایران ───
+export const IRAN_TIMEZONE = "Asia/Tehran";
+
+function toValidDate(input) {
+  if (!input) return null;
+  const d = input instanceof Date ? input : new Date(input);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+// ─── تاریخ و ساعت شمسی با ساعت رسمی ایران ───
 // مثل: ۱۴ مرداد ۱۴۰۴، ۲۱:۳۰
-export function faDateTime(isoString) {
-  if (!isoString) return "—";
+export function faDateTime(isoString, options = {}) {
+  const d = toValidDate(isoString);
+  if (!d) return "—";
   try {
-    const d = new Date(isoString);
-    return new Intl.DateTimeFormat("fa-IR", {
+    return new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+      timeZone: IRAN_TIMEZONE,
       year: "numeric",
       month: "long",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      ...options,
     }).format(d);
   } catch {
     return "—";
   }
 }
 
-// ─── فقط تاریخ شمسی (بدون ساعت) ───
-// مثل: ۱۴ مرداد ۱۴۰۴
-export function faDate(isoString) {
-  if (!isoString) return "—";
+// ─── فقط تاریخ شمسی (با ساعت رسمی ایران) ───
+// پیش‌فرض: ۱۴۰۴/۵/۱۴
+export function faDate(isoString, options = {}) {
+  const d = toValidDate(isoString);
+  if (!d) return "—";
   try {
-    const d = new Date(isoString);
-    return new Intl.DateTimeFormat("fa-IR", {
+    return new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+      timeZone: IRAN_TIMEZONE,
       year: "numeric",
-      month: "long",
+      month: "numeric",
       day: "numeric",
+      ...options,
+    }).format(d);
+  } catch {
+    return "—";
+  }
+}
+
+// تاریخ شمسی طولانی: ۱۴ مرداد ۱۴۰۴
+export function faDateLong(isoString, options = {}) {
+  return faDate(isoString, { month: "long", ...options });
+}
+
+// فقط ساعت با ساعت رسمی ایران (مثلاً ۲۱:۳۰)
+export function faTime(isoString, options = {}) {
+  const d = toValidDate(isoString);
+  if (!d) return "—";
+  try {
+    return new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+      timeZone: IRAN_TIMEZONE,
+      hour: "2-digit",
+      minute: "2-digit",
+      ...options,
+    }).format(d);
+  } catch {
+    return "—";
+  }
+}
+
+// ─── توابع ویژه پنل گاد (تاریخ میلادی + ساعت رسمی ایران) ───
+// تاریخ میلادی و ساعت ایران (مثلاً: 09/13/2026, 11:23:45)
+export function godDateTime(isoString, options = {}) {
+  const d = toValidDate(isoString);
+  if (!d) return "—";
+  try {
+    return new Intl.DateTimeFormat("en-US", {
+      timeZone: IRAN_TIMEZONE,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+      ...options,
+    }).format(d);
+  } catch {
+    return "—";
+  }
+}
+
+// فقط تاریخ میلادی بر اساس افق ایران (مثلاً: 09/13/2026)
+export function godDate(isoString, options = {}) {
+  const d = toValidDate(isoString);
+  if (!d) return "—";
+  try {
+    return new Intl.DateTimeFormat("en-US", {
+      timeZone: IRAN_TIMEZONE,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      ...options,
+    }).format(d);
+  } catch {
+    return "—";
+  }
+}
+
+// فقط ساعت رسمی ایران برای پنل گاد (مثلاً: 11:23:45)
+export function godTime(isoString, options = {}) {
+  const d = toValidDate(isoString);
+  if (!d) return "—";
+  try {
+    return new Intl.DateTimeFormat("en-US", {
+      timeZone: IRAN_TIMEZONE,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+      ...options,
     }).format(d);
   } catch {
     return "—";
@@ -40,8 +131,9 @@ export function faDate(isoString) {
 }
 
 export function faRelative(isoString) {
-  if (!isoString) return "—";
-  const diff = (Date.now() - new Date(isoString).getTime()) / 1000;
+  const d = toValidDate(isoString);
+  if (!d) return "—";
+  const diff = (Date.now() - d.getTime()) / 1000;
   if (diff < 0) return "به‌زودی"; // تاریخ از آینده
   if (diff < 60) return "همین الان";
   if (diff < 3600) return `${faNum(Math.floor(diff / 60))} دقیقه پیش`;

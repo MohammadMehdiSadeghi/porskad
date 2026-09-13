@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabaseClient";
-import { faNum, faRelative } from "../../lib/utils";
+import { faNum, faRelative, faDateTime } from "../../lib/utils";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import StickerCard from "../../components/ui/StickerCard";
@@ -649,12 +649,7 @@ export default function TelegramBot() {
                               👤 {ownerNames[cfg.user_id] || "کاربر حذف‌شده"}
                             </span>
                             <span className="text-ink-subtle font-bold">
-                              {cfg.created_at
-                                ? new Date(cfg.created_at).toLocaleString("fa-IR", {
-                                    dateStyle: "short",
-                                    timeStyle: "short",
-                                  })
-                                : ""}
+                              {cfg.created_at ? faDateTime(cfg.created_at) : ""}
                             </span>
                           </div>
                         )}

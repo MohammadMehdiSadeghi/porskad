@@ -11,7 +11,7 @@ import { TableSkeleton } from "../../components/ui/Skeleton";
 import Modal from "../../components/ui/Modal";
 import EmptyState from "../../components/ui/EmptyState";
 import SEO from "../../components/ui/SEO";
-import { faDateTime, faRelative, faNum } from "../../lib/utils";
+import { faDateTime, faRelative, faNum, faDate } from "../../lib/utils";
 import { upgradeUserSubscription, getEffectivePlans } from "../../lib/plans";
 import {
   TICKET_CATEGORIES,
@@ -459,7 +459,7 @@ export default function Support() {
 
     const followUp = reopenMessage.trim();
     const updatedMessage = followUp
-      ? `${reopenModalTicket.message}\n\n─── پیام تکمیلی کاربر (${new Date().toLocaleDateString("fa-IR")}) ───\n${followUp}`
+      ? `${reopenModalTicket.message}\n\n─── پیام تکمیلی کاربر (${faDate(new Date())}) ───\n${followUp}`
       : reopenModalTicket.message;
 
     setReopening(true);
@@ -555,7 +555,7 @@ export default function Support() {
   async function handleConfirmPayment(ticket) {
     const note = window.prompt("در صورت نیاز توضیح واریز (تاریخ/کد پیگیری):", "")?.trim();
     if (note === undefined) return;
-    const stamp = new Date().toLocaleDateString("fa-IR");
+    const stamp = faDate(new Date());
     const updatedMessage = `${ticket.message}\n\n─── اعلام واریز توسط کاربر (${stamp}) ───${note ? `\n${note}` : ""}`;
     try {
       const { error } = await supabase

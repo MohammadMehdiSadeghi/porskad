@@ -11,6 +11,7 @@ import Spinner from "../../components/ui/Spinner";
 import { TableSkeleton } from "../../components/ui/Skeleton";
 import StickerCard from "../../components/ui/StickerCard";
 import Badge from "../../components/ui/Badge";
+import { godDateTime, godDate, godTime } from "../../lib/utils";
 import "./superadmin-ibm.css";
 
 // ─── Icons ───
@@ -1958,7 +1959,7 @@ export default function SuperAdmin() {
                       {e.message}
                     </span>
                     <span style={{ color: "var(--sa-text-2)", fontSize: "0.85rem" }}>
-                      {e.created_at ? new Date(e.created_at).toLocaleTimeString() : ""}
+                      {e.created_at ? godTime(e.created_at) : ""}
                     </span>
                   </div>
                 ))}
@@ -3522,7 +3523,7 @@ export default function SuperAdmin() {
                               {item.details?.form_title || "Untitled Form"}
                             </span>
                             <span style={{ fontSize: "0.72rem", color: "var(--sa-text-2)" }}>
-                              {new Date(item.created_at).toLocaleString("en-US")}
+                              {godDateTime(item.created_at)}
                             </span>
                           </div>
                           <div style={{ fontSize: "0.75rem", color: "var(--sa-text-1)" }}>
@@ -4063,10 +4064,10 @@ export default function SuperAdmin() {
                         </span>
                       </td>
                       <td style={{ fontSize: "0.85rem", color: "var(--sa-text-1)", fontFamily: "'IBM Plex Mono', monospace" }}>
-                        {r.quota_reset_at ? new Date(r.quota_reset_at).toLocaleDateString("en-US") : "30 days"}
+                        {r.quota_reset_at ? godDate(r.quota_reset_at) : "30 days"}
                       </td>
                       <td style={{ fontSize: "0.85rem", color: "var(--sa-text-2)" }}>
-                        {r.created_at ? new Date(r.created_at).toLocaleDateString("en-US") : "—"}
+                        {r.created_at ? godDate(r.created_at) : "—"}
                       </td>
                       <td>
                         <div style={{ display: "flex", gap: "0.25rem" }}>
@@ -4695,7 +4696,7 @@ export default function SuperAdmin() {
 
                               {/* Timestamp */}
                               <td style={{ fontSize: "0.82rem", color: "var(--sa-text-1)", whiteSpace: "nowrap" }}>
-                                {r.created_at ? new Date(r.created_at).toLocaleString("en-US") : "—"}
+                                {r.created_at ? godDateTime(r.created_at) : "—"}
                               </td>
 
                               {/* Actions */}
@@ -4802,7 +4803,7 @@ export default function SuperAdmin() {
 
                               {/* Last Active */}
                               <td style={{ fontSize: "0.8rem", color: "var(--sa-text-0)", fontWeight: 600, whiteSpace: "nowrap" }}>
-                                {new Date(u.last_seen).toLocaleString("en-US")}
+                                {godDateTime(u.last_seen)}
                               </td>
 
                               {/* Actions */}
@@ -4839,7 +4840,7 @@ export default function SuperAdmin() {
             <div className="flex gap-2 items-center">
               {health?.checkedAt && (
                 <span style={{ fontSize: "0.8rem", color: "var(--sa-text-2)" }}>
-                  Last check: {new Date(health.checkedAt).toLocaleString("fa-IR")}
+                  Last check: {godDateTime(health.checkedAt)}
                 </span>
               )}
               <button className="sa-btn sa-btn-primary" onClick={loadHealth} disabled={healthLoading}>
@@ -5078,7 +5079,7 @@ export default function SuperAdmin() {
                       </div>
                       <div style={{ fontSize: "0.85rem", color: "var(--sa-text-2)" }}>
                         {health.lastTgFail?.error_message || "unknown error"} —{" "}
-                        {health.lastTgFail?.created_at ? new Date(health.lastTgFail.created_at).toLocaleString("fa-IR") : ""}
+                        {health.lastTgFail?.created_at ? godDateTime(health.lastTgFail.created_at) : ""}
                       </div>
                       <button className="sa-btn sa-btn-ghost" style={{ marginTop: "0.75rem" }} onClick={() => setTab("database")}>
                         Inspect telegram_send_log
@@ -5111,7 +5112,7 @@ export default function SuperAdmin() {
                           {health.openTickets.map((t) => (
                             <tr key={t.id}>
                               <td style={{ fontWeight: 600 }}>{t.subject}</td>
-                              <td>{new Date(t.created_at).toLocaleString("fa-IR")}</td>
+                              <td>{godDateTime(t.created_at)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -5311,7 +5312,7 @@ export default function SuperAdmin() {
                             ) : (
                               whoDeleted(i)
                             )}{" "}
-                            · {new Date(i.at).toLocaleString("en-US")}
+                            · {godDateTime(i.at)}
                           </div>
                         </div>
                         <span style={{ fontSize: "0.78rem", fontWeight: 700, color: dl === null ? "#64748b" : dl <= 5 ? "#dc2626" : "#059669", flexShrink: 0 }}>
@@ -5404,7 +5405,7 @@ export default function SuperAdmin() {
                           {r.details ? JSON.stringify(r.details).slice(0, 50) : "—"}
                         </td>
                         <td style={{ fontSize: "0.85rem", color: "var(--sa-text-2)" }}>
-                          {r.created_at ? new Date(r.created_at).toLocaleString() : "—"}
+                          {r.created_at ? godDateTime(r.created_at) : "—"}
                         </td>
                       </tr>
                     ))}
@@ -5462,7 +5463,7 @@ export default function SuperAdmin() {
                           {r.url || "—"}
                         </td>
                         <td style={{ fontSize: "0.85rem", color: "var(--sa-text-2)" }}>
-                          {r.created_at ? new Date(r.created_at).toLocaleString() : "—"}
+                          {r.created_at ? godDateTime(r.created_at) : "—"}
                         </td>
                       </tr>
                     ))}
@@ -5622,11 +5623,11 @@ export default function SuperAdmin() {
                 ["SuperAdmin / Owner", detailModal.is_owner ? "Yes" : "No"],
                 ["Account Status", detailModal.is_active ? "Active" : "Inactive"],
                 ["Monthly Responses", (detailModal.is_owner || detailModal.max_responses_per_month >= 999999 || detailModal.plan === "unlimited") ? `${detailModal.monthly_responses_used ?? 0} used (Unlimited ✨)` : `${detailModal.monthly_responses_used ?? 0} / ${detailModal.max_responses_per_month ?? 100} used`],
-                ["Quota Reset Date", detailModal.quota_reset_at ? new Date(detailModal.quota_reset_at).toLocaleDateString() : "—"],
+                ["Quota Reset Date", detailModal.quota_reset_at ? godDate(detailModal.quota_reset_at) : "—"],
                 [
                   "Joined Date",
                   detailModal.created_at
-                    ? new Date(detailModal.created_at).toLocaleString()
+                    ? godDateTime(detailModal.created_at)
                     : "—",
                 ],
                 ["Hidden From", `${detailModal.hidden_from?.length || 0} admins`],
@@ -5696,7 +5697,7 @@ export default function SuperAdmin() {
                             {log.device || "Desktop"} · {log.browser || "—"} ({log.os || "—"})
                           </td>
                           <td style={{ padding: "0.3rem 0.5rem", whiteSpace: "nowrap" }}>
-                            {log.created_at ? new Date(log.created_at).toLocaleString("en-US") : "—"}
+                            {log.created_at ? godDateTime(log.created_at) : "—"}
                           </td>
                         </tr>
                       ))}
@@ -6751,7 +6752,7 @@ export default function SuperAdmin() {
                               whiteSpace: "nowrap",
                             }}
                           >
-                            {log.created_at ? new Date(log.created_at).toLocaleString("en-US") : "—"}
+                            {log.created_at ? godDateTime(log.created_at) : "—"}
                           </td>
                         </tr>
                       );

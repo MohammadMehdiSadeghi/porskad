@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { faNum } from "../../lib/utils";
+import { faNum, faDateTime } from "../../lib/utils";
 import { supabase } from "../../lib/supabaseClient";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
@@ -300,7 +300,7 @@ export default function SmsPanel() {
                             </Badge>
                           </td>
                           <td className="px-4 py-3 text-xs font-semibold text-ink-subtle dark:text-slate-400">
-                            {new Date(o.created_at).toLocaleString("fa-IR")}
+                            {faDateTime(o.created_at)}
                           </td>
                         </tr>
                       ))}
@@ -333,7 +333,7 @@ export default function SmsPanel() {
                   <div className="p-4 flex flex-col gap-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-bold text-navy dark:text-slate-100" dir="ltr">{msg.mobile}</span>
-                      <span className="text-xs font-medium text-ink-subtle dark:text-slate-400">{new Date(msg.created_at).toLocaleString("fa-IR")}</span>
+                      <span className="text-xs font-medium text-ink-subtle dark:text-slate-400">{faDateTime(msg.created_at)}</span>
                     </div>
                     <p className="text-sm font-semibold text-ink dark:text-slate-200 leading-6">{msg.text}</p>
                   </div>

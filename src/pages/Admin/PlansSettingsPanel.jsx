@@ -18,7 +18,7 @@ import {
   fetchLivePlanUserCounts,
 } from "../../lib/plans";
 import { supabase } from "../../lib/supabaseClient";
-import { faNum } from "../../lib/utils";
+import { faNum, faDateTime } from "../../lib/utils";
 import Button from "../../components/ui/Button";
 import Modal from "../../components/ui/Modal";
 import Badge from "../../components/ui/Badge";
@@ -359,7 +359,7 @@ export default function PlansSettingsPanel() {
                   {loadingDb
                     ? "در حال بازیابی از سرور…"
                     : dbTime
-                    ? `آخرین ذخیره سرور: ${new Date(dbTime).toLocaleString("fa-IR")}`
+                    ? `آخرین ذخیره سرور: ${faDateTime(dbTime)}`
                     : "هنوز روی سرور ذخیره نشده (پیش‌فرض‌های کد فعال است)"}
                 </span>
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold text-ink-subtle dark:text-slate-500">
