@@ -33,7 +33,7 @@ VALUES (
       "minPurchaseToman": 50000,
       "maxUses": 50,
       "usedCount": 0,
-      "expiresAt": "2026-12-30T23:59:59.000Z",
+      "expiresAt": "2027-03-20T23:59:59.000Z",
       "applicablePlans": ["pro"],
       "isActive": true,
       "createdAt": "2026-03-05T00:00:00.000Z"

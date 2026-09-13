@@ -15,7 +15,15 @@ import {
   validateDiscountCode,
 } from "../../lib/discounts";
 import { getEffectivePlans } from "../../lib/plans";
-import { faNum, faDate } from "../../lib/utils";
+import {
+  faNum,
+  faDate,
+  faDateLong,
+  JALALI_MONTH_NAMES,
+  gregorianToJalali,
+  isoToJalali,
+  jalaliToIso,
+} from "../../lib/utils";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import Modal from "../../components/ui/Modal";
@@ -58,6 +66,12 @@ export default function DiscountCodesPanel() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCode, setEditingCode] = useState(null);
 
+  // تاریخ جاری شمسی برای پیش‌فرض‌ها
+  const currentJalali = useMemo(() => {
+    const now = new Date();
+    return gregorianToJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
+  }, []);
+
   // فرم کد تخفیف
   const [formData, setFormData] = useState({
     code: "",
@@ -67,7 +81,10 @@ export default function DiscountCodesPanel() {
     maxDiscountToman: "",
     minPurchaseToman: "",
     maxUses: "",
-    expiresAt: "",
+    hasExpiry: false,
+    jYear: 1405,
+    jMonth: 12,
+    jDay: 29,
     applicablePlans: [], // خالی = همه طرح‌ها
     isActive: true,
   });
@@ -109,6 +126,12 @@ export default function DiscountCodesPanel() {
   // باز کردن مودال ایجاد
   const handleOpenCreate = () => {
     setEditingCode(null);
+    let nextMonth = currentJalali.jm + 1;
+    let nextYear = currentJalali.jy;
+    if (nextMonth > 12) {
+      nextMonth = 1;
+      nextYear += 1;
+    }
     setFormData({
       code: generateRandomCouponCode(),
       title: "",
@@ -117,7 +140,10 @@ export default function DiscountCodesPanel() {
       maxDiscountToman: "",
       minPurchaseToman: "",
       maxUses: "50",
-      expiresAt: "",
+      hasExpiry: false,
+      jYear: nextYear,
+      jMonth: nextMonth,
+      jDay: Math.min(28, currentJalali.jd),
       applicablePlans: [],
       isActive: true,
     });
@@ -127,6 +153,21 @@ export default function DiscountCodesPanel() {
   // باز کردن مودال ویرایش
   const handleOpenEdit = (c) => {
     setEditingCode(c);
+    let hasExpiry = false;
+    let jYear = currentJalali.jy;
+    let jMonth = currentJalali.jm;
+    let jDay = currentJalali.jd;
+
+    if (c.expiresAt) {
+      const parsedJ = isoToJalali(c.expiresAt);
+      if (parsedJ) {
+        hasExpiry = true;
+        jYear = parsedJ.jy;
+        jMonth = parsedJ.jm;
+        jDay = parsedJ.jd;
+      }
+    }
+
     setFormData({
       code: c.code,
       title: c.title || "",
@@ -135,11 +176,35 @@ export default function DiscountCodesPanel() {
       maxDiscountToman: c.maxDiscountToman ?? "",
       minPurchaseToman: c.minPurchaseToman ?? "",
       maxUses: c.maxUses ?? "",
-      expiresAt: c.expiresAt ? c.expiresAt.split("T")[0] : "",
+      hasExpiry,
+      jYear,
+      jMonth,
+      jDay,
       applicablePlans: Array.isArray(c.applicablePlans) ? c.applicablePlans : [],
       isActive: Boolean(c.isActive),
     });
     setModalOpen(true);
+  };
+
+  // میانبرهای سریع تاریخ انقضا
+  const handlePresetDate = (type) => {
+    const now = new Date();
+    let target = new Date();
+    if (type === "1week") {
+      target.setDate(target.getDate() + 7);
+      const j = gregorianToJalali(target.getFullYear(), target.getMonth() + 1, target.getDate());
+      setFormData((prev) => ({ ...prev, hasExpiry: true, jYear: j.jy, jMonth: j.jm, jDay: j.jd }));
+    } else if (type === "1month") {
+      target.setMonth(target.getMonth() + 1);
+      const j = gregorianToJalali(target.getFullYear(), target.getMonth() + 1, target.getDate());
+      setFormData((prev) => ({ ...prev, hasExpiry: true, jYear: j.jy, jMonth: j.jm, jDay: j.jd }));
+    } else if (type === "3months") {
+      target.setMonth(target.getMonth() + 3);
+      const j = gregorianToJalali(target.getFullYear(), target.getMonth() + 1, target.getDate());
+      setFormData((prev) => ({ ...prev, hasExpiry: true, jYear: j.jy, jMonth: j.jm, jDay: j.jd }));
+    } else if (type === "yearEnd") {
+      setFormData((prev) => ({ ...prev, hasExpiry: true, jYear: currentJalali.jy, jMonth: 12, jDay: 29 }));
+    }
   };
 
   // سوئیچ وضعیت فعال/غیرفعال آنی
@@ -187,6 +252,10 @@ export default function DiscountCodesPanel() {
       return;
     }
 
+    const expiresAt = formData.hasExpiry
+      ? jalaliToIso(Number(formData.jYear), Number(formData.jMonth), Number(formData.jDay), true)
+      : null;
+
     const payload = {
       id: editingCode?.id || `disc_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       code: cleanCode,
@@ -197,7 +266,7 @@ export default function DiscountCodesPanel() {
       minPurchaseToman: formData.minPurchaseToman ? Math.max(0, Number(formData.minPurchaseToman)) : null,
       maxUses: formData.maxUses ? Math.max(1, Number(formData.maxUses)) : null,
       usedCount: editingCode?.usedCount || 0,
-      expiresAt: formData.expiresAt ? new Date(`${formData.expiresAt}T23:59:59.000Z`).toISOString() : null,
+      expiresAt,
       applicablePlans: formData.applicablePlans,
       isActive: Boolean(formData.isActive),
       createdAt: editingCode?.createdAt || new Date().toISOString(),
@@ -496,7 +565,7 @@ export default function DiscountCodesPanel() {
                     <span>
                       {c.expiresAt ? (
                         <span className={isExpired ? "text-rose-500 font-black" : "text-navy dark:text-slate-200"}>
-                          {faDate(c.expiresAt)}
+                          {faDateLong(c.expiresAt)}
                         </span>
                       ) : (
                         "دائمی (بدون انقضا)"
@@ -767,6 +836,7 @@ export default function DiscountCodesPanel() {
           </div>
 
           {/* ردیف ۵: محدودیت تعداد نفرات و تاریخ انقضا */}
+          {/* ردیف ۵: محدودیت تعداد نفرات و نوع انقضا */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-extrabold text-navy dark:text-slate-200 block mb-1">
@@ -777,23 +847,152 @@ export default function DiscountCodesPanel() {
                 min={1}
                 value={formData.maxUses}
                 onChange={(e) => setFormData({ ...formData, maxUses: e.target.value })}
-                placeholder="نامحدود"
+                placeholder="نامحدود (سقفی ندارد)"
                 className="w-full bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-3.5 py-2 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
               />
             </div>
 
             <div>
               <label className="text-xs font-extrabold text-navy dark:text-slate-200 block mb-1">
-                تاریخ انقضا (میلادی/شمسی):
+                نوع اعتبار زمانی:
               </label>
-              <input
-                type="date"
-                value={formData.expiresAt}
-                onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })}
-                className="w-full bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-3.5 py-2 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
-              />
+              <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 dark:bg-slate-900/80 border-2 border-ink/15 dark:border-slate-700 rounded-pill-md">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, hasExpiry: false })}
+                  className={`py-1.5 px-2 rounded-xl text-xs font-extrabold transition-all ${
+                    !formData.hasExpiry
+                      ? "bg-white dark:bg-slate-800 text-teal dark:text-teal shadow-sm"
+                      : "text-ink-subtle dark:text-slate-400 hover:text-navy dark:hover:text-white"
+                  }`}
+                >
+                  دائمی (بدون انقضا)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, hasExpiry: true })}
+                  className={`py-1.5 px-2 rounded-xl text-xs font-extrabold transition-all ${
+                    formData.hasExpiry
+                      ? "bg-teal text-white shadow-sm"
+                      : "text-ink-subtle dark:text-slate-400 hover:text-navy dark:hover:text-white"
+                  }`}
+                >
+                  دارای تاریخ انقضا
+                </button>
+              </div>
             </div>
           </div>
+
+          {/* ردیف انتخاب تاریخ انقضای شمسی */}
+          {formData.hasExpiry && (
+            <div className="p-3.5 bg-teal/5 dark:bg-slate-900/60 border-2 border-teal/30 dark:border-teal/20 rounded-2xl flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 text-xs font-extrabold text-navy dark:text-teal">
+                  <Calendar size={14} className="text-teal" />
+                  <span>انتخاب تاریخ انقضا (تقویم شمسی):</span>
+                </div>
+                {/* میانبرهای سریع */}
+                <div className="flex items-center gap-1 flex-wrap text-[11px] font-bold">
+                  <span className="text-ink-subtle dark:text-slate-400 text-[10px]">میانبر:</span>
+                  <button
+                    type="button"
+                    onClick={() => handlePresetDate("1week")}
+                    className="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 text-ink dark:text-slate-200 hover:border-teal hover:text-teal transition-colors"
+                  >
+                    ۱ هفته
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePresetDate("1month")}
+                    className="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 text-ink dark:text-slate-200 hover:border-teal hover:text-teal transition-colors"
+                  >
+                    ۱ ماه
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePresetDate("3months")}
+                    className="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 text-ink dark:text-slate-200 hover:border-teal hover:text-teal transition-colors"
+                  >
+                    ۳ ماه
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePresetDate("yearEnd")}
+                    className="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 text-ink dark:text-slate-200 hover:border-teal hover:text-teal transition-colors"
+                  >
+                    پایان سال
+                  </button>
+                </div>
+              </div>
+
+              {/* ۳ دراپ‌داون سال / ماه / روز شمسی */}
+              <div className="grid grid-cols-3 gap-2">
+                {/* روز */}
+                <div>
+                  <label className="text-[11px] font-extrabold text-ink-subtle dark:text-slate-400 block mb-1">روز:</label>
+                  <select
+                    value={formData.jDay}
+                    onChange={(e) => setFormData({ ...formData, jDay: Number(e.target.value) })}
+                    className="w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-2.5 py-1.5 text-xs font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
+                  >
+                    {Array.from({ length: formData.jMonth <= 6 ? 31 : formData.jMonth <= 11 ? 30 : 29 }, (_, i) => i + 1).map((d) => (
+                      <option key={d} value={d}>
+                        {faNum(d)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* ماه */}
+                <div>
+                  <label className="text-[11px] font-extrabold text-ink-subtle dark:text-slate-400 block mb-1">ماه:</label>
+                  <select
+                    value={formData.jMonth}
+                    onChange={(e) => {
+                      const m = Number(e.target.value);
+                      const maxD = m <= 6 ? 31 : m <= 11 ? 30 : 29;
+                      setFormData({
+                        ...formData,
+                        jMonth: m,
+                        jDay: Math.min(formData.jDay, maxD),
+                      });
+                    }}
+                    className="w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-2.5 py-1.5 text-xs font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
+                  >
+                    {JALALI_MONTH_NAMES.map((mName, idx) => (
+                      <option key={idx + 1} value={idx + 1}>
+                        {mName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* سال */}
+                <div>
+                  <label className="text-[11px] font-extrabold text-ink-subtle dark:text-slate-400 block mb-1">سال:</label>
+                  <select
+                    value={formData.jYear}
+                    onChange={(e) => setFormData({ ...formData, jYear: Number(e.target.value) })}
+                    className="w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-2.5 py-1.5 text-xs font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
+                  >
+                    {[1404, 1405, 1406, 1407, 1408, 1409, 1410].map((y) => (
+                      <option key={y} value={y}>
+                        {faNum(y)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* پیش‌نمایش متنی تاریخ انقضا */}
+              <div className="flex items-center justify-between text-xs font-bold bg-white/80 dark:bg-slate-800/80 px-3 py-2 rounded-xl border border-teal/20 text-navy dark:text-slate-200">
+                <span className="text-teal font-extrabold">پیش‌نمایش اعتبار:</span>
+                <span>
+                  تا پایان {faNum(formData.jDay)} {JALALI_MONTH_NAMES[formData.jMonth - 1]} {faNum(formData.jYear)} (ساعت ۲۳:۵۹)
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* ردیف ۶: طرح‌های مجاز */}
           <div>
