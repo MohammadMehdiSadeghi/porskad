@@ -215,15 +215,15 @@ export default function SuperAdmin() {
         supabase.from("profiles").select("plan").eq("is_active", true).limit(5000),
       ]);
 
-      const logs = authRecent?.data || [];
+      const logs = authRecent || [];
       const logins = logs.filter((l) => l.action === "login" || l.action === "login_after_register").length;
       const failed = logs.filter((l) => l.action === "failed_login" || l.action === "login_failed").length;
 
-      const tg = tgRecent?.data || [];
+      const tg = tgRecent || [];
       const tgFailed = tg.filter((t) => t.status === "failed").length;
       const lastFail = tg.find((t) => t.status === "failed");
 
-      const q = quotaRows?.data || [];
+      const q = quotaRows || [];
       const nearQuota = q
         .filter((u) => (u.max_responses_per_month ?? 0) > 0 && (u.max_responses_per_month ?? 0) < 999999 && (u.monthly_responses_used ?? 0) / u.max_responses_per_month >= 0.8)
         .sort((a, b) => (b.monthly_responses_used / b.max_responses_per_month) - (a.monthly_responses_used / a.max_responses_per_month))
@@ -246,17 +246,17 @@ export default function SuperAdmin() {
           if (b) b[field] += 1;
         }
       };
-      tally(signups14?.data, "signups");
-      tally(resp14?.data, "responses");
-      tally(forms14?.data, "forms");
-      tally(logins14?.data, "logins");
-      tally(failed14?.data, "failed");
+      tally(signups14, "signups");
+      tally(resp14, "responses");
+      tally(forms14, "forms");
+      tally(logins14, "logins");
+      tally(failed14, "failed");
       const labels = ["13d ago", "12d", "11d", "10d", "9d", "8d", "7d", "6d", "5d", "4d", "3d", "2d", "Yesterday", "Today"];
       const series = buckets.map((b, i) => ({ ...b, label: labels[i] }));
 
       // ─── Plan Distribution ───
       const planCounts = {};
-      for (const r of planRows?.data || []) {
+      for (const r of planRows || []) {
         const p = r.plan || "free";
         planCounts[p] = (planCounts[p] || 0) + 1;
       }
@@ -280,7 +280,7 @@ export default function SuperAdmin() {
         tgTotal: tg.length,
         tgFailed,
         lastTgFail: lastFail || null,
-        openTickets: ticketsOpen?.data || [],
+        openTickets: ticketsOpen || [],
         nearQuota,
         series,
         planDist,
@@ -803,6 +803,54 @@ export default function SuperAdmin() {
     }
   }
 
+  async function handleSaveDetailQuota() {
+    if (!detailModal?.id) return;
+    setDetailQuotaSaving(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          plan: detailPlan,
+          max_forms: Number(detailMaxForms) || 5,
+          max_responses_per_month: Number(detailMaxResponses) || 100,
+          monthly_responses_used: Number(detailResponsesUsed) || 0,
+          quota_reset_at: detailQuotaResetAt ? new Date(detailQuotaResetAt).toISOString() : null,
+          can_use_telegram: detailCanTelegram,
+          can_export_excel: detailCanExcel,
+          can_use_logic: detailCanLogic,
+          can_upload_files: detailCanFileUpload,
+          can_use_sms: detailCanSms,
+          can_use_webhooks: detailCanWebhooks,
+          can_remove_branding: detailCanRemoveBranding,
+        })
+        .eq("id", detailModal.id);
+
+      if (error) throw error;
+      showToast("User plan, quotas & permissions updated successfully");
+      setDetailModal((prev) => ({
+        ...prev,
+        plan: detailPlan,
+        max_forms: Number(detailMaxForms) || 5,
+        max_responses_per_month: Number(detailMaxResponses) || 100,
+        monthly_responses_used: Number(detailResponsesUsed) || 0,
+        quota_reset_at: detailQuotaResetAt,
+        can_use_telegram: detailCanTelegram,
+        can_export_excel: detailCanExcel,
+        can_use_logic: detailCanLogic,
+        can_upload_files: detailCanFileUpload,
+        can_use_sms: detailCanSms,
+        can_use_webhooks: detailCanWebhooks,
+        can_remove_branding: detailCanRemoveBranding,
+      }));
+      loadUsers();
+      loadAdmins();
+    } catch (err) {
+      showToast("Failed to save plan & quotas: " + err.message, "error");
+    } finally {
+      setDetailQuotaSaving(false);
+    }
+  }
+
   async function handleResetAllQ() {
     if (!confirm("Are you sure you want to reset ALL 20 question types to factory defaults?")) return;
     await resetQuestionTypesConfig();
@@ -897,7 +945,7 @@ export default function SuperAdmin() {
     try {
       const { data: allProfiles, error: profErr } = await supabase
         .from("profiles")
-        .select("id, email, full_name, phone, is_active, is_owner, created_at, hidden_from, max_forms, max_responses_per_month, monthly_responses_used, quota_reset_at, can_use_telegram")
+        .select("*")
         .order("created_at", { ascending: false });
       if (profErr) throw profErr;
 
@@ -929,7 +977,7 @@ export default function SuperAdmin() {
     try {
       const { data: allProfiles, error: profErr } = await supabase
         .from("profiles")
-        .select("id, email, full_name, phone, is_active, is_owner, created_at, hidden_from")
+        .select("*")
         .order("created_at", { ascending: false });
       if (profErr) throw profErr;
 
@@ -1617,9 +1665,19 @@ export default function SuperAdmin() {
   // ─── Export ───
   async function exportTable(tableName) {
     try {
-      const { data, error } = await supabase.rpc("export_table_data", { p_table_name: tableName });
-      if (error) throw error;
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      let dataToExport = null;
+      try {
+        const { data, error } = await supabase.rpc("export_table_data", { p_table_name: tableName });
+        if (!error && data) dataToExport = data;
+      } catch {}
+
+      if (!dataToExport) {
+        const { data, error } = await supabase.from(tableName).select("*").limit(5000);
+        if (error) throw error;
+        dataToExport = data;
+      }
+
+      const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
