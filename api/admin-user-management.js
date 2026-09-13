@@ -57,7 +57,6 @@ export default async function handler(req, res) {
     }
 
     const PRIMARY_GOD_EMAILS = [
-      "superadmin@gmailc.com",
       "superadmin@gmail.com",
       "mohammad12345sadeghi@gmail.com",
       "artinerfan1388@gmail.com",

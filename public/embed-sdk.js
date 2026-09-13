@@ -47,7 +47,8 @@
     host.appendChild(frame);
 
     function onMessage(e) {
-      if (e.origin !== origin || !e.data || e.data.type !== "porskad-resize") return;
+      if (e.origin !== origin || !e.data) return;
+      if (e.data.type !== "porskad-resize" && e.data.type !== "pcode:resize") return;
       if (!e.source || e.source !== frame.contentWindow) return;
       if (typeof e.data.height === "number") {
         frame.style.height = Math.max(e.data.height + 24, 160) + "px";

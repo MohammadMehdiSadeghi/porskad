@@ -55,11 +55,16 @@ export default async function handler(req, res) {
   // ⚠️ حریم خصوصی: هیچ IP یا موقعیت مکانی (کشور/شهر) عمداً استخراج و ذخیره نمی‌شود.
   // فقط مرورگر، سیستم‌عامل و نوع دستگاه لاگ می‌شود.
 
-  const effectiveUserId = userId || user_id || null;
-  const effectiveEmail = email ? String(email).trim().toLowerCase() : null;
+  const rawUserId = userId || user_id || null;
+  const isUuid = rawUserId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(rawUserId));
+  const effectiveUserId = isUuid ? rawUserId : null;
+
+  const effectiveEmail = email ? String(email).trim().toLowerCase().slice(0, 255) : null;
+  const ALLOWED_ACTIONS = ["login", "logout", "failed_login", "register", "password_reset", "session_refresh", "token_revoke"];
+  const effectiveAction = ALLOWED_ACTIONS.includes(action) ? action : "auth_event";
 
   // حذف هرگونه داده حساس احتمالی که کلاینت فرستاده باشد
-  const safeDetails = { ...(typeof details === "object" ? details : { raw: details }) };
+  const safeDetails = { ...(typeof details === "object" ? details : { raw: String(details).slice(0, 500) }) };
   delete safeDetails.ip;
   delete safeDetails.client_ip;
   delete safeDetails.ip_address;
@@ -81,7 +86,7 @@ export default async function handler(req, res) {
       await supabaseAdmin.from("auth_logs").insert({
         user_id: effectiveUserId,
         email: effectiveEmail,
-        action,
+        action: effectiveAction,
         device,
         browser,
         os,
@@ -93,7 +98,7 @@ export default async function handler(req, res) {
       try {
         await supabaseAdmin.from("activity_log").insert({
           user_id: effectiveUserId,
-          action,
+          action: effectiveAction,
           target_type: "auth",
           target_id: effectiveUserId ? String(effectiveUserId) : null,
           details: { email: effectiveEmail, browser, os, device },

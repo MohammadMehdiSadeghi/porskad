@@ -54,6 +54,34 @@ export default async function handler(req, res) {
       );
     } catch {}
 
+    // بررسی سقف مجاز ساخت فرم برای کاربر
+    const { data: userProfile } = await adminClient
+      .from("profiles")
+      .select("is_owner, plan, max_forms")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const isUnlimited = Boolean(
+      userProfile?.is_owner ||
+      userProfile?.plan === "unlimited" ||
+      (userProfile?.max_forms && Number(userProfile.max_forms) >= 999999)
+    );
+
+    if (!isUnlimited) {
+      const allowedMax = userProfile?.max_forms ? Number(userProfile.max_forms) : 5;
+      const { count: currentActiveForms } = await adminClient
+        .from("forms")
+        .select("id", { count: "exact", head: true })
+        .or(`manager_id.eq.${user.id},created_by.eq.${user.id}`)
+        .is("deleted_at", null);
+
+      if ((currentActiveForms || 0) >= allowedMax) {
+        return res.status(403).json({
+          error: `سقف ساخت فرم‌های حساب شما تکمیل شده است (حداکثر ${allowedMax} فرم). لطفاً پلن خود را ارتقا دهید.`,
+        });
+      }
+    }
+
     const {
       title,
       form_type = "step_by_step",

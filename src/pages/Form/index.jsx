@@ -86,7 +86,18 @@ export default function FormFill() {
     async function load() {
       // اول کانفیگ انواع سوال از سرور (تا فیلتر سوالات غیرفعال دقیق باشد)
       const cfgPromise = loadQuestionTypesConfigFromDb().catch(() => {});
-      const { data: formData, error: formError } = await supabase.from("forms").select("*").eq("slug", slug).eq("published", true).eq("archived", false).maybeSingle();
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+      let query = supabase.from("forms").select("*");
+      if (isUuid) {
+        query = query.or(`id.eq.${slug},public_id.eq.${slug},slug.eq.${slug}`);
+      } else {
+        query = query.or(`public_id.eq.${slug},slug.eq.${slug}`);
+      }
+      const { data: formData, error: formError } = await query
+        .eq("published", true)
+        .eq("archived", false)
+        .is("deleted_at", null)
+        .maybeSingle();
       if (cancelled) return;
       if (formError || !formData) { setUnavailable("This form has been deleted, unpublished, archived, or the link is incorrect."); setLoading(false); return; }
 
@@ -290,30 +301,83 @@ export default function FormFill() {
     setSubmitting(true); setSubmitError(null);
     try {
       const ua = parseUserAgent(); const nowIso = new Date().toISOString();
-      const responseId = generateUuid();
-      const respPayload = {
-        id: responseId,
-        form_id: form.id,
-        is_complete: true,
-        started_at: new Date(startedAt ?? Date.now()).toISOString(),
-        submitted_at: nowIso,
-        duration_seconds: startedAt ? Math.round((Date.now() - startedAt) / 1000) : null,
+      let responseId = null;
+
+      const meta = {
         device: ua.device,
         browser: ua.browser,
         os: ua.os,
-        user_agent: navigator.userAgent,
-        referrer_url: document.referrer || null,
+        userAgent: navigator.userAgent,
+        referrerUrl: document.referrer || null,
+        startedAt: new Date(startedAt ?? Date.now()).toISOString(),
+        completedAt: nowIso,
+        hiddenFields,
       };
-      let { error: respError } = await supabase.from("responses").insert(respPayload);
-      if (respError && respError.message && respError.message.includes("referrer_url")) {
-        delete respPayload.referrer_url;
-        respPayload.referer = document.referrer || null;
-        const retry = await supabase.from("responses").insert(respPayload);
-        respError = retry.error;
+
+      const finalAnswers = {};
+      const rows = [];
+      visibleQuestions.forEach((q) => {
+        const v = answers[q.id];
+        if (v !== undefined && v !== null && String(v ?? "").trim() !== "") {
+          const normVal = normalizeAnswerValue(q, v);
+          finalAnswers[q.id] = normVal;
+          rows.push({
+            question_id: q.id,
+            value: normVal,
+            time_spent_seconds: Math.round(times[q.id] ?? 0),
+          });
+        }
+      });
+
+      // ۱. تلاش برای ثبت از طریق RPC اختصاصی submit_public_response (مدیریت سهمیه‌ها و محدودیت‌ها)
+      try {
+        const targetPublicId = form.public_id || form.id;
+        const { data: rpcData, error: rpcError } = await supabase.rpc("submit_public_response", {
+          p_form_public_id: targetPublicId,
+          p_answers: finalAnswers,
+          p_meta: meta,
+          p_times: times || {},
+        });
+        if (!rpcError && (rpcData?.response_id || rpcData?.responseId)) {
+          responseId = rpcData?.response_id || rpcData?.responseId;
+        } else if (rpcError) {
+          console.warn("RPC submit error, trying direct fallback:", rpcError);
+        }
+      } catch (rpcErr) {
+        console.warn("RPC submit exception, trying direct fallback:", rpcErr);
       }
-      if (respError) throw respError;
-      const rows = visibleQuestions.filter((q) => { const v = answers[q.id]; return !(v === undefined || v === null || String(v ?? "").trim() === ""); }).map((q) => ({ response_id: responseId, question_id: q.id, value: normalizeAnswerValue(q, answers[q.id]), time_spent_seconds: Math.round(times[q.id] ?? 0) }));
-      if (rows.length) { const { error: ansError } = await supabase.from("answers").insert(rows); if (ansError) throw ansError; }
+
+      // ۲. فالبک درج مستقیم در صورت عدم دسترسی به RPC
+      if (!responseId) {
+        responseId = generateUuid();
+        const respPayload = {
+          id: responseId,
+          form_id: form.id,
+          is_complete: true,
+          started_at: meta.startedAt,
+          submitted_at: nowIso,
+          duration_seconds: startedAt ? Math.round((Date.now() - startedAt) / 1000) : null,
+          device: ua.device,
+          browser: ua.browser,
+          os: ua.os,
+          user_agent: navigator.userAgent,
+          referrer_url: document.referrer || null,
+        };
+        let { error: respError } = await supabase.from("responses").insert(respPayload);
+        if (respError && respError.message && respError.message.includes("referrer_url")) {
+          delete respPayload.referrer_url;
+          respPayload.referer = document.referrer || null;
+          const retry = await supabase.from("responses").insert(respPayload);
+          respError = retry.error;
+        }
+        if (respError) throw respError;
+
+        if (rows.length) {
+          const ansRows = rows.map((r) => ({ ...r, response_id: responseId }));
+          const { error: ansError } = await supabase.from("answers").insert(ansRows);
+          if (ansError) throw ansError;
+        }
+      }
       
       localStorage.removeItem(draftKey(slug));
       localStorage.setItem(`porskad_submitted_${form.id}`, new Date().toISOString());
@@ -362,7 +426,7 @@ export default function FormFill() {
       }
     } catch (err) { console.error(err); setSubmitError("ثبت جواب ناموفق بود؛ دوباره تلاش کن."); }
     finally { setSubmitting(false); }
-  }, [submitting, honeypot, form, visibleQuestions, questions, answers, times, startedAt, slug, total]);
+  }, [submitting, honeypot, form, visibleQuestions, questions, answers, times, startedAt, slug, total, hiddenFields]);
 
   useEffect(() => { if (formEnded && step >= 0 && step < total) { accrueTime(); setDir(1); setStep(total); } }, [formEnded]);
 

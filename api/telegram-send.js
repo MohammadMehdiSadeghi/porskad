@@ -67,19 +67,21 @@ export default async function handler(req, res) {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // ─── نرمال‌سازی form_id: می‌تونه UUID باشه یا public_id ("fr_...") ───
-    // از Embed ممکنه public_id اومده باشه؛ اینجا به UUID واقعی تبدیلش می‌کنیم.
+    // ─── نرمال‌سازی form_id: می‌تونه UUID باشه یا public_id ("fr_...") یا slug ───
     let resolvedFormId = form_id;
-    if (typeof form_id === "string" && form_id.startsWith("fr_")) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(form_id));
+    if (!isUuid) {
       const { data: f, error: fErr } = await supabase
         .from("forms")
         .select("id")
-        .eq("public_id", form_id)
+        .or(`public_id.eq.${form_id},slug.eq.${form_id}`)
+        .is("deleted_at", null)
         .maybeSingle();
-      if (!fErr && f) resolvedFormId = f.id;
-      else {
-        console.warn("telegram-send: form not found by public_id:", form_id, fErr?.message);
-        return res.status(200).json({ ok: true, skipped: true, reason: "no_form_public_id" });
+      if (!fErr && f) {
+        resolvedFormId = f.id;
+      } else {
+        console.warn("telegram-send: form not found by public_id/slug:", form_id, fErr?.message);
+        return res.status(200).json({ ok: true, skipped: true, reason: "no_form_found" });
       }
     }
 

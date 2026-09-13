@@ -318,6 +318,37 @@ export default async function handler(req, res) {
         }
 
         if (req.method === "POST") {
+          // بررسی سقف ساخت فرم بر اساس پلن کاربر
+          const { data: userProfile } = await clients.adminClient
+            .from("profiles")
+            .select("is_owner, plan, max_forms")
+            .eq("id", user.id)
+            .maybeSingle();
+
+          const isUnlimited = Boolean(
+            userProfile?.is_owner ||
+            userProfile?.plan === "unlimited" ||
+            (userProfile?.max_forms && Number(userProfile.max_forms) >= 999999)
+          );
+
+          if (!isUnlimited) {
+            const allowedMax = userProfile?.max_forms ? Number(userProfile.max_forms) : 5;
+            const { count: currentActiveForms } = await clients.adminClient
+              .from("forms")
+              .select("id", { count: "exact", head: true })
+              .or(`manager_id.eq.${user.id},created_by.eq.${user.id}`)
+              .is("deleted_at", null);
+
+            if ((currentActiveForms || 0) >= allowedMax) {
+              return res.status(403).json({
+                error: `سقف ساخت فرم‌های حساب شما تکمیل شده است (حداکثر ${allowedMax} فرم). لطفاً پلن خود را ارتقا دهید.`,
+                quota_exceeded: true,
+                max_forms: allowedMax,
+                current_forms: currentActiveForms,
+              });
+            }
+          }
+
           const body = req.body || {};
           const {
             title,
@@ -377,14 +408,14 @@ export default async function handler(req, res) {
       // شناسه فرم: segments[1]
       const formIdentifier = segments[1];
 
-      // کمکی: پیدا کردن فرم بر اساس id یا slug
+      // کمکی: پیدا کردن فرم بر اساس id، public_id یا slug
       async function findForm() {
         let q = clients.adminClient.from("forms").select("*").is("deleted_at", null);
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(formIdentifier);
         if (isUuid) {
-          q = q.eq("id", formIdentifier);
+          q = q.or(`id.eq.${formIdentifier},public_id.eq.${formIdentifier},slug.eq.${formIdentifier}`);
         } else {
-          q = q.eq("slug", formIdentifier);
+          q = q.or(`public_id.eq.${formIdentifier},slug.eq.${formIdentifier}`);
         }
         const { data, error } = await q.maybeSingle();
         if (error || !data) return null;
@@ -544,11 +575,82 @@ export default async function handler(req, res) {
 
         // ثبت پاسخ جدید (Submit): POST /api/v1/forms/:id/responses
         if (segments.length === 3 && req.method === "POST") {
+          // بررسی فعال بودن فرم
+          if (!form.published || form.archived) {
+            return res.status(400).json({ error: "این فرم در دسترس نیست یا غیرفعال شده است." });
+          }
+
+          // بررسی سقف مجاز پاسخ‌های این فرم
+          const maxLimit = form.max_responses_limit || form.settings?.max_responses_limit;
+          if (maxLimit && Number(maxLimit) > 0) {
+            const { count: completedCount } = await clients.adminClient
+              .from("responses")
+              .select("id", { count: "exact", head: true })
+              .eq("form_id", form.id)
+              .eq("is_complete", true);
+            if ((completedCount || 0) >= Number(maxLimit)) {
+              return res.status(400).json({ error: "ظرفیت ثبت پاسخ برای این فرم تکمیل شده است." });
+            }
+          }
+
           const body = req.body || {};
           const { answers = [], duration_seconds = null, device = "api", browser = "http-client" } = body;
 
           if (!Array.isArray(answers)) {
             return res.status(400).json({ error: "آرایه answers الزامی است." });
+          }
+
+          // اعتبارسنجی سوالات: استخراج سوالات معتبر این فرم جهت جلوگیری از ارسال شناسه‌های نامعتبر
+          const { data: formQuestions } = await clients.adminClient
+            .from("questions")
+            .select("id, title, required, type")
+            .eq("form_id", form.id);
+          
+          const validQIds = new Set((formQuestions || []).map((q) => q.id));
+          const answersToInsert = [];
+          for (const a of answers) {
+            if (!a.question_id || !validQIds.has(a.question_id)) {
+              continue; // نادیده گرفتن سوالاتی که متعلق به این فرم نیستند
+            }
+            answersToInsert.push({
+              question_id: a.question_id,
+              value: a.value,
+              time_spent_seconds: a.time_spent_seconds || null,
+            });
+          }
+
+          // بررسی سهمیه ماهانه مالک فرم (monthly_responses_used vs max_responses_per_month)
+          const formOwnerId = form.manager_id || form.created_by;
+          if (formOwnerId) {
+            const { data: ownerProf } = await clients.adminClient
+              .from("profiles")
+              .select("id, is_owner, plan, max_responses_per_month, monthly_responses_used")
+              .eq("id", formOwnerId)
+              .maybeSingle();
+
+            const isOwnerUnlimited = Boolean(
+              ownerProf?.is_owner ||
+              ownerProf?.plan === "unlimited" ||
+              (ownerProf?.max_responses_per_month && Number(ownerProf.max_responses_per_month) >= 999999)
+            );
+
+            if (!isOwnerUnlimited && ownerProf) {
+              const used = Number(ownerProf.monthly_responses_used) || 0;
+              const allowed = Number(ownerProf.max_responses_per_month) || 100;
+              if (used >= allowed) {
+                return res.status(403).json({ error: "سهمیه ماهانه دریافت پاسخ برای فرم‌های این حساب به پایان رسیده است." });
+              }
+            }
+
+            // افزایش سهمیه ماهانه مصرف‌شده
+            await clients.adminClient.rpc("increment_monthly_responses", { p_user_id: formOwnerId }).catch(async () => {
+              if (ownerProf) {
+                await clients.adminClient
+                  .from("profiles")
+                  .update({ monthly_responses_used: (Number(ownerProf.monthly_responses_used) || 0) + 1 })
+                  .eq("id", formOwnerId);
+              }
+            });
           }
 
           // ایجاد رکورد پاسخ در responses
@@ -569,15 +671,40 @@ export default async function handler(req, res) {
           if (respErr) return res.status(400).json({ error: respErr.message });
 
           // درج جواب‌ها در answers
-          if (answers.length > 0) {
-            const answersToInsert = answers.map((a) => ({
+          if (answersToInsert.length > 0) {
+            const formatted = answersToInsert.map((a) => ({
+              ...a,
               response_id: respRow.id,
-              question_id: a.question_id,
-              value: a.value,
-              time_spent_seconds: a.time_spent_seconds || null,
             }));
+            await clients.adminClient.from("answers").insert(formatted);
+          }
 
-            await clients.adminClient.from("answers").insert(answersToInsert);
+          // ارسال پیام تلگرام در پس‌زمینه (اگر ربات تلگرام فعال باشد)
+          try {
+            fetch(`${origin}/api/telegram-send`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ form_id: form.id, response_id: respRow.id }),
+            }).catch(() => {});
+          } catch {}
+
+          // دیسپچ وب‌هوک در صورت وجود
+          const webhookUrl = form.webhook_url || form.settings?.webhook_url;
+          if (webhookUrl) {
+            try {
+              fetch(webhookUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  event: "response.submitted",
+                  form_id: form.id,
+                  form_title: form.title,
+                  response_id: respRow.id,
+                  submitted_at: respRow.submitted_at,
+                  answers: answersToInsert,
+                }),
+              }).catch(() => {});
+            } catch {}
           }
 
           return res.status(201).json({
@@ -643,6 +770,19 @@ export default async function handler(req, res) {
         if (!form) return res.status(404).json({ error: "فرم یافت نشد." });
 
         if (req.method === "GET") {
+          const user = await getUserFromReq(req, clients);
+          const isOwnerOrAdmin = user && (
+            form.manager_id === user.id ||
+            form.created_by === user.id
+          );
+
+          // اگر فرم در وضعیت پیش‌نویس (منتشرنشده) یا آرشیو باشد، فقط مالک به آن دسترسی دارد
+          if (!form.published || form.archived) {
+            if (!isOwnerOrAdmin) {
+              return res.status(404).json({ error: "فرم یافت نشد یا هنوز منتشر نشده است." });
+            }
+          }
+
           // دریافت سوالات مرتبط
           const { data: questions } = await clients.adminClient
             .from("questions")
@@ -650,9 +790,29 @@ export default async function handler(req, res) {
             .eq("form_id", form.id)
             .order("position", { ascending: true });
 
+          // پاکسازی فیلدهای داخلی برای درخواست‌های عمومی
+          const safeForm = isOwnerOrAdmin
+            ? form
+            : {
+                id: form.id,
+                slug: form.slug,
+                public_id: form.public_id || form.id,
+                title: form.title,
+                description: form.description,
+                form_type: form.form_type,
+                published: form.published,
+                welcome_title: form.welcome_title,
+                welcome_message: form.welcome_message,
+                exit_title: form.exit_title,
+                exit_message: form.exit_message,
+                default_theme: form.default_theme,
+                created_at: form.created_at,
+                updated_at: form.updated_at,
+              };
+
           return res.status(200).json({
             form: {
-              ...form,
+              ...safeForm,
               public_url: `${origin}/f/${form.slug}`,
               embed_url: `${origin}/embed/${form.slug}`,
             },
@@ -700,12 +860,15 @@ export default async function handler(req, res) {
             return res.status(403).json({ error: "شما اجازه حذف این فرم را ندارید." });
           }
 
-          // حذف سوالات و فرم
-          await clients.adminClient.from("questions").delete().eq("form_id", form.id);
-          const { error: delErr } = await clients.adminClient.from("forms").delete().eq("id", form.id);
+          // حذف نرم (Soft Delete) جهت امکان بازیابی از سطل زباله و محافظت از تاریخچه پاسخ‌ها
+          const nowIso = new Date().toISOString();
+          const { error: delErr } = await clients.adminClient
+            .from("forms")
+            .update({ deleted_at: nowIso, published: false })
+            .eq("id", form.id);
 
           if (delErr) return res.status(400).json({ error: delErr.message });
-          return res.status(200).json({ success: true, message: "فرم و تمامی سوالات آن با موفقیت حذف شدند." });
+          return res.status(200).json({ success: true, message: "فرم به سطل زباله منتقل شد." });
         }
 
         return res.status(405).json({ error: "Method not allowed" });
