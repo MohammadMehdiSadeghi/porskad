@@ -86,14 +86,14 @@ export default function ConfirmDialog({
                 <button
                   type="button"
                   onClick={onCancel}
-                  className="flex-1 inline-flex items-center justify-center bg-white dark:bg-slate-800 border-2 border-ink dark:border-slate-600 text-ink dark:text-slate-200 font-extrabold py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] shadow-[2.75px_2.75px_0_#292827] dark:shadow-[2.75px_2.75px_0_#000000] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-150 text-sm sm:text-base cursor-pointer"
+                  className="flex-1 inline-flex items-center justify-center bg-white dark:bg-slate-800 border-2 border-ink dark:border-slate-600 text-ink dark:text-slate-200 font-extrabold py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] shadow-[2.75px_2.75px_0_#292827] dark:shadow-[2.75px_2.75px_0_#000000] hover:scale-[1.02] active:scale-[0.97] transition-all duration-200 ease-out text-sm sm:text-base cursor-pointer"
                 >
                   بازگشت و ویرایش
                 </button>
                 <button
                   type="button"
                   onClick={onConfirm}
-                  className="flex-1 inline-flex items-center justify-center bg-ecosystem-normal border-2 border-ecosystem-dark text-white font-extrabold py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] shadow-[2.75px_2.75px_0_#2e7068] dark:shadow-[2.75px_2.75px_0_#1f413d] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-150 text-sm sm:text-base cursor-pointer"
+                  className="flex-1 inline-flex items-center justify-center bg-ecosystem-normal border-2 border-ecosystem-dark text-white font-extrabold py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] shadow-[2.75px_2.75px_0_#2e7068] dark:shadow-[2.75px_2.75px_0_#1f413d] hover:scale-[1.02] active:scale-[0.97] transition-all duration-200 ease-out text-sm sm:text-base cursor-pointer"
                 >
                   {allFilled ? "ارسال نهایی" : "ارسال با فیلدهای خالی"}
                 </button>

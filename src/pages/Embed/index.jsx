@@ -657,7 +657,7 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full inline-flex items-center justify-center bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] font-extrabold shadow-[2.75px_2.75px_0_#2e7068] hover:shadow-[3.75px_3.75px_0_#2e7068] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-sm sm:text-base cursor-pointer"
+                  className="w-full inline-flex items-center justify-center bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] font-extrabold shadow-[2.75px_2.75px_0_#2e7068] hover:shadow-[3.75px_3.75px_0_#2e7068] hover:scale-[1.02] active:scale-[0.97] transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-sm sm:text-base cursor-pointer"
                 >
                   {submitting ? "در حال ثبت..." : "ارسال پاسخ‌ها"}
                 </button>
@@ -1171,7 +1171,7 @@ export default function EmbedForm() {
                         type="button"
                         onClick={goNext}
                         disabled={visibleTotal === 0}
-                        className="inline-flex items-center justify-center bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-6 sm:px-7 py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] font-extrabold shadow-[2.75px_2.75px_0_#2e7068] hover:shadow-[3.75px_3.75px_0_#2e7068] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-sm sm:text-base cursor-pointer"
+                        className="inline-flex items-center justify-center bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-6 sm:px-7 py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] font-extrabold shadow-[2.75px_2.75px_0_#2e7068] hover:shadow-[3.75px_3.75px_0_#2e7068] hover:scale-[1.02] active:scale-[0.97] transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-sm sm:text-base cursor-pointer"
                       >
                         شروع
                       </button>
@@ -1207,7 +1207,7 @@ export default function EmbedForm() {
                       <button
                         type="button"
                         onClick={goBack}
-                        className="inline-flex items-center justify-center bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-ink dark:text-slate-200 px-3.5 sm:px-4 py-2 rounded-pill-md [corner-shape:squircle] font-extrabold shadow-[2px_2px_0_#cbd5e1] dark:shadow-[2px_2px_0_#000000] hover:bg-slate-200 dark:hover:bg-slate-700 hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-150 text-xs sm:text-sm cursor-pointer"
+                        className="inline-flex items-center justify-center bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-ink dark:text-slate-200 px-3.5 sm:px-4 py-2 rounded-pill-md [corner-shape:squircle] font-extrabold shadow-[2px_2px_0_#cbd5e1] dark:shadow-[2px_2px_0_#000000] hover:bg-slate-200 dark:hover:bg-slate-700 hover:scale-[1.02] active:scale-[0.97] transition-all duration-200 ease-out text-xs sm:text-sm cursor-pointer"
                       >
                         برگشت
                       </button>
@@ -1215,7 +1215,7 @@ export default function EmbedForm() {
                         <button
                           type="button"
                           onClick={goNext}
-                          className="inline-flex items-center justify-center bg-male-normal border-2 border-male-dark text-white px-5 sm:px-6 py-2.5 rounded-pill-md [corner-shape:squircle] font-bold shadow-[2.75px_2.75px_0_#0b0f1f] hover:shadow-[3.75px_3.75px_0_#0b0f1f] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-150 text-xs sm:text-sm cursor-pointer"
+                          className="inline-flex items-center justify-center bg-male-normal border-2 border-male-dark text-white px-5 sm:px-6 py-2.5 rounded-pill-md [corner-shape:squircle] font-bold shadow-[2.75px_2.75px_0_#0b0f1f] hover:shadow-[3.75px_3.75px_0_#0b0f1f] hover:scale-[1.02] active:scale-[0.97] transition-all duration-200 ease-out text-xs sm:text-sm cursor-pointer"
                         >
                           بعدی ←
                         </button>
@@ -1224,7 +1224,7 @@ export default function EmbedForm() {
                           type="button"
                           onClick={openConfirm}
                           disabled={submitting}
-                          className="inline-flex items-center justify-center bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-5 sm:px-6 py-2.5 rounded-pill-md [corner-shape:squircle] font-bold shadow-[2.75px_2.75px_0_#2e7068] hover:shadow-[3.75px_3.75px_0_#2e7068] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-xs sm:text-sm cursor-pointer"
+                          className="inline-flex items-center justify-center bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-5 sm:px-6 py-2.5 rounded-pill-md [corner-shape:squircle] font-bold shadow-[2.75px_2.75px_0_#2e7068] hover:shadow-[3.75px_3.75px_0_#2e7068] hover:scale-[1.02] active:scale-[0.97] transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-xs sm:text-sm cursor-pointer"
                         >
                           {submitting ? "در حال ثبت..." : "ثبت و ارسال"}
                         </button>

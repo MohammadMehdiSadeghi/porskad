@@ -39,6 +39,31 @@
     html.dark button:not([class*="bg-"]) {
         background-color: #1E293B;
     }
+
+    /* ─── یکپارچه‌سازی انیمیشن تمام دکمه‌ها در سراسر سایت (Scale Animation) ─── */
+    button:not(:disabled):not(.no-anim),
+    [role="button"]:not([aria-disabled="true"]):not(.no-anim),
+    .btn:not(:disabled) {
+        transition-property: transform, background-color, border-color, color, box-shadow;
+        transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+        transition-duration: 200ms;
+    }
+    button:not(:disabled):not(.no-anim):hover,
+    [role="button"]:not([aria-disabled="true"]):not(.no-anim):hover,
+    .btn:not(:disabled):hover {
+        transform: scale(1.02);
+    }
+    button:not(:disabled):not(.no-anim):active,
+    [role="button"]:not([aria-disabled="true"]):not(.no-anim):active,
+    .btn:not(:disabled):active {
+        transform: scale(0.97);
+    }
+    button:disabled,
+    [role="button"][aria-disabled="true"] {
+        transform: none !important;
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
 }
 
 /* ─── یکپارچه‌سازی و راست‌چین بودن placeholder تمام فرم‌ها ─── */
