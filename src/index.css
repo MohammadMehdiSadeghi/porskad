@@ -35,13 +35,6 @@
         line-height: 1.3;
         font-weight: 800;
     }
-    /* تضمین پس‌زمینه سالید و غیرشفاف برای تمام دکمه‌ها */
-    button:not([class*="bg-"]) {
-        background-color: #F1F5F9;
-    }
-    html.dark button:not([class*="bg-"]) {
-        background-color: #1E293B;
-    }
 
     /* ─── یکپارچه‌سازی انیمیشن تمام دکمه‌ها در سراسر سایت (Scale Animation) ─── */
     button:not(:disabled):not(.no-anim),
@@ -67,6 +60,138 @@
         cursor: not-allowed;
         opacity: 0.5;
     }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DESIGN SYSTEM BUTTON CLASSES (.btn, .btn-primary, etc.)
+   بر اساس ۵ تم اصلی برند پرس‌کاد و سیستم طراحی رکاد (DESIGN_SYSTEM.md)
+   ══════════════════════════════════════════════════════════════ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    border: 2px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    user-select: none;
+    white-space: nowrap;
+}
+
+/* ۱. تم اکوسیستم (Primary / Teal) */
+.btn-primary,
+.btn-ecosystem,
+.btn-teal {
+    background-color: #59BBAF !important;
+    color: #ffffff !important;
+    border-color: #347e75 !important;
+    box-shadow: 2.75px 2.75px 0 #2e7068 !important;
+}
+.btn-primary:hover,
+.btn-ecosystem:hover,
+.btn-teal:hover {
+    background-color: #50A89E !important;
+    box-shadow: 3.75px 3.75px 0 #2e7068 !important;
+}
+
+/* ۲. تم پسر (Sec / Male / Navy) */
+.btn-sec,
+.btn-male,
+.btn-navy {
+    background-color: #202A5A !important;
+    color: #ffffff !important;
+    border-color: #15244a !important;
+    box-shadow: 2.75px 2.75px 0 #0b0f1f !important;
+}
+.btn-sec:hover,
+.btn-male:hover,
+.btn-navy:hover {
+    background-color: #182044 !important;
+    box-shadow: 3.75px 3.75px 0 #0b0f1f !important;
+}
+
+/* ۳. تم دختر (Girl / Female / Magenta) */
+.btn-girl,
+.btn-female,
+.btn-magenta {
+    background-color: #E0195B !important;
+    color: #ffffff !important;
+    border-color: #ce1754 !important;
+    box-shadow: 2.75px 2.75px 0 #ce1754 !important;
+}
+.btn-girl:hover,
+.btn-female:hover,
+.btn-magenta:hover {
+    background-color: #A81344 !important;
+    box-shadow: 3.75px 3.75px 0 #ce1754 !important;
+}
+
+/* ۴. تم کالج (Third / College / Orange) */
+.btn-third,
+.btn-college,
+.btn-orange {
+    background-color: #F8A41D !important;
+    color: #ffffff !important;
+    border-color: #C57A07 !important;
+    box-shadow: 2.75px 2.75px 0 #C57A07 !important;
+}
+.btn-third:hover,
+.btn-college:hover,
+.btn-orange:hover {
+    background-color: #BA7B16 !important;
+    box-shadow: 3.75px 3.75px 0 #C57A07 !important;
+}
+
+/* ۵. تم کلوپ (Club / Purple) */
+.btn-club,
+.btn-purple {
+    background-color: #652D90 !important;
+    color: #ffffff !important;
+    border-color: #4C226C !important;
+    box-shadow: 2.75px 2.75px 0 #231032 !important;
+}
+.btn-club:hover,
+.btn-purple:hover {
+    background-color: #4C226C !important;
+    box-shadow: 3.75px 3.75px 0 #231032 !important;
+}
+
+/* دکمه ثانویه خوش‌رنگ (Secondary - Ecosystem Soft Tint) */
+.btn-secondary {
+    background-color: #EEF8F7 !important;
+    color: #202A5A !important;
+    border-color: #59BBAF !important;
+    box-shadow: 2px 2px 0 #59BBAF !important;
+}
+.btn-secondary:hover {
+    background-color: #59BBAF !important;
+    color: #ffffff !important;
+}
+
+/* دکمه خطر / حذف (Danger) */
+.btn-danger {
+    background-color: #E0195B !important;
+    color: #ffffff !important;
+    border-color: #A81344 !important;
+    box-shadow: 2.75px 2.75px 0 #4c0519 !important;
+}
+.btn-danger:hover {
+    background-color: #A81344 !important;
+}
+
+/* Dark Mode Styles for .btn classes */
+html.dark .btn-secondary {
+    background-color: #1E293B !important;
+    color: #2DD4BF !important;
+    border-color: #2DD4BF !important;
+    box-shadow: 2px 2px 0 #1f413d !important;
+}
+html.dark .btn-secondary:hover {
+    background-color: #2DD4BF !important;
+    color: #0B0F19 !important;
 }
 
 /* ─── یکپارچه‌سازی و راست‌چین بودن placeholder تمام فرم‌ها ─── */

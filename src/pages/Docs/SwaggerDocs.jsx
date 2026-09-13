@@ -215,7 +215,7 @@ print(response.json())`
           <div className="flex items-center gap-3">
             <Link
               to="/admin"
-              className="flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-all"
+              className="flex items-center gap-1.5 text-xs font-semibold text-slate-200 hover:text-white bg-white/10 hover:bg-teal px-3 py-1.5 rounded-lg border border-white/20 transition-all"
             >
               <ArrowLeft size={14} />
               <span>Back to App</span>
@@ -239,7 +239,7 @@ print(response.json())`
               target="_blank"
               rel="noopener noreferrer"
               download="porskad-openapi.json"
-              className="text-xs font-semibold bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all"
+              className="text-xs font-semibold bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-white px-3 py-1.5 rounded-lg border border-amber-500/40 flex items-center gap-1.5 transition-all"
               title="Download OpenAPI 3.0 JSON specification"
             >
               <Download size={14} />
@@ -298,8 +298,8 @@ print(response.json())`
               }}
               className={`text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
                 showSnippets
-                  ? "bg-slate-900 text-white dark:bg-teal-600"
-                  : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"
+                  ? "bg-teal text-white shadow-xs"
+                  : "bg-teal/10 hover:bg-teal hover:text-white text-teal dark:text-teal-300 border border-teal-500/30"
               }`}
             >
               <Terminal size={14} />
@@ -314,8 +314,8 @@ print(response.json())`
               }}
               className={`text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
                 showQuestionTypes
-                  ? "bg-slate-900 text-white dark:bg-teal-600"
-                  : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"
+                  ? "bg-purple text-white shadow-xs"
+                  : "bg-purple/10 hover:bg-purple hover:text-white text-purple dark:text-purple-300 border border-purple/30"
               }`}
             >
               <Layers size={14} />
@@ -455,12 +455,14 @@ print(response.json())`
         .swagger-ui .col-12 { padding: 0 !important; }
         .swagger-ui .opblock { border-radius: 12px !important; margin: 0 0 12px !important; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05) !important; }
         .swagger-ui .opblock-summary { border-radius: 12px !important; }
-        .swagger-ui .btn.authorize { background-color: #0d9488 !important; border-color: #0d9488 !important; color: white !important; border-radius: 8px !important; }
+        .swagger-ui .btn.authorize { background-color: #0d9488 !important; border-color: #0d9488 !important; color: white !important; font-weight: 700 !important; border-radius: 8px !important; box-shadow: 2.75px 2.75px 0 #2e7068 !important; }
         .swagger-ui .btn.authorize svg { fill: white !important; }
-        .swagger-ui .btn.execute { background-color: #2563eb !important; border-color: #2563eb !important; color: white !important; border-radius: 8px !important; }
-        .swagger-ui .btn.try-out__btn { border-radius: 8px !important; }
-        .swagger-ui select { border-radius: 8px !important; }
-        .swagger-ui input[type=text] { border-radius: 8px !important; }
+        .swagger-ui .btn.execute { background-color: #202A5A !important; border-color: #202A5A !important; color: white !important; font-weight: 700 !important; border-radius: 8px !important; box-shadow: 2.75px 2.75px 0 #0b0f1f !important; }
+        .swagger-ui .btn.try-out__btn { background-color: #59BBAF !important; border-color: #347e75 !important; color: white !important; font-weight: 700 !important; border-radius: 8px !important; box-shadow: 2.75px 2.75px 0 #2e7068 !important; }
+        .swagger-ui .btn.cancel { background-color: #E0195B !important; border-color: #ce1754 !important; color: white !important; font-weight: 700 !important; border-radius: 8px !important; box-shadow: 2.75px 2.75px 0 #ce1754 !important; }
+        .swagger-ui .btn.download-url { background-color: #F8A41D !important; border-color: #C57A07 !important; color: white !important; font-weight: 700 !important; border-radius: 8px !important; }
+        .swagger-ui select { border-radius: 8px !important; border: 2px solid #58bdaf !important; }
+        .swagger-ui input[type=text] { border-radius: 8px !important; border: 2px solid #cbd5e1 !important; }
       `}</style>
     </div>
   );

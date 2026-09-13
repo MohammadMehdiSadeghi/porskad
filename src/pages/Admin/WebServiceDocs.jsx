@@ -101,13 +101,14 @@ function EmbeddedSwaggerUI({ token }) {
         .swagger-ui .wrapper { padding: 0 !important; max-width: 100% !important; }
         .swagger-ui .col-12 { padding: 0 !important; }
         .swagger-ui .opblock { border-radius: 14px !important; margin: 0 0 12px !important; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.06) !important; }
-        .swagger-ui .opblock-summary { border-radius: 14px !important; }
-        .swagger-ui .btn.authorize { background-color: #0d9488 !important; border-color: #0d9488 !important; color: white !important; border-radius: 8px !important; }
+        .swagger-ui .btn.authorize { background-color: #0d9488 !important; border-color: #0d9488 !important; color: white !important; font-weight: 700 !important; border-radius: 8px !important; box-shadow: 2.75px 2.75px 0 #2e7068 !important; }
         .swagger-ui .btn.authorize svg { fill: white !important; }
-        .swagger-ui .btn.execute { background-color: #2563eb !important; border-color: #2563eb !important; color: white !important; border-radius: 8px !important; }
-        .swagger-ui .btn.try-out__btn { border-radius: 8px !important; }
-        .swagger-ui select { border-radius: 8px !important; }
-        .swagger-ui input[type=text] { border-radius: 8px !important; }
+        .swagger-ui .btn.execute { background-color: #202A5A !important; border-color: #202A5A !important; color: white !important; font-weight: 700 !important; border-radius: 8px !important; box-shadow: 2.75px 2.75px 0 #0b0f1f !important; }
+        .swagger-ui .btn.try-out__btn { background-color: #59BBAF !important; border-color: #347e75 !important; color: white !important; font-weight: 700 !important; border-radius: 8px !important; box-shadow: 2.75px 2.75px 0 #2e7068 !important; }
+        .swagger-ui .btn.cancel { background-color: #E0195B !important; border-color: #ce1754 !important; color: white !important; font-weight: 700 !important; border-radius: 8px !important; box-shadow: 2.75px 2.75px 0 #ce1754 !important; }
+        .swagger-ui .btn.download-url { background-color: #F8A41D !important; border-color: #C57A07 !important; color: white !important; font-weight: 700 !important; border-radius: 8px !important; }
+        .swagger-ui select { border-radius: 8px !important; border: 2px solid #58bdaf !important; }
+        .swagger-ui input[type=text] { border-radius: 8px !important; border: 2px solid #cbd5e1 !important; }
       `}</style>
       {loading && (
         <div className="absolute inset-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xs flex flex-col items-center justify-center gap-3 z-10">
@@ -275,7 +276,7 @@ print(response.json())`,
         </div>
 
         <Button
-          variant="white"
+          variant="navy"
           size="sm"
           as="a"
           href="/docs"
@@ -632,7 +633,7 @@ print(response.json())`,
 
                     <div className="flex items-center gap-2">
                       <Button
-                        variant="white"
+                        variant="secondary"
                         size="sm"
                         onClick={() => handleCopyText(docsUrl, "docs")}
                         className="flex items-center gap-1.5"
@@ -702,7 +703,7 @@ print(response.json())`,
 
                     <div className="flex items-center gap-2">
                       <Button
-                        variant="white"
+                        variant="secondary"
                         size="sm"
                         onClick={() => handleCopyText(openApiUrl, "openapi")}
                         className="flex items-center gap-1.5"
@@ -747,7 +748,7 @@ print(response.json())`,
                     </span>
 
                     <Button
-                      variant="white"
+                      variant="orange"
                       size="sm"
                       onClick={() => handleCopyText(openApiJsonText, "openapi_raw")}
                       disabled={!openApiJsonText}
@@ -832,7 +833,7 @@ print(response.json())`,
 
                     {token && (
                       <Button
-                        variant="white"
+                        variant="teal"
                         size="sm"
                         onClick={() => handleCopyText(`Authorization: Bearer ${token}`, "copy_full_auth")}
                         className="flex items-center gap-1.5 text-xs"

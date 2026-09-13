@@ -156,42 +156,42 @@
 }
 
 .sa-btn-primary {
-  background: var(--sa-link);
-  color: var(--sa-surface);
+  background: var(--sa-link) !important;
+  color: var(--sa-surface) !important;
 }
 
 .sa-btn-primary:hover {
-  background: var(--sa-link-strong);
+  background: var(--sa-link-strong) !important;
 }
 
 .sa-btn-secondary {
-  background: var(--sa-surface-2, #f4f4f4);
-  color: var(--sa-text-0);
+  background: var(--sa-surface-2, #f4f4f4) !important;
+  color: var(--sa-text-0) !important;
   border: 1px solid var(--sa-field-border);
 }
 
 .sa-btn-secondary:hover {
-  background: var(--sa-surface-4, #e0e0e0);
+  background: var(--sa-surface-4, #e0e0e0) !important;
 }
 
 .sa-btn-danger {
-  background: var(--sa-danger);
-  color: var(--sa-surface);
+  background: var(--sa-danger) !important;
+  color: var(--sa-surface) !important;
 }
 
 .sa-btn-danger:hover {
-  background: var(--sa-danger-strong);
+  background: var(--sa-danger-strong) !important;
 }
 
 .sa-btn-ghost {
-  background: var(--sa-surface-1, #ffffff);
-  color: var(--sa-link);
+  background: var(--sa-surface-1, #ffffff) !important;
+  color: var(--sa-link) !important;
   border: 1px solid var(--sa-field-border, #e0e0e0);
   padding: 0.25rem 0.5rem;
 }
 
 .sa-btn-ghost:hover {
-  background: var(--sa-surface-3, #f4f4f4);
+  background: var(--sa-surface-3, #f4f4f4) !important;
 }
 
 .sa-btn-sm {

@@ -2,29 +2,113 @@
 import clsx from "./clsx";
 
 const VARIANTS = {
+  // ۱. تم اکوسیستم (Ecosystem / Primary / Teal)
   teal: clsx(
     "bg-teal text-white border-teal-text hover:bg-teal-hover",
     "shadow-[2.75px_2.75px_0_#2e7068] hover:shadow-[3.75px_3.75px_0_#2e7068]",
     "dark:bg-teal dark:text-[#0B0F19] dark:border-teal dark:hover:bg-teal-light",
     "dark:shadow-[2.75px_2.75px_0_#1f413d] dark:hover:shadow-[3.75px_3.75px_0_#1f413d]"
   ),
+  primary: clsx(
+    "bg-teal text-white border-teal-text hover:bg-teal-hover",
+    "shadow-[2.75px_2.75px_0_#2e7068] hover:shadow-[3.75px_3.75px_0_#2e7068]",
+    "dark:bg-teal dark:text-[#0B0F19] dark:border-teal dark:hover:bg-teal-light",
+    "dark:shadow-[2.75px_2.75px_0_#1f413d] dark:hover:shadow-[3.75px_3.75px_0_#1f413d]"
+  ),
+  ecosystem: clsx(
+    "bg-teal text-white border-teal-text hover:bg-teal-hover",
+    "shadow-[2.75px_2.75px_0_#2e7068] hover:shadow-[3.75px_3.75px_0_#2e7068]",
+    "dark:bg-teal dark:text-[#0B0F19] dark:border-teal dark:hover:bg-teal-light",
+    "dark:shadow-[2.75px_2.75px_0_#1f413d] dark:hover:shadow-[3.75px_3.75px_0_#1f413d]"
+  ),
+
+  // ۲. تم پسر (Male / Sec / Navy)
   navy: clsx(
     "bg-navy text-white border-[#15244a] hover:bg-navy-hover",
     "shadow-[2.75px_2.75px_0_#0b0f1f] hover:shadow-[3.75px_3.75px_0_#0b0f1f]",
     "dark:bg-[#1E293B] dark:text-slate-100 dark:border-slate-500 dark:hover:bg-slate-700",
     "dark:shadow-[2.75px_2.75px_0_#000000] dark:hover:shadow-[3.75px_3.75px_0_#000000]"
   ),
-  indigo: clsx(
-    "bg-navy text-white border-navy hover:bg-navy-hover",
+  sec: clsx(
+    "bg-navy text-white border-[#15244a] hover:bg-navy-hover",
     "shadow-[2.75px_2.75px_0_#0b0f1f] hover:shadow-[3.75px_3.75px_0_#0b0f1f]",
-    "dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600 dark:hover:bg-slate-700",
+    "dark:bg-[#1E293B] dark:text-slate-100 dark:border-slate-500 dark:hover:bg-slate-700",
     "dark:shadow-[2.75px_2.75px_0_#000000] dark:hover:shadow-[3.75px_3.75px_0_#000000]"
   ),
+  male: clsx(
+    "bg-navy text-white border-[#15244a] hover:bg-navy-hover",
+    "shadow-[2.75px_2.75px_0_#0b0f1f] hover:shadow-[3.75px_3.75px_0_#0b0f1f]",
+    "dark:bg-[#1E293B] dark:text-slate-100 dark:border-slate-500 dark:hover:bg-slate-700",
+    "dark:shadow-[2.75px_2.75px_0_#000000] dark:hover:shadow-[3.75px_3.75px_0_#000000]"
+  ),
+
+  // ۳. تم دختر (Female / Girl / Magenta)
   magenta: clsx(
     "bg-magenta text-white border-magenta-text hover:bg-magenta-text",
     "shadow-[2.75px_2.75px_0_#ce1754] hover:shadow-[3.75px_3.75px_0_#ce1754]",
     "dark:bg-magenta dark:text-white dark:border-pink-400 dark:hover:bg-pink-600",
     "dark:shadow-[2.75px_2.75px_0_#4e0920] dark:hover:shadow-[3.75px_3.75px_0_#4e0920]"
+  ),
+  girl: clsx(
+    "bg-magenta text-white border-magenta-text hover:bg-magenta-text",
+    "shadow-[2.75px_2.75px_0_#ce1754] hover:shadow-[3.75px_3.75px_0_#ce1754]",
+    "dark:bg-magenta dark:text-white dark:border-pink-400 dark:hover:bg-pink-600",
+    "dark:shadow-[2.75px_2.75px_0_#4e0920] dark:hover:shadow-[3.75px_3.75px_0_#4e0920]"
+  ),
+  female: clsx(
+    "bg-magenta text-white border-magenta-text hover:bg-magenta-text",
+    "shadow-[2.75px_2.75px_0_#ce1754] hover:shadow-[3.75px_3.75px_0_#ce1754]",
+    "dark:bg-magenta dark:text-white dark:border-pink-400 dark:hover:bg-pink-600",
+    "dark:shadow-[2.75px_2.75px_0_#4e0920] dark:hover:shadow-[3.75px_3.75px_0_#4e0920]"
+  ),
+
+  // ۴. تم کالج (College / Third / Orange)
+  orange: clsx(
+    "bg-orange text-white border-[#C57A07] hover:bg-orange-alt",
+    "shadow-[2.75px_2.75px_0_#C57A07] hover:shadow-[3.75px_3.75px_0_#C57A07]",
+    "dark:bg-orange dark:text-[#0B0F19] dark:border-amber-400 dark:hover:bg-amber-400",
+    "dark:shadow-[2.75px_2.75px_0_#57390a] dark:hover:shadow-[3.75px_3.75px_0_#57390a]"
+  ),
+  third: clsx(
+    "bg-orange text-white border-[#C57A07] hover:bg-orange-alt",
+    "shadow-[2.75px_2.75px_0_#C57A07] hover:shadow-[3.75px_3.75px_0_#C57A07]",
+    "dark:bg-orange dark:text-[#0B0F19] dark:border-amber-400 dark:hover:bg-amber-400",
+    "dark:shadow-[2.75px_2.75px_0_#57390a] dark:hover:shadow-[3.75px_3.75px_0_#57390a]"
+  ),
+  college: clsx(
+    "bg-orange text-white border-[#C57A07] hover:bg-orange-alt",
+    "shadow-[2.75px_2.75px_0_#C57A07] hover:shadow-[3.75px_3.75px_0_#C57A07]",
+    "dark:bg-orange dark:text-[#0B0F19] dark:border-amber-400 dark:hover:bg-amber-400",
+    "dark:shadow-[2.75px_2.75px_0_#57390a] dark:hover:shadow-[3.75px_3.75px_0_#57390a]"
+  ),
+
+  // ۵. تم کلوپ (Club / Purple)
+  club: clsx(
+    "bg-purple text-white border-[#3b1742] hover:bg-[#3b1742]",
+    "shadow-[2.75px_2.75px_0_#231032] hover:shadow-[3.75px_3.75px_0_#231032]",
+    "dark:bg-purple dark:text-white dark:border-purple-400 dark:hover:bg-purple-600",
+    "dark:shadow-[2.75px_2.75px_0_#231032] dark:hover:shadow-[3.75px_3.75px_0_#231032]"
+  ),
+  purple: clsx(
+    "bg-purple text-white border-[#3b1742] hover:bg-[#3b1742]",
+    "shadow-[2.75px_2.75px_0_#231032] hover:shadow-[3.75px_3.75px_0_#231032]",
+    "dark:bg-purple dark:text-white dark:border-purple-400 dark:hover:bg-purple-600",
+    "dark:shadow-[2.75px_2.75px_0_#231032] dark:hover:shadow-[3.75px_3.75px_0_#231032]"
+  ),
+
+  // Secondary خوش‌رنگ با تم اکوسیستم (Ecosystem Soft Tint)
+  secondary: clsx(
+    "bg-[#EEF8F7] text-navy border-teal hover:bg-teal hover:text-white",
+    "shadow-[2.75px_2.75px_0_#59BBAF] hover:shadow-[3.75px_3.75px_0_#59BBAF]",
+    "dark:bg-slate-800 dark:text-teal dark:border-teal dark:hover:bg-teal dark:hover:text-[#0B0F19]",
+    "dark:shadow-[2.75px_2.75px_0_#1f413d] dark:hover:shadow-[3.75px_3.75px_0_#1f413d]"
+  ),
+
+  danger: clsx(
+    "bg-rose-600 text-white border-rose-800 hover:bg-rose-700",
+    "shadow-[2.75px_2.75px_0_#4c0519] hover:shadow-[3.75px_3.75px_0_#4c0519]",
+    "dark:bg-rose-600 dark:text-white dark:border-rose-400 dark:hover:bg-rose-700",
+    "dark:shadow-[2.75px_2.75px_0_#1c0409] dark:hover:shadow-[3.75px_3.75px_0_#1c0409]"
   ),
   red: clsx(
     "bg-magenta text-white border-magenta-text hover:bg-magenta-text",
@@ -32,17 +116,17 @@ const VARIANTS = {
     "dark:bg-magenta dark:text-white dark:border-pink-400 dark:hover:bg-pink-600",
     "dark:shadow-[2.75px_2.75px_0_#4e0920] dark:hover:shadow-[3.75px_3.75px_0_#4e0920]"
   ),
+  indigo: clsx(
+    "bg-navy text-white border-navy hover:bg-navy-hover",
+    "shadow-[2.75px_2.75px_0_#0b0f1f] hover:shadow-[3.75px_3.75px_0_#0b0f1f]",
+    "dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600 dark:hover:bg-slate-700",
+    "dark:shadow-[2.75px_2.75px_0_#000000] dark:hover:shadow-[3.75px_3.75px_0_#000000]"
+  ),
   emerald: clsx(
     "bg-teal text-white border-teal-text hover:bg-teal-hover",
     "shadow-[2.75px_2.75px_0_#2e7068] hover:shadow-[3.75px_3.75px_0_#2e7068]",
     "dark:bg-teal dark:text-[#0B0F19] dark:border-teal dark:hover:bg-teal-light",
     "dark:shadow-[2.75px_2.75px_0_#1f413d] dark:hover:shadow-[3.75px_3.75px_0_#1f413d]"
-  ),
-  orange: clsx(
-    "bg-orange text-white border-[#C57A07] hover:bg-orange-alt",
-    "shadow-[2.75px_2.75px_0_#C57A07] hover:shadow-[3.75px_3.75px_0_#C57A07]",
-    "dark:bg-orange dark:text-[#0B0F19] dark:border-amber-400 dark:hover:bg-amber-400",
-    "dark:shadow-[2.75px_2.75px_0_#57390a] dark:hover:shadow-[3.75px_3.75px_0_#57390a]"
   ),
   white: clsx(
     "bg-white text-ink border-ink hover:bg-bg-neutral",
@@ -56,23 +140,11 @@ const VARIANTS = {
     "dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-700",
     "dark:shadow-[2px_2px_0_#000000] dark:hover:shadow-[3px_3px_0_#000000]"
   ),
-  danger: clsx(
-    "bg-rose-600 text-white border-rose-800 hover:bg-rose-700",
-    "shadow-[2.75px_2.75px_0_#4c0519] hover:shadow-[3.75px_3.75px_0_#4c0519]",
-    "dark:bg-rose-600 dark:text-white dark:border-rose-400 dark:hover:bg-rose-700",
-    "dark:shadow-[2.75px_2.75px_0_#1c0409] dark:hover:shadow-[3.75px_3.75px_0_#1c0409]"
-  ),
   outline: clsx(
     "bg-white text-navy border-ink/30 hover:bg-slate-100",
     "shadow-[2px_2px_0_#cbd5e1] hover:shadow-[3px_3px_0_#cbd5e1]",
     "dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600 dark:hover:bg-slate-700",
     "dark:shadow-[2px_2px_0_#000000] dark:hover:shadow-[3px_3px_0_#000000]"
-  ),
-  secondary: clsx(
-    "bg-slate-100 text-navy border-navy hover:bg-navy hover:text-white",
-    "shadow-[2.75px_2.75px_0_#202A5A] hover:shadow-[3.75px_3.75px_0_#202A5A]",
-    "dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-700 dark:hover:text-white",
-    "dark:shadow-[2.75px_2.75px_0_#000000] dark:hover:shadow-[3.75px_3.75px_0_#000000]"
   ),
   ghost: clsx(
     "bg-slate-100 text-navy border-slate-300 hover:bg-slate-200",
