@@ -341,7 +341,7 @@ export default function DiscountCodesPanel() {
   }, [codes, search, statusFilter]);
 
   return (
-    <div className="flex flex-col gap-6" dir="rtl">
+    <div className="flex flex-col gap-6 font-sans" dir="rtl">
       {/* هدر بخش و توضیحات */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -349,7 +349,7 @@ export default function DiscountCodesPanel() {
             <Ticket size={24} className="text-teal" />
             <span>مدیریت کدهای تخفیف و پروموشن</span>
           </h2>
-          <p className="text-xs sm:text-sm text-ink-subtle dark:text-slate-400 mt-1 font-medium leading-6">
+          <p className="text-sm font-semibold text-ink-subtle dark:text-slate-400 mt-1">
             تعریف کدهای تخفیف تخصصی درصدی یا ثابت، تعیین سقف تخفیف، محدودیت نفرات، تاریخ انقضا و اعمال مستقیم در خرید اشتراک.
           </p>
         </div>
@@ -370,8 +370,8 @@ export default function DiscountCodesPanel() {
               <Ticket size={24} />
             </div>
             <div>
-              <div className="text-xs font-bold text-ink-subtle dark:text-slate-400">کدهای فعال و معتبر</div>
-              <div className="text-2xl font-black text-navy dark:text-white mt-0.5">
+              <div className="text-xs font-black text-ink-subtle dark:text-slate-400">کدهای فعال و معتبر</div>
+              <div className="text-xl sm:text-2xl font-black text-navy dark:text-white mt-1">
                 {loading ? "..." : `${faNum(stats.active)} از ${faNum(stats.total)}`}
               </div>
             </div>
@@ -384,8 +384,8 @@ export default function DiscountCodesPanel() {
               <Users size={24} />
             </div>
             <div>
-              <div className="text-xs font-bold text-ink-subtle dark:text-slate-400">مجموع دفعات استفاده‌شده</div>
-              <div className="text-2xl font-black text-navy dark:text-white mt-0.5">
+              <div className="text-xs font-black text-ink-subtle dark:text-slate-400">مجموع دفعات استفاده‌شده</div>
+              <div className="text-xl sm:text-2xl font-black text-navy dark:text-white mt-1">
                 {loading ? "..." : `${faNum(stats.totalUses)} بار`}
               </div>
             </div>
@@ -398,8 +398,8 @@ export default function DiscountCodesPanel() {
               <Percent size={24} />
             </div>
             <div>
-              <div className="text-xs font-bold text-ink-subtle dark:text-slate-400">تخفیف‌های درصدی فعال</div>
-              <div className="text-2xl font-black text-navy dark:text-white mt-0.5">
+              <div className="text-xs font-black text-ink-subtle dark:text-slate-400">تخفیف‌های درصدی فعال</div>
+              <div className="text-xl sm:text-2xl font-black text-navy dark:text-white mt-1">
                 {loading ? "..." : faNum(codes.filter((c) => c.type === "percent" && c.isActive).length)}
               </div>
             </div>
@@ -416,7 +416,7 @@ export default function DiscountCodesPanel() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="جستجوی کد تخفیف یا عنوان..."
-            className="w-full pr-10 pl-3 py-2 bg-slate-50 dark:bg-slate-900 border border-ink/15 dark:border-slate-700 rounded-pill-md text-xs sm:text-sm font-bold text-ink dark:text-white focus:outline-none focus:border-teal"
+            className="w-full pr-10 pl-3.5 py-2.5 bg-slate-50 dark:bg-slate-900 border-2 border-ink/15 dark:border-slate-700 rounded-xl text-sm font-bold text-navy dark:text-white focus:outline-none focus:border-teal transition-colors font-sans"
           />
         </div>
 
@@ -433,7 +433,7 @@ export default function DiscountCodesPanel() {
               key={tab.id}
               type="button"
               onClick={() => setStatusFilter(tab.id)}
-              className={`px-3 py-1.5 rounded-pill-md text-xs font-bold transition-all ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap font-sans ${
                 statusFilter === tab.id
                   ? "bg-navy dark:bg-teal text-white dark:text-navy shadow-sm"
                   : "bg-slate-100 dark:bg-slate-800 text-ink dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
@@ -479,7 +479,7 @@ export default function DiscountCodesPanel() {
                 {/* ردیف بالا: کد + وضعیت + کپی */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-base sm:text-lg font-black tracking-wider text-navy dark:text-teal bg-teal/10 dark:bg-teal/20 px-3 py-1 rounded-xl border border-teal/30 select-all">
+                    <span className="font-sans text-base sm:text-lg font-black tracking-wider text-navy dark:text-teal bg-teal/10 dark:bg-teal/20 px-3.5 py-1.5 rounded-xl border border-teal/30 select-all">
                       {c.code}
                     </span>
                     <button
@@ -650,23 +650,23 @@ export default function DiscountCodesPanel() {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="text-xs font-bold text-ink dark:text-slate-300 block mb-1">کد تخفیف مورد نظر:</label>
+            <label className="text-xs font-black text-navy dark:text-slate-200 block mb-1.5">کد تخفیف مورد نظر:</label>
             <input
               type="text"
               dir="ltr"
               value={testCodeInput}
               onChange={(e) => setTestCodeInput(e.target.value)}
               placeholder="مثلاً WELCOME20"
-              className="w-full bg-white dark:bg-slate-900 border border-ink/20 dark:border-slate-700 rounded-pill-md px-3 py-2 text-xs sm:text-sm font-mono font-bold text-center uppercase"
+              className="w-full bg-white dark:bg-slate-900 border-2 border-ink/15 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-black text-center uppercase tracking-wider text-navy dark:text-white focus:border-teal outline-none transition-colors font-sans"
             />
           </div>
 
           <div>
-            <label className="text-xs font-bold text-ink dark:text-slate-300 block mb-1">طرح انتخابی:</label>
+            <label className="text-xs font-black text-navy dark:text-slate-200 block mb-1.5">طرح انتخابی:</label>
             <select
               value={testPlanInput}
               onChange={(e) => setTestPlanInput(e.target.value)}
-              className="w-full bg-white dark:bg-slate-900 border border-ink/20 dark:border-slate-700 rounded-pill-md px-3 py-2 text-xs sm:text-sm font-bold text-ink dark:text-white"
+              className="w-full bg-white dark:bg-slate-900 border-2 border-ink/15 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-navy dark:text-white focus:border-teal outline-none transition-colors font-sans"
             >
               {availablePlans.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -677,13 +677,13 @@ export default function DiscountCodesPanel() {
           </div>
 
           <div>
-            <label className="text-xs font-bold text-ink dark:text-slate-300 block mb-1">مبلغ آزمایشی (تومان):</label>
+            <label className="text-xs font-black text-navy dark:text-slate-200 block mb-1.5">مبلغ آزمایشی (تومان):</label>
             <input
               type="number"
               value={testAmountInput}
               onChange={(e) => setTestAmountInput(e.target.value)}
               placeholder="40000"
-              className="w-full bg-white dark:bg-slate-900 border border-ink/20 dark:border-slate-700 rounded-pill-md px-3 py-2 text-xs sm:text-sm font-bold text-ink dark:text-white"
+              className="w-full bg-white dark:bg-slate-900 border-2 border-ink/15 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-navy dark:text-white focus:border-teal outline-none transition-colors font-sans"
             />
           </div>
         </div>
@@ -735,7 +735,7 @@ export default function DiscountCodesPanel() {
         <form onSubmit={handleSubmitForm} className="flex flex-col gap-4">
           {/* ردیف ۱: عبارت کد + دکمه تولید رندوم */}
           <div>
-            <label className="text-xs font-extrabold text-navy dark:text-slate-200 block mb-1">
+            <label className="block text-xs font-black text-navy dark:text-slate-200 mb-1.5">
               عبارت کد تخفیف (انگلیسی / اعداد):
             </label>
             <div className="flex items-center gap-2">
@@ -746,7 +746,7 @@ export default function DiscountCodesPanel() {
                 value={formData.code}
                 onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                 placeholder="مثلاً NOWRUZ1405"
-                className="flex-1 bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-3.5 py-2 text-sm font-mono font-black text-center uppercase focus:border-teal focus:outline-none"
+                className="flex-1 bg-white dark:bg-slate-900 border-2 border-ink/15 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-black text-center uppercase tracking-wider text-navy dark:text-white focus:border-teal outline-none transition-colors font-sans"
               />
               <Button
                 type="button"
@@ -763,24 +763,24 @@ export default function DiscountCodesPanel() {
 
           {/* ردیف ۲: عنوان یا یادداشت */}
           <div>
-            <label className="text-xs font-extrabold text-navy dark:text-slate-200 block mb-1">عنوان / یادداشت مدیریتی:</label>
+            <label className="block text-xs font-black text-navy dark:text-slate-200 mb-1.5">عنوان / یادداشت مدیریتی:</label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="مثلاً تخفیف ۵۰ درصدی نوروز ویژه طرح حرفه‌ای"
-              className="w-full bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-3.5 py-2 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
+              className="w-full bg-white dark:bg-slate-900 border-2 border-ink/15 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-navy dark:text-white focus:border-teal outline-none transition-colors font-sans"
             />
           </div>
 
           {/* ردیف ۳: نوع و مقدار تخفیف */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-extrabold text-navy dark:text-slate-200 block mb-1">نوع تخفیف:</label>
+              <label className="block text-xs font-black text-navy dark:text-slate-200 mb-1.5">نوع تخفیف:</label>
               <select
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                className="w-full bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-3.5 py-2 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
+                className="w-full bg-white dark:bg-slate-900 border-2 border-ink/15 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-navy dark:text-white focus:border-teal outline-none transition-colors font-sans"
               >
                 <option value="percent">درصدی (٪)</option>
                 <option value="fixed">مبلغ ثابت (تومان)</option>
@@ -788,7 +788,7 @@ export default function DiscountCodesPanel() {
             </div>
 
             <div>
-              <label className="text-xs font-extrabold text-navy dark:text-slate-200 block mb-1">
+              <label className="block text-xs font-black text-navy dark:text-slate-200 mb-1.5">
                 {formData.type === "percent" ? "درصد تخفیف (۱ تا ۱۰۰):" : "مبلغ تخفیف (تومان):"}
               </label>
               <input
@@ -798,7 +798,7 @@ export default function DiscountCodesPanel() {
                 max={formData.type === "percent" ? 100 : undefined}
                 value={formData.value}
                 onChange={(e) => setFormData({ ...formData, value: e.target.value })}
-                className="w-full bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-3.5 py-2 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
+                className="w-full bg-white dark:bg-slate-900 border-2 border-ink/15 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-navy dark:text-white focus:border-teal outline-none transition-colors font-sans"
               />
             </div>
           </div>
@@ -806,7 +806,7 @@ export default function DiscountCodesPanel() {
           {/* ردیف ۴: سقف تخفیف درصدی و حداقل خرید */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-extrabold text-navy dark:text-slate-200 block mb-1">
+              <label className="block text-xs font-black text-navy dark:text-slate-200 mb-1.5">
                 سقف تخفیف (تومان - اختیاری برای درصدی):
               </label>
               <input
@@ -816,12 +816,12 @@ export default function DiscountCodesPanel() {
                 onChange={(e) => setFormData({ ...formData, maxDiscountToman: e.target.value })}
                 placeholder="بدون سقف"
                 disabled={formData.type === "fixed"}
-                className="w-full bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-3.5 py-2 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none disabled:opacity-50"
+                className="w-full bg-white dark:bg-slate-900 border-2 border-ink/15 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-navy dark:text-white focus:border-teal outline-none transition-colors font-sans disabled:opacity-50"
               />
             </div>
 
             <div>
-              <label className="text-xs font-extrabold text-navy dark:text-slate-200 block mb-1">
+              <label className="block text-xs font-black text-navy dark:text-slate-200 mb-1.5">
                 حداقل مبلغ خرید (تومان - اختیاری):
               </label>
               <input
@@ -830,7 +830,7 @@ export default function DiscountCodesPanel() {
                 value={formData.minPurchaseToman}
                 onChange={(e) => setFormData({ ...formData, minPurchaseToman: e.target.value })}
                 placeholder="بدون حداقل (۰)"
-                className="w-full bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-3.5 py-2 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
+                className="w-full bg-white dark:bg-slate-900 border-2 border-ink/15 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-navy dark:text-white focus:border-teal outline-none transition-colors font-sans"
               />
             </div>
           </div>
@@ -848,19 +848,19 @@ export default function DiscountCodesPanel() {
                 value={formData.maxUses}
                 onChange={(e) => setFormData({ ...formData, maxUses: e.target.value })}
                 placeholder="نامحدود (سقفی ندارد)"
-                className="w-full bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-3.5 py-2 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
+                className="w-full bg-white dark:bg-slate-900 border-2 border-ink/15 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-navy dark:text-white focus:border-teal outline-none transition-colors font-sans"
               />
             </div>
 
             <div>
-              <label className="text-xs font-extrabold text-navy dark:text-slate-200 block mb-1">
+              <label className="block text-xs font-black text-navy dark:text-slate-200 mb-1.5">
                 نوع اعتبار زمانی:
               </label>
-              <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 dark:bg-slate-900/80 border-2 border-ink/15 dark:border-slate-700 rounded-pill-md">
+              <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 dark:bg-slate-900/80 border-2 border-ink/15 dark:border-slate-700 rounded-xl">
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, hasExpiry: false })}
-                  className={`py-1.5 px-2 rounded-xl text-xs font-extrabold transition-all ${
+                  className={`py-2 px-2.5 rounded-lg text-xs font-black transition-all font-sans ${
                     !formData.hasExpiry
                       ? "bg-white dark:bg-slate-800 text-teal dark:text-teal shadow-sm"
                       : "text-ink-subtle dark:text-slate-400 hover:text-navy dark:hover:text-white"
@@ -871,7 +871,7 @@ export default function DiscountCodesPanel() {
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, hasExpiry: true })}
-                  className={`py-1.5 px-2 rounded-xl text-xs font-extrabold transition-all ${
+                  className={`py-2 px-2.5 rounded-lg text-xs font-black transition-all font-sans ${
                     formData.hasExpiry
                       ? "bg-teal text-white shadow-sm"
                       : "text-ink-subtle dark:text-slate-400 hover:text-navy dark:hover:text-white"
@@ -929,11 +929,11 @@ export default function DiscountCodesPanel() {
               <div className="grid grid-cols-3 gap-2">
                 {/* روز */}
                 <div>
-                  <label className="text-xs font-extrabold text-ink-subtle dark:text-slate-400 block mb-1">روز:</label>
+                  <label className="text-xs font-black text-ink-subtle dark:text-slate-400 block mb-1">روز:</label>
                   <select
                     value={formData.jDay}
                     onChange={(e) => setFormData({ ...formData, jDay: Number(e.target.value) })}
-                    className="w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-2.5 py-1.5 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
+                    className="w-full bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-navy dark:text-white focus:border-teal outline-none transition-colors font-sans"
                   >
                     {Array.from({ length: formData.jMonth <= 6 ? 31 : formData.jMonth <= 11 ? 30 : 29 }, (_, i) => i + 1).map((d) => (
                       <option key={d} value={d}>
@@ -945,7 +945,7 @@ export default function DiscountCodesPanel() {
 
                 {/* ماه */}
                 <div>
-                  <label className="text-xs font-extrabold text-ink-subtle dark:text-slate-400 block mb-1">ماه:</label>
+                  <label className="text-xs font-black text-ink-subtle dark:text-slate-400 block mb-1">ماه:</label>
                   <select
                     value={formData.jMonth}
                     onChange={(e) => {
@@ -957,7 +957,7 @@ export default function DiscountCodesPanel() {
                         jDay: Math.min(formData.jDay, maxD),
                       });
                     }}
-                    className="w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-2.5 py-1.5 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
+                    className="w-full bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-navy dark:text-white focus:border-teal outline-none transition-colors font-sans"
                   >
                     {JALALI_MONTH_NAMES.map((mName, idx) => (
                       <option key={idx + 1} value={idx + 1}>
@@ -969,11 +969,11 @@ export default function DiscountCodesPanel() {
 
                 {/* سال */}
                 <div>
-                  <label className="text-xs font-extrabold text-ink-subtle dark:text-slate-400 block mb-1">سال:</label>
+                  <label className="text-xs font-black text-ink-subtle dark:text-slate-400 block mb-1">سال:</label>
                   <select
                     value={formData.jYear}
                     onChange={(e) => setFormData({ ...formData, jYear: Number(e.target.value) })}
-                    className="w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-2.5 py-1.5 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
+                    className="w-full bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-navy dark:text-white focus:border-teal outline-none transition-colors font-sans"
                   >
                     {[1404, 1405, 1406, 1407, 1408, 1409, 1410].map((y) => (
                       <option key={y} value={y}>

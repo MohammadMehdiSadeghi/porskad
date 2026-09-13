@@ -19,6 +19,9 @@
         overflow-x: hidden;
         line-height: 1.6;
     }
+    button, input, optgroup, select, textarea {
+        font-family: inherit;
+    }
     html.dark body {
         @apply text-slate-100 bg-[#0B0F19];
     }
