@@ -23,6 +23,7 @@ import {
   X,
   Settings,
   Crown,
+  Code2,
 } from "lucide-react";
 import NotificationBell from "../ui/NotificationBell";
 import TabGate from "./TabGate";
@@ -78,6 +79,7 @@ export default function AdminLayout() {
         { to: "/admin/settings", label: "تنظیمات سامانه", icon: Settings, end: false },
         { to: "/admin/support", label: "تیکت‌های پشتیبانی", icon: Headphones, end: false },
         { to: "/admin/superadmin", label: "سوپرادمین (God)", icon: Shield, end: false },
+        { to: "/admin/api-docs", label: "مستندات API / وب‌سرویس", icon: Code2, end: false },
         { to: "/admin/profile", label: "پروفایل", icon: User, end: false },
       ]
     : [
@@ -87,8 +89,9 @@ export default function AdminLayout() {
         { to: "/admin/telegram", label: "اتصال به تلگرام", icon: Bot, end: false, tabId: "telegram" },
         { to: "/admin/support", label: "پشتیبانی", icon: Headphones, end: false, tabId: "support" },
         { to: "/admin/subscriptions", label: "اشتراک‌ها", icon: Crown, end: false, tabId: "subscriptions" },
+        { to: "/admin/api-docs", label: "مستندات API / وب‌سرویس", icon: Code2, end: false },
         { to: "/admin/profile", label: "پروفایل و سهمیه", icon: User, end: false, tabId: "profile" },
-      ].filter((item) => tabsCfg[item.tabId]?.state !== TAB_STATE_DISABLED);
+      ].filter((item) => !item.tabId || tabsCfg[item.tabId]?.state !== TAB_STATE_DISABLED);
 
 
   const isSuperAdmin = owner || profile?.is_owner;

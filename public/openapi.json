@@ -1,0 +1,859 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "پرس‌کاد REST API — سامانه آنلاین و هوشمند ساخت فرم و نظرسنجی",
+    "description": "مستندات جامع وب‌سرویس استاندارد پرس‌کاد (Porskad API v1) برای اتصال برنامه‌ها و پلتفرم‌های جانبی. از طریق این وب‌سرویس می‌توانید تمامی امکانات پرس‌کاد شامل دریافت اطلاعات حساب، ساخت و مدیریت فرم‌ها، تعریف تمامی ۲۰ نوع سوال، دریافت پاسخ‌ها، ثبت پاسخ و دریافت کدهای امبد را در پلتفرم خود پیاده‌سازی کنید.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "پشتیبانی فنی پرس‌کاد",
+      "url": "https://porskad.ir"
+    }
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "سرور فعلی (Current Origin)"
+    }
+  ],
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Account",
+      "description": "مدیریت و اطلاعات حساب کاربری، سهمیه‌ها و اشتراک"
+    },
+    {
+      "name": "Question Types",
+      "description": "اطلاعات، متادیتا و الگوهای هر ۲۰ نوع سوال پرس‌کاد"
+    },
+    {
+      "name": "Forms",
+      "description": "عملیات کامل ساخت، ویرایش، حذف و دریافت فرم‌ها (CRUD)"
+    },
+    {
+      "name": "Questions",
+      "description": "مدیریت سوالات، گزینه‌ها، شروط و ترتیب نمایش در فرم"
+    },
+    {
+      "name": "Responses",
+      "description": "دریافت پاسخ‌های ثبت شده، فیلتر و حذف پاسخ‌ها"
+    },
+    {
+      "name": "Submission",
+      "description": "ثبت پاسخ جدید به فرم‌ها از طریق وب‌سرویس یا پلتفرم جانبی"
+    },
+    {
+      "name": "Embed",
+      "description": "کدهای آماده امبد (Iframe، SDK Script، React و لینک‌های مستقیم)"
+    }
+  ],
+  "paths": {
+    "/api/v1/me": {
+      "get": {
+        "tags": ["Account"],
+        "summary": "دریافت اطلاعات حساب کاربری و سهمیه",
+        "description": "مشخصات کاربر جاری، نقش سیستمی، تعداد فرم‌ها، سهمیه باقی‌مانده و وضعیت اشتراک را برمی‌گرداند.",
+        "responses": {
+          "200": {
+            "description": "اطلاعات حساب کاربری با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/api/v1/question-types": {
+      "get": {
+        "tags": ["Question Types"],
+        "summary": "فهرست متادیتای تمام ۲۰ نوع سوال فرم‌ساز",
+        "description": "لیست کامل انواع سوالات پشتیبانی‌شده در پرس‌کاد همراه با دسته‌بندی، فیلدهای مجاز، گزینه‌های پیش‌فرض، عملگرهای شرطی و راهنمای استفاده.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "لیست انواع سوال با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": { "type": "integer", "example": 20 },
+                    "categories": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/QuestionCategory" }
+                    },
+                    "types": {
+                      "type": "object",
+                      "additionalProperties": { "$ref": "#/components/schemas/QuestionTypeMeta" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms": {
+      "get": {
+        "tags": ["Forms"],
+        "summary": "دریافت لیست فرم‌های کاربر",
+        "description": "لیست تمامی فرم‌های ایجاد شده توسط کاربر فعلی همراه با تعداد پاسخ‌ها، وضعیت انتشار و لینک‌های مربوطه.",
+        "parameters": [
+          {
+            "name": "published",
+            "in": "query",
+            "required": false,
+            "description": "فیلتر بر اساس فرم‌های منتشر شده (true / false)",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "تعداد رکورد در هر صفحه (پیش‌فرض ۵۰)",
+            "schema": { "type": "integer", "default": 50 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "لیست فرم‌ها با موفقیت دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "forms": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/FormSummary" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" }
+        }
+      },
+      "post": {
+        "tags": ["Forms"],
+        "summary": "ایجاد یک فرم جدید",
+        "description": "یک فرم جدید با تنظیمات دلخواه، نوع فرم (step_by_step یا classic)، پیام‌های خوش‌آمد و خروج ایجاد می‌کند.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateFormInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "فرم با موفقیت ساخته شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "form": { "$ref": "#/components/schemas/FormDetail" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequestError" },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" }
+        }
+      }
+    },
+    "/api/v1/forms/{id}": {
+      "get": {
+        "tags": ["Forms"],
+        "summary": "دریافت جزئیات کامل فرم و سوالات آن",
+        "description": "مشخصات کامل یک فرم همراه با تمامی سوالات مرتب‌شده آن را با شناسه فرم یا اسلاگ برمی‌گرداند.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "شناسه UUID فرم یا اسلاگ (Slug)",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "جزئیات فرم دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "form": { "$ref": "#/components/schemas/FormDetail" },
+                    "questions": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/QuestionDetail" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFoundError" }
+        }
+      },
+      "put": {
+        "tags": ["Forms"],
+        "summary": "به‌روزرسانی تنظیمات و مشخصات فرم",
+        "description": "تغییر عنوان، توضیحات، پیام‌های آغاز و پایان، وضعیت انتشار (published)، قالب ظاهری و تنظیمات فرم.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "شناسه UUID فرم",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateFormInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "فرم با موفقیت به‌روز شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "form": { "$ref": "#/components/schemas/FormDetail" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFoundError" }
+        }
+      },
+      "delete": {
+        "tags": ["Forms"],
+        "summary": "حذف فرم",
+        "description": "حذف کامل یا انتقال فرم به سطل زباله (توسط مالک فرم).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "شناسه UUID فرم",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "فرم با موفقیت حذف شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "فرم با موفقیت حذف شد." }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFoundError" }
+        }
+      }
+    },
+    "/api/v1/forms/{id}/questions": {
+      "get": {
+        "tags": ["Questions"],
+        "summary": "دریافت لیست سوالات یک فرم",
+        "description": "لیست تمامی سوالات فرم مشخص شده، مرتب شده بر اساس ترتیب (position).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "شناسه فرم",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "لیست سوالات دریافت شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "questions": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/QuestionDetail" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Questions"],
+        "summary": "افزودن سوال جدید به فرم",
+        "description": "یک سوال جدید با یکی از ۲۰ نوع استاندارد به فرم اضافه می‌کند.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "شناسه فرم",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateQuestionInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "سوال با موفقیت به فرم افزوده شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "question": { "$ref": "#/components/schemas/QuestionDetail" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/{id}/questions/{questionId}": {
+      "put": {
+        "tags": ["Questions"],
+        "summary": "ویرایش یک سوال موجود",
+        "description": "ویرایش متن، گزینه‌ها، شروط، اجباری بودن و سایر مشخصات سوال.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "شناسه فرم",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "questionId",
+            "in": "path",
+            "required": true,
+            "description": "شناسه سوال",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateQuestionInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "سوال با موفقیت ویرایش شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "question": { "$ref": "#/components/schemas/QuestionDetail" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Questions"],
+        "summary": "حذف یک سوال از فرم",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "شناسه فرم",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "questionId",
+            "in": "path",
+            "required": true,
+            "description": "شناسه سوال",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "سوال با موفقیت حذف شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/{id}/responses": {
+      "get": {
+        "tags": ["Responses"],
+        "summary": "دریافت پاسخ‌های ثبت‌شده برای فرم",
+        "description": "لیست کامل پاسخ‌ها به همراه جواب هر سوال، اطلاعات دستگاه، مدت زمان پر کردن و تاریخ ثبت.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "شناسه فرم",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "حداکثر تعداد پاسخ‌ها",
+            "schema": { "type": "integer", "default": 50 }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "پاسخ‌ها با موفقیت دریافت شدند",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total": { "type": "integer", "example": 25 },
+                    "responses": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ResponseDetail" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Submission"],
+        "summary": "ثبت پاسخ جدید به فرم (Submit)",
+        "description": "ثبت جواب‌های شرکت‌کننده در فرم از طریق وب‌سرویس پلتفرم‌های خارجی بدون نیاز به نمایش صفحه وب پرس‌کاد.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "شناسه UUID یا Slug فرم",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SubmitResponseInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "پاسخ با موفقیت در سامانه ثبت شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "response_id": { "type": "string", "example": "4a58b5e2-632b-4221-8255-a0c3bbd4a2d7" },
+                    "message": { "type": "string", "example": "از اینکه جواب دادی خیلی ممنونیم." }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/{id}/responses/{responseId}": {
+      "delete": {
+        "tags": ["Responses"],
+        "summary": "حذف یک پاسخ ثبت شده",
+        "description": "حذف رکورد یک پاسخ و تمام جواب‌های مرتبط با آن توسط صاحب فرم.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "شناسه فرم",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "responseId",
+            "in": "path",
+            "required": true,
+            "description": "شناسه پاسخ",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "پاسخ با موفقیت حذف شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/{id}/embed": {
+      "get": {
+        "tags": ["Embed"],
+        "summary": "دریافت کدهای امبد و اشتراک‌گذاری فرم",
+        "description": "کدهای آماده Iframe، اسکریپت SDK لودر و کامپوننت React به همراه لینک‌های مستقیم جهت تعبیه در هر وب‌سایت یا اپلیکیشن جانبی.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "شناسه UUID یا Slug فرم",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "کدهای امبد آماده",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EmbedCodes" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "توکن دسترسی JWT دریافت شده از نشست کاربری در پرس‌کاد. برای ارسال در هدر درخواست: `Authorization: Bearer <TOKEN>`"
+      }
+    },
+    "schemas": {
+      "UserProfile": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "example": "user@example.com" },
+          "full_name": { "type": "string", "example": "محمد صادقی" },
+          "role": { "type": "string", "example": "manager" },
+          "is_owner": { "type": "boolean", "example": false },
+          "phone": { "type": "string", "example": "09123456789" },
+          "forms_count": { "type": "integer", "example": 4 },
+          "active_plan": { "type": "string", "example": "pro" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "QuestionCategory": {
+        "type": "object",
+        "properties": {
+          "key": { "type": "string", "example": "choice" },
+          "title": { "type": "string", "example": "سوالات گزینه‌ای و مقیاسی" },
+          "description": { "type": "string" },
+          "types": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "QuestionTypeMeta": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "example": "choice" },
+          "label": { "type": "string", "example": "چندگزینه‌ای" },
+          "category": { "type": "string", "example": "choice" },
+          "hint": { "type": "string" },
+          "hasOptions": { "type": "boolean" },
+          "hasMaxSelections": { "type": "boolean" },
+          "hasDisplayMode": { "type": "boolean" },
+          "defaultDisplayMode": { "type": "string", "example": "buttons" },
+          "defaultOptions": { "type": "array", "items": { "type": "string" } },
+          "conditionOperators": { "type": "array", "items": { "type": "string" } },
+          "valueFieldType": { "type": "string", "example": "option_select" }
+        }
+      },
+      "FormSummary": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "slug": { "type": "string", "example": "survey-customer-2026" },
+          "title": { "type": "string", "example": "نظرسنجی رضایت مشتریان" },
+          "form_type": { "type": "string", "example": "step_by_step" },
+          "published": { "type": "boolean", "example": true },
+          "responses_count": { "type": "integer", "example": 142 },
+          "public_url": { "type": "string", "example": "https://porskad.ir/f/survey-customer-2026" },
+          "embed_url": { "type": "string", "example": "https://porskad.ir/embed/survey-customer-2026" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CreateFormInput": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": { "type": "string", "example": "فرم ثبت‌نام رویداد بهاره" },
+          "slug": { "type": "string", "example": "spring-event-reg", "description": "اسلاگ منحصربه‌فرد (حروف کوچک انگلیسی، اعداد و خط تیره)" },
+          "form_type": { "type": "string", "enum": ["step_by_step", "classic"], "default": "step_by_step" },
+          "description": { "type": "string", "example": "لطفاً مشخصات خود را جهت صدور کارت ورود وارد کنید." },
+          "welcome_title": { "type": "string", "example": "خوش آمدید!" },
+          "welcome_message": { "type": "string", "example": "تکمیل این فرم کمتر از ۳ دقیقه زمان می‌برد." },
+          "exit_title": { "type": "string", "example": "ثبت شد!" },
+          "exit_message": { "type": "string", "example": "اطلاعات با موفقیت ثبت شد. به زودی با شما تماس می‌گیریم." },
+          "default_theme": { "type": "string", "enum": ["light", "dark", "system"], "default": "light" }
+        }
+      },
+      "UpdateFormInput": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "published": { "type": "boolean" },
+          "welcome_title": { "type": "string" },
+          "welcome_message": { "type": "string" },
+          "exit_title": { "type": "string" },
+          "exit_message": { "type": "string" },
+          "default_theme": { "type": "string" }
+        }
+      },
+      "FormDetail": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "slug": { "type": "string" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "form_type": { "type": "string" },
+          "published": { "type": "boolean" },
+          "welcome_title": { "type": "string" },
+          "welcome_message": { "type": "string" },
+          "exit_title": { "type": "string" },
+          "exit_message": { "type": "string" },
+          "default_theme": { "type": "string" },
+          "created_at": { "type": "string" },
+          "updated_at": { "type": "string" }
+        }
+      },
+      "CreateQuestionInput": {
+        "type": "object",
+        "required": ["type", "title"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "choice", "picture_choice", "dropdown", "yes_no", "likert", "nps", "rating", "matrix", "ranking",
+              "short_text", "long_text", "number", "email", "phone_ir", "link", "telegram_id",
+              "statement", "group", "file_upload", "payment"
+            ],
+            "example": "choice"
+          },
+          "title": { "type": "string", "example": "از خدمات کدام بخش رضایت بیشتری داشتید؟" },
+          "description": { "type": "string", "example": "می‌توانید چند گزینه را انتخاب کنید." },
+          "required": { "type": "boolean", "default": true },
+          "options": {
+            "type": "array",
+            "description": "آرایه‌ای از رشته‌ها یا اشیاء تصویری ({text, image}) برای سوالات چندگزینه‌ای",
+            "items": { "type": "string" },
+            "example": ["پشتیبانی تلفنی", "سرعت پاسخگویی", "کیفیت پنل کاربری", "قیمت مناسب"]
+          },
+          "position": { "type": "integer", "default": 0 },
+          "display_mode": { "type": "string", "enum": ["buttons", "list", "grid"], "default": "buttons" },
+          "max_selections": { "type": "integer", "example": 2, "description": "حداکثر تعداد مجاز انتخاب برای چندگزینه‌ای" },
+          "points": { "type": "number", "example": 10, "description": "امتیاز این سوال در آزمون‌ها" },
+          "correct_answer": { "type": "string", "description": "پاسخ صحیح سوال برای سیستم نمره‌دهی" },
+          "conditions": {
+            "type": "object",
+            "description": "منطق شرطی نمایش این سوال بر اساس پاسخ به سوالات قبلی"
+          }
+        }
+      },
+      "QuestionDetail": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "form_id": { "type": "string", "format": "uuid" },
+          "type": { "type": "string" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "required": { "type": "boolean" },
+          "options": { "type": "array" },
+          "position": { "type": "integer" },
+          "display_mode": { "type": "string" },
+          "max_selections": { "type": "integer" },
+          "points": { "type": "number" },
+          "correct_answer": { "type": "string" },
+          "conditions": { "type": "object" },
+          "created_at": { "type": "string" }
+        }
+      },
+      "SubmitAnswerItem": {
+        "type": "object",
+        "required": ["question_id", "value"],
+        "properties": {
+          "question_id": { "type": "string", "format": "uuid", "description": "شناسه سوال" },
+          "value": {
+            "description": "پاسخ کاربر (رشته، عدد، آرایه‌ای از گزینه‌ها یا آبجکت پاسخ ماتریسی)",
+            "example": ["پشتیبانی تلفنی"]
+          },
+          "time_spent_seconds": { "type": "integer", "example": 8 }
+        }
+      },
+      "SubmitResponseInput": {
+        "type": "object",
+        "required": ["answers"],
+        "properties": {
+          "answers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SubmitAnswerItem" }
+          },
+          "duration_seconds": { "type": "integer", "example": 45 },
+          "device": { "type": "string", "example": "mobile" },
+          "browser": { "type": "string", "example": "Chrome" }
+        }
+      },
+      "ResponseDetail": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "form_id": { "type": "string", "format": "uuid" },
+          "is_complete": { "type": "boolean" },
+          "started_at": { "type": "string" },
+          "submitted_at": { "type": "string" },
+          "duration_seconds": { "type": "integer" },
+          "device": { "type": "string" },
+          "browser": { "type": "string" },
+          "answers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "question_id": { "type": "string" },
+                "question_title": { "type": "string" },
+                "question_type": { "type": "string" },
+                "value": {}
+              }
+            }
+          }
+        }
+      },
+      "EmbedCodes": {
+        "type": "object",
+        "properties": {
+          "form_id": { "type": "string" },
+          "slug": { "type": "string" },
+          "direct_url": { "type": "string", "example": "https://porskad.ir/f/my-form" },
+          "embed_url": { "type": "string", "example": "https://porskad.ir/embed/my-form" },
+          "iframe_code": {
+            "type": "string",
+            "example": "<iframe src=\"https://porskad.ir/embed/my-form\" width=\"100%\" height=\"600\" frameborder=\"0\" allow=\"camera; microphone; autoplay\"></iframe>"
+          },
+          "sdk_code": {
+            "type": "string",
+            "example": "<div id=\"porskad-form\" data-porskad-form=\"my-form\"></div>\n<script src=\"https://porskad.ir/embed-sdk.js\" async></script>"
+          },
+          "react_code": {
+            "type": "string",
+            "example": "export function SurveyEmbed() {\n  return (\n    <iframe\n      src=\"https://porskad.ir/embed/my-form\"\n      className=\"w-full h-[600px] rounded-2xl border-0\"\n      allow=\"camera; microphone\"\n    />\n  );\n}"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string", "example": "شرح خطا رخ داده است" }
+        }
+      }
+    },
+    "responses": {
+      "UnauthorizedError": {
+        "description": "توکن احراز هویت ارسال نشده یا منقضی شده است",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "NotFoundError": {
+        "description": "منبع درخواستی یافت نشد",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "BadRequestError": {
+        "description": "ورودی‌های درخواست نامعتبر است",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      }
+    }
+  }
+}
