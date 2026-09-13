@@ -211,47 +211,49 @@ html.dark .skeleton-shimmer::after {
     animation: slide-up 0.3s ease-out;
 }
 
-/* ─── Mobile Typography (< 768px): Polished, balanced headings & text scale ─── */
+/* ─── Mobile Typography (< 768px): Polished, balanced headings & text scale (Min font size: 13px) ─── */
 @media (max-width: 767px) {
-    .text-xs { font-size: 10.5px; line-height: 15px; }
-    .text-sm { font-size: 12px; line-height: 18px; }
-    .text-base { font-size: 14px; line-height: 21px; }
-    .text-md { font-size: 16px; line-height: 24px; }
-    .text-lg { font-size: 18px; line-height: 26px; }
-    .text-xl { font-size: 21px; line-height: 29px; }
-    .text-2xl { font-size: 24px; line-height: 32px; }
-    .text-3xl { font-size: 28px; line-height: 36px; }
+    .text-xs { font-size: 13px; line-height: 18px; }
+    .text-sm { font-size: 14px; line-height: 20px; }
+    .text-base { font-size: 15px; line-height: 22px; }
+    .text-md { font-size: 17px; line-height: 25px; }
+    .text-lg { font-size: 19px; line-height: 27px; }
+    .text-xl { font-size: 22px; line-height: 30px; }
+    .text-2xl { font-size: 25px; line-height: 33px; }
+    .text-3xl { font-size: 29px; line-height: 37px; }
 
     /* Dedicated heading rules on mobile to prevent overflow & wrapping */
-    h1.text-xl, .title-xl { font-size: 20px; line-height: 28px; }
-    h1.text-2xl, .title-2xl { font-size: 22px; line-height: 30px; }
-    h1.text-3xl, .title-3xl { font-size: 26px; line-height: 34px; }
-    h2.text-lg { font-size: 16px; line-height: 24px; }
-    h2.text-xl { font-size: 18px; line-height: 26px; }
-    h3.text-base { font-size: 13.5px; line-height: 20px; }
-    h3.text-lg { font-size: 15.5px; line-height: 22px; }
+    h1.text-xl, .title-xl { font-size: 21px; line-height: 29px; }
+    h1.text-2xl, .title-2xl { font-size: 23px; line-height: 31px; }
+    h1.text-3xl, .title-3xl { font-size: 27px; line-height: 35px; }
+    h2.text-lg { font-size: 17px; line-height: 25px; }
+    h2.text-xl { font-size: 19px; line-height: 27px; }
+    h3.text-base { font-size: 14.5px; line-height: 21px; }
+    h3.text-lg { font-size: 16.5px; line-height: 23px; }
 
     /* Clean mobile input sizes */
     input, select, textarea {
-        font-size: 13.5px;
+        font-size: 14px;
     }
 }
 
 /* ─── Extra Small Mobile (< 380px) ─── */
 @media (max-width: 380px) {
-    .text-xl { font-size: 19px; line-height: 26px; }
-    .text-2xl { font-size: 21px; line-height: 28px; }
-    .text-3xl { font-size: 24px; line-height: 32px; }
-    h1.text-xl { font-size: 18.5px; line-height: 26px; }
-    h1.text-2xl { font-size: 20px; line-height: 27px; }
-    h1.text-3xl { font-size: 23px; line-height: 30px; }
+    .text-xs { font-size: 13px; line-height: 18px; }
+    .text-sm { font-size: 13.5px; line-height: 19px; }
+    .text-xl { font-size: 20px; line-height: 27px; }
+    .text-2xl { font-size: 22px; line-height: 29px; }
+    .text-3xl { font-size: 25px; line-height: 33px; }
+    h1.text-xl { font-size: 19.5px; line-height: 27px; }
+    h1.text-2xl { font-size: 21px; line-height: 28px; }
+    h1.text-3xl { font-size: 24px; line-height: 31px; }
 }
 
-/* ─── Laptop & Desktop Monitor: Scaled typography (-1px for body/sm/xs, -1.5px to -2px for headings) ─── */
+/* ─── Laptop & Desktop Monitor: Scaled typography (Min font size: 13px) ─── */
 @media (min-width: 768px) {
-    .text-xs { font-size: 9.5px; line-height: 15px; }
-    .text-sm { font-size: 12px; line-height: 19px; }
-    .text-base { font-size: 15px; line-height: 23px; }
+    .text-xs { font-size: 13px; line-height: 18px; }
+    .text-sm { font-size: 14px; line-height: 21px; }
+    .text-base { font-size: 15.5px; line-height: 24px; }
     .text-md { font-size: 18px; line-height: 27px; }
     .text-lg { font-size: 23px; line-height: 34px; }
     .text-xl { font-size: 29px; line-height: 42px; }
@@ -263,18 +265,29 @@ html.dark .skeleton-shimmer::after {
     
     /* Button typography refined for sleek desktop feel */
     .rounded-pill-md.text-sm,
-    .rounded-pill-md.text-base { font-size: 12px; line-height: 18px; }
+    .rounded-pill-md.text-base { font-size: 13.5px; line-height: 20px; }
 }
 
 @media (min-width: 1024px) {
-    .text-xs { font-size: 9.5px; line-height: 15px; }
-    .text-sm { font-size: 12px; line-height: 19px; }
-    .text-base { font-size: 14.5px; line-height: 22px; }
+    .text-xs { font-size: 13px; line-height: 18px; }
+    .text-sm { font-size: 14px; line-height: 21px; }
+    .text-base { font-size: 15.5px; line-height: 24px; }
     .text-md { font-size: 18px; line-height: 27px; }
     .text-lg { font-size: 22.5px; line-height: 33px; }
     .text-xl { font-size: 28.5px; line-height: 41px; }
     .text-2xl { font-size: 36.5px; line-height: 51px; }
     .text-3xl { font-size: 46px; line-height: 64px; }
+}
+
+/* ─── قاعده عمومی: تضمین اینکه هیچ فونتی در سایت زیر ۱۳px نباشد ─── */
+.text-xs,
+.caption,
+[class*="text-[9px]"],
+[class*="text-[10px]"],
+[class*="text-[11px]"],
+[class*="text-[12px]"] {
+    font-size: 13px !important;
+    line-height: 1.45 !important;
 }
 
 /* ══════════════════════════════════════════════════════════════

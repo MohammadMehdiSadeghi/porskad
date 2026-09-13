@@ -494,19 +494,19 @@ export default function DiscountCodesPanel() {
 
                   <div className="flex items-center gap-1.5">
                     {isExpired ? (
-                      <span className="bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-300 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full">
+                      <span className="bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-300 text-xs font-extrabold px-3 py-1 rounded-full">
                         منقضی شده
                       </span>
                     ) : isCapped ? (
-                      <span className="bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-300 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full">
+                      <span className="bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-300 text-xs font-extrabold px-3 py-1 rounded-full">
                         تکمیل ظرفیت
                       </span>
                     ) : c.isActive ? (
-                      <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-300 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full">
+                      <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-300 text-xs font-extrabold px-3 py-1 rounded-full">
                         فعال
                       </span>
                     ) : (
-                      <span className="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full">
+                      <span className="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-extrabold px-3 py-1 rounded-full">
                         غیرفعال
                       </span>
                     )}
@@ -521,12 +521,12 @@ export default function DiscountCodesPanel() {
                       {c.type === "percent" ? `${faNum(c.value)}٪ تخفیف` : `${faNum(Number(c.value).toLocaleString("fa-IR"))} تومان تخفیف`}
                     </span>
                     {c.maxDiscountToman && (
-                      <span className="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-md text-[11px]">
+                      <span className="bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-md text-xs font-bold">
                         سقف: {faNum(c.maxDiscountToman.toLocaleString("fa-IR"))} تومان
                       </span>
                     )}
                     {c.minPurchaseToman && (
-                      <span className="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-md text-[11px]">
+                      <span className="bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-md text-xs font-bold">
                         حداقل خرید: {faNum(c.minPurchaseToman.toLocaleString("fa-IR"))} تومان
                       </span>
                     )}
@@ -537,7 +537,7 @@ export default function DiscountCodesPanel() {
                 <div className="flex flex-col gap-2 pt-2 border-t border-ink/10 dark:border-slate-700/60">
                   {c.maxUses ? (
                     <div className="flex flex-col gap-1">
-                      <div className="flex items-center justify-between text-[11px] font-bold text-ink-subtle dark:text-slate-400">
+                      <div className="flex items-center justify-between text-xs font-bold text-ink-subtle dark:text-slate-400">
                         <span>میزان استفاده:</span>
                         <span>
                           {faNum(c.usedCount || 0)} از {faNum(c.maxUses)} نفر ({faNum(usagePercent)}٪)
@@ -551,15 +551,15 @@ export default function DiscountCodesPanel() {
                       </div>
                     </div>
                   ) : (
-                    <div className="text-[11px] font-bold text-ink-subtle dark:text-slate-400 flex items-center justify-between">
+                    <div className="text-xs font-bold text-ink-subtle dark:text-slate-400 flex items-center justify-between">
                       <span>دفعات استفاده شده:</span>
                       <span className="text-navy dark:text-white font-extrabold">{faNum(c.usedCount || 0)} بار (بدون سقف)</span>
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between text-[11px] font-bold text-ink-subtle dark:text-slate-400">
+                  <div className="flex items-center justify-between text-xs font-bold text-ink-subtle dark:text-slate-400">
                     <span className="flex items-center gap-1">
-                      <Clock size={12} />
+                      <Clock size={13} />
                       مهلت اعتبار:
                     </span>
                     <span>
@@ -574,7 +574,7 @@ export default function DiscountCodesPanel() {
                   </div>
 
                   {Array.isArray(c.applicablePlans) && c.applicablePlans.length > 0 && (
-                    <div className="text-[11px] font-bold text-ink-subtle dark:text-slate-400 flex items-center gap-1">
+                    <div className="text-xs font-bold text-ink-subtle dark:text-slate-400 flex items-center gap-1">
                       <span>طرح‌های مجاز:</span>
                       <span className="text-navy dark:text-slate-200 font-extrabold">
                         {c.applicablePlans.map((pid) => availablePlans.find((p) => p.id === pid)?.name || pid).join("، ")}
@@ -892,33 +892,33 @@ export default function DiscountCodesPanel() {
                   <span>انتخاب تاریخ انقضا (تقویم شمسی):</span>
                 </div>
                 {/* میانبرهای سریع */}
-                <div className="flex items-center gap-1 flex-wrap text-[11px] font-bold">
-                  <span className="text-ink-subtle dark:text-slate-400 text-[10px]">میانبر:</span>
+                <div className="flex items-center gap-1.5 flex-wrap text-xs font-bold">
+                  <span className="text-ink-subtle dark:text-slate-400 text-xs">میانبر:</span>
                   <button
                     type="button"
                     onClick={() => handlePresetDate("1week")}
-                    className="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 text-ink dark:text-slate-200 hover:border-teal hover:text-teal transition-colors"
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 text-ink dark:text-slate-200 hover:border-teal hover:text-teal transition-colors text-xs"
                   >
                     ۱ هفته
                   </button>
                   <button
                     type="button"
                     onClick={() => handlePresetDate("1month")}
-                    className="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 text-ink dark:text-slate-200 hover:border-teal hover:text-teal transition-colors"
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 text-ink dark:text-slate-200 hover:border-teal hover:text-teal transition-colors text-xs"
                   >
                     ۱ ماه
                   </button>
                   <button
                     type="button"
                     onClick={() => handlePresetDate("3months")}
-                    className="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 text-ink dark:text-slate-200 hover:border-teal hover:text-teal transition-colors"
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 text-ink dark:text-slate-200 hover:border-teal hover:text-teal transition-colors text-xs"
                   >
                     ۳ ماه
                   </button>
                   <button
                     type="button"
                     onClick={() => handlePresetDate("yearEnd")}
-                    className="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 text-ink dark:text-slate-200 hover:border-teal hover:text-teal transition-colors"
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 text-ink dark:text-slate-200 hover:border-teal hover:text-teal transition-colors text-xs"
                   >
                     پایان سال
                   </button>
@@ -929,11 +929,11 @@ export default function DiscountCodesPanel() {
               <div className="grid grid-cols-3 gap-2">
                 {/* روز */}
                 <div>
-                  <label className="text-[11px] font-extrabold text-ink-subtle dark:text-slate-400 block mb-1">روز:</label>
+                  <label className="text-xs font-extrabold text-ink-subtle dark:text-slate-400 block mb-1">روز:</label>
                   <select
                     value={formData.jDay}
                     onChange={(e) => setFormData({ ...formData, jDay: Number(e.target.value) })}
-                    className="w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-2.5 py-1.5 text-xs font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
+                    className="w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-2.5 py-1.5 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
                   >
                     {Array.from({ length: formData.jMonth <= 6 ? 31 : formData.jMonth <= 11 ? 30 : 29 }, (_, i) => i + 1).map((d) => (
                       <option key={d} value={d}>
@@ -945,7 +945,7 @@ export default function DiscountCodesPanel() {
 
                 {/* ماه */}
                 <div>
-                  <label className="text-[11px] font-extrabold text-ink-subtle dark:text-slate-400 block mb-1">ماه:</label>
+                  <label className="text-xs font-extrabold text-ink-subtle dark:text-slate-400 block mb-1">ماه:</label>
                   <select
                     value={formData.jMonth}
                     onChange={(e) => {
@@ -957,7 +957,7 @@ export default function DiscountCodesPanel() {
                         jDay: Math.min(formData.jDay, maxD),
                       });
                     }}
-                    className="w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-2.5 py-1.5 text-xs font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
+                    className="w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-2.5 py-1.5 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
                   >
                     {JALALI_MONTH_NAMES.map((mName, idx) => (
                       <option key={idx + 1} value={idx + 1}>
@@ -969,11 +969,11 @@ export default function DiscountCodesPanel() {
 
                 {/* سال */}
                 <div>
-                  <label className="text-[11px] font-extrabold text-ink-subtle dark:text-slate-400 block mb-1">سال:</label>
+                  <label className="text-xs font-extrabold text-ink-subtle dark:text-slate-400 block mb-1">سال:</label>
                   <select
                     value={formData.jYear}
                     onChange={(e) => setFormData({ ...formData, jYear: Number(e.target.value) })}
-                    className="w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-2.5 py-1.5 text-xs font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
+                    className="w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-2.5 py-1.5 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
                   >
                     {[1404, 1405, 1406, 1407, 1408, 1409, 1410].map((y) => (
                       <option key={y} value={y}>
