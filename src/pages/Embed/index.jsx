@@ -517,7 +517,7 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
         <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35 }}
           className="relative max-w-lg w-full">
           <div aria-hidden="true" className="absolute top-[0.1875rem] left-[0.1875rem] w-full h-full bg-male-normal dark:bg-black rounded-tl-[2rem] rounded-br-[2rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
-          <div className="relative z-10 bg-white dark:bg-[#111827] border-2 border-male-normal dark:border-slate-700 rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-5 sm:p-6 text-center">
+          <div className="relative z-10 bg-white dark:bg-[#131B2E] border-2 border-male-normal dark:border-slate-700 rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-5 sm:p-6 text-center">
             <div className="flex justify-center mb-3">
               <CheckCircle2 size={48} className="text-ecosystem-normal" />
             </div>
@@ -547,7 +547,7 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
         <div className="w-full max-w-xl -rotate-[0.3deg]">
           <div className="relative">
             <div aria-hidden="true" className="absolute top-2 left-2 w-full h-full bg-male-normal dark:bg-black rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
-            <div className="relative z-10 bg-white dark:bg-[#111827] border-2 border-male-normal dark:border-slate-700 rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-5 sm:p-6 lg:p-7">
+            <div className="relative z-10 bg-white dark:bg-[#131B2E] border-2 border-male-normal dark:border-slate-700 rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-5 sm:p-6 lg:p-7">
               <form onSubmit={handleShowConfirm} className="flex flex-col gap-3.5 sm:gap-4">
                 <div className="text-center mb-0.5">
                   <h1 className="text-lg sm:text-xl font-black text-male-normal dark:text-white mb-0.5">{schema.title}</h1>
@@ -654,13 +654,13 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
                   <div className="bg-female-light border border-female-normal rounded-pill-md px-3 py-1.5 text-xs sm:text-sm font-bold text-female-normal">{error}</div>
                 )}
 
-                <div className="relative">
-                  <div aria-hidden="true" className="absolute top-[0.125rem] left-[0.125rem] w-full h-full bg-ecosystem-dark rounded-pill-md [corner-shape:squircle]" />
-                  <button type="submit" disabled={submitting}
-                    className="relative z-10 w-full bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] font-extrabold hover:bg-ecosystem-dark transition-colors duration-200 disabled:opacity-50 text-sm sm:text-base">
-                    {submitting ? "در حال ثبت..." : "ارسال پاسخ‌ها"}
-                  </button>
-                </div>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full inline-flex items-center justify-center bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] font-extrabold shadow-[2.75px_2.75px_0_#2e7068] hover:shadow-[3.75px_3.75px_0_#2e7068] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-sm sm:text-base cursor-pointer"
+                >
+                  {submitting ? "در حال ثبت..." : "ارسال پاسخ‌ها"}
+                </button>
               </form>
               {schema.showBranding && <BrandingBadge formId={formId} />}
             </div>
@@ -1151,7 +1151,7 @@ export default function EmbedForm() {
         <div className="w-full max-w-xl -rotate-[0.6deg]">
           <div className="relative">
             <div aria-hidden="true" className="absolute top-2 left-2 w-full h-full bg-male-normal dark:bg-black rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
-            <div className="relative z-10 bg-white dark:bg-[#111827] border-2 border-male-normal dark:border-slate-700 rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-5 sm:p-6 lg:p-7 text-ink dark:text-slate-100">
+            <div className="relative z-10 bg-white dark:bg-[#131B2E] border-2 border-male-normal dark:border-slate-700 rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-5 sm:p-6 lg:p-7 text-ink dark:text-slate-100">
               <AnimatePresence mode="wait" custom={dir}>
                 {/* صفحه خوش‌آمد */}
                 {step === -1 && (
@@ -1166,10 +1166,13 @@ export default function EmbedForm() {
                     <h1 className="text-lg sm:text-xl font-black text-male-normal dark:text-white">{schema.welcome_title}</h1>
                     <p className="text-sm sm:text-base text-ink-soft dark:text-slate-300 leading-7">{schema.welcome_message}</p>
                     {visibleTotal > 0 && <span className="text-xs text-ink/40 dark:text-slate-400 font-bold">{faNum(visibleTotal)} سوال</span>}
-                    <div className="relative mt-3 sm:mt-4">
-                      <div aria-hidden="true" className="absolute top-[0.125rem] left-[0.125rem] w-full h-full bg-ecosystem-dark rounded-pill-md [corner-shape:squircle]" />
-                      <button onClick={goNext} disabled={visibleTotal === 0}
-                        className="relative z-10 bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-6 sm:px-7 py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] font-extrabold hover:bg-ecosystem-dark transition-colors duration-200 disabled:opacity-50 text-sm sm:text-base cursor-pointer">
+                    <div className="mt-3 sm:mt-4">
+                      <button
+                        type="button"
+                        onClick={goNext}
+                        disabled={visibleTotal === 0}
+                        className="inline-flex items-center justify-center bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-6 sm:px-7 py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] font-extrabold shadow-[2.75px_2.75px_0_#2e7068] hover:shadow-[3.75px_3.75px_0_#2e7068] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-sm sm:text-base cursor-pointer"
+                      >
                         شروع
                       </button>
                     </div>
@@ -1201,20 +1204,30 @@ export default function EmbedForm() {
                     )}
 
                     <div className="flex items-center justify-between mt-1.5 sm:mt-2">
-                      <button onClick={goBack} className="text-xs sm:text-sm font-bold text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white transition-colors duration-200 cursor-pointer">برگشت</button>
+                      <button
+                        type="button"
+                        onClick={goBack}
+                        className="inline-flex items-center justify-center bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-ink dark:text-slate-200 px-3.5 sm:px-4 py-2 rounded-pill-md [corner-shape:squircle] font-extrabold shadow-[2px_2px_0_#cbd5e1] dark:shadow-[2px_2px_0_#000000] hover:bg-slate-200 dark:hover:bg-slate-700 hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-150 text-xs sm:text-sm cursor-pointer"
+                      >
+                        برگشت
+                      </button>
                       {!isLastVisibleStep ? (
-                        <div className="relative">
-                          <div aria-hidden="true" className="absolute top-[0.125rem] left-[0.125rem] w-full h-full bg-male-dark rounded-pill-md [corner-shape:squircle]" />
-                          <button onClick={goNext} className="relative z-10 bg-male-normal border-2 border-male-dark text-white px-5 sm:px-6 py-2.5 rounded-pill-md [corner-shape:squircle] font-bold hover:bg-male-dark transition-colors duration-200 text-xs sm:text-sm cursor-pointer">بعدی ←</button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={goNext}
+                          className="inline-flex items-center justify-center bg-male-normal border-2 border-male-dark text-white px-5 sm:px-6 py-2.5 rounded-pill-md [corner-shape:squircle] font-bold shadow-[2.75px_2.75px_0_#0b0f1f] hover:shadow-[3.75px_3.75px_0_#0b0f1f] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-150 text-xs sm:text-sm cursor-pointer"
+                        >
+                          بعدی ←
+                        </button>
                       ) : (
-                        <div className="relative">
-                          <div aria-hidden="true" className="absolute top-[0.125rem] left-[0.125rem] w-full h-full bg-ecosystem-dark rounded-pill-md [corner-shape:squircle]" />
-                          <button onClick={openConfirm} disabled={submitting}
-                            className="relative z-10 bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-5 sm:px-6 py-2.5 rounded-pill-md [corner-shape:squircle] font-bold hover:bg-ecosystem-dark transition-colors duration-200 disabled:opacity-50 text-xs sm:text-sm cursor-pointer">
-                            {submitting ? "در حال ثبت..." : "ثبت و ارسال"}
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={openConfirm}
+                          disabled={submitting}
+                          className="inline-flex items-center justify-center bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-5 sm:px-6 py-2.5 rounded-pill-md [corner-shape:squircle] font-bold shadow-[2.75px_2.75px_0_#2e7068] hover:shadow-[3.75px_3.75px_0_#2e7068] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-xs sm:text-sm cursor-pointer"
+                        >
+                          {submitting ? "در حال ثبت..." : "ثبت و ارسال"}
+                        </button>
                       )}
                     </div>
                     {submitError && (

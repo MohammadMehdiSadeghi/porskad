@@ -165,13 +165,13 @@
 }
 
 .sa-btn-secondary {
-  background: transparent;
+  background: var(--sa-surface-2, #f4f4f4);
   color: var(--sa-text-0);
   border: 1px solid var(--sa-field-border);
 }
 
 .sa-btn-secondary:hover {
-  background: var(--sa-surface-4);
+  background: var(--sa-surface-4, #e0e0e0);
 }
 
 .sa-btn-danger {
@@ -184,13 +184,14 @@
 }
 
 .sa-btn-ghost {
-  background: transparent;
+  background: var(--sa-surface-1, #ffffff);
   color: var(--sa-link);
+  border: 1px solid var(--sa-field-border, #e0e0e0);
   padding: 0.25rem 0.5rem;
 }
 
 .sa-btn-ghost:hover {
-  background: var(--sa-surface-4);
+  background: var(--sa-surface-3, #f4f4f4);
 }
 
 .sa-btn-sm {

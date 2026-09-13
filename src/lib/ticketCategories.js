@@ -1,4 +1,4 @@
-import { faNum } from "./utils";
+import { faNum } from "./utils.js";
 
 // ════════════════════════════════════════════════════════════
 // دسته‌بندی تیکت‌ها + فرمت استاندارد پیام درخواست اشتراک
@@ -27,7 +27,7 @@ export const PAYMENT_FLOW = {
   rejected: { label: "درخواست رد شد", color: "red" },
 };
 
-const fmtToman = (rial) => `${faNum(Math.round((rial || 0) / 10))} تومان`;
+const fmtToman = (rial) => `${faNum(Math.round((rial || 0) / 10).toLocaleString("fa-IR"))} تومان`;
 
 export const SUBSCRIPTION_DURATIONS = [
   { days: 30, label: "۱ ماهه (۳۰ روز)" },
@@ -37,14 +37,29 @@ export const SUBSCRIPTION_DURATIONS = [
 ];
 
 /**
- * متن استاندارد «درخواست فعال‌سازی اشتراک».
- * عمداً هیچ درخواستی برای «شماره کارت بفرستید» ندارد؛ کاربر فقط
- * درخواست فعال‌سازی می‌دهد و مدیر خودش روش پرداخت را تعیین می‌کند.
+ * متن استاندارد «درخواست فعال‌سازی اشتراک» همراه با پشتیبانی از کد تخفیف.
  */
-export function buildSubscriptionActivationMessage(plan, dur) {
-  const priceRial =
+export function buildSubscriptionActivationMessage(plan, dur, discount = null) {
+  const originalRial =
     dur.days === 365 ? plan.priceYearly : plan.priceMonthly * Math.round(dur.days / 30);
-  const subject = `درخواست فعال‌سازی اشتراک — طرح ${plan.name} (${dur.label})`;
+  
+  let finalRial = originalRial;
+  const discountLines = [];
+
+  if (discount && discount.discountAmountRial > 0) {
+    finalRial = Math.max(0, originalRial - discount.discountAmountRial);
+    const typeLabel = discount.type === "percent" ? `${faNum(discount.value)}٪` : "مبلغ ثابت";
+    discountLines.push(
+      `• کد تخفیف اعمال‌شده: ${discount.code}`,
+      `• مبلغ تخفیف: ${fmtToman(discount.discountAmountRial)} (${typeLabel})`,
+      `• مبلغ نهایی پس از تخفیف: ${fmtToman(finalRial)}`
+    );
+  }
+
+  const subject = `درخواست فعال‌سازی اشتراک — طرح ${plan.name} (${dur.label})${
+    discount?.code ? ` [کد تخفیف: ${discount.code}]` : ""
+  }`;
+
   const message = [
     "با سلام و احترام،",
     "",
@@ -53,9 +68,20 @@ export function buildSubscriptionActivationMessage(plan, dur) {
     `• طرح درخواستی: ${plan.name}`,
     `• شناسه طرح: ${plan.id}`,
     `• دوره اشتراک: ${dur.label}`,
-    `• مبلغ فاکتور: ${fmtToman(priceRial)}`,
+    discount?.code
+      ? `• مبلغ پایه طرح: ${fmtToman(originalRial)}`
+      : `• مبلغ فاکتور: ${fmtToman(originalRial)}`,
+    ...discountLines,
     "",
     "لطفاً نسبت به فعال‌سازی این طرح اقدام فرمایید. با تشکر 🙏",
   ].join("\n");
-  return { subject, message, amount: fmtToman(priceRial) };
+
+  return {
+    subject,
+    message,
+    amount: fmtToman(finalRial),
+    originalAmount: fmtToman(originalRial),
+    finalRial,
+    hasDiscount: Boolean(discount?.discountAmountRial > 0),
+  };
 }

@@ -88,7 +88,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen dot-pattern bg-bg-mint flex items-center justify-center p-4 relative">
+    <div className="min-h-screen dot-pattern bg-bg-mint dark:bg-dark-canvas flex items-center justify-center p-4 relative">
       <div className="absolute top-4 left-4 z-20">
         <ThemeToggle />
       </div>
@@ -108,22 +108,22 @@ export default function Login() {
               <Badge color="navy" rotate="rotate-[2deg]">
                 پرس‌کاد — فرم‌ساز آنلاین
               </Badge>
-              <h1 className="text-xl sm:text-2xl font-black text-navy">ورود به حساب</h1>
-              <p className="text-sm font-semibold text-ink-subtle">
+              <h1 className="text-xl sm:text-2xl font-black text-navy dark:text-white">ورود به حساب</h1>
+              <p className="text-sm font-semibold text-ink-subtle dark:text-slate-400">
                 ایمیل و رمز عبور خود را برای ورود وارد کنید.
               </p>
             </div>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-extrabold text-navy">ایمیل</span>
+              <span className="text-sm font-extrabold text-navy dark:text-slate-200">ایمیل</span>
               <input
                 type="email"
                 dir="ltr"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white border-2 border-ink/25 focus:border-teal focus:ring-4 focus:ring-teal/20
-                  rounded-pill-md px-4 py-2.5 font-semibold text-ink text-left focus:outline-none transition-all"
+                className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20
+                  rounded-pill-md px-4 py-2.5 font-semibold text-ink dark:text-slate-100 text-left focus:outline-none transition-all"
                 placeholder="Example@gmail.com"
                 autoComplete="username"
               />
@@ -131,11 +131,11 @@ export default function Login() {
 
             <label className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-extrabold text-navy">رمز عبور</span>
+                <span className="text-sm font-extrabold text-navy dark:text-slate-200">رمز عبور</span>
                 <button
                   type="button"
                   onClick={() => setShowForgotModal(true)}
-                  className="text-xs font-bold text-teal hover:text-navy hover:underline transition-colors cursor-pointer"
+                  className="text-xs font-bold text-teal hover:text-navy dark:hover:text-teal-light transition-colors cursor-pointer"
                 >
                   فراموشی رمز عبور؟
                 </button>
@@ -147,15 +147,15 @@ export default function Login() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white border-2 border-ink/25 focus:border-teal focus:ring-4 focus:ring-teal/20
-                    rounded-pill-md px-4 py-3 pl-11 font-semibold text-ink text-left focus:outline-none transition-all"
+                  className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20
+                    rounded-pill-md px-4 py-3 pl-11 font-semibold text-ink dark:text-slate-100 text-left focus:outline-none transition-all"
                   placeholder="••••••••"
                   autoComplete="current-password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-navy transition-colors p-1 cursor-pointer"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40 dark:text-slate-400 hover:text-navy dark:hover:text-white transition-colors p-1 cursor-pointer"
                   tabIndex={-1}
                   aria-label={showPassword ? "مخفی کردن رمز عبور" : "نمایش رمز عبور"}
                 >
@@ -166,10 +166,10 @@ export default function Login() {
 
             {error && (
               <div className="flex flex-col gap-2.5">
-                <div className="rotate-[-0.5deg] bg-white border-2 border-magenta rounded-pill-md px-3.5 py-2.5 text-sm font-bold text-magenta-text">
+                <div className="rotate-[-0.5deg] bg-white dark:bg-slate-900 border-2 border-magenta rounded-pill-md px-3.5 py-2.5 text-sm font-bold text-magenta-text dark:text-pink-300">
                   {error}
                 </div>
-                <div className="bg-bg-yellow/40 border-2 border-dashed border-ink/25 rounded-pill-md p-3 flex items-center justify-between gap-2 text-xs font-bold text-navy">
+                <div className="bg-bg-yellow/40 dark:bg-amber-950/40 border-2 border-dashed border-ink/25 dark:border-amber-700/60 rounded-pill-md p-3 flex items-center justify-between gap-2 text-xs font-bold text-navy dark:text-amber-200">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <Headphones size={15} className="text-teal shrink-0" />
                     <span className="truncate">نیاز به کمک دارید؟ پشتیبانی:</span>

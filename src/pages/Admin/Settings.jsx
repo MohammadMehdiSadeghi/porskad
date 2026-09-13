@@ -18,12 +18,15 @@ import {
   Layers,
   Inbox,
   UserPlus,
+  Ticket,
 } from "lucide-react";
 import PlansSettingsPanel from "./PlansSettingsPanel";
+import DiscountCodesPanel from "./DiscountCodesPanel";
 
 const TABS = [
   { id: "general", label: "تنظیمات عمومی", icon: Sliders },
   { id: "plans", label: "مدیریت اشتراک‌ها", icon: Crown },
+  { id: "discounts", label: "کدهای تخفیف", icon: Ticket },
 ];
 
 export default function Settings() {
@@ -397,6 +400,7 @@ export default function Settings() {
       )}
 
       {tab === "plans" && <PlansSettingsPanel />}
+      {tab === "discounts" && <DiscountCodesPanel />}
     </div>
   );
 }

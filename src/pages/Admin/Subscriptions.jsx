@@ -1,12 +1,29 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, X, Crown, Sparkles, Building2, Ticket, ShieldCheck } from "lucide-react";
+import {
+  Check,
+  X,
+  Crown,
+  Sparkles,
+  Building2,
+  Ticket,
+  ShieldCheck,
+  Tag,
+  Percent,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../components/ui/Toast";
 import { getEffectivePlans, getPlanIds, getPlan } from "../../lib/plans";
 import {
   buildSubscriptionActivationMessage,
   SUBSCRIPTION_DURATIONS as DURATIONS,
 } from "../../lib/ticketCategories";
+import {
+  validateDiscountCode,
+  incrementDiscountCodeUsage,
+} from "../../lib/discounts";
 import { faNum } from "../../lib/utils";
 import StickerCard from "../../components/ui/StickerCard";
 import Button from "../../components/ui/Button";
@@ -17,13 +34,7 @@ import SEO from "../../components/ui/SEO";
 // ════════════════════════════════════════════════════════
 // صفحه «اشتراک‌ها» — کاربر طرح فعلی‌اش را می‌بیند و برای
 // خرید/ارتقا دکمه «خرید اشتراک» را می‌زند → مودال انتخاب
-// دوره → هدایت به /admin/support با subject/message آماده در
-// کوئری‌استرینگ → مودال تیکت پشتیبانی خودبه‌خود با متن
-// پر شده باز می‌شود و کاربر فقط «ارسال پیام» را می‌زند.
-// متن تیکت فقط «درخواست فعال‌سازی» است (بدون درخواست شماره
-// پرداخت). مدیر اول راهنمای پرداخت را می‌فرستد، کاربر فیش را
-// برمی‌گرداند، و بعد مدیر با دکمه‌های «تایید و فعال‌سازی»
-// یا «رد درخواست» تصمیم نهایی را می‌گیرد.
+// دوره + فیلد کد تخفیف → هدایت به /admin/support با متن آماده
 // ════════════════════════════════════════════════════════
 
 const PLAN_ICONS = {
@@ -42,6 +53,7 @@ const fmtToman = (rial) => `${faNum(Math.round((rial || 0) / 10))} تومان`;
 
 export default function Subscriptions() {
   const { profile, isOwner } = useAuth();
+  const { push } = useToast();
   const navigate = useNavigate();
   const plans = useMemo(() => getEffectivePlans(), []);
   const planIds = useMemo(() => getPlanIds(plans), [plans]);
@@ -50,11 +62,81 @@ export default function Subscriptions() {
   const [buyPlan, setBuyPlan] = useState(null); // plan object of open modal
   const [duration, setDuration] = useState(DURATIONS[0]);
 
+  // کد تخفیف در مودال خرید
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState(null);
+  const [couponError, setCouponError] = useState(null);
+
+  // محاسبه مبلغ پایه دوره انتخابی
+  const calculateOriginalPriceRial = (plan, dur) => {
+    if (!plan || !dur) return 0;
+    return dur.days === 365 ? plan.priceYearly : plan.priceMonthly * Math.round(dur.days / 30);
+  };
+
+  // اعمال یا اعتبارسنجی مجدد کد تخفیف
+  const handleApplyCoupon = (codeToTest = couponInput, dur = duration) => {
+    if (!codeToTest || !codeToTest.trim()) {
+      setCouponError("لطفاً کد تخفیف را وارد کنید.");
+      setAppliedDiscount(null);
+      return;
+    }
+
+    const priceRial = calculateOriginalPriceRial(buyPlan, dur);
+    const result = validateDiscountCode(codeToTest, buyPlan?.id, priceRial);
+
+    if (result.valid) {
+      setAppliedDiscount(result.discount);
+      setCouponError(null);
+      push(`کد تخفیف ${result.discount.code} با موفقیت اعمال شد`, "success");
+    } else {
+      setCouponError(result.error || "کد تخفیف معتبر نیست.");
+      setAppliedDiscount(null);
+    }
+  };
+
+  // حذف کد تخفیف
+  const handleRemoveCoupon = () => {
+    setAppliedDiscount(null);
+    setCouponInput("");
+    setCouponError(null);
+  };
+
+  // تغییر دوره و بررسی مجدد تخفیف اعمال‌شده
+  const handleSelectDuration = (d) => {
+    setDuration(d);
+    if (appliedDiscount) {
+      handleApplyCoupon(appliedDiscount.code, d);
+    }
+  };
+
+  // باز کردن مودال خرید با ریست فرم تخفیف
+  const handleOpenBuyModal = (plan) => {
+    setBuyPlan(plan);
+    setDuration(DURATIONS[0]);
+    setCouponInput("");
+    setAppliedDiscount(null);
+    setCouponError(null);
+  };
+
   // «ثبت درخواست و ارسال تیکت» → رفتن به صفحه تیکت‌ها با متن آماده
   function goToTicketWithRequest() {
     if (!buyPlan) return;
-    const { subject, message } = buildSubscriptionActivationMessage(buyPlan, duration);
+
+    // در صورت وجود کد تخفیف، شمارنده استفاده افزایش می‌یابد
+    if (appliedDiscount?.code) {
+      incrementDiscountCodeUsage(appliedDiscount.code);
+    }
+
+    const { subject, message } = buildSubscriptionActivationMessage(
+      buyPlan,
+      duration,
+      appliedDiscount
+    );
+
     setBuyPlan(null);
+    setAppliedDiscount(null);
+    setCouponInput("");
+
     navigate(
       `/admin/support?category=subscription&subject=${encodeURIComponent(subject)}&message=${encodeURIComponent(message)}`
     );
@@ -173,12 +255,9 @@ export default function Subscriptions() {
                     </Button>
                   ) : (
                     <Button
-                      variant="primary"
+                      variant="teal"
                       className="w-full justify-center"
-                      onClick={() => {
-                        setDuration(DURATIONS[0]);
-                        setBuyPlan(plan);
-                      }}
+                      onClick={() => handleOpenBuyModal(plan)}
                     >
                       <Crown size={15} />
                       <span>خرید اشتراک — {plan.name}</span>
@@ -192,51 +271,150 @@ export default function Subscriptions() {
       </div>
 
       <div className="text-[11px] font-medium text-ink/45 dark:text-slate-500 leading-6 px-1">
-        💡 با زدن «خرید اشتراک» و انتخاب دوره، شما به صفحهٔ تیکت‌ها می‌روید؛ متن درخواست آماده پر شده است و فقط کافی
+        💡 با زدن «خرید اشتراک» و انتخاب دوره، شما به صفحهٔ تیکت‌ها می‌روید؛ متن درخواست همراه با کد تخفیف اعمال‌شده آماده پر شده است و فقط کافی
         است «ارسال پیام» را بزنید. پشتیبانی راهنمای پرداخت را برایتان می‌فرستد و پس از واریز، اشتراک‌تان فعال می‌شود.
       </div>
 
-      {/* مودال انتخاب دوره */}
+      {/* مودال انتخاب دوره و اعمال کد تخفیف */}
       <Modal open={Boolean(buyPlan)} onClose={() => setBuyPlan(null)} title={buyPlan ? `خرید اشتراک — طرح ${buyPlan.name}` : ""}>
-        {buyPlan && (
-          <div className="flex flex-col gap-4">
-            <div className="text-sm font-bold text-ink dark:text-slate-200 leading-7">
-              دورهٔ اشتراک را انتخاب کنید — در مرحلهٔ بعد، تیکت درخواست با متن آماده برایتان باز می‌شود.
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {DURATIONS.map((d) => {
-                const priceRial = d.days === 365 ? buyPlan.priceYearly : buyPlan.priceMonthly * Math.round(d.days / 30);
-                const active = duration.days === d.days;
-                return (
-                  <button
-                    key={d.days}
-                    type="button"
-                    onClick={() => setDuration(d)}
-                    className={`text-right rounded-2xl [corner-shape:squircle] border-2 p-3.5 transition-all ${
-                      active
-                        ? "border-teal bg-teal/5 dark:bg-teal/10 shadow-[2px_2px_0_0_rgba(0,0,0,0.12)]"
-                        : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-teal/50"
-                    }`}
-                  >
-                    <div className="text-sm font-black text-navy dark:text-white">{d.label}</div>
-                    <div className={`text-xs font-bold mt-1 ${active ? "text-teal" : "text-ink/50 dark:text-slate-400"}`}>
-                      {(priceRial || 0) === 0 ? "رایگان" : fmtToman(priceRial)}
+        {buyPlan && (() => {
+          const originalPriceRial = calculateOriginalPriceRial(buyPlan, duration);
+          const originalPriceToman = Math.round(originalPriceRial / 10);
+          const discountAmountRial = appliedDiscount?.discountAmountRial || 0;
+          const discountAmountToman = Math.round(discountAmountRial / 10);
+          const finalPriceRial = Math.max(0, originalPriceRial - discountAmountRial);
+          const finalPriceToman = Math.round(finalPriceRial / 10);
+
+          return (
+            <div className="flex flex-col gap-4">
+              <div className="text-sm font-bold text-ink dark:text-slate-200 leading-7">
+                دورهٔ اشتراک مورد نظر را انتخاب کنید:
+              </div>
+
+              {/* انتخاب دوره */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {DURATIONS.map((d) => {
+                  const dPriceRial = d.days === 365 ? buyPlan.priceYearly : buyPlan.priceMonthly * Math.round(d.days / 30);
+                  const active = duration.days === d.days;
+                  return (
+                    <button
+                      key={d.days}
+                      type="button"
+                      onClick={() => handleSelectDuration(d)}
+                      className={`text-right rounded-2xl [corner-shape:squircle] border-2 p-3.5 transition-all cursor-pointer ${
+                        active
+                          ? "border-teal bg-teal/10 dark:bg-teal/20 shadow-[2px_2px_0_0_#2e7068]"
+                          : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-teal/50"
+                      }`}
+                    >
+                      <div className="text-sm font-black text-navy dark:text-white">{d.label}</div>
+                      <div className={`text-xs font-bold mt-1 ${active ? "text-teal dark:text-teal-light" : "text-ink/50 dark:text-slate-400"}`}>
+                        {(dPriceRial || 0) === 0 ? "رایگان" : fmtToman(dPriceRial)}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* بخش کد تخفیف */}
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-900/80 border-2 border-dashed border-ink/15 dark:border-slate-700 rounded-2xl flex flex-col gap-2.5">
+                <div className="flex items-center gap-1.5 text-xs font-black text-navy dark:text-slate-200">
+                  <Tag size={14} className="text-teal" />
+                  <span>کد تخفیف دارید؟</span>
+                </div>
+
+                {!appliedDiscount ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      dir="ltr"
+                      value={couponInput}
+                      onChange={(e) => {
+                        setCouponInput(e.target.value.toUpperCase());
+                        setCouponError(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleApplyCoupon(couponInput);
+                        }
+                      }}
+                      placeholder="مثلاً NOWRUZ1405"
+                      className="flex-1 bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-3 py-2 text-xs sm:text-sm font-mono font-black uppercase focus:border-teal focus:outline-none"
+                    />
+                    <Button
+                      type="button"
+                      variant="teal"
+                      size="sm"
+                      onClick={() => handleApplyCoupon(couponInput)}
+                    >
+                      اعمال کد
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between gap-2 p-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 rounded-xl text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                      <span>
+                        کد <span className="font-mono font-black">{appliedDiscount.code}</span> اعمال شد
+                        ({faNum(discountAmountToman.toLocaleString("fa-IR"))} تومان تخفیف)
+                      </span>
                     </div>
-                  </button>
-                );
-              })}
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoupon}
+                      className="text-rose-600 dark:text-rose-400 hover:underline text-[11px] font-black cursor-pointer mr-auto shrink-0"
+                    >
+                      حذف کد
+                    </button>
+                  </div>
+                )}
+
+                {couponError && (
+                  <div className="flex items-center gap-1 text-xs font-bold text-rose-600 dark:text-rose-400">
+                    <AlertCircle size={13} className="shrink-0" />
+                    <span>{couponError}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* خلاصه صورت‌حساب */}
+              <div className="p-3 bg-white dark:bg-slate-800/90 border-2 border-ink/10 dark:border-slate-700 rounded-2xl flex flex-col gap-1.5 text-xs font-bold">
+                <div className="flex items-center justify-between text-ink-subtle dark:text-slate-400">
+                  <span>مبلغ پایه ({duration.label}):</span>
+                  <span className={appliedDiscount ? "line-through" : ""}>
+                    {faNum(originalPriceToman.toLocaleString("fa-IR"))} تومان
+                  </span>
+                </div>
+
+                {appliedDiscount && (
+                  <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
+                    <span>میزان تخفیف ({appliedDiscount.code}):</span>
+                    <span>- {faNum(discountAmountToman.toLocaleString("fa-IR"))} تومان</span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-1.5 border-t border-ink/10 dark:border-slate-700 text-sm font-black text-navy dark:text-white">
+                  <span>مبلغ نهایی فاکتور:</span>
+                  <span className="text-teal dark:text-teal-light text-base sm:text-lg">
+                    {finalPriceToman === 0 ? "رایگان" : `${faNum(finalPriceToman.toLocaleString("fa-IR"))} تومان`}
+                  </span>
+                </div>
+              </div>
+
+              {/* دکمه‌های ادامه و انصراف */}
+              <div className="flex items-center gap-2 pt-1">
+                <Button variant="teal" className="flex-1 justify-center" onClick={goToTicketWithRequest}>
+                  <Ticket size={15} />
+                  <span>ادامه — رفتن به تیکت و ارسال درخواست</span>
+                </Button>
+                <Button variant="ghost" onClick={() => setBuyPlan(null)}>
+                  انصراف
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2 pt-1">
-              <Button variant="primary" className="flex-1 justify-center" onClick={goToTicketWithRequest}>
-                <Ticket size={15} />
-                <span>ادامه — رفتن به تیکت و ارسال درخواست</span>
-              </Button>
-              <Button variant="ghost" onClick={() => setBuyPlan(null)}>
-                انصراف
-              </Button>
-            </div>
-          </div>
-        )}
+          );
+        })()}
       </Modal>
     </div>
   );

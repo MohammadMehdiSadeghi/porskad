@@ -1,0 +1,867 @@
+// ══════════════════════════════════════════════════════════════
+// پنل تخصصی مدیریت کدهای تخفیف پرس‌کاد
+// امکانات: ایجاد، ویرایش، تولید کد رندوم، تعیین سقف تخفیف، محدودیت نفرات،
+// تاریخ انقضا (شمسی)، انطباق با طرح‌های خاص، سوئیچ فعال/غیرفعال،
+// نوار پیشرفت مصرف، شبیه‌ساز تست زنده و ذخیره در دیتابیس
+// استایل: مطابق با DESIGN_SYSTEM پرس‌کاد (سایه‌های هارد، Squircle، رنگ‌های برند)
+// ══════════════════════════════════════════════════════════════
+
+import { useState, useEffect, useMemo } from "react";
+import { useToast } from "../../components/ui/Toast";
+import {
+  loadDiscountCodes,
+  saveDiscountCodes,
+  generateRandomCouponCode,
+  validateDiscountCode,
+} from "../../lib/discounts";
+import { getEffectivePlans } from "../../lib/plans";
+import { faNum, faDate } from "../../lib/utils";
+import Button from "../../components/ui/Button";
+import Badge from "../../components/ui/Badge";
+import Modal from "../../components/ui/Modal";
+import StickerCard from "../../components/ui/StickerCard";
+import {
+  Ticket,
+  Plus,
+  Copy,
+  Check,
+  Percent,
+  Calendar,
+  Users,
+  Sparkles,
+  Search,
+  Filter,
+  Trash2,
+  Edit2,
+  Play,
+  RotateCcw,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  ShieldAlert,
+  Flame,
+} from "lucide-react";
+
+export default function DiscountCodesPanel() {
+  const { push } = useToast();
+
+  const [codes, setCodes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(null);
+
+  // جستجو و فیلتر
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all"); // all | active | expired | capped
+
+  // مودال ایجاد / ویرایش
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingCode, setEditingCode] = useState(null);
+
+  // فرم کد تخفیف
+  const [formData, setFormData] = useState({
+    code: "",
+    title: "",
+    type: "percent", // percent | fixed
+    value: 20,
+    maxDiscountToman: "",
+    minPurchaseToman: "",
+    maxUses: "",
+    expiresAt: "",
+    applicablePlans: [], // خالی = همه طرح‌ها
+    isActive: true,
+  });
+
+  // تست زنده کد تخفیف (Live Simulator)
+  const [testCodeInput, setTestCodeInput] = useState("");
+  const [testPlanInput, setTestPlanInput] = useState("pro");
+  const [testAmountInput, setTestAmountInput] = useState("40000"); // 40,000 تومان
+  const [testResult, setTestResult] = useState(null);
+
+  const availablePlans = useMemo(() => {
+    const p = getEffectivePlans();
+    return Object.values(p).filter((item) => item.id !== "free" && !String(item.id).startsWith("_"));
+  }, []);
+
+  // بارگذاری اولیه
+  useEffect(() => {
+    async function init() {
+      setLoading(true);
+      const data = await loadDiscountCodes();
+      setCodes(data);
+      setLoading(false);
+    }
+    init();
+  }, []);
+
+  // کپی سریع در کلیپ‌بورد
+  const handleCopy = (codeStr) => {
+    try {
+      navigator.clipboard.writeText(codeStr);
+      setCopiedCode(codeStr);
+      push(`کد «${codeStr}» کپی شد`, "success");
+      setTimeout(() => setCopiedCode(null), 2500);
+    } catch {
+      push("خطا در کپی به کلیپ‌بورد", "error");
+    }
+  };
+
+  // باز کردن مودال ایجاد
+  const handleOpenCreate = () => {
+    setEditingCode(null);
+    setFormData({
+      code: generateRandomCouponCode(),
+      title: "",
+      type: "percent",
+      value: 20,
+      maxDiscountToman: "",
+      minPurchaseToman: "",
+      maxUses: "50",
+      expiresAt: "",
+      applicablePlans: [],
+      isActive: true,
+    });
+    setModalOpen(true);
+  };
+
+  // باز کردن مودال ویرایش
+  const handleOpenEdit = (c) => {
+    setEditingCode(c);
+    setFormData({
+      code: c.code,
+      title: c.title || "",
+      type: c.type || "percent",
+      value: c.value,
+      maxDiscountToman: c.maxDiscountToman ?? "",
+      minPurchaseToman: c.minPurchaseToman ?? "",
+      maxUses: c.maxUses ?? "",
+      expiresAt: c.expiresAt ? c.expiresAt.split("T")[0] : "",
+      applicablePlans: Array.isArray(c.applicablePlans) ? c.applicablePlans : [],
+      isActive: Boolean(c.isActive),
+    });
+    setModalOpen(true);
+  };
+
+  // سوئیچ وضعیت فعال/غیرفعال آنی
+  const handleToggleActive = async (c) => {
+    const nextCodes = codes.map((item) =>
+      item.id === c.id ? { ...item, isActive: !item.isActive } : item
+    );
+    setCodes(nextCodes);
+    const res = await saveDiscountCodes(nextCodes);
+    if (res.ok) {
+      push(`کد ${c.code} ${!c.isActive ? "فعال" : "غیرفعال"} شد`, "info");
+    } else {
+      push("خطا در ذخیره وضعیت در سرور", "error");
+    }
+  };
+
+  // حذف کد
+  const handleDelete = async (c) => {
+    if (!window.confirm(`آیا از حذف کد تخفیف «${c.code}» مطمئن هستید؟`)) return;
+    const nextCodes = codes.filter((item) => item.id !== c.id);
+    setCodes(nextCodes);
+    const res = await saveDiscountCodes(nextCodes);
+    if (res.ok) {
+      push(`کد ${c.code} با موفقیت حذف شد`, "success");
+    } else {
+      push("خطا در حذف کد در سرور", "error");
+    }
+  };
+
+  // ذخیره فرم (ایجاد یا ویرایش)
+  const handleSubmitForm = async (e) => {
+    e.preventDefault();
+    const cleanCode = formData.code.trim().toUpperCase();
+    if (!cleanCode) {
+      push("لطفاً عبارت کد تخفیف را وارد کنید", "error");
+      return;
+    }
+
+    // بررسی عدم تکراری بودن کد
+    const duplicate = codes.find(
+      (c) => c.code.toUpperCase() === cleanCode && c.id !== editingCode?.id
+    );
+    if (duplicate) {
+      push("این کد تخفیف قبلاً تعریف شده است. لطفاً عبارت دیگری انتخاب کنید.", "error");
+      return;
+    }
+
+    const payload = {
+      id: editingCode?.id || `disc_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      code: cleanCode,
+      title: formData.title.trim() || `تخفیف ${cleanCode}`,
+      type: formData.type,
+      value: Math.max(1, Number(formData.value) || 1),
+      maxDiscountToman: formData.maxDiscountToman ? Math.max(0, Number(formData.maxDiscountToman)) : null,
+      minPurchaseToman: formData.minPurchaseToman ? Math.max(0, Number(formData.minPurchaseToman)) : null,
+      maxUses: formData.maxUses ? Math.max(1, Number(formData.maxUses)) : null,
+      usedCount: editingCode?.usedCount || 0,
+      expiresAt: formData.expiresAt ? new Date(`${formData.expiresAt}T23:59:59.000Z`).toISOString() : null,
+      applicablePlans: formData.applicablePlans,
+      isActive: Boolean(formData.isActive),
+      createdAt: editingCode?.createdAt || new Date().toISOString(),
+    };
+
+    setSaving(true);
+    let nextCodes = [];
+    if (editingCode) {
+      nextCodes = codes.map((c) => (c.id === editingCode.id ? payload : c));
+    } else {
+      nextCodes = [payload, ...codes];
+    }
+
+    setCodes(nextCodes);
+    const res = await saveDiscountCodes(nextCodes);
+    setSaving(false);
+
+    if (res.ok) {
+      push(editingCode ? "کد تخفیف با موفقیت ویرایش شد" : "کد تخفیف جدید ایجاد و فعال شد", "success");
+      setModalOpen(false);
+    } else {
+      push("خطا در ذخیره روی سرور: " + res.dbError, "error");
+    }
+  };
+
+  // تست زنده
+  const handleRunSimulator = () => {
+    if (!testCodeInput.trim()) {
+      push("لطفاً یک کد برای شبیه‌سازی وارد کنید", "error");
+      return;
+    }
+    const amountRial = (Number(testAmountInput) || 0) * 10;
+    const result = validateDiscountCode(testCodeInput, testPlanInput, amountRial, codes);
+    setTestResult(result);
+  };
+
+  // آمار کلی
+  const stats = useMemo(() => {
+    const total = codes.length;
+    const active = codes.filter((c) => {
+      const isNotExpired = !c.expiresAt || new Date(c.expiresAt).getTime() > Date.now();
+      const hasQuota = !c.maxUses || (c.usedCount || 0) < c.maxUses;
+      return c.isActive && isNotExpired && hasQuota;
+    }).length;
+    const totalUses = codes.reduce((acc, c) => acc + (c.usedCount || 0), 0);
+    return { total, active, totalUses };
+  }, [codes]);
+
+  // فیلتر کردن لیست
+  const filteredCodes = useMemo(() => {
+    return codes.filter((c) => {
+      // جستجو
+      const q = search.trim().toLowerCase();
+      const matchSearch =
+        !q ||
+        c.code.toLowerCase().includes(q) ||
+        (c.title && c.title.toLowerCase().includes(q));
+
+      if (!matchSearch) return false;
+
+      // فیلتر وضعیت
+      const isExpired = c.expiresAt && new Date(c.expiresAt).getTime() < Date.now();
+      const isCapped = c.maxUses && (c.usedCount || 0) >= c.maxUses;
+
+      if (statusFilter === "active") return c.isActive && !isExpired && !isCapped;
+      if (statusFilter === "expired") return isExpired;
+      if (statusFilter === "capped") return isCapped;
+      if (statusFilter === "inactive") return !c.isActive;
+
+      return true;
+    });
+  }, [codes, search, statusFilter]);
+
+  return (
+    <div className="flex flex-col gap-6" dir="rtl">
+      {/* هدر بخش و توضیحات */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-black text-navy dark:text-white flex items-center gap-2">
+            <Ticket size={24} className="text-teal" />
+            <span>مدیریت کدهای تخفیف و پروموشن</span>
+          </h2>
+          <p className="text-xs sm:text-sm text-ink-subtle dark:text-slate-400 mt-1 font-medium leading-6">
+            تعریف کدهای تخفیف تخصصی درصدی یا ثابت، تعیین سقف تخفیف، محدودیت نفرات، تاریخ انقضا و اعمال مستقیم در خرید اشتراک.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button variant="teal" size="sm" onClick={handleOpenCreate}>
+            <Plus size={16} />
+            <span>ایجاد کد تخفیف جدید</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* کارتهای آمار سریع */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <StickerCard theme="teal">
+          <div className="p-4 flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-teal/15 text-teal flex items-center justify-center shrink-0">
+              <Ticket size={24} />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-ink-subtle dark:text-slate-400">کدهای فعال و معتبر</div>
+              <div className="text-2xl font-black text-navy dark:text-white mt-0.5">
+                {loading ? "..." : `${faNum(stats.active)} از ${faNum(stats.total)}`}
+              </div>
+            </div>
+          </div>
+        </StickerCard>
+
+        <StickerCard theme="orange">
+          <div className="p-4 flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-orange/15 text-orange flex items-center justify-center shrink-0">
+              <Users size={24} />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-ink-subtle dark:text-slate-400">مجموع دفعات استفاده‌شده</div>
+              <div className="text-2xl font-black text-navy dark:text-white mt-0.5">
+                {loading ? "..." : `${faNum(stats.totalUses)} بار`}
+              </div>
+            </div>
+          </div>
+        </StickerCard>
+
+        <StickerCard theme="white">
+          <div className="p-4 flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-male-normal/10 text-male-normal dark:text-teal flex items-center justify-center shrink-0">
+              <Percent size={24} />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-ink-subtle dark:text-slate-400">تخفیف‌های درصدی فعال</div>
+              <div className="text-2xl font-black text-navy dark:text-white mt-0.5">
+                {loading ? "..." : faNum(codes.filter((c) => c.type === "percent" && c.isActive).length)}
+              </div>
+            </div>
+          </div>
+        </StickerCard>
+      </div>
+
+      {/* نوار جستجو، فیلتر و ابزارها */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-800/90 border-2 border-ink/10 dark:border-slate-700 rounded-2xl p-3.5 shadow-sm">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink/40 dark:text-slate-500" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="جستجوی کد تخفیف یا عنوان..."
+            className="w-full pr-10 pl-3 py-2 bg-slate-50 dark:bg-slate-900 border border-ink/15 dark:border-slate-700 rounded-pill-md text-xs sm:text-sm font-bold text-ink dark:text-white focus:outline-none focus:border-teal"
+          />
+        </div>
+
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+          <Filter size={14} className="text-ink/40 dark:text-slate-500 ml-1" />
+          {[
+            { id: "all", label: "همه" },
+            { id: "active", label: "فعال" },
+            { id: "expired", label: "منقضی‌شده" },
+            { id: "capped", label: "تکمیل‌ظرفیت" },
+            { id: "inactive", label: "غیرفعال" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setStatusFilter(tab.id)}
+              className={`px-3 py-1.5 rounded-pill-md text-xs font-bold transition-all ${
+                statusFilter === tab.id
+                  ? "bg-navy dark:bg-teal text-white dark:text-navy shadow-sm"
+                  : "bg-slate-100 dark:bg-slate-800 text-ink dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* لیست کدهای تخفیف */}
+      {loading ? (
+        <div className="p-12 text-center text-sm font-bold text-ink-subtle dark:text-slate-400">
+          در حال بارگذاری کدهای تخفیف...
+        </div>
+      ) : filteredCodes.length === 0 ? (
+        <div className="bg-white dark:bg-slate-800/60 border-2 border-dashed border-ink/15 dark:border-slate-700 rounded-2xl p-8 text-center flex flex-col items-center gap-3">
+          <Ticket size={36} className="text-ink/30 dark:text-slate-600" />
+          <div className="text-sm font-bold text-navy dark:text-white">هیچ کد تخفیفی با این مشخصات یافت نشد</div>
+          <Button variant="teal" size="sm" onClick={handleOpenCreate}>
+            ایجاد اولین کد تخفیف
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredCodes.map((c) => {
+            const isExpired = c.expiresAt && new Date(c.expiresAt).getTime() < Date.now();
+            const isCapped = c.maxUses && (c.usedCount || 0) >= c.maxUses;
+            const isOperational = c.isActive && !isExpired && !isCapped;
+
+            const usagePercent = c.maxUses ? Math.min(100, Math.round(((c.usedCount || 0) / c.maxUses) * 100)) : null;
+
+            return (
+              <div
+                key={c.id}
+                className={`relative bg-white dark:bg-slate-800 border-2 rounded-2xl p-4 sm:p-5 transition-all duration-200 flex flex-col justify-between gap-4 shadow-sm ${
+                  isOperational
+                    ? "border-ink/15 dark:border-slate-700 hover:border-teal/50"
+                    : "border-rose-300 dark:border-rose-900/50 opacity-80"
+                }`}
+              >
+                {/* ردیف بالا: کد + وضعیت + کپی */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-base sm:text-lg font-black tracking-wider text-navy dark:text-teal bg-teal/10 dark:bg-teal/20 px-3 py-1 rounded-xl border border-teal/30 select-all">
+                      {c.code}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(c.code)}
+                      className="inline-flex items-center gap-1 text-xs font-bold text-ink-subtle dark:text-slate-400 hover:text-teal p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                      title="کپی کد"
+                    >
+                      {copiedCode === c.code ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    {isExpired ? (
+                      <span className="bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-300 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full">
+                        منقضی شده
+                      </span>
+                    ) : isCapped ? (
+                      <span className="bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-300 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full">
+                        تکمیل ظرفیت
+                      </span>
+                    ) : c.isActive ? (
+                      <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-300 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full">
+                        فعال
+                      </span>
+                    ) : (
+                      <span className="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full">
+                        غیرفعال
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* عنوان و مشخصات تخفیف */}
+                <div className="flex flex-col gap-1.5">
+                  <div className="text-sm font-black text-navy dark:text-white">{c.title || "تخفیف ویژه"}</div>
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-ink-subtle dark:text-slate-400">
+                    <span className="text-teal font-black text-sm">
+                      {c.type === "percent" ? `${faNum(c.value)}٪ تخفیف` : `${faNum(Number(c.value).toLocaleString("fa-IR"))} تومان تخفیف`}
+                    </span>
+                    {c.maxDiscountToman && (
+                      <span className="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-md text-[11px]">
+                        سقف: {faNum(c.maxDiscountToman.toLocaleString("fa-IR"))} تومان
+                      </span>
+                    )}
+                    {c.minPurchaseToman && (
+                      <span className="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-md text-[11px]">
+                        حداقل خرید: {faNum(c.minPurchaseToman.toLocaleString("fa-IR"))} تومان
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* نوار مصرف و تاریخ انقضا */}
+                <div className="flex flex-col gap-2 pt-2 border-t border-ink/10 dark:border-slate-700/60">
+                  {c.maxUses ? (
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-ink-subtle dark:text-slate-400">
+                        <span>میزان استفاده:</span>
+                        <span>
+                          {faNum(c.usedCount || 0)} از {faNum(c.maxUses)} نفر ({faNum(usagePercent)}٪)
+                        </span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-teal transition-all duration-300"
+                          style={{ width: `${usagePercent}%` }}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-[11px] font-bold text-ink-subtle dark:text-slate-400 flex items-center justify-between">
+                      <span>دفعات استفاده شده:</span>
+                      <span className="text-navy dark:text-white font-extrabold">{faNum(c.usedCount || 0)} بار (بدون سقف)</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between text-[11px] font-bold text-ink-subtle dark:text-slate-400">
+                    <span className="flex items-center gap-1">
+                      <Clock size={12} />
+                      مهلت اعتبار:
+                    </span>
+                    <span>
+                      {c.expiresAt ? (
+                        <span className={isExpired ? "text-rose-500 font-black" : "text-navy dark:text-slate-200"}>
+                          {faDate(c.expiresAt)}
+                        </span>
+                      ) : (
+                        "دائمی (بدون انقضا)"
+                      )}
+                    </span>
+                  </div>
+
+                  {Array.isArray(c.applicablePlans) && c.applicablePlans.length > 0 && (
+                    <div className="text-[11px] font-bold text-ink-subtle dark:text-slate-400 flex items-center gap-1">
+                      <span>طرح‌های مجاز:</span>
+                      <span className="text-navy dark:text-slate-200 font-extrabold">
+                        {c.applicablePlans.map((pid) => availablePlans.find((p) => p.id === pid)?.name || pid).join("، ")}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* دکمه‌های عملیات */}
+                <div className="flex items-center justify-between gap-2 pt-2 border-t border-ink/10 dark:border-slate-700/60">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleActive(c)}
+                      className={`text-xs font-bold px-2.5 py-1 rounded-pill-md transition-colors ${
+                        c.isActive
+                          ? "bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 hover:bg-amber-200"
+                          : "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200"
+                      }`}
+                    >
+                      {c.isActive ? "غیرفعال‌سازی" : "فعال‌سازی"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTestCodeInput(c.code);
+                        setTestPlanInput(c.applicablePlans?.[0] || "pro");
+                        handleRunSimulator();
+                      }}
+                      className="text-xs font-bold text-teal hover:underline px-2 py-1 cursor-pointer"
+                    >
+                      تست در شبیه‌ساز
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(c)}
+                      className="p-1.5 text-ink-subtle hover:text-navy dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                      title="ویرایش"
+                    >
+                      <Edit2 size={15} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(c)}
+                      className="p-1.5 text-rose-500 hover:text-rose-700 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors"
+                      title="حذف"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* شبیه‌ساز تست زنده کد تخفیف (Live Simulator) */}
+      <div className="bg-gradient-to-br from-slate-50 to-teal/5 dark:from-slate-800/80 dark:to-slate-900 border-2 border-teal/30 rounded-2xl p-4 sm:p-6 flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <Sparkles size={20} className="text-teal" />
+          <h3 className="text-base sm:text-lg font-black text-navy dark:text-white">
+            شبیه‌ساز و تستر زنده کدهای تخفیف (Simulator)
+          </h3>
+        </div>
+        <p className="text-xs sm:text-sm font-medium text-ink-subtle dark:text-slate-400">
+          برای اطمینان از عملکرد صحیح کدها، شرایط یک خرید فرضی را وارد کرده و نتیجه محاسبات را فوراً بررسی کنید:
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="text-xs font-bold text-ink dark:text-slate-300 block mb-1">کد تخفیف مورد نظر:</label>
+            <input
+              type="text"
+              dir="ltr"
+              value={testCodeInput}
+              onChange={(e) => setTestCodeInput(e.target.value)}
+              placeholder="مثلاً WELCOME20"
+              className="w-full bg-white dark:bg-slate-900 border border-ink/20 dark:border-slate-700 rounded-pill-md px-3 py-2 text-xs sm:text-sm font-mono font-bold text-center uppercase"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-ink dark:text-slate-300 block mb-1">طرح انتخابی:</label>
+            <select
+              value={testPlanInput}
+              onChange={(e) => setTestPlanInput(e.target.value)}
+              className="w-full bg-white dark:bg-slate-900 border border-ink/20 dark:border-slate-700 rounded-pill-md px-3 py-2 text-xs sm:text-sm font-bold text-ink dark:text-white"
+            >
+              {availablePlans.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-ink dark:text-slate-300 block mb-1">مبلغ آزمایشی (تومان):</label>
+            <input
+              type="number"
+              value={testAmountInput}
+              onChange={(e) => setTestAmountInput(e.target.value)}
+              placeholder="40000"
+              className="w-full bg-white dark:bg-slate-900 border border-ink/20 dark:border-slate-700 rounded-pill-md px-3 py-2 text-xs sm:text-sm font-bold text-ink dark:text-white"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button variant="navy" size="sm" onClick={handleRunSimulator}>
+            <Play size={14} />
+            <span>بررسی و محاسبه نتیجه</span>
+          </Button>
+        </div>
+
+        {/* نتیجه تست */}
+        {testResult && (
+          <div
+            className={`p-3.5 rounded-xl border-2 flex flex-col gap-2 ${
+              testResult.valid
+                ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200"
+                : "bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-900 dark:text-rose-200"
+            }`}
+          >
+            <div className="flex items-center gap-2 font-black text-sm">
+              {testResult.valid ? <CheckCircle2 size={18} className="text-emerald-600" /> : <AlertCircle size={18} className="text-rose-600" />}
+              <span>{testResult.valid ? "کد تخفیف کاملاً معتبر و قابل اعمال است ✅" : "کد تخفیف رد شد ❌"}</span>
+            </div>
+
+            {testResult.valid ? (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs font-bold pt-1">
+                <div>مبلغ پایه: {faNum(testResult.discount.originalPriceToman.toLocaleString("fa-IR"))} تومان</div>
+                <div className="text-emerald-600 dark:text-emerald-300">
+                  تخفیف کسر شده: {faNum(testResult.discount.discountAmountToman.toLocaleString("fa-IR"))} تومان
+                </div>
+                <div className="font-black">
+                  مبلغ نهایی قابل پرداخت: {faNum(testResult.discount.finalPriceToman.toLocaleString("fa-IR"))} تومان
+                </div>
+              </div>
+            ) : (
+              <div className="text-xs font-bold">{testResult.error}</div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* مودال ایجاد و ویرایش */}
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editingCode ? `ویرایش کد تخفیف ${editingCode.code}` : "تعریف کد تخفیف جدید"}
+      >
+        <form onSubmit={handleSubmitForm} className="flex flex-col gap-4">
+          {/* ردیف ۱: عبارت کد + دکمه تولید رندوم */}
+          <div>
+            <label className="text-xs font-extrabold text-navy dark:text-slate-200 block mb-1">
+              عبارت کد تخفیف (انگلیسی / اعداد):
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                required
+                dir="ltr"
+                value={formData.code}
+                onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                placeholder="مثلاً NOWRUZ1405"
+                className="flex-1 bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-3.5 py-2 text-sm font-mono font-black text-center uppercase focus:border-teal focus:outline-none"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setFormData({ ...formData, code: generateRandomCouponCode() })}
+                title="تولید کد رندوم"
+              >
+                <Sparkles size={14} />
+                <span>کد تصادفی</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* ردیف ۲: عنوان یا یادداشت */}
+          <div>
+            <label className="text-xs font-extrabold text-navy dark:text-slate-200 block mb-1">عنوان / یادداشت مدیریتی:</label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              placeholder="مثلاً تخفیف ۵۰ درصدی نوروز ویژه طرح حرفه‌ای"
+              className="w-full bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-3.5 py-2 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
+            />
+          </div>
+
+          {/* ردیف ۳: نوع و مقدار تخفیف */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-extrabold text-navy dark:text-slate-200 block mb-1">نوع تخفیف:</label>
+              <select
+                value={formData.type}
+                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                className="w-full bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-3.5 py-2 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
+              >
+                <option value="percent">درصدی (٪)</option>
+                <option value="fixed">مبلغ ثابت (تومان)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs font-extrabold text-navy dark:text-slate-200 block mb-1">
+                {formData.type === "percent" ? "درصد تخفیف (۱ تا ۱۰۰):" : "مبلغ تخفیف (تومان):"}
+              </label>
+              <input
+                type="number"
+                required
+                min={1}
+                max={formData.type === "percent" ? 100 : undefined}
+                value={formData.value}
+                onChange={(e) => setFormData({ ...formData, value: e.target.value })}
+                className="w-full bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-3.5 py-2 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* ردیف ۴: سقف تخفیف درصدی و حداقل خرید */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-extrabold text-navy dark:text-slate-200 block mb-1">
+                سقف تخفیف (تومان - اختیاری برای درصدی):
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={formData.maxDiscountToman}
+                onChange={(e) => setFormData({ ...formData, maxDiscountToman: e.target.value })}
+                placeholder="بدون سقف"
+                disabled={formData.type === "fixed"}
+                className="w-full bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-3.5 py-2 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none disabled:opacity-50"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-extrabold text-navy dark:text-slate-200 block mb-1">
+                حداقل مبلغ خرید (تومان - اختیاری):
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={formData.minPurchaseToman}
+                onChange={(e) => setFormData({ ...formData, minPurchaseToman: e.target.value })}
+                placeholder="بدون حداقل (۰)"
+                className="w-full bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-3.5 py-2 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* ردیف ۵: محدودیت تعداد نفرات و تاریخ انقضا */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-extrabold text-navy dark:text-slate-200 block mb-1">
+                محدودیت تعداد نفرات / دفعات استفاده:
+              </label>
+              <input
+                type="number"
+                min={1}
+                value={formData.maxUses}
+                onChange={(e) => setFormData({ ...formData, maxUses: e.target.value })}
+                placeholder="نامحدود"
+                className="w-full bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-3.5 py-2 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-extrabold text-navy dark:text-slate-200 block mb-1">
+                تاریخ انقضا (میلادی/شمسی):
+              </label>
+              <input
+                type="date"
+                value={formData.expiresAt}
+                onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })}
+                className="w-full bg-white dark:bg-slate-900 border-2 border-ink/20 dark:border-slate-700 rounded-pill-md px-3.5 py-2 text-xs sm:text-sm font-bold text-ink dark:text-white focus:border-teal focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* ردیف ۶: طرح‌های مجاز */}
+          <div>
+            <label className="text-xs font-extrabold text-navy dark:text-slate-200 block mb-1.5">
+              قابل استفاده برای کدام طرح‌ها؟
+            </label>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, applicablePlans: [] })}
+                className={`px-3 py-1.5 rounded-pill-md text-xs font-bold border-2 transition-all ${
+                  formData.applicablePlans.length === 0
+                    ? "border-teal bg-teal text-white"
+                    : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-900 text-ink dark:text-slate-300"
+                }`}
+              >
+                همه طرح‌ها
+              </button>
+
+              {availablePlans.map((p) => {
+                const checked = formData.applicablePlans.includes(p.id);
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      const next = checked
+                        ? formData.applicablePlans.filter((id) => id !== p.id)
+                        : [...formData.applicablePlans, p.id];
+                      setFormData({ ...formData, applicablePlans: next });
+                    }}
+                    className={`px-3 py-1.5 rounded-pill-md text-xs font-bold border-2 transition-all ${
+                      checked
+                        ? "border-navy dark:border-teal bg-navy dark:bg-teal text-white dark:text-navy"
+                        : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-900 text-ink dark:text-slate-300"
+                    }`}
+                  >
+                    {p.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ردیف ۷: وضعیت فعال بودن */}
+          <label className="flex items-center gap-2 cursor-pointer pt-1">
+            <input
+              type="checkbox"
+              checked={formData.isActive}
+              onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+              className="w-4 h-4 text-teal rounded focus:ring-teal"
+            />
+            <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-white">
+              این کد تخفیف بلافاصله فعال باشد
+            </span>
+          </label>
+
+          {/* دکمه‌های فرم */}
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-ink/10 dark:border-slate-700">
+            <Button variant="ghost" type="button" onClick={() => setModalOpen(false)}>
+              انصراف
+            </Button>
+            <Button variant="teal" type="submit" disabled={saving}>
+              <span>{saving ? "در حال ذخیره..." : editingCode ? "ذخیره تغییرات" : "ایجاد کد تخفیف"}</span>
+            </Button>
+          </div>
+        </form>
+      </Modal>
+    </div>
+  );
+}

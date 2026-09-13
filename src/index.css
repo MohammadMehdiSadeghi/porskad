@@ -32,6 +32,13 @@
         line-height: 1.3;
         font-weight: 800;
     }
+    /* تضمین پس‌زمینه سالید و غیرشفاف برای تمام دکمه‌ها */
+    button:not([class*="bg-"]) {
+        background-color: #F1F5F9;
+    }
+    html.dark button:not([class*="bg-"]) {
+        background-color: #1E293B;
+    }
 }
 
 /* ─── یکپارچه‌سازی و راست‌چین بودن placeholder تمام فرم‌ها ─── */
@@ -390,40 +397,40 @@ html.dark .text-club-darker {
 }
 
 /* ─── Universal Dark Mode Background Inversions for Cards, Panels & Pills ─── */
-html.dark .bg-white {
+html.dark .bg-white:not([class*="dark:bg-"]):not(button):not(a):not([role="button"]):not([type="button"]):not([type="submit"]):not(.btn):not(.sa-btn) {
     background-color: #131B2E !important;
 }
 
-html.dark .bg-white\/80,
-html.dark .bg-white\/90 {
+html.dark .bg-white\/80:not([class*="dark:bg-"]),
+html.dark .bg-white\/90:not([class*="dark:bg-"]) {
     background-color: rgba(19, 27, 46, 0.9) !important;
 }
 
-html.dark .bg-white\/70,
-html.dark .bg-white\/60,
-html.dark .bg-white\/50 {
+html.dark .bg-white\/70:not([class*="dark:bg-"]),
+html.dark .bg-white\/60:not([class*="dark:bg-"]),
+html.dark .bg-white\/50:not([class*="dark:bg-"]) {
     background-color: rgba(19, 27, 46, 0.6) !important;
 }
 
-html.dark .bg-slate-50,
-html.dark .bg-gray-50 {
+html.dark .bg-slate-50:not([class*="dark:bg-"]),
+html.dark .bg-gray-50:not([class*="dark:bg-"]) {
     background-color: #0E1526 !important;
 }
 
-html.dark .bg-gray-100,
-html.dark .bg-slate-100 {
+html.dark .bg-gray-100:not([class*="dark:bg-"]):not(button):not(a):not([role="button"]):not([type="button"]):not([type="submit"]):not(.btn):not(.sa-btn),
+html.dark .bg-slate-100:not([class*="dark:bg-"]):not(button):not(a):not([role="button"]):not([type="button"]):not([type="submit"]):not(.btn):not(.sa-btn) {
     background-color: #162032 !important;
 }
 
-html.dark .bg-bg-lavender {
+html.dark .bg-bg-lavender:not([class*="dark:bg-"]) {
     background-color: #0B0F19 !important;
 }
 
-html.dark .bg-bg-neutral {
+html.dark .bg-bg-neutral:not([class*="dark:bg-"]):not(button):not(a):not([role="button"]):not([type="button"]):not([type="submit"]):not(.btn):not(.sa-btn) {
     background-color: #162032 !important;
 }
 
-html.dark .bg-bg-neutral\/50 {
+html.dark .bg-bg-neutral\/50:not([class*="dark:bg-"]) {
     background-color: rgba(22, 32, 50, 0.6) !important;
 }
 

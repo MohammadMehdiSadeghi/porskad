@@ -3,52 +3,52 @@ import clsx from "./clsx";
 
 export const STICKER_THEMES = {
   white: {
-    back: "bg-ink dark:bg-black/90",
+    back: "bg-ink dark:bg-black",
     border: "border-ink dark:border-slate-700",
     bg: "bg-white dark:bg-slate-900",
   },
   teal: {
-    back: "bg-teal-alt dark:bg-teal/10",
+    back: "bg-teal-text dark:bg-[#153e3a]",
     border: "border-teal dark:border-teal",
     bg: "bg-ecosystem-light dark:bg-[#0d2322]",
   },
   navy: {
-    back: "bg-navy-alt dark:bg-slate-950",
+    back: "bg-navy-darker dark:bg-black",
     border: "border-navy dark:border-blue-500",
     bg: "bg-male-light dark:bg-[#11182c]",
   },
   magenta: {
-    back: "bg-magenta dark:bg-pink-950",
+    back: "bg-magenta-text dark:bg-[#4e0920]",
     border: "border-magenta dark:border-pink-500",
     bg: "bg-female-light dark:bg-[#250d18]",
   },
   orange: {
-    back: "bg-orange-alt dark:bg-amber-950",
+    back: "bg-[#c57a07] dark:bg-[#57390a]",
     border: "border-orange dark:border-amber-500",
     bg: "bg-college-light dark:bg-[#261705]",
   },
   ecosystem: {
-    back: "bg-ecosystem-dark dark:bg-teal/10",
+    back: "bg-ecosystem-dark dark:bg-[#153e3a]",
     border: "border-ecosystem-normal dark:border-teal",
     bg: "bg-ecosystem-light dark:bg-[#0d2322]",
   },
   male: {
-    back: "bg-male-dark dark:bg-slate-950",
+    back: "bg-male-darker dark:bg-black",
     border: "border-male-normal dark:border-blue-500",
     bg: "bg-male-light dark:bg-[#11182c]",
   },
   female: {
-    back: "bg-female-dark dark:bg-pink-950",
+    back: "bg-female-darker dark:bg-[#4e0920]",
     border: "border-female-normal dark:border-pink-500",
     bg: "bg-female-light dark:bg-[#250d18]",
   },
   college: {
-    back: "bg-college-dark dark:bg-amber-950",
+    back: "bg-college-darker dark:bg-[#57390a]",
     border: "border-college-normal dark:border-amber-500",
     bg: "bg-college-light dark:bg-[#261705]",
   },
   club: {
-    back: "bg-club-dark dark:bg-purple",
+    back: "bg-club-darker dark:bg-[#231032]",
     border: "border-club-normal dark:border-purple",
     bg: "bg-club-light dark:bg-[#1e0d29]",
   },

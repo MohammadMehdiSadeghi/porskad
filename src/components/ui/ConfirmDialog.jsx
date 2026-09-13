@@ -36,7 +36,7 @@ export default function ConfirmDialog({
           >
             <div aria-hidden="true" className="absolute top-2 left-2 w-full h-full bg-male-normal dark:bg-black rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
 
-            <div className="relative z-10 bg-white dark:bg-[#111827] border-2 border-male-normal dark:border-slate-700 rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-4 sm:p-6">
+            <div className="relative z-10 bg-white dark:bg-[#131B2E] border-2 border-male-normal dark:border-slate-700 rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-4 sm:p-6">
               <div className="text-center mb-3 sm:mb-4 flex flex-col items-center">
                 <motion.div
                   className="w-14 h-14 rounded-2xl flex items-center justify-center mb-2"
@@ -82,19 +82,21 @@ export default function ConfirmDialog({
                 </div>
               )}
 
-              <div className="flex flex-col sm:flex-row gap-2">
-                <div className="relative flex-1">
-                  <div aria-hidden="true" className="absolute top-[3px] left-[3px] w-full h-full bg-ink dark:bg-black rounded-pill-md [corner-shape:squircle]" />
-                  <button onClick={onCancel} className="relative z-10 w-full bg-white dark:bg-slate-800 border-2 border-ink dark:border-slate-600 text-ink dark:text-slate-200 font-extrabold py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] hover:bg-bg-neutral dark:hover:bg-slate-700 transition-colors duration-200 text-sm sm:text-base cursor-pointer">
-                    بازگشت و ویرایش
-                  </button>
-                </div>
-                <div className="relative flex-1">
-                  <div aria-hidden="true" className="absolute top-[3px] left-[3px] w-full h-full bg-ecosystem-dark rounded-pill-md [corner-shape:squircle]" />
-                  <button onClick={onConfirm} className="relative z-10 w-full bg-ecosystem-normal border-2 border-ecosystem-dark text-white font-extrabold py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] hover:bg-ecosystem-dark transition-colors duration-200 text-sm sm:text-base cursor-pointer">
-                    {allFilled ? "ارسال نهایی" : "ارسال با فیلدهای خالی"}
-                  </button>
-                </div>
+              <div className="flex flex-col sm:flex-row gap-2.5">
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="flex-1 inline-flex items-center justify-center bg-white dark:bg-slate-800 border-2 border-ink dark:border-slate-600 text-ink dark:text-slate-200 font-extrabold py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] shadow-[2.75px_2.75px_0_#292827] dark:shadow-[2.75px_2.75px_0_#000000] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-150 text-sm sm:text-base cursor-pointer"
+                >
+                  بازگشت و ویرایش
+                </button>
+                <button
+                  type="button"
+                  onClick={onConfirm}
+                  className="flex-1 inline-flex items-center justify-center bg-ecosystem-normal border-2 border-ecosystem-dark text-white font-extrabold py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] shadow-[2.75px_2.75px_0_#2e7068] dark:shadow-[2.75px_2.75px_0_#1f413d] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-150 text-sm sm:text-base cursor-pointer"
+                >
+                  {allFilled ? "ارسال نهایی" : "ارسال با فیلدهای خالی"}
+                </button>
               </div>
             </div>
           </motion.div>
