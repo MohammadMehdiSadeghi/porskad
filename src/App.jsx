@@ -141,7 +141,7 @@ export default function App() {
                 <Route path="support" element={<Support />} />
                 <Route path="subscriptions" element={<Subscriptions />} />
                 <Route path="profile" element={<Profile />} />
-                <Route path="api-docs" element={<Navigate to="/docs" replace />} />
+                <Route path="api-docs" element={<Navigate to="/admin/profile?tab=developer" replace />} />
 
                 {/* بخش‌های اختصاصی مالک و سوپرادمین */}
                 <Route path="managers" element={<AuthGuard ownerOnly={true}><Managers /></AuthGuard>} />
