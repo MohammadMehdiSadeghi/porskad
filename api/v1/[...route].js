@@ -320,6 +320,29 @@ export default async function handler(req, res) {
 
   try {
     // ─────────────────────────────────────────────────────────────
+    // ۰. اندپوینت پایه مستندات و مشخصات REST API: GET /api/v1
+    // ─────────────────────────────────────────────────────────────
+    if (segments.length === 0) {
+      if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
+      return res.status(200).json({
+        name: "Porskad REST API",
+        version: "v1",
+        status: "online",
+        docs_url: `${origin}/docs`,
+        openapi_spec: `${origin}/openapi.json`,
+        endpoints: {
+          account: `${origin}/api/v1/me`,
+          question_types: `${origin}/api/v1/question-types`,
+          forms: `${origin}/api/v1/forms`,
+          form_detail: `${origin}/api/v1/forms/{id}`,
+          form_questions: `${origin}/api/v1/forms/{id}/questions`,
+          form_responses: `${origin}/api/v1/forms/{id}/responses`,
+          form_embed: `${origin}/api/v1/forms/{id}/embed`,
+        },
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────
     // ۱. متادیتای انواع سوال: GET /api/v1/question-types
     // ─────────────────────────────────────────────────────────────
     if (segments.length === 1 && segments[0] === "question-types") {

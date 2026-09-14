@@ -67,6 +67,47 @@ export default async function handler(req, res) {
 
     const { action, target_user_id, new_password, new_email } = req.body || {};
 
+    // ۰. ایجاد کاربر جدید توسط سوپرادمین
+    if (action === "create_user") {
+      const { email, password, fullName } = req.body || {};
+      if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required" });
+      }
+
+      const { data, error } = await adminClient.auth.admin.createUser({
+        email: email.trim(),
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: fullName?.trim() || email.split("@")[0],
+        },
+      });
+
+      if (error) {
+        return res.status(400).json({ error: error.message });
+      }
+
+      if (data?.user?.id) {
+        try {
+          await adminClient
+            .from("profiles")
+            .update({
+              full_name: fullName?.trim() || email.split("@")[0],
+              is_owner: false,
+            })
+            .eq("id", data.user.id);
+        } catch {}
+
+        try {
+          await adminClient
+            .from("user_roles")
+            .upsert({ user_id: data.user.id, role_id: "manager", active: true }, { onConflict: "user_id" });
+        } catch {}
+      }
+
+      return res.status(200).json({ user_id: data.user.id });
+    }
+
     if (!action || !target_user_id) {
       return res.status(400).json({ error: "action و target_user_id الزامی هستند" });
     }

@@ -390,5 +390,52 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "خطا در ایجاد حساب کاربری." });
   }
 
+  // ══════════════════════════════════════════════════════════════
+  // ۴. ثبت‌نام مستقیم با ایمیل و رمز عبور (سازگاری کامل با فرآیندهای قدیمی)
+  // ══════════════════════════════════════════════════════════════
+  if (action === "register" || (!action && body.email && body.password)) {
+    const { email: regEmail, password: regPassword, fullName: regFullName, phone: regPhone } = body || {};
+    if (!regEmail || !regPassword) {
+      return res.status(400).json({ error: "ایمیل و رمز عبور الزامی هستند" });
+    }
+
+    const regCleanPhone = regPhone ? normalizeIranPhone(regPhone) : "";
+
+    const { data: regData, error: regError } = await supabaseAdmin.auth.admin.createUser({
+      email: regEmail.trim(),
+      password: regPassword,
+      email_confirm: true,
+      user_metadata: {
+        full_name: regFullName?.trim() || regEmail.split("@")[0],
+        phone: regCleanPhone,
+      },
+    });
+
+    if (regError) {
+      return res.status(400).json({ error: regError.message });
+    }
+
+    if (regData?.user?.id) {
+      try {
+        await supabaseAdmin
+          .from("profiles")
+          .update({
+            phone: regCleanPhone || null,
+            full_name: regFullName?.trim() || regEmail.split("@")[0],
+            is_owner: false,
+          })
+          .eq("id", regData.user.id);
+      } catch {}
+
+      try {
+        await supabaseAdmin
+          .from("user_roles")
+          .upsert({ user_id: regData.user.id, role_id: "manager", active: true }, { onConflict: "user_id,role_id" });
+      } catch {}
+    }
+
+    return res.status(200).json({ user: regData.user });
+  }
+
   return res.status(400).json({ error: "Unknown action" });
 }

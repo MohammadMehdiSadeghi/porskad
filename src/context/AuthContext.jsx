@@ -395,10 +395,10 @@ export function AuthProvider({ children }) {
     const cleanPhone = phone?.trim() || "";
     // ۱. ابتدا تلاش از طریق API برای تایید خودکار و دور زدن محدودیت ایمیل
     try {
-      const apiRes = await fetch("/api/auth-register", {
+      const apiRes = await fetch("/api/auth-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password, fullName, phone: cleanPhone }),
+        body: JSON.stringify({ action: "register", email: email.trim(), password, fullName, phone: cleanPhone }),
       });
       if (apiRes.ok) {
         const { data: loginData } = await supabase.auth.signInWithPassword({
@@ -573,13 +573,14 @@ export function AuthProvider({ children }) {
 
     // ۱. اول سعی کن از طریق API سرورلس اختصاصی ایجاد کنی
     try {
-      const apiRes = await fetch("/api/admin-create-user", {
+      const apiRes = await fetch("/api/admin-user-management", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: session?.access_token ? `Bearer ${session.access_token}` : "",
         },
         body: JSON.stringify({
+          action: "create_user",
           email: email.trim(),
           password,
           fullName: fullName ?? email.split("@")[0],
