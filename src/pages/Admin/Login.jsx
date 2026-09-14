@@ -23,6 +23,7 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
   const [googleAuthEnabled, setGoogleAuthEnabled] = useState(true);
+  const [smsOtpEnabled, setSmsOtpEnabled] = useState(true);
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [telegramSupportId, setTelegramSupportId] = useState("porskad_support");
 
@@ -37,6 +38,9 @@ export default function Login() {
           if (typeof data.google_auth_enabled === "boolean") {
             setGoogleAuthEnabled(data.google_auth_enabled);
           }
+          if (typeof data.sms_otp_enabled === "boolean") {
+            setSmsOtpEnabled(data.sms_otp_enabled);
+          }
         }
       } catch (err) {
         console.warn("RPC get_system_settings error in login:", err);
@@ -46,7 +50,7 @@ export default function Login() {
         const { data } = await supabase
           .from("system_settings")
           .select("key, value")
-          .in("key", ["telegram_support_id", "google_auth_enabled"]);
+          .in("key", ["telegram_support_id", "google_auth_enabled", "sms_otp_enabled"]);
         if (Array.isArray(data) && data.length > 0) {
           for (const row of data) {
             if (row.key === "telegram_support_id" && row.value) {
@@ -55,6 +59,9 @@ export default function Login() {
             }
             if (row.key === "google_auth_enabled" && row.value !== undefined) {
               setGoogleAuthEnabled(row.value === true || row.value === "true");
+            }
+            if (row.key === "sms_otp_enabled" && row.value !== undefined) {
+              setSmsOtpEnabled(row.value === true || row.value === "true");
             }
           }
         }
@@ -104,8 +111,8 @@ export default function Login() {
       const rawInput = email.trim();
       let targetEmail = rawInput;
 
-      // اگر کاربر شماره موبایل ایران وارد کرده باشد
-      if (isValidIranPhone(rawInput)) {
+      // اگر ورود با موبایل فعال باشد و کاربر شماره موبایل ایران وارد کرده باشد
+      if (smsOtpEnabled !== false && isValidIranPhone(rawInput)) {
         const cleanPhone = normalizeIranPhone(rawInput);
         targetEmail = `${cleanPhone}@porskad.local`;
 
@@ -176,16 +183,18 @@ export default function Login() {
             </div>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-extrabold text-navy dark:text-slate-200">ایمیل یا شماره موبایل</span>
+              <span className="text-sm font-extrabold text-navy dark:text-slate-200">
+                {smsOtpEnabled !== false ? "ایمیل یا شماره موبایل" : "ایمیل"}
+              </span>
               <input
-                type="text"
+                type={smsOtpEnabled !== false ? "text" : "email"}
                 dir="ltr"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20
                   rounded-pill-md px-4 py-2.5 font-semibold text-ink dark:text-slate-100 text-left focus:outline-none transition-all"
-                placeholder="۰۹۱۲۳۴۵۶۷۸۹ یا name@example.com"
+                placeholder={smsOtpEnabled !== false ? "۰۹۱۲۳۴۵۶۷۸۹ یا name@example.com" : "name@example.com"}
                 autoComplete="username"
               />
             </label>

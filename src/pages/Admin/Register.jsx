@@ -38,6 +38,7 @@ export default function Register() {
   const [verificationToken, setVerificationToken] = useState("");
 
   // فرم مرحله ۳
+  const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -279,6 +280,17 @@ export default function Register() {
     if (e) e.preventDefault();
     setError(null);
 
+    if (!email.trim()) {
+      setError("لطفاً آدرس ایمیل خود را وارد نمایید.");
+      return;
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setError("فرمت آدرس ایمیل نامعتبر است (مثال: name@example.com).");
+      return;
+    }
+
     if (!fullName.trim()) {
       setError("لطفاً نام و نام خانوادگی خود را وارد نمایید.");
       return;
@@ -305,6 +317,7 @@ export default function Register() {
           action: "complete_registration",
           phone: clean,
           verificationToken,
+          email: cleanEmail,
           fullName: fullName.trim(),
           password,
         }),
@@ -318,7 +331,7 @@ export default function Register() {
       }
 
       // ورود خودکار کاربر با مشخصات ثبت‌شده
-      const targetEmail = data.email || `${clean}@porskad.local`;
+      const targetEmail = data.email || cleanEmail;
       const { data: loginData, error: loginErr } = await supabase.auth.signInWithPassword({
         email: targetEmail,
         password,
@@ -361,9 +374,13 @@ export default function Register() {
               <Badge color="navy" rotate="rotate-[2deg]">
                 پرس‌کاد — سامانه فرم‌ساز هوشمند
               </Badge>
-              <h1 className="text-xl sm:text-2xl font-black text-navy dark:text-white">ثبت‌نام حساب کاربری</h1>
+              <h1 className="text-xl sm:text-2xl font-black text-navy dark:text-white">
+                {smsOtpEnabled === false ? "ثبت‌نام با گوگل" : "ثبت‌نام حساب کاربری"}
+              </h1>
               <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400">
-                فرم‌های هوشمند و جذاب بدون نیاز به کدنویسی
+                {smsOtpEnabled === false
+                  ? "ثبت‌نام و ورود سریع بدون نیاز به پیامک"
+                  : "فرم‌های هوشمند و جذاب بدون نیاز به کدنویسی"}
               </p>
             </div>
 
@@ -446,7 +463,7 @@ export default function Register() {
                       <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${step === 3 ? "bg-teal text-white" : "bg-ink/10 dark:bg-slate-700 text-ink/60 dark:text-slate-400"}`}>
                         {faNum("3")}
                       </span>
-                      <span>رمز و مشخصات</span>
+                      <span>ایمیل و رمز عبور</span>
                     </div>
                   </div>
                 )}
@@ -670,17 +687,36 @@ export default function Register() {
               <form onSubmit={handleCompleteRegistration} className="flex flex-col gap-3.5">
                 <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-700/60 rounded-xl p-2.5 flex items-center gap-2 text-xs font-bold text-emerald-800 dark:text-emerald-300">
                   <ShieldCheck size={16} className="text-emerald-600 shrink-0" />
-                  <span>شماره موبایل شما با موفقیت تایید شد. اکنون نام و رمز عبور خود را تعیین فرمایید.</span>
+                  <span>شماره موبایل شما تایید شد. اکنون ایمیل، نام و رمز عبور ورود خود را تعیین فرمایید.</span>
                 </div>
 
                 <label className="flex flex-col gap-1">
                   <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">
-                    نام و نام خانوادگی
+                    آدرس ایمیل <span className="text-teal font-black">*</span>
+                  </span>
+                  <input
+                    type="email"
+                    dir="ltr"
+                    required
+                    autoFocus
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/50 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all text-sm"
+                    placeholder="name@example.com"
+                    autoComplete="email"
+                  />
+                  <span className="text-[11px] text-ink-subtle dark:text-slate-400">
+                    از این ایمیل برای ورود و اطلاعیه‌های حساب استفاده خواهد شد.
+                  </span>
+                </label>
+
+                <label className="flex flex-col gap-1">
+                  <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">
+                    نام و نام خانوادگی <span className="text-teal font-black">*</span>
                   </span>
                   <input
                     type="text"
                     required
-                    autoFocus
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/50 dark:placeholder:text-slate-500 focus:outline-none transition-all text-sm"

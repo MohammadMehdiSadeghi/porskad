@@ -356,7 +356,7 @@ export default async function handler(req, res) {
   // ۳. تکمیل ثبت‌نام (complete_registration)
   // ══════════════════════════════════════════════════════════════
   if (action === "complete_registration") {
-    const { verificationToken, fullName, password } = body;
+    const { verificationToken, fullName, password, email } = body;
 
     if (!verificationToken) {
       return res.status(400).json({ error: "توکن اعتبارسنجی یافت نشد. لطفاً ابتدا شماره را تایید کنید." });
@@ -395,24 +395,40 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "لطفاً نام و نام خانوادگی خود را کامل وارد کنید." });
     }
 
+    const cleanEmail = (email || "").trim().toLowerCase();
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      return res.status(400).json({ error: "لطفاً یک آدرس ایمیل معتبر وارد فرمایید (مثال: name@example.com)." });
+    }
+
     if (!password || password.length < 6) {
       return res.status(400).json({ error: "رمز عبور باید حداقل ۶ کاراکتر باشد." });
     }
 
-    // بررسی نهایی عدم تکراری بودن در دیتابیس
-    const { data: finalCheck } = await supabaseAdmin
+    // بررسی نهایی عدم تکراری بودن شماره در دیتابیس
+    const { data: finalPhoneCheck } = await supabaseAdmin
       .from("profiles")
       .select("id")
       .eq("phone", cleanPhone)
       .maybeSingle();
 
-    if (finalCheck) {
+    if (finalPhoneCheck) {
       return res.status(400).json({ error: "این شماره موبایل قبلاً ثبت‌نام شده است." });
     }
 
-    const userEmail = `${cleanPhone}@porskad.local`;
+    // بررسی عدم تکراری بودن ایمیل در دیتابیس
+    const { data: finalEmailCheck } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("email", cleanEmail)
+      .maybeSingle();
 
-    // ایجاد کاربر در Supabase Auth
+    if (finalEmailCheck) {
+      return res.status(400).json({ error: "این آدرس ایمیل قبلاً در سامانه ثبت شده است. لطفاً وارد شوید یا از ایمیل دیگری استفاده کنید." });
+    }
+
+    const userEmail = cleanEmail;
+
+    // ایجاد کاربر در Supabase Auth با ایمیل واقعی کاربر
     const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({
       email: userEmail,
       password: password,

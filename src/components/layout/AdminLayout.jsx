@@ -7,6 +7,8 @@ import Button from "../ui/Button";
 import Modal from "../ui/Modal";
 import { useToast } from "../ui/Toast";
 import { isValidIranPhone, normalizeIranPhone } from "../../lib/validators";
+import { supabase } from "../../lib/supabaseClient";
+import PasswordToggle from "../ui/PasswordToggle";
 import {
   LayoutDashboard,
   FileText,
@@ -49,9 +51,20 @@ export default function AdminLayout() {
   }, [location.pathname]);
 
   const [promptPhone, setPromptPhone] = useState("");
+  const [promptFullName, setPromptFullName] = useState("");
+  const [promptPassword, setPromptPassword] = useState("");
+  const [promptConfirmPassword, setPromptConfirmPassword] = useState("");
+  const [showPromptPassword, setShowPromptPassword] = useState(false);
+  const [showPromptConfirmPassword, setShowPromptConfirmPassword] = useState(false);
   const [phoneError, setPhoneError] = useState(null);
   const [savingPhone, setSavingPhone] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  useEffect(() => {
+    if (profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name) {
+      setPromptFullName(profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || "");
+    }
+  }, [profile, user]);
 
   if (loading) {
     return (
@@ -115,6 +128,12 @@ export default function AdminLayout() {
   async function handleSavePhone(e) {
     e.preventDefault();
     setPhoneError(null);
+
+    if (!promptFullName.trim()) {
+      setPhoneError("لطفاً نام و نام خانوادگی خود را وارد کنید.");
+      return;
+    }
+
     const cleanPhone = normalizeIranPhone(promptPhone);
     if (!cleanPhone) {
       setPhoneError("لطفاً شماره موبایل خود را وارد کنید.");
@@ -125,12 +144,54 @@ export default function AdminLayout() {
       return;
     }
 
+    if (!promptPassword || promptPassword.length < 6) {
+      setPhoneError("رمز عبور باید حداقل ۶ کاراکتر باشد.");
+      return;
+    }
+    if (promptPassword !== promptConfirmPassword) {
+      setPhoneError("رمز عبور و تکرار آن یکسان نیستند.");
+      return;
+    }
+
     setSavingPhone(true);
     try {
-      await updateProfile({ phone: cleanPhone });
-      toast.success("شماره موبایل با موفقیت ثبت شد.");
+      // بررسی عدم تکراری بودن شماره موبایل در دیتابیس
+      const { data: dup } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("phone", cleanPhone)
+        .neq("id", user.id)
+        .maybeSingle();
+
+      if (dup) {
+        setPhoneError("این شماره موبایل قبلاً برای حساب دیگری ثبت شده است.");
+        setSavingPhone(false);
+        return;
+      }
+
+      // تنظیم رمز عبور و متاداده کاربر در Supabase Auth
+      const { error: authErr } = await supabase.auth.updateUser({
+        password: promptPassword,
+        data: {
+          full_name: promptFullName.trim(),
+          phone: cleanPhone,
+        },
+      });
+      if (authErr) {
+        setPhoneError(authErr.message || "خطا در تنظیم رمز عبور.");
+        setSavingPhone(false);
+        return;
+      }
+
+      // ذخیره نام و شماره در جدول profiles
+      await updateProfile({
+        phone: cleanPhone,
+        full_name: promptFullName.trim(),
+      });
+
+      toast.success("مشخصات حساب کاربری شما با موفقیت تکمیل شد.");
     } catch (err) {
-      setPhoneError(err.message || "خطا در ذخیره شماره موبایل. لطفاً دوباره تلاش کنید.");
+      setPhoneError(err.message || "خطا در ذخیره اطلاعات. لطفاً دوباره تلاش کنید.");
     } finally {
       setSavingPhone(false);
     }
@@ -413,40 +474,139 @@ export default function AdminLayout() {
         </main>
       </div>
 
-      {/* مودال الزام ثبت شماره موبایل برای کاربران قبلی بدون شماره */}
+      {/* مودال تکمیل مشخصات حساب کاربری (شماره، نام، رمز عبور و جیمیل) */}
       <Modal
         open={needsPhone}
-        title="تکمیل شماره تلفن همراه"
+        title="تکمیل مشخصات حساب کاربری"
         closable={false}
       >
-        <form onSubmit={handleSavePhone} className="space-y-4">
-          <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-300 rounded-xl p-3.5 text-xs sm:text-sm leading-relaxed">
-            کاربر گرامی، جهت امنیت حساب کاربری و دریافت اعلان‌های مهم، ثبت شماره موبایل برای تمامی کاربران <strong>الزامی</strong> است. لطفاً شماره موبایل خود را وارد و ثبت نمایید.
+        <form onSubmit={handleSavePhone} className="space-y-3.5">
+          <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-300 rounded-xl p-3 text-xs leading-relaxed">
+            کاربر گرامی، حساب شما با موفقیت شناسایی شد. جهت امنیت و تکمیل ثبت‌نام، لطفاً نام، شماره موبایل و رمز عبور ورود خود را تعیین فرمایید.
           </div>
 
+          {/* نمایش جیمیل تایید شده */}
+          <div className="flex flex-col gap-1 text-right">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-navy dark:text-slate-200">
+                ایمیل حساب کاربری
+              </span>
+              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full">
+                تایید شده
+              </span>
+            </div>
+            <input
+              type="text"
+              dir="ltr"
+              disabled
+              value={user?.email || profile?.email || ""}
+              className="w-full bg-slate-100 dark:bg-slate-900 border border-ink/15 dark:border-slate-700 rounded-pill-md px-3.5 py-2 font-mono text-xs text-ink/70 dark:text-slate-400 text-left cursor-not-allowed"
+            />
+          </div>
+
+          {/* نام و نام خانوادگی */}
           <label className="flex flex-col gap-1 text-right">
-            <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">
-              شماره تلفن همراه <span className="text-red-500">*</span>
+            <span className="text-xs font-bold text-navy dark:text-slate-200">
+              نام و نام خانوادگی <span className="text-teal font-black">*</span>
+            </span>
+            <input
+              type="text"
+              required
+              value={promptFullName}
+              onChange={(e) => {
+                setPromptFullName(e.target.value);
+                if (phoneError) setPhoneError(null);
+              }}
+              className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2 text-xs sm:text-sm font-semibold text-ink dark:text-white focus:outline-none transition-all"
+              placeholder="مثلاً: علی محمدی"
+            />
+          </label>
+
+          {/* شماره تلفن همراه */}
+          <label className="flex flex-col gap-1 text-right">
+            <span className="text-xs font-bold text-navy dark:text-slate-200">
+              شماره تلفن همراه <span className="text-teal font-black">*</span>
             </span>
             <input
               type="tel"
               dir="ltr"
               required
-              autoFocus
               value={promptPhone}
               onChange={(e) => {
                 setPromptPhone(e.target.value);
                 if (phoneError) setPhoneError(null);
               }}
-              className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink dark:text-white text-left focus:outline-none transition-all text-sm"
+              className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2 text-xs sm:text-sm font-semibold text-ink dark:text-white text-left focus:outline-none transition-all"
               placeholder="۰۹۱۲۳۴۵۶۷۸۹"
             />
-            {phoneError && (
-              <span className="text-xs font-bold text-red-600 dark:text-red-400 mt-1">
-                {phoneError}
-              </span>
-            )}
           </label>
+
+          {/* تعیین رمز عبور و تکرار آن */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <label className="flex flex-col gap-1 text-right">
+              <span className="text-xs font-bold text-navy dark:text-slate-200">
+                رمز عبور <span className="text-teal font-black">*</span>
+              </span>
+              <div className="relative">
+                <input
+                  type={showPromptPassword ? "text" : "password"}
+                  dir="ltr"
+                  required
+                  value={promptPassword}
+                  onChange={(e) => {
+                    setPromptPassword(e.target.value);
+                    if (phoneError) setPhoneError(null);
+                  }}
+                  className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2 pl-9 text-xs sm:text-sm font-semibold text-ink dark:text-white text-left focus:outline-none transition-all"
+                  placeholder="حداقل ۶ کاراکتر"
+                  autoComplete="new-password"
+                />
+                <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                  <PasswordToggle
+                    visible={showPromptPassword}
+                    onToggle={() => setShowPromptPassword(!showPromptPassword)}
+                    size={15}
+                    ariaLabel="نمایش رمز"
+                  />
+                </div>
+              </div>
+            </label>
+
+            <label className="flex flex-col gap-1 text-right">
+              <span className="text-xs font-bold text-navy dark:text-slate-200">
+                تکرار رمز عبور <span className="text-teal font-black">*</span>
+              </span>
+              <div className="relative">
+                <input
+                  type={showPromptConfirmPassword ? "text" : "password"}
+                  dir="ltr"
+                  required
+                  value={promptConfirmPassword}
+                  onChange={(e) => {
+                    setPromptConfirmPassword(e.target.value);
+                    if (phoneError) setPhoneError(null);
+                  }}
+                  className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2 pl-9 text-xs sm:text-sm font-semibold text-ink dark:text-white text-left focus:outline-none transition-all"
+                  placeholder="تکرار رمز"
+                  autoComplete="new-password"
+                />
+                <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                  <PasswordToggle
+                    visible={showPromptConfirmPassword}
+                    onToggle={() => setShowPromptConfirmPassword(!showPromptConfirmPassword)}
+                    size={15}
+                    ariaLabel="نمایش تکرار رمز"
+                  />
+                </div>
+              </div>
+            </label>
+          </div>
+
+          {phoneError && (
+            <div className="text-xs font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 rounded-pill-md p-2 text-right">
+              {phoneError}
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row items-center gap-2 pt-2">
             <Button
@@ -455,7 +615,7 @@ export default function AdminLayout() {
               className="w-full sm:flex-1 justify-center"
               disabled={savingPhone}
             >
-              {savingPhone ? "در حال ثبت شماره..." : "ثبت شماره و ادامه"}
+              {savingPhone ? "در حال ثبت اطلاعات..." : "تکمیل ثبت‌نام و ورود"}
             </Button>
             <Button
               type="button"
