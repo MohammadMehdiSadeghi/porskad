@@ -29,8 +29,8 @@ export default function Login() {
   useEffect(() => {
     async function loadSettings() {
       try {
-        const { data } = await supabase.rpc("get_system_settings");
-        if (data) {
+        const { data, error } = await supabase.rpc("get_system_settings");
+        if (!error && data) {
           if (data.telegram_support_id) {
             setTelegramSupportId(String(data.telegram_support_id).replace(/^@/, "").trim());
           }
@@ -38,25 +38,27 @@ export default function Login() {
             setGoogleAuthEnabled(data.google_auth_enabled);
           }
         }
-      } catch {
-        try {
-          const { data } = await supabase
-            .from("system_settings")
-            .select("key, value")
-            .in("key", ["telegram_support_id", "google_auth_enabled"]);
-          if (Array.isArray(data)) {
-            for (const row of data) {
-              if (row.key === "telegram_support_id" && row.value) {
-                const val = typeof row.value === "string" ? row.value : JSON.stringify(row.value);
-                setTelegramSupportId(val.replace(/[ "@]/g, "").trim());
-              }
-              if (row.key === "google_auth_enabled" && row.value !== undefined) {
-                setGoogleAuthEnabled(row.value === true || row.value === "true");
-              }
+      } catch (err) {
+        console.warn("RPC get_system_settings error in login:", err);
+      }
+
+      try {
+        const { data } = await supabase
+          .from("system_settings")
+          .select("key, value")
+          .in("key", ["telegram_support_id", "google_auth_enabled"]);
+        if (Array.isArray(data) && data.length > 0) {
+          for (const row of data) {
+            if (row.key === "telegram_support_id" && row.value) {
+              const val = typeof row.value === "string" ? row.value : JSON.stringify(row.value);
+              setTelegramSupportId(val.replace(/[ "@]/g, "").trim());
+            }
+            if (row.key === "google_auth_enabled" && row.value !== undefined) {
+              setGoogleAuthEnabled(row.value === true || row.value === "true");
             }
           }
-        } catch {}
-      }
+        }
+      } catch {}
     }
     loadSettings();
   }, []);

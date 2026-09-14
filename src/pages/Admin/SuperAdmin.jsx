@@ -687,47 +687,159 @@ export default function SuperAdmin() {
   }
 
   // ─── System Settings ───
+  // ─── System Settings ───
   async function loadSystemSettings() {
     setSettingsLoading(true);
     try {
-      const { data, error } = await supabase.rpc("get_system_settings");
-      if (!error && data && Object.keys(data).length > 0) {
-        setSysSettings((prev) => ({ ...prev, ...data }));
+      let loadedFromApi = false;
+
+      // ۱. تلاش برای خواندن از اندپوینت سرورلس جهت اطمینان از خواندن تمام کلیدها حتی در صورت محدودیت RLS
+      try {
+        const session = (await supabase.auth.getSession())?.data?.session;
+        const token = session?.access_token;
+        if (token) {
+          const res = await fetch("/api/admin-system-settings", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            const json = await res.json();
+            if (json.success && json.settings) {
+              setSysSettings((prev) => ({
+                ...prev,
+                ...json.settings,
+                sms_otp_enabled: json.settings.sms_otp_enabled !== false,
+                google_auth_enabled: json.settings.google_auth_enabled !== false,
+                registration_enabled: json.settings.registration_enabled !== false,
+              }));
+              loadedFromApi = true;
+            }
+          }
+        }
+      } catch (apiErr) {
+        console.warn("api/admin-system-settings fetch error:", apiErr);
       }
 
-      // بررسی مستقیم جدول system_settings برای اطمینان از خواندن مقادیر حتی در صورت کش بودن RPC
-      const { data: rows } = await supabase
-        .from("system_settings")
-        .select("key, value")
-        .in("key", [
-          "sms_otp_enabled",
-          "google_auth_enabled",
-          "otp_sms_pattern",
-          "otp_line_number",
-          "otp_cooldown_seconds",
-          "otp_max_resends",
-        ]);
-
-      if (Array.isArray(rows) && rows.length > 0) {
-        const directObj = {};
-        for (const r of rows) {
-          if (r.key === "sms_otp_enabled" && r.value !== undefined) {
-            directObj.sms_otp_enabled = r.value === true || r.value === "true";
-          }
-          if (r.key === "google_auth_enabled" && r.value !== undefined) {
-            directObj.google_auth_enabled = r.value === true || r.value === "true";
-          }
-          if (r.key === "otp_sms_pattern" && r.value) directObj.otp_sms_pattern = String(r.value);
-          if (r.key === "otp_line_number" && r.value) directObj.otp_line_number = String(r.value);
-          if (r.key === "otp_cooldown_seconds" && r.value) directObj.otp_cooldown_seconds = Number(r.value);
-          if (r.key === "otp_max_resends" && r.value !== undefined) directObj.otp_max_resends = Number(r.value);
+      // ۲. در صورت در دسترس نبودن API، خواندن از get_system_settings
+      if (!loadedFromApi) {
+        const { data, error } = await supabase.rpc("get_system_settings");
+        if (!error && data && Object.keys(data).length > 0) {
+          setSysSettings((prev) => ({
+            ...prev,
+            ...data,
+            sms_otp_enabled: data.sms_otp_enabled !== false,
+            google_auth_enabled: data.google_auth_enabled !== false,
+            registration_enabled: data.registration_enabled !== false,
+          }));
         }
-        setSysSettings((prev) => ({ ...prev, ...directObj }));
+
+        // بررسی مستقیم جدول system_settings برای اطمینان از خواندن مقادیر
+        const { data: rows } = await supabase
+          .from("system_settings")
+          .select("key, value")
+          .in("key", [
+            "sms_otp_enabled",
+            "google_auth_enabled",
+            "registration_enabled",
+            "otp_sms_pattern",
+            "otp_line_number",
+            "otp_cooldown_seconds",
+            "otp_max_resends",
+          ]);
+
+        if (Array.isArray(rows) && rows.length > 0) {
+          const directObj = {};
+          for (const r of rows) {
+            if (r.key === "sms_otp_enabled" && r.value !== undefined) {
+              directObj.sms_otp_enabled = r.value === true || r.value === "true";
+            }
+            if (r.key === "google_auth_enabled" && r.value !== undefined) {
+              directObj.google_auth_enabled = r.value === true || r.value === "true";
+            }
+            if (r.key === "registration_enabled" && r.value !== undefined) {
+              directObj.registration_enabled = r.value === true || r.value === "true";
+            }
+            if (r.key === "otp_sms_pattern" && r.value) directObj.otp_sms_pattern = String(r.value);
+            if (r.key === "otp_line_number" && r.value) directObj.otp_line_number = String(r.value);
+            if (r.key === "otp_cooldown_seconds" && r.value) directObj.otp_cooldown_seconds = Number(r.value);
+            if (r.key === "otp_max_resends" && r.value !== undefined) directObj.otp_max_resends = Number(r.value);
+          }
+          setSysSettings((prev) => ({ ...prev, ...directObj }));
+        }
       }
     } catch (err) {
       console.error("Failed to load system settings:", err);
     } finally {
       setSettingsLoading(false);
+    }
+  }
+
+  // ─── تابع عمومی ذخیره‌سازی مطمئن تنظیمات سامانه با روال دوگانه ───
+  async function persistSystemSettings(nextSettings, successMsg) {
+    setSettingsSaving(true);
+    let saved = false;
+    let errorMsg = null;
+
+    // ۱. ابتدا تلاش برای ذخیره از طریق API سرورلس با توکن سوپرادمین
+    try {
+      const session = (await supabase.auth.getSession())?.data?.session;
+      const token = session?.access_token;
+      if (token) {
+        const res = await fetch("/api/admin-system-settings", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ settings: nextSettings }),
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          saved = true;
+          if (json.settings) {
+            setSysSettings((prev) => ({ ...prev, ...json.settings }));
+          }
+        } else {
+          errorMsg = json.error || "خطا در پاسخ سرور";
+        }
+      }
+    } catch (e) {
+      errorMsg = e.message;
+    }
+
+    // ۲. فالبک یا همگام‌سازی همزمان با RPC دیتابیس
+    try {
+      const { data: rpcData, error: rpcErr } = await supabase.rpc("update_system_settings", {
+        p_settings: nextSettings,
+      });
+      if (!rpcErr) {
+        saved = true;
+        if (rpcData) {
+          setSysSettings((prev) => ({ ...prev, ...rpcData }));
+        }
+      } else if (!saved) {
+        errorMsg = rpcErr.message;
+      }
+    } catch (e) {
+      if (!saved) errorMsg = e.message;
+    }
+
+    // ۳. همگام‌سازی مستقیم در جدول system_settings
+    try {
+      const entries = Object.entries(nextSettings).map(([key, value]) => ({ key, value }));
+      const { error: tableErr } = await supabase
+        .from("system_settings")
+        .upsert(entries, { onConflict: "key" });
+      if (!tableErr) saved = true;
+    } catch {}
+
+    setSettingsSaving(false);
+
+    if (saved) {
+      showToast(successMsg || "تنظیمات با موفقیت ذخیره و در سامانه اعمال شد.");
+      return true;
+    } else {
+      showToast("خطا در ذخیره تنظیمات: " + (errorMsg || "لطفاً دسترسی خود را بررسی نمایید."), "error");
+      return false;
     }
   }
 
@@ -752,42 +864,11 @@ export default function SuperAdmin() {
     // به‌روزرسانی آنی استیت
     setSysSettings((prev) => ({ ...prev, ...nextSettings }));
 
-    // ذخیره خودکار و فوری در دیتابیس
-    setSettingsSaving(true);
-    try {
-      // ۱. ذخیره با RPC
-      const { data, error } = await supabase.rpc("update_system_settings", {
-        p_settings: nextSettings,
-      });
+    const msg = method === "sms_otp"
+      ? (nextSettings.sms_otp_enabled ? "روش ثبت‌نام با پیامک OTP فعال شد." : "روش ثبت‌نام با پیامک OTP غیرفعال شد.")
+      : (nextSettings.google_auth_enabled ? "روش ورود با حساب گوگل فعال شد." : "روش ورود با حساب گوگل غیرفعال شد.");
 
-      // ۲. همچنین ذخیره مستقیم در جدول system_settings
-      await Promise.all([
-        supabase.from("system_settings").upsert({ key: "sms_otp_enabled", value: nextSettings.sms_otp_enabled }, { onConflict: "key" }),
-        supabase.from("system_settings").upsert({ key: "google_auth_enabled", value: nextSettings.google_auth_enabled }, { onConflict: "key" }),
-      ]);
-
-      if (data) {
-        setSysSettings((prev) => ({ ...prev, ...nextSettings, ...data }));
-      }
-
-      showToast(
-        method === "sms_otp"
-          ? (nextSettings.sms_otp_enabled ? "روش ثبت‌نام با پیامک OTP فعال شد." : "روش ثبت‌نام با پیامک OTP غیرفعال شد.")
-          : (nextSettings.google_auth_enabled ? "روش ورود با گوگل فعال شد." : "روش ورود با گوگل غیرفعال شد.")
-      );
-    } catch (err) {
-      try {
-        await Promise.all([
-          supabase.from("system_settings").upsert({ key: "sms_otp_enabled", value: nextSettings.sms_otp_enabled }, { onConflict: "key" }),
-          supabase.from("system_settings").upsert({ key: "google_auth_enabled", value: nextSettings.google_auth_enabled }, { onConflict: "key" }),
-        ]);
-        showToast("تنظیمات با موفقیت ذخیره شد");
-      } catch (fallbackErr) {
-        showToast("خطا در ذخیره وضعیت: " + (err.message || fallbackErr.message), "error");
-      }
-    } finally {
-      setSettingsSaving(false);
-    }
+    await persistSystemSettings(nextSettings, msg);
   }
 
   async function saveSystemSettings(e) {
@@ -796,29 +877,7 @@ export default function SuperAdmin() {
       showToast("خطا: حداقل یکی از دو روش ثبت‌نام (پیامک OTP یا گوگل) باید فعال باشد.", "error");
       return;
     }
-    setSettingsSaving(true);
-    try {
-      const { data, error } = await supabase.rpc("update_system_settings", {
-        p_settings: sysSettings,
-      });
-
-      // همچنین ذخیره مستقیم در جدول system_settings
-      const entries = Object.entries(sysSettings).map(([key, value]) => ({ key, value }));
-      await supabase.from("system_settings").upsert(entries, { onConflict: "key" });
-
-      if (data) setSysSettings((prev) => ({ ...prev, ...sysSettings, ...data }));
-      showToast("تنظیمات با موفقیت ذخیره شد (Settings saved successfully)");
-    } catch (err) {
-      try {
-        const entries = Object.entries(sysSettings).map(([key, value]) => ({ key, value }));
-        await supabase.from("system_settings").upsert(entries, { onConflict: "key" });
-        showToast("تنظیمات با موفقیت ذخیره شد");
-      } catch (directErr) {
-        showToast("Error saving settings: " + (err.message || directErr.message), "error");
-      }
-    } finally {
-      setSettingsSaving(false);
-    }
+    await persistSystemSettings(sysSettings, "تنظیمات با موفقیت ذخیره و در سامانه اعمال شد.");
   }
 
   // ─── Question Types Management Handlers ───
@@ -2259,15 +2318,69 @@ export default function SuperAdmin() {
                 </label>
               </div>
 
+              {/* ─── Fast Toggle for Auth Methods in Settings Tab ─── */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div className="sa-card" style={{ padding: "0.85rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 0 }}>
+                  <div>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                      <Smartphone size={15} style={{ color: "#2DD4BF" }} />
+                      ثبت‌نام با شماره (SMS OTP)
+                    </div>
+                    <div className="sa-stat-sub" style={{ fontSize: "0.75rem", marginTop: "0.2rem" }}>
+                      ارسال کد تایید ۵ رقمی پیامکی به موبایل
+                    </div>
+                  </div>
+                  <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={sysSettings.sms_otp_enabled !== false}
+                      onChange={() => handleToggleAuthMethod("sms_otp")}
+                      style={{ width: 18, height: 18, cursor: "pointer" }}
+                    />
+                    <span style={{ fontSize: "0.8rem", fontWeight: 600, color: sysSettings.sms_otp_enabled !== false ? "#2DD4BF" : "var(--sa-text-2)" }}>
+                      {sysSettings.sms_otp_enabled !== false ? "فعال" : "غیرفعال"}
+                    </span>
+                  </label>
+                </div>
+
+                <div className="sa-card" style={{ padding: "0.85rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 0 }}>
+                  <div>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                      </svg>
+                      ورود / ثبت‌نام با جیمیل (Google)
+                    </div>
+                    <div className="sa-stat-sub" style={{ fontSize: "0.75rem", marginTop: "0.2rem" }}>
+                      ثبت‌نام مستقیم با یک کلیک از حساب گوگل
+                    </div>
+                  </div>
+                  <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={sysSettings.google_auth_enabled !== false}
+                      onChange={() => handleToggleAuthMethod("google_auth")}
+                      style={{ width: 18, height: 18, cursor: "pointer" }}
+                    />
+                    <span style={{ fontSize: "0.8rem", fontWeight: 600, color: sysSettings.google_auth_enabled !== false ? "#3B82F6" : "var(--sa-text-2)" }}>
+                      {sysSettings.google_auth_enabled !== false ? "فعال" : "غیرفعال"}
+                    </span>
+                  </label>
+                </div>
+              </div>
+
               {/* ─── Link to dedicated Auth & OTP tab ─── */}
               <div className="sa-card" style={{ padding: "0.85rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 0, borderLeft: "4px solid var(--sa-link)" }}>
                 <div>
                   <div style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
                     <Smartphone size={16} style={{ color: "var(--sa-link)" }} />
-                    SMS OTP & Google Sign-in Methods
+                    SMS OTP & Google Sign-in Methods (پیکربندی کامل الگو و خنک‌سازی)
                   </div>
                   <div className="sa-stat-sub" style={{ fontSize: "0.8rem", marginTop: "0.2rem" }}>
-                    Configure SMS template, cooldown, and toggle Google vs SMS auth in the dedicated tab.
+                    تنظیم متن الگوی پیامک، زمان انتظار ارسال مجدد و خط خدماتی پیامک در تب اختصاصی.
                   </div>
                 </div>
                 <button

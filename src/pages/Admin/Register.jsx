@@ -18,6 +18,7 @@ export default function Register() {
   const navigate = useNavigate();
 
   // ─── روش‌های احراز هویت فعال ───
+  const [registrationEnabled, setRegistrationEnabled] = useState(true);
   const [smsOtpEnabled, setSmsOtpEnabled] = useState(true);
   const [googleAuthEnabled, setGoogleAuthEnabled] = useState(true);
   const [googleBusy, setGoogleBusy] = useState(false);
@@ -79,10 +80,13 @@ export default function Register() {
   useEffect(() => {
     async function loadSettings() {
       try {
-        const { data } = await supabase.rpc("get_system_settings");
-        if (data) {
+        const { data, error } = await supabase.rpc("get_system_settings");
+        if (!error && data) {
           if (data.telegram_support_id) {
             setTelegramSupportId(String(data.telegram_support_id).replace(/^@/, "").trim());
+          }
+          if (typeof data.registration_enabled === "boolean") {
+            setRegistrationEnabled(data.registration_enabled);
           }
           if (typeof data.sms_otp_enabled === "boolean") {
             setSmsOtpEnabled(data.sms_otp_enabled);
@@ -91,30 +95,36 @@ export default function Register() {
             setGoogleAuthEnabled(data.google_auth_enabled);
           }
         }
-      } catch {
-        try {
-          const { data } = await supabase
-            .from("system_settings")
-            .select("key, value")
-            .in("key", ["telegram_support_id", "sms_otp_enabled", "google_auth_enabled"]);
-          if (Array.isArray(data)) {
-            for (const row of data) {
-              if (row.key === "telegram_support_id" && row.value) {
-                const val = typeof row.value === "string" ? row.value : JSON.stringify(row.value);
-                setTelegramSupportId(val.replace(/[ "@]/g, "").trim());
-              }
-              if (row.key === "sms_otp_enabled" && row.value !== undefined) {
-                setSmsOtpEnabled(row.value === true || row.value === "true");
-              }
-              if (row.key === "google_auth_enabled" && row.value !== undefined) {
-                setGoogleAuthEnabled(row.value === true || row.value === "true");
-              }
+      } catch (err) {
+        console.warn("RPC get_system_settings error:", err);
+      }
+
+      // کوئری مستقیم جدول system_settings جهت تضمین مقادیر
+      try {
+        const { data } = await supabase
+          .from("system_settings")
+          .select("key, value")
+          .in("key", ["telegram_support_id", "registration_enabled", "sms_otp_enabled", "google_auth_enabled"]);
+        if (Array.isArray(data) && data.length > 0) {
+          for (const row of data) {
+            if (row.key === "telegram_support_id" && row.value) {
+              const val = typeof row.value === "string" ? row.value : JSON.stringify(row.value);
+              setTelegramSupportId(val.replace(/[ "@]/g, "").trim());
+            }
+            if (row.key === "registration_enabled" && row.value !== undefined) {
+              setRegistrationEnabled(row.value === true || row.value === "true");
+            }
+            if (row.key === "sms_otp_enabled" && row.value !== undefined) {
+              setSmsOtpEnabled(row.value === true || row.value === "true");
+            }
+            if (row.key === "google_auth_enabled" && row.value !== undefined) {
+              setGoogleAuthEnabled(row.value === true || row.value === "true");
             }
           }
-        } catch {}
-      } finally {
-        setSettingsLoaded(true);
-      }
+        }
+      } catch {}
+
+      setSettingsLoaded(true);
     }
     loadSettings();
   }, []);
@@ -357,35 +367,89 @@ export default function Register() {
               </p>
             </div>
 
-            {/* نوار مراحل (Stepper) - فقط در صورت فعال بودن پیامک */}
-            {smsOtpEnabled !== false && (
-              <div className="flex items-center justify-between border-y border-ink/10 dark:border-slate-700/60 py-3 px-1 text-xs font-black">
-                <div className={`flex items-center gap-1.5 ${step === 1 ? "text-teal font-black" : step > 1 ? "text-emerald-600 dark:text-emerald-400" : "text-ink/40 dark:text-slate-500"}`}>
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${step === 1 ? "bg-teal text-white" : step > 1 ? "bg-emerald-600 text-white" : "bg-ink/10 dark:bg-slate-700 text-ink/60 dark:text-slate-400"}`}>
-                    {step > 1 ? <Check size={12} /> : faNum("1")}
-                  </span>
-                  <span>شماره همراه</span>
+            {/* ══════════════ حالت ثبت‌نام عمومی غیرفعال ══════════════ */}
+            {registrationEnabled === false ? (
+              <div className="flex flex-col items-center gap-4 py-4 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border-2 border-amber-500/30 flex items-center justify-center text-amber-500">
+                  <ShieldCheck size={32} />
                 </div>
 
-                <div className="w-6 h-[1.5px] bg-ink/15 dark:bg-slate-700" />
-
-                <div className={`flex items-center gap-1.5 ${step === 2 ? "text-teal font-black" : step > 2 ? "text-emerald-600 dark:text-emerald-400" : "text-ink/40 dark:text-slate-500"}`}>
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${step === 2 ? "bg-teal text-white" : step > 2 ? "bg-emerald-600 text-white" : "bg-ink/10 dark:bg-slate-700 text-ink/60 dark:text-slate-400"}`}>
-                    {step > 2 ? <Check size={12} /> : faNum("2")}
-                  </span>
-                  <span>کد پیامکی</span>
+                <div className="flex flex-col gap-1.5">
+                  <h3 className="text-base sm:text-lg font-black text-navy dark:text-white">ثبت‌نام عمومی غیرفعال است</h3>
+                  <p className="text-xs sm:text-sm text-ink-subtle dark:text-slate-400 max-w-xs leading-relaxed">
+                    در حال حاضر ثبت‌نام مستقیم کاربران موقتاً بسته شده است. کاربران جدید فقط توسط مدیریت سامانه ایجاد می‌شوند.
+                  </p>
                 </div>
 
-                <div className="w-6 h-[1.5px] bg-ink/15 dark:bg-slate-700" />
-
-                <div className={`flex items-center gap-1.5 ${step === 3 ? "text-teal font-black" : "text-ink/40 dark:text-slate-500"}`}>
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${step === 3 ? "bg-teal text-white" : "bg-ink/10 dark:bg-slate-700 text-ink/60 dark:text-slate-400"}`}>
-                    {faNum("3")}
-                  </span>
-                  <span>رمز و مشخصات</span>
+                <div className="w-full flex flex-col gap-2.5 pt-2">
+                  <Link
+                    to="/admin/login"
+                    className="w-full flex items-center justify-center gap-2 bg-teal text-white font-bold py-2.5 px-4 rounded-pill-md shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-xs sm:text-sm cursor-pointer transition-all"
+                  >
+                    ورود به حساب کاربری موجود
+                  </Link>
+                  {telegramSupportId && (
+                    <a
+                      href={`https://t.me/${telegramSupportId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full flex items-center justify-center gap-2 bg-white dark:bg-slate-800 text-ink dark:text-white border-2 border-ink dark:border-slate-600 font-bold py-2.5 px-4 rounded-pill-md text-xs sm:text-sm transition-all hover:bg-slate-50 dark:hover:bg-slate-700"
+                    >
+                      <Headphones size={15} className="text-teal" />
+                      ارتباط با پشتیبانی در تلگرام
+                    </a>
+                  )}
                 </div>
               </div>
-            )}
+            ) : smsOtpEnabled === false && googleAuthEnabled === false ? (
+              <div className="flex flex-col items-center gap-4 py-4 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border-2 border-rose-500/30 flex items-center justify-center text-rose-500">
+                  <HelpCircle size={32} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <h3 className="text-base sm:text-lg font-black text-navy dark:text-white">امکان ثبت‌نام در دسترس نیست</h3>
+                  <p className="text-xs sm:text-sm text-ink-subtle dark:text-slate-400 max-w-xs leading-relaxed">
+                    روش‌های ثبت‌نام در حال حاضر توسط مدیریت موقتاً غیرفعال شده‌اند.
+                  </p>
+                </div>
+                <Link
+                  to="/admin/login"
+                  className="w-full flex items-center justify-center gap-2 bg-teal text-white font-bold py-2.5 px-4 rounded-pill-md shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none text-xs sm:text-sm cursor-pointer"
+                >
+                  ورود به حساب کاربری
+                </Link>
+              </div>
+            ) : (
+              <>
+                {/* نوار مراحل (Stepper) - فقط در صورت فعال بودن پیامک */}
+                {smsOtpEnabled !== false && (
+                  <div className="flex items-center justify-between border-y border-ink/10 dark:border-slate-700/60 py-3 px-1 text-xs font-black">
+                    <div className={`flex items-center gap-1.5 ${step === 1 ? "text-teal font-black" : step > 1 ? "text-emerald-600 dark:text-emerald-400" : "text-ink/40 dark:text-slate-500"}`}>
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${step === 1 ? "bg-teal text-white" : step > 1 ? "bg-emerald-600 text-white" : "bg-ink/10 dark:bg-slate-700 text-ink/60 dark:text-slate-400"}`}>
+                        {step > 1 ? <Check size={12} /> : faNum("1")}
+                      </span>
+                      <span>شماره همراه</span>
+                    </div>
+
+                    <div className="w-6 h-[1.5px] bg-ink/15 dark:bg-slate-700" />
+
+                    <div className={`flex items-center gap-1.5 ${step === 2 ? "text-teal font-black" : step > 2 ? "text-emerald-600 dark:text-emerald-400" : "text-ink/40 dark:text-slate-500"}`}>
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${step === 2 ? "bg-teal text-white" : step > 2 ? "bg-emerald-600 text-white" : "bg-ink/10 dark:bg-slate-700 text-ink/60 dark:text-slate-400"}`}>
+                        {step > 2 ? <Check size={12} /> : faNum("2")}
+                      </span>
+                      <span>کد پیامکی</span>
+                    </div>
+
+                    <div className="w-6 h-[1.5px] bg-ink/15 dark:bg-slate-700" />
+
+                    <div className={`flex items-center gap-1.5 ${step === 3 ? "text-teal font-black" : "text-ink/40 dark:text-slate-500"}`}>
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${step === 3 ? "bg-teal text-white" : "bg-ink/10 dark:bg-slate-700 text-ink/60 dark:text-slate-400"}`}>
+                        {faNum("3")}
+                      </span>
+                      <span>رمز و مشخصات</span>
+                    </div>
+                  </div>
+                )}
 
             {/* ══════════════ حالت فقط گوگل (وقتی پیامک غیرفعال است) ══════════════ */}
             {smsOtpEnabled === false && googleAuthEnabled !== false && (
@@ -697,6 +761,8 @@ export default function Register() {
                   </span>
                 </Button>
               </form>
+            )}
+            </>
             )}
 
             {/* فوتر فرم */}

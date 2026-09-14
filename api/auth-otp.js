@@ -103,7 +103,7 @@ export default async function handler(req, res) {
         .select("key, value")
         .in("key", ["sms_otp_enabled", "registration_enabled", "otp_sms_pattern", "otp_line_number", "otp_cooldown_seconds", "otp_max_resends", "otp_amoot_token"]);
 
-      if (Array.isArray(sysSettings)) {
+      if (Array.isArray(sysSettings) && sysSettings.length > 0) {
         for (const row of sysSettings) {
           if (row.key === "sms_otp_enabled" && row.value !== undefined) smsOtpEnabled = row.value === true || row.value === "true";
           if (row.key === "registration_enabled" && row.value !== undefined) registrationEnabled = row.value === true || row.value === "true";
@@ -112,6 +112,16 @@ export default async function handler(req, res) {
           if (row.key === "otp_cooldown_seconds" && Number(row.value)) cooldownSeconds = Number(row.value);
           if (row.key === "otp_max_resends" && Number(row.value) !== undefined) maxResends = Number(row.value);
           if (row.key === "otp_amoot_token" && row.value) amootToken = String(row.value);
+        }
+      } else {
+        const { data: rpcData } = await supabaseAdmin.rpc("get_system_settings");
+        if (rpcData) {
+          if (typeof rpcData.sms_otp_enabled === "boolean") smsOtpEnabled = rpcData.sms_otp_enabled;
+          if (typeof rpcData.registration_enabled === "boolean") registrationEnabled = rpcData.registration_enabled;
+          if (rpcData.otp_sms_pattern) pattern = String(rpcData.otp_sms_pattern);
+          if (rpcData.otp_line_number) lineNumber = String(rpcData.otp_line_number);
+          if (rpcData.otp_cooldown_seconds) cooldownSeconds = Number(rpcData.otp_cooldown_seconds);
+          if (rpcData.otp_max_resends !== undefined) maxResends = Number(rpcData.otp_max_resends);
         }
       }
     } catch {}
