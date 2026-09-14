@@ -104,7 +104,8 @@ function EmbeddedSwaggerUI({ token }) {
     <div className="relative w-full rounded-2xl overflow-hidden border-2 border-ink/10 dark:border-slate-800 bg-white dark:bg-[#0E1526] p-3 sm:p-5 min-h-[600px]">
       <style>{`
         .swagger-ui .topbar { display: none !important; }
-        .swagger-ui { font-family: "IRANSansX", "Montserrat", Tahoma, sans-serif !important; }
+        .swagger-ui { font-family: "IRANSansX", "Montserrat", Tahoma, sans-serif !important; width: 100% !important; max-width: 100% !important; }
+        .swagger-ui-embedded { width: 100% !important; max-width: 100% !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
         .swagger-ui code, .swagger-ui pre, .swagger-ui .microlight { font-family: ui-monospace, monospace !important; }
         .swagger-ui .info { margin: 10px 0 20px !important; }
         .swagger-ui .info .title { font-size: 20px !important; color: #0f172a !important; font-weight: 800 !important; }
@@ -112,9 +113,13 @@ function EmbeddedSwaggerUI({ token }) {
         .dark .swagger-ui { filter: invert(0.88) hue-rotate(180deg); }
         .dark .swagger-ui img { filter: invert(1) hue-rotate(180deg); }
         .swagger-ui .scheme-container { background: transparent !important; box-shadow: none !important; padding: 5px 0 !important; }
-        .swagger-ui .wrapper { padding: 0 !important; max-width: 100% !important; }
-        .swagger-ui .col-12 { padding: 0 !important; }
-        .swagger-ui .opblock { border-radius: 14px !important; margin: 0 0 12px !important; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.06) !important; }
+        .swagger-ui .wrapper { padding: 0 !important; max-width: 100% !important; width: 100% !important; box-sizing: border-box !important; }
+        .swagger-ui .col-12 { padding: 0 !important; width: 100% !important; max-width: 100% !important; }
+        .swagger-ui .opblock { border-radius: 14px !important; margin: 0 0 12px !important; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.06) !important; max-width: 100% !important; overflow-wrap: break-word !important; }
+        .swagger-ui .opblock-summary { flex-wrap: wrap !important; gap: 8px !important; }
+        .swagger-ui .opblock-summary-path { word-break: break-all !important; max-width: 100% !important; }
+        .swagger-ui pre { white-space: pre-wrap !important; word-break: break-all !important; max-width: 100% !important; }
+        .swagger-ui table { width: 100% !important; max-width: 100% !important; }
         .swagger-ui .btn.authorize { background-color: #0d9488 !important; border-color: #0d9488 !important; color: white !important; font-weight: 700 !important; border-radius: 8px !important; box-shadow: 2.75px 2.75px 0 #2e7068 !important; }
         .swagger-ui .btn.authorize svg { fill: white !important; }
         .swagger-ui .btn.execute { background-color: #202A5A !important; border-color: #202A5A !important; color: white !important; font-weight: 700 !important; border-radius: 8px !important; box-shadow: 2.75px 2.75px 0 #0b0f1f !important; }
@@ -313,40 +318,40 @@ print(response.json())`,
       {/* ══════════════════════════════════════════════════════════════ */}
       <div className="-rotate-[0.2deg]">
         <StickerCard theme="teal" radius="rounded-tl-[1.75rem] rounded-br-[1.75rem] rounded-tr-none rounded-bl-none">
-          <div className="p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div className="flex items-start sm:items-center gap-3.5">
-              <div className="p-3 bg-teal/20 text-teal rounded-2xl shrink-0 mt-0.5 sm:mt-0">
-                <Key size={22} />
+          <div className="p-4 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="p-2.5 sm:p-3 bg-teal/20 text-teal rounded-2xl shrink-0 mt-0.5 sm:mt-0">
+                <Key size={20} className="sm:w-[22px] sm:h-[22px]" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base font-black text-navy dark:text-white">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-sm sm:text-base font-black text-navy dark:text-white">
                     توکن اختصاصی شما (Bearer Token)
                   </h2>
                   <Badge color="teal">کلید امنیتی</Badge>
                 </div>
-                <p className="text-xs text-ink-subtle dark:text-slate-300 mt-1 leading-relaxed">
+                <p className="text-xs text-ink-subtle dark:text-slate-300 mt-1 leading-relaxed break-words">
                   احراز هویت حساب شما در درخواست‌ها • هدر ارسالی:{" "}
-                  <code className="font-mono bg-white/80 dark:bg-slate-800 text-teal px-1.5 py-0.5 rounded border border-teal/20" dir="ltr">
+                  <code className="font-mono bg-white/80 dark:bg-slate-800 text-teal px-1.5 py-0.5 rounded border border-teal/20 text-[11px] inline-block break-all" dir="ltr">
                     Authorization: Bearer &lt;TOKEN&gt;
                   </code>
                 </p>
               </div>
             </div>
 
-            {/* فیلد توکن و دکمه کپی — نیم‌عرض و مقید */}
-            <div className="flex items-center gap-2 w-full lg:w-auto shrink-0 pt-1 lg:pt-0">
-              <div className="relative flex-1 lg:w-72 xl:w-80 min-w-0 bg-white/95 dark:bg-slate-900 border-2 border-teal/30 dark:border-teal/40 rounded-pill-md px-3.5 py-2 font-mono text-xs text-slate-700 dark:text-slate-200 dir-ltr text-left flex items-center justify-between">
+            {/* فیلد توکن و دکمه کپی — واکنش‌گرا و سازگار با موبایل */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto shrink-0 pt-1 lg:pt-0">
+              <div className="relative flex-1 lg:w-72 xl:w-80 min-w-0 bg-white/95 dark:bg-slate-900 border-2 border-teal/30 dark:border-teal/40 rounded-pill-md px-3 py-2 font-mono text-xs text-slate-700 dark:text-slate-200 dir-ltr text-left flex items-center justify-between gap-1.5">
                 <span className="truncate whitespace-nowrap overflow-hidden text-ellipsis block min-w-0 flex-1 select-all">
                   {token
-                    ? (showToken ? token : `${token.substring(0, 14)}••••••••••••••••••••${token.substring(token.length - 6)}`)
+                    ? (showToken ? token : `${token.substring(0, 10)}••••••••${token.substring(token.length - 4)}`)
                     : "در حال بارگذاری توکن..."}
                 </span>
                 <PasswordToggle
                   visible={showToken}
                   onToggle={() => setShowToken(!showToken)}
                   size={15}
-                  className="shrink-0 ml-1.5"
+                  className="shrink-0"
                   ariaLabel={showToken ? "مخفی کردن توکن" : "نمایش کامل توکن"}
                 />
               </div>
@@ -356,7 +361,7 @@ print(response.json())`,
                 size="sm"
                 onClick={() => handleCopyText(token, "token")}
                 disabled={!token}
-                className="shrink-0 flex items-center gap-1.5"
+                className="shrink-0 flex items-center justify-center gap-1.5 text-xs py-2"
               >
                 {copiedToken ? <Check size={14} /> : <Copy size={14} />}
                 <span>{copiedToken ? "کپی شد" : "کپی توکن"}</span>
@@ -431,7 +436,7 @@ print(response.json())`,
                       <h4 className="text-base font-black text-navy dark:text-white">
                         ۱. کنسول مستندات Swagger
                       </h4>
-                      <span className="text-xs text-blue-600 dark:text-blue-400 font-mono dir-ltr block mt-0.5">
+                      <span className="text-xs text-blue-600 dark:text-blue-400 font-mono dir-ltr block mt-0.5 truncate max-w-full">
                         {docsUrl}
                       </span>
                     </div>
@@ -486,7 +491,7 @@ print(response.json())`,
                       <h4 className="text-base font-black text-navy dark:text-white">
                         ۲. فایل نقشه OpenAPI 3.0
                       </h4>
-                      <span className="text-xs text-amber-600 dark:text-amber-400 font-mono dir-ltr block mt-0.5">
+                      <span className="text-xs text-amber-600 dark:text-amber-400 font-mono dir-ltr block mt-0.5 truncate max-w-full">
                         {openApiUrl}
                       </span>
                     </div>
@@ -548,7 +553,7 @@ print(response.json())`,
                       <h4 className="text-base font-black text-navy dark:text-white">
                         ۳. وب‌سرویس و کدهای نمونه
                       </h4>
-                      <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono dir-ltr block mt-0.5">
+                      <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono dir-ltr block mt-0.5 truncate max-w-full">
                         {apiUrl}
                       </span>
                     </div>
@@ -594,29 +599,29 @@ print(response.json())`,
         /* ══════════════════════════════════════════════════════════════ */
         <div className="flex flex-col gap-6">
           {/* نوار ناوبری به سبک پیل‌های استیکری دیزاین رکاد */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 border-2 border-ink/10 dark:border-slate-800 rounded-pill-md p-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 border-2 border-ink/10 dark:border-slate-800 rounded-2xl sm:rounded-pill-md p-2.5 sm:p-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => handleNavigateSection(null)}
-              className="flex items-center gap-1.5 font-bold"
+              className="flex items-center gap-1.5 font-bold justify-center sm:justify-start"
             >
               <ArrowRight size={15} />
-              <span>بازگشت به ۳ بخش اصلی مستندات</span>
+              <span>بازگشت به ۳ بخش اصلی</span>
             </Button>
 
-            <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
+            <div className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none w-full sm:w-auto">
               {SECTIONS.map((sec) => (
                 <button
                   key={sec.id}
                   onClick={() => handleNavigateSection(sec.id)}
-                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-pill-sm text-xs font-extrabold transition-all whitespace-nowrap cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-pill-sm text-xs font-extrabold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
                     activeSection === sec.id
                       ? "bg-teal text-white shadow-[2px_2px_0_0_rgba(0,0,0,0.15)]"
                       : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-slate-200 hover:bg-bg-lavender dark:hover:bg-slate-800"
                   }`}
                 >
-                  <sec.icon size={14} />
+                  <sec.icon size={13} />
                   <span>{sec.title}</span>
                 </button>
               ))}
@@ -963,45 +968,48 @@ print(response.json())`,
               {/* نمونه کدهای آماده */}
               <StickerCard theme="white">
                 <div className="p-5 sm:p-6 flex flex-col gap-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-ink/5 dark:border-slate-800 pb-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2.5 border-b-2 border-ink/5 dark:border-slate-800 pb-3">
                     <div className="flex items-center gap-2">
-                      <Code2 size={18} className="text-teal" />
-                      <span className="text-sm font-black text-navy dark:text-white">
+                      <Code2 size={18} className="text-teal shrink-0" />
+                      <span className="text-xs sm:text-sm font-black text-navy dark:text-white">
                         نمونه کدهای آماده اتصال (با توکن شما):
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-pill-md">
-                      {[
-                        { id: "curl", label: "cURL" },
-                        { id: "javascript", label: "JavaScript" },
-                        { id: "python", label: "Python" },
-                      ].map((lang) => (
-                        <button
-                          key={lang.id}
-                          onClick={() => setSelectedLang(lang.id)}
-                          className={`px-3.5 py-1 rounded-pill-sm text-xs font-extrabold transition-all cursor-pointer ${
-                            selectedLang === lang.id
-                              ? "bg-teal text-white shadow-xs"
-                              : "text-ink-subtle hover:text-navy dark:hover:text-white"
-                          }`}
-                        >
-                          {lang.label}
-                        </button>
-                      ))}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-pill-md">
+                        {[
+                          { id: "curl", label: "cURL" },
+                          { id: "javascript", label: "JavaScript" },
+                          { id: "python", label: "Python" },
+                        ].map((lang) => (
+                          <button
+                            key={lang.id}
+                            onClick={() => setSelectedLang(lang.id)}
+                            className={`px-3 py-1 rounded-pill-sm text-xs font-extrabold transition-all cursor-pointer ${
+                              selectedLang === lang.id
+                                ? "bg-teal text-white shadow-xs"
+                                : "text-ink-subtle hover:text-navy dark:hover:text-white"
+                            }`}
+                          >
+                            {lang.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleCopySnippet(codeSnippets[selectedLang])}
+                        className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-white/10"
+                      >
+                        {copiedSnippet ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                        <span>{copiedSnippet ? "کپی شد" : "کپی کد"}</span>
+                      </button>
                     </div>
                   </div>
 
-                  <div className="relative bg-slate-900 text-slate-100 rounded-xl p-4 font-mono text-xs dir-ltr text-left overflow-x-auto">
-                    <button
-                      onClick={() => handleCopySnippet(codeSnippets[selectedLang])}
-                      className="absolute top-3 right-3 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-white/10"
-                    >
-                      {copiedSnippet ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-                      <span>{copiedSnippet ? "کپی شد" : "کپی کد"}</span>
-                    </button>
-
-                    <pre className="pr-20 whitespace-pre">{codeSnippets[selectedLang]}</pre>
+                  <div className="relative bg-slate-900 text-slate-100 rounded-xl p-4 font-mono text-xs dir-ltr text-left overflow-x-auto max-w-full">
+                    <pre className="whitespace-pre">{codeSnippets[selectedLang]}</pre>
                   </div>
                 </div>
               </StickerCard>
@@ -1014,8 +1022,8 @@ print(response.json())`,
                     <span>جدول اندپوینت‌های اصلی سامانه پرس‌کاد:</span>
                   </h4>
 
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs text-right border-collapse">
+                  <div className="overflow-x-auto max-w-full -mx-1 sm:mx-0">
+                    <table className="w-full min-w-[560px] text-xs text-right border-collapse">
                       <thead>
                         <tr className="border-b-2 border-ink/10 dark:border-slate-800 text-ink-subtle dark:text-slate-400 font-black">
                           <th className="py-3 px-3">متد</th>

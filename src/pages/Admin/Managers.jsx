@@ -16,6 +16,7 @@ import { supabase } from "../../lib/supabaseClient";
 import { logActivity } from "../../lib/activityLogger";
 import { faNum, faDate } from "../../lib/utils";
 import { DEFAULT_PLANS, getEffectivePlans } from "../../lib/plans";
+import { isValidIranPhone, normalizeIranPhone } from "../../lib/validators";
 
 // ─── دسته‌بندی مجوزها ───
 const PERMISSION_CATEGORIES = [
@@ -615,7 +616,9 @@ export default function Managers() {
   const [newPassword, setNewPassword] = useState("");
   const [createPasswordVisible, setCreatePasswordVisible] = useState(false);
   const [newName, setNewName] = useState("");
+  const [newPhone, setNewPhone] = useState("");
   const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
   const [createError, setCreateError] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
@@ -675,12 +678,19 @@ export default function Managers() {
       });
       if (userId) {
         try {
-          await updateUserQuota(userId, {
-            maxForms: 5,
-            maxResponses: 100,
+          const updates = {
+            max_forms: 5,
+            max_responses_per_month: 100,
             plan: "free",
-            canUseTelegram: Boolean(newCanUseTelegram),
-          });
+            can_use_telegram: Boolean(newCanUseTelegram),
+          };
+          if (newPhone.trim()) {
+            const normalized = normalizeIranPhone(newPhone.trim());
+            if (isValidIranPhone(normalized)) {
+              updates.phone = normalized;
+            }
+          }
+          await supabase.from("profiles").update(updates).eq("id", userId);
         } catch {}
       }
       push("کاربر جدید با موفقیت ایجاد شد!");
@@ -688,6 +698,7 @@ export default function Managers() {
       setNewEmail("");
       setNewPassword("");
       setNewName("");
+      setNewPhone("");
       setNewCanUseTelegram(false);
       load();
     } catch (err) {
@@ -700,6 +711,7 @@ export default function Managers() {
   function openEdit(manager) {
     setSelectedManager(manager);
     setEditName(manager.full_name || manager.email.split("@")[0]);
+    setEditPhone(manager.phone || "");
     setEditCanUseTelegram(Boolean(manager.can_use_telegram));
     setEditNewPassword("");
     setEditPasswordVisible(false);
@@ -1574,6 +1586,11 @@ export default function Managers() {
             <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)}
               className={inputCls} placeholder="نام و نام خانوادگی" />
           </div>
+          <div>
+            <label className="block text-sm font-extrabold text-navy dark:text-slate-100 mb-1.5">شماره موبایل (اختیاری)</label>
+            <input type="tel" dir="ltr" value={newPhone} onChange={(e) => setNewPhone(e.target.value)}
+              className={inputCls} placeholder="۰۹۱۲۳۴۵۶۷۸۹" />
+          </div>
 
           {/* دسترسی به ربات تلگرام */}
           <div className="flex items-center justify-between p-3 rounded-xl bg-bg-lavender/50 dark:bg-slate-800/80 border-2 border-teal/20 dark:border-teal/30">
@@ -1629,6 +1646,21 @@ export default function Managers() {
             <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className={inputCls} />
           </div>
 
+          <div>
+            <label className="block text-sm font-extrabold text-navy dark:text-slate-100 mb-1.5">شماره موبایل / تماس</label>
+            <input
+              type="tel"
+              dir="ltr"
+              value={editPhone}
+              onChange={(e) => setEditPhone(e.target.value)}
+              className={inputCls}
+              placeholder="۰۹۱۲۳۴۵۶۷۸۹ (مثال: 09123456789)"
+            />
+            <span className="text-[11px] text-ink-subtle dark:text-slate-400 mt-1 block">
+              تغییر شماره تماس کاربر توسط سوپرادمین
+            </span>
+          </div>
+
           {/* دسترسی به بات تلگرام */}
           {!selectedManager?.is_owner && (
             <div className="flex items-center justify-between p-3.5 rounded-xl bg-bg-lavender/50 dark:bg-slate-800/80 border-2 border-teal/20 dark:border-teal/30">
@@ -1682,11 +1714,24 @@ export default function Managers() {
             <Button variant="teal" size="sm" onClick={async () => {
               if (!selectedManager) return;
               try {
+                let cleanPhone = undefined;
+                if (editPhone && editPhone.trim()) {
+                  const normalized = normalizeIranPhone(editPhone.trim());
+                  if (!isValidIranPhone(normalized)) {
+                    push("شماره موبایل نامعتبر است (مثال: ۰۹۱۲۳۴۵۶۷۸۹)", "error");
+                    return;
+                  }
+                  cleanPhone = normalized;
+                } else if (editPhone === "") {
+                  cleanPhone = null;
+                }
+
                 if (selectedManager.is_owner) {
-                  await updateManager(selectedManager.id, { fullName: editName });
+                  await updateManager(selectedManager.id, { fullName: editName, phone: cleanPhone });
                 } else {
                   await updateManager(selectedManager.id, {
                     fullName: editName,
+                    phone: cleanPhone,
                     isActive: selectedManager.is_active,
                   });
                   await updateUserQuota(selectedManager.id, {

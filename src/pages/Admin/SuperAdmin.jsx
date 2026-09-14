@@ -95,6 +95,8 @@ import {
   saveGlobalFileUploadPolicy,
   FILE_TYPE_PRESETS,
   DEFAULT_FILE_UPLOAD_POLICY,
+  isValidIranPhone,
+  normalizeIranPhone,
 } from "../../lib/validators";
 
 
@@ -5820,14 +5822,23 @@ export default function SuperAdmin() {
                   className="sa-btn sa-btn-primary"
                   onClick={async () => {
                     try {
+                      let cleanPhone = null;
+                      if (detailModal.phone && String(detailModal.phone).trim()) {
+                        cleanPhone = normalizeIranPhone(String(detailModal.phone).trim());
+                        if (!isValidIranPhone(cleanPhone)) {
+                          showToast("Invalid Iran phone format (e.g. 09123456789)", "error");
+                          return;
+                        }
+                      }
                       const { error } = await supabase
                         .from("profiles")
                         .update({
                           full_name: detailModal.full_name,
-                          phone: detailModal.phone,
+                          phone: cleanPhone,
                         })
                         .eq("id", detailModal.id);
                       if (error) throw error;
+                      setDetailModal((prev) => (prev ? { ...prev, phone: cleanPhone } : prev));
                       showToast("Profile details updated successfully");
                       loadUsers();
                       loadAdmins();

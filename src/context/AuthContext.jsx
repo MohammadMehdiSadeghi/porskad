@@ -608,8 +608,8 @@ export function AuthProvider({ children }) {
     return userId;
   }
 
-  async function updateManager(managerId, { fullName, isActive, permissions } = {}) {
-    // بررسی سمت کلاینت: owner فقط نامش قابل تغییر است
+  async function updateManager(managerId, { fullName, phone, isActive, permissions } = {}) {
+    // بررسی سمت کلاینت: owner فقط نام و شماره تلفنش قابل تغییر است
     let isOwnerTarget = false;
     try {
       const { data: tp } = await supabase
@@ -621,11 +621,14 @@ export function AuthProvider({ children }) {
     } catch { /* ستون is_owner ممکنه وجود نداشته باشه */ }
 
     if (isOwnerTarget) {
-      // owner فقط نامش قابل تغییر است، مجوز و وضعیتش غیرقابل تغییر
-      if (fullName !== undefined) {
+      // owner فقط نام و تلفنش قابل تغییر است، مجوز و وضعیتش غیرقابل تغییر
+      const ownerUpdates = {};
+      if (fullName !== undefined) ownerUpdates.full_name = fullName;
+      if (phone !== undefined) ownerUpdates.phone = phone;
+      if (Object.keys(ownerUpdates).length > 0) {
         const { error } = await supabase
           .from("profiles")
-          .update({ full_name: fullName })
+          .update(ownerUpdates)
           .eq("id", managerId);
         if (error) throw error;
       }
@@ -634,6 +637,7 @@ export function AuthProvider({ children }) {
 
     const updates = {};
     if (fullName !== undefined) updates.full_name = fullName;
+    if (phone !== undefined) updates.phone = phone;
     if (isActive !== undefined) updates.is_active = isActive;
 
     if (Object.keys(updates).length > 0) {
