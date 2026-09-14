@@ -8,6 +8,7 @@ import Badge from "../../components/ui/Badge";
 import Modal from "../../components/ui/Modal";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabaseClient";
+import { isValidIranPhone, normalizeIranPhone } from "../../lib/validators";
 import SEO from "../../components/ui/SEO";
 import ThemeToggle from "../../components/ui/ThemeToggle";
 import { logActivity } from "../../lib/activityLogger";
@@ -74,13 +75,46 @@ export default function Login() {
     setBusy(true);
     setError(null);
     try {
-      await login(email.trim(), password);
-      logActivity("login", "user", null, { email: email.trim() });
-      navigate("/admin/forms", { replace: true });
+      const rawInput = email.trim();
+      let targetEmail = rawInput;
+
+      // اگر کاربر شماره موبایل ایران وارد کرده باشد
+      if (isValidIranPhone(rawInput)) {
+        const cleanPhone = normalizeIranPhone(rawInput);
+        targetEmail = `${cleanPhone}@porskad.local`;
+
+        // ابتدا تلاش با ایمیل ساخته‌شده اختصاصی موبایل
+        try {
+          await login(targetEmail, password);
+          logActivity("login", "user", null, { phone: cleanPhone });
+          navigate(isOwner() ? "/admin" : "/admin/forms", { replace: true });
+          return;
+        } catch (phoneErr) {
+          // اگر پیدا نشد، ممکن است با ایمیل عادی ثبت‌نام کرده ولی شماره‌اش در profiles باشد
+          try {
+            const { data: prof } = await supabase
+              .from("profiles")
+              .select("email")
+              .eq("phone", cleanPhone)
+              .maybeSingle();
+            if (prof?.email) {
+              await login(prof.email, password);
+              logActivity("login", "user", null, { email: prof.email, phone: cleanPhone });
+              navigate(isOwner() ? "/admin" : "/admin/forms", { replace: true });
+              return;
+            }
+          } catch {}
+          throw phoneErr;
+        }
+      }
+
+      await login(targetEmail, password);
+      logActivity("login", "user", null, { email: targetEmail });
+      navigate(isOwner() ? "/admin" : "/admin/forms", { replace: true });
     } catch (err) {
       setError(
         err?.message?.includes("Invalid login")
-          ? "ایمیل یا رمز عبور درست نیست."
+          ? "ایمیل، شماره موبایل یا رمز عبور اشتباه است."
           : "ورود ناموفق بود؛ لطفاً دوباره تلاش کنید.",
       );
     } finally {
@@ -116,16 +150,16 @@ export default function Login() {
             </div>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-extrabold text-navy dark:text-slate-200">ایمیل</span>
+              <span className="text-sm font-extrabold text-navy dark:text-slate-200">ایمیل یا شماره موبایل</span>
               <input
-                type="email"
+                type="text"
                 dir="ltr"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20
                   rounded-pill-md px-4 py-2.5 font-semibold text-ink dark:text-slate-100 text-left focus:outline-none transition-all"
-                placeholder="Example@gmail.com"
+                placeholder="۰۹۱۲۳۴۵۶۷۸۹ یا name@example.com"
                 autoComplete="username"
               />
             </label>

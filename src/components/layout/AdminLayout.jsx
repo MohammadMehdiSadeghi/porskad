@@ -86,10 +86,11 @@ export default function AdminLayout() {
         { to: "/admin", label: "داشبورد کل", icon: LayoutDashboard, end: true },
         { to: "/admin/forms", label: "فرم‌های من", icon: FileText, end: false, tabId: "forms" },
         { to: "/admin/embed", label: "اشتراک‌گذاری", icon: Share2, end: false, tabId: "embed" },
+        { to: "/admin/sms", label: "پنل پیامک", icon: MessageSquare, end: false, tabId: "sms" },
+        { to: "/admin/web-service", label: "مستندات وب سرویس", icon: Code2, end: false, tabId: "webservice" },
         { to: "/admin/telegram", label: "اتصال به تلگرام", icon: Bot, end: false, tabId: "telegram" },
         { to: "/admin/support", label: "پشتیبانی", icon: Headphones, end: false, tabId: "support" },
         { to: "/admin/subscriptions", label: "اشتراک‌ها", icon: Crown, end: false, tabId: "subscriptions" },
-        { to: "/admin/web-service", label: "مستندات وب سرویس", icon: Code2, end: false },
         { to: "/admin/profile", label: "پروفایل و سهمیه", icon: User, end: false, tabId: "profile" },
       ].filter((item) => !item.tabId || tabsCfg[item.tabId]?.state !== TAB_STATE_DISABLED);
 
@@ -102,6 +103,8 @@ export default function AdminLayout() {
     const path = location.pathname;
     if (path.startsWith("/admin/forms")) return "forms";
     if (path.startsWith("/admin/embed")) return "embed";
+    if (path.startsWith("/admin/sms")) return "sms";
+    if (path.startsWith("/admin/web-service")) return "webservice";
     if (path.startsWith("/admin/telegram")) return "telegram";
     if (path.startsWith("/admin/support")) return "support";
     if (path.startsWith("/admin/subscriptions")) return "subscriptions";

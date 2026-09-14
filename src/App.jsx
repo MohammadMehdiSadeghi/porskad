@@ -148,7 +148,7 @@ export default function App() {
                 {/* بخش‌های اختصاصی مالک و سوپرادمین */}
                 <Route path="managers" element={<AuthGuard ownerOnly={true}><Managers /></AuthGuard>} />
                 <Route path="settings" element={<AuthGuard ownerOnly={true}><Settings /></AuthGuard>} />
-                <Route path="sms" element={<AuthGuard ownerOnly={true}><SmsPanel /></AuthGuard>} />
+                <Route path="sms" element={<AuthGuard adminOnly={false}><SmsPanel /></AuthGuard>} />
                 <Route path="superadmin" element={<AuthGuard ownerOnly={true}><SuperAdmin /></AuthGuard>} />
               </Route>
 

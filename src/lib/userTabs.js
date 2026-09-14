@@ -16,6 +16,8 @@ export const USER_TABS_SETTINGS_KEY = "user_tabs_config";
 export const USER_TABS = [
   { id: "forms",    label: "فرم‌های من",       path: "/admin/forms" },
   { id: "embed",    label: "اشتراک‌گذاری",     path: "/admin/embed" },
+  { id: "sms",      label: "پنل پیامک",         path: "/admin/sms" },
+  { id: "webservice", label: "مستندات وب‌سرویس", path: "/admin/web-service" },
   { id: "telegram", label: "اتصال به تلگرام",  path: "/admin/telegram" },
   { id: "support",  label: "پشتیبانی",         path: "/admin/support" },
   { id: "profile",  label: "پروفایل و سهمیه",  path: "/admin/profile" },
@@ -32,7 +34,7 @@ export const DEFAULT_MAINTENANCE_MESSAGE =
 export const DEFAULT_USER_TABS_CONFIG = Object.fromEntries(
   USER_TABS.map((t) => [
     t.id,
-    { state: TAB_STATE_ON, message: "" },
+    { state: t.id === "sms" ? TAB_STATE_DISABLED : TAB_STATE_ON, message: "" },
   ]),
 );
 

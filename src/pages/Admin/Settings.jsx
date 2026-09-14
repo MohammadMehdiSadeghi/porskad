@@ -44,6 +44,10 @@ export default function Settings() {
     default_max_active_forms: 5,
     default_max_monthly_responses: 100,
     registration_enabled: true,
+    otp_sms_pattern: "کد تایید ثبت‌نام در پرس‌کاد: %code%",
+    otp_line_number: "Service",
+    otp_cooldown_seconds: 90,
+    otp_max_resends: 2,
   });
 
   useEffect(() => {
@@ -62,6 +66,10 @@ export default function Settings() {
           default_max_active_forms: data.default_max_active_forms ?? 5,
           default_max_monthly_responses: data.default_max_monthly_responses ?? 100,
           registration_enabled: data.registration_enabled !== false,
+          otp_sms_pattern: data.otp_sms_pattern || "کد تایید ثبت‌نام در پرس‌کاد: %code%",
+          otp_line_number: data.otp_line_number || "Service",
+          otp_cooldown_seconds: data.otp_cooldown_seconds ?? 90,
+          otp_max_resends: data.otp_max_resends ?? 2,
         });
       }
     } catch (err) {
@@ -82,6 +90,10 @@ export default function Settings() {
         default_max_active_forms: Math.max(1, Number(settings.default_max_active_forms) || 5),
         default_max_monthly_responses: Math.max(1, Number(settings.default_max_monthly_responses) || 100),
         registration_enabled: Boolean(settings.registration_enabled),
+        otp_sms_pattern: settings.otp_sms_pattern?.trim() || "کد تایید ثبت‌نام در پرس‌کاد: %code%",
+        otp_line_number: settings.otp_line_number?.trim() || "Service",
+        otp_cooldown_seconds: Math.max(30, Number(settings.otp_cooldown_seconds) || 90),
+        otp_max_resends: Math.max(1, Number(settings.otp_max_resends) || 2),
       };
 
       const { data, error } = await supabase.rpc("update_system_settings", {
@@ -377,6 +389,84 @@ export default function Settings() {
                 </button>
                 <span className="text-xs font-bold text-navy dark:text-slate-200 min-w-[50px]">
                   {settings.registration_enabled ? "فعال" : "غیرفعال"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </StickerCard>
+
+        {/* ۴. تنظیمات پیامک و اعتبارسنجی ثبت‌نام (OTP) */}
+        <StickerCard title="تنظیمات پیامک و کد اعتبارسنجی (OTP)">
+          <div className="p-4 sm:p-6 space-y-4">
+            <div className="bg-teal/10 dark:bg-teal/10 border border-teal/20 dark:border-teal/30 rounded-2xl p-3.5 text-xs text-navy dark:text-slate-200 leading-relaxed">
+              <strong className="text-teal font-black">الگوی پیامک تایید شماره:</strong> کد ورود ۵ رقمی به‌صورت خودکار جایگزین تگ <code dir="ltr" className="bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded text-teal font-black border border-teal/20">%code%</code> خواهد شد.
+            </div>
+
+            <div>
+              <label className="block text-xs font-black text-navy dark:text-slate-200 mb-1.5">
+                متن پیامک اعتبارسنجی (حاوی الگو)
+              </label>
+              <textarea
+                rows={2}
+                dir="rtl"
+                value={settings.otp_sms_pattern || ""}
+                onChange={(e) => setSettings({ ...settings, otp_sms_pattern: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl border-2 border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold text-navy dark:text-slate-100 focus:border-teal outline-none transition-colors"
+                placeholder="کد تایید ثبت‌نام در پرس‌کاد: %code%"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-black text-navy dark:text-slate-200 mb-1.5">
+                  خط فرستنده پیامک
+                </label>
+                <input
+                  type="text"
+                  dir="ltr"
+                  value={settings.otp_line_number || "Service"}
+                  onChange={(e) => setSettings({ ...settings, otp_line_number: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border-2 border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-bold font-mono text-navy dark:text-slate-100 focus:border-teal outline-none"
+                  placeholder="Service"
+                />
+                <span className="text-[11px] text-ink-subtle dark:text-slate-400 mt-1 block">
+                  پیش‌فرض: Service (خط خدماتی)
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-navy dark:text-slate-200 mb-1.5">
+                  زمان انتظار ارسال مجدد (ثانیه)
+                </label>
+                <input
+                  type="number"
+                  min="30"
+                  max="600"
+                  dir="ltr"
+                  value={settings.otp_cooldown_seconds ?? 90}
+                  onChange={(e) => setSettings({ ...settings, otp_cooldown_seconds: parseInt(e.target.value) || 90 })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border-2 border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-bold font-mono text-navy dark:text-slate-100 focus:border-teal outline-none text-center"
+                />
+                <span className="text-[11px] text-ink-subtle dark:text-slate-400 mt-1 block">
+                  پیش‌فرض: ۹۰ ثانیه (۱:۳۰ دقیقه)
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-navy dark:text-slate-200 mb-1.5">
+                  حداکثر دفعات ارسال مجدد
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="5"
+                  dir="ltr"
+                  value={settings.otp_max_resends ?? 2}
+                  onChange={(e) => setSettings({ ...settings, otp_max_resends: parseInt(e.target.value) || 2 })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border-2 border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-bold font-mono text-navy dark:text-slate-100 focus:border-teal outline-none text-center"
+                />
+                <span className="text-[11px] text-ink-subtle dark:text-slate-400 mt-1 block">
+                  پیش‌فرض: ۲ بار
                 </span>
               </div>
             </div>

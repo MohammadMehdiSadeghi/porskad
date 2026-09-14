@@ -393,6 +393,10 @@ export default function SuperAdmin() {
     default_max_active_forms: 5,
     default_max_monthly_responses: 100,
     registration_enabled: true,
+    otp_sms_pattern: "کد تایید ثبت‌نام در پرس‌کاد: %code%",
+    otp_line_number: "Service",
+    otp_cooldown_seconds: 90,
+    otp_max_resends: 2,
   });
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsSaving, setSettingsSaving] = useState(false);
@@ -2147,6 +2151,88 @@ export default function SuperAdmin() {
                     {sysSettings.registration_enabled !== false ? "Enabled" : "Disabled"}
                   </span>
                 </label>
+              </div>
+
+              {/* ─── SMS Registration & OTP Settings ─── */}
+              <div style={{ marginTop: "0.5rem", borderTop: "1px solid var(--sa-field-border)", paddingTop: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--sa-text-0)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <span>📱</span> SMS Registration & OTP Pattern (الگوی پیامک ثبت‌نام)
+                  </div>
+                  <div style={{ fontSize: "0.8rem", color: "var(--sa-text-2)", marginTop: "0.2rem" }}>
+                    Configure the OTP template, sender line, cooldown timer, and resend limits for user sign-ups.
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                    SMS Pattern Template (متن پیامک حاوی الگو)
+                  </label>
+                  <textarea
+                    rows={2}
+                    dir="rtl"
+                    value={sysSettings.otp_sms_pattern || "کد تایید ثبت‌نام در پرس‌کاد: %code%"}
+                    onChange={(e) => setSysSettings({ ...sysSettings, otp_sms_pattern: e.target.value })}
+                    style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", outline: "none", fontFamily: "inherit" }}
+                    placeholder="کد تایید ثبت‌نام در پرس‌کاد: %code%"
+                  />
+                  <div style={{ fontSize: "0.78rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
+                    💡 متن پیامک ارسالی به کاربر. عبارت <code dir="ltr" style={{ color: "var(--sa-link)", fontWeight: 700 }}>%code%</code> به‌صورت خودکار با کد ۵ رقمی جایگزین خواهد شد.
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                      Sender Line (خط فرستنده)
+                    </label>
+                    <input
+                      type="text"
+                      dir="ltr"
+                      value={sysSettings.otp_line_number || "Service"}
+                      onChange={(e) => setSysSettings({ ...sysSettings, otp_line_number: e.target.value })}
+                      style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", outline: "none" }}
+                      placeholder="Service"
+                    />
+                    <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
+                      پیش‌فرض: <code dir="ltr">Service</code> (خط خدماتی عبور از بلک‌لیست)
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                      Resend Cooldown (ثانیه)
+                    </label>
+                    <input
+                      type="number"
+                      min={30}
+                      max={600}
+                      value={sysSettings.otp_cooldown_seconds ?? 90}
+                      onChange={(e) => setSysSettings({ ...sysSettings, otp_cooldown_seconds: parseInt(e.target.value) || 90 })}
+                      style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", outline: "none" }}
+                    />
+                    <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
+                      پیش‌فرض: ۹۰ ثانیه (۱:۳۰ دقیقه)
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                      Max Resends (حداکثر ارسال)
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={5}
+                      value={sysSettings.otp_max_resends ?? 2}
+                      onChange={(e) => setSysSettings({ ...sysSettings, otp_max_resends: parseInt(e.target.value) || 2 })}
+                      style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", outline: "none" }}
+                    />
+                    <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
+                      پیش‌فرض: ۲ بار ارسال مجدد
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.5rem" }}>

@@ -22,6 +22,8 @@ import {
 const TAB_LABELS_EN = {
   forms: "My Forms",
   embed: "Embed & Share",
+  sms: "SMS Panel Integration",
+  webservice: "Webservice & API Docs",
   telegram: "Telegram Integration",
   support: "Support & Tickets",
   profile: "Profile & Quota",

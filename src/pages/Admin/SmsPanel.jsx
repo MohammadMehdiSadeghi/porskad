@@ -41,25 +41,37 @@ const inputCls =
   "w-full bg-slate-50 dark:bg-slate-800/90 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md px-3.5 py-2.5 text-sm font-semibold text-navy dark:text-slate-100 focus:border-teal focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed";
 
 export default function SmsPanel() {
-  const { hasPermission, isOwner } = useAuth();
+  const { user, hasPermission, isOwner } = useAuth();
   const canSms = hasPermission("manage_sms") || isOwner();
 
+  const isGlobalAdmin = isOwner() || hasPermission("manage_system");
+  const tokenStorageKey = isGlobalAdmin ? "porskad_amoot_token" : `porskad_amoot_token_${user?.id || "user"}`;
+  const lineStorageKey = isGlobalAdmin ? "porskad_amoot_line" : `porskad_amoot_line_${user?.id || "user"}`;
+  const senderStorageKey = isGlobalAdmin ? "porskad_amoot_sender" : `porskad_amoot_sender_${user?.id || "user"}`;
+  const activeStorageKey = isGlobalAdmin ? "porskad_amoot_active" : `porskad_amoot_active_${user?.id || "user"}`;
+
   const [tab, setTab] = useState("dashboard");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
   // ─── Settings State ───
-  const [amootToken, setAmootToken] = useState("");
+  const [amootToken, setAmootToken] = useState(() => localStorage.getItem(tokenStorageKey) || "");
   const [showToken, setShowToken] = useState(false);
-  const [hasTokenInDb, setHasTokenInDb] = useState(false);
-  const [maskedToken, setMaskedToken] = useState("");
-  const [lineNumber, setLineNumber] = useState("Public");
-  const [senderName, setSenderName] = useState("پرس‌کاد");
-  const [isActive, setIsActive] = useState(true);
+  const [hasTokenInDb, setHasTokenInDb] = useState(() => Boolean(localStorage.getItem(tokenStorageKey)));
+  const [maskedToken, setMaskedToken] = useState(() => {
+    const t = localStorage.getItem(tokenStorageKey) || "";
+    return t.length > 5 ? "••••••••" + t.slice(-4) : "";
+  });
+  const [lineNumber, setLineNumber] = useState(() => localStorage.getItem(lineStorageKey) || "Service");
+  const [senderName, setSenderName] = useState(() => localStorage.getItem(senderStorageKey) || "پرس‌کاد");
+  const [isActive, setIsActive] = useState(() => {
+    const saved = localStorage.getItem(activeStorageKey);
+    return saved !== null ? saved === "true" : true;
+  });
   const [savingSettings, setSavingSettings] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
   const [testResult, setTestResult] = useState(null);
-  const [availableLines, setAvailableLines] = useState(["Public"]);
+  const [availableLines, setAvailableLines] = useState(["Service", "Public", "98"]);
   const [copiedWebhook, setCopiedWebhook] = useState(false);
 
   // ─── Live Account State ───
@@ -103,10 +115,10 @@ export default function SmsPanel() {
   // ─── بارگذاری تنظیمات و وضعیت حساب آموت ───
   const loadSettings = useCallback(async () => {
     try {
-      const storedToken = localStorage.getItem("porskad_amoot_token") || "";
-      const storedLine = localStorage.getItem("porskad_amoot_line") || "";
-      const storedSender = localStorage.getItem("porskad_amoot_sender") || "";
-      const storedActive = localStorage.getItem("porskad_amoot_active");
+      const storedToken = localStorage.getItem(tokenStorageKey) || "";
+      const storedLine = localStorage.getItem(lineStorageKey) || "";
+      const storedSender = localStorage.getItem(senderStorageKey) || "";
+      const storedActive = localStorage.getItem(activeStorageKey);
 
       if (storedLine) setLineNumber(storedLine);
       if (storedSender) setSenderName(storedSender);
@@ -115,31 +127,36 @@ export default function SmsPanel() {
       let resolvedToken = storedToken;
 
       // ۱. تلاش برای خواندن مستقیم از دیتابیس Supabase
-      try {
-        const { data: dbSettings } = await supabase
-          .from("sms_settings")
-          .select("id, amoot_token, line_number, sender_name, is_active, updated_at")
-          .eq("id", 1)
-          .maybeSingle();
+      if (isGlobalAdmin) {
+        try {
+          const { data: dbSettings } = await supabase
+            .from("sms_settings")
+            .select("id, amoot_token, line_number, sender_name, is_active, updated_at")
+            .eq("id", 1)
+            .maybeSingle();
 
-        if (dbSettings) {
-          if (dbSettings.amoot_token && dbSettings.amoot_token.length > 5) {
-            resolvedToken = dbSettings.amoot_token;
-            localStorage.setItem("porskad_amoot_token", resolvedToken);
+          if (dbSettings) {
+            if (dbSettings.amoot_token && dbSettings.amoot_token.length > 5) {
+              resolvedToken = dbSettings.amoot_token;
+              localStorage.setItem(tokenStorageKey, resolvedToken);
+            }
+            if (dbSettings.line_number) setLineNumber(dbSettings.line_number);
+            if (dbSettings.sender_name) setSenderName(dbSettings.sender_name);
+            if (dbSettings.is_active !== undefined && dbSettings.is_active !== null) {
+              setIsActive(dbSettings.is_active);
+            }
           }
-          if (dbSettings.line_number) setLineNumber(dbSettings.line_number);
-          if (dbSettings.sender_name) setSenderName(dbSettings.sender_name);
-          if (dbSettings.is_active !== undefined && dbSettings.is_active !== null) {
-            setIsActive(dbSettings.is_active);
-          }
+        } catch (err) {
+          console.warn("DB settings load note:", err?.message);
         }
-      } catch (err) {
-        console.warn("DB settings load note:", err?.message);
       }
 
       const hasToken = Boolean(resolvedToken && resolvedToken.length > 5);
       setHasTokenInDb(hasToken);
       setMaskedToken(hasToken ? "••••••••" + resolvedToken.slice(-4) : "");
+      if (resolvedToken) {
+        setAmootToken(resolvedToken);
+      }
 
       // ۲. دریافت اطلاعات زنده از بریج
       const data = await callAmootProxy("get_settings", { token: resolvedToken });
@@ -153,7 +170,7 @@ export default function SmsPanel() {
     } catch (err) {
       console.error("Load settings error:", err);
     }
-  }, [callAmootProxy]);
+  }, [callAmootProxy, tokenStorageKey, lineStorageKey, senderStorageKey, activeStorageKey, isGlobalAdmin]);
 
   // ─── بارگذاری آمار و تاریخچه‌ها ───
   const loadDashboard = useCallback(async () => {
@@ -222,7 +239,7 @@ export default function SmsPanel() {
     setTestingConnection(true);
     setTestResult(null);
     try {
-      const storedToken = localStorage.getItem("porskad_amoot_token") || "";
+      const storedToken = localStorage.getItem(tokenStorageKey) || "";
       const tokenToTest = (amootToken.trim() && !amootToken.includes("••••"))
         ? amootToken.trim()
         : storedToken;
@@ -237,9 +254,10 @@ export default function SmsPanel() {
       setTestResult(data);
       if (data?.success) {
         showToast("اتصال به وب‌سرویس آموت با موفقیت تأیید شد.", "success");
-        localStorage.setItem("porskad_amoot_token", tokenToTest);
+        localStorage.setItem(tokenStorageKey, tokenToTest);
         setHasTokenInDb(true);
         setMaskedToken("••••••••" + tokenToTest.slice(-4));
+        setAmootToken(tokenToTest);
         setLiveAccount({
           status: "connected",
           accountName: data.accountName,
@@ -266,11 +284,11 @@ export default function SmsPanel() {
     e.preventDefault();
     setSavingSettings(true);
     try {
-      const storedToken = localStorage.getItem("porskad_amoot_token") || "";
+      const storedToken = localStorage.getItem(tokenStorageKey) || "";
       let finalToken = amootToken.trim();
       if (!finalToken || finalToken.includes("••••")) {
         finalToken = storedToken;
-        if (!finalToken) {
+        if (!finalToken && isGlobalAdmin) {
           try {
             const { data: existing } = await supabase
               .from("sms_settings")
@@ -285,37 +303,39 @@ export default function SmsPanel() {
       }
 
       if (finalToken) {
-        localStorage.setItem("porskad_amoot_token", finalToken);
+        localStorage.setItem(tokenStorageKey, finalToken);
+        setAmootToken(finalToken);
       }
-      localStorage.setItem("porskad_amoot_line", lineNumber || "Public");
-      localStorage.setItem("porskad_amoot_sender", senderName || "پرس‌کاد");
-      localStorage.setItem("porskad_amoot_active", String(isActive));
+      localStorage.setItem(lineStorageKey, lineNumber || "Service");
+      localStorage.setItem(senderStorageKey, senderName || "پرس‌کاد");
+      localStorage.setItem(activeStorageKey, String(isActive));
 
-      // تلاش برای ذخیره مستقیم در پایگاه داده
-      try {
-        await supabase.from("sms_settings").upsert({
-          id: 1,
-          amoot_token: finalToken,
-          line_number: (lineNumber || "Public").trim(),
-          sender_name: (senderName || "پرس‌کاد").trim(),
-          is_active: isActive,
-          updated_at: new Date().toISOString(),
-        });
-      } catch (dbErr) {
-        console.warn("Direct DB upsert note:", dbErr?.message);
+      // تلاش برای ذخیره مستقیم در پایگاه داده (برای سوپرادمین)
+      if (isGlobalAdmin) {
+        try {
+          await supabase.from("sms_settings").upsert({
+            id: 1,
+            amoot_token: finalToken,
+            line_number: (lineNumber || "Service").trim(),
+            sender_name: (senderName || "پرس‌کاد").trim(),
+            is_active: isActive,
+            updated_at: new Date().toISOString(),
+          });
+        } catch (dbErr) {
+          console.warn("Direct DB upsert note:", dbErr?.message);
+        }
       }
 
       // ارسال به بریج سرورلس با توکن
       await callAmootProxy("save_settings", {
         token: finalToken,
         amoot_token: finalToken,
-        line_number: (lineNumber || "Public").trim(),
+        line_number: (lineNumber || "Service").trim(),
         sender_name: (senderName || "پرس‌کاد").trim(),
         is_active: isActive,
       });
 
       showToast("تنظیمات وب‌سرویس پیامک با موفقیت ذخیره شد.", "success");
-      setAmootToken("");
       await loadSettings();
     } catch (err) {
       showToast(err.message || "خطا در ذخیره تنظیمات", "error");
@@ -355,7 +375,7 @@ export default function SmsPanel() {
       return;
     }
 
-    const storedToken = localStorage.getItem("porskad_amoot_token") || "";
+    const storedToken = localStorage.getItem(tokenStorageKey) || "";
     const tokenToSend = (amootToken.trim() && !amootToken.includes("••••"))
       ? amootToken.trim()
       : storedToken;
@@ -435,8 +455,6 @@ export default function SmsPanel() {
     { id: "inbox", label: "صندوق دریافتی", icon: Inbox },
     { id: "settings", label: "تنظیمات آموت", icon: Settings },
   ];
-
-  if (loading) return <DashboardSkeleton />;
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full">
@@ -805,13 +823,13 @@ export default function SmsPanel() {
                       </span>
                     )}
                   </div>
-                  <div className="relative">
+                  <div className="relative flex items-center">
                     <input
                       type={showToken ? "text" : "password"}
                       value={amootToken}
                       onChange={(e) => setAmootToken(e.target.value)}
-                      placeholder={hasTokenInDb ? maskedToken : "توکن وب‌سرویس را اینجا جای‌گذاری کنید..."}
-                      className={`${inputCls} pl-10 text-left font-mono text-xs`}
+                      placeholder="توکن وب‌سرویس را اینجا جای‌گذاری کنید..."
+                      className={`${inputCls} pl-10 pr-24 text-left font-mono text-xs`}
                       dir="ltr"
                     />
                     <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
@@ -822,9 +840,21 @@ export default function SmsPanel() {
                         ariaLabel="نمایش یا مخفی‌سازی توکن آموت"
                       />
                     </div>
+                    {amootToken && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAmootToken("");
+                          showToast("توکن پاک شد؛ می‌توانید توکن جدید را وارد کنید.", "info");
+                        }}
+                        className="absolute right-2 px-2.5 py-1 text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 rounded-pill-sm border border-rose-200 dark:border-rose-900/50 transition-all cursor-pointer"
+                      >
+                        پاک کردن
+                      </button>
+                    )}
                   </div>
                   <p className="text-[11px] font-semibold text-ink-subtle dark:text-slate-500">
-                    توکن را می‌توانید از پنل کاربری آموت &gt; بخش وب‌سرویس &gt; دریافت کلید دسترسی کپی کنید.
+                    توکن فعال در این فیلد باقی می‌ماند. برای جایگزینی، روی «پاک کردن» کلیک کنید و توکن جدید را ثبت و ذخیره نمایید.
                   </p>
                 </div>
 

@@ -8,7 +8,7 @@ function apiDevPlugin() {
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         const url = req.url || "";
-        if (url.startsWith("/api/v1") || url.startsWith("/api/openapi")) {
+        if (url.startsWith("/api/")) {
           try {
             // تزئین متدهای کمکی Express/Vercel روی شیء پاسخ Node.js
             if (!res.status) {
@@ -37,12 +37,24 @@ function apiDevPlugin() {
               }
             }
 
+            let handlerModule = null;
             if (url.startsWith("/api/openapi")) {
-              const { default: openapiHandler } = await import("./api/openapi.js");
-              return await openapiHandler(req, res);
+              handlerModule = await import("./api/openapi.js");
+            } else if (url.startsWith("/api/v1")) {
+              handlerModule = await import("./api/v1/[...route].js");
+            } else {
+              const routeName = url.split("?")[0].replace(/^\/api\//, "").replace(/\.js$/, "");
+              try {
+                handlerModule = await import(`./api/${routeName}.js`);
+              } catch (importErr) {
+                return next();
+              }
             }
 
-            const { default: apiHandler } = await import("./api/v1/[...route].js");
+            const apiHandler = handlerModule?.default;
+            if (typeof apiHandler !== "function") {
+              return next();
+            }
 
             if (["POST", "PUT", "PATCH"].includes(req.method)) {
               let bodyStr = "";
