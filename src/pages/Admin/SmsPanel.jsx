@@ -368,7 +368,7 @@ export default function SmsPanel() {
           className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-pill-md text-sm font-bold shadow-xl border-2 transition-all flex items-center gap-2 ${
             toast.type === "error"
               ? "bg-rose-50 dark:bg-rose-950/80 border-rose-500 text-rose-700 dark:text-rose-200"
-              : "bg-emerald-50 dark:bg-emerald-950/80 border-teal text-teal-dark dark:text-emerald-200"
+              : "bg-emerald-50 dark:bg-emerald-950/80 border-teal text-teal-text dark:text-emerald-200"
           }`}
         >
           {toast.type === "error" ? <AlertTriangle size={18} /> : <CheckCircle2 size={18} />}
@@ -390,10 +390,15 @@ export default function SmsPanel() {
 
         {/* بج وضعیت اتصال در هدر */}
         <div className="flex items-center gap-2">
-          {isActive && hasTokenInDb ? (
+          {!isActive ? (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-pill-md bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700 text-xs font-bold">
+              <span className="w-2 h-2 rounded-full bg-slate-400" />
+              <span>ارسال پیامک: غیرفعال</span>
+            </div>
+          ) : hasTokenInDb ? (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-pill-md bg-teal/15 text-teal border border-teal/30 text-xs font-bold">
               <Radio size={14} className="animate-pulse" />
-              <span>آموت: فعال و متصل</span>
+              <span>آموت: فعال و آماده</span>
             </div>
           ) : (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-pill-md bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs font-bold">
@@ -431,16 +436,22 @@ export default function SmsPanel() {
             <StickerCard theme="white">
               <div className="p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-5">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-teal/15 text-teal flex items-center justify-center shrink-0 shadow-inner">
-                    <Zap size={26} />
+                  <div
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-inner transition-colors duration-200 ${
+                      isActive && hasTokenInDb
+                        ? "bg-teal/15 text-teal border border-teal/30 shadow-[0_0_15px_rgba(45,212,191,0.2)]"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700"
+                    }`}
+                  >
+                    <Zap size={26} className={isActive && hasTokenInDb ? "fill-teal/30" : ""} />
                   </div>
                   <div>
                     <div className="flex items-center gap-2.5">
                       <h2 className="text-base sm:text-lg font-black text-navy dark:text-white">
                         درگاه پیامک آموت (Amoot Telecom)
                       </h2>
-                      <Badge color={isActive && hasTokenInDb ? "teal" : "orange"}>
-                        {isActive && hasTokenInDb ? "سرویس فعال" : "غیرفعال"}
+                      <Badge color={!isActive ? "gray" : hasTokenInDb ? "teal" : "orange"}>
+                        {!isActive ? "سرویس خاموش" : hasTokenInDb ? "سرویس فعال" : "در انتظار توکن"}
                       </Badge>
                     </div>
                     <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 mt-1">
@@ -634,7 +645,7 @@ export default function SmsPanel() {
                   <div
                     className={`p-3.5 rounded-pill-md border-2 text-xs font-bold flex items-center gap-2 ${
                       sendResult.success
-                        ? "bg-emerald-50 dark:bg-emerald-950/40 border-teal text-teal-dark dark:text-emerald-200"
+                        ? "bg-emerald-50 dark:bg-emerald-950/40 border-teal text-teal-text dark:text-emerald-200"
                         : "bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-700 dark:text-rose-200"
                     }`}
                   >
@@ -760,7 +771,7 @@ export default function SmsPanel() {
                 </div>
 
                 {/* سوئیچ وضعیت فعال بودن */}
-                <div className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/60 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md">
+                <div className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/60 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md transition-colors">
                   <div>
                     <span className="text-xs sm:text-sm font-bold text-navy dark:text-white block">
                       فعال‌سازی ارسال پیامک
@@ -769,19 +780,33 @@ export default function SmsPanel() {
                       در صورت خاموش بودن، ارسال پیامک‌های سامانه متوقف می‌شود.
                     </span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsActive(!isActive)}
-                    className={`w-12 h-6.5 rounded-full transition-colors relative cursor-pointer ${
-                      isActive ? "bg-teal" : "bg-slate-300 dark:bg-slate-600"
-                    }`}
-                  >
+                  <div className="flex items-center gap-2.5">
                     <span
-                      className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${
-                        isActive ? "right-1" : "right-6.5"
+                      className={`text-xs font-bold transition-colors ${
+                        isActive ? "text-teal" : "text-ink-subtle dark:text-slate-400"
                       }`}
-                    />
-                  </button>
+                    >
+                      {isActive ? "روشن" : "خاموش"}
+                    </span>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={isActive}
+                      onClick={() => setIsActive(!isActive)}
+                      className={`w-12 h-6 rounded-full transition-all duration-200 relative cursor-pointer p-0.5 border focus:outline-none focus:ring-2 focus:ring-teal/40 ${
+                        isActive
+                          ? "bg-teal border-teal/80 shadow-xs"
+                          : "bg-slate-300 dark:bg-slate-700 border-slate-400/40"
+                      }`}
+                      title={isActive ? "کلیک برای غیرفعال‌سازی" : "کلیک برای فعال‌سازی"}
+                    >
+                      <span
+                        className={`block w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-200 ${
+                          isActive ? "mr-0" : "mr-6"
+                        }`}
+                      />
+                    </button>
+                  </div>
                 </div>
 
                 {/* نتیجه تست اتصال */}
@@ -789,7 +814,7 @@ export default function SmsPanel() {
                   <div
                     className={`p-4 rounded-pill-md border-2 text-xs leading-relaxed flex flex-col gap-1.5 ${
                       testResult.success
-                        ? "bg-emerald-50 dark:bg-emerald-950/40 border-teal text-teal-dark dark:text-emerald-200"
+                        ? "bg-emerald-50 dark:bg-emerald-950/40 border-teal text-teal-text dark:text-emerald-200"
                         : "bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-700 dark:text-rose-200"
                     }`}
                   >
