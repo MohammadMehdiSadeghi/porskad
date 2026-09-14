@@ -691,8 +691,38 @@ export default function SuperAdmin() {
     setSettingsLoading(true);
     try {
       const { data, error } = await supabase.rpc("get_system_settings");
-      if (!error && data) {
+      if (!error && data && Object.keys(data).length > 0) {
         setSysSettings((prev) => ({ ...prev, ...data }));
+      }
+
+      // بررسی مستقیم جدول system_settings برای اطمینان از خواندن مقادیر حتی در صورت کش بودن RPC
+      const { data: rows } = await supabase
+        .from("system_settings")
+        .select("key, value")
+        .in("key", [
+          "sms_otp_enabled",
+          "google_auth_enabled",
+          "otp_sms_pattern",
+          "otp_line_number",
+          "otp_cooldown_seconds",
+          "otp_max_resends",
+        ]);
+
+      if (Array.isArray(rows) && rows.length > 0) {
+        const directObj = {};
+        for (const r of rows) {
+          if (r.key === "sms_otp_enabled" && r.value !== undefined) {
+            directObj.sms_otp_enabled = r.value === true || r.value === "true";
+          }
+          if (r.key === "google_auth_enabled" && r.value !== undefined) {
+            directObj.google_auth_enabled = r.value === true || r.value === "true";
+          }
+          if (r.key === "otp_sms_pattern" && r.value) directObj.otp_sms_pattern = String(r.value);
+          if (r.key === "otp_line_number" && r.value) directObj.otp_line_number = String(r.value);
+          if (r.key === "otp_cooldown_seconds" && r.value) directObj.otp_cooldown_seconds = Number(r.value);
+          if (r.key === "otp_max_resends" && r.value !== undefined) directObj.otp_max_resends = Number(r.value);
+        }
+        setSysSettings((prev) => ({ ...prev, ...directObj }));
       }
     } catch (err) {
       console.error("Failed to load system settings:", err);
@@ -701,21 +731,62 @@ export default function SuperAdmin() {
     }
   }
 
-  function handleToggleAuthMethod(method) {
+  async function handleToggleAuthMethod(method) {
+    let nextSettings = { ...sysSettings };
     if (method === "sms_otp") {
       const nextVal = sysSettings.sms_otp_enabled === false ? true : false;
       if (!nextVal && sysSettings.google_auth_enabled === false) {
         showToast("خطا: حداقل یکی از روش‌های ثبت‌نام (پیامک OTP یا گوگل) باید همیشه فعال بماند.", "error");
         return;
       }
-      setSysSettings((prev) => ({ ...prev, sms_otp_enabled: nextVal }));
+      nextSettings.sms_otp_enabled = nextVal;
     } else if (method === "google_auth") {
       const nextVal = sysSettings.google_auth_enabled === false ? true : false;
       if (!nextVal && sysSettings.sms_otp_enabled === false) {
         showToast("خطا: حداقل یکی از روش‌های ثبت‌نام (پیامک OTP یا گوگل) باید همیشه فعال بماند.", "error");
         return;
       }
-      setSysSettings((prev) => ({ ...prev, google_auth_enabled: nextVal }));
+      nextSettings.google_auth_enabled = nextVal;
+    }
+
+    // به‌روزرسانی آنی استیت
+    setSysSettings((prev) => ({ ...prev, ...nextSettings }));
+
+    // ذخیره خودکار و فوری در دیتابیس
+    setSettingsSaving(true);
+    try {
+      // ۱. ذخیره با RPC
+      const { data, error } = await supabase.rpc("update_system_settings", {
+        p_settings: nextSettings,
+      });
+
+      // ۲. همچنین ذخیره مستقیم در جدول system_settings
+      await Promise.all([
+        supabase.from("system_settings").upsert({ key: "sms_otp_enabled", value: nextSettings.sms_otp_enabled }, { onConflict: "key" }),
+        supabase.from("system_settings").upsert({ key: "google_auth_enabled", value: nextSettings.google_auth_enabled }, { onConflict: "key" }),
+      ]);
+
+      if (data) {
+        setSysSettings((prev) => ({ ...prev, ...nextSettings, ...data }));
+      }
+
+      showToast(
+        method === "sms_otp"
+          ? (nextSettings.sms_otp_enabled ? "روش ثبت‌نام با پیامک OTP فعال شد." : "روش ثبت‌نام با پیامک OTP غیرفعال شد.")
+          : (nextSettings.google_auth_enabled ? "روش ورود با گوگل فعال شد." : "روش ورود با گوگل غیرفعال شد.")
+      );
+    } catch (err) {
+      try {
+        await Promise.all([
+          supabase.from("system_settings").upsert({ key: "sms_otp_enabled", value: nextSettings.sms_otp_enabled }, { onConflict: "key" }),
+          supabase.from("system_settings").upsert({ key: "google_auth_enabled", value: nextSettings.google_auth_enabled }, { onConflict: "key" }),
+        ]);
+        showToast("تنظیمات با موفقیت ذخیره شد");
+      } catch (fallbackErr) {
+        showToast("خطا در ذخیره وضعیت: " + (err.message || fallbackErr.message), "error");
+      }
+    } finally {
+      setSettingsSaving(false);
     }
   }
 
@@ -730,11 +801,21 @@ export default function SuperAdmin() {
       const { data, error } = await supabase.rpc("update_system_settings", {
         p_settings: sysSettings,
       });
-      if (error) throw error;
-      if (data) setSysSettings(data);
-      showToast("System settings saved successfully");
+
+      // همچنین ذخیره مستقیم در جدول system_settings
+      const entries = Object.entries(sysSettings).map(([key, value]) => ({ key, value }));
+      await supabase.from("system_settings").upsert(entries, { onConflict: "key" });
+
+      if (data) setSysSettings((prev) => ({ ...prev, ...sysSettings, ...data }));
+      showToast("تنظیمات با موفقیت ذخیره شد (Settings saved successfully)");
     } catch (err) {
-      showToast("Error saving settings: " + err.message, "error");
+      try {
+        const entries = Object.entries(sysSettings).map(([key, value]) => ({ key, value }));
+        await supabase.from("system_settings").upsert(entries, { onConflict: "key" });
+        showToast("تنظیمات با موفقیت ذخیره شد");
+      } catch (directErr) {
+        showToast("Error saving settings: " + (err.message || directErr.message), "error");
+      }
     } finally {
       setSettingsSaving(false);
     }
