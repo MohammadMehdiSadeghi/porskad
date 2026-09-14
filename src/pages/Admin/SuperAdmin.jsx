@@ -835,10 +835,10 @@ export default function SuperAdmin() {
     setSettingsSaving(false);
 
     if (saved) {
-      showToast(successMsg || "تنظیمات با موفقیت ذخیره و در سامانه اعمال شد.");
+      showToast(successMsg || "System settings saved and applied successfully.");
       return true;
     } else {
-      showToast("خطا در ذخیره تنظیمات: " + (errorMsg || "لطفاً دسترسی خود را بررسی نمایید."), "error");
+      showToast("Error saving settings: " + (errorMsg || "Please check your permissions."), "error");
       return false;
     }
   }
@@ -848,25 +848,25 @@ export default function SuperAdmin() {
     if (method === "sms_otp") {
       const nextVal = sysSettings.sms_otp_enabled === false ? true : false;
       if (!nextVal && sysSettings.google_auth_enabled === false) {
-        showToast("خطا: حداقل یکی از روش‌های ثبت‌نام (پیامک OTP یا گوگل) باید همیشه فعال بماند.", "error");
+        showToast("Error: At least one registration method (SMS OTP or Google) must remain active.", "error");
         return;
       }
       nextSettings.sms_otp_enabled = nextVal;
     } else if (method === "google_auth") {
       const nextVal = sysSettings.google_auth_enabled === false ? true : false;
       if (!nextVal && sysSettings.sms_otp_enabled === false) {
-        showToast("خطا: حداقل یکی از روش‌های ثبت‌نام (پیامک OTP یا گوگل) باید همیشه فعال بماند.", "error");
+        showToast("Error: At least one registration method (SMS OTP or Google) must remain active.", "error");
         return;
       }
       nextSettings.google_auth_enabled = nextVal;
     }
 
-    // به‌روزرسانی آنی استیت
+    // Immediate optimistic state update
     setSysSettings((prev) => ({ ...prev, ...nextSettings }));
 
     const msg = method === "sms_otp"
-      ? (nextSettings.sms_otp_enabled ? "روش ثبت‌نام با پیامک OTP فعال شد." : "روش ثبت‌نام با پیامک OTP غیرفعال شد.")
-      : (nextSettings.google_auth_enabled ? "روش ورود با حساب گوگل فعال شد." : "روش ورود با حساب گوگل غیرفعال شد.");
+      ? (nextSettings.sms_otp_enabled ? "SMS OTP registration method enabled." : "SMS OTP registration method disabled.")
+      : (nextSettings.google_auth_enabled ? "Google OAuth method enabled." : "Google OAuth method disabled.");
 
     await persistSystemSettings(nextSettings, msg);
   }
@@ -874,10 +874,10 @@ export default function SuperAdmin() {
   async function saveSystemSettings(e) {
     if (e) e.preventDefault();
     if (sysSettings.sms_otp_enabled === false && sysSettings.google_auth_enabled === false) {
-      showToast("خطا: حداقل یکی از دو روش ثبت‌نام (پیامک OTP یا گوگل) باید فعال باشد.", "error");
+      showToast("Error: At least one registration method (SMS OTP or Google) must be enabled.", "error");
       return;
     }
-    await persistSystemSettings(sysSettings, "تنظیمات با موفقیت ذخیره و در سامانه اعمال شد.");
+    await persistSystemSettings(sysSettings, "Settings saved and applied successfully.");
   }
 
   // ─── Question Types Management Handlers ───
@@ -2324,10 +2324,10 @@ export default function SuperAdmin() {
                   <div>
                     <div style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.35rem" }}>
                       <Smartphone size={15} style={{ color: "#2DD4BF" }} />
-                      ثبت‌نام با شماره (SMS OTP)
+                      SMS OTP Registration
                     </div>
                     <div className="sa-stat-sub" style={{ fontSize: "0.75rem", marginTop: "0.2rem" }}>
-                      ارسال کد تایید ۵ رقمی پیامکی به موبایل
+                      5-digit SMS verification code to mobile phone
                     </div>
                   </div>
                   <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer" }}>
@@ -2338,7 +2338,7 @@ export default function SuperAdmin() {
                       style={{ width: 18, height: 18, cursor: "pointer" }}
                     />
                     <span style={{ fontSize: "0.8rem", fontWeight: 600, color: sysSettings.sms_otp_enabled !== false ? "#2DD4BF" : "var(--sa-text-2)" }}>
-                      {sysSettings.sms_otp_enabled !== false ? "فعال" : "غیرفعال"}
+                      {sysSettings.sms_otp_enabled !== false ? "Enabled" : "Disabled"}
                     </span>
                   </label>
                 </div>
@@ -2352,10 +2352,10 @@ export default function SuperAdmin() {
                         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                       </svg>
-                      ورود / ثبت‌نام با جیمیل (Google)
+                      Google OAuth Sign-In
                     </div>
                     <div className="sa-stat-sub" style={{ fontSize: "0.75rem", marginTop: "0.2rem" }}>
-                      ثبت‌نام مستقیم با یک کلیک از حساب گوگل
+                      Direct passwordless onboarding via Google account
                     </div>
                   </div>
                   <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer" }}>
@@ -2366,7 +2366,7 @@ export default function SuperAdmin() {
                       style={{ width: 18, height: 18, cursor: "pointer" }}
                     />
                     <span style={{ fontSize: "0.8rem", fontWeight: 600, color: sysSettings.google_auth_enabled !== false ? "#3B82F6" : "var(--sa-text-2)" }}>
-                      {sysSettings.google_auth_enabled !== false ? "فعال" : "غیرفعال"}
+                      {sysSettings.google_auth_enabled !== false ? "Enabled" : "Disabled"}
                     </span>
                   </label>
                 </div>
@@ -2377,10 +2377,10 @@ export default function SuperAdmin() {
                 <div>
                   <div style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
                     <Smartphone size={16} style={{ color: "var(--sa-link)" }} />
-                    SMS OTP & Google Sign-in Methods (پیکربندی کامل الگو و خنک‌سازی)
+                    SMS OTP & Google Sign-in Methods (Pattern & Limits)
                   </div>
                   <div className="sa-stat-sub" style={{ fontSize: "0.8rem", marginTop: "0.2rem" }}>
-                    تنظیم متن الگوی پیامک، زمان انتظار ارسال مجدد و خط خدماتی پیامک در تب اختصاصی.
+                    Configure SMS template, resend cooldown interval, and service sender line in dedicated tab.
                   </div>
                 </div>
                 <button
@@ -2409,7 +2409,7 @@ export default function SuperAdmin() {
         </div>
       )}
 
-      {/* ═══════════ OTP Pattern & Sign-in Methods (الگو OTP و روش‌های ورود) ═══════════ */}
+      {/* ═══════════ OTP Pattern & Sign-in Methods ═══════════ */}
       {tab === "auth_otp" && (
         <div style={{ maxWidth: 900, display: "flex", flexDirection: "column", gap: "1.25rem" }}>
           {/* Header */}
@@ -2424,7 +2424,7 @@ export default function SuperAdmin() {
           >
             <div>
               <div className="sa-section-title" style={{ margin: 0, fontSize: "1.1rem" }}>
-                OTP Pattern & Sign-in Methods (الگوی OTP و روش‌های احراز هویت)
+                OTP Pattern & Sign-in Methods
               </div>
               <div style={{ fontSize: "0.8rem", color: "var(--sa-text-1)" }}>
                 Manage registration methods (SMS OTP & Google OAuth) and customize OTP message patterns.
@@ -2455,7 +2455,7 @@ export default function SuperAdmin() {
           >
             <Shield size={20} style={{ color: "#2DD4BF", flexShrink: 0, marginTop: "2px" }} />
             <div style={{ fontSize: "0.82rem", lineHeight: 1.6, color: "var(--sa-text-0)" }}>
-              <strong style={{ color: "#2DD4BF" }}>قانون عدم قطعی احراز هویت:</strong> حداقل یکی از دو روش ثبت‌نام (پیامک OTP یا حساب کاربری گوگل) باید همیشه فعال بماند تا ثبت‌نام و ورود کاربران متوقف نشود. شما می‌توانید هرکدام را بر اساس نیاز غیرفعال کنید، اما امکان غیرفعال‌سازی همزمان هر دو روش مسدود است.
+              <strong style={{ color: "#2DD4BF" }}>Authentication Safeguard Rule:</strong> At least one registration method (SMS OTP or Google OAuth) must always remain enabled to prevent user onboarding disruption. You may toggle either method as needed, but disabling both simultaneously is prevented.
             </div>
           </div>
 
@@ -2493,10 +2493,10 @@ export default function SuperAdmin() {
                     </div>
                     <div>
                       <div style={{ fontSize: "0.95rem", fontWeight: 800 }}>
-                        پیامک یکبار مصرف (SMS OTP)
+                        One-Time Password (SMS OTP)
                       </div>
                       <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)" }}>
-                        ارسال کد تایید ۵ رقمی به شماره موبایل
+                        5-digit SMS verification code to mobile phone
                       </div>
                     </div>
                   </div>
@@ -2511,24 +2511,24 @@ export default function SuperAdmin() {
                       color: sysSettings.sms_otp_enabled !== false ? "#10b981" : "#ef4444",
                     }}
                   >
-                    {sysSettings.sms_otp_enabled !== false ? "فعال (Active)" : "غیرفعال (Disabled)"}
+                    {sysSettings.sms_otp_enabled !== false ? "Active" : "Disabled"}
                   </span>
                 </div>
 
                 <p style={{ fontSize: "0.8rem", color: "var(--sa-text-1)", lineHeight: 1.5, margin: 0 }}>
-                  کاربر با وارد کردن شماره موبایل و تایید کد پیامکی ۵ رقمی، احراز هویت شده و حسابش ایجاد می‌شود.
+                  Users authenticate and create an account by entering their mobile phone number and confirming a 5-digit verification code.
                 </p>
               </div>
 
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.75rem", borderTop: "1px solid var(--sa-field-border)" }}>
-                <span style={{ fontSize: "0.8rem", color: "var(--sa-text-2)" }}>وضعیت فعال‌سازی:</span>
+                <span style={{ fontSize: "0.8rem", color: "var(--sa-text-2)" }}>Activation Status:</span>
                 <button
                   type="button"
                   onClick={() => handleToggleAuthMethod("sms_otp")}
                   className={`sa-btn ${sysSettings.sms_otp_enabled !== false ? "sa-btn-danger" : "sa-btn-primary"}`}
                   style={{ fontSize: "0.8rem", padding: "0.35rem 0.85rem" }}
                 >
-                  {sysSettings.sms_otp_enabled !== false ? "غیرفعال‌سازی روش پیامک" : "فعال‌سازی روش پیامک"}
+                  {sysSettings.sms_otp_enabled !== false ? "Disable SMS Method" : "Enable SMS Method"}
                 </button>
               </div>
             </div>
@@ -2569,10 +2569,10 @@ export default function SuperAdmin() {
                     </div>
                     <div>
                       <div style={{ fontSize: "0.95rem", fontWeight: 800 }}>
-                        ورود با حساب گوگل (Google Sign-In)
+                        Google Sign-In (OAuth 2.0)
                       </div>
                       <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)" }}>
-                        ثبت‌نام و ورود مستقیم بدون نیاز به رمز
+                        Direct 1-click passwordless onboarding
                       </div>
                     </div>
                   </div>
@@ -2587,24 +2587,24 @@ export default function SuperAdmin() {
                       color: sysSettings.google_auth_enabled !== false ? "#10b981" : "#ef4444",
                     }}
                   >
-                    {sysSettings.google_auth_enabled !== false ? "فعال (Active)" : "غیرفعال (Disabled)"}
+                    {sysSettings.google_auth_enabled !== false ? "Active" : "Disabled"}
                   </span>
                 </div>
 
                 <p style={{ fontSize: "0.8rem", color: "var(--sa-text-1)", lineHeight: 1.5, margin: 0 }}>
-                  کاربر با یک کلیک و از طریق حساب جیمیل خود وارد شده و ایمیل و نام او به صورت خودکار ثبت می‌شود.
+                  Users sign in or register with one click using their Google account. Their verified email and profile name are imported automatically.
                 </p>
               </div>
 
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.75rem", borderTop: "1px solid var(--sa-field-border)" }}>
-                <span style={{ fontSize: "0.8rem", color: "var(--sa-text-2)" }}>وضعیت فعال‌سازی:</span>
+                <span style={{ fontSize: "0.8rem", color: "var(--sa-text-2)" }}>Activation Status:</span>
                 <button
                   type="button"
                   onClick={() => handleToggleAuthMethod("google_auth")}
                   className={`sa-btn ${sysSettings.google_auth_enabled !== false ? "sa-btn-danger" : "sa-btn-primary"}`}
                   style={{ fontSize: "0.8rem", padding: "0.35rem 0.85rem" }}
                 >
-                  {sysSettings.google_auth_enabled !== false ? "غیرفعال‌سازی روش گوگل" : "فعال‌سازی روش گوگل"}
+                  {sysSettings.google_auth_enabled !== false ? "Disable Google Method" : "Enable Google Method"}
                 </button>
               </div>
             </div>
@@ -2617,10 +2617,10 @@ export default function SuperAdmin() {
                 <div>
                   <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--sa-text-0)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                     <Edit3 size={16} style={{ color: "var(--sa-link)" }} />
-                    تنظیم الگوی پیامک و قوانین ارسال (OTP Pattern & Limits)
+                    OTP Pattern & Delivery Rules
                   </div>
                   <div style={{ fontSize: "0.8rem", color: "var(--sa-text-2)", marginTop: "0.2rem" }}>
-                    تنظیم متن پیامک ارسالی، خط فرستنده، زمان خنک‌سازی ارسال مجدد و محدودیت‌های تکرار.
+                    Configure SMS message pattern template, sender line, resend cooldown interval, and maximum retry limits.
                   </div>
                 </div>
               </div>
@@ -2628,7 +2628,7 @@ export default function SuperAdmin() {
               {/* Template Textarea */}
               <div>
                 <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
-                  متن الگوی پیامک (SMS Pattern Template)
+                  SMS Pattern Template
                 </label>
                 <textarea
                   rows={3}
@@ -2649,7 +2649,7 @@ export default function SuperAdmin() {
                 />
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "0.35rem", flexWrap: "wrap", gap: "0.5rem" }}>
                   <div style={{ fontSize: "0.78rem", color: "var(--sa-text-2)" }}>
-                    💡 متغیر <code dir="ltr" style={{ color: "var(--sa-link)", fontWeight: 700, background: "rgba(45,212,191,0.1)", padding: "2px 6px", borderRadius: "4px" }}>%code%</code> در زمان ارسال با کد ۵ رقمی جایگزین می‌شود.
+                    💡 Variable <code dir="ltr" style={{ color: "var(--sa-link)", fontWeight: 700, background: "rgba(45,212,191,0.1)", padding: "2px 6px", borderRadius: "4px" }}>%code%</code> is dynamically replaced with the 5-digit verification code upon sending.
                   </div>
                   <button
                     type="button"
@@ -2661,7 +2661,7 @@ export default function SuperAdmin() {
                     className="sa-btn sa-btn-secondary"
                     style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem" }}
                   >
-                    + افزودن %code%
+                    + Insert %code%
                   </button>
                 </div>
               </div>
@@ -2676,7 +2676,7 @@ export default function SuperAdmin() {
                 }}
               >
                 <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--sa-text-2)", marginBottom: "0.5rem", textTransform: "uppercase" }}>
-                  پیش‌نمایش زنده پیامک دریافتی کاربر (Live SMS Preview):
+                  Live SMS Preview (User Screen):
                 </div>
                 <div
                   dir="rtl"
@@ -2694,9 +2694,9 @@ export default function SuperAdmin() {
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.72rem", color: "var(--sa-text-2)", marginBottom: "0.35rem", borderBottom: "1px solid var(--sa-field-border)", paddingBottom: "0.3rem" }}>
-                    <span>فرستنده: {sysSettings.otp_line_number || "Service"}</span>
+                    <span>From: {sysSettings.otp_line_number || "Service"}</span>
                     <span>•</span>
-                    <span>همین الان</span>
+                    <span>Just now</span>
                   </div>
                   <div style={{ fontWeight: 600 }}>
                     {(sysSettings.otp_sms_pattern || "کد تایید ثبت‌نام در پرس‌کاد: %code%").replace(/%code%/g, "۴۸۲۹۱")}
@@ -2708,7 +2708,7 @@ export default function SuperAdmin() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
-                    خط فرستنده (Sender Line)
+                    Sender Line
                   </label>
                   <input
                     type="text"
@@ -2719,13 +2719,13 @@ export default function SuperAdmin() {
                     placeholder="Service"
                   />
                   <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
-                    پیش‌فرض: <code dir="ltr">Service</code> (خط خدماتی عبور از بلک‌لیست)
+                    Default: <code dir="ltr">Service</code> (Service line bypasses operator blacklists)
                   </div>
                 </div>
 
                 <div>
                   <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
-                    زمان انتظار مجدد (ثانیه)
+                    Resend Cooldown (Seconds)
                   </label>
                   <input
                     type="number"
@@ -2736,13 +2736,13 @@ export default function SuperAdmin() {
                     style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", outline: "none", borderRadius: "4px" }}
                   />
                   <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
-                    پیش‌فرض: ۹۰ ثانیه (۱:۳۰ دقیقه)
+                    Default: 90 seconds (1:30 min)
                   </div>
                 </div>
 
                 <div>
                   <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
-                    حداکثر ارسال مجدد
+                    Max Resends
                   </label>
                   <input
                     type="number"
@@ -2753,7 +2753,7 @@ export default function SuperAdmin() {
                     style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", outline: "none", borderRadius: "4px" }}
                   />
                   <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
-                    پیش‌فرض: ۲ بار ارسال مجدد
+                    Default: 2 retry attempts
                   </div>
                 </div>
               </div>
