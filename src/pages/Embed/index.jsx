@@ -33,6 +33,9 @@ function postToParent(type, data = {}) {
   } catch { /* ignore */ }
 }
 
+const inputCls =
+  "w-full bg-white dark:bg-slate-800 border-2 border-ink/20 dark:border-slate-700 focus:border-teal focus:ring-2 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink dark:text-slate-100 text-sm focus:outline-none transition-all";
+
 // ─── گزارش ارتفاع به سایت میزبان ───
 function useAutoResize(formId) {
   useEffect(() => {

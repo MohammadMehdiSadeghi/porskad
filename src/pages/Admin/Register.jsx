@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Headphones, Send, ExternalLink, HelpCircle, KeyRound } from "lucide-react";
 import PasswordToggle from "../../components/ui/PasswordToggle";
 import StickerCard from "../../components/ui/StickerCard";

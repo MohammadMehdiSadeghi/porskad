@@ -12,7 +12,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { QUESTION_TYPES, QUESTION_TYPE_ORDER, QUESTION_CATEGORIES, makeQuestion, resolveQuestion, LEGACY_TYPE_MAP, getAvailableQuestionCategories, getEffectiveQuestionType, loadQuestionTypesConfigFromDb } from "../../../lib/questionTypes";
 import { QUESTION_TYPE_ICONS } from "../../../lib/questionIcons";
 import ConditionBuilder from "../../../components/logic/ConditionBuilder";
-import { makeCondition, makeConditionGroup, makeJumpAction, GROUP_OPERATORS } from "../../../lib/logic/types";
+import { makeCondition, makeConditionGroup, makeJumpAction, GROUP_OPERATORS, JUMP_ACTION_TYPES, JUMP_ACTION_TYPE_ORDER } from "../../../lib/logic/types";
 import { faNum, slugify, copyToClipboard } from "../../../lib/utils";
 import { Link2, BarChart3, Share2, Puzzle, Settings, FileText, AlignLeft, ArrowRight, Eye, Save, Target, Check, ChevronDown, ChevronUp, LayoutGrid, Trash2, X, Sun, Moon, Monitor, Image, Sliders, Gauge, Grid, ListOrdered, Info, Layers, Upload, CreditCard, Globe, Lock, MapPin, Send, MessageCircle, Clock, ShieldCheck, Zap, Sparkles, AlertTriangle, Rocket } from "lucide-react";
 import FormPreview from "../../../components/form/FormPreview";

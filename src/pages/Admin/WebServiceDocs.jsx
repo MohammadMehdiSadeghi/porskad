@@ -43,28 +43,42 @@ function EmbeddedSwaggerUI({ token }) {
     }
 
     function init() {
-      if (window.SwaggerUIBundle && containerRef.current && isMounted) {
-        const ui = window.SwaggerUIBundle({
-          url: "/openapi.json",
-          domNode: containerRef.current,
-          deepLinking: false,
-          presets: [
-            window.SwaggerUIBundle.presets.apis,
-            window.SwaggerUIStandalonePreset || window.SwaggerUIBundle.SwaggerUIStandalonePreset,
-          ],
-          layout: "BaseLayout",
-          docExpansion: "list",
-          filter: true,
-          tryItOutEnabled: true,
-          onComplete: () => {
-            if (isMounted) {
-              setLoading(false);
-              if (token) {
-                ui.preauthorizeApiKey("BearerAuth", `Bearer ${token}`);
+      if (!isMounted) return;
+      try {
+        if (window.SwaggerUIBundle && containerRef.current) {
+          const presets = [window.SwaggerUIBundle.presets.apis];
+          if (window.SwaggerUIStandalonePreset) {
+            presets.push(window.SwaggerUIStandalonePreset);
+          } else if (window.SwaggerUIBundle.SwaggerUIStandalonePreset) {
+            presets.push(window.SwaggerUIBundle.SwaggerUIStandalonePreset);
+          }
+
+          const ui = window.SwaggerUIBundle({
+            url: "/openapi.json",
+            domNode: containerRef.current,
+            deepLinking: false,
+            presets,
+            layout: "BaseLayout",
+            docExpansion: "list",
+            filter: true,
+            tryItOutEnabled: true,
+            onComplete: () => {
+              if (isMounted) {
+                setLoading(false);
+                if (token) {
+                  try {
+                    ui.preauthorizeApiKey("BearerAuth", `Bearer ${token}`);
+                  } catch {
+                    // ignore
+                  }
+                }
               }
-            }
-          },
-        });
+            },
+          });
+        }
+      } catch (e) {
+        console.error("Swagger init error:", e);
+        if (isMounted) setLoading(false);
       }
     }
 
@@ -144,6 +158,7 @@ export default function WebServiceDocs() {
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const panelDocsUrl = `${origin}/admin/web-service`;
+  const docsUrl = panelDocsUrl;
   const openApiUrl = `${origin}/openapi.json`;
   const apiUrl = `${origin}/api/v1`;
 

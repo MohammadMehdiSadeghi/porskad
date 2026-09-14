@@ -87,34 +87,48 @@ export default function SwaggerDocs() {
     }
 
     function initSwagger() {
-      if (window.SwaggerUIBundle && containerRef.current && isMounted) {
-        const ui = window.SwaggerUIBundle({
-          url: "/openapi.json",
-          domNode: containerRef.current,
-          deepLinking: true,
-          presets: [
-            window.SwaggerUIBundle.presets.apis,
-            window.SwaggerUIStandalonePreset || window.SwaggerUIBundle.SwaggerUIStandalonePreset,
-          ],
-          layout: "BaseLayout",
-          defaultModelsExpandDepth: 1,
-          defaultModelExpandDepth: 1,
-          docExpansion: "list",
-          filter: true,
-          showExtensions: true,
-          showCommonExtensions: true,
-          tryItOutEnabled: true,
-          persistAuthorization: true,
-          onComplete: () => {
-            if (isMounted) {
-              setSpecLoading(false);
-              swaggerInstanceRef.current = ui;
-              if (token) {
-                ui.preauthorizeApiKey("BearerAuth", `Bearer ${token}`);
+      if (!isMounted) return;
+      try {
+        if (window.SwaggerUIBundle && containerRef.current) {
+          const presets = [window.SwaggerUIBundle.presets.apis];
+          if (window.SwaggerUIStandalonePreset) {
+            presets.push(window.SwaggerUIStandalonePreset);
+          } else if (window.SwaggerUIBundle.SwaggerUIStandalonePreset) {
+            presets.push(window.SwaggerUIBundle.SwaggerUIStandalonePreset);
+          }
+
+          const ui = window.SwaggerUIBundle({
+            url: "/openapi.json",
+            domNode: containerRef.current,
+            deepLinking: true,
+            presets,
+            layout: "BaseLayout",
+            defaultModelsExpandDepth: 1,
+            defaultModelExpandDepth: 1,
+            docExpansion: "list",
+            filter: true,
+            showExtensions: true,
+            showCommonExtensions: true,
+            tryItOutEnabled: true,
+            persistAuthorization: true,
+            onComplete: () => {
+              if (isMounted) {
+                setSpecLoading(false);
+                swaggerInstanceRef.current = ui;
+                if (token) {
+                  try {
+                    ui.preauthorizeApiKey("BearerAuth", `Bearer ${token}`);
+                  } catch {
+                    // ignore
+                  }
+                }
               }
-            }
-          },
-        });
+            },
+          });
+        }
+      } catch (err) {
+        console.error("Swagger init error:", err);
+        if (isMounted) setSpecLoading(false);
       }
     }
 
@@ -127,6 +141,9 @@ export default function SwaggerDocs() {
       script.async = true;
       script.onload = () => {
         initSwagger();
+      };
+      script.onerror = () => {
+        if (isMounted) setSpecLoading(false);
       };
       document.body.appendChild(script);
     }

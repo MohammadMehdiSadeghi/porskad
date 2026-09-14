@@ -23,7 +23,7 @@ const KNOWN_GLOBALS = new Set([
   "HTMLElement", "HTMLInputElement", "HTMLTextAreaElement", "HTMLSelectElement",
   "HTMLDivElement", "HTMLAnchorElement", "HTMLCanvasElement", "SVGElement",
   "MutationObserver", "ResizeObserver", "IntersectionObserver", "Performance",
-  "performance", "indexedDB", "Worker", "SharedWorker", "ServiceWorker"
+  "performance", "indexedDB", "Worker", "SharedWorker", "ServiceWorker", "structuredClone"
 ]);
 
 function getFiles(dir, exts = [".js", ".jsx"]) {
@@ -87,11 +87,11 @@ for (const dir of targetDirs) {
 
     try {
       traverse(ast, {
-        ReferencedIdentifier(pathNode) {
+        Identifier(pathNode) {
+          if (!pathNode.isReferencedIdentifier()) return;
           const name = pathNode.node.name;
           if (KNOWN_GLOBALS.has(name)) return;
           if (pathNode.scope.hasBinding(name)) return;
-          if (pathNode.scope.hasGlobal(name)) return;
 
           // Ignore JSX pragmas or special identifiers
           if (name.startsWith("__")) return;
