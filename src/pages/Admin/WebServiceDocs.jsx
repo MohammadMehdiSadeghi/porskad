@@ -143,7 +143,7 @@ export default function WebServiceDocs() {
   const [loadingOpenApiJson, setLoadingOpenApiJson] = useState(false);
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const docsUrl = `${origin}/docs`;
+  const panelDocsUrl = `${origin}/admin/web-service`;
   const openApiUrl = `${origin}/openapi.json`;
   const apiUrl = `${origin}/api/v1`;
 
@@ -275,18 +275,18 @@ print(response.json())`,
           </p>
         </div>
 
-        <Button
-          variant="navy"
-          size="sm"
-          as="a"
-          href="/docs"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1.5 text-xs font-bold"
-        >
-          <span>مشاهده تمام‌صفحه (/docs)</span>
-          <ExternalLink size={13} />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="navy"
+            size="sm"
+            onClick={handleCopyToken}
+            disabled={!token}
+            className="flex items-center gap-1.5 text-xs font-bold"
+          >
+            {copiedToken ? <Check size={13} /> : <Copy size={13} />}
+            <span>{copiedToken ? "توکن کپی شد" : "کپی سریع توکن"}</span>
+          </Button>
+        </div>
       </div>
 
       {/* ══════════════════════════════════════════════════════════════ */}
@@ -317,7 +317,7 @@ print(response.json())`,
 
             {/* فیلد توکن و دکمه کپی — نیم‌عرض و مقید */}
             <div className="flex items-center gap-2 w-full lg:w-auto shrink-0 pt-1 lg:pt-0">
-              <div className="relative flex-1 lg:w-72 xl:w-80 min-w-0 bg-white/95 dark:bg-slate-900 border-2 border-teal/30 dark:border-teal/40 rounded-pill-md px-3.5 py-2 font-mono text-xs text-slate-700 dark:text-slate-200 dir-ltr text-left flex items-center justify-between shadow-2xs">
+              <div className="relative flex-1 lg:w-72 xl:w-80 min-w-0 bg-white/95 dark:bg-slate-900 border-2 border-teal/30 dark:border-teal/40 rounded-pill-md px-3.5 py-2 font-mono text-xs text-slate-700 dark:text-slate-200 dir-ltr text-left flex items-center justify-between">
                 <span className="truncate whitespace-nowrap overflow-hidden text-ellipsis block min-w-0 flex-1 select-all">
                   {token
                     ? (showToken ? token : `${token.substring(0, 14)}••••••••••••••••••••${token.substring(token.length - 6)}`)
@@ -436,22 +436,16 @@ print(response.json())`,
 
                     <div className="flex items-center justify-between text-xs pt-1">
                       <button
-                        onClick={() => handleCopyText(docsUrl, "docs")}
+                        onClick={() => handleCopyText(`${origin}/admin/web-service?section=swagger`, "swagger_link")}
                         className="text-ink-subtle hover:text-navy dark:hover:text-white flex items-center gap-1 font-bold p-1 cursor-pointer transition-colors"
                       >
-                        {copiedLink === "docs" ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
-                        <span>{copiedLink === "docs" ? "کپی شد" : "کپی لینک"}</span>
+                        {copiedLink === "swagger_link" ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
+                        <span>{copiedLink === "swagger_link" ? "کپی شد" : "کپی آدرس کنسول"}</span>
                       </button>
 
-                      <a
-                        href="/docs"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-ink-subtle hover:text-teal flex items-center gap-1 font-bold p-1 transition-colors"
-                      >
-                        <span>تب جدید</span>
-                        <ExternalLink size={12} />
-                      </a>
+                      <span className="text-ink-subtle dark:text-slate-400 text-[11px] font-semibold">
+                        مستندات داخلی پنل
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -582,7 +576,7 @@ print(response.json())`,
         /* ══════════════════════════════════════════════════════════════ */
         <div className="flex flex-col gap-6">
           {/* نوار ناوبری به سبک پیل‌های استیکری دیزاین رکاد */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 border-2 border-ink/10 dark:border-slate-800 rounded-pill-md p-2 shadow-2xs">
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 border-2 border-ink/10 dark:border-slate-800 rounded-pill-md p-2">
             <Button
               variant="ghost"
               size="sm"
@@ -635,23 +629,22 @@ print(response.json())`,
                       <Button
                         variant="secondary"
                         size="sm"
-                        onClick={() => handleCopyText(docsUrl, "docs")}
+                        onClick={() => handleCopyText(apiUrl, "api_base")}
                         className="flex items-center gap-1.5"
                       >
-                        {copiedLink === "docs" ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
-                        <span>{copiedLink === "docs" ? "کپی شد" : "کپی آدرس /docs"}</span>
+                        {copiedLink === "api_base" ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                        <span>{copiedLink === "api_base" ? "کپی شد" : "کپی آدرس API"}</span>
                       </Button>
                       <Button
                         variant="teal"
                         size="sm"
                         as="a"
-                        href="/docs"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href="/openapi.json"
+                        download="porskad-openapi.json"
                         className="flex items-center gap-1.5"
                       >
-                        <span>تب جداگانه</span>
-                        <ExternalLink size={13} />
+                        <Download size={13} />
+                        <span>دانلود نقشه OpenAPI</span>
                       </Button>
                     </div>
                   </div>
@@ -984,7 +977,7 @@ print(response.json())`,
                   <div className="relative bg-slate-900 text-slate-100 rounded-xl p-4 font-mono text-xs dir-ltr text-left overflow-x-auto">
                     <button
                       onClick={() => handleCopySnippet(codeSnippets[selectedLang])}
-                      className="absolute top-3 right-3 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                      className="absolute top-3 right-3 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-white/10"
                     >
                       {copiedSnippet ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
                       <span>{copiedSnippet ? "کپی شد" : "کپی کد"}</span>

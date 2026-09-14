@@ -156,38 +156,69 @@ curl -X GET "${baseUrl}/forms" \\
   -H "Authorization: Bearer ${token ? token.substring(0, 15) + "..." : "YOUR_ACCESS_TOKEN"}" \\
   -H "Accept: application/json"
 
-# 2. Create a new form
-curl -X POST "${baseUrl}/forms" \\
-  -H "Authorization: Bearer ${token ? token.substring(0, 15) + "..." : "YOUR_ACCESS_TOKEN"}" \\
+# 2. Get form details, all questions & logic rules
+curl -X GET "${baseUrl}/forms/YOUR_FORM_SLUG_OR_ID" \\
+  -H "Accept: application/json"
+
+# 3. Get all questions of a form
+curl -X GET "${baseUrl}/forms/YOUR_FORM_SLUG_OR_ID/questions"
+
+# 4. Get a specific question by ID
+curl -X GET "${baseUrl}/forms/YOUR_FORM_SLUG_OR_ID/questions/QUESTION_ID"
+
+# 5. Get form analytics & response stats
+curl -X GET "${baseUrl}/forms/YOUR_FORM_SLUG_OR_ID/stats" \\
+  -H "Authorization: Bearer ${token ? token.substring(0, 15) + "..." : "YOUR_ACCESS_TOKEN"}"
+
+# 6. Submit a response to a form
+curl -X POST "${baseUrl}/forms/YOUR_FORM_SLUG_OR_ID/responses" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "title": "Customer Feedback 2026",
-    "form_type": "step_by_step",
-    "description": "Short feedback survey"
+    "duration_seconds": 30,
+    "answers": [
+      { "question_id": "QUESTION_UUID", "value": "پاسخ نمونه" }
+    ]
   }'
 
-# 3. Get all 20 question types metadata
+# 7. Get all 20 question types metadata
 curl -X GET "${baseUrl}/question-types"`,
 
-    js: `// JavaScript (Fetch API)
+    js: `// JavaScript (Fetch API / async-await)
 const TOKEN = "${token ? token.substring(0, 15) + "..." : "YOUR_ACCESS_TOKEN"}";
+const BASE = "${baseUrl}";
 
-// Fetch user forms
-async function getForms() {
-  const response = await fetch("${baseUrl}/forms", {
-    method: "GET",
-    headers: {
-      "Authorization": \`Bearer \${TOKEN}\`,
-      "Accept": "application/json"
-    }
+// 1. Fetch form with all questions and rules
+async function getFormWithQuestions(formSlugOrId) {
+  const res = await fetch(\`\${BASE}/forms/\${formSlugOrId}\`, {
+    headers: { "Accept": "application/json" }
   });
-  const data = await response.json();
-  console.log("Forms:", data.forms);
+  const { form, questions, logic_rules } = await res.json();
+  console.log("Form:", form.title);
+  console.log("Questions (" + questions.length + "):", questions);
+  return { form, questions, logic_rules };
 }
 
-getForms();`,
+// 2. Fetch responses list
+async function getResponses(formSlugOrId) {
+  const res = await fetch(\`\${BASE}/forms/\${formSlugOrId}/responses?limit=50\`, {
+    headers: { "Authorization": \`Bearer \${TOKEN}\` }
+  });
+  const data = await res.json();
+  console.log("Total responses:", data.total, data.responses);
+}
 
-    python: `# Python (requests)
+// 3. Submit response
+async function submitAnswers(formSlugOrId, answers) {
+  const res = await fetch(\`\${BASE}/forms/\${formSlugOrId}/responses\`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ answers, duration_seconds: 25 })
+  });
+  const result = await res.json();
+  console.log("Submit result:", result);
+}`,
+
+    python: `# Python 3 (requests)
 import requests
 
 TOKEN = "${token ? token.substring(0, 15) + "..." : "YOUR_ACCESS_TOKEN"}"
@@ -198,8 +229,27 @@ headers = {
     "Accept": "application/json"
 }
 
-response = requests.get(f"{BASE_URL}/forms", headers=headers)
-print(response.json())`
+# 1. Get form details and all questions
+def get_form(form_id):
+    resp = requests.get(f"{BASE_URL}/forms/{form_id}", headers=headers)
+    data = resp.json()
+    print("Form Title:", data.get("form", {}).get("title"))
+    print("Questions Count:", len(data.get("questions", [])))
+    return data
+
+# 2. Get form statistics
+def get_stats(form_id):
+    resp = requests.get(f"{BASE_URL}/forms/{form_id}/stats", headers=headers)
+    print("Stats:", resp.json())
+
+# 3. Submit response
+def submit_response(form_id, answers):
+    payload = {
+        "duration_seconds": 45,
+        "answers": answers
+    }
+    resp = requests.post(f"{BASE_URL}/forms/{form_id}/responses", json=payload)
+    print("Submit status:", resp.json())`
   };
 
   return (

@@ -17,7 +17,7 @@ function ToggleSwitch({ checked, onChange, label, activeIcon: ActiveIcon, inacti
       onClick={onChange}
       className={`flex-1 flex items-center justify-between gap-2 px-3 py-2 rounded-xl border transition-all duration-200 cursor-pointer select-none ${
         checked
-          ? "bg-teal/10 border-teal/30 hover:bg-teal/15 shadow-2xs"
+          ? "bg-teal/10 border-teal/30 hover:bg-teal/15 font-bold"
           : "bg-ink/5 border-ink/10 hover:bg-ink/10"
       }`}
       title={checked ? `کلیک برای خاموش کردن ${label}` : `کلیک برای روشن کردن ${label}`}
@@ -336,7 +336,7 @@ export default function NotificationBell() {
                         }`}
                       >
                         <div
-                          className={`shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shadow-2xs ${
+                          className={`shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center ${
                             n.read ? "bg-ink/5 dark:bg-white/5" : "bg-gradient-to-br from-teal/20 to-teal/10 dark:from-teal/20 dark:to-teal/10 border border-teal/20"
                           }`}
                         >

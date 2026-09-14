@@ -1,12 +1,85 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+// افزونه توسعه محلی: اجرای مستقیم اندپوینت‌های API در سرور توسعه Vite بدون نیاز به Vercel CLI
+function apiDevPlugin() {
+  return {
+    name: "api-dev-middleware",
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        const url = req.url || "";
+        if (url.startsWith("/api/v1") || url.startsWith("/api/openapi")) {
+          try {
+            // تزئین متدهای کمکی Express/Vercel روی شیء پاسخ Node.js
+            if (!res.status) {
+              res.status = function (code) {
+                this.statusCode = code;
+                return this;
+              };
+            }
+            if (!res.json) {
+              res.json = function (data) {
+                if (!this.getHeader("Content-Type")) {
+                  this.setHeader("Content-Type", "application/json; charset=utf-8");
+                }
+                this.end(JSON.stringify(data));
+                return this;
+              };
+            }
+
+            // استخراج خودکار Query Params برای شبیه‌سازی دقیق محیط Vercel
+            if (!req.query) {
+              try {
+                const parsedUrl = new URL(req.url, "http://localhost:5173");
+                req.query = Object.fromEntries(parsedUrl.searchParams.entries());
+              } catch {
+                req.query = {};
+              }
+            }
+
+            if (url.startsWith("/api/openapi")) {
+              const { default: openapiHandler } = await import("./api/openapi.js");
+              return await openapiHandler(req, res);
+            }
+
+            const { default: apiHandler } = await import("./api/v1/[...route].js");
+
+            if (["POST", "PUT", "PATCH"].includes(req.method)) {
+              let bodyStr = "";
+              req.on("data", (chunk) => {
+                bodyStr += chunk;
+              });
+              req.on("end", async () => {
+                try {
+                  req.body = bodyStr ? JSON.parse(bodyStr) : {};
+                } catch {
+                  req.body = {};
+                }
+                await apiHandler(req, res);
+              });
+              return;
+            }
+
+            await apiHandler(req, res);
+            return;
+          } catch (err) {
+            console.error("Vite API Dev Server Error:", err);
+            res.statusCode = 500;
+            res.setHeader("Content-Type", "application/json; charset=utf-8");
+            res.end(JSON.stringify({ error: err.message }));
+            return;
+          }
+        }
+        next();
+      });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), apiDevPlugin()],
   server: {
     proxy: {
-      // برای تست لوکال APIهای Vercel: `vercel dev` را روی پورت 3000 اجرا کن
-      // (npx vercel dev) — بعد این proxy درخواست‌های /api را به آن می‌فرستد.
       "/api": {
         target: "http://localhost:3000",
         changeOrigin: true,

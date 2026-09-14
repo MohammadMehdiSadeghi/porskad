@@ -1,0 +1,1211 @@
+import fs from "fs";
+import path from "path";
+
+const openapi = {
+  openapi: "3.0.3",
+  info: {
+    title: "Porskad REST API",
+    version: "2.0.0",
+    description: "مستندات تعاملی و جامع رابط برنامه‌نویسی پرس‌کاد (Porskad REST API v1). این API امکان مدیریت کامل فرم‌ها، دریافت مشخصات تمام ۲۰ نوع سوال، قوانین منطقی، ثبت پاسخ‌ها، خروجی گزارشات و دریافت کدهای امبد را فراهم می‌کند.",
+    contact: {
+      name: "تیم فنی پرس‌کاد",
+      url: "https://porskad.ir"
+    },
+    license: {
+      name: "MIT",
+      url: "https://opensource.org/licenses/MIT"
+    }
+  },
+  servers: [
+    {
+      url: "/",
+      description: "Current Server Origin"
+    }
+  ],
+  tags: [
+    {
+      name: "Account",
+      description: "اطلاعات حساب کاربری، وضعیت سهمیه‌ها و محدودیت‌های پلن"
+    },
+    {
+      name: "Question Types",
+      description: "متادیتا، عملگرهای شرطی و راهنمای ساخت تمام ۲۰ نوع سوال فرم"
+    },
+    {
+      name: "Forms",
+      description: "عملیات کامل ایجاد، ویرایش، حذف، دریافت و آمار فرم‌ها"
+    },
+    {
+      name: "Questions",
+      description: "مدیریت سوالات فرم، گزینه‌ها، اعتبارسنجی‌ها، مقادیر پیش‌فرض و ترتیب"
+    },
+    {
+      name: "Responses",
+      description: "مشاهده، فیلتر و مدیریت پاسخ‌های ثبت‌شده شرکت‌کنندگان"
+    },
+    {
+      name: "Submission",
+      description: "ثبت پاسخ به فرم از طریق وب‌سایت‌های دیگر، اپلیکیشن‌ها یا ربات‌ها"
+    },
+    {
+      name: "Embed",
+      description: "کدهای آماده امبد (آی‌فریم، اسکریپت SDK، کامپوننت ری‌اکت) و لینک‌های مستقیم"
+    }
+  ],
+  paths: {
+    "/api/v1/me": {
+      get: {
+        tags: ["Account"],
+        summary: "دریافت اطلاعات حساب کاربری و سهمیه مصرف‌شده",
+        description: "اطلاعات پروفایل کاربر لاگین‌شده، نوع پلن، سقف تعداد فرم‌ها، سهمیه پاسخ‌های ماهانه و تعداد فرم‌های فعال.",
+        operationId: "getCurrentUser",
+        security: [{ BearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "پروفایل کاربر و آمار مصرف",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/UserProfile" }
+              }
+            }
+          },
+          "401": {
+            description: "توکن نامعتبر است یا ارسال نشده",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/question-types": {
+      get: {
+        tags: ["Question Types"],
+        summary: "لیست متادیتای تمام ۲۰ نوع سوال پرس‌کاد",
+        description: "دریافت ساختار و ویژگی‌های تمام ۲۰ نوع سوال قابل استفاده در فرم‌ها شامل گزینه‌ای، متنی، پیشرفته، عملگرهای شرطی، مقادیر پیش‌فرض و دسته‌بندی‌ها.",
+        operationId: "getQuestionTypes",
+        responses: {
+          "200": {
+            description: "کاتالوگ کامل انواع سوالات",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    count: { type: "integer", example: 20 },
+                    categories: {
+                      type: "array",
+                      items: { $ref: "#/components/schemas/QuestionCategory" }
+                    },
+                    types: {
+                      type: "object",
+                      additionalProperties: { $ref: "#/components/schemas/QuestionTypeMeta" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms": {
+      get: {
+        tags: ["Forms"],
+        summary: "لیست فرم‌های کاربر",
+        description: "لیست فرم‌های متعلق به کاربر لاگین‌شده به همراه تعداد سوالات، تعداد پاسخ‌ها و لینک‌های عمومی.",
+        operationId: "listForms",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "limit",
+            in: "query",
+            required: false,
+            description: "حداکثر تعداد فرم‌های برگشتی (پیش‌فرض ۵۰، حداکثر ۱۰۰)",
+            schema: { type: "integer", default: 50, maximum: 100 }
+          },
+          {
+            name: "offset",
+            in: "query",
+            required: false,
+            description: "آفست جهت صفحه‌بندی (پیش‌فرض ۰)",
+            schema: { type: "integer", default: 0 }
+          },
+          {
+            name: "published",
+            in: "query",
+            required: false,
+            description: "فیلتر بر اساس وضعیت انتشار (true یا false)",
+            schema: { type: "boolean" }
+          },
+          {
+            name: "archived",
+            in: "query",
+            required: false,
+            description: "فیلتر بر اساس وضعیت آرشیو بودن (true یا false)",
+            schema: { type: "boolean" }
+          },
+          {
+            name: "search",
+            in: "query",
+            required: false,
+            description: "جستجو در عنوان فرم‌ها",
+            schema: { type: "string" }
+          },
+          {
+            name: "all",
+            in: "query",
+            required: false,
+            description: "مشاهده تمام فرم‌های سامانه (مخصوص مدیران کل و سوپرادمین)",
+            schema: { type: "boolean" }
+          }
+        ],
+        responses: {
+          "200": {
+            description: "لیست فرم‌ها به همراه متادیتا",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    total: { type: "integer", example: 12 },
+                    count: { type: "integer", example: 12 },
+                    offset: { type: "integer", example: 0 },
+                    limit: { type: "integer", example: 50 },
+                    forms: {
+                      type: "array",
+                      items: { $ref: "#/components/schemas/FormSummary" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            description: "نیاز به احراز هویت با Bearer Token",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } }
+            }
+          }
+        }
+      },
+      POST: {
+        tags: ["Forms"],
+        summary: "ایجاد یک فرم جدید",
+        description: "ساخت یک فرم نظرسنجی، آزمون یا ثبت‌نام جدید بر اساس تنظیمات ارسالی.",
+        operationId: "createForm",
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/CreateFormInput" }
+            }
+          }
+        },
+        responses: {
+          "201": {
+            description: "فرم با موفقیت ساخته شد",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    form: { $ref: "#/components/schemas/FormDetail" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            description: "اطلاعات فرم نامعتبر است",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } }
+            }
+          },
+          "403": {
+            description: "سقف ساخت فرم‌های حساب کاربر تکمیل شده است",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/{id}": {
+      get: {
+        tags: ["Forms"],
+        summary: "دریافت اطلاعات کامل فرم، سوالات و قوانین",
+        description: "دریافت تمام مشخصات فرم، آرایه کامل سوالات با تمام جزئیات (نوع، اعتبارسنجی، گزینه‌ها، امتیاز، پرش‌ها) و قوانین شرطی (Logic Rules). پارامتر id می‌تواند شناسه UUID فرم، public_id یا slug اختصاصی آن باشد.",
+        operationId: "getFormDetail",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "شناسه فرم (UUID، public_id یا slug)",
+            schema: { type: "string" }
+          }
+        ],
+        responses: {
+          "200": {
+            description: "مشخصات کامل فرم، سوالات و قوانین",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    form: { $ref: "#/components/schemas/FormDetail" },
+                    questions: {
+                      type: "array",
+                      items: { $ref: "#/components/schemas/QuestionDetail" }
+                    },
+                    logic_rules: {
+                      type: "array",
+                      items: { $ref: "#/components/schemas/LogicRule" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            description: "فرم یافت نشد یا در وضعیت پیش‌نویس قرار دارد",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } }
+            }
+          }
+        }
+      },
+      put: {
+        tags: ["Forms"],
+        summary: "ویرایش تنظیمات فرم",
+        description: "به‌روزرسانی عنوان، اسلاگ، توضیحات، پیام‌های شروع و پایان، تم ظاهری، وضعیت انتشار و سقف دریافت پاسخ‌ها.",
+        operationId: "updateForm",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "شناسه فرم (UUID، public_id یا slug)",
+            schema: { type: "string" }
+          }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/UpdateFormInput" }
+            }
+          }
+        },
+        responses: {
+          "200": {
+            description: "فرم با موفقیت به‌روزرسانی شد",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    form: { $ref: "#/components/schemas/FormDetail" }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            description: "شما اجازه ویرایش این فرم را ندارید",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } }
+            }
+          }
+        }
+      },
+      delete: {
+        tags: ["Forms"],
+        summary: "انتقال فرم به سطل زباله (Soft Delete)",
+        description: "انتقال فرم به سطل زباله با قابلیت بازیابی در صورت نیاز.",
+        operationId: "deleteForm",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "شناسه فرم",
+            schema: { type: "string" }
+          }
+        ],
+        responses: {
+          "200": {
+            description: "فرم به سطل زباله منتقل شد",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: { type: "boolean", example: true },
+                    message: { type: "string", example: "فرم به سطل زباله منتقل شد." }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/{id}/stats": {
+      get: {
+        tags: ["Forms"],
+        summary: "دریافت آمار و تحلیل پاسخ‌های فرم",
+        description: "خلاصه آمار عملکردی فرم شامل تعداد کل پاسخ‌ها، پاسخ‌های تکمیل‌شده، نرخ تکمیل (درصد)، میانگین زمان پر کردن، تفکیک پاسخ‌های امروز و هفته اخیر و تفکیک بر اساس دستگاه شرکت‌کننده.",
+        operationId: "getFormStats",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "شناسه فرم (UUID، public_id یا slug)",
+            schema: { type: "string" }
+          }
+        ],
+        responses: {
+          "200": {
+            description: "خلاصه آماری فرم",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/FormStats" }
+              }
+            }
+          },
+          "403": {
+            description: "دسترسی غیرمجاز به آمار این فرم",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/{id}/questions": {
+      get: {
+        tags: ["Questions"],
+        summary: "لیست تمام سوالات یک فرم",
+        description: "دریافت لیست تمام سوالات فرم همراه با جزئیات فنی، اعتبارسنجی‌ها، گزینه‌ها و تنظیمات ظاهری.",
+        operationId: "getFormQuestions",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "شناسه فرم (UUID، public_id یا slug)",
+            schema: { type: "string" }
+          }
+        ],
+        responses: {
+          "200": {
+            description: "لیست سوالات مرتب‌شده بر اساس موقعیت",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    count: { type: "integer", example: 5 },
+                    questions: {
+                      type: "array",
+                      items: { $ref: "#/components/schemas/QuestionDetail" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      post: {
+        tags: ["Questions"],
+        summary: "افزودن یک سوال جدید به فرم",
+        description: "ایجاد سوال جدید با تعیین نوع (از بین ۲۰ نوع سوال)، عنوان، گزینه‌ها، اعتبارسنجی و قوانین پرش.",
+        operationId: "createQuestion",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "شناسه فرم",
+            schema: { type: "string" }
+          }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/CreateQuestionInput" }
+            }
+          }
+        },
+        responses: {
+          "201": {
+            description: "سوال با موفقیت ایجاد شد",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    question: { $ref: "#/components/schemas/QuestionDetail" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/{id}/questions/{questionId}": {
+      get: {
+        tags: ["Questions"],
+        summary: "دریافت مشخصات کامل یک سوال مشخص",
+        description: "دریافت مشخصات، اعتبارسنجی، متون راهنما و گزینه‌های یک سوال به خصوص با شناسه questionId.",
+        operationId: "getQuestionById",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "شناسه فرم",
+            schema: { type: "string" }
+          },
+          {
+            name: "questionId",
+            in: "path",
+            required: true,
+            description: "شناسه سوال (UUID)",
+            schema: { type: "string" }
+          }
+        ],
+        responses: {
+          "200": {
+            description: "مشخصات کامل سوال",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    question: { $ref: "#/components/schemas/QuestionDetail" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            description: "سوال یافت نشد",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } }
+            }
+          }
+        }
+      },
+      put: {
+        tags: ["Questions"],
+        summary: "ویرایش یک سوال موجود",
+        description: "به‌روزرسانی فیلدهای عنوان، متن پیش‌فرض، نوع، گزینه‌ها، سقف انتخاب، امتیاز، اعتبارسنجی و شرایط پرش سوال.",
+        operationId: "updateQuestion",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "شناسه فرم",
+            schema: { type: "string" }
+          },
+          {
+            name: "questionId",
+            in: "path",
+            required: true,
+            description: "شناسه سوال",
+            schema: { type: "string" }
+          }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/UpdateQuestionInput" }
+            }
+          }
+        },
+        responses: {
+          "200": {
+            description: "سوال با موفقیت به‌روزرسانی شد",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    question: { $ref: "#/components/schemas/QuestionDetail" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      delete: {
+        tags: ["Questions"],
+        summary: "حذف یک سوال از فرم",
+        description: "حذف قطعی یا انتقال سوال مشخص به سطل زباله.",
+        operationId: "deleteQuestion",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "شناسه فرم",
+            schema: { type: "string" }
+          },
+          {
+            name: "questionId",
+            in: "path",
+            required: true,
+            description: "شناسه سوال",
+            schema: { type: "string" }
+          }
+        ],
+        responses: {
+          "200": {
+            description: "سوال با موفقیت حذف شد",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: { type: "boolean", example: true },
+                    message: { type: "string", example: "سوال با موفقیت حذف شد." }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/{id}/responses": {
+      get: {
+        tags: ["Responses"],
+        summary: "دریافت لیست پاسخ‌های ثبت‌شده فرم",
+        description: "لیست کامل پاسخ‌های دریافتی از کاربران به همراه مقادیر ثبت‌شده، زمان صرف‌شده و اطلاعات دستگاه، غنی‌شده با عنوان و نوع هر سوال.",
+        operationId: "getFormResponses",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "شناسه فرم",
+            schema: { type: "string" }
+          },
+          {
+            name: "limit",
+            in: "query",
+            required: false,
+            description: "تعداد رکورد در هر صفحه (پیش‌فرض ۵۰، حداکثر ۲۰۰)",
+            schema: { type: "integer", default: 50, maximum: 200 }
+          },
+          {
+            name: "offset",
+            in: "query",
+            required: false,
+            description: "آفست جهت صفحه‌بندی (پیش‌فرض ۰)",
+            schema: { type: "integer", default: 0 }
+          },
+          {
+            name: "is_complete",
+            in: "query",
+            required: false,
+            description: "فیلتر بر اساس تکمیل شدن فرم",
+            schema: { type: "boolean" }
+          }
+        ],
+        responses: {
+          "200": {
+            description: "لیست پاسخ‌ها به همراه صفحه‌بندی",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    form_id: { type: "string", format: "uuid" },
+                    total: { type: "integer", example: 140 },
+                    count: { type: "integer", example: 50 },
+                    offset: { type: "integer", example: 0 },
+                    limit: { type: "integer", example: 50 },
+                    responses: {
+                      type: "array",
+                      items: { $ref: "#/components/schemas/ResponseDetail" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      post: {
+        tags: ["Submission"],
+        summary: "ثبت و ارسال پاسخ به یک فرم (Public Submission)",
+        description: "ارسال جواب‌های کاربر به فرم. این اندپوینت عمومی است و می‌تواند از هر وب‌سایت، وب‌ویو، اپلیکیشن موبایل یا اتوماسیون خارجی فراخوانی شود.",
+        operationId: "submitFormResponse",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "شناسه فرم (UUID، public_id یا slug)",
+            schema: { type: "string" }
+          }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/SubmitResponseInput" }
+            }
+          }
+        },
+        responses: {
+          "201": {
+            description: "پاسخ با موفقیت ثبت شد",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ResponseSubmissionResult" }
+              }
+            }
+          },
+          "400": {
+            description: "خطا در اعتبارسنجی ورودی‌ها یا تکمیل ظرفیت فرم",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } }
+            }
+          },
+          "403": {
+            description: "سهمیه ماهانه ورودی‌های فرم به پایان رسیده است",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/{id}/responses/{responseId}": {
+      get: {
+        tags: ["Responses"],
+        summary: "دریافت جزئیات کامل یک پاسخ مشخص",
+        description: "مشاهده کامل جواب‌های یک شرکت‌کننده به خصوص با شناسه responseId به همراه نام و نوع هر سوال و امتیاز کسب‌شده.",
+        operationId: "getResponseById",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "شناسه فرم",
+            schema: { type: "string" }
+          },
+          {
+            name: "responseId",
+            in: "path",
+            required: true,
+            description: "شناسه پاسخ (UUID)",
+            schema: { type: "string" }
+          }
+        ],
+        responses: {
+          "200": {
+            description: "مشخصات کامل پاسخ ثبت‌شده",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    response: { $ref: "#/components/schemas/ResponseDetail" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            description: "پاسخ یافت نشد",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } }
+            }
+          }
+        }
+      },
+      delete: {
+        tags: ["Responses"],
+        summary: "حذف یک پاسخ ثبت‌شده",
+        description: "حذف یک رکورد پاسخ مشخص از دیتابیس.",
+        operationId: "deleteResponse",
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "شناسه فرم",
+            schema: { type: "string" }
+          },
+          {
+            name: "responseId",
+            in: "path",
+            required: true,
+            description: "شناسه پاسخ",
+            schema: { type: "string" }
+          }
+        ],
+        responses: {
+          "200": {
+            description: "پاسخ با موفقیت حذف شد",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: { type: "boolean", example: true },
+                    message: { type: "string", example: "پاسخ با موفقیت حذف شد." }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/{id}/embed": {
+      get: {
+        tags: ["Embed"],
+        summary: "دریافت کدهای امبد و پیوند مستقیم فرم",
+        description: "تولید خودکار کدهای iframe واکنش‌گرا، اسکریپت Embed SDK و کامپوننت آماده React جهت تعبیه در سایت‌های دیگر.",
+        operationId: "getFormEmbedCodes",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "شناسه فرم (UUID، public_id یا slug)",
+            schema: { type: "string" }
+          }
+        ],
+        responses: {
+          "200": {
+            description: "کدهای امبد و پیوندهای مستقیم",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/EmbedCodes" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    securitySchemes: {
+      BearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+        description: "توکن دسترسی کاربر (Supabase Session JWT). فرمت: `Bearer <token>`"
+      }
+    },
+    schemas: {
+      UserProfile: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          email: { type: "string", format: "email" },
+          full_name: { type: "string" },
+          phone: { type: "string", nullable: true },
+          is_owner: { type: "boolean" },
+          role: { type: "string", enum: ["owner", "superadmin", "admin", "manager"] },
+          plan: { type: "string", example: "pro" },
+          max_forms: { type: "integer", example: 50 },
+          max_responses_per_month: { type: "integer", example: 5000 },
+          monthly_responses_used: { type: "integer", example: 124 },
+          forms_count: { type: "integer", example: 8 },
+          created_at: { type: "string", format: "date-time" }
+        }
+      },
+      QuestionCategory: {
+        type: "object",
+        properties: {
+          key: { type: "string", example: "choice" },
+          title: { type: "string", example: "سوالات گزینه‌ای و مقیاسی" },
+          types: {
+            type: "array",
+            items: { type: "string" },
+            example: ["choice", "picture_choice", "dropdown", "yes_no", "likert", "nps", "rating", "matrix", "ranking"]
+          }
+        }
+      },
+      QuestionTypeMeta: {
+        type: "object",
+        properties: {
+          label: { type: "string", example: "چندگزینه‌ای" },
+          category: { type: "string", example: "choice" },
+          hint: { type: "string" },
+          hasOptions: { type: "boolean" },
+          hasMaxSelections: { type: "boolean" },
+          hasDisplayMode: { type: "boolean" },
+          defaultDisplayMode: { type: "string", nullable: true },
+          defaultOptions: { type: "array", items: {} },
+          conditionOperators: {
+            type: "array",
+            items: { type: "string" }
+          }
+        }
+      },
+      FormSummary: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          public_id: { type: "string" },
+          slug: { type: "string" },
+          title: { type: "string" },
+          description: { type: "string" },
+          form_type: { type: "string", enum: ["step_by_step", "registration"] },
+          published: { type: "boolean" },
+          archived: { type: "boolean" },
+          default_theme: { type: "string", enum: ["light", "dark", "system"] },
+          questions_count: { type: "integer", example: 6 },
+          responses_count: {
+            type: "object",
+            properties: {
+              total: { type: "integer", example: 45 },
+              complete: { type: "integer", example: 40 }
+            }
+          },
+          public_url: { type: "string", format: "uri" },
+          embed_url: { type: "string", format: "uri" },
+          created_at: { type: "string", format: "date-time" },
+          updated_at: { type: "string", format: "date-time" }
+        }
+      },
+      CreateFormInput: {
+        type: "object",
+        required: ["title"],
+        properties: {
+          title: { type: "string", minLength: 1, maxLength: 255, example: "نظرسنجی رضایت مشتریان ۱۴۰۵" },
+          slug: { type: "string", minLength: 2, maxLength: 80, pattern: "^[a-z0-9-]+$", example: "customer-feedback-2026", description: "اسلاگ اختصاصی یکتا (فقط حروف کوچک، اعداد و خط تیره)" },
+          form_type: { type: "string", enum: ["step_by_step", "registration"], default: "step_by_step" },
+          description: { type: "string", maxLength: 3000, example: "لطفاً با پاسخ به چند سوال کوتاه ما را در بهبود خدمات یاری دهید." },
+          welcome_title: { type: "string", maxLength: 255, default: "سلام!" },
+          welcome_message: { type: "string", maxLength: 1000, default: "ممنون که وقت گذاشتی؛ چند سوال کوتاه داریم." },
+          exit_title: { type: "string", maxLength: 255, default: "تمام شد!" },
+          exit_message: { type: "string", maxLength: 1000, default: "از اینکه جواب دادی خیلی ممنونیم. نظراتت برای ما طلاست!" },
+          default_theme: { type: "string", enum: ["light", "dark", "system"], default: "light" },
+          published: { type: "boolean", default: false },
+          max_responses_limit: { type: "integer", minimum: 1, maximum: 1000000, nullable: true, description: "سقف مجاز تعداد کل پاسخ‌ها" },
+          prevent_duplicate: { type: "boolean", default: false, description: "جلوگیری از ارسال تکراری توسط یک مرورگر" },
+          identifier_mapping: { type: "object", nullable: true }
+        }
+      },
+      UpdateFormInput: {
+        type: "object",
+        properties: {
+          title: { type: "string", minLength: 1, maxLength: 255 },
+          slug: { type: "string", minLength: 2, maxLength: 80, pattern: "^[a-z0-9-]+$" },
+          description: { type: "string", maxLength: 3000 },
+          form_type: { type: "string", enum: ["step_by_step", "registration"] },
+          published: { type: "boolean" },
+          archived: { type: "boolean" },
+          welcome_title: { type: "string", maxLength: 255 },
+          welcome_message: { type: "string", maxLength: 1000 },
+          exit_title: { type: "string", maxLength: 255 },
+          exit_message: { type: "string", maxLength: 1000 },
+          default_theme: { type: "string", enum: ["light", "dark", "system"] },
+          max_responses_limit: { type: "integer", minimum: 1, maximum: 1000000, nullable: true },
+          prevent_duplicate: { type: "boolean" },
+          identifier_mapping: { type: "object", nullable: true }
+        }
+      },
+      FormDetail: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          public_id: { type: "string" },
+          slug: { type: "string" },
+          title: { type: "string" },
+          description: { type: "string" },
+          form_type: { type: "string", enum: ["step_by_step", "registration"] },
+          published: { type: "boolean" },
+          archived: { type: "boolean" },
+          welcome_title: { type: "string" },
+          welcome_message: { type: "string" },
+          exit_title: { type: "string" },
+          exit_message: { type: "string" },
+          default_theme: { type: "string", enum: ["light", "dark", "system"] },
+          max_responses_limit: { type: "integer", nullable: true },
+          prevent_duplicate: { type: "boolean" },
+          identifier_mapping: { type: "object", nullable: true },
+          questions_count: { type: "integer", example: 8 },
+          responses_count: {
+            type: "object",
+            properties: {
+              total: { type: "integer" },
+              complete: { type: "integer" }
+            }
+          },
+          public_url: { type: "string", format: "uri" },
+          embed_url: { type: "string", format: "uri" },
+          created_at: { type: "string", format: "date-time" },
+          updated_at: { type: "string", format: "date-time" }
+        }
+      },
+      FormStats: {
+        type: "object",
+        properties: {
+          form_id: { type: "string", format: "uuid" },
+          slug: { type: "string" },
+          title: { type: "string" },
+          stats: {
+            type: "object",
+            properties: {
+              total_responses: { type: "integer", example: 120 },
+              completed_responses: { type: "integer", example: 105 },
+              incomplete_responses: { type: "integer", example: 15 },
+              completion_rate_percentage: { type: "integer", example: 88 },
+              average_duration_seconds: { type: "integer", example: 64 },
+              today: { type: "integer", example: 12 },
+              last_7_days: { type: "integer", example: 54 },
+              last_30_days: { type: "integer", example: 120 },
+              devices: {
+                type: "object",
+                properties: {
+                  desktop: { type: "integer", example: 70 },
+                  mobile: { type: "integer", example: 45 },
+                  tablet: { type: "integer", example: 5 },
+                  other: { type: "integer", example: 0 }
+                }
+              }
+            }
+          }
+        }
+      },
+      CreateQuestionInput: {
+        type: "object",
+        required: ["type", "title"],
+        properties: {
+          type: {
+            type: "string",
+            description: "یکی از ۲۰ نوع سوال استاندارد پرس‌کاد",
+            enum: [
+              "choice", "picture_choice", "dropdown", "yes_no", "likert",
+              "nps", "rating", "matrix", "ranking", "short_text",
+              "long_text", "number", "email", "phone_ir", "link",
+              "telegram_id", "statement", "group", "file_upload", "payment"
+            ],
+            example: "choice"
+          },
+          title: { type: "string", minLength: 1, maxLength: 500, example: "کیفیت خدمات دریافتی را چگونه ارزیابی می‌کنید؟" },
+          description: { type: "string", maxLength: 2000, example: "لطفاً گزینه‌ای را انتخاب کنید که نزدیک‌ترین حالت به تجربه شماست." },
+          placeholder: { type: "string", maxLength: 255, example: "پاسخ خود را بنویسید..." },
+          required: { type: "boolean", default: true },
+          position: { type: "integer", description: "ترتیب قرارگیری سوال در فرم (از ۰ به بعد)" },
+          options: {
+            type: "array",
+            maxItems: 100,
+            description: "فهرست گزینه‌ها (برای سوالات چندگزینه‌ای، کشویی، ماتریسی و تصویری)",
+            items: {},
+            example: ["خیلی خوب", "خوب", "متوسط", "ضعیف"]
+          },
+          display_mode: { type: "string", enum: ["buttons", "dropdown", "list"], nullable: true },
+          max_selections: { type: "integer", minimum: 1, maximum: 100, default: 1, description: "حداکثر تعداد گزینه‌های قابل انتخاب همزمان" },
+          points: { type: "integer", minimum: 0, maximum: 1000, nullable: true, description: "امتیاز سوال در صورت پاسخ صحیح (برای آزمون‌ها)" },
+          correct_answer: { description: "پاسخ صحیح سوال جهت محاسبه خودکار نمره (محرمانه، فقط برای مدیر فرم بازگردانده می‌شود)" },
+          validation: { type: "object", nullable: true, description: "قوانین اعتبارسنجی ویژه (حداقل/حداکثر کاراکتر یا عدد)" },
+          conditions: { type: "object", nullable: true, description: "شرایط نمایش مشروط سوال" },
+          jump_actions: { type: "array", items: {}, description: "اقدامات پرش به سوال خاص بر اساس پاسخ انتخابی" }
+        }
+      },
+      UpdateQuestionInput: {
+        type: "object",
+        properties: {
+          title: { type: "string", minLength: 1, maxLength: 500 },
+          type: {
+            type: "string",
+            enum: [
+              "choice", "picture_choice", "dropdown", "yes_no", "likert",
+              "nps", "rating", "matrix", "ranking", "short_text",
+              "long_text", "number", "email", "phone_ir", "link",
+              "telegram_id", "statement", "group", "file_upload", "payment"
+            ]
+          },
+          description: { type: "string", maxLength: 2000 },
+          placeholder: { type: "string", maxLength: 255 },
+          required: { type: "boolean" },
+          position: { type: "integer" },
+          options: { type: "array", maxItems: 100, items: {} },
+          display_mode: { type: "string", nullable: true },
+          max_selections: { type: "integer", minimum: 1, maximum: 100 },
+          points: { type: "integer", minimum: 0, maximum: 1000, nullable: true },
+          correct_answer: { description: "پاسخ صحیح سوال (تنها برای مدیران مجاز است)" },
+          validation: { type: "object", nullable: true },
+          conditions: { type: "object", nullable: true },
+          jump_actions: { type: "array", items: {} }
+        }
+      },
+      QuestionDetail: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          form_id: { type: "string", format: "uuid" },
+          type: {
+            type: "string",
+            enum: [
+              "choice", "picture_choice", "dropdown", "yes_no", "likert",
+              "nps", "rating", "matrix", "ranking", "short_text",
+              "long_text", "number", "email", "phone_ir", "link",
+              "telegram_id", "statement", "group", "file_upload", "payment"
+            ]
+          },
+          title: { type: "string" },
+          description: { type: "string" },
+          placeholder: { type: "string" },
+          required: { type: "boolean" },
+          position: { type: "integer" },
+          options: { type: "array", items: {} },
+          display_mode: { type: "string", nullable: true },
+          max_selections: { type: "integer", default: 1 },
+          points: { type: "integer", nullable: true },
+          correct_answer: { description: "پاسخ صحیح سوال (صرفاً برای مدیران لاگین‌شده برگشت داده می‌شود و برای پاسخ‌دهندگان عمومی مخفی است)" },
+          score: { type: "integer", nullable: true },
+          validation: { type: "object", nullable: true },
+          conditions: { type: "object", nullable: true },
+          jump_actions: { type: "array", items: {} },
+          created_at: { type: "string", format: "date-time" }
+        }
+      },
+      LogicRule: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          name: { type: "string" },
+          enabled: { type: "boolean" },
+          priority: { type: "integer" },
+          source_question_id: { type: "string", format: "uuid", nullable: true },
+          group_operator: { type: "string", enum: ["AND", "OR"] },
+          conditions_json: { type: "array", items: {} },
+          action_type: { type: "string" },
+          action_target_id: { type: "string", nullable: true }
+        }
+      },
+      SubmitAnswerItem: {
+        type: "object",
+        required: ["question_id", "value"],
+        properties: {
+          question_id: { type: "string", format: "uuid", description: "شناسه سوالی که به آن پاسخ داده شده" },
+          value: { description: "مقدار پاسخ (می‌تواند رشته، عدد، آرایه انتخاب‌ها یا آبجکت باشد)" },
+          time_spent_seconds: { type: "integer", minimum: 0, maximum: 86400, nullable: true, description: "مدت زمان صرف‌شده برای این سوال خاص به ثانیه" }
+        }
+      },
+      SubmitResponseInput: {
+        type: "object",
+        required: ["answers"],
+        properties: {
+          answers: {
+            type: "array",
+            maxItems: 200,
+            items: { $ref: "#/components/schemas/SubmitAnswerItem" },
+            description: "آرایه جواب‌های ثبت‌شده برای سوالات فرم (حداکثر ۲۰۰ سوال)"
+          },
+          duration_seconds: { type: "integer", minimum: 0, maximum: 86400, example: 45, description: "کل زمان سپری شده برای تکمیل فرم به ثانیه" },
+          device: { type: "string", example: "mobile", enum: ["mobile", "tablet", "desktop", "api"] },
+          browser: { type: "string", example: "Chrome" },
+          os: { type: "string", example: "iOS" },
+          user_agent: { type: "string", maxLength: 500 },
+          referer: { type: "string", maxLength: 1000 }
+        }
+      },
+      ResponseSubmissionResult: {
+        type: "object",
+        properties: {
+          success: { type: "boolean", example: true },
+          response_id: { type: "string", format: "uuid" },
+          message: { type: "string", example: "از اینکه وقت گذاشتید متشکریم." },
+          score: {
+            type: "object",
+            nullable: true,
+            properties: {
+              earned: { type: "number", example: 18 },
+              total: { type: "number", example: 20 }
+            }
+          }
+        }
+      },
+      ResponseDetail: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          form_id: { type: "string", format: "uuid" },
+          is_complete: { type: "boolean" },
+          started_at: { type: "string", format: "date-time" },
+          submitted_at: { type: "string", format: "date-time" },
+          duration_seconds: { type: "integer", nullable: true },
+          device: { type: "string", nullable: true },
+          browser: { type: "string", nullable: true },
+          os: { type: "string", nullable: true },
+          user_agent: { type: "string", nullable: true },
+          referer: { type: "string", nullable: true },
+          answers: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string", format: "uuid" },
+                question_id: { type: "string", format: "uuid" },
+                question_title: { type: "string", nullable: true },
+                question_type: { type: "string", nullable: true },
+                value: {},
+                time_spent_seconds: { type: "integer", nullable: true }
+              }
+            }
+          }
+        }
+      },
+      EmbedCodes: {
+        type: "object",
+        properties: {
+          form_id: { type: "string", format: "uuid" },
+          slug: { type: "string" },
+          public_id: { type: "string" },
+          title: { type: "string" },
+          direct_url: { type: "string", format: "uri" },
+          embed_url: { type: "string", format: "uri" },
+          iframe_code: { type: "string" },
+          sdk_code: { type: "string" },
+          react_code: { type: "string" }
+        }
+      },
+      ErrorResponse: {
+        type: "object",
+        properties: {
+          error: { type: "string", example: "خطای اعتبارسنجی یا عدم دسترسی" }
+        }
+      }
+    }
+  }
+};
+
+const targetPath = path.join(process.cwd(), "public", "openapi.json");
+fs.writeFileSync(targetPath, JSON.stringify(openapi, null, 2), "utf-8");
+console.log("Successfully generated public/openapi.json!");
+console.log("Paths count:", Object.keys(openapi.paths).length);
+console.log("Schemas count:", Object.keys(openapi.components.schemas).length);

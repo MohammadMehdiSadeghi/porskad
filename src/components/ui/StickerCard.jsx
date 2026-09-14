@@ -3,7 +3,7 @@ import clsx from "./clsx";
 
 export const STICKER_THEMES = {
   white: {
-    back: "bg-ink dark:bg-black",
+    back: "bg-ink dark:bg-slate-800",
     border: "border-ink dark:border-slate-700",
     bg: "bg-white dark:bg-slate-900",
   },
@@ -13,7 +13,7 @@ export const STICKER_THEMES = {
     bg: "bg-ecosystem-light dark:bg-[#0d2322]",
   },
   navy: {
-    back: "bg-navy-darker dark:bg-black",
+    back: "bg-navy-darker dark:bg-[#182544]",
     border: "border-navy dark:border-blue-500",
     bg: "bg-male-light dark:bg-[#11182c]",
   },
@@ -33,7 +33,7 @@ export const STICKER_THEMES = {
     bg: "bg-ecosystem-light dark:bg-[#0d2322]",
   },
   male: {
-    back: "bg-male-darker dark:bg-black",
+    back: "bg-male-darker dark:bg-[#182544]",
     border: "border-male-normal dark:border-blue-500",
     bg: "bg-male-light dark:bg-[#11182c]",
   },

@@ -112,9 +112,9 @@ export default function App() {
               {/* عمومی — فرم پر کردن */}
               <Route path="/f/:slug" element={<FormFill />} />
 
-              {/* مستندات عمومی Swagger / OpenAPI */}
-              <Route path="/docs" element={<SwaggerDocs />} />
-              <Route path="/swagger" element={<Navigate to="/docs" replace />} />
+              {/* مستندات اختصاصی وب‌سرویس و سوئگر (فقط داخل پنل با الزام لاگین) */}
+              <Route path="/docs" element={<Navigate to="/admin/web-service" replace />} />
+              <Route path="/swagger" element={<Navigate to="/admin/web-service" replace />} />
 
               {/* Embed — جاسازی فرم در سایت‌های دیگر */}
               <Route path="/embed/:formId" element={<EmbedForm />} />

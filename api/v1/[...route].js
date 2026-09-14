@@ -1,6 +1,27 @@
 import { createClient } from "@supabase/supabase-js";
+import fs from "fs";
+import path from "path";
 
-// متادیتای انواع سوالات پرس‌کاد
+// بارگذاری خودکار مقادیر .env در صورت اجرا در محیط محلی Node.js
+if (!process.env.SUPABASE_URL && !process.env.VITE_SUPABASE_URL) {
+  try {
+    const envPath = path.join(process.cwd(), ".env");
+    if (fs.existsSync(envPath)) {
+      const lines = fs.readFileSync(envPath, "utf-8").split("\n");
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith("#") && trimmed.includes("=")) {
+          const idx = trimmed.indexOf("=");
+          const k = trimmed.slice(0, idx).trim();
+          const v = trimmed.slice(idx + 1).trim();
+          if (!process.env[k]) process.env[k] = v;
+        }
+      }
+    }
+  } catch {}
+}
+
+// متادیتای تمام ۲۰ نوع سوال پرس‌کاد
 const QUESTION_TYPES_DATA = {
   choice: {
     label: "چندگزینه‌ای",
@@ -186,6 +207,10 @@ function getSupabaseClients(req) {
   const anonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+  if (!supabaseUrl || !anonKey) {
+    return { supabaseUrl: null, anonKey: null, serviceKey: null, userClient: null, adminClient: null };
+  }
+
   const authHeader = req.headers.authorization;
   const token = authHeader?.replace("Bearer ", "").trim();
 
@@ -211,6 +236,43 @@ async function getUserFromReq(req, clients) {
   }
 }
 
+async function isAuthorizedForForm(user, form, clients) {
+  if (!user || !form) return false;
+  if (form.manager_id === user.id || form.created_by === user.id) return true;
+  try {
+    const { data: profile } = await clients.adminClient
+      .from("profiles")
+      .select("is_owner, role")
+      .eq("id", user.id)
+      .maybeSingle();
+    return Boolean(profile?.is_owner || profile?.role === "superadmin" || profile?.role === "admin");
+  } catch {
+    return false;
+  }
+}
+
+// پاکسازی سوال برای کاربران عمومی/پاسخ‌دهندگان جهت جلوگیری از لو رفتن جواب آزمون‌ها و تقلب
+function sanitizeQuestionForPublic(q) {
+  if (!q) return null;
+  const { correct_answer, ...safeQ } = q;
+  return safeQ;
+}
+
+// پاکسازی تنظیمات حساس فرم (توکن تلگرام، وب‌هوک، کلیدهای پیامک) برای کاربران عمومی
+function sanitizeFormSettingsForPublic(settings) {
+  if (!settings || typeof settings !== "object") return {};
+  const allowedKeys = [
+    "theme", "font", "direction", "language", "show_progress_bar",
+    "show_question_numbers", "allow_back_navigation", "submit_button_text",
+    "success_redirect_url", "shuffle_questions", "display_mode", "max_responses_limit"
+  ];
+  const safe = {};
+  for (const k of allowedKeys) {
+    if (settings[k] !== undefined) safe[k] = settings[k];
+  }
+  return safe;
+}
+
 export default async function handler(req, res) {
   // هدرهای CORS برای دسترسی از هر پلتفرم خارجی
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -223,19 +285,38 @@ export default async function handler(req, res) {
 
   const clients = getSupabaseClients(req);
   if (!clients.supabaseUrl) {
-    return res.status(500).json({ error: "Supabase configuration is missing" });
+    return res.status(500).json({ error: "تنظیمات اتصال دیتابیس (Supabase URL / Key) یافت نشد." });
   }
 
-  // تفکیک مسیرها: [...route]
+  // تفکیک مسیرها: [...route] به صورت ایمن و چندسطحی
   let segments = [];
   if (req.query?.route) {
-    segments = Array.isArray(req.query.route) ? req.query.route : [req.query.route];
+    if (Array.isArray(req.query.route)) {
+      segments = req.query.route.flatMap((s) => String(s).split("/")).filter(Boolean);
+    } else {
+      segments = String(req.query.route).split("/").filter(Boolean);
+    }
   } else {
-    const cleanUrl = req.url.replace(/^\/api\/v1\/?/, "").split("?")[0];
+    const cleanUrl = (req.url || "").replace(/^\/api\/v1\/?/, "").split("?")[0];
     segments = cleanUrl.split("/").filter(Boolean);
   }
 
   const origin = getOrigin(req);
+
+  // استخراج خودکار Query Params در صورت اجرا بدون فریم‌ورک اکسپرس (مانند میدلور محلی یا محیط‌های سرورلس خاص)
+  if (!req.query && req.url && req.url.includes("?")) {
+    try {
+      const parsedUrl = new URL(req.url, origin);
+      req.query = Object.fromEntries(parsedUrl.searchParams.entries());
+    } catch {}
+  }
+
+  // اطمینان از پارس بودن body اگر به صورت رشته متنی ارسال شده باشد
+  if (typeof req.body === "string" && req.body.trim()) {
+    try {
+      req.body = JSON.parse(req.body);
+    } catch {}
+  }
 
   try {
     // ─────────────────────────────────────────────────────────────
@@ -277,6 +358,10 @@ export default async function handler(req, res) {
         phone: profile?.phone || null,
         is_owner: Boolean(profile?.is_owner),
         role: profile?.role || "manager",
+        plan: profile?.plan || "free",
+        max_forms: profile?.max_forms || 5,
+        max_responses_per_month: profile?.max_responses_per_month || 100,
+        monthly_responses_used: profile?.monthly_responses_used || 0,
         forms_count: formsCount || 0,
         created_at: profile?.created_at || user.created_at,
       });
@@ -292,41 +377,112 @@ export default async function handler(req, res) {
         if (!user) return res.status(401).json({ error: "Unauthorized. Please provide a valid Bearer token." });
 
         if (req.method === "GET") {
-          const limit = Math.min(parseInt(req.query?.limit || "50", 10), 100);
+          const rawLimit = parseInt(req.query?.limit || "50", 10);
+          const limit = isNaN(rawLimit) || rawLimit <= 0 ? 50 : Math.min(rawLimit, 100);
+          const rawOffset = parseInt(req.query?.offset || "0", 10);
+          const offset = isNaN(rawOffset) || rawOffset < 0 ? 0 : rawOffset;
+          const search = req.query?.search ? String(req.query.search).trim() : null;
+
+          const { data: userProfile } = await clients.adminClient
+            .from("profiles")
+            .select("is_owner, role")
+            .eq("id", user.id)
+            .maybeSingle();
+
+          const isSuperadmin = Boolean(
+            userProfile?.is_owner || userProfile?.role === "superadmin" || userProfile?.role === "admin"
+          );
+
           let query = clients.adminClient
             .from("forms")
-            .select("id, slug, title, description, form_type, published, created_at, updated_at")
-            .or(`manager_id.eq.${user.id},created_by.eq.${user.id}`)
+            .select(
+              "id, public_id, slug, title, description, form_type, published, archived, default_theme, created_at, updated_at",
+              { count: "exact" }
+            )
             .is("deleted_at", null)
-            .order("created_at", { ascending: false })
-            .limit(limit);
+            .order("created_at", { ascending: false });
+
+          // اگر سوپرادمین پارامتر all=true ارسال نکند، فقط فرم‌های خود کاربر را برگردان
+          if (!isSuperadmin || req.query?.all !== "true") {
+            query = query.or(`manager_id.eq.${user.id},created_by.eq.${user.id}`);
+          }
 
           if (req.query?.published !== undefined) {
             query = query.eq("published", req.query.published === "true");
           }
 
-          const { data: forms, error } = await query;
+          if (req.query?.archived !== undefined) {
+            query = query.eq("archived", req.query.archived === "true");
+          }
+
+          if (search) {
+            query = query.ilike("title", `%${search}%`);
+          }
+
+          query = query.range(offset, offset + limit - 1);
+
+          const { data: forms, count: totalCount, error } = await query;
           if (error) return res.status(400).json({ error: error.message });
+
+          // دریافت تعداد سوالات و پاسخ‌ها برای فرم‌های موجود
+          const formIds = (forms || []).map((f) => f.id);
+          let countsMap = {};
+          let questionCountsMap = {};
+
+          if (formIds.length > 0) {
+            try {
+              const { data: qCounts } = await clients.adminClient
+                .from("questions")
+                .select("form_id")
+                .in("form_id", formIds);
+
+              (qCounts || []).forEach((q) => {
+                questionCountsMap[q.form_id] = (questionCountsMap[q.form_id] || 0) + 1;
+              });
+
+              const { data: respCounts } = await clients.adminClient
+                .from("responses")
+                .select("form_id, is_complete")
+                .in("form_id", formIds);
+
+              (respCounts || []).forEach((r) => {
+                if (!countsMap[r.form_id]) {
+                  countsMap[r.form_id] = { total: 0, complete: 0 };
+                }
+                countsMap[r.form_id].total += 1;
+                if (r.is_complete) countsMap[r.form_id].complete += 1;
+              });
+            } catch {}
+          }
 
           const enriched = (forms || []).map((f) => ({
             ...f,
+            questions_count: questionCountsMap[f.id] || 0,
+            responses_count: countsMap[f.id] || { total: 0, complete: 0 },
             public_url: `${origin}/f/${f.slug}`,
             embed_url: `${origin}/embed/${f.slug}`,
           }));
 
-          return res.status(200).json({ count: enriched.length, forms: enriched });
+          return res.status(200).json({
+            count: enriched.length,
+            total: totalCount ?? enriched.length,
+            offset,
+            limit,
+            forms: enriched,
+          });
         }
 
         if (req.method === "POST") {
           // بررسی سقف ساخت فرم بر اساس پلن کاربر
           const { data: userProfile } = await clients.adminClient
             .from("profiles")
-            .select("is_owner, plan, max_forms")
+            .select("is_owner, plan, max_forms, role")
             .eq("id", user.id)
             .maybeSingle();
 
           const isUnlimited = Boolean(
             userProfile?.is_owner ||
+            userProfile?.role === "superadmin" ||
             userProfile?.plan === "unlimited" ||
             (userProfile?.max_forms && Number(userProfile.max_forms) >= 999999)
           );
@@ -360,29 +516,43 @@ export default async function handler(req, res) {
             exit_title = "تمام شد!",
             exit_message = "از اینکه جواب دادی خیلی ممنونیم. نظراتت برای ما طلاست!",
             default_theme = "light",
+            identifier_mapping = null,
+            max_responses_limit = null,
+            prevent_duplicate = false,
+            published = false,
           } = body;
 
-          if (!title || !title.trim()) {
+          const cleanTitle = String(title || "").trim();
+          if (!cleanTitle) {
             return res.status(400).json({ error: "عنوان فرم الزامی است." });
           }
 
-          const cleanSlug = slug
-            ? slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-")
+          const rawSlug = slug
+            ? String(slug).trim().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "")
             : `form-${Math.random().toString(36).substring(2, 8)}`;
+          const cleanSlug = (rawSlug.length >= 2 ? rawSlug : `form-${Math.random().toString(36).substring(2, 8)}`).substring(0, 80);
+
+          const safeMaxLimit = (max_responses_limit !== null && max_responses_limit !== undefined && max_responses_limit !== "")
+            ? Math.max(1, Math.min(Math.round(Number(max_responses_limit) || 1), 1000000))
+            : null;
 
           const newFormData = {
-            title: title.trim(),
+            title: cleanTitle.substring(0, 255),
             slug: cleanSlug,
-            form_type,
-            description,
-            welcome_title,
-            welcome_message,
-            exit_title,
-            exit_message,
-            published: false,
+            form_type: ["step_by_step", "registration"].includes(form_type) ? form_type : "step_by_step",
+            description: String(description || "").substring(0, 3000),
+            welcome_title: String(welcome_title || "سلام!").substring(0, 255),
+            welcome_message: String(welcome_message || "").substring(0, 1000),
+            exit_title: String(exit_title || "تمام شد!").substring(0, 255),
+            exit_message: String(exit_message || "").substring(0, 1000),
+            published: Boolean(published),
+            archived: false,
             manager_id: user.id,
             created_by: user.id,
             default_theme: ["light", "dark", "system"].includes(default_theme) ? default_theme : "light",
+            identifier_mapping: identifier_mapping || null,
+            max_responses_limit: safeMaxLimit,
+            prevent_duplicate: Boolean(prevent_duplicate),
           };
 
           const { data: newForm, error: insertErr } = await clients.adminClient
@@ -398,6 +568,8 @@ export default async function handler(req, res) {
               ...newForm,
               public_url: `${origin}/f/${newForm.slug}`,
               embed_url: `${origin}/embed/${newForm.slug}`,
+              questions_count: 0,
+              responses_count: { total: 0, complete: 0 },
             },
           });
         }
@@ -405,11 +577,13 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: "Method not allowed" });
       }
 
-      // شناسه فرم: segments[1]
+      // شناسه فرم: segments[1] (می‌تواند UUID، public_id یا slug باشد)
       const formIdentifier = segments[1];
 
-      // کمکی: پیدا کردن فرم بر اساس id، public_id یا slug
       async function findForm() {
+        if (!formIdentifier || typeof formIdentifier !== "string" || !/^[a-zA-Z0-9_-]{1,100}$/.test(formIdentifier)) {
+          return null;
+        }
         let q = clients.adminClient.from("forms").select("*").is("deleted_at", null);
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(formIdentifier);
         if (isUuid) {
@@ -434,6 +608,7 @@ export default async function handler(req, res) {
         return res.status(200).json({
           form_id: form.id,
           slug: form.slug,
+          public_id: form.public_id || form.id,
           title: form.title,
           direct_url: directUrl,
           embed_url: embedUrl,
@@ -443,27 +618,112 @@ export default async function handler(req, res) {
         });
       }
 
-      // 3.3 سوالات فرم: /api/v1/forms/:id/questions
+      // 3.3 خلاصه آمار و تحلیل فرم: GET /api/v1/forms/:id/stats
+      if (segments.length === 3 && segments[2] === "stats") {
+        if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
+        const form = await findForm();
+        if (!form) return res.status(404).json({ error: "فرم یافت نشد." });
+
+        const user = await getUserFromReq(req, clients);
+        const authorized = await isAuthorizedForForm(user, form, clients);
+        if (!authorized) {
+          return res.status(403).json({ error: "شما اجازه دسترسی به آمار این فرم را ندارید." });
+        }
+
+        const { data: allResponses, error: respErr } = await clients.adminClient
+          .from("responses")
+          .select("id, is_complete, started_at, submitted_at, duration_seconds, device, browser")
+          .eq("form_id", form.id)
+          .order("created_at", { ascending: false });
+
+        if (respErr) return res.status(400).json({ error: respErr.message });
+
+        const responses = allResponses || [];
+        const total = responses.length;
+        const complete = responses.filter((r) => r.is_complete).length;
+        const incomplete = total - complete;
+        const completionRate = total > 0 ? Math.round((complete / total) * 100) : 0;
+
+        const durations = responses
+          .filter((r) => r.duration_seconds && r.duration_seconds > 0)
+          .map((r) => r.duration_seconds);
+        const avgDuration = durations.length > 0
+          ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
+          : null;
+
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 3600 * 1000).toISOString();
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 3600 * 1000).toISOString();
+
+        const todayCount = responses.filter((r) => (r.submitted_at || r.started_at) >= startOfToday).length;
+        const weekCount = responses.filter((r) => (r.submitted_at || r.started_at) >= sevenDaysAgo).length;
+        const monthCount = responses.filter((r) => (r.submitted_at || r.started_at) >= thirtyDaysAgo).length;
+
+        const deviceStats = { desktop: 0, mobile: 0, tablet: 0, other: 0 };
+        responses.forEach((r) => {
+          const d = (r.device || "").toLowerCase();
+          if (d.includes("mob")) deviceStats.mobile++;
+          else if (d.includes("tab")) deviceStats.tablet++;
+          else if (d.includes("desk")) deviceStats.desktop++;
+          else deviceStats.other++;
+        });
+
+        return res.status(200).json({
+          form_id: form.id,
+          slug: form.slug,
+          title: form.title,
+          stats: {
+            total_responses: total,
+            completed_responses: complete,
+            incomplete_responses: incomplete,
+            completion_rate_percentage: completionRate,
+            average_duration_seconds: avgDuration,
+            today: todayCount,
+            last_7_days: weekCount,
+            last_30_days: monthCount,
+            devices: deviceStats,
+          },
+        });
+      }
+
+      // 3.4 سوالات فرم: /api/v1/forms/:id/questions
       if (segments.length >= 3 && segments[2] === "questions") {
         const form = await findForm();
         if (!form) return res.status(404).json({ error: "فرم یافت نشد." });
 
-        // GET /api/v1/forms/:id/questions
+        // GET /api/v1/forms/:id/questions (لیست سوالات)
         if (segments.length === 3 && req.method === "GET") {
+          const user = await getUserFromReq(req, clients);
+          const authorized = await isAuthorizedForForm(user, form, clients);
+
+          if (!form.published || form.archived) {
+            if (!authorized) {
+              return res.status(404).json({ error: "فرم یافت نشد یا هنوز منتشر نشده است." });
+            }
+          }
+
           const { data: questions, error } = await clients.adminClient
             .from("questions")
             .select("*")
             .eq("form_id", form.id)
             .order("position", { ascending: true });
+
           if (error) return res.status(400).json({ error: error.message });
-          return res.status(200).json({ count: (questions || []).length, questions: questions || [] });
+
+          const safeQuestions = authorized
+            ? (questions || [])
+            : (questions || []).map(sanitizeQuestionForPublic);
+
+          return res.status(200).json({ count: safeQuestions.length, questions: safeQuestions });
         }
 
         // POST /api/v1/forms/:id/questions (افزودن سوال جدید)
         if (segments.length === 3 && req.method === "POST") {
           const user = await getUserFromReq(req, clients);
           if (!user) return res.status(401).json({ error: "Unauthorized" });
-          if (form.manager_id !== user.id && form.created_by !== user.id) {
+          const authorized = await isAuthorizedForForm(user, form, clients);
+          if (!authorized) {
             return res.status(403).json({ error: "دسترسی غیرمجاز به ویرایش این فرم." });
           }
 
@@ -473,6 +733,8 @@ export default async function handler(req, res) {
             title = "سوال جدید",
             description = "",
             required = true,
+            placeholder = "",
+            validation = null,
             options = [],
             position,
             display_mode = null,
@@ -487,7 +749,21 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: `نوع سوال نامعتبر است: ${type}` });
           }
 
-          // محاسبه موقعیت پیش‌فرض
+          const cleanTitle = String(title || "").trim();
+          if (!cleanTitle) {
+            return res.status(400).json({ error: "عنوان سوال نمی‌تواند خالی باشد." });
+          }
+
+          const cleanPoints = (points !== undefined && points !== null && !isNaN(Number(points)))
+            ? Math.max(0, Math.min(Math.round(Number(points)), 1000))
+            : null;
+
+          const cleanMaxSelections = (max_selections !== undefined && max_selections !== null && !isNaN(Number(max_selections)))
+            ? Math.max(1, Math.min(Math.round(Number(max_selections)), 100))
+            : 1;
+
+          const cleanOptions = Array.isArray(options) ? options.slice(0, 100) : [];
+
           let targetPosition = position;
           if (targetPosition === undefined || targetPosition === null) {
             const { count } = await clients.adminClient
@@ -500,17 +776,19 @@ export default async function handler(req, res) {
           const newQ = {
             form_id: form.id,
             type,
-            title,
-            description,
+            title: cleanTitle.substring(0, 500),
+            description: String(description || "").substring(0, 2000),
             required: Boolean(required),
-            options: Array.isArray(options) ? options : [],
+            placeholder: String(placeholder || "").substring(0, 255),
+            validation: validation || null,
+            options: cleanOptions,
             position: targetPosition,
-            display_mode,
-            max_selections,
-            points,
-            correct_answer,
-            conditions,
-            jump_actions,
+            display_mode: display_mode || null,
+            max_selections: cleanMaxSelections,
+            points: cleanPoints,
+            correct_answer: correct_answer || null,
+            conditions: conditions || null,
+            jump_actions: Array.isArray(jump_actions) ? jump_actions : [],
           };
 
           const { data: savedQ, error: qErr } = await clients.adminClient
@@ -523,24 +801,85 @@ export default async function handler(req, res) {
           return res.status(201).json({ question: savedQ });
         }
 
-        // PUT / DELETE یک سوال مشخص: /api/v1/forms/:id/questions/:questionId
+        // GET / PUT / DELETE یک سوال مشخص: /api/v1/forms/:id/questions/:questionId
         if (segments.length === 4) {
           const questionId = segments[3];
+          if (!questionId || typeof questionId !== "string" || !/^[a-zA-Z0-9_-]{1,100}$/.test(questionId)) {
+            return res.status(400).json({ error: "شناسه سوال نامعتبر است." });
+          }
+
           const user = await getUserFromReq(req, clients);
+          const authorized = await isAuthorizedForForm(user, form, clients);
+
+          // GET: دریافت مشخصات یک سوال مشخص
+          if (req.method === "GET") {
+            if (!form.published || form.archived) {
+              if (!authorized) {
+                return res.status(404).json({ error: "فرم یافت نشد یا در دسترس نیست." });
+              }
+            }
+
+            const { data: singleQ, error: getQErr } = await clients.adminClient
+              .from("questions")
+              .select("*")
+              .eq("id", questionId)
+              .eq("form_id", form.id)
+              .maybeSingle();
+
+            if (getQErr) return res.status(400).json({ error: getQErr.message });
+            if (!singleQ) return res.status(404).json({ error: "سوال با شناسه مورد نظر یافت نشد." });
+
+            const safeSingleQ = authorized ? singleQ : sanitizeQuestionForPublic(singleQ);
+            return res.status(200).json({ question: safeSingleQ });
+          }
+
           if (!user) return res.status(401).json({ error: "Unauthorized" });
-          if (form.manager_id !== user.id && form.created_by !== user.id) {
-            return res.status(403).json({ error: "دسترسی غیرمجاز به این فرم." });
+          if (!authorized) {
+            return res.status(403).json({ error: "دسترسی غیرمجاز به ویرایش این فرم." });
           }
 
           if (req.method === "PUT") {
             const body = req.body || {};
             const patch = {};
             [
-              "title", "type", "description", "required", "options", "position",
-              "display_mode", "max_selections", "points", "correct_answer", "conditions", "jump_actions"
+              "title", "type", "description", "required", "placeholder", "validation",
+              "options", "position", "display_mode", "max_selections", "points",
+              "correct_answer", "conditions", "jump_actions"
             ].forEach((key) => {
               if (body[key] !== undefined) patch[key] = body[key];
             });
+
+            if (patch.type && !QUESTION_TYPES_DATA[patch.type]) {
+              return res.status(400).json({ error: `نوع سوال نامعتبر است: ${patch.type}` });
+            }
+
+            if (patch.title !== undefined) {
+              const cleanTitle = String(patch.title).trim();
+              if (!cleanTitle) {
+                return res.status(400).json({ error: "عنوان سوال نمی‌تواند خالی باشد." });
+              }
+              patch.title = cleanTitle.substring(0, 500);
+            }
+
+            if (patch.description !== undefined && patch.description !== null) {
+              patch.description = String(patch.description).substring(0, 2000);
+            }
+
+            if (patch.placeholder !== undefined && patch.placeholder !== null) {
+              patch.placeholder = String(patch.placeholder).substring(0, 255);
+            }
+
+            if (patch.points !== undefined && patch.points !== null) {
+              patch.points = isNaN(Number(patch.points)) ? null : Math.max(0, Math.min(Math.round(Number(patch.points)), 1000));
+            }
+
+            if (patch.max_selections !== undefined && patch.max_selections !== null) {
+              patch.max_selections = isNaN(Number(patch.max_selections)) ? 1 : Math.max(1, Math.min(Math.round(Number(patch.max_selections)), 100));
+            }
+
+            if (patch.options !== undefined && Array.isArray(patch.options)) {
+              patch.options = patch.options.slice(0, 100);
+            }
 
             const { data: updatedQ, error: upErr } = await clients.adminClient
               .from("questions")
@@ -560,6 +899,7 @@ export default async function handler(req, res) {
               .delete()
               .eq("id", questionId)
               .eq("form_id", form.id);
+
             if (delErr) return res.status(400).json({ error: delErr.message });
             return res.status(200).json({ success: true, message: "سوال با موفقیت حذف شد." });
           }
@@ -568,19 +908,17 @@ export default async function handler(req, res) {
         }
       }
 
-      // 3.4 پاسخ‌های فرم: /api/v1/forms/:id/responses
+      // 3.5 پاسخ‌های فرم: /api/v1/forms/:id/responses
       if (segments.length >= 3 && segments[2] === "responses") {
         const form = await findForm();
         if (!form) return res.status(404).json({ error: "فرم یافت نشد." });
 
         // ثبت پاسخ جدید (Submit): POST /api/v1/forms/:id/responses
         if (segments.length === 3 && req.method === "POST") {
-          // بررسی فعال بودن فرم
           if (!form.published || form.archived) {
             return res.status(400).json({ error: "این فرم در دسترس نیست یا غیرفعال شده است." });
           }
 
-          // بررسی سقف مجاز پاسخ‌های این فرم
           const maxLimit = form.max_responses_limit || form.settings?.max_responses_limit;
           if (maxLimit && Number(maxLimit) > 0) {
             const { count: completedCount } = await clients.adminClient
@@ -594,42 +932,90 @@ export default async function handler(req, res) {
           }
 
           const body = req.body || {};
-          const { answers = [], duration_seconds = null, device = "api", browser = "http-client" } = body;
+          const {
+            answers = [],
+            duration_seconds = null,
+            device = "api",
+            browser = "http-client",
+            os = null,
+            user_agent = null,
+            referer = null,
+          } = body;
 
           if (!Array.isArray(answers)) {
             return res.status(400).json({ error: "آرایه answers الزامی است." });
           }
 
-          // اعتبارسنجی سوالات: استخراج سوالات معتبر این فرم جهت جلوگیری از ارسال شناسه‌های نامعتبر
-          const { data: formQuestions } = await clients.adminClient
-            .from("questions")
-            .select("id, title, required, type")
-            .eq("form_id", form.id);
-          
-          const validQIds = new Set((formQuestions || []).map((q) => q.id));
-          const answersToInsert = [];
-          for (const a of answers) {
-            if (!a.question_id || !validQIds.has(a.question_id)) {
-              continue; // نادیده گرفتن سوالاتی که متعلق به این فرم نیستند
-            }
-            answersToInsert.push({
-              question_id: a.question_id,
-              value: a.value,
-              time_spent_seconds: a.time_spent_seconds || null,
-            });
+          if (answers.length > 200) {
+            return res.status(400).json({ error: "تعداد پاسخ‌ها بیش از حد مجاز است (حداکثر ۲۰۰ پاسخ)." });
           }
 
-          // بررسی سهمیه ماهانه مالک فرم (monthly_responses_used vs max_responses_per_month)
+          const cleanDuration = (duration_seconds !== null && duration_seconds !== undefined && !isNaN(Number(duration_seconds)))
+            ? Math.max(0, Math.min(Math.round(Number(duration_seconds)), 86400))
+            : 10;
+
+          const cleanDevice = String(device || "api").substring(0, 100);
+          const cleanBrowser = String(browser || "http-client").substring(0, 100);
+          const cleanOs = os ? String(os).substring(0, 100) : null;
+          const cleanUserAgent = user_agent ? String(user_agent).substring(0, 500) : null;
+          const cleanReferer = referer ? String(referer).substring(0, 1000) : null;
+
+          const { data: formQuestions } = await clients.adminClient
+            .from("questions")
+            .select("id, title, required, type, points, correct_answer")
+            .eq("form_id", form.id);
+
+          const questionsMap = new Map((formQuestions || []).map((q) => [q.id, q]));
+          const answersToInsert = [];
+          let earnedScore = 0;
+          let totalPossibleScore = 0;
+
+          for (const a of answers) {
+            if (!a || !a.question_id || !questionsMap.has(a.question_id)) {
+              continue;
+            }
+            const q = questionsMap.get(a.question_id);
+
+            // مهار طول پاسخ متنی برای جلوگیری از حملات پر کردن دیتابیس
+            let safeValue = a.value;
+            if (typeof safeValue === "string" && safeValue.length > 25000) {
+              safeValue = safeValue.substring(0, 25000);
+            }
+
+            const cleanTimeSpent = (a.time_spent_seconds !== undefined && a.time_spent_seconds !== null && !isNaN(Number(a.time_spent_seconds)))
+              ? Math.max(0, Math.min(Math.round(Number(a.time_spent_seconds)), 86400))
+              : null;
+
+            answersToInsert.push({
+              question_id: a.question_id,
+              value: safeValue,
+              time_spent_seconds: cleanTimeSpent,
+            });
+
+            if (q.points && q.points > 0) {
+              totalPossibleScore += q.points;
+              if (q.correct_answer !== null && q.correct_answer !== undefined) {
+                const normVal = JSON.stringify(safeValue);
+                const normAns = JSON.stringify(q.correct_answer);
+                if (normVal === normAns) {
+                  earnedScore += q.points;
+                }
+              }
+            }
+          }
+
+          // بررسی سهمیه ماهانه مالک فرم
           const formOwnerId = form.manager_id || form.created_by;
           if (formOwnerId) {
             const { data: ownerProf } = await clients.adminClient
               .from("profiles")
-              .select("id, is_owner, plan, max_responses_per_month, monthly_responses_used")
+              .select("id, is_owner, plan, max_responses_per_month, monthly_responses_used, role")
               .eq("id", formOwnerId)
               .maybeSingle();
 
             const isOwnerUnlimited = Boolean(
               ownerProf?.is_owner ||
+              ownerProf?.role === "superadmin" ||
               ownerProf?.plan === "unlimited" ||
               (ownerProf?.max_responses_per_month && Number(ownerProf.max_responses_per_month) >= 999999)
             );
@@ -642,53 +1028,108 @@ export default async function handler(req, res) {
               }
             }
 
-            // افزایش سهمیه ماهانه مصرف‌شده
-            await clients.adminClient.rpc("increment_monthly_responses", { p_user_id: formOwnerId }).catch(async () => {
+            try {
+              const { error: rpcErr } = await clients.adminClient.rpc("increment_monthly_responses", { p_user_id: formOwnerId });
+              if (rpcErr && ownerProf) {
+                await clients.adminClient
+                  .from("profiles")
+                  .update({ monthly_responses_used: (Number(ownerProf.monthly_responses_used) || 0) + 1 })
+                  .eq("id", formOwnerId);
+              }
+            } catch {
               if (ownerProf) {
                 await clients.adminClient
                   .from("profiles")
                   .update({ monthly_responses_used: (Number(ownerProf.monthly_responses_used) || 0) + 1 })
                   .eq("id", formOwnerId);
               }
+            }
+          }
+
+          const finalAnswersObj = {};
+          if (Array.isArray(answers)) {
+            for (const a of answers) {
+              if (a.question_id) finalAnswersObj[a.question_id] = a.value;
+            }
+          } else if (answers && typeof answers === "object") {
+            Object.assign(finalAnswersObj, answers);
+          }
+
+          const targetPublicId = form.slug || form.public_id || form.id;
+          const metaPayload = {
+            device: cleanDevice,
+            browser: cleanBrowser,
+            os: cleanOs,
+            userAgent: cleanUserAgent || "api",
+            referrerUrl: cleanReferer,
+            startedAt: new Date(Date.now() - cleanDuration * 1000).toISOString(),
+            completedAt: new Date().toISOString(),
+          };
+
+          let createdResponseId = null;
+          let rpcScoreResult = null;
+
+          // ۱. تلاش برای ثبت امن از طریق RPC
+          try {
+            const { data: rpcRes, error: rpcErr } = await clients.adminClient.rpc("submit_public_response", {
+              p_form_public_id: targetPublicId,
+              p_answers: finalAnswersObj,
+              p_meta: metaPayload,
+              p_times: {},
             });
+
+            if (!rpcErr && rpcRes && (rpcRes.response_id || rpcRes.id)) {
+              createdResponseId = rpcRes.response_id || rpcRes.id;
+              if (rpcRes.score) rpcScoreResult = rpcRes.score;
+            } else if (rpcErr) {
+              const msg = rpcErr.message || "";
+              if (!msg.includes("function") && !msg.includes("does not exist")) {
+                return res.status(400).json({ error: msg });
+              }
+            }
+          } catch {}
+
+          // ۲. در صورتی که RPC در دسترس نبود، درج مستقیم در جداول
+          if (!createdResponseId) {
+            const { data: respRow, error: respErr } = await clients.adminClient
+              .from("responses")
+              .insert({
+                form_id: form.id,
+                is_complete: true,
+                started_at: metaPayload.startedAt,
+                submitted_at: metaPayload.completedAt,
+                duration_seconds: cleanDuration,
+                device: cleanDevice,
+                browser: cleanBrowser,
+                os: cleanOs,
+                user_agent: cleanUserAgent,
+                referer: cleanReferer,
+              })
+              .select()
+              .single();
+
+            if (respErr) return res.status(400).json({ error: respErr.message });
+            createdResponseId = respRow.id;
+
+            if (answersToInsert.length > 0) {
+              const formatted = answersToInsert.map((a) => ({
+                ...a,
+                response_id: respRow.id,
+              }));
+              await clients.adminClient.from("answers").insert(formatted);
+            }
           }
 
-          // ایجاد رکورد پاسخ در responses
-          const { data: respRow, error: respErr } = await clients.adminClient
-            .from("responses")
-            .insert({
-              form_id: form.id,
-              is_complete: true,
-              started_at: new Date(Date.now() - (duration_seconds || 10) * 1000).toISOString(),
-              submitted_at: new Date().toISOString(),
-              duration_seconds,
-              device,
-              browser,
-            })
-            .select()
-            .single();
-
-          if (respErr) return res.status(400).json({ error: respErr.message });
-
-          // درج جواب‌ها در answers
-          if (answersToInsert.length > 0) {
-            const formatted = answersToInsert.map((a) => ({
-              ...a,
-              response_id: respRow.id,
-            }));
-            await clients.adminClient.from("answers").insert(formatted);
-          }
-
-          // ارسال پیام تلگرام در پس‌زمینه (اگر ربات تلگرام فعال باشد)
+          // دیسپچ تلگرام
           try {
             fetch(`${origin}/api/telegram-send`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ form_id: form.id, response_id: respRow.id }),
+              body: JSON.stringify({ form_id: form.id, response_id: createdResponseId }),
             }).catch(() => {});
           } catch {}
 
-          // دیسپچ وب‌هوک در صورت وجود
+          // دیسپچ وب‌هوک
           const webhookUrl = form.webhook_url || form.settings?.webhook_url;
           if (webhookUrl) {
             try {
@@ -699,9 +1140,10 @@ export default async function handler(req, res) {
                   event: "response.submitted",
                   form_id: form.id,
                   form_title: form.title,
-                  response_id: respRow.id,
-                  submitted_at: respRow.submitted_at,
+                  response_id: createdResponseId,
+                  submitted_at: metaPayload.completedAt,
                   answers: answersToInsert,
+                  score: totalPossibleScore > 0 ? { earned: earnedScore, total: totalPossibleScore } : null,
                 }),
               }).catch(() => {});
             } catch {}
@@ -709,8 +1151,9 @@ export default async function handler(req, res) {
 
           return res.status(201).json({
             success: true,
-            response_id: respRow.id,
+            response_id: createdResponseId,
             message: form.exit_message || "از اینکه پاسخ دادید ممنونیم.",
+            score: rpcScoreResult || (totalPossibleScore > 0 ? { earned: earnedScore, total: totalPossibleScore } : undefined),
           });
         }
 
@@ -718,81 +1161,176 @@ export default async function handler(req, res) {
         if (segments.length === 3 && req.method === "GET") {
           const user = await getUserFromReq(req, clients);
           if (!user) return res.status(401).json({ error: "Unauthorized" });
-          if (form.manager_id !== user.id && form.created_by !== user.id) {
+          const authorized = await isAuthorizedForForm(user, form, clients);
+          if (!authorized) {
             return res.status(403).json({ error: "شما اجازه دسترسی به پاسخ‌های این فرم را ندارید." });
           }
 
-          const limit = Math.min(parseInt(req.query?.limit || "50", 10), 200);
-          const offset = parseInt(req.query?.offset || "0", 10);
+          const rawLimit = parseInt(req.query?.limit || "50", 10);
+          const limit = isNaN(rawLimit) || rawLimit <= 0 ? 50 : Math.min(rawLimit, 200);
+          const rawOffset = parseInt(req.query?.offset || "0", 10);
+          const offset = isNaN(rawOffset) || rawOffset < 0 ? 0 : rawOffset;
 
-          const { data: responses, error: rErr } = await clients.adminClient
+          let query = clients.adminClient
             .from("responses")
             .select(`
-              id, is_complete, started_at, submitted_at, duration_seconds, device, browser,
+              id, is_complete, started_at, submitted_at, duration_seconds, device, browser, os,
               answers ( id, question_id, value, time_spent_seconds )
-            `)
+            `, { count: "exact" })
             .eq("form_id", form.id)
-            .order("created_at", { ascending: false })
-            .range(offset, offset + limit - 1);
+            .order("created_at", { ascending: false });
 
+          if (req.query?.is_complete !== undefined) {
+            query = query.eq("is_complete", req.query.is_complete === "true");
+          }
+
+          query = query.range(offset, offset + limit - 1);
+
+          const { data: responses, count: totalCount, error: rErr } = await query;
           if (rErr) return res.status(400).json({ error: rErr.message });
+
+          // غنی‌سازی پاسخ‌ها با عنوان و نوع سوالات جهت خوانایی آسان API
+          const { data: formQuestions } = await clients.adminClient
+            .from("questions")
+            .select("id, title, type")
+            .eq("form_id", form.id);
+
+          const qMetaMap = new Map((formQuestions || []).map((q) => [q.id, { title: q.title, type: q.type }]));
+
+          const enrichedResponses = (responses || []).map((r) => ({
+            ...r,
+            answers: (r.answers || []).map((a) => ({
+              ...a,
+              question_title: qMetaMap.get(a.question_id)?.title || null,
+              question_type: qMetaMap.get(a.question_id)?.type || null,
+            })),
+          }));
 
           return res.status(200).json({
             form_id: form.id,
-            total: (responses || []).length,
-            responses: responses || [],
+            total: totalCount ?? enrichedResponses.length,
+            count: enrichedResponses.length,
+            offset,
+            limit,
+            responses: enrichedResponses,
           });
         }
 
-        // حذف یک پاسخ: DELETE /api/v1/forms/:id/responses/:responseId
-        if (segments.length === 4 && req.method === "DELETE") {
+        // GET / DELETE یک پاسخ مشخص: /api/v1/forms/:id/responses/:responseId
+        if (segments.length === 4) {
           const responseId = segments[3];
           const user = await getUserFromReq(req, clients);
           if (!user) return res.status(401).json({ error: "Unauthorized" });
-          if (form.manager_id !== user.id && form.created_by !== user.id) {
-            return res.status(403).json({ error: "دسترسی غیرمجاز" });
+          const authorized = await isAuthorizedForForm(user, form, clients);
+          if (!authorized) {
+            return res.status(403).json({ error: "دسترسی غیرمجاز به این فرم." });
           }
 
-          const { error: delErr } = await clients.adminClient
-            .from("responses")
-            .delete()
-            .eq("id", responseId)
-            .eq("form_id", form.id);
+          // GET: دریافت جزییات یک پاسخ مشخص
+          if (req.method === "GET") {
+            const { data: resp, error: getRespErr } = await clients.adminClient
+              .from("responses")
+              .select(`
+                id, form_id, is_complete, started_at, submitted_at, duration_seconds, device, browser, os, user_agent, referer, created_at,
+                answers ( id, question_id, value, time_spent_seconds )
+              `)
+              .eq("id", responseId)
+              .eq("form_id", form.id)
+              .maybeSingle();
 
-          if (delErr) return res.status(400).json({ error: delErr.message });
-          return res.status(200).json({ success: true, message: "پاسخ با موفقیت حذف شد." });
+            if (getRespErr) return res.status(400).json({ error: getRespErr.message });
+            if (!resp) return res.status(404).json({ error: "پاسخ مورد نظر یافت نشد." });
+
+            const { data: formQuestions } = await clients.adminClient
+              .from("questions")
+              .select("id, title, type, points, correct_answer")
+              .eq("form_id", form.id);
+
+            const qMetaMap = new Map((formQuestions || []).map((q) => [q.id, q]));
+
+            const enrichedAnswers = (resp.answers || []).map((a) => {
+              const q = qMetaMap.get(a.question_id);
+              return {
+                ...a,
+                question_title: q?.title || null,
+                question_type: q?.type || null,
+                question_points: q?.points || null,
+                correct_answer: q?.correct_answer ?? null,
+              };
+            });
+
+            return res.status(200).json({
+              response: {
+                ...resp,
+                answers: enrichedAnswers,
+              },
+            });
+          }
+
+          // DELETE: حذف پاسخ
+          if (req.method === "DELETE") {
+            const { error: delErr } = await clients.adminClient
+              .from("responses")
+              .delete()
+              .eq("id", responseId)
+              .eq("form_id", form.id);
+
+            if (delErr) return res.status(400).json({ error: delErr.message });
+            return res.status(200).json({ success: true, message: "پاسخ با موفقیت حذف شد." });
+          }
+
+          return res.status(405).json({ error: "Method not allowed" });
         }
       }
 
-      // 3.5 دریافت، ویرایش یا حذف تکی فرم: /api/v1/forms/:id
+      // 3.6 دریافت، ویرایش یا حذف تکی فرم: /api/v1/forms/:id
       if (segments.length === 2) {
         const form = await findForm();
         if (!form) return res.status(404).json({ error: "فرم یافت نشد." });
 
         if (req.method === "GET") {
           const user = await getUserFromReq(req, clients);
-          const isOwnerOrAdmin = user && (
-            form.manager_id === user.id ||
-            form.created_by === user.id
-          );
+          const isOwnerOrAdmin = await isAuthorizedForForm(user, form, clients);
 
-          // اگر فرم در وضعیت پیش‌نویس (منتشرنشده) یا آرشیو باشد، فقط مالک به آن دسترسی دارد
+          // اگر فرم در وضعیت پیش‌نویس (منتشرنشده) یا آرشیو باشد، فقط مالک/ادمین به آن دسترسی دارد
           if (!form.published || form.archived) {
             if (!isOwnerOrAdmin) {
               return res.status(404).json({ error: "فرم یافت نشد یا هنوز منتشر نشده است." });
             }
           }
 
-          // دریافت سوالات مرتبط
+          // دریافت تمام سوالات مرتبط با تمام مشخصات کامل
           const { data: questions } = await clients.adminClient
             .from("questions")
             .select("*")
             .eq("form_id", form.id)
             .order("position", { ascending: true });
 
-          // پاکسازی فیلدهای داخلی برای درخواست‌های عمومی
+          // دریافت قوانین شرطی (Logic Rules)
+          const { data: logicRules } = await clients.adminClient
+            .from("logic_rules")
+            .select("*")
+            .eq("form_id", form.id)
+            .order("priority", { ascending: true });
+
+          // دریافت تعداد کل پاسخ‌ها
+          const { count: respTotal } = await clients.adminClient
+            .from("responses")
+            .select("id", { count: "exact", head: true })
+            .eq("form_id", form.id);
+
+          const { count: respComplete } = await clients.adminClient
+            .from("responses")
+            .select("id", { count: "exact", head: true })
+            .eq("form_id", form.id)
+            .eq("is_complete", true);
+
           const safeForm = isOwnerOrAdmin
-            ? form
+            ? {
+                ...form,
+                questions_count: (questions || []).length,
+                responses_count: { total: respTotal || 0, complete: respComplete || 0 },
+              }
             : {
                 id: form.id,
                 slug: form.slug,
@@ -801,14 +1339,25 @@ export default async function handler(req, res) {
                 description: form.description,
                 form_type: form.form_type,
                 published: form.published,
+                archived: form.archived,
                 welcome_title: form.welcome_title,
                 welcome_message: form.welcome_message,
                 exit_title: form.exit_title,
                 exit_message: form.exit_message,
                 default_theme: form.default_theme,
+                max_responses_limit: form.max_responses_limit,
+                prevent_duplicate: form.prevent_duplicate,
+                identifier_mapping: form.identifier_mapping,
+                settings: sanitizeFormSettingsForPublic(form.settings),
+                questions_count: (questions || []).length,
+                responses_count: { total: respTotal || 0, complete: respComplete || 0 },
                 created_at: form.created_at,
                 updated_at: form.updated_at,
               };
+
+          const safeQuestions = isOwnerOrAdmin
+            ? (questions || [])
+            : (questions || []).map(sanitizeQuestionForPublic);
 
           return res.status(200).json({
             form: {
@@ -816,25 +1365,89 @@ export default async function handler(req, res) {
               public_url: `${origin}/f/${form.slug}`,
               embed_url: `${origin}/embed/${form.slug}`,
             },
-            questions: questions || [],
+            questions: safeQuestions,
+            logic_rules: logicRules || [],
           });
         }
 
         if (req.method === "PUT") {
           const user = await getUserFromReq(req, clients);
           if (!user) return res.status(401).json({ error: "Unauthorized" });
-          if (form.manager_id !== user.id && form.created_by !== user.id) {
+          const isOwnerOrAdmin = await isAuthorizedForForm(user, form, clients);
+          if (!isOwnerOrAdmin) {
             return res.status(403).json({ error: "شما اجازه ویرایش این فرم را ندارید." });
           }
 
           const body = req.body || {};
           const patch = {};
           [
-            "title", "description", "published", "welcome_title", "welcome_message",
-            "exit_title", "exit_message", "default_theme", "form_type"
+            "title", "description", "published", "archived", "slug", "welcome_title",
+            "welcome_message", "exit_title", "exit_message", "default_theme",
+            "form_type", "identifier_mapping", "max_responses_limit", "prevent_duplicate", "settings"
           ].forEach((k) => {
             if (body[k] !== undefined) patch[k] = body[k];
           });
+
+          if (patch.title !== undefined) {
+            const cleanTitle = String(patch.title).trim();
+            if (!cleanTitle) {
+              return res.status(400).json({ error: "عنوان فرم نمی‌تواند خالی باشد." });
+            }
+            patch.title = cleanTitle.substring(0, 255);
+          }
+
+          if (patch.slug !== undefined) {
+            const cleanSlug = String(patch.slug)
+              .trim()
+              .toLowerCase()
+              .replace(/[^a-z0-9-]/g, "-")
+              .replace(/-+/g, "-")
+              .replace(/^-|-$/g, "");
+            if (!cleanSlug || cleanSlug.length < 2) {
+              return res.status(400).json({ error: "شناسه یکتای فرم (slug) باید حداقل ۲ کاراکتر معتبر انگلیسی یا عدد باشد." });
+            }
+            patch.slug = cleanSlug.substring(0, 80);
+          }
+
+          if (patch.form_type !== undefined) {
+            if (!["step_by_step", "registration"].includes(patch.form_type)) {
+              return res.status(400).json({ error: "نوع فرم نامعتبر است. مقادیر مجاز: step_by_step یا registration" });
+            }
+          }
+
+          if (patch.default_theme !== undefined) {
+            if (!["light", "dark", "system"].includes(patch.default_theme)) {
+              return res.status(400).json({ error: "تم پیش‌فرض نامعتبر است. مقادیر مجاز: light, dark, system" });
+            }
+          }
+
+          if (patch.max_responses_limit !== undefined) {
+            patch.max_responses_limit = (patch.max_responses_limit !== null && patch.max_responses_limit !== "")
+              ? Math.max(1, Math.min(Math.round(Number(patch.max_responses_limit) || 1), 1000000))
+              : null;
+          }
+
+          if (patch.description !== undefined && patch.description !== null) {
+            patch.description = String(patch.description).substring(0, 3000);
+          }
+
+          if (patch.welcome_title !== undefined && patch.welcome_title !== null) {
+            patch.welcome_title = String(patch.welcome_title).substring(0, 255);
+          }
+
+          if (patch.welcome_message !== undefined && patch.welcome_message !== null) {
+            patch.welcome_message = String(patch.welcome_message).substring(0, 1000);
+          }
+
+          if (patch.exit_title !== undefined && patch.exit_title !== null) {
+            patch.exit_title = String(patch.exit_title).substring(0, 255);
+          }
+
+          if (patch.exit_message !== undefined && patch.exit_message !== null) {
+            patch.exit_message = String(patch.exit_message).substring(0, 1000);
+          }
+
+          patch.updated_at = new Date().toISOString();
 
           const { data: updatedForm, error: upErr } = await clients.adminClient
             .from("forms")
@@ -856,11 +1469,12 @@ export default async function handler(req, res) {
         if (req.method === "DELETE") {
           const user = await getUserFromReq(req, clients);
           if (!user) return res.status(401).json({ error: "Unauthorized" });
-          if (form.manager_id !== user.id && form.created_by !== user.id) {
+          const isOwnerOrAdmin = await isAuthorizedForForm(user, form, clients);
+          if (!isOwnerOrAdmin) {
             return res.status(403).json({ error: "شما اجازه حذف این فرم را ندارید." });
           }
 
-          // حذف نرم (Soft Delete) جهت امکان بازیابی از سطل زباله و محافظت از تاریخچه پاسخ‌ها
+          // حذف نرم (Soft Delete)
           const nowIso = new Date().toISOString();
           const { error: delErr } = await clients.adminClient
             .from("forms")
@@ -875,7 +1489,7 @@ export default async function handler(req, res) {
       }
     }
 
-    return res.status(404).json({ error: "اندپوینت درخواستی یافت نشد. لطفاً مستندات /docs را بررسی کنید." });
+    return res.status(404).json({ error: "اندپوینت درخواستی یافت نشد. لطفاً بخش مستندات وب‌سرویس در پنل مدیریت (/admin/web-service) را بررسی کنید." });
   } catch (err) {
     console.error("API v1 Error:", err);
     return res.status(500).json({ error: err.message || "Internal Server Error" });
