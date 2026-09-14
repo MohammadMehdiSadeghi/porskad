@@ -91,7 +91,8 @@ function EmbeddedSwaggerUI({ token }) {
     <div className="relative w-full rounded-2xl overflow-hidden border-2 border-ink/10 dark:border-slate-800 bg-white dark:bg-[#0E1526] p-3 sm:p-5 min-h-[600px]">
       <style>{`
         .swagger-ui .topbar { display: none !important; }
-        .swagger-ui { font-family: ui-sans-serif, system-ui, sans-serif !important; }
+        .swagger-ui { font-family: "IRANSansX", "Montserrat", Tahoma, sans-serif !important; }
+        .swagger-ui code, .swagger-ui pre, .swagger-ui .microlight { font-family: ui-monospace, monospace !important; }
         .swagger-ui .info { margin: 10px 0 20px !important; }
         .swagger-ui .info .title { font-size: 20px !important; color: #0f172a !important; font-weight: 800 !important; }
         .dark .swagger-ui .info .title { color: #f8fafc !important; }

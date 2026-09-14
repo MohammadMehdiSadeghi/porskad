@@ -14,7 +14,7 @@ export default {
         },
         extend: {
             fontFamily: {
-                sans: ["Montserrat", "IRANSansX", "Tahoma", "sans-serif"],
+                sans: ["IRANSansX", "Montserrat", "Tahoma", "sans-serif"],
                 ...md.fontFamily,
             },
             colors: {

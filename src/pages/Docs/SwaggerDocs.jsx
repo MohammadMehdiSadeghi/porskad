@@ -494,7 +494,8 @@ def submit_response(form_id, answers):
       {/* Swagger Custom Clean Styles */}
       <style>{`
         .swagger-ui .topbar { display: none !important; }
-        .swagger-ui { font-family: ui-sans-serif, system-ui, sans-serif !important; }
+        .swagger-ui { font-family: "IRANSansX", "Montserrat", Tahoma, sans-serif !important; }
+        .swagger-ui code, .swagger-ui pre, .swagger-ui .microlight { font-family: ui-monospace, monospace !important; }
         .swagger-ui .info { margin: 15px 0 25px !important; }
         .swagger-ui .info .title { font-size: 22px !important; color: #0f172a !important; font-weight: 800 !important; }
         .dark .swagger-ui .info .title { color: #f8fafc !important; }

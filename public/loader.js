@@ -153,14 +153,14 @@
       var fab = document.createElement("button");
       fab.setAttribute("data-pcode-fab", formId);
       fab.style.cssText = "position:fixed;bottom:20px;right:20px;z-index:100000;width:56px;height:56px;border-radius:50%;background:#21295A;color:#fff;font-size:24px;border:none;cursor:pointer;box-shadow:0 6px 20px rgba(33,41,90,0.4);display:flex;align-items:center;justify-content:center;font-family:sans-serif;transition:transform 0.2s;";
-      fab.innerHTML = '<span style="font-size:11px;font-weight:900;line-height:1.3;text-align:center;font-family:Vazirmatn,sans-serif;">پرس<br/><span style="color:#58BDAF;">کاد</span></span>';
+      fab.innerHTML = '<span style="font-size:11px;font-weight:900;line-height:1.3;text-align:center;font-family:IRANSansX,Montserrat,Tahoma,sans-serif;">پرس<br/><span style="color:#58BDAF;">کاد</span></span>';
       document.body.appendChild(fab);
 
       var isOpen = false;
       function togglePopover() {
         isOpen = !isOpen;
         iframe.style.display = isOpen ? "block" : "none";
-        fab.innerHTML = isOpen ? '✕' : '<span style="font-size:11px;font-weight:900;line-height:1.3;text-align:center;font-family:Vazirmatn,sans-serif;">پرس<br/><span style="color:#58BDAF;">کاد</span></span>';
+        fab.innerHTML = isOpen ? '✕' : '<span style="font-size:11px;font-weight:900;line-height:1.3;text-align:center;font-family:IRANSansX,Montserrat,Tahoma,sans-serif;">پرس<br/><span style="color:#58BDAF;">کاد</span></span>';
         fab.style.transform = isOpen ? "rotate(90deg)" : "rotate(0deg)";
         postEvent(formId, isOpen ? "opened" : "closed");
       }
@@ -232,7 +232,7 @@
         if (overlay2) overlay2.style.display = "none";
         var fab2 = document.querySelector('[data-pcode-fab="' + d.formId + '"]');
         if (fab2) {
-          fab2.innerHTML = '<span style="font-size:11px;font-weight:900;line-height:1.3;text-align:center;font-family:Vazirmatn,sans-serif;">پرس<br/><span style="color:#58BDAF;">کاد</span></span>';
+          fab2.innerHTML = '<span style="font-size:11px;font-weight:900;line-height:1.3;text-align:center;font-family:IRANSansX,Montserrat,Tahoma,sans-serif;">پرس<br/><span style="color:#58BDAF;">کاد</span></span>';
           fab2.style.transform = "rotate(0deg)";
         }
       }
@@ -283,14 +283,9 @@
     }
   }
 
-  // بارگذاری فونت وزیرمتن
+  // فونت پیش‌فرض دیزاین سیستم IRANSansX در صفحه لود می‌شود
   function loadFont() {
-    if (document.getElementById("porscad-font")) return;
-    var link = document.createElement("link");
-    link.id = "porscad-font";
-    link.rel = "stylesheet";
-    link.href = "https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33/Vazirmatn-font-face.css";
-    document.head.appendChild(link);
+    // No external font dependency needed
   }
 
   // پویاسازی برای فریم‌ورک‌های SPA و وب‌کامپوننت‌ها

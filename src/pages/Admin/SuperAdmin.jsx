@@ -2000,7 +2000,7 @@ export default function SuperAdmin() {
                     <span
                       style={{
                         color: "var(--sa-danger)",
-                        fontFamily: "'IBM Plex Mono', monospace",
+                        fontFamily: "ui-monospace, monospace",
                         fontSize: "0.85rem",
                       }}
                     >
@@ -2081,7 +2081,7 @@ export default function SuperAdmin() {
                   type="text"
                   value={sysSettings.telegram_support_id || ""}
                   onChange={(e) => setSysSettings({ ...sysSettings, telegram_support_id: e.target.value })}
-                  style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", fontFamily: "'IBM Plex Mono', monospace", outline: "none" }}
+                  style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", fontFamily: "ui-monospace, monospace", outline: "none" }}
                   placeholder="porskad_support"
                 />
                 <div style={{ fontSize: "0.85rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
@@ -2415,7 +2415,7 @@ export default function SuperAdmin() {
                                   {Icon ? <Icon size={16} /> : meta.icon}
                                 </div>
                                 <div>
-                                  <div style={{ fontWeight: 700, fontSize: "0.85rem", fontFamily: "'IBM Plex Mono', monospace" }}>
+                                  <div style={{ fontWeight: 700, fontSize: "0.85rem", fontFamily: "ui-monospace, monospace" }}>
                                     {key}
                                   </div>
                                   <div style={{ fontSize: "0.72rem", color: "var(--sa-text-2)", maxWidth: 260 }} title={meta.hint}>
@@ -3713,14 +3713,14 @@ export default function SuperAdmin() {
                         {storageData?.database?.tables?.map((tbl) => (
                           <tr key={tbl.table_name}>
                             <td
-                              style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600 }}
+                              style={{ fontFamily: "ui-monospace, monospace", fontWeight: 600 }}
                             >
                               {tbl.table_name}
                             </td>
                             <td>{(tbl.row_count ?? 0).toLocaleString()}</td>
                             <td
                               style={{
-                                fontFamily: "'IBM Plex Mono', monospace",
+                                fontFamily: "ui-monospace, monospace",
                                 color: "var(--sa-link)",
                                 fontWeight: 600,
                               }}
@@ -3791,7 +3791,7 @@ export default function SuperAdmin() {
                         fontSize: "0.85rem",
                         fontWeight: 700,
                         color: "var(--sa-link)",
-                        fontFamily: "'IBM Plex Mono', monospace",
+                        fontFamily: "ui-monospace, monospace",
                       }}
                     >
                       {storageData?.project?.source_pretty || "—"}
@@ -3839,7 +3839,7 @@ export default function SuperAdmin() {
                             style={{
                               fontSize: "0.8rem",
                               fontWeight: 700,
-                              fontFamily: "'IBM Plex Mono', monospace",
+                              fontFamily: "ui-monospace, monospace",
                             }}
                           >
                             {item.pretty}
@@ -3955,7 +3955,7 @@ export default function SuperAdmin() {
                                 <span
                                   style={{
                                     fontSize: "0.85rem",
-                                    fontFamily: "'IBM Plex Mono', monospace",
+                                    fontFamily: "ui-monospace, monospace",
                                     maxWidth: 120,
                                     overflow: "hidden",
                                     textOverflow: "ellipsis",
@@ -4072,13 +4072,13 @@ export default function SuperAdmin() {
                     <tr key={r.id} onClick={() => setDetailModal(r)} style={{ cursor: "pointer" }}>
                       <td style={{ fontWeight: 700 }}>{r.full_name || "—"}</td>
                       <td
-                        style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "0.85rem" }}
+                        style={{ fontFamily: "ui-monospace, monospace", fontSize: "0.85rem" }}
                       >
                         {r.email}
                       </td>
                       <td
                         style={{
-                          fontFamily: "'IBM Plex Mono', monospace",
+                          fontFamily: "ui-monospace, monospace",
                           fontSize: "0.85rem",
                           color: "var(--sa-link)",
                           fontWeight: 600,
@@ -4109,7 +4109,7 @@ export default function SuperAdmin() {
                       <td>
                         <span
                           style={{
-                            fontFamily: "'IBM Plex Mono', monospace",
+                            fontFamily: "ui-monospace, monospace",
                             fontSize: "0.85rem",
                             fontWeight: 700,
                             color:
@@ -4121,7 +4121,7 @@ export default function SuperAdmin() {
                           {r.monthly_responses_used || 0} / {r.max_responses_per_month || 100}
                         </span>
                       </td>
-                      <td style={{ fontSize: "0.85rem", color: "var(--sa-text-1)", fontFamily: "'IBM Plex Mono', monospace" }}>
+                      <td style={{ fontSize: "0.85rem", color: "var(--sa-text-1)", fontFamily: "ui-monospace, monospace" }}>
                         {r.quota_reset_at ? godDate(r.quota_reset_at) : "30 days"}
                       </td>
                       <td style={{ fontSize: "0.85rem", color: "var(--sa-text-2)" }}>
@@ -4634,7 +4634,7 @@ export default function SuperAdmin() {
                         padding: "0.4rem 0.65rem 0.4rem 1.8rem",
                         border: "1px solid var(--sa-field-border)",
                         fontSize: "0.8rem",
-                        fontFamily: "'IBM Plex Sans', sans-serif",
+                        fontFamily: "inherit",
                         outline: "none",
                       }}
                     />
@@ -5452,7 +5452,7 @@ export default function SuperAdmin() {
                         </td>
                         <td
                           style={{
-                            fontFamily: "'IBM Plex Mono', monospace",
+                            fontFamily: "ui-monospace, monospace",
                             fontSize: "0.85rem",
                             maxWidth: 200,
                             overflow: "hidden",
@@ -5499,7 +5499,7 @@ export default function SuperAdmin() {
                       <tr key={r.id || i}>
                         <td
                           style={{
-                            fontFamily: "'IBM Plex Mono', monospace",
+                            fontFamily: "ui-monospace, monospace",
                             fontSize: "0.85rem",
                             fontWeight: 600,
                             color: "var(--sa-danger)",
@@ -5547,7 +5547,7 @@ export default function SuperAdmin() {
               padding: "0.5rem 0.75rem",
               border: "1px solid var(--sa-field-border)",
               fontSize: "0.8rem",
-              fontFamily: "'IBM Plex Sans', sans-serif",
+              fontFamily: "inherit",
               outline: "none",
             };
             return (
@@ -5592,7 +5592,7 @@ export default function SuperAdmin() {
                     rows={3}
                     style={{
                       ...inputStyle,
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: "ui-monospace, monospace",
                       resize: "vertical",
                     }}
                   />
@@ -5796,7 +5796,7 @@ export default function SuperAdmin() {
                     minWidth: 140,
                     padding: "0.5rem 0.75rem",
                     fontSize: "0.8rem",
-                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    fontFamily: "inherit",
                     outline: "none",
                   }}
                 />
@@ -5812,7 +5812,7 @@ export default function SuperAdmin() {
                     minWidth: 140,
                     padding: "0.5rem 0.75rem",
                     fontSize: "0.8rem",
-                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    fontFamily: "inherit",
                     outline: "none",
                   }}
                 />
@@ -6002,7 +6002,7 @@ export default function SuperAdmin() {
                       width: "100%",
                       padding: "0.4rem 0.5rem",
                       fontSize: "0.8rem",
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: "ui-monospace, monospace",
                       fontWeight: 700,
                       outline: "none",
                     }}
@@ -6031,7 +6031,7 @@ export default function SuperAdmin() {
                       width: "100%",
                       padding: "0.4rem 0.5rem",
                       fontSize: "0.8rem",
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: "ui-monospace, monospace",
                       fontWeight: 700,
                       outline: "none",
                     }}
@@ -6059,7 +6059,7 @@ export default function SuperAdmin() {
                       width: "100%",
                       padding: "0.4rem 0.5rem",
                       fontSize: "0.8rem",
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: "ui-monospace, monospace",
                       fontWeight: 700,
                       outline: "none",
                     }}
@@ -6219,7 +6219,7 @@ export default function SuperAdmin() {
                       width: "100%",
                       padding: "0.5rem 2rem 0.5rem 0.75rem",
                       fontSize: "0.8rem",
-                      fontFamily: "'IBM Plex Sans', sans-serif",
+                      fontFamily: "inherit",
                       outline: "none",
                     }}
                   />
@@ -6315,7 +6315,7 @@ export default function SuperAdmin() {
                     flex: 1,
                     padding: "0.5rem 0.75rem",
                     fontSize: "0.8rem",
-                    fontFamily: "'IBM Plex Sans', monospace",
+                    fontFamily: "ui-monospace, monospace",
                     outline: "none",
                   }}
                 />
@@ -6659,7 +6659,7 @@ export default function SuperAdmin() {
                 <div
                   style={{
                     fontSize: "0.8rem",
-                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontFamily: "ui-monospace, monospace",
                     opacity: 0.75,
                   }}
                 >
@@ -6720,7 +6720,7 @@ export default function SuperAdmin() {
                     padding: "0.35rem 0.55rem",
                     border: "1px solid var(--sa-field-border)",
                     fontSize: "0.8rem",
-                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    fontFamily: "inherit",
                     outline: "none",
                   }}
                 />
@@ -6789,7 +6789,7 @@ export default function SuperAdmin() {
                           </td>
                           <td
                             style={{
-                              fontFamily: "'IBM Plex Mono', monospace",
+                              fontFamily: "ui-monospace, monospace",
                               fontSize: "0.8rem",
                               maxWidth: "240px",
                               overflow: "hidden",
@@ -6984,7 +6984,7 @@ export default function SuperAdmin() {
                   width: "100%",
                   padding: "0.45rem 0.65rem",
                   fontSize: "0.85rem",
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: "ui-monospace, monospace",
                   background: "var(--sa-hover)",
                   border: "1px solid var(--sa-field-border)",
                   color: "var(--sa-text-2)",

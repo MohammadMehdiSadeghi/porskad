@@ -3,7 +3,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 .sa-root {
-  font-family: 'IBM Plex Sans', 'IBM Plex Sans Arabic', sans-serif;
+  font-family: "IRANSansX", "Montserrat", Tahoma, sans-serif;
   background: var(--sa-surface-2);
   min-height: 100vh;
   padding: 1.5rem;
@@ -97,7 +97,7 @@
   background: transparent;
   color: var(--sa-text-1);
   cursor: pointer;
-  font-family: 'IBM Plex Sans', sans-serif;
+  font-family: inherit;
   transition: all 0.15s;
 }
 
@@ -129,7 +129,7 @@
   background: var(--sa-surface);
   font-size: 0.875rem;
   color: var(--sa-text-0);
-  font-family: 'IBM Plex Sans', sans-serif;
+  font-family: inherit;
   outline: none;
   transition: border-color 0.15s;
 }
@@ -150,7 +150,7 @@
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  font-family: 'IBM Plex Sans', sans-serif;
+  font-family: inherit;
   border: none;
   transition: all 0.15s;
 }
@@ -265,7 +265,7 @@
   cursor: pointer;
   transition: background 0.15s;
   border: none;
-  font-family: 'IBM Plex Sans', sans-serif;
+  font-family: inherit;
 }
 
 .sa-tile:hover {
@@ -296,7 +296,7 @@
   background: var(--sa-surface);
   font-size: 0.875rem;
   color: var(--sa-text-0);
-  font-family: 'IBM Plex Sans', sans-serif;
+  font-family: inherit;
   outline: none;
   transition: border-color 0.15s;
 }
@@ -486,7 +486,7 @@
   border: 1px solid;
   cursor: pointer;
   transition: all 0.15s;
-  font-family: 'IBM Plex Sans', sans-serif;
+  font-family: inherit;
 }
 
 .sa-perm.active {
@@ -512,7 +512,7 @@
   border: 1px solid var(--sa-field-border);
   background: var(--sa-surface);
   font-size: 0.875rem;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   color: var(--sa-text-0);
   outline: none;
   resize: vertical;
@@ -533,7 +533,7 @@
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--sa-surface);
-  font-family: 'IBM Plex Sans', sans-serif;
+  font-family: inherit;
 }
 
 .sa-toast.success {
@@ -604,7 +604,7 @@
   font-size: 2.25rem;
   font-weight: 700;
   color: var(--sa-link);
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   line-height: 1;
 }
 
