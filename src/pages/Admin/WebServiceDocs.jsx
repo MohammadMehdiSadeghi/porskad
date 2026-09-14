@@ -210,6 +210,10 @@ export default function WebServiceDocs() {
     push("با موفقیت در حافظه کپی شد", "success");
   }
 
+  function handleCopyToken() {
+    handleCopyText(token, "token");
+  }
+
   const codeSnippets = {
     curl: `curl -X GET "${apiUrl}/forms" \\
   -H "Authorization: Bearer ${token || "YOUR_TOKEN"}" \\
