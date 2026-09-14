@@ -124,7 +124,7 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen dot-pattern bg-bg-mint flex items-center justify-center p-4 relative">
+    <div className="min-h-screen dot-pattern bg-bg-mint dark:bg-dark-canvas flex items-center justify-center p-4 relative">
       <div className="absolute top-4 left-4 z-20">
         <ThemeToggle />
       </div>
@@ -141,8 +141,8 @@ export default function Register() {
               <Badge color="green" rotate="rotate-[1deg]">
                 ثبت‌نام انجام شد
               </Badge>
-              <h2 className="text-xl font-black text-navy">خوش آمدید!</h2>
-              <p className="text-sm font-semibold text-ink-subtle leading-6">
+              <h2 className="text-xl font-black text-navy dark:text-white">خوش آمدید!</h2>
+              <p className="text-sm font-semibold text-ink-subtle dark:text-slate-400 leading-6">
                 حساب کاربری شما با موفقیت ایجاد شد. اکنون می‌توانید وارد حساب خود شوید و اولین فرم خود را بسازید.
               </p>
               <Button
@@ -161,33 +161,33 @@ export default function Register() {
                 <Badge color="navy" rotate="rotate-[2deg]">
                   پرس‌کاد — سامانه فرم‌ساز
                 </Badge>
-                <h1 className="text-xl sm:text-2xl font-black text-navy">ثبت‌نام رایگان</h1>
-                <p className="text-xs sm:text-sm font-semibold text-ink-subtle">
+                <h1 className="text-xl sm:text-2xl font-black text-navy dark:text-white">ثبت‌نام رایگان</h1>
+                <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400">
                   فرم‌های هوشمند، جذاب و بدون کدنویسی بسازید
                 </p>
               </div>
 
               <label className="flex flex-col gap-1">
-                <span className="text-xs sm:text-sm font-extrabold text-navy">نام و نام خانوادگی</span>
+                <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">نام و نام خانوادگی</span>
                 <input
                   type="text"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full bg-white border-2 border-ink/25 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink focus:outline-none transition-all text-sm"
+                  className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink dark:text-slate-100 placeholder:text-ink-subtle/50 dark:placeholder:text-slate-500 focus:outline-none transition-all text-sm"
                   placeholder="مثلاً: علی محمدی"
                 />
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-xs sm:text-sm font-extrabold text-navy">ایمیل</span>
+                <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">ایمیل</span>
                 <input
                   type="email"
                   dir="ltr"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white border-2 border-ink/25 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink text-left focus:outline-none transition-all text-sm"
+                  className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink dark:text-slate-100 placeholder:text-ink-subtle/50 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all text-sm"
                   placeholder="name@example.com"
                   autoComplete="username"
                 />
@@ -195,7 +195,7 @@ export default function Register() {
 
               <label className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs sm:text-sm font-extrabold text-navy">شماره موبایل</span>
+                  <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">شماره موبایل</span>
                   <span className="text-xs font-bold text-teal">اجباری</span>
                 </div>
                 <input
@@ -204,7 +204,7 @@ export default function Register() {
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-white border-2 border-ink/25 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink text-left focus:outline-none transition-all text-sm"
+                  className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink dark:text-slate-100 placeholder:text-ink-subtle/50 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all text-sm"
                   placeholder="۰۹۱۲۳۴۵۶۷۸۹"
                   autoComplete="tel"
                 />
@@ -212,7 +212,7 @@ export default function Register() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <label className="flex flex-col gap-1">
-                  <span className="text-xs sm:text-sm font-extrabold text-navy">رمز عبور</span>
+                  <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">رمز عبور</span>
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
@@ -220,8 +220,8 @@ export default function Register() {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-white border-2 border-ink/25 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 pl-10 font-semibold text-ink text-left focus:outline-none transition-all text-sm"
-                      placeholder="حداقل ۶ کاراکتر (حروف و عدد)"
+                      className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 pl-10 font-semibold text-ink dark:text-slate-100 placeholder:text-ink-subtle/50 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all text-sm"
+                      placeholder="حداقل ۶ کاراکتر"
                       autoComplete="new-password"
                     />
                     <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
@@ -236,7 +236,7 @@ export default function Register() {
                 </label>
 
                 <label className="flex flex-col gap-1">
-                  <span className="text-xs sm:text-sm font-extrabold text-navy">تکرار رمز عبور</span>
+                  <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">تکرار رمز عبور</span>
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? "text" : "password"}
@@ -244,7 +244,7 @@ export default function Register() {
                       required
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full bg-white border-2 border-ink/25 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 pl-10 font-semibold text-ink text-left focus:outline-none transition-all text-sm"
+                      className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 pl-10 font-semibold text-ink dark:text-slate-100 placeholder:text-ink-subtle/50 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all text-sm"
                       placeholder="تکرار رمز"
                       autoComplete="new-password"
                     />
@@ -262,10 +262,10 @@ export default function Register() {
 
               {error && (
                 <div className="flex flex-col gap-2.5">
-                  <div className="rotate-[-0.5deg] bg-female-light border-2 border-female-normal rounded-pill-md px-3.5 py-2 text-xs sm:text-sm font-bold text-female-normal">
+                  <div className="rotate-[-0.5deg] bg-female-light dark:bg-pink-950/40 border-2 border-female-normal dark:border-pink-600 rounded-pill-md px-3.5 py-2 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">
                     {error}
                   </div>
-                  <div className="bg-bg-yellow/40 border-2 border-dashed border-ink/25 rounded-pill-md p-3 flex items-center justify-between gap-2 text-xs font-bold text-navy">
+                  <div className="bg-bg-yellow/40 dark:bg-amber-950/40 border-2 border-dashed border-ink/25 dark:border-amber-700/60 rounded-pill-md p-3 flex items-center justify-between gap-2 text-xs font-bold text-navy dark:text-amber-200">
                     <div className="flex items-center gap-1.5 min-w-0">
                       <Headphones size={15} className="text-teal shrink-0" />
                       <span className="truncate">نیاز به راهنمایی دارید؟ پشتیبانی:</span>
@@ -274,7 +274,7 @@ export default function Register() {
                       href={`https://t.me/${telegramSupportId}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 bg-white hover:bg-teal hover:text-white border-2 border-ink text-navy px-2.5 py-1 rounded-pill-sm text-xs font-black transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] shrink-0"
+                      className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-800 hover:bg-teal dark:hover:bg-teal hover:text-white border-2 border-ink dark:border-slate-700 text-navy dark:text-slate-100 px-2.5 py-1 rounded-pill-sm text-xs font-black transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] shrink-0"
                     >
                       <Send size={11} className="rotate-45" />
                       <span>@{telegramSupportId}</span>
@@ -295,7 +295,7 @@ export default function Register() {
                   <span className="w-full text-center">{busy ? "در حال ساخت حساب..." : "ساخت حساب کاربری"}</span>
                 </Button>
 
-                <div className="flex items-center justify-center gap-2 text-[13px] font-bold text-ink-subtle pt-2 border-t border-ink/10 text-center flex-wrap">
+                <div className="flex items-center justify-center gap-2 text-[13px] font-bold text-ink-subtle dark:text-slate-400 pt-2 border-t border-ink/10 dark:border-slate-800 text-center flex-wrap">
                   <span>قبلاً حساب ساخته‌اید؟</span>
                   <Link
                     to="/admin/login"

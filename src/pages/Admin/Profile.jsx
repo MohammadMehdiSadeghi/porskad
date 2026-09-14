@@ -65,8 +65,10 @@ export default function Profile() {
     }
   }, [profile, user]);
 
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPass, setShowCurrentPass] = useState(false);
   const [showNewPass, setShowNewPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
@@ -143,6 +145,10 @@ export default function Profile() {
   async function handleChangePassword() {
     setPasswordError(null);
 
+    if (!currentPassword) {
+      setPasswordError("لطفاً ابتدا رمز عبور فعلی خود را وارد کنید.");
+      return;
+    }
     if (!newPassword) {
       setPasswordError("رمز عبور جدید را وارد کنید.");
       return;
@@ -155,15 +161,20 @@ export default function Profile() {
       setPasswordError("رمز جدید و تکرار آن یکسان نیستند.");
       return;
     }
+    if (currentPassword === newPassword) {
+      setPasswordError("رمز جدید نمی‌تواند همان رمز قبلی باشد.");
+      return;
+    }
 
     setSavingPassword(true);
     try {
-      await changePassword(newPassword);
+      await changePassword(currentPassword, newPassword);
       push("رمز عبور با موفقیت تغییر یافت", "success");
+      setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err) {
-      setPasswordError(err.message || "خطا در تغییر رمز عبور. لطفاً مجدداً تلاش کنید.");
+      setPasswordError(err.message || "خطا در تغییر رمز عبور. لطفاً رمز فعلی را بررسی کنید.");
     } finally {
       setSavingPassword(false);
     }
@@ -365,10 +376,32 @@ export default function Profile() {
                 </div>
 
                 <p className="text-xs text-ink-subtle dark:text-slate-400 leading-relaxed">
-                  جهت تغییر رمز عبور حساب خود، نیازی به رمز قبلی ندارید؛ کافیست رمز جدید را وارد کرده و ذخیره نمایید.
+                  جهت حفظ امنیت حساب کاربری، برای تغییر رمز عبور ابتدا رمز عبور فعلی خود را وارد نمایید.
                 </p>
 
                 <div className="flex flex-col gap-3.5">
+                  <label className="flex flex-col gap-1.5">
+                    <span className="text-xs font-bold text-ink-subtle dark:text-slate-400">رمز عبور فعلی</span>
+                    <div className="relative">
+                      <input
+                        type={showCurrentPass ? "text" : "password"}
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        dir="ltr"
+                        placeholder="رمز فعلی حساب کاربری"
+                        className="w-full bg-slate-50 dark:bg-slate-800/90 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md pl-10 pr-3.5 py-2 text-sm font-semibold text-navy dark:text-slate-100 focus:outline-none focus:border-teal transition-colors text-left"
+                      />
+                      <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                        <PasswordToggle
+                          visible={showCurrentPass}
+                          onToggle={() => setShowCurrentPass(!showCurrentPass)}
+                          size={16}
+                          ariaLabel="نمایش یا مخفی‌سازی رمز فعلی"
+                        />
+                      </div>
+                    </div>
+                  </label>
+
                   <label className="flex flex-col gap-1.5">
                     <span className="text-xs font-bold text-ink-subtle dark:text-slate-400">رمز عبور جدید</span>
                     <div className="relative">

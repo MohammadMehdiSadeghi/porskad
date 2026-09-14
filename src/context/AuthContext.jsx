@@ -527,8 +527,29 @@ export function AuthProvider({ children }) {
     await supabase.auth.signOut();
   }
 
-  async function changePassword(newPassword) {
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
+  async function changePassword(arg1, arg2) {
+    let currentPass = null;
+    let newPass = null;
+
+    if (arg2 !== undefined) {
+      currentPass = arg1;
+      newPass = arg2;
+    } else {
+      newPass = arg1;
+    }
+
+    if (currentPass) {
+      if (!user?.email) throw new Error("کاربر وارد سیستم نشده است");
+      const { error: verifyErr } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPass,
+      });
+      if (verifyErr) {
+        throw new Error("رمز عبور فعلی وارد شده نادرست است.");
+      }
+    }
+
+    const { error } = await supabase.auth.updateUser({ password: newPass });
     if (error) throw error;
   }
 
