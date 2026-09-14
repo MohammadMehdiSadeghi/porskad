@@ -187,9 +187,9 @@ export default function FormsList() {
 
     let createdFormData = null;
 
-    // ۱. ابتدا تلاش از طریق API سرورلس اختصاصی جهت دور زدن محدودیت‌های RLS و اطمینان از ثبت نقش
+    // ۱. ابتدا تلاش از طریق API v1 رسمی جهت کنترل سهمیه و ساخت فرم
     try {
-      const apiRes = await fetch("/api/create-form", {
+      const apiRes = await fetch("/api/v1/forms", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -325,9 +325,9 @@ export default function FormsList() {
 
     let newForm = null;
 
-    // ۱. تلاش از طریق API سرورلس
+    // ۱. تلاش از طریق API سرورلس v1
     try {
-      const apiRes = await fetch("/api/create-form", {
+      const apiRes = await fetch("/api/v1/forms", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

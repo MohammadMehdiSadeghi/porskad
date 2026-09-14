@@ -45,9 +45,10 @@ export async function logAuthEvent({ userId = null, email = null, action = "logi
     const { browser, os, device } = parseUserAgent(ua);
 
     const payload = {
+      action: "log_auth",
       userId,
       email,
-      action,
+      log_action: action,
       browser,
       os,
       device,
@@ -58,7 +59,7 @@ export async function logAuthEvent({ userId = null, email = null, action = "logi
 
     // ۱. ارسال به سرورلس API
     try {
-      const res = await fetch("/api/log-auth", {
+      const res = await fetch("/api/auth-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

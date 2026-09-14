@@ -437,5 +437,90 @@ export default async function handler(req, res) {
     return res.status(200).json({ user: regData.user });
   }
 
+  // ══════════════════════════════════════════════════════════════
+  // ۵. ثبت لاگ‌های امنیتی ورود و نشست‌ها (log_auth)
+  // ══════════════════════════════════════════════════════════════
+  if (action === "log_auth") {
+    const uaString = req.headers["user-agent"] || "";
+    let autoBrowser = "Other";
+    let autoOs = "Other";
+    let autoDevice = "Desktop";
+
+    if (uaString) {
+      if (/mobile|android|iphone|ipad|ipod/i.test(uaString)) {
+        autoDevice = /ipad|tablet/i.test(uaString) ? "Tablet" : "Mobile";
+      }
+      if (/windows/i.test(uaString)) autoOs = "Windows";
+      else if (/macintosh|mac os x/i.test(uaString)) autoOs = "macOS";
+      else if (/iphone|ipad|ipod/i.test(uaString)) autoOs = "iOS";
+      else if (/android/i.test(uaString)) autoOs = "Android";
+      else if (/linux/i.test(uaString)) autoOs = "Linux";
+
+      if (/edg/i.test(uaString)) autoBrowser = "Edge";
+      else if (/chrome|crios/i.test(uaString) && !/opr|opera|edg/i.test(uaString)) autoBrowser = "Chrome";
+      else if (/firefox|fxios/i.test(uaString) && !/chrome|crios/i.test(uaString)) autoBrowser = "Firefox";
+      else if (/safari/i.test(uaString) && !/chrome|crios/i.test(uaString)) autoBrowser = "Safari";
+      else if (/opr|opera/i.test(uaString)) autoBrowser = "Opera";
+      else if (/samsungbrowser/i.test(uaString)) autoBrowser = "Samsung Browser";
+    }
+
+    const {
+      userId,
+      user_id,
+      email: logEmail,
+      log_action = "login",
+      details = {},
+      browser = autoBrowser,
+      os = autoOs,
+      device = autoDevice,
+    } = body;
+
+    const rawUserId = userId || user_id || null;
+    const isUuid = rawUserId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(rawUserId));
+    const effectiveUserId = isUuid ? rawUserId : null;
+    const effectiveEmail = logEmail ? String(logEmail).trim().toLowerCase().slice(0, 255) : null;
+    const ALLOWED_ACTIONS = ["login", "logout", "failed_login", "register", "password_reset", "session_refresh", "token_revoke"];
+    const effectiveAction = ALLOWED_ACTIONS.includes(log_action) ? log_action : "auth_event";
+
+    const safeDetails = { ...(typeof details === "object" ? details : { raw: String(details).slice(0, 500) }) };
+    delete safeDetails.ip;
+    delete safeDetails.client_ip;
+    delete safeDetails.ip_address;
+    delete safeDetails.country;
+    delete safeDetails.city;
+    delete safeDetails.location;
+    delete safeDetails.lat;
+    delete safeDetails.lng;
+    delete safeDetails.phone;
+
+    try {
+      await supabaseAdmin.from("auth_logs").insert({
+        user_id: effectiveUserId,
+        email: effectiveEmail,
+        action: effectiveAction,
+        device,
+        browser,
+        os,
+        user_agent: uaString,
+        details: safeDetails,
+      });
+
+      try {
+        await supabaseAdmin.from("activity_log").insert({
+          user_id: effectiveUserId,
+          action: effectiveAction,
+          target_type: "auth",
+          target_id: effectiveUserId ? String(effectiveUserId) : null,
+          details: { email: effectiveEmail, browser, os, device },
+          user_agent: uaString,
+        });
+      } catch {}
+    } catch (dbErr) {
+      console.warn("log_auth DB warning:", dbErr?.message);
+    }
+
+    return res.status(200).json({ ok: true, device, browser, os });
+  }
+
   return res.status(400).json({ error: "Unknown action" });
 }
