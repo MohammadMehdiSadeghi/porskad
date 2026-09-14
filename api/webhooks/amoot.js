@@ -1,8 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
 
 export default async function handler(req, res) {
+  // پشتیبانی از Preflight CORS و متد GET برای تست و تایید پرتال آموت
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-SMSCenter-Signature, x-smscenter-signature");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   if (req.method === "GET") {
-    // برای تایید و تست وب‌هوک توسط آموت یا مرورگر
     return res.status(200).json({
       status: "active",
       service: "Porskad Amoot SMS Webhook",
@@ -24,7 +32,18 @@ export default async function handler(req, res) {
   const adminClient = createClient(supabaseUrl, serviceKey);
 
   try {
-    const payload = req.body || {};
+    let payload = req.body || {};
+    if (typeof payload === "string" && payload.trim()) {
+      try {
+        payload = JSON.parse(payload);
+      } catch {
+        try {
+          payload = Object.fromEntries(new URLSearchParams(payload));
+        } catch {
+          payload = {};
+        }
+      }
+    }
 
     // استخراج فیلدها با پشتیبانی از فرمت‌های مختلف آموت
     const mobile =
