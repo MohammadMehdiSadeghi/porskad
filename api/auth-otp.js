@@ -142,7 +142,30 @@ export default async function handler(req, res) {
     }
 
     // ۳. بررسی محدودیت ارسال مجدد و زمان خنک‌سازی (Cooldown & Max Resends)
-    const existingSession = otpSessions.get(cleanPhone);
+    let existingSession = otpSessions.get(cleanPhone);
+    if (!existingSession) {
+      try {
+        const { data: dbSession } = await supabaseAdmin
+          .from("otp_verifications")
+          .select("*")
+          .eq("phone", cleanPhone)
+          .maybeSingle();
+        if (dbSession) {
+          existingSession = {
+            code: dbSession.code,
+            expiresAt: new Date(dbSession.expires_at).getTime(),
+            lastSentAt: new Date(dbSession.last_sent_at).getTime(),
+            resends: dbSession.resend_count || 0,
+            attempts: dbSession.attempts || 0,
+            verified: dbSession.verified || false,
+            verificationToken: dbSession.verification_token || null,
+            tokenExpiresAt: dbSession.token_expires_at ? new Date(dbSession.token_expires_at).getTime() : null,
+          };
+          otpSessions.set(cleanPhone, existingSession);
+        }
+      } catch {}
+    }
+
     if (existingSession) {
       const elapsed = Math.floor((now - existingSession.lastSentAt) / 1000);
       if (elapsed < cooldownSeconds) {
@@ -173,28 +196,27 @@ export default async function handler(req, res) {
 
     if (amootToken) {
       try {
-        const amootRes = await fetch("https://portal.amootsms.com/rest/SendSimple", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            token: amootToken.trim(),
-            Mobiles: cleanPhone,
-            SMSMessageText: messageText.trim(),
-            LineNumber: lineNumber || "Service",
-          }).toString(),
-          signal: AbortSignal.timeout(12000),
+        const sendUrl = "https://portal.amootsoft.com/webservice2.asmx/SendSimple";
+        const postData = new URLSearchParams({
+          UserName: amootToken,
+          Password: "",
+          LineNumber: lineNumber || "Service",
+          Mobile: cleanPhone,
+          SMSMessage: messageText,
         });
 
-        const amootData = await amootRes.json().catch(() => null);
-        if (amootData && amootData.Status === "Success") {
-          sendSuccess = true;
-        } else {
-          sendErrorMsg = amootData?.Status || "Amoot error";
-          console.warn("Amoot OTP send warning:", sendErrorMsg);
+        const resp = await fetch(sendUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: postData.toString(),
+        });
+        const text = await resp.text();
+        sendSuccess = resp.ok && (text.includes("SendSimpleResult") || text.includes("<Status>Success</Status>") || !text.includes("Fault"));
+        if (!sendSuccess) {
+          sendErrorMsg = text.slice(0, 160);
         }
       } catch (err) {
         sendErrorMsg = err.message;
-        console.warn("Amoot OTP fetch error:", err.message);
       }
     } else {
       // حالت توسعه محلی اگر توکن تعریف نشده باشد
@@ -213,11 +235,13 @@ export default async function handler(req, res) {
       });
     } catch {}
 
-    // ۶. ذخیره سشن جدید با افزایش شمارنده ارسال مجدد
+    // ۶. ذخیره سشن جدید با افزایش شمارنده ارسال مجدد در حافظه و دیتابیس
     const currentResends = existingSession ? existingSession.resends + 1 : 0;
+    const expiresAt = now + 5 * 60 * 1000;
+
     otpSessions.set(cleanPhone, {
       code,
-      expiresAt: now + 5 * 60 * 1000, // ۵ دقیقه اعتبار کد
+      expiresAt,
       lastSentAt: now,
       resends: currentResends,
       attempts: 0,
@@ -225,6 +249,18 @@ export default async function handler(req, res) {
       verificationToken: null,
       tokenExpiresAt: null,
     });
+
+    try {
+      await supabaseAdmin.from("otp_verifications").upsert({
+        phone: cleanPhone,
+        code,
+        resend_count: currentResends,
+        attempts: 0,
+        verified: false,
+        last_sent_at: new Date(now).toISOString(),
+        expires_at: new Date(expiresAt).toISOString(),
+      }, { onConflict: "phone" });
+    } catch {}
 
     return res.status(200).json({
       success: true,
@@ -245,7 +281,30 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "لطفاً کد تایید ۵ رقمی را کامل وارد نمایید." });
     }
 
-    const session = otpSessions.get(cleanPhone);
+    let session = otpSessions.get(cleanPhone);
+    if (!session) {
+      try {
+        const { data: dbSession } = await supabaseAdmin
+          .from("otp_verifications")
+          .select("*")
+          .eq("phone", cleanPhone)
+          .maybeSingle();
+        if (dbSession) {
+          session = {
+            code: dbSession.code,
+            expiresAt: new Date(dbSession.expires_at).getTime(),
+            lastSentAt: new Date(dbSession.last_sent_at).getTime(),
+            resends: dbSession.resend_count || 0,
+            attempts: dbSession.attempts || 0,
+            verified: dbSession.verified || false,
+            verificationToken: dbSession.verification_token || null,
+            tokenExpiresAt: dbSession.token_expires_at ? new Date(dbSession.token_expires_at).getTime() : null,
+          };
+          otpSessions.set(cleanPhone, session);
+        }
+      } catch {}
+    }
+
     if (!session) {
       return res.status(400).json({ error: "کد تاییدی برای این شماره یافت نشد یا منقضی شده است. لطفاً مجدداً کد دریافت کنید." });
     }
@@ -256,11 +315,13 @@ export default async function handler(req, res) {
 
     if (session.attempts >= 5) {
       otpSessions.delete(cleanPhone);
+      try { await supabaseAdmin.from("otp_verifications").delete().eq("phone", cleanPhone); } catch {}
       return res.status(429).json({ error: "تعداد دفعات ورود اشتباه بیش از حد مجاز بود. لطفاً کد جدید دریافت کنید." });
     }
 
     if (session.code !== rawCode) {
       session.attempts += 1;
+      try { await supabaseAdmin.from("otp_verifications").update({ attempts: session.attempts }).eq("phone", cleanPhone); } catch {}
       const remainingAttempts = 5 - session.attempts;
       return res.status(400).json({
         error: `کد تایید وارد شده نادرست است. (${remainingAttempts} تلاش باقی‌مانده)`,
@@ -291,7 +352,24 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "توکن اعتبارسنجی یافت نشد. لطفاً ابتدا شماره را تایید کنید." });
     }
 
-    const session = otpSessions.get(cleanPhone);
+    let session = otpSessions.get(cleanPhone);
+    if (!session || !session.verified || session.verificationToken !== verificationToken) {
+      try {
+        const { data: dbSession } = await supabaseAdmin
+          .from("otp_verifications")
+          .select("*")
+          .eq("phone", cleanPhone)
+          .maybeSingle();
+        if (dbSession && dbSession.verified && dbSession.verification_token === verificationToken) {
+          session = {
+            verified: true,
+            verificationToken: dbSession.verification_token,
+            tokenExpiresAt: dbSession.token_expires_at ? new Date(dbSession.token_expires_at).getTime() : 0,
+          };
+        }
+      } catch {}
+    }
+
     if (
       !session ||
       !session.verified ||
@@ -388,8 +466,11 @@ export default async function handler(req, res) {
         });
       } catch {}
 
-      // پاک کردن سشن OTP
+      // پاک کردن سشن OTP از حافظه و دیتابیس
       otpSessions.delete(cleanPhone);
+      try {
+        await supabaseAdmin.from("otp_verifications").delete().eq("phone", cleanPhone);
+      } catch {}
 
       return res.status(200).json({
         success: true,
