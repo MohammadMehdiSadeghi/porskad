@@ -90,7 +90,7 @@ export default async function handler(req, res) {
 
     // ۲. خواندن تنظیمات الگو و خنک‌سازی از system_settings
     let pattern = "کد تایید ثبت‌نام در پرس‌کاد: %code%";
-    let lineNumber = "Service";
+    let lineNumber = "98";
     let cooldownSeconds = 90; // ۱:۳۰ دقیقه طبق درخواست کاربر
     let maxResends = 2; // حداکثر ۲ بار ارسال مجدد طبق درخواست کاربر
     let amootToken = process.env.AMOOT_TOKEN || process.env.AMOOT_SMS_TOKEN || "";
@@ -144,8 +144,8 @@ export default async function handler(req, res) {
           .maybeSingle();
         if (smsRow?.amoot_token) {
           amootToken = smsRow.amoot_token;
-          if (!lineNumber || lineNumber === "Service") {
-            lineNumber = smsRow.line_number || "Service";
+          if (!lineNumber || lineNumber === "Service" || lineNumber === "Public") {
+            lineNumber = (!smsRow.line_number || smsRow.line_number === "Service" || smsRow.line_number === "Public") ? "98" : smsRow.line_number;
           }
         }
       } catch {}
@@ -210,7 +210,7 @@ export default async function handler(req, res) {
         const postData = new URLSearchParams({
           UserName: amootToken,
           Password: "",
-          LineNumber: lineNumber || "Service",
+          LineNumber: (!lineNumber || lineNumber === "Service" || lineNumber === "Public") ? "98" : lineNumber,
           Mobile: cleanPhone,
           SMSMessage: messageText,
         });

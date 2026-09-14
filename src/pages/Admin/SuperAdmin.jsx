@@ -397,7 +397,7 @@ export default function SuperAdmin() {
     sms_otp_enabled: true,
     google_auth_enabled: true,
     otp_sms_pattern: "کد تایید ثبت‌نام در پرس‌کاد: %code%",
-    otp_line_number: "Service",
+    otp_line_number: "98",
     otp_cooldown_seconds: 90,
     otp_max_resends: 2,
   });
@@ -759,7 +759,10 @@ export default function SuperAdmin() {
               directObj.registration_enabled = r.value === true || r.value === "true";
             }
             if (r.key === "otp_sms_pattern" && r.value) directObj.otp_sms_pattern = String(r.value);
-            if (r.key === "otp_line_number" && r.value) directObj.otp_line_number = String(r.value);
+            if (r.key === "otp_line_number" && r.value) {
+              const val = String(r.value);
+              directObj.otp_line_number = (val === "Service" || val === "Public") ? "98" : val;
+            }
             if (r.key === "otp_cooldown_seconds" && r.value) directObj.otp_cooldown_seconds = Number(r.value);
             if (r.key === "otp_max_resends" && r.value !== undefined) directObj.otp_max_resends = Number(r.value);
           }
@@ -2694,7 +2697,7 @@ export default function SuperAdmin() {
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.72rem", color: "var(--sa-text-2)", marginBottom: "0.35rem", borderBottom: "1px solid var(--sa-field-border)", paddingBottom: "0.3rem" }}>
-                    <span>From: {sysSettings.otp_line_number || "Service"}</span>
+                    <span>From: {sysSettings.otp_line_number || "98"}</span>
                     <span>•</span>
                     <span>Just now</span>
                   </div>
@@ -2713,13 +2716,13 @@ export default function SuperAdmin() {
                   <input
                     type="text"
                     dir="ltr"
-                    value={sysSettings.otp_line_number || "Service"}
+                    value={sysSettings.otp_line_number || "98"}
                     onChange={(e) => setSysSettings({ ...sysSettings, otp_line_number: e.target.value })}
                     style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", outline: "none", borderRadius: "4px" }}
-                    placeholder="Service"
+                    placeholder="98"
                   />
                   <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
-                    Default: <code dir="ltr">Service</code> (Service line bypasses operator blacklists)
+                    Default: <code dir="ltr">98</code> (Default SMS line)
                   </div>
                 </div>
 

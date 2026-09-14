@@ -31,9 +31,9 @@ function translateAmootStatus(status) {
     User_WebServiceBanned: "دسترسی وب‌سرویس این حساب در سامانه آموت مسدود یا غیرفعال است (احتمالاً نیاز به احراز هویت/تأیید مدارک یا فعال‌سازی وب‌سرویس در پنل آموت دارید)",
     User_NotActive: "حساب کاربری آموت شما هنوز فعال نشده است",
     User_AccessDenied: "عدم دسترسی به وب‌سرویس در حساب آموت",
-    LineNumber_Empty: "شماره خط فرستنده وارد نشده است (می‌توانید Public یا خط اختصاصی را انتخاب کنید)",
-    LineNumber_Invalid: "شماره خط فرستنده در حساب آموت شما معتبر یا فعال نیست (می‌توانید خط Public یا Service را انتخاب کنید)",
-    LineNumber_NotExist: "شماره خط فرستنده انتخابی در حساب آموت شما تعریف نشده است (لطفاً یکی از خطوط معتبر مانند Service یا Public یا 98 را انتخاب کنید)",
+    LineNumber_Empty: "شماره خط فرستنده وارد نشده است (می‌توانید خط 98 را انتخاب کنید)",
+    LineNumber_Invalid: "شماره خط فرستنده در حساب آموت شما معتبر یا فعال نیست (می‌توانید خط 98 را انتخاب کنید)",
+    LineNumber_NotExist: "شماره خط فرستنده انتخابی در حساب آموت شما تعریف نشده است (لطفاً خط معتبر 98 را انتخاب کنید)",
     Line_Not_Active: "خط ارسال پیامک انتخابی فعال نیست",
     Line_AccessDenied: "شما مجوز ارسال پیامک از این خط را ندارید",
     Insufficient_Credit: "اعتبار پنل پیامک آموت شما کافی نیست (لطفاً حساب آموت را شارژ کنید)",
@@ -131,8 +131,10 @@ export default async function handler(req, res) {
           remaindCredit: remaindCredit,
           remaindCreditTomans: Math.floor(remaindCredit / 10),
           listLineNumbers: Array.isArray(amootData.ListLineNumbers) && amootData.ListLineNumbers.length > 0
-            ? amootData.ListLineNumbers
-            : ["Public"],
+            ? amootData.ListLineNumbers.filter((l) => l && l !== "Public" && l !== "Service").length > 0
+              ? amootData.ListLineNumbers.filter((l) => l && l !== "Public" && l !== "Service")
+              : ["98"]
+            : ["98"],
           message: "اتصال با موفقیت برقرار شد.",
         });
       } else {
@@ -189,8 +191,10 @@ export default async function handler(req, res) {
               remaindCredit: credit,
               remaindCreditTomans: Math.floor(credit / 10),
               listLineNumbers: Array.isArray(amootData.ListLineNumbers) && amootData.ListLineNumbers.length > 0
-                ? amootData.ListLineNumbers
-                : ["Public"],
+                ? amootData.ListLineNumbers.filter((l) => l && l !== "Public" && l !== "Service").length > 0
+                  ? amootData.ListLineNumbers.filter((l) => l && l !== "Public" && l !== "Service")
+                  : ["98"]
+                : ["98"],
             };
           } else if (amootData) {
             liveAccount = {
@@ -209,7 +213,7 @@ export default async function handler(req, res) {
         settings: {
           has_token: hasToken,
           masked_token: maskedToken,
-          line_number: dbSettings?.line_number || "Public",
+          line_number: (!dbSettings?.line_number || dbSettings?.line_number === "Public" || dbSettings?.line_number === "Service") ? "98" : dbSettings.line_number,
           sender_name: dbSettings?.sender_name || "پرس‌کاد",
           is_active: dbSettings?.is_active ?? true,
           updated_at: dbSettings?.updated_at,
@@ -245,7 +249,7 @@ export default async function handler(req, res) {
             {
               id: 1,
               amoot_token: finalToken,
-              line_number: (line_number || "Public").trim(),
+              line_number: (!line_number || line_number === "Public" || line_number === "Service" ? "98" : line_number).trim(),
               sender_name: (sender_name || "پرس‌کاد").trim(),
               is_active: Boolean(is_active),
               updated_at: new Date().toISOString(),
@@ -294,7 +298,7 @@ export default async function handler(req, res) {
       }
 
       let activeToken = ((customToken || body.token || "") + "").trim();
-      let defaultLine = lineNumber || "Public";
+      let defaultLine = (!lineNumber || lineNumber === "Public" || lineNumber === "Service") ? "98" : lineNumber;
 
       if (!activeToken && adminClient) {
         try {
@@ -306,7 +310,8 @@ export default async function handler(req, res) {
 
           if (dbSettings) {
             activeToken = dbSettings.amoot_token || "";
-            defaultLine = lineNumber || dbSettings.line_number || "Public";
+            const dbLine = dbSettings.line_number;
+            defaultLine = (!dbLine || dbLine === "Public" || dbLine === "Service") ? defaultLine : dbLine;
           }
         } catch {
           // ignore

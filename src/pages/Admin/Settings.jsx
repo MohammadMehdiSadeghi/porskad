@@ -45,7 +45,7 @@ export default function Settings() {
     default_max_monthly_responses: 100,
     registration_enabled: true,
     otp_sms_pattern: "کد تایید ثبت‌نام در پرس‌کاد: %code%",
-    otp_line_number: "Service",
+    otp_line_number: "98",
     otp_cooldown_seconds: 90,
     otp_max_resends: 2,
   });
@@ -67,7 +67,7 @@ export default function Settings() {
           default_max_monthly_responses: data.default_max_monthly_responses ?? 100,
           registration_enabled: data.registration_enabled !== false,
           otp_sms_pattern: data.otp_sms_pattern || "کد تایید ثبت‌نام در پرس‌کاد: %code%",
-          otp_line_number: data.otp_line_number || "Service",
+          otp_line_number: (!data.otp_line_number || data.otp_line_number === "Service" || data.otp_line_number === "Public") ? "98" : data.otp_line_number,
           otp_cooldown_seconds: data.otp_cooldown_seconds ?? 90,
           otp_max_resends: data.otp_max_resends ?? 2,
         });
@@ -91,7 +91,7 @@ export default function Settings() {
         default_max_monthly_responses: Math.max(1, Number(settings.default_max_monthly_responses) || 100),
         registration_enabled: Boolean(settings.registration_enabled),
         otp_sms_pattern: settings.otp_sms_pattern?.trim() || "کد تایید ثبت‌نام در پرس‌کاد: %code%",
-        otp_line_number: settings.otp_line_number?.trim() || "Service",
+        otp_line_number: settings.otp_line_number?.trim() || "98",
         otp_cooldown_seconds: Math.max(30, Number(settings.otp_cooldown_seconds) || 90),
         otp_max_resends: Math.max(1, Number(settings.otp_max_resends) || 2),
       };
@@ -424,13 +424,13 @@ export default function Settings() {
                 <input
                   type="text"
                   dir="ltr"
-                  value={settings.otp_line_number || "Service"}
+                  value={settings.otp_line_number || "98"}
                   onChange={(e) => setSettings({ ...settings, otp_line_number: e.target.value })}
                   className="w-full px-3.5 py-2.5 rounded-xl border-2 border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-bold font-mono text-navy dark:text-slate-100 focus:border-teal outline-none"
-                  placeholder="Service"
+                  placeholder="98"
                 />
                 <span className="text-[11px] text-ink-subtle dark:text-slate-400 mt-1 block">
-                  پیش‌فرض: Service (خط خدماتی)
+                  پیش‌فرض: 98 (خط پیش‌فرض سراسری)
                 </span>
               </div>
 

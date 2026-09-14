@@ -62,7 +62,10 @@ export default function SmsPanel() {
     const t = localStorage.getItem(tokenStorageKey) || "";
     return t.length > 5 ? "••••••••" + t.slice(-4) : "";
   });
-  const [lineNumber, setLineNumber] = useState(() => localStorage.getItem(lineStorageKey) || "Service");
+  const [lineNumber, setLineNumber] = useState(() => {
+    const saved = localStorage.getItem(lineStorageKey);
+    return (saved && saved !== "Service" && saved !== "Public") ? saved : "98";
+  });
   const [senderName, setSenderName] = useState(() => localStorage.getItem(senderStorageKey) || "پرس‌کاد");
   const [isActive, setIsActive] = useState(() => {
     const saved = localStorage.getItem(activeStorageKey);
@@ -71,7 +74,7 @@ export default function SmsPanel() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
   const [testResult, setTestResult] = useState(null);
-  const [availableLines, setAvailableLines] = useState(["Service", "Public", "98"]);
+  const [availableLines, setAvailableLines] = useState(["98"]);
   const [copiedWebhook, setCopiedWebhook] = useState(false);
 
   // ─── Live Account State ───
@@ -120,7 +123,10 @@ export default function SmsPanel() {
       const storedSender = localStorage.getItem(senderStorageKey) || "";
       const storedActive = localStorage.getItem(activeStorageKey);
 
-      if (storedLine) setLineNumber(storedLine);
+      if (storedLine) {
+        const clean = (storedLine === "Service" || storedLine === "Public") ? "98" : storedLine;
+        setLineNumber(clean);
+      }
       if (storedSender) setSenderName(storedSender);
       if (storedActive !== null) setIsActive(storedActive === "true");
 
@@ -140,7 +146,10 @@ export default function SmsPanel() {
               resolvedToken = dbSettings.amoot_token;
               localStorage.setItem(tokenStorageKey, resolvedToken);
             }
-            if (dbSettings.line_number) setLineNumber(dbSettings.line_number);
+            if (dbSettings.line_number) {
+              const clean = (dbSettings.line_number === "Service" || dbSettings.line_number === "Public") ? "98" : dbSettings.line_number;
+              setLineNumber(clean);
+            }
             if (dbSettings.sender_name) setSenderName(dbSettings.sender_name);
             if (dbSettings.is_active !== undefined && dbSettings.is_active !== null) {
               setIsActive(dbSettings.is_active);
@@ -163,7 +172,8 @@ export default function SmsPanel() {
       if (data?.liveAccount) {
         setLiveAccount(data.liveAccount);
         if (Array.isArray(data.liveAccount.listLineNumbers) && data.liveAccount.listLineNumbers.length > 0) {
-          setAvailableLines(data.liveAccount.listLineNumbers);
+          const filtered = data.liveAccount.listLineNumbers.filter((l) => l && l !== "Public" && l !== "Service");
+          setAvailableLines(filtered.length > 0 ? filtered : ["98"]);
         }
         setHasTokenInDb(true);
       }
@@ -266,7 +276,8 @@ export default function SmsPanel() {
           listLineNumbers: data.listLineNumbers,
         });
         if (data.listLineNumbers?.length) {
-          setAvailableLines(data.listLineNumbers);
+          const filtered = data.listLineNumbers.filter((l) => l && l !== "Public" && l !== "Service");
+          setAvailableLines(filtered.length > 0 ? filtered : ["98"]);
         }
       } else {
         showToast(data?.message || "پاسخ از درگاه آموت دریافت شد", "error");
@@ -306,7 +317,8 @@ export default function SmsPanel() {
         localStorage.setItem(tokenStorageKey, finalToken);
         setAmootToken(finalToken);
       }
-      localStorage.setItem(lineStorageKey, lineNumber || "Service");
+      const finalLine = (!lineNumber || lineNumber === "Service" || lineNumber === "Public") ? "98" : lineNumber;
+      localStorage.setItem(lineStorageKey, finalLine);
       localStorage.setItem(senderStorageKey, senderName || "پرس‌کاد");
       localStorage.setItem(activeStorageKey, String(isActive));
 
@@ -316,7 +328,7 @@ export default function SmsPanel() {
           await supabase.from("sms_settings").upsert({
             id: 1,
             amoot_token: finalToken,
-            line_number: (lineNumber || "Service").trim(),
+            line_number: finalLine.trim(),
             sender_name: (senderName || "پرس‌کاد").trim(),
             is_active: isActive,
             updated_at: new Date().toISOString(),
@@ -330,7 +342,7 @@ export default function SmsPanel() {
       await callAmootProxy("save_settings", {
         token: finalToken,
         amoot_token: finalToken,
-        line_number: (lineNumber || "Service").trim(),
+        line_number: finalLine.trim(),
         sender_name: (senderName || "پرس‌کاد").trim(),
         is_active: isActive,
       });
@@ -383,11 +395,12 @@ export default function SmsPanel() {
     setSendingSms(true);
     setSendResult(null);
     try {
+      const lineToSend = (!lineNumber || lineNumber === "Service" || lineNumber === "Public") ? "98" : lineNumber;
       const data = await callAmootProxy("send_sms", {
         token: tokenToSend,
         mobiles: uniqueMobiles,
         text: smsText.trim(),
-        lineNumber: lineNumber || "Public",
+        lineNumber: lineToSend,
       });
 
       if (data.success) {
@@ -404,7 +417,7 @@ export default function SmsPanel() {
               mobile: m,
               text: smsText.trim(),
               status: "sent",
-              line_number: lineNumber || "Public",
+              line_number: lineToSend,
               parts: data.parts || smsPagesCount || 1,
               cost: data.price ? Number(data.price) / uniqueMobiles.length : 0,
             }))
@@ -566,7 +579,7 @@ export default function SmsPanel() {
                     <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 mt-1">
                       {liveAccount?.accountName ? `حساب کاربری: ${liveAccount.accountName}` : "ارسال پیامک از طریق پرتال رسمی پیامک آموت"}
                       {" • "}
-                      خط پیش‌فرض: <code className="font-mono text-xs font-bold text-teal">{lineNumber || "Public"}</code>
+                      خط پیش‌فرض: <code className="font-mono text-xs font-bold text-teal">{(!lineNumber || lineNumber === "Service" || lineNumber === "Public") ? "98" : lineNumber}</code>
                     </p>
                   </div>
                 </div>
@@ -659,7 +672,7 @@ export default function SmsPanel() {
                     ارسال آنی پیامک با آموت
                   </h2>
                   <div className="text-xs font-bold text-ink-subtle dark:text-slate-400">
-                    خط ارسال‌کننده: <span className="text-teal font-mono">{lineNumber || "Public"}</span>
+                    خط ارسال‌کننده: <span className="text-teal font-mono">{(!lineNumber || lineNumber === "Service" || lineNumber === "Public") ? "98" : lineNumber}</span>
                   </div>
                 </div>
 
@@ -720,13 +733,11 @@ export default function SmsPanel() {
                       شماره خط فرستنده:
                     </label>
                     <select
-                      value={lineNumber}
+                      value={(!lineNumber || lineNumber === "Service" || lineNumber === "Public") ? "98" : lineNumber}
                       onChange={(e) => setLineNumber(e.target.value)}
                       className={inputCls}
                     >
-                      <option value="Public">Public (خط عمومی خدماتی آموت)</option>
-                      <option value="Service">Service (خط خدماتی اختصاصی)</option>
-                      <option value="98">98 (خط پیش‌فرض سراسری)</option>
+                      <option value="98">98 (خط پیش‌فرض سامانه)</option>
                       {availableLines
                         .filter((l) => l && !["Public", "Service", "98"].includes(l))
                         .map((line) => (
@@ -866,13 +877,11 @@ export default function SmsPanel() {
                       شماره خط فرستنده (Line Number)
                     </label>
                     <select
-                      value={lineNumber}
+                      value={(!lineNumber || lineNumber === "Service" || lineNumber === "Public") ? "98" : lineNumber}
                       onChange={(e) => setLineNumber(e.target.value)}
                       className={inputCls}
                     >
-                      <option value="Service">Service (خط خدماتی اختصاصی — عبور از بلک‌لیست)</option>
-                      <option value="Public">Public (خط عمومی خدماتی آموت)</option>
-                      <option value="98">98 (خط پیش‌فرض سراسری)</option>
+                      <option value="98">98 (خط پیش‌فرض سامانه)</option>
                       {availableLines
                         .filter((l) => l && !["Public", "Service", "98"].includes(l))
                         .map((line) => (
@@ -882,7 +891,7 @@ export default function SmsPanel() {
                         ))}
                     </select>
                     <span className="text-[11px] text-ink-subtle dark:text-slate-500">
-                      خطوط فعال اکانت شما: <strong className="text-teal font-mono">Service , Public , 98</strong> (برای پیامک‌های سامانه، خط Service بهترین انتخاب است).
+                      خط فعال اکانت شما: <strong className="text-teal font-mono">98</strong> (خط پیش‌فرض ارسال پیامک سامانه).
                     </span>
                   </div>
 
@@ -1070,7 +1079,7 @@ export default function SmsPanel() {
                             {o.text}
                           </td>
                           <td className="px-4 py-3 text-center text-xs font-mono text-ink-subtle dark:text-slate-400">
-                            {o.line_number || "Public"}
+                            {(!o.line_number || o.line_number === "Public" || o.line_number === "Service") ? "98" : o.line_number}
                           </td>
                           <td className="px-4 py-3 text-center text-xs font-bold text-ink-subtle dark:text-slate-400">
                             {faNum(o.parts || 1)}
