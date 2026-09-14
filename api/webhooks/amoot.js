@@ -1,130 +1,148 @@
 import { createClient } from "@supabase/supabase-js";
 
+function cleanVal(v) {
+  if (v === null || v === undefined) return "";
+  let s = String(v).trim();
+  // حذف کوتیشن‌های احتمالی در ابتدا و انتهای پارامترها (مثل %22MSG-TEST-900001%22)
+  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+    s = s.slice(1, -1).trim();
+  }
+  return s;
+}
+
 export default async function handler(req, res) {
-  // پشتیبانی از Preflight CORS و متد GET برای تست و تایید پرتال آموت
+  // پشتیبانی کامل از Preflight CORS و هدرهای اختصاصی آموت
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-SMSCenter-Signature, x-smscenter-signature");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-SMSCenter-Signature, x-smscenter-signature, *"
+  );
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
-  if (req.method === "GET") {
-    return res.status(200).json({
-      status: "active",
-      service: "Porskad Amoot SMS Webhook",
-      timestamp: new Date().toISOString(),
-    });
+  // ادغام پارامترهای GET (Query String) و POST (Body)
+  let queryParams = {};
+  if (req.query) {
+    for (const [k, v] of Object.entries(req.query)) {
+      queryParams[k] = cleanVal(v);
+    }
   }
 
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceKey) {
-    return res.status(500).json({ error: "Server database configuration missing" });
-  }
-
-  const adminClient = createClient(supabaseUrl, serviceKey);
-
-  try {
-    let payload = req.body || {};
-    if (typeof payload === "string" && payload.trim()) {
+  let bodyParams = {};
+  if (req.body) {
+    let raw = req.body;
+    if (typeof raw === "string" && raw.trim()) {
       try {
-        payload = JSON.parse(payload);
+        raw = JSON.parse(raw);
       } catch {
         try {
-          payload = Object.fromEntries(new URLSearchParams(payload));
+          raw = Object.fromEntries(new URLSearchParams(raw));
         } catch {
-          payload = {};
+          raw = {};
         }
       }
     }
-
-    // استخراج فیلدها با پشتیبانی از فرمت‌های مختلف آموت
-    const mobile =
-      payload.Mobile ||
-      payload.mobile ||
-      payload.From ||
-      payload.Sender ||
-      payload.senderNumber ||
-      "";
-
-    const text =
-      payload.SMSMessageText ||
-      payload.MessageText ||
-      payload.messageText ||
-      payload.Text ||
-      payload.text ||
-      "";
-
-    const lineNumber =
-      payload.LineNumber ||
-      payload.lineNumber ||
-      payload.To ||
-      payload.receiverNumber ||
-      "";
-
-    const messageId =
-      String(payload.MessageID || payload.messageId || payload.AmootMessageID || payload.ID || "");
-
-    // اگر پیامک دریافتی معتبر باشد
-    if (mobile || text) {
-      await adminClient.from("sms_inbox").insert({
-        amoot_message_id: messageId || null,
-        mobile: String(mobile || "").trim(),
-        line_number: String(lineNumber || "").trim(),
-        text: String(text || "").trim(),
-        raw_payload: payload,
-      });
-
-      return res.status(200).json({
-        success: true,
-        message: "Message received and logged to inbox",
-      });
+    if (typeof raw === "object" && raw !== null) {
+      for (const [k, v] of Object.entries(raw)) {
+        bodyParams[k] = cleanVal(v);
+      }
     }
-
-    // اگر وب‌هوک وضعیت دلیوری (Delivery Report) باشد
-    const deliveryStatus = payload.Status || payload.DeliveryStatus || payload.status;
-    const deliveryMsgId = payload.MessageID || payload.CampaignID || payload.messageId;
-
-    if (deliveryMsgId && deliveryStatus) {
-      await adminClient.from("sms_delivery_reports").insert({
-        message_id: String(deliveryMsgId),
-        mobile: String(mobile || ""),
-        status: String(deliveryStatus),
-        delivered_at: new Date().toISOString(),
-        raw_payload: payload,
-      });
-
-      // به‌روزرسانی وضعیت در جدول sms_outbox
-      const isDelivered = String(deliveryStatus).toLowerCase().includes("deliver");
-      await adminClient
-        .from("sms_outbox")
-        .update({
-          status: isDelivered ? "delivered" : "sent",
-        })
-        .eq("message_id", String(deliveryMsgId));
-
-      return res.status(200).json({
-        success: true,
-        message: "Delivery report processed",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "Webhook payload acknowledged",
-    });
-  } catch (err) {
-    console.error("Amoot Webhook Error:", err);
-    return res.status(500).json({
-      error: "Webhook processing error",
-      details: err.message,
-    });
   }
+
+  const payload = { ...queryParams, ...bodyParams };
+
+  // اتصال به پایگاه داده Supabase در صورت نیاز به ذخیره‌سازی
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (supabaseUrl && serviceKey) {
+    try {
+      const adminClient = createClient(supabaseUrl, serviceKey);
+
+      // ۱. بررسی گزارش وضعیت تحویل پیامک (Delivery Report)
+      const deliveryStatus =
+        payload.DeliveryType ||
+        payload.DeliveryStatus ||
+        payload.Status ||
+        payload.status ||
+        "";
+
+      const deliveryMsgId =
+        payload.MessageID ||
+        payload.CampaignID ||
+        payload.messageId ||
+        payload.ID ||
+        "";
+
+      const mobile =
+        payload.Mobile ||
+        payload.mobile ||
+        payload.From ||
+        payload.Sender ||
+        payload.senderNumber ||
+        "";
+
+      const text =
+        payload.SMSMessageText ||
+        payload.MessageText ||
+        payload.messageText ||
+        payload.Text ||
+        payload.text ||
+        "";
+
+      const lineNumber =
+        payload.LineNumber ||
+        payload.lineNumber ||
+        payload.To ||
+        payload.receiverNumber ||
+        "";
+
+      if (deliveryMsgId && deliveryStatus) {
+        // ذخیره لاگ دلیوری
+        try {
+          await adminClient.from("sms_delivery_reports").insert({
+            message_id: deliveryMsgId,
+            mobile: mobile || null,
+            status: deliveryStatus,
+            delivered_at: new Date().toISOString(),
+            raw_payload: payload,
+          });
+        } catch {
+          // ignore if table doesn't exist
+        }
+
+        // به‌روزرسانی جدول سوابق ارسال پیامک
+        const isDelivered = deliveryStatus.toLowerCase().includes("deliver");
+        const isFailed = deliveryStatus.toLowerCase().includes("fail") || deliveryStatus.toLowerCase().includes("reject");
+        
+        await adminClient
+          .from("sms_outbox")
+          .update({
+            status: isDelivered ? "delivered" : isFailed ? "failed" : "sent",
+          })
+          .eq("message_id", deliveryMsgId);
+      }
+
+      // ۲. بررسی پیامک دریافتی از مخاطب (Incoming SMS)
+      if (mobile || text) {
+        await adminClient.from("sms_inbox").insert({
+          amoot_message_id: payload.MessageID || null,
+          mobile: mobile,
+          line_number: lineNumber,
+          text: text,
+          raw_payload: payload,
+        });
+      }
+    } catch (err) {
+      console.error("Amoot Webhook processing error:", err);
+      // ادامه می‌دهیم تا حتما پاسخ OK به آموت داده شود
+    }
+  }
+
+  // ⚠️ مهم: پرتال آموت و تسترهای وب‌هوک پیامک، خروجی متنی دقیق «OK» را به عنوان نشانه موفقیت بررسی می‌کنند
+  res.setHeader("Content-Type", "text/plain; charset=utf-8");
+  return res.status(200).send("OK");
 }

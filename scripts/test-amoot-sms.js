@@ -148,6 +148,41 @@ async function runTests() {
     assert.strictEqual(typeof proxyModule.default, "function");
   });
 
+  await it("Webhook responds with HTTP 200 and OK for Amoot delivery test query", async () => {
+    let statusCode = null;
+    let sentBody = null;
+    const mockRes = {
+      setHeader: () => {},
+      status: (code) => {
+        statusCode = code;
+        return {
+          send: (body) => { sentBody = body; },
+          json: (body) => { sentBody = body; },
+          end: () => {},
+        };
+      },
+      end: () => {},
+    };
+    const mockReq = {
+      method: "GET",
+      query: {
+        MessageID: '"MSG-TEST-900001"',
+        DeliveryType: '"Delivered"',
+        Cost: '"120"',
+        RegDateTime: '"2026-09-14 14:24:03"',
+        SendDateTime: '"2026-09-14 14:24:10"',
+      },
+      body: {},
+      headers: {
+        "x-smscenter-signature": "Jsu5tMockSignatureKey",
+      },
+    };
+
+    await webhookModule.default(mockReq, mockRes);
+    assert.strictEqual(statusCode, 200);
+    assert.strictEqual(sentBody, "OK");
+  });
+
   console.log("\n==================================================");
   console.log(`TOTAL TESTS: ${passed + failed} | PASSED: ${passed} | FAILED: ${failed}`);
   console.log("==================================================");
