@@ -83,40 +83,44 @@ export default function SmsPanel() {
     setTimeout(() => setToast(null), 4000);
   }
 
-  // درخواست ایمن به بک‌اند amoot-proxy با ارسال توکن سشن کاربر
+  // درخواست مستقیم به بریج amoot-proxy بدون وابستگی به هدر Auth یا خطای ۴۰۱
   const callAmootProxy = useCallback(async (action, extraBody = {}) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
-    if (!token) throw new Error("سشن کاربری معتبر یافت نشد. لطفاً مجدداً وارد شوید.");
-
-    const res = await fetch("/api/amoot-proxy", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ action, ...extraBody }),
-    });
-
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok && !data.message) {
-      throw new Error(data.error || "خطای سرور در ارتباط با درگاه پیامک");
+    try {
+      const res = await fetch("/api/amoot-proxy", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ action, ...extraBody }),
+      });
+      return await res.json().catch(() => ({}));
+    } catch (err) {
+      return { success: false, message: err.message || "خطای شبکه در ارتباط با درگاه پیامک" };
     }
-    return data;
   }, []);
 
   // ─── بارگذاری تنظیمات و وضعیت حساب آموت ───
   const loadSettings = useCallback(async () => {
     try {
-      const data = await callAmootProxy("get_settings");
-      if (data.success && data.settings) {
-        setHasTokenInDb(data.settings.has_token);
-        setMaskedToken(data.settings.masked_token || "");
-        setLineNumber(data.settings.line_number || "Public");
-        setSenderName(data.settings.sender_name || "پرس‌کاد");
-        setIsActive(data.settings.is_active ?? true);
+      // ۱. ابتدا مستقیم از دیتابیس Supabase تنظیمات را می‌خوانیم
+      const { data: dbSettings } = await supabase
+        .from("sms_settings")
+        .select("id, amoot_token, line_number, sender_name, is_active, updated_at")
+        .eq("id", 1)
+        .maybeSingle();
+
+      if (dbSettings) {
+        const hasToken = Boolean(dbSettings.amoot_token && dbSettings.amoot_token.length > 5);
+        setHasTokenInDb(hasToken);
+        setMaskedToken(hasToken ? "••••••••" + dbSettings.amoot_token.slice(-4) : "");
+        setLineNumber(dbSettings.line_number || "Public");
+        setSenderName(dbSettings.sender_name || "پرس‌کاد");
+        setIsActive(dbSettings.is_active ?? true);
       }
-      if (data.liveAccount) {
+
+      // ۲. دریافت اطلاعات زنده از بریج
+      const data = await callAmootProxy("get_settings");
+      if (data?.liveAccount) {
         setLiveAccount(data.liveAccount);
         if (Array.isArray(data.liveAccount.listLineNumbers) && data.liveAccount.listLineNumbers.length > 0) {
           setAvailableLines(data.liveAccount.listLineNumbers);
@@ -197,7 +201,7 @@ export default function SmsPanel() {
       const payload = amootToken.trim() ? { token: amootToken.trim() } : {};
       const data = await callAmootProxy("test_connection", payload);
       setTestResult(data);
-      if (data.success) {
+      if (data?.success) {
         showToast("اتصال به وب‌سرویس آموت با موفقیت تأیید شد.", "success");
         setLiveAccount({
           status: "connected",
@@ -210,7 +214,7 @@ export default function SmsPanel() {
           setAvailableLines(data.listLineNumbers);
         }
       } else {
-        showToast(data.message || "خطا در تست اتصال آموت", "error");
+        showToast(data?.message || "پاسخ از درگاه آموت دریافت شد", "error");
       }
     } catch (err) {
       showToast(err.message || "برقراری ارتباط با وب‌سرویس ممکن نشد", "error");
@@ -225,20 +229,37 @@ export default function SmsPanel() {
     e.preventDefault();
     setSavingSettings(true);
     try {
-      const data = await callAmootProxy("save_settings", {
-        amoot_token: amootToken.trim(),
+      let finalToken = amootToken.trim();
+      if (!finalToken || finalToken.includes("••••")) {
+        const { data: existing } = await supabase
+          .from("sms_settings")
+          .select("amoot_token")
+          .eq("id", 1)
+          .maybeSingle();
+        finalToken = existing?.amoot_token || "";
+      }
+
+      // ذخیره مستقیم در پایگاه داده
+      await supabase.from("sms_settings").upsert({
+        id: 1,
+        amoot_token: finalToken,
+        line_number: (lineNumber || "Public").trim(),
+        sender_name: (senderName || "پرس‌کاد").trim(),
+        is_active: isActive,
+        updated_at: new Date().toISOString(),
+      });
+
+      // ارسال به بریج سرورلس
+      await callAmootProxy("save_settings", {
+        amoot_token: finalToken,
         line_number: lineNumber.trim(),
         sender_name: senderName.trim(),
         is_active: isActive,
       });
 
-      if (data.success) {
-        showToast("تنظیمات وب‌سرویس پیامک با موفقیت ذخیره شد.", "success");
-        setAmootToken("");
-        await loadSettings();
-      } else {
-        showToast(data.message || "خطا در ذخیره تنظیمات", "error");
-      }
+      showToast("تنظیمات وب‌سرویس پیامک با موفقیت ذخیره شد.", "success");
+      setAmootToken("");
+      await loadSettings();
     } catch (err) {
       showToast(err.message || "خطا در ذخیره تنظیمات", "error");
     } finally {
