@@ -9,6 +9,7 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import StickerCard from "../../components/ui/StickerCard";
 import Modal from "../../components/ui/Modal";
+import PasswordToggle from "../../components/ui/PasswordToggle";
 import { Plus, Edit, Edit3, Trash2, Crown, Users, User, ChevronDown, ChevronUp, Shield, FileText, BarChart3, Settings, Eye, EyeOff, Sliders, Bot, Copy, Calendar, CheckCircle, XCircle, Phone, Mail, RotateCcw, Save, Info, Sparkles, Zap, Layers, Check, Search, X } from "lucide-react";
 import SEO from "../../components/ui/SEO";
 import { supabase } from "../../lib/supabaseClient";
@@ -1558,15 +1559,14 @@ export default function Managers() {
                 className={`${inputCls} pl-10`}
                 placeholder="حداقل ۶ کاراکتر شامل حروف و اعداد"
               />
-              <button
-                type="button"
-                onClick={() => setCreatePasswordVisible(!createPasswordVisible)}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40 dark:text-slate-400 hover:text-navy dark:hover:text-slate-200 transition-colors p-1 cursor-pointer"
-                tabIndex={-1}
-                aria-label={createPasswordVisible ? "مخفی کردن رمز عبور" : "نمایش رمز عبور"}
-              >
-                {createPasswordVisible ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+              <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                <PasswordToggle
+                  visible={createPasswordVisible}
+                  onToggle={() => setCreatePasswordVisible(!createPasswordVisible)}
+                  size={16}
+                  ariaLabel="نمایش یا مخفی‌سازی رمز عبور"
+                />
+              </div>
             </div>
           </div>
           <div>
@@ -1665,15 +1665,14 @@ export default function Managers() {
                   placeholder="حداقل ۶ کاراکتر جهت تغییر رمز"
                   className={`${inputCls} pl-10`}
                 />
-                <button
-                  type="button"
-                  onClick={() => setEditPasswordVisible(!editPasswordVisible)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40 dark:text-slate-400 hover:text-navy dark:hover:text-slate-200 transition-colors p-1 cursor-pointer"
-                  tabIndex={-1}
-                  aria-label={editPasswordVisible ? "مخفی کردن رمز عبور" : "نمایش رمز عبور"}
-                >
-                  {editPasswordVisible ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
+                <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                  <PasswordToggle
+                    visible={editPasswordVisible}
+                    onToggle={() => setEditPasswordVisible(!editPasswordVisible)}
+                    size={16}
+                    ariaLabel="نمایش یا مخفی‌سازی رمز عبور"
+                  />
+                </div>
               </div>
             </div>
             </div>

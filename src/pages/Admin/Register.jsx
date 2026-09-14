@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Headphones, Send, ExternalLink, HelpCircle, KeyRound } from "lucide-react";
+import { Headphones, Send, ExternalLink, HelpCircle, KeyRound } from "lucide-react";
+import PasswordToggle from "../../components/ui/PasswordToggle";
 import StickerCard from "../../components/ui/StickerCard";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
@@ -223,15 +223,14 @@ export default function Register() {
                       placeholder="حداقل ۶ کاراکتر (حروف و عدد)"
                       autoComplete="new-password"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink/40 hover:text-navy transition-colors p-1 cursor-pointer"
-                      tabIndex={-1}
-                      aria-label={showPassword ? "مخفی کردن رمز عبور" : "نمایش رمز عبور"}
-                    >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
+                    <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                      <PasswordToggle
+                        visible={showPassword}
+                        onToggle={() => setShowPassword(!showPassword)}
+                        size={16}
+                        ariaLabel="نمایش یا مخفی‌سازی رمز عبور"
+                      />
+                    </div>
                   </div>
                 </label>
 
@@ -248,15 +247,14 @@ export default function Register() {
                       placeholder="تکرار رمز"
                       autoComplete="new-password"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink/40 hover:text-navy transition-colors p-1 cursor-pointer"
-                      tabIndex={-1}
-                      aria-label={showConfirmPassword ? "مخفی کردن تکرار رمز عبور" : "نمایش تکرار رمز عبور"}
-                    >
-                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
+                    <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                      <PasswordToggle
+                        visible={showConfirmPassword}
+                        onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
+                        size={16}
+                        ariaLabel="نمایش یا مخفی‌سازی تکرار رمز عبور"
+                      />
+                    </div>
                   </div>
                 </label>
               </div>

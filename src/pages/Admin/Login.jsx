@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, KeyRound, Headphones, Send, ExternalLink } from "lucide-react";
+import { KeyRound, Headphones, Send, ExternalLink } from "lucide-react";
+import PasswordToggle from "../../components/ui/PasswordToggle";
 import StickerCard from "../../components/ui/StickerCard";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
@@ -152,15 +153,13 @@ export default function Login() {
                   placeholder="••••••••"
                   autoComplete="current-password"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40 dark:text-slate-400 hover:text-navy dark:hover:text-white transition-colors p-1 cursor-pointer"
-                  tabIndex={-1}
-                  aria-label={showPassword ? "مخفی کردن رمز عبور" : "نمایش رمز عبور"}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
+                <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                  <PasswordToggle
+                    visible={showPassword}
+                    onToggle={() => setShowPassword(!showPassword)}
+                    size={18}
+                  />
+                </div>
               </div>
             </label>
 

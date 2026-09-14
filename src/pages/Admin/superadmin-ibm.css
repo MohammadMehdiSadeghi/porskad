@@ -38,6 +38,7 @@
   justify-content: center;
   background: var(--sa-text-0);
   color: var(--sa-surface);
+  border-radius: 0.625rem;
 }
 
 .sa-header-right {
@@ -73,12 +74,13 @@
   font-size: 0.8125rem;
   font-weight: 700;
   background: #393939;
+  border-radius: 0.5rem;
 }
 
 /* ─── Tabs (Carbon-style) ─── */
 .sa-tabs {
   display: flex;
-  gap: 0;
+  gap: 0.25rem;
   border-bottom: 1px solid var(--sa-surface-3);
   margin-bottom: 1.5rem;
   overflow-x: auto;
@@ -98,6 +100,7 @@
   color: var(--sa-text-1);
   cursor: pointer;
   font-family: inherit;
+  border-radius: 0.5rem 0.5rem 0 0;
   transition: all 0.15s;
 }
 
@@ -131,12 +134,13 @@
   color: var(--sa-text-0);
   font-family: inherit;
   outline: none;
-  transition: border-color 0.15s;
+  border-radius: 0.625rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .sa-search input:focus {
   border-color: var(--sa-link);
-  box-shadow: 0 0 0 1px var(--sa-link);
+  box-shadow: 0 0 0 2px var(--sa-link-tint);
 }
 
 .sa-actions {
@@ -152,12 +156,13 @@
   cursor: pointer;
   font-family: inherit;
   border: none;
+  border-radius: 0.625rem;
   transition: all 0.15s;
 }
 
 .sa-btn-primary {
   background: var(--sa-link) !important;
-  color: var(--sa-surface) !important;
+  color: #ffffff !important;
 }
 
 .sa-btn-primary:hover {
@@ -165,18 +170,18 @@
 }
 
 .sa-btn-secondary {
-  background: var(--sa-surface-2, #f4f4f4) !important;
+  background: var(--sa-surface-2, #f8fafc) !important;
   color: var(--sa-text-0) !important;
   border: 1px solid var(--sa-field-border);
 }
 
 .sa-btn-secondary:hover {
-  background: var(--sa-surface-4, #e0e0e0) !important;
+  background: var(--sa-surface-4, #f1f5f9) !important;
 }
 
 .sa-btn-danger {
   background: var(--sa-danger) !important;
-  color: var(--sa-surface) !important;
+  color: #ffffff !important;
 }
 
 .sa-btn-danger:hover {
@@ -186,24 +191,28 @@
 .sa-btn-ghost {
   background: var(--sa-surface-1, #ffffff) !important;
   color: var(--sa-link) !important;
-  border: 1px solid var(--sa-field-border, #e0e0e0);
+  border: 1px solid var(--sa-field-border, #cbd5e1);
   padding: 0.25rem 0.5rem;
 }
 
 .sa-btn-ghost:hover {
-  background: var(--sa-surface-3, #f4f4f4) !important;
+  background: var(--sa-surface-3, #f1f5f9) !important;
 }
 
 .sa-btn-sm {
   padding: 0.3rem 0.75rem;
   font-size: 0.8125rem;
+  border-radius: 0.5rem;
 }
 
 /* ─── Carbon Cards ─── */
 .sa-card {
   background: var(--sa-surface);
   border: 1px solid var(--sa-surface-3);
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
   margin-bottom: 1rem;
+  overflow: hidden;
 }
 
 .sa-card-header {
@@ -224,28 +233,33 @@
   gap: 1px;
   background: var(--sa-surface-3);
   margin-bottom: 1.5rem;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 
 .sa-stat {
   background: var(--sa-surface);
-  padding: 1rem;
+  padding: 1.25rem 1rem;
   text-align: center;
+  transition: background 0.15s;
 }
 
 .sa-stat-label {
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 600;
   color: var(--sa-text-1);
   margin-bottom: 0.35rem;
 }
 
 .sa-stat-value {
   font-size: 2.25rem;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--sa-text-0);
 }
 
 .sa-stat-sub {
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
   color: var(--sa-text-2);
 }
 
@@ -256,11 +270,14 @@
   gap: 1px;
   background: var(--sa-surface-3);
   margin-bottom: 1.5rem;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 
 .sa-tile {
   background: var(--sa-surface);
-  padding: 0.75rem;
+  padding: 0.85rem;
   text-align: center;
   cursor: pointer;
   transition: background 0.15s;
@@ -298,13 +315,14 @@
   color: var(--sa-text-0);
   font-family: inherit;
   outline: none;
-  transition: border-color 0.15s;
+  border-radius: 0.625rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 .sa-input:focus,
 .sa-select:focus,
 .sa-textarea:focus {
   border-color: var(--sa-link);
-  box-shadow: 0 0 0 1px var(--sa-link);
+  box-shadow: 0 0 0 2px var(--sa-link-tint);
 }
 .sa-input::placeholder,
 .sa-textarea::placeholder { color: var(--sa-text-4); }
@@ -318,6 +336,9 @@
   width: 100%;
   max-width: 100%;
   margin-bottom: 1rem;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 
 .sa-table {
@@ -853,38 +874,38 @@ html.dark .sa-admin-avatar.normal { background: var(--sa-surface-2); color: var(
 
 /* ─── Modal portal (outside sa-root) — make tokens available from :root ─── */
 :root {
-  --sa-text-0: #161616; --sa-text-1: #525252; --sa-text-2: #6f6f6f; --sa-text-3: #8d8d8d;
-  --sa-text-4: #a8a8a8; --sa-link: #0f62fe; --sa-link-strong: #0043ce; --sa-danger: #da1e28;
-  --sa-danger-strong: #a2191f; --sa-success: #198038; --sa-success-bg: #defbe6;
-  --sa-warn-text: #8a3800; --sa-warn-border: #f1c21b; --sa-warn-bg: #fff8e1;
-  --sa-orange: #eb6200; --sa-blue-bg: #d0e2ff; --sa-blue-soft: #edf5ff; --sa-purple: #8a3ffc;
-  --sa-purple-bg: #e8daff; --sa-cyan: #1192e8; --sa-red-soft: #fff1f1;
-  --sa-error-bg-2: #ffd7d9; --sa-error-text-2: #752227; --sa-surface: #ffffff;
-  --sa-surface-2: #f4f4f4; --sa-surface-3: #e0e0e0; --sa-surface-4: #e8e8e8;
-  --sa-surface-5: #f9f9f9; --sa-surface-6: #fafafa; --sa-field-border: #c6c6c6;
-  --sa-input-disabled: #e0e0e0; --sa-on-blue: #ffffff; --sa-on-danger: #ffffff;
-  --sa-hover: rgba(0, 0, 0, 0.05); --sa-hairline: rgba(140, 140, 140, 0.25);
-  --sa-link-tint: rgba(15, 98, 254, 0.08); --sa-danger-tint: rgba(218, 30, 40, 0.06);
-  --sa-warn-tint: rgba(241, 194, 27, 0.08); --sa-callout-bg: #e5f6ff;
-  --sa-callout-text: #00539a; --sa-callout-border: #99c9ef;
-  --sa-border: #c6c6c6; --sa-surface-1: #ffffff; --sa-bg-2: #f4f4f4;
+  --sa-text-0: #1e293b; --sa-text-1: #475569; --sa-text-2: #64748b; --sa-text-3: #94a3b8;
+  --sa-text-4: #cbd5e1; --sa-link: #0d9488; --sa-link-strong: #0f766e; --sa-danger: #e11d48;
+  --sa-danger-strong: #be123c; --sa-success: #10b981; --sa-success-bg: #ecfdf5;
+  --sa-warn-text: #b45309; --sa-warn-border: #f59e0b; --sa-warn-bg: #fffbeb;
+  --sa-orange: #ea580c; --sa-blue-bg: #e0f2fe; --sa-blue-soft: #f0f9ff; --sa-purple: #8b5cf6;
+  --sa-purple-bg: #f5f3ff; --sa-cyan: #06b6d4; --sa-red-soft: #fff1f2;
+  --sa-error-bg-2: #ffe4e6; --sa-error-text-2: #9f1239; --sa-surface: #ffffff;
+  --sa-surface-2: #f8fafc; --sa-surface-3: #e2e8f0; --sa-surface-4: #f1f5f9;
+  --sa-surface-5: #ffffff; --sa-surface-6: #f8fafc; --sa-field-border: #cbd5e1;
+  --sa-input-disabled: #e2e8f0; --sa-on-blue: #ffffff; --sa-on-danger: #ffffff;
+  --sa-hover: rgba(0, 0, 0, 0.04); --sa-hairline: rgba(148, 163, 184, 0.25);
+  --sa-link-tint: rgba(13, 148, 136, 0.08); --sa-danger-tint: rgba(225, 29, 72, 0.06);
+  --sa-warn-tint: rgba(245, 158, 11, 0.08); --sa-callout-bg: #f0fdfa;
+  --sa-callout-text: #115e59; --sa-callout-border: #99f6e4;
+  --sa-border: #e2e8f0; --sa-surface-1: #ffffff; --sa-bg-2: #f8fafc;
 }
 :is(html.dark, body.dark) {
-  --sa-text-0: #f4f4f4; --sa-text-1: #c6c6c6; --sa-text-2: #a7a7a7; --sa-text-3: #8d8d8d;
-  --sa-text-4: #6f6f6f; --sa-link: #78a9ff; --sa-link-strong: #a6c8ff; --sa-danger: #fa4d56;
-  --sa-danger-strong: #ff8389; --sa-success: #42be65; --sa-success-bg: #0e3a21;
-  --sa-warn-text: #f1c21b; --sa-warn-border: #8a6d1a; --sa-warn-bg: #312a16;
-  --sa-orange: #ff832b; --sa-blue-bg: #00356b; --sa-blue-soft: #0a2c47; --sa-purple: #be95ff;
-  --sa-purple-bg: #2a1744; --sa-cyan: #38bdf8; --sa-red-soft: #2d1215;
-  --sa-error-bg-2: #3a1216; --sa-error-text-2: #ff8389; --sa-surface: #111827;
-  --sa-surface-2: #1e293b; --sa-surface-3: #334155; --sa-surface-4: #334155;
-  --sa-surface-5: #0f172a; --sa-surface-6: #1e293b; --sa-field-border: #334155;
-  --sa-input-disabled: #334155; --sa-on-blue: #ffffff; --sa-on-danger: #ffffff;
-  --sa-hover: rgba(255, 255, 255, 0.07); --sa-hairline: rgba(180, 180, 180, 0.18);
-  --sa-link-tint: rgba(120, 169, 255, 0.16); --sa-danger-tint: rgba(250, 77, 86, 0.12);
-  --sa-warn-tint: rgba(241, 194, 27, 0.12); --sa-callout-bg: #05355c;
-  --sa-callout-text: #9ed6ff; --sa-callout-border: #38697a;
-  --sa-border: #334155; --sa-surface-1: #111827; --sa-bg-2: #1e293b;
+  --sa-text-0: #f8fafc; --sa-text-1: #cbd5e1; --sa-text-2: #94a3b8; --sa-text-3: #64748b;
+  --sa-text-4: #475569; --sa-link: #2dd4bf; --sa-link-strong: #5eead4; --sa-danger: #fb7185;
+  --sa-danger-strong: #fda4af; --sa-success: #34d399; --sa-success-bg: #064e3b;
+  --sa-warn-text: #fbbf24; --sa-warn-border: #d97706; --sa-warn-bg: #451a03;
+  --sa-orange: #fb923c; --sa-blue-bg: #0c4a6e; --sa-blue-soft: #082f49; --sa-purple: #c084fc;
+  --sa-purple-bg: #3b0764; --sa-cyan: #38bdf8; --sa-red-soft: #4c0519;
+  --sa-error-bg-2: #881337; --sa-error-text-2: #fecdd3; --sa-surface: #131b2e;
+  --sa-surface-2: #0b0f19; --sa-surface-3: #1e293b; --sa-surface-4: #283548;
+  --sa-surface-5: #0f172a; --sa-surface-6: #131b2e; --sa-field-border: #283548;
+  --sa-input-disabled: #1e293b; --sa-on-blue: #ffffff; --sa-on-danger: #ffffff;
+  --sa-hover: rgba(255, 255, 255, 0.05); --sa-hairline: rgba(148, 163, 184, 0.15);
+  --sa-link-tint: rgba(45, 212, 191, 0.12); --sa-danger-tint: rgba(251, 113, 133, 0.12);
+  --sa-warn-tint: rgba(251, 191, 36, 0.12); --sa-callout-bg: #042f2e;
+  --sa-callout-text: #5eead4; --sa-callout-border: #134e4a;
+  --sa-border: #1e293b; --sa-surface-1: #131b2e; --sa-bg-2: #0b0f19;
 }
 
 /* Generic dialogs opened inside God panel */

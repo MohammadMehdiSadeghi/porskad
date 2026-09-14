@@ -12,10 +12,9 @@ import {
   Lock,
   Key,
   Mail,
-  Eye,
-  EyeOff,
   User,
 } from "lucide-react";
+import PasswordToggle from "../../components/ui/PasswordToggle";
 
 export default function Profile() {
   const { user, profile, changePassword, updateProfile } = useAuth();
@@ -263,14 +262,14 @@ export default function Profile() {
                       placeholder="••••••••"
                       className="w-full bg-slate-50 dark:bg-slate-800/90 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md pl-10 pr-3.5 py-2 text-sm font-semibold text-navy dark:text-slate-100 focus:outline-none focus:border-teal transition-colors text-left"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowCurrentPass(!showCurrentPass)}
-                      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink/40 hover:text-navy dark:hover:text-white transition-colors p-1 cursor-pointer"
-                      tabIndex={-1}
-                    >
-                      {showCurrentPass ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
+                    <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                      <PasswordToggle
+                        visible={showCurrentPass}
+                        onToggle={() => setShowCurrentPass(!showCurrentPass)}
+                        size={16}
+                        ariaLabel="نمایش یا مخفی‌سازی رمز فعلی"
+                      />
+                    </div>
                   </div>
                 </label>
 
@@ -285,14 +284,14 @@ export default function Profile() {
                       placeholder="حداقل ۶ کاراکتر"
                       className="w-full bg-slate-50 dark:bg-slate-800/90 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md pl-10 pr-3.5 py-2 text-sm font-semibold text-navy dark:text-slate-100 focus:outline-none focus:border-teal transition-colors text-left"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPass(!showNewPass)}
-                      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink/40 hover:text-navy dark:hover:text-white transition-colors p-1 cursor-pointer"
-                      tabIndex={-1}
-                    >
-                      {showNewPass ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
+                    <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                      <PasswordToggle
+                        visible={showNewPass}
+                        onToggle={() => setShowNewPass(!showNewPass)}
+                        size={16}
+                        ariaLabel="نمایش یا مخفی‌سازی رمز جدید"
+                      />
+                    </div>
                   </div>
                 </label>
 
@@ -307,14 +306,14 @@ export default function Profile() {
                       placeholder="تکرار رمز جدید"
                       className="w-full bg-slate-50 dark:bg-slate-800/90 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md pl-10 pr-3.5 py-2 text-sm font-semibold text-navy dark:text-slate-100 focus:outline-none focus:border-teal transition-colors text-left"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPass(!showConfirmPass)}
-                      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink/40 hover:text-navy dark:hover:text-white transition-colors p-1 cursor-pointer"
-                      tabIndex={-1}
-                    >
-                      {showConfirmPass ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
+                    <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                      <PasswordToggle
+                        visible={showConfirmPass}
+                        onToggle={() => setShowConfirmPass(!showConfirmPass)}
+                        size={16}
+                        ariaLabel="نمایش یا مخفی‌سازی تکرار رمز جدید"
+                      />
+                    </div>
                   </div>
                 </label>
               </div>

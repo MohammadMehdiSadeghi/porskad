@@ -13,9 +13,8 @@ import {
   ChevronDown,
   ChevronUp,
   ShieldCheck,
-  Eye,
-  EyeOff
 } from "lucide-react";
+import PasswordToggle from "../../components/ui/PasswordToggle";
 
 const QUESTION_TYPES_LIST = [
   { key: "choice", label: "Multiple Choice", category: "Choice & Rating", desc: "Select 1 to N choices from a predefined list." },
@@ -314,13 +313,12 @@ def submit_response(form_id, answers):
                 <span className="font-mono bg-slate-100 dark:bg-slate-800 text-teal-600 dark:text-teal-400 px-2 py-0.5 rounded border border-teal-500/20 text-xs select-all max-w-[220px] sm:max-w-xs truncate inline-block align-middle">
                   {showToken ? token : `${token.substring(0, 16)}••••••••••••••••`}
                 </span>
-                <button
-                  onClick={() => setShowToken(!showToken)}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
-                  title={showToken ? "Hide token" : "Show full token"}
-                >
-                  {showToken ? <EyeOff size={14} /> : <Eye size={14} />}
-                </button>
+                <PasswordToggle
+                  visible={showToken}
+                  onToggle={() => setShowToken(!showToken)}
+                  size={14}
+                  ariaLabel={showToken ? "Hide token" : "Show full token"}
+                />
                 <button
                   onClick={handleCopyToken}
                   className="bg-teal-600 hover:bg-teal-700 text-white px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer shadow-xs"

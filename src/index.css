@@ -39,20 +39,20 @@
     }
 
     /* ─── یکپارچه‌سازی انیمیشن تمام دکمه‌ها در سراسر سایت (Scale Animation) ─── */
-    button:not(:disabled):not(.no-anim),
-    [role="button"]:not([aria-disabled="true"]):not(.no-anim),
+    button:not(:disabled):not(.no-anim):not(.password-toggle-btn):not([class*="-translate-y-1/2"]):not([class*="translate-y-"]),
+    [role="button"]:not([aria-disabled="true"]):not(.no-anim):not(.password-toggle-btn):not([class*="-translate-y-1/2"]):not([class*="translate-y-"]),
     .btn:not(:disabled) {
         transition-property: transform, background-color, border-color, color, box-shadow;
         transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
         transition-duration: 200ms;
     }
-    button:not(:disabled):not(.no-anim):hover,
-    [role="button"]:not([aria-disabled="true"]):not(.no-anim):hover,
+    button:not(:disabled):not(.no-anim):not(.password-toggle-btn):not([class*="-translate-y-1/2"]):not([class*="translate-y-"]):hover,
+    [role="button"]:not([aria-disabled="true"]):not(.no-anim):not(.password-toggle-btn):not([class*="-translate-y-1/2"]):not([class*="translate-y-"]):hover,
     .btn:not(:disabled):hover {
         transform: scale(1.02);
     }
-    button:not(:disabled):not(.no-anim):active,
-    [role="button"]:not([aria-disabled="true"]):not(.no-anim):active,
+    button:not(:disabled):not(.no-anim):not(.password-toggle-btn):not([class*="-translate-y-1/2"]):not([class*="translate-y-"]):active,
+    [role="button"]:not([aria-disabled="true"]):not(.no-anim):not(.password-toggle-btn):not([class*="-translate-y-1/2"]):not([class*="translate-y-"]):active,
     .btn:not(:disabled):active {
         transform: scale(0.97);
     }
@@ -61,6 +61,50 @@
         transform: none !important;
         cursor: not-allowed;
         opacity: 0.5;
+    }
+
+    /* ─── انیمیشن اختصاصی دکمه نمایش/مخفی‌سازی رمز عبور و توکن‌ها ─── */
+    .password-toggle-wrap {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+    }
+    .password-toggle-btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 2rem !important;
+        height: 2rem !important;
+        border-radius: 9999px !important;
+        background: transparent !important;
+        border: none !important;
+        cursor: pointer !important;
+        outline: none !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        transform: none !important;
+        transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                    color 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    .password-toggle-btn:hover {
+        background-color: rgba(148, 163, 184, 0.15) !important;
+    }
+    .password-toggle-btn:active {
+        background-color: rgba(148, 163, 184, 0.25) !important;
+    }
+    .password-toggle-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+                    opacity 0.2s ease-in-out;
+    }
+    .password-toggle-icon.is-active {
+        transform: rotate(180deg) scale(1.08);
     }
 }
 
@@ -931,6 +975,86 @@ html.dark [role="dialog"] td {
     border-color: #24304D !important;
     color: #F8FAFC !important;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   PORSKAD HARMONY DESIGN SYSTEM TOKENS
+   یکپارچه‌سازی فونت‌ها، شدوها، ردیوس‌ها و کارت‌ها در سراسر پنل
+   ══════════════════════════════════════════════════════════════ */
+.ui-card {
+    background-color: #ffffff;
+    border: 2px solid rgba(32, 42, 90, 0.08);
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+    transition: box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+html.dark .ui-card {
+    background-color: #131B2E;
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.35);
+}
+
+.ui-input {
+    width: 100%;
+    background-color: #ffffff;
+    border: 2px solid rgba(32, 42, 90, 0.18);
+    border-radius: 0.625rem;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #202A5A;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.ui-input:focus {
+    border-color: #58BDAF !important;
+    box-shadow: 0 0 0 4px rgba(88, 189, 175, 0.18) !important;
+}
+html.dark .ui-input {
+    background-color: #1A2238;
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #F8FAFC;
+}
+html.dark .ui-input::placeholder {
+    color: #64748B;
+}
+
+/* استاندارد عناوین و متون */
+.heading-page {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 900;
+    color: #202A5A;
+}
+@media (min-width: 640px) {
+    .heading-page {
+        font-size: 1.875rem;
+        line-height: 2.25rem;
+    }
+}
+html.dark .heading-page {
+    color: #FFFFFF;
+}
+
+.heading-section {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    font-weight: 800;
+    color: #202A5A;
+}
+html.dark .heading-section {
+    color: #F1F5F9;
+}
+
+.text-caption {
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+    font-weight: 600;
+    color: #64748B;
+}
+html.dark .text-caption {
+    color: #94A3B8;
+}
+
 
 
 

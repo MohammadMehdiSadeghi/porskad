@@ -11,6 +11,7 @@ import EmptyState from "../../components/ui/EmptyState";
 import Spinner from "../../components/ui/Spinner";
 import { TableSkeleton, DashboardSkeleton } from "../../components/ui/Skeleton";
 import SEO from "../../components/ui/SEO";
+import PasswordToggle from "../../components/ui/PasswordToggle";
 import {
   MessageSquare,
   Send,
@@ -709,13 +710,14 @@ export default function SmsPanel() {
                       className={`${inputCls} pl-10 text-left font-mono text-xs`}
                       dir="ltr"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowToken(!showToken)}
-                      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-subtle hover:text-navy dark:hover:text-white p-1 cursor-pointer transition-colors"
-                    >
-                      {showToken ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
+                    <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                      <PasswordToggle
+                        visible={showToken}
+                        onToggle={() => setShowToken(!showToken)}
+                        size={16}
+                        ariaLabel="نمایش یا مخفی‌سازی توکن آموت"
+                      />
+                    </div>
                   </div>
                   <p className="text-[11px] font-semibold text-ink-subtle dark:text-slate-500">
                     توکن را می‌توانید از پنل کاربری آموت &gt; بخش وب‌سرویس &gt; دریافت کلید دسترسی کپی کنید.

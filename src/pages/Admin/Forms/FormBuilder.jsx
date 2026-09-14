@@ -160,7 +160,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
               <button
                 onClick={() => onMove(-1)}
                 disabled={index === 0}
-                className="w-8 h-8 rounded-pill-md border-2 border-ink/20 bg-white flex items-center justify-center text-ink hover:bg-bg-neutral disabled:opacity-30 transition-colors"
+                className="w-8 h-8 rounded-pill-md border-2 border-ink/20 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-center text-ink dark:text-slate-200 hover:bg-bg-neutral dark:hover:bg-slate-700 disabled:opacity-30 transition-colors"
                 title="بالا"
               >
                 <ChevronUp size={15} />
@@ -168,14 +168,14 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
               <button
                 onClick={() => onMove(1)}
                 disabled={index === total - 1}
-                className="w-8 h-8 rounded-pill-md border-2 border-ink/20 bg-white flex items-center justify-center text-ink hover:bg-bg-neutral disabled:opacity-30 transition-colors"
+                className="w-8 h-8 rounded-pill-md border-2 border-ink/20 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-center text-ink dark:text-slate-200 hover:bg-bg-neutral dark:hover:bg-slate-700 disabled:opacity-30 transition-colors"
                 title="پایین"
               >
                 <ChevronDown size={15} />
               </button>
               <button
                 onClick={onDelete}
-                className="w-8 h-8 rounded-pill-md border-2 border-magenta/40 bg-white flex items-center justify-center text-magenta-text hover:bg-magenta/10 transition-colors"
+                className="w-8 h-8 rounded-pill-md border-2 border-magenta/40 dark:border-pink-500/40 bg-white dark:bg-slate-800 flex items-center justify-center text-magenta-text dark:text-pink-400 hover:bg-magenta/10 dark:hover:bg-pink-950/40 transition-colors"
                 title="حذف سوال"
               >
                 <Trash2 size={15} />
@@ -934,7 +934,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                   ? `گزینه «${q.options[ja.option_index]}»`
                   : " generally";
                 return (
-                  <div key={ja.id || i} className="flex flex-col gap-1.5 bg-white rounded-pill-md border border-ink/10 p-2.5">
+                  <div key={ja.id || i} className="flex flex-col gap-1.5 bg-white dark:bg-slate-800 rounded-pill-md border border-ink/10 dark:border-slate-700 p-2.5">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-extrabold text-magenta-text shrink-0">
                         {jaLabel}:
@@ -1717,8 +1717,8 @@ export default function FormBuilder() {
                         const currentLevel = current ? current.level : 0;
                         const MAX_LEVELS = 3;
                         return (
-                          <div key={q.localId || q.id} className="flex items-center gap-2 bg-white border-2 border-ink/10 rounded-pill-md px-3 py-2">
-                            <span className="text-xs font-bold text-navy flex-1 truncate">{q.title || "بدون عنوان"}</span>
+                          <div key={q.localId || q.id} className="flex items-center gap-2 bg-white dark:bg-slate-800 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md px-3 py-2">
+                            <span className="text-xs font-bold text-navy dark:text-slate-100 flex-1 truncate">{q.title || "بدون عنوان"}</span>
                             <select
                               value={currentLevel}
                               onChange={(e) => {
@@ -1732,7 +1732,9 @@ export default function FormBuilder() {
                                 setFormField({ identifier_mapping: next.length ? next : null });
                               }}
                               className={`text-xs font-bold rounded-pill-sm border-2 px-2 py-1.5 cursor-pointer focus:outline-none ${
-                                currentLevel > 0 ? "border-teal bg-teal/10 text-teal-text" : "border-ink/15 bg-white text-ink/60"
+                                currentLevel > 0
+                                  ? "border-teal bg-teal/10 dark:bg-teal/20 text-teal-text dark:text-teal"
+                                  : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink/60 dark:text-slate-400"
                               }`}
                             >
                               <option value={0}>— شناسه نیست</option>
@@ -1905,7 +1907,7 @@ export default function FormBuilder() {
         </div>
 
         {questions.length === 0 ? (
-          <div className="p-6 text-center bg-white/70 border-2 border-dashed border-ink/15 rounded-2xl text-xs sm:text-sm font-bold text-ink-subtle">
+          <div className="p-6 text-center bg-white/70 dark:bg-slate-850/60 border-2 border-dashed border-ink/15 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-bold text-ink-subtle dark:text-slate-400">
             هنوز سوالی به این فرم اضافه نشده است. با انتخاب یکی از انواع بالا، اولین سوال در این بخش قرار می‌گیرد.
           </div>
         ) : (
@@ -1940,7 +1942,7 @@ export default function FormBuilder() {
 
       {/* ─── ستون پیش‌نمایش و دکمه ذخیره دسکتاپ (سمت چپ) ─── */}
       <div className="hidden lg:flex flex-col gap-3.5 w-[330px] shrink-0 sticky top-20 self-start">
-        <div className="rounded-2xl border-2 border-navy/20 bg-white overflow-hidden shadow-lg">
+        <div className="rounded-2xl border-2 border-navy/20 dark:border-slate-700 bg-white dark:bg-[#131B2E] overflow-hidden shadow-sm">
           <FormPreview form={form} questions={questions} />
         </div>
         <Button

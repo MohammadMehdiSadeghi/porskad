@@ -10,8 +10,6 @@ import SEO from "../../components/ui/SEO";
 import {
   Code2,
   Key,
-  Eye,
-  EyeOff,
   Copy,
   Check,
   Globe,
@@ -27,6 +25,7 @@ import {
   CheckCircle2,
   Sparkles,
 } from "lucide-react";
+import PasswordToggle from "../../components/ui/PasswordToggle";
 
 // ─── کامپوننت کنسول تعاملی Swagger مستقیم داخل صفحه ───
 function EmbeddedSwaggerUI({ token }) {
@@ -324,14 +323,13 @@ print(response.json())`,
                     ? (showToken ? token : `${token.substring(0, 14)}••••••••••••••••••••${token.substring(token.length - 6)}`)
                     : "در حال بارگذاری توکن..."}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => setShowToken(!showToken)}
-                  className="p-1 text-ink-subtle hover:text-navy dark:hover:text-white rounded transition-colors shrink-0 ml-1.5 cursor-pointer"
-                  title={showToken ? "مخفی کردن" : "نمایش کامل"}
-                >
-                  {showToken ? <EyeOff size={14} /> : <Eye size={14} />}
-                </button>
+                <PasswordToggle
+                  visible={showToken}
+                  onToggle={() => setShowToken(!showToken)}
+                  size={15}
+                  className="shrink-0 ml-1.5"
+                  ariaLabel={showToken ? "مخفی کردن توکن" : "نمایش کامل توکن"}
+                />
               </div>
 
               <Button
