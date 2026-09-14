@@ -33,6 +33,7 @@ function translateAmootStatus(status) {
     User_AccessDenied: "عدم دسترسی به وب‌سرویس در حساب آموت",
     LineNumber_Empty: "شماره خط فرستنده وارد نشده است (می‌توانید Public یا خط اختصاصی را انتخاب کنید)",
     LineNumber_Invalid: "شماره خط فرستنده در حساب آموت شما معتبر یا فعال نیست (می‌توانید خط Public یا Service را انتخاب کنید)",
+    LineNumber_NotExist: "شماره خط فرستنده انتخابی در حساب آموت شما تعریف نشده است (لطفاً یکی از خطوط معتبر مانند Service یا Public یا 98 را انتخاب کنید)",
     Line_Not_Active: "خط ارسال پیامک انتخابی فعال نیست",
     Line_AccessDenied: "شما مجوز ارسال پیامک از این خط را ندارید",
     Insufficient_Credit: "اعتبار پنل پیامک آموت شما کافی نیست (لطفاً حساب آموت را شارژ کنید)",

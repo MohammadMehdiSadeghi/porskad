@@ -835,16 +835,24 @@ export default function SmsPanel() {
                       <Smartphone size={14} className="text-teal" />
                       شماره خط فرستنده (Line Number)
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={lineNumber}
                       onChange={(e) => setLineNumber(e.target.value)}
-                      placeholder="Public یا 5000..."
-                      className={`${inputCls} text-left font-mono text-xs`}
-                      dir="ltr"
-                    />
+                      className={inputCls}
+                    >
+                      <option value="Service">Service (خط خدماتی اختصاصی — عبور از بلک‌لیست)</option>
+                      <option value="Public">Public (خط عمومی خدماتی آموت)</option>
+                      <option value="98">98 (خط پیش‌فرض سراسری)</option>
+                      {availableLines
+                        .filter((l) => l && !["Public", "Service", "98"].includes(l))
+                        .map((line) => (
+                          <option key={line} value={line}>
+                            {line}
+                          </option>
+                        ))}
+                    </select>
                     <span className="text-[11px] text-ink-subtle dark:text-slate-500">
-                      مقدار پیش‌فرض <code className="font-bold">Public</code> یا شماره اختصاصی خریداری شده شما.
+                      خطوط فعال اکانت شما: <strong className="text-teal font-mono">Service , Public , 98</strong> (برای پیامک‌های سامانه، خط Service بهترین انتخاب است).
                     </span>
                   </div>
 
