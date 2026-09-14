@@ -4,8 +4,8 @@ const THEMES = {
   orange: {
     rotate: "rotate-[1deg] lg:rotate-[2.5deg]",
     badgeRotate: "rotate-[3deg]",
-    back: "bg-orange-alt dark:bg-black/80",
-    border: "border-orange-alt dark:border-amber-500/50",
+    back: "bg-orange-alt dark:bg-[#78350f] dark:border dark:border-amber-500/40 dark:shadow-[0_0_20px_rgba(245,158,11,0.2)]",
+    border: "border-orange-alt dark:border-amber-500/60",
     cardBg: "bg-[#FEF7EC] dark:bg-[#1A1207]",
     text: "text-orange dark:text-amber-400",
     badge: "border-orange text-orange dark:border-amber-500/50 dark:text-amber-300 dark:bg-slate-900/90",
@@ -13,8 +13,8 @@ const THEMES = {
   navy: {
     rotate: "-rotate-[1deg] lg:-rotate-[2deg]",
     badgeRotate: "-rotate-[2.5deg]",
-    back: "bg-navy-alt dark:bg-black/80",
-    border: "border-navy dark:border-blue-500/50",
+    back: "bg-navy-alt dark:bg-[#1e3a8a] dark:border dark:border-blue-500/40 dark:shadow-[0_0_20px_rgba(59,130,246,0.2)]",
+    border: "border-navy dark:border-blue-500/60",
     cardBg: "bg-[#F4F5FB] dark:bg-[#0F172A]",
     text: "text-navy-alt dark:text-sky-300",
     badge: "border-navy-alt text-navy-alt dark:border-blue-500/50 dark:text-sky-300 dark:bg-slate-900/90",
@@ -22,8 +22,8 @@ const THEMES = {
   magenta: {
     rotate: "rotate-[1deg] lg:rotate-[2.5deg]",
     badgeRotate: "rotate-[3deg]",
-    back: "bg-magenta dark:bg-black/80",
-    border: "border-magenta dark:border-pink-500/50",
+    back: "bg-magenta dark:bg-[#831843] dark:border dark:border-pink-500/40 dark:shadow-[0_0_20px_rgba(236,72,153,0.2)]",
+    border: "border-magenta dark:border-pink-500/60",
     cardBg: "bg-[#FEFAFB] dark:bg-[#1F0D18]",
     text: "text-magenta-text dark:text-pink-400",
     badge: "border-magenta-text text-magenta-text dark:border-pink-500/50 dark:text-pink-300 dark:bg-slate-900/90",
@@ -31,8 +31,8 @@ const THEMES = {
   teal: {
     rotate: "-rotate-[1deg] lg:-rotate-[2deg]",
     badgeRotate: "-rotate-[2.5deg]",
-    back: "bg-teal-alt dark:bg-black/80",
-    border: "border-teal dark:border-teal/50",
+    back: "bg-teal-alt dark:bg-[#115e59] dark:border dark:border-teal/40 dark:shadow-[0_0_20px_rgba(45,212,191,0.2)]",
+    border: "border-teal dark:border-teal/60",
     cardBg: "bg-[#F2FAF9] dark:bg-[#0C1F1E]",
     text: "text-teal-text dark:text-teal",
     badge: "border-teal-text text-teal-text dark:border-teal/50 dark:text-teal dark:bg-slate-900/90",

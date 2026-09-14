@@ -170,8 +170,8 @@ export default function Dashboard() {
       />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-xl sm:text-3xl font-black text-navy">داشبورد کل</h1>
-          <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-1">
+          <h1 className="text-xl sm:text-3xl font-black text-navy dark:text-white">داشبورد کل</h1>
+          <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 mt-1">
             نمای کلی فرم‌ها و پاسخ‌ها
             <span className="live-dot inline-block w-1.5 h-1.5 rounded-full bg-teal mr-1.5 align-middle" />
           </p>
@@ -198,7 +198,7 @@ export default function Dashboard() {
 
       {/* آخرین پاسخ‌ها */}
       <div>
-        <h2 className="text-lg sm:text-xl font-black text-navy mb-3 sm:mb-4">آخرین پاسخ‌ها</h2>
+        <h2 className="text-lg sm:text-xl font-black text-navy dark:text-white mb-3 sm:mb-4">آخرین پاسخ‌ها</h2>
         {recent.length === 0 ? (
           <EmptyState
             icon={<Inbox size={48} />}
@@ -213,7 +213,7 @@ export default function Dashboard() {
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-navy border-b-2 border-ink/10">
+                    <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-800">
                       <th className="text-right font-black px-4 py-3">فرم</th>
                       <th className="text-right font-black px-4 py-3">زمان ثبت</th>
                       <th className="text-right font-black px-4 py-3">وضعیت</th>
@@ -223,12 +223,12 @@ export default function Dashboard() {
                   </thead>
                   <tbody>
                     {recent.map((r, i) => (
-                      <tr key={r.id} className={`${i % 2 ? "bg-bg-lavender/60" : ""} border-b border-ink/5 last:border-0`}>
-                        <td className="px-4 py-3 font-bold text-ink">{formTitleById[r.form_id] ?? "—"}</td>
-                        <td className="px-4 py-3 font-semibold text-ink-subtle">{faRelative(r.submitted_at ?? r.created_at)}</td>
+                      <tr key={r.id} className={`${i % 2 ? "bg-bg-lavender/60 dark:bg-slate-800/40" : ""} border-b border-ink/5 dark:border-slate-800/60 last:border-0`}>
+                        <td className="px-4 py-3 font-bold text-ink dark:text-slate-100">{formTitleById[r.form_id] ?? "—"}</td>
+                        <td className="px-4 py-3 font-semibold text-ink-subtle dark:text-slate-400">{faRelative(r.submitted_at ?? r.created_at)}</td>
                         <td className="px-4 py-3">{r.is_complete ? <Badge color="green">کامل</Badge> : <Badge color="gray">ناقص</Badge>}</td>
-                        <td className="px-4 py-3 font-semibold text-ink-subtle">{r.duration_seconds ? faDuration(r.duration_seconds) : "—"}</td>
-                        <td className="px-4 py-3 font-semibold text-ink-subtle">{DEVICE_FA[r.device] ?? r.device ?? "—"}</td>
+                        <td className="px-4 py-3 font-semibold text-ink-subtle dark:text-slate-400">{r.duration_seconds ? faDuration(r.duration_seconds) : "—"}</td>
+                        <td className="px-4 py-3 font-semibold text-ink-subtle dark:text-slate-400">{DEVICE_FA[r.device] ?? r.device ?? "—"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -237,8 +237,8 @@ export default function Dashboard() {
               {/* موبایل: ردیف‌های فشرده — اسکرول عمودی */}
               <div className="md:hidden max-h-[24rem] overflow-y-auto">
                 <table className="w-full text-xs">
-                  <thead className="sticky top-0 bg-white z-10">
-                    <tr className="text-navy border-b-2 border-ink/10">
+                  <thead className="sticky top-0 bg-white dark:bg-slate-900 z-10">
+                    <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-800">
                       <th className="text-right font-black px-2.5 py-2">فرم</th>
                       <th className="text-right font-black px-2.5 py-2">زمان</th>
                       <th className="text-center font-black px-2 py-2">وضعیت</th>
@@ -246,12 +246,12 @@ export default function Dashboard() {
                   </thead>
                   <tbody>
                     {recent.map((r, i) => (
-                      <tr key={r.id} className={`${i % 2 ? "bg-bg-lavender/40" : ""} border-b border-ink/5 last:border-0`}
+                      <tr key={r.id} className={`${i % 2 ? "bg-bg-lavender/40 dark:bg-slate-800/40" : ""} border-b border-ink/5 dark:border-slate-800/60 last:border-0`}
                         style={{ pageBreakInside: 'avoid' }}>
-                        <td className="px-2.5 py-2 font-bold text-ink max-w-[45%] truncate" title={formTitleById[r.form_id] ?? "—"}>
+                        <td className="px-2.5 py-2 font-bold text-ink dark:text-slate-100 max-w-[45%] truncate" title={formTitleById[r.form_id] ?? "—"}>
                           {formTitleById[r.form_id] ?? "—"}
                         </td>
-                        <td className="px-2.5 py-2 font-semibold text-ink-subtle whitespace-nowrap">
+                        <td className="px-2.5 py-2 font-semibold text-ink-subtle dark:text-slate-400 whitespace-nowrap">
                           {faRelative(r.submitted_at ?? r.created_at)}
                         </td>
                         <td className="px-2 py-2 text-center">
