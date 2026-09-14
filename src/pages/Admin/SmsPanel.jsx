@@ -103,29 +103,52 @@ export default function SmsPanel() {
   // ─── بارگذاری تنظیمات و وضعیت حساب آموت ───
   const loadSettings = useCallback(async () => {
     try {
-      // ۱. ابتدا مستقیم از دیتابیس Supabase تنظیمات را می‌خوانیم
-      const { data: dbSettings } = await supabase
-        .from("sms_settings")
-        .select("id, amoot_token, line_number, sender_name, is_active, updated_at")
-        .eq("id", 1)
-        .maybeSingle();
+      const storedToken = localStorage.getItem("porskad_amoot_token") || "";
+      const storedLine = localStorage.getItem("porskad_amoot_line") || "";
+      const storedSender = localStorage.getItem("porskad_amoot_sender") || "";
+      const storedActive = localStorage.getItem("porskad_amoot_active");
 
-      if (dbSettings) {
-        const hasToken = Boolean(dbSettings.amoot_token && dbSettings.amoot_token.length > 5);
-        setHasTokenInDb(hasToken);
-        setMaskedToken(hasToken ? "••••••••" + dbSettings.amoot_token.slice(-4) : "");
-        setLineNumber(dbSettings.line_number || "Public");
-        setSenderName(dbSettings.sender_name || "پرس‌کاد");
-        setIsActive(dbSettings.is_active ?? true);
+      if (storedLine) setLineNumber(storedLine);
+      if (storedSender) setSenderName(storedSender);
+      if (storedActive !== null) setIsActive(storedActive === "true");
+
+      let resolvedToken = storedToken;
+
+      // ۱. تلاش برای خواندن مستقیم از دیتابیس Supabase
+      try {
+        const { data: dbSettings } = await supabase
+          .from("sms_settings")
+          .select("id, amoot_token, line_number, sender_name, is_active, updated_at")
+          .eq("id", 1)
+          .maybeSingle();
+
+        if (dbSettings) {
+          if (dbSettings.amoot_token && dbSettings.amoot_token.length > 5) {
+            resolvedToken = dbSettings.amoot_token;
+            localStorage.setItem("porskad_amoot_token", resolvedToken);
+          }
+          if (dbSettings.line_number) setLineNumber(dbSettings.line_number);
+          if (dbSettings.sender_name) setSenderName(dbSettings.sender_name);
+          if (dbSettings.is_active !== undefined && dbSettings.is_active !== null) {
+            setIsActive(dbSettings.is_active);
+          }
+        }
+      } catch (err) {
+        console.warn("DB settings load note:", err?.message);
       }
 
+      const hasToken = Boolean(resolvedToken && resolvedToken.length > 5);
+      setHasTokenInDb(hasToken);
+      setMaskedToken(hasToken ? "••••••••" + resolvedToken.slice(-4) : "");
+
       // ۲. دریافت اطلاعات زنده از بریج
-      const data = await callAmootProxy("get_settings");
+      const data = await callAmootProxy("get_settings", { token: resolvedToken });
       if (data?.liveAccount) {
         setLiveAccount(data.liveAccount);
         if (Array.isArray(data.liveAccount.listLineNumbers) && data.liveAccount.listLineNumbers.length > 0) {
           setAvailableLines(data.liveAccount.listLineNumbers);
         }
+        setHasTokenInDb(true);
       }
     } catch (err) {
       console.error("Load settings error:", err);
@@ -199,11 +222,24 @@ export default function SmsPanel() {
     setTestingConnection(true);
     setTestResult(null);
     try {
-      const payload = amootToken.trim() ? { token: amootToken.trim() } : {};
-      const data = await callAmootProxy("test_connection", payload);
+      const storedToken = localStorage.getItem("porskad_amoot_token") || "";
+      const tokenToTest = (amootToken.trim() && !amootToken.includes("••••"))
+        ? amootToken.trim()
+        : storedToken;
+
+      if (!tokenToTest) {
+        showToast("لطفاً ابتدا توکن وب‌سرویس آموت را وارد نمایید.", "error");
+        setTestingConnection(false);
+        return;
+      }
+
+      const data = await callAmootProxy("test_connection", { token: tokenToTest });
       setTestResult(data);
       if (data?.success) {
         showToast("اتصال به وب‌سرویس آموت با موفقیت تأیید شد.", "success");
+        localStorage.setItem("porskad_amoot_token", tokenToTest);
+        setHasTokenInDb(true);
+        setMaskedToken("••••••••" + tokenToTest.slice(-4));
         setLiveAccount({
           status: "connected",
           accountName: data.accountName,
@@ -230,31 +266,51 @@ export default function SmsPanel() {
     e.preventDefault();
     setSavingSettings(true);
     try {
+      const storedToken = localStorage.getItem("porskad_amoot_token") || "";
       let finalToken = amootToken.trim();
       if (!finalToken || finalToken.includes("••••")) {
-        const { data: existing } = await supabase
-          .from("sms_settings")
-          .select("amoot_token")
-          .eq("id", 1)
-          .maybeSingle();
-        finalToken = existing?.amoot_token || "";
+        finalToken = storedToken;
+        if (!finalToken) {
+          try {
+            const { data: existing } = await supabase
+              .from("sms_settings")
+              .select("amoot_token")
+              .eq("id", 1)
+              .maybeSingle();
+            finalToken = existing?.amoot_token || "";
+          } catch {
+            // ignore
+          }
+        }
       }
 
-      // ذخیره مستقیم در پایگاه داده
-      await supabase.from("sms_settings").upsert({
-        id: 1,
+      if (finalToken) {
+        localStorage.setItem("porskad_amoot_token", finalToken);
+      }
+      localStorage.setItem("porskad_amoot_line", lineNumber || "Public");
+      localStorage.setItem("porskad_amoot_sender", senderName || "پرس‌کاد");
+      localStorage.setItem("porskad_amoot_active", String(isActive));
+
+      // تلاش برای ذخیره مستقیم در پایگاه داده
+      try {
+        await supabase.from("sms_settings").upsert({
+          id: 1,
+          amoot_token: finalToken,
+          line_number: (lineNumber || "Public").trim(),
+          sender_name: (senderName || "پرس‌کاد").trim(),
+          is_active: isActive,
+          updated_at: new Date().toISOString(),
+        });
+      } catch (dbErr) {
+        console.warn("Direct DB upsert note:", dbErr?.message);
+      }
+
+      // ارسال به بریج سرورلس با توکن
+      await callAmootProxy("save_settings", {
+        token: finalToken,
         amoot_token: finalToken,
         line_number: (lineNumber || "Public").trim(),
         sender_name: (senderName || "پرس‌کاد").trim(),
-        is_active: isActive,
-        updated_at: new Date().toISOString(),
-      });
-
-      // ارسال به بریج سرورلس
-      await callAmootProxy("save_settings", {
-        amoot_token: finalToken,
-        line_number: lineNumber.trim(),
-        sender_name: senderName.trim(),
         is_active: isActive,
       });
 
@@ -299,13 +355,19 @@ export default function SmsPanel() {
       return;
     }
 
+    const storedToken = localStorage.getItem("porskad_amoot_token") || "";
+    const tokenToSend = (amootToken.trim() && !amootToken.includes("••••"))
+      ? amootToken.trim()
+      : storedToken;
+
     setSendingSms(true);
     setSendResult(null);
     try {
       const data = await callAmootProxy("send_sms", {
+        token: tokenToSend,
         mobiles: uniqueMobiles,
         text: smsText.trim(),
-        lineNumber: lineNumber,
+        lineNumber: lineNumber || "Public",
       });
 
       if (data.success) {
@@ -313,6 +375,24 @@ export default function SmsPanel() {
         setSendResult({ success: true, ...data });
         setSmsText("");
         setRawMobiles("");
+
+        // ثبت لاگ پیامک در کلاینت برای نمایش سریع در تاریخچه
+        try {
+          await supabase.from("sms_outbox").insert(
+            uniqueMobiles.map((m) => ({
+              message_id: String(data.campaignId || ""),
+              mobile: m,
+              text: smsText.trim(),
+              status: "sent",
+              line_number: lineNumber || "Public",
+              parts: data.parts || smsPagesCount || 1,
+              cost: data.price ? Number(data.price) / uniqueMobiles.length : 0,
+            }))
+          );
+        } catch {
+          // ignore
+        }
+
         await Promise.all([loadDashboard(), loadSettings()]);
       } else {
         showToast(data.message || "ارسال پیامک ناموفق بود", "error");
@@ -391,11 +471,11 @@ export default function SmsPanel() {
         {/* بج وضعیت اتصال در هدر */}
         <div className="flex items-center gap-2">
           {!isActive ? (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-pill-md bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700 text-xs font-bold">
-              <span className="w-2 h-2 rounded-full bg-slate-400" />
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-pill-md bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50 text-xs font-bold">
+              <span className="w-2 h-2 rounded-full bg-rose-500" />
               <span>ارسال پیامک: غیرفعال</span>
             </div>
-          ) : hasTokenInDb ? (
+          ) : (hasTokenInDb || liveAccount) ? (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-pill-md bg-teal/15 text-teal border border-teal/30 text-xs font-bold">
               <Radio size={14} className="animate-pulse" />
               <span>آموت: فعال و آماده</span>
@@ -438,20 +518,31 @@ export default function SmsPanel() {
                 <div className="flex items-start gap-4">
                   <div
                     className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-inner transition-colors duration-200 ${
-                      isActive && hasTokenInDb
+                      isActive && (hasTokenInDb || liveAccount)
                         ? "bg-teal/15 text-teal border border-teal/30 shadow-[0_0_15px_rgba(45,212,191,0.2)]"
-                        : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700"
+                        : !isActive
+                        ? "bg-rose-50 dark:bg-rose-950/40 text-rose-500 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50"
+                        : "bg-amber-50 dark:bg-amber-950/40 text-amber-500 dark:text-amber-400 border border-amber-200 dark:border-amber-900/50"
                     }`}
                   >
-                    <Zap size={26} className={isActive && hasTokenInDb ? "fill-teal/30" : ""} />
+                    <Zap
+                      size={26}
+                      className={
+                        isActive && (hasTokenInDb || liveAccount)
+                          ? "fill-teal"
+                          : !isActive
+                          ? "text-rose-500"
+                          : "text-amber-500"
+                      }
+                    />
                   </div>
                   <div>
                     <div className="flex items-center gap-2.5">
                       <h2 className="text-base sm:text-lg font-black text-navy dark:text-white">
                         درگاه پیامک آموت (Amoot Telecom)
                       </h2>
-                      <Badge color={!isActive ? "gray" : hasTokenInDb ? "teal" : "orange"}>
-                        {!isActive ? "سرویس خاموش" : hasTokenInDb ? "سرویس فعال" : "در انتظار توکن"}
+                      <Badge color={!isActive ? "red" : (hasTokenInDb || liveAccount) ? "teal" : "orange"}>
+                        {!isActive ? "سرویس خاموش" : (hasTokenInDb || liveAccount) ? "سرویس فعال" : "در انتظار توکن"}
                       </Badge>
                     </div>
                     <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 mt-1">
@@ -616,8 +707,10 @@ export default function SmsPanel() {
                       className={inputCls}
                     >
                       <option value="Public">Public (خط عمومی خدماتی آموت)</option>
+                      <option value="Service">Service (خط خدماتی اختصاصی)</option>
+                      <option value="98">98 (خط پیش‌فرض سراسری)</option>
                       {availableLines
-                        .filter((l) => l && l !== "Public")
+                        .filter((l) => l && !["Public", "Service", "98"].includes(l))
                         .map((line) => (
                           <option key={line} value={line}>
                             {line}
@@ -783,26 +876,24 @@ export default function SmsPanel() {
                   <div className="flex items-center gap-2.5">
                     <span
                       className={`text-xs font-bold transition-colors ${
-                        isActive ? "text-teal" : "text-ink-subtle dark:text-slate-400"
+                        isActive ? "text-teal" : "text-rose-500 dark:text-rose-400"
                       }`}
                     >
-                      {isActive ? "روشن" : "خاموش"}
+                      {isActive ? "روشن (سرویس فعال)" : "خاموش (متوقف)"}
                     </span>
                     <button
                       type="button"
                       role="switch"
                       aria-checked={isActive}
                       onClick={() => setIsActive(!isActive)}
-                      className={`w-12 h-6 rounded-full transition-all duration-200 relative cursor-pointer p-0.5 border focus:outline-none focus:ring-2 focus:ring-teal/40 ${
-                        isActive
-                          ? "bg-teal border-teal/80 shadow-xs"
-                          : "bg-slate-300 dark:bg-slate-700 border-slate-400/40"
+                      className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal/40 ${
+                        isActive ? "bg-teal" : "bg-slate-300 dark:bg-slate-700"
                       }`}
                       title={isActive ? "کلیک برای غیرفعال‌سازی" : "کلیک برای فعال‌سازی"}
                     >
                       <span
-                        className={`block w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-200 ${
-                          isActive ? "mr-0" : "mr-6"
+                        className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                          isActive ? "-translate-x-5" : "translate-x-0"
                         }`}
                       />
                     </button>

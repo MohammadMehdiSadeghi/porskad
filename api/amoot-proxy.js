@@ -29,11 +29,22 @@ function translateAmootStatus(status) {
     Token_Invalid: "توکن وب‌سرویس آموت نامعتبر یا منقضی است",
     Token_NotExists: "توکن وب‌سرویس وارد شده در سامانه آموت یافت نشد",
     User_WebServiceBanned: "دسترسی وب‌سرویس این حساب در سامانه آموت مسدود یا غیرفعال است (احتمالاً نیاز به احراز هویت/تأیید مدارک یا فعال‌سازی وب‌سرویس در پنل آموت دارید)",
+    User_NotActive: "حساب کاربری آموت شما هنوز فعال نشده است",
+    User_AccessDenied: "عدم دسترسی به وب‌سرویس در حساب آموت",
     LineNumber_Empty: "شماره خط فرستنده وارد نشده است (می‌توانید Public یا خط اختصاصی را انتخاب کنید)",
-    Insufficient_Credit: "اعتبار پنل پیامک آموت شما کافی نیست",
+    LineNumber_Invalid: "شماره خط فرستنده در حساب آموت شما معتبر یا فعال نیست (می‌توانید خط Public یا Service را انتخاب کنید)",
+    Line_Not_Active: "خط ارسال پیامک انتخابی فعال نیست",
+    Line_AccessDenied: "شما مجوز ارسال پیامک از این خط را ندارید",
+    Insufficient_Credit: "اعتبار پنل پیامک آموت شما کافی نیست (لطفاً حساب آموت را شارژ کنید)",
     Mobile_Empty: "شماره موبایل گیرنده وارد نشده است",
+    Mobiles_Empty: "شماره موبایل گیرنده وارد نشده است",
     Mobile_Invalid: "شماره موبایل وارد شده معتبر نیست",
+    Mobiles_Invalid: "شماره موبایل‌های وارد شده معتبر نیستند",
     MessageText_Empty: "متن پیامک نمی‌تواند خالی باشد",
+    SMSMessageText_Empty: "متن پیامک نمی‌تواند خالی باشد",
+    FilterMessage_Reject: "متن پیامک توسط سامانه فیلترینگ پیامک رد شد (حاوی کلمات مسدودشده یا تبلیغاتی)",
+    SendDateTime_Invalid: "تاریخ و زمان ارسال پیامک نامعتبر است",
+    DailyLimit_Exceeded: "سقف مجاز ارسال روزانه پیامک به پایان رسیده است",
     Failed: "ارسال پیامک با خطا مواجه شد",
     ServerError: "خطای سرور سرویس‌دهنده آموت",
   };
@@ -76,6 +87,14 @@ export default async function handler(req, res) {
           .eq("id", 1)
           .maybeSingle();
         testToken = dbSettings?.amoot_token || "";
+      }
+
+      if (!testToken) {
+        testToken =
+          process.env.AMOOT_TOKEN ||
+          process.env.AMOOT_SMS_TOKEN ||
+          process.env.VITE_AMOOT_TOKEN ||
+          "";
       }
 
       if (!testToken) {
@@ -138,18 +157,26 @@ export default async function handler(req, res) {
         dbSettings = data;
       }
 
-      const hasToken = Boolean(dbSettings?.amoot_token && dbSettings.amoot_token.length > 5);
+      const effectiveToken = (
+        (body.token ||
+          dbSettings?.amoot_token ||
+          process.env.AMOOT_TOKEN ||
+          process.env.AMOOT_SMS_TOKEN ||
+          process.env.VITE_AMOOT_TOKEN ||
+          "") + ""
+      ).trim();
+      const hasToken = Boolean(effectiveToken && effectiveToken.length > 5);
       const maskedToken = hasToken
-        ? "••••••••" + dbSettings.amoot_token.slice(-4)
+        ? "••••••••" + effectiveToken.slice(-4)
         : "";
 
       let liveAccount = null;
-      if (hasToken && dbSettings?.is_active) {
+      if (hasToken && (dbSettings?.is_active ?? true)) {
         try {
           const amootRes = await fetch("https://portal.amootsms.com/rest/AccountStatus", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ token: dbSettings.amoot_token }).toString(),
+            body: new URLSearchParams({ token: effectiveToken }).toString(),
             signal: AbortSignal.timeout(8000),
           });
           const amootData = await amootRes.json().catch(() => null);
@@ -160,7 +187,9 @@ export default async function handler(req, res) {
               accountName: amootData.AccountName,
               remaindCredit: credit,
               remaindCreditTomans: Math.floor(credit / 10),
-              listLineNumbers: amootData.ListLineNumbers || ["Public"],
+              listLineNumbers: Array.isArray(amootData.ListLineNumbers) && amootData.ListLineNumbers.length > 0
+                ? amootData.ListLineNumbers
+                : ["Public"],
             };
           } else if (amootData) {
             liveAccount = {
@@ -209,17 +238,23 @@ export default async function handler(req, res) {
         finalToken = amoot_token.trim();
       }
 
-      await adminClient.from("sms_settings").upsert(
-        {
-          id: 1,
-          amoot_token: finalToken,
-          line_number: (line_number || "Public").trim(),
-          sender_name: (sender_name || "پرس‌کاد").trim(),
-          is_active: Boolean(is_active),
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "id" }
-      );
+      if (adminClient) {
+        try {
+          await adminClient.from("sms_settings").upsert(
+            {
+              id: 1,
+              amoot_token: finalToken,
+              line_number: (line_number || "Public").trim(),
+              sender_name: (sender_name || "پرس‌کاد").trim(),
+              is_active: Boolean(is_active),
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "id" }
+          );
+        } catch (dbErr) {
+          console.warn("amoot-proxy upsert error:", dbErr?.message);
+        }
+      }
 
       return res.status(200).json({
         success: true,
@@ -257,36 +292,51 @@ export default async function handler(req, res) {
         });
       }
 
-      let activeToken = customToken ? customToken.trim() : "";
+      let activeToken = ((customToken || body.token || "") + "").trim();
       let defaultLine = lineNumber || "Public";
 
       if (!activeToken && adminClient) {
-        const { data: dbSettings } = await adminClient
-          .from("sms_settings")
-          .select("amoot_token, line_number, is_active")
-          .eq("id", 1)
-          .maybeSingle();
+        try {
+          const { data: dbSettings } = await adminClient
+            .from("sms_settings")
+            .select("amoot_token, line_number, is_active")
+            .eq("id", 1)
+            .maybeSingle();
 
-        if (dbSettings) {
-          activeToken = dbSettings.amoot_token || "";
-          defaultLine = lineNumber || dbSettings.line_number || "Public";
+          if (dbSettings) {
+            activeToken = dbSettings.amoot_token || "";
+            defaultLine = lineNumber || dbSettings.line_number || "Public";
+          }
+        } catch {
+          // ignore
         }
+      }
+
+      if (!activeToken) {
+        activeToken =
+          process.env.AMOOT_TOKEN ||
+          process.env.AMOOT_SMS_TOKEN ||
+          process.env.VITE_AMOOT_TOKEN ||
+          "";
       }
 
       if (!activeToken) {
         return res.status(200).json({
           success: false,
-          message: "توکن سامانه پیامک آموت وارد نشده است. لطفاً توکن را در تب تنظیمات وارد کنید.",
+          message: "توکن سامانه پیامک آموت یافت نشد. لطفاً در تب تنظیمات توکن را ذخیره نمایید.",
         });
       }
 
       const amootPayload = {
         token: activeToken,
         Mobiles: targetMobiles.join(","),
-        SendDateTime: "0",
         SMSMessageText: text.trim(),
         LineNumber: defaultLine,
       };
+
+      if (body.sendDateTime && String(body.sendDateTime).trim() !== "0") {
+        amootPayload.SendDateTime = String(body.sendDateTime).trim();
+      }
 
       const sendRes = await fetch("https://portal.amootsms.com/rest/SendSimple", {
         method: "POST",
