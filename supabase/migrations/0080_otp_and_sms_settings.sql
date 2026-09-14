@@ -3,16 +3,18 @@
 -- Description: تنظیمات پیامک ثبت‌نام OTP و جدول سشن‌های تایید موبایل
 -- ══════════════════════════════════════════════════════════════
 
--- ۱. ثبت کلیدهای پیش‌فرض OTP در system_settings
+-- ۱. ثبت کلیدهای پیش‌فرض OTP و روش‌های احراز هویت در system_settings
 INSERT INTO public.system_settings (key, value, description)
 VALUES 
+  ('sms_otp_enabled', 'true'::jsonb, 'فعال بودن ثبت‌نام و ورود با پیامک OTP'),
+  ('google_auth_enabled', 'true'::jsonb, 'فعال بودن ثبت‌نام و ورود با حساب گوگل'),
   ('otp_sms_pattern', '"کد تایید ثبت‌نام در پرس‌کاد: %code%"'::jsonb, 'الگوی پیامک حاوی کد تایید ورود و ثبت‌نام'),
   ('otp_line_number', '"Service"'::jsonb, 'خط فرستنده پیامک OTP (پیش‌فرض: Service)'),
   ('otp_cooldown_seconds', '90'::jsonb, 'زمان انتظار ارسال مجدد کد به ثانیه (پیش‌فرض: ۹۰ ثانیه)'),
   ('otp_max_resends', '2'::jsonb, 'حداکثر دفعات مجاز ارسال مجدد کد برای یک شماره')
 ON CONFLICT (key) DO NOTHING;
 
--- ۲. به‌روزرسانی تابع get_system_settings جهت بازگرداندن فیلدهای عمومی OTP
+-- ۲. به‌روزرسانی تابع get_system_settings جهت بازگرداندن فیلدهای عمومی OTP و روش‌های احراز هویت
 CREATE OR REPLACE FUNCTION public.get_system_settings()
 RETURNS jsonb
 LANGUAGE sql STABLE
@@ -29,6 +31,7 @@ AS $$
     'default_max_active_forms', 'default_max_monthly_responses',
     'question_types_config', 'plans_config', 'user_tabs_config',
     'file_upload_policy', 'discount_codes',
+    'sms_otp_enabled', 'google_auth_enabled',
     'otp_sms_pattern', 'otp_line_number', 'otp_cooldown_seconds', 'otp_max_resends'
   ]);
 $$;

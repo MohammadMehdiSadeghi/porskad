@@ -391,6 +391,30 @@ export function AuthProvider({ children }) {
     return data;
   }
 
+  async function loginWithGoogle() {
+    const redirectTo = typeof window !== "undefined"
+      ? `${window.location.origin}/admin`
+      : undefined;
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo,
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
+      },
+    });
+    if (error) {
+      logAuthEvent({
+        action: "failed_login_google",
+        details: { reason: error.message?.slice(0, 120) || "unknown" },
+      });
+      throw error;
+    }
+    return data;
+  }
+
   async function register(email, password, fullName, phone) {
     const cleanPhone = phone?.trim() || "";
     // ۱. ابتدا تلاش از طریق API برای تایید خودکار و دور زدن محدودیت ایمیل
@@ -856,6 +880,7 @@ export function AuthProvider({ children }) {
     isPrimaryGodEmail,
     PRIMARY_GOD_EMAILS,
     login,
+    loginWithGoogle,
     register,
     updateUserQuota,
     logout,

@@ -103,6 +103,7 @@ import {
 const TABS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "settings", label: "Settings", icon: Settings },
+  { id: "auth_otp", label: "OTP & Sign-in Methods", icon: Smartphone },
   { id: "question_types", label: "Form Questions", icon: ListOrdered },
   { id: "user_tabs", label: "User Tabs Control", icon: LayoutDashboard },
   { id: "transfer", label: "Form Transfer", icon: ArrowRightLeft },
@@ -393,6 +394,8 @@ export default function SuperAdmin() {
     default_max_active_forms: 5,
     default_max_monthly_responses: 100,
     registration_enabled: true,
+    sms_otp_enabled: true,
+    google_auth_enabled: true,
     otp_sms_pattern: "کد تایید ثبت‌نام در پرس‌کاد: %code%",
     otp_line_number: "Service",
     otp_cooldown_seconds: 90,
@@ -698,8 +701,30 @@ export default function SuperAdmin() {
     }
   }
 
+  function handleToggleAuthMethod(method) {
+    if (method === "sms_otp") {
+      const nextVal = sysSettings.sms_otp_enabled === false ? true : false;
+      if (!nextVal && sysSettings.google_auth_enabled === false) {
+        showToast("خطا: حداقل یکی از روش‌های ثبت‌نام (پیامک OTP یا گوگل) باید همیشه فعال بماند.", "error");
+        return;
+      }
+      setSysSettings((prev) => ({ ...prev, sms_otp_enabled: nextVal }));
+    } else if (method === "google_auth") {
+      const nextVal = sysSettings.google_auth_enabled === false ? true : false;
+      if (!nextVal && sysSettings.sms_otp_enabled === false) {
+        showToast("خطا: حداقل یکی از روش‌های ثبت‌نام (پیامک OTP یا گوگل) باید همیشه فعال بماند.", "error");
+        return;
+      }
+      setSysSettings((prev) => ({ ...prev, google_auth_enabled: nextVal }));
+    }
+  }
+
   async function saveSystemSettings(e) {
     if (e) e.preventDefault();
+    if (sysSettings.sms_otp_enabled === false && sysSettings.google_auth_enabled === false) {
+      showToast("خطا: حداقل یکی از دو روش ثبت‌نام (پیامک OTP یا گوگل) باید فعال باشد.", "error");
+      return;
+    }
     setSettingsSaving(true);
     try {
       const { data, error } = await supabase.rpc("update_system_settings", {
@@ -2153,84 +2178,388 @@ export default function SuperAdmin() {
                 </label>
               </div>
 
-              {/* ─── SMS Registration & OTP Settings ─── */}
-              <div style={{ marginTop: "0.5rem", borderTop: "1px solid var(--sa-field-border)", paddingTop: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {/* ─── Link to dedicated Auth & OTP tab ─── */}
+              <div className="sa-card" style={{ padding: "0.85rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 0, borderLeft: "4px solid var(--sa-link)" }}>
+                <div>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    <Smartphone size={16} style={{ color: "var(--sa-link)" }} />
+                    SMS OTP & Google Sign-in Methods
+                  </div>
+                  <div className="sa-stat-sub" style={{ fontSize: "0.8rem", marginTop: "0.2rem" }}>
+                    Configure SMS template, cooldown, and toggle Google vs SMS auth in the dedicated tab.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTab("auth_otp")}
+                  className="sa-btn sa-btn-secondary"
+                  style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", fontSize: "0.8rem" }}
+                >
+                  Configure Methods →
+                </button>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.5rem" }}>
+                <button
+                  type="submit"
+                  className="sa-btn sa-btn-primary"
+                  disabled={settingsSaving}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+                >
+                  <Save size={14} />
+                  {settingsSaving ? "Saving..." : "Save Settings"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════ OTP Pattern & Sign-in Methods (الگو OTP و روش‌های ورود) ═══════════ */}
+      {tab === "auth_otp" && (
+        <div style={{ maxWidth: 900, display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+          {/* Header */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "0.75rem",
+            }}
+          >
+            <div>
+              <div className="sa-section-title" style={{ margin: 0, fontSize: "1.1rem" }}>
+                OTP Pattern & Sign-in Methods (الگوی OTP و روش‌های احراز هویت)
+              </div>
+              <div style={{ fontSize: "0.8rem", color: "var(--sa-text-1)" }}>
+                Manage registration methods (SMS OTP & Google OAuth) and customize OTP message patterns.
+              </div>
+            </div>
+            <button
+              className="sa-btn sa-btn-primary"
+              onClick={saveSystemSettings}
+              disabled={settingsSaving}
+              style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+            >
+              <Save size={14} />
+              {settingsSaving ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+
+          {/* Safety Rule Notice */}
+          <div
+            style={{
+              background: "rgba(45, 212, 191, 0.08)",
+              border: "1px solid rgba(45, 212, 191, 0.3)",
+              borderRadius: "8px",
+              padding: "0.85rem 1.15rem",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "0.75rem",
+            }}
+          >
+            <Shield size={20} style={{ color: "#2DD4BF", flexShrink: 0, marginTop: "2px" }} />
+            <div style={{ fontSize: "0.82rem", lineHeight: 1.6, color: "var(--sa-text-0)" }}>
+              <strong style={{ color: "#2DD4BF" }}>قانون عدم قطعی احراز هویت:</strong> حداقل یکی از دو روش ثبت‌نام (پیامک OTP یا حساب کاربری گوگل) باید همیشه فعال بماند تا ثبت‌نام و ورود کاربران متوقف نشود. شما می‌توانید هرکدام را بر اساس نیاز غیرفعال کنید، اما امکان غیرفعال‌سازی همزمان هر دو روش مسدود است.
+            </div>
+          </div>
+
+          {/* Two Auth Methods Cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            {/* 1. SMS OTP Method */}
+            <div
+              className="sa-card"
+              style={{
+                padding: "1.25rem",
+                border: sysSettings.sms_otp_enabled !== false ? "2px solid rgba(45, 212, 191, 0.4)" : "1px solid var(--sa-field-border)",
+                background: sysSettings.sms_otp_enabled !== false ? "var(--sa-card-bg)" : "rgba(0,0,0,0.05)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                gap: "1rem",
+              }}
+            >
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: "8px",
+                        background: sysSettings.sms_otp_enabled !== false ? "rgba(45, 212, 191, 0.15)" : "rgba(100,116,139,0.15)",
+                        color: sysSettings.sms_otp_enabled !== false ? "#2DD4BF" : "var(--sa-text-2)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Smartphone size={20} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "0.95rem", fontWeight: 800 }}>
+                        پیامک یکبار مصرف (SMS OTP)
+                      </div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)" }}>
+                        ارسال کد تایید ۵ رقمی به شماره موبایل
+                      </div>
+                    </div>
+                  </div>
+
+                  <span
+                    style={{
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      padding: "0.2rem 0.6rem",
+                      borderRadius: "999px",
+                      background: sysSettings.sms_otp_enabled !== false ? "rgba(16, 185, 129, 0.15)" : "rgba(239, 68, 68, 0.15)",
+                      color: sysSettings.sms_otp_enabled !== false ? "#10b981" : "#ef4444",
+                    }}
+                  >
+                    {sysSettings.sms_otp_enabled !== false ? "فعال (Active)" : "غیرفعال (Disabled)"}
+                  </span>
+                </div>
+
+                <p style={{ fontSize: "0.8rem", color: "var(--sa-text-1)", lineHeight: 1.5, margin: 0 }}>
+                  کاربر با وارد کردن شماره موبایل و تایید کد پیامکی ۵ رقمی، احراز هویت شده و حسابش ایجاد می‌شود.
+                </p>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.75rem", borderTop: "1px solid var(--sa-field-border)" }}>
+                <span style={{ fontSize: "0.8rem", color: "var(--sa-text-2)" }}>وضعیت فعال‌سازی:</span>
+                <button
+                  type="button"
+                  onClick={() => handleToggleAuthMethod("sms_otp")}
+                  className={`sa-btn ${sysSettings.sms_otp_enabled !== false ? "sa-btn-danger" : "sa-btn-primary"}`}
+                  style={{ fontSize: "0.8rem", padding: "0.35rem 0.85rem" }}
+                >
+                  {sysSettings.sms_otp_enabled !== false ? "غیرفعال‌سازی روش پیامک" : "فعال‌سازی روش پیامک"}
+                </button>
+              </div>
+            </div>
+
+            {/* 2. Google OAuth Method */}
+            <div
+              className="sa-card"
+              style={{
+                padding: "1.25rem",
+                border: sysSettings.google_auth_enabled !== false ? "2px solid rgba(59, 130, 246, 0.4)" : "1px solid var(--sa-field-border)",
+                background: sysSettings.google_auth_enabled !== false ? "var(--sa-card-bg)" : "rgba(0,0,0,0.05)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                gap: "1rem",
+              }}
+            >
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: "8px",
+                        background: "rgba(59, 130, 246, 0.15)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "0.95rem", fontWeight: 800 }}>
+                        ورود با حساب گوگل (Google Sign-In)
+                      </div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)" }}>
+                        ثبت‌نام و ورود مستقیم بدون نیاز به رمز
+                      </div>
+                    </div>
+                  </div>
+
+                  <span
+                    style={{
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      padding: "0.2rem 0.6rem",
+                      borderRadius: "999px",
+                      background: sysSettings.google_auth_enabled !== false ? "rgba(16, 185, 129, 0.15)" : "rgba(239, 68, 68, 0.15)",
+                      color: sysSettings.google_auth_enabled !== false ? "#10b981" : "#ef4444",
+                    }}
+                  >
+                    {sysSettings.google_auth_enabled !== false ? "فعال (Active)" : "غیرفعال (Disabled)"}
+                  </span>
+                </div>
+
+                <p style={{ fontSize: "0.8rem", color: "var(--sa-text-1)", lineHeight: 1.5, margin: 0 }}>
+                  کاربر با یک کلیک و از طریق حساب جیمیل خود وارد شده و ایمیل و نام او به صورت خودکار ثبت می‌شود.
+                </p>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.75rem", borderTop: "1px solid var(--sa-field-border)" }}>
+                <span style={{ fontSize: "0.8rem", color: "var(--sa-text-2)" }}>وضعیت فعال‌سازی:</span>
+                <button
+                  type="button"
+                  onClick={() => handleToggleAuthMethod("google_auth")}
+                  className={`sa-btn ${sysSettings.google_auth_enabled !== false ? "sa-btn-danger" : "sa-btn-primary"}`}
+                  style={{ fontSize: "0.8rem", padding: "0.35rem 0.85rem" }}
+                >
+                  {sysSettings.google_auth_enabled !== false ? "غیرفعال‌سازی روش گوگل" : "فعال‌سازی روش گوگل"}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* SMS Pattern Configuration Card */}
+          <div className="sa-card" style={{ padding: "1.25rem" }}>
+            <form onSubmit={saveSystemSettings} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--sa-text-0)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    <span>📱</span> SMS Registration & OTP Pattern (الگوی پیامک ثبت‌نام)
+                    <Edit3 size={16} style={{ color: "var(--sa-link)" }} />
+                    تنظیم الگوی پیامک و قوانین ارسال (OTP Pattern & Limits)
                   </div>
                   <div style={{ fontSize: "0.8rem", color: "var(--sa-text-2)", marginTop: "0.2rem" }}>
-                    Configure the OTP template, sender line, cooldown timer, and resend limits for user sign-ups.
+                    تنظیم متن پیامک ارسالی، خط فرستنده، زمان خنک‌سازی ارسال مجدد و محدودیت‌های تکرار.
+                  </div>
+                </div>
+              </div>
+
+              {/* Template Textarea */}
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                  متن الگوی پیامک (SMS Pattern Template)
+                </label>
+                <textarea
+                  rows={3}
+                  dir="rtl"
+                  value={sysSettings.otp_sms_pattern || "کد تایید ثبت‌نام در پرس‌کاد: %code%"}
+                  onChange={(e) => setSysSettings({ ...sysSettings, otp_sms_pattern: e.target.value })}
+                  style={{
+                    width: "100%",
+                    padding: "0.6rem 0.85rem",
+                    border: "1px solid var(--sa-field-border)",
+                    borderRadius: "6px",
+                    fontSize: "0.88rem",
+                    outline: "none",
+                    fontFamily: "inherit",
+                    lineHeight: 1.6,
+                  }}
+                  placeholder="کد تایید ثبت‌نام در پرس‌کاد: %code%"
+                />
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "0.35rem", flexWrap: "wrap", gap: "0.5rem" }}>
+                  <div style={{ fontSize: "0.78rem", color: "var(--sa-text-2)" }}>
+                    💡 متغیر <code dir="ltr" style={{ color: "var(--sa-link)", fontWeight: 700, background: "rgba(45,212,191,0.1)", padding: "2px 6px", borderRadius: "4px" }}>%code%</code> در زمان ارسال با کد ۵ رقمی جایگزین می‌شود.
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!sysSettings.otp_sms_pattern?.includes("%code%")) {
+                        setSysSettings({ ...sysSettings, otp_sms_pattern: (sysSettings.otp_sms_pattern || "") + " %code%" });
+                      }
+                    }}
+                    className="sa-btn sa-btn-secondary"
+                    style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem" }}
+                  >
+                    + افزودن %code%
+                  </button>
+                </div>
+              </div>
+
+              {/* Live Preview Box */}
+              <div
+                style={{
+                  background: "var(--sa-surface-1, rgba(0,0,0,0.15))",
+                  border: "1px dashed var(--sa-field-border)",
+                  borderRadius: "8px",
+                  padding: "1rem",
+                }}
+              >
+                <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--sa-text-2)", marginBottom: "0.5rem", textTransform: "uppercase" }}>
+                  پیش‌نمایش زنده پیامک دریافتی کاربر (Live SMS Preview):
+                </div>
+                <div
+                  dir="rtl"
+                  style={{
+                    background: "var(--sa-card-bg)",
+                    border: "1px solid var(--sa-field-border)",
+                    borderRadius: "12px",
+                    padding: "0.85rem 1rem",
+                    maxWidth: 420,
+                    fontSize: "0.88rem",
+                    lineHeight: 1.6,
+                    color: "var(--sa-text-0)",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                    position: "relative",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.72rem", color: "var(--sa-text-2)", marginBottom: "0.35rem", borderBottom: "1px solid var(--sa-field-border)", paddingBottom: "0.3rem" }}>
+                    <span>فرستنده: {sysSettings.otp_line_number || "Service"}</span>
+                    <span>•</span>
+                    <span>همین الان</span>
+                  </div>
+                  <div style={{ fontWeight: 600 }}>
+                    {(sysSettings.otp_sms_pattern || "کد تایید ثبت‌نام در پرس‌کاد: %code%").replace(/%code%/g, "۴۸۲۹۱")}
+                  </div>
+                </div>
+              </div>
+
+              {/* Grid: Sender Line, Cooldown, Max Resends */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                    خط فرستنده (Sender Line)
+                  </label>
+                  <input
+                    type="text"
+                    dir="ltr"
+                    value={sysSettings.otp_line_number || "Service"}
+                    onChange={(e) => setSysSettings({ ...sysSettings, otp_line_number: e.target.value })}
+                    style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", outline: "none", borderRadius: "4px" }}
+                    placeholder="Service"
+                  />
+                  <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
+                    پیش‌فرض: <code dir="ltr">Service</code> (خط خدماتی عبور از بلک‌لیست)
                   </div>
                 </div>
 
                 <div>
                   <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
-                    SMS Pattern Template (متن پیامک حاوی الگو)
+                    زمان انتظار مجدد (ثانیه)
                   </label>
-                  <textarea
-                    rows={2}
-                    dir="rtl"
-                    value={sysSettings.otp_sms_pattern || "کد تایید ثبت‌نام در پرس‌کاد: %code%"}
-                    onChange={(e) => setSysSettings({ ...sysSettings, otp_sms_pattern: e.target.value })}
-                    style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", outline: "none", fontFamily: "inherit" }}
-                    placeholder="کد تایید ثبت‌نام در پرس‌کاد: %code%"
+                  <input
+                    type="number"
+                    min={30}
+                    max={600}
+                    value={sysSettings.otp_cooldown_seconds ?? 90}
+                    onChange={(e) => setSysSettings({ ...sysSettings, otp_cooldown_seconds: parseInt(e.target.value) || 90 })}
+                    style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", outline: "none", borderRadius: "4px" }}
                   />
-                  <div style={{ fontSize: "0.78rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
-                    💡 متن پیامک ارسالی به کاربر. عبارت <code dir="ltr" style={{ color: "var(--sa-link)", fontWeight: 700 }}>%code%</code> به‌صورت خودکار با کد ۵ رقمی جایگزین خواهد شد.
+                  <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
+                    پیش‌فرض: ۹۰ ثانیه (۱:۳۰ دقیقه)
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
-                      Sender Line (خط فرستنده)
-                    </label>
-                    <input
-                      type="text"
-                      dir="ltr"
-                      value={sysSettings.otp_line_number || "Service"}
-                      onChange={(e) => setSysSettings({ ...sysSettings, otp_line_number: e.target.value })}
-                      style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", outline: "none" }}
-                      placeholder="Service"
-                    />
-                    <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
-                      پیش‌فرض: <code dir="ltr">Service</code> (خط خدماتی عبور از بلک‌لیست)
-                    </div>
-                  </div>
-
-                  <div>
-                    <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
-                      Resend Cooldown (ثانیه)
-                    </label>
-                    <input
-                      type="number"
-                      min={30}
-                      max={600}
-                      value={sysSettings.otp_cooldown_seconds ?? 90}
-                      onChange={(e) => setSysSettings({ ...sysSettings, otp_cooldown_seconds: parseInt(e.target.value) || 90 })}
-                      style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", outline: "none" }}
-                    />
-                    <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
-                      پیش‌فرض: ۹۰ ثانیه (۱:۳۰ دقیقه)
-                    </div>
-                  </div>
-
-                  <div>
-                    <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
-                      Max Resends (حداکثر ارسال)
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={5}
-                      value={sysSettings.otp_max_resends ?? 2}
-                      onChange={(e) => setSysSettings({ ...sysSettings, otp_max_resends: parseInt(e.target.value) || 2 })}
-                      style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", outline: "none" }}
-                    />
-                    <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
-                      پیش‌فرض: ۲ بار ارسال مجدد
-                    </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                    حداکثر ارسال مجدد
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={5}
+                    value={sysSettings.otp_max_resends ?? 2}
+                    onChange={(e) => setSysSettings({ ...sysSettings, otp_max_resends: parseInt(e.target.value) || 2 })}
+                    style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", outline: "none", borderRadius: "4px" }}
+                  />
+                  <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
+                    پیش‌فرض: ۲ بار ارسال مجدد
                   </div>
                 </div>
               </div>

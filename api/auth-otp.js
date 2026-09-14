@@ -94,15 +94,19 @@ export default async function handler(req, res) {
     let cooldownSeconds = 90; // ۱:۳۰ دقیقه طبق درخواست کاربر
     let maxResends = 2; // حداکثر ۲ بار ارسال مجدد طبق درخواست کاربر
     let amootToken = process.env.AMOOT_TOKEN || process.env.AMOOT_SMS_TOKEN || "";
+    let smsOtpEnabled = true;
+    let registrationEnabled = true;
 
     try {
       const { data: sysSettings } = await supabaseAdmin
         .from("system_settings")
         .select("key, value")
-        .in("key", ["otp_sms_pattern", "otp_line_number", "otp_cooldown_seconds", "otp_max_resends", "otp_amoot_token"]);
+        .in("key", ["sms_otp_enabled", "registration_enabled", "otp_sms_pattern", "otp_line_number", "otp_cooldown_seconds", "otp_max_resends", "otp_amoot_token"]);
 
       if (Array.isArray(sysSettings)) {
         for (const row of sysSettings) {
+          if (row.key === "sms_otp_enabled" && row.value !== undefined) smsOtpEnabled = row.value === true || row.value === "true";
+          if (row.key === "registration_enabled" && row.value !== undefined) registrationEnabled = row.value === true || row.value === "true";
           if (row.key === "otp_sms_pattern" && row.value) pattern = String(row.value);
           if (row.key === "otp_line_number" && row.value) lineNumber = String(row.value);
           if (row.key === "otp_cooldown_seconds" && Number(row.value)) cooldownSeconds = Number(row.value);
@@ -111,6 +115,14 @@ export default async function handler(req, res) {
         }
       }
     } catch {}
+
+    if (registrationEnabled === false) {
+      return res.status(403).json({ error: "ثبت‌نام عمومی در سامانه در حال حاضر غیرفعال است." });
+    }
+
+    if (smsOtpEnabled === false) {
+      return res.status(400).json({ error: "ثبت‌نام با پیامک در حال حاضر غیرفعال است. لطفاً از طریق ورود با گوگل اقدام فرمایید." });
+    }
 
     // همچنین اگر توکن آموت در sms_settings باشد بخوانیم
     if (!amootToken) {
