@@ -20,14 +20,14 @@ import { logActivity } from "../../../lib/activityLogger";
 import SEO from "../../../components/ui/SEO";
 
 const inputCls =
-  "w-full bg-white dark:bg-slate-800/90 border-2 border-ink/20 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-3.5 py-2.5 font-semibold text-ink dark:text-white placeholder:text-ink/40 dark:placeholder:text-slate-500 focus:outline-none transition-all";
+  "w-full bg-white dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-gray-700 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/20 rounded-xl px-3.5 py-2.5 font-semibold text-sec dark:text-white placeholder:text-gray-400 focus:outline-none transition-all";
 
 function Field({ label, children, hint }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-sm font-extrabold text-navy dark:text-slate-200">{label}</span>
+      <span className="text-sm font-extrabold text-sec dark:text-slate-200">{label}</span>
       {children}
-      {hint && <span className="text-xs font-medium text-ink-subtle dark:text-slate-400">{hint}</span>}
+      {hint && <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{hint}</span>}
     </label>
   );
 }
@@ -53,7 +53,6 @@ function normalizeConditionGroup(cg) {
 // ─── کارت ویرایش یک سوال ───
 function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDelete }) {
   const meta = QUESTION_TYPES[q.type];
-  const rots = index % 2 ? "rotate-[0.4deg]" : "-rotate-[0.4deg]";
   const isChoice = q.type === "choice" || q.type === "yes_no";
 
   function setOpt(i, val) {
@@ -136,23 +135,23 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
   const sourceQuestions = allQuestions.filter((_, j) => j < index);
 
   return (
-    <div className={rots}>
-      <StickerCard theme="white" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
+    <div>
+      <StickerCard theme="white">
         <div className="p-4 sm:p-5 flex flex-col gap-3.5">
           {/* هدر: شماره + نوع + عملیات */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="w-8 h-8 flex items-center justify-center bg-navy text-white rounded-full text-sm font-black rotate-[3deg]">
+            <span className="w-8 h-8 flex items-center justify-center bg-sec dark:bg-[#1C2536] text-white rounded-full text-sm font-black border border-primary/30">
               {faNum(index + 1)}
             </span>
             <Badge color={meta.color}>
               {(() => { const Icon = QUESTION_TYPE_ICONS[q.type]; return Icon ? <Icon size={12} /> : null; })()} {meta.label}
             </Badge>
-            <label className="flex items-center gap-1.5 text-xs font-bold text-ink-subtle mr-auto cursor-pointer select-none">
+            <label className="flex items-center gap-1.5 text-xs font-bold text-gray-500 dark:text-gray-400 mr-auto cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={q.required}
                 onChange={(e) => onChange({ required: e.target.checked })}
-                className="accent-teal w-4 h-4"
+                className="accent-ecosystem-normal w-4 h-4"
               />
               اجباری
             </label>
@@ -160,7 +159,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
               <button
                 onClick={() => onMove(-1)}
                 disabled={index === 0}
-                className="w-8 h-8 rounded-pill-md border-2 border-ink/20 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-center text-ink dark:text-slate-200 hover:bg-bg-neutral dark:hover:bg-slate-700 disabled:opacity-30 transition-colors"
+                className="w-8 h-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C2536] flex items-center justify-center text-sec dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#151C28] disabled:opacity-30 transition-colors"
                 title="بالا"
               >
                 <ChevronUp size={15} />
@@ -168,14 +167,14 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
               <button
                 onClick={() => onMove(1)}
                 disabled={index === total - 1}
-                className="w-8 h-8 rounded-pill-md border-2 border-ink/20 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-center text-ink dark:text-slate-200 hover:bg-bg-neutral dark:hover:bg-slate-700 disabled:opacity-30 transition-colors"
+                className="w-8 h-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C2536] flex items-center justify-center text-sec dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#151C28] disabled:opacity-30 transition-colors"
                 title="پایین"
               >
                 <ChevronDown size={15} />
               </button>
               <button
                 onClick={onDelete}
-                className="w-8 h-8 rounded-pill-md border-2 border-magenta/40 dark:border-pink-500/40 bg-white dark:bg-slate-800 flex items-center justify-center text-magenta-text dark:text-pink-400 hover:bg-magenta/10 dark:hover:bg-pink-950/40 transition-colors"
+                className="w-8 h-8 rounded-xl border border-female-normal/40 bg-white dark:bg-[#1C2536] flex items-center justify-center text-female-normal hover:bg-female-light dark:hover:bg-pink-950/40 transition-colors"
                 title="حذف سوال"
               >
                 <Trash2 size={15} />

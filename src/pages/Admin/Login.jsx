@@ -166,24 +166,24 @@ export default function Login() {
         url="/admin/login"
         noIndex
       />
-      <div className="w-full max-w-md -rotate-[0.7deg]">
+      <div className="w-full max-w-md">
         <StickerCard theme="white">
           <form
             onSubmit={handleSubmit}
             className="p-7 sm:p-9 flex flex-col gap-5"
           >
             <div className="flex flex-col items-center gap-2 text-center">
-              <Badge color="navy" rotate="rotate-[2deg]">
+              <Badge color="navy">
                 پرس‌کاد — فرم‌ساز آنلاین
               </Badge>
-              <h1 className="text-xl sm:text-2xl font-black text-navy dark:text-white">ورود به حساب</h1>
-              <p className="text-sm font-semibold text-ink-subtle dark:text-slate-400">
+              <h1 className="text-xl sm:text-2xl font-black text-sec dark:text-white">ورود به حساب</h1>
+              <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">
                 ایمیل و رمز عبور خود را برای ورود وارد کنید.
               </p>
             </div>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-extrabold text-navy dark:text-slate-200">
+              <span className="text-sm font-extrabold text-sec dark:text-slate-200">
                 {smsOtpEnabled !== false ? "ایمیل یا شماره موبایل" : "ایمیل"}
               </span>
               <input
@@ -192,8 +192,8 @@ export default function Login() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20
-                  rounded-pill-md px-4 py-2.5 font-semibold text-ink dark:text-slate-100 text-left focus:outline-none transition-all"
+                className="w-full bg-white dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-gray-700 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/20
+                  rounded-xl px-4 py-2.5 font-semibold text-sec dark:text-white text-left focus:outline-none transition-all"
                 placeholder={smsOtpEnabled !== false ? "۰۹۱۲۳۴۵۶۷۸۹ یا name@example.com" : "name@example.com"}
                 autoComplete="username"
               />
@@ -201,11 +201,11 @@ export default function Login() {
 
             <label className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-extrabold text-navy dark:text-slate-200">رمز عبور</span>
+                <span className="text-sm font-extrabold text-sec dark:text-slate-200">رمز عبور</span>
                 <button
                   type="button"
                   onClick={() => setShowForgotModal(true)}
-                  className="text-xs font-bold text-teal hover:text-navy dark:hover:text-teal-light transition-colors cursor-pointer"
+                  className="text-xs font-bold text-ecosystem-normal hover:text-sec dark:hover:text-ecosystem-light transition-colors cursor-pointer"
                 >
                   فراموشی رمز عبور؟
                 </button>
@@ -217,8 +217,8 @@ export default function Login() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20
-                    rounded-pill-md px-4 py-3 pl-11 font-semibold text-ink dark:text-slate-100 text-left focus:outline-none transition-all"
+                  className="w-full bg-white dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-gray-700 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/20
+                    rounded-xl px-4 py-3 pl-11 font-semibold text-sec dark:text-white text-left focus:outline-none transition-all"
                   placeholder="••••••••"
                   autoComplete="current-password"
                 />
@@ -234,19 +234,19 @@ export default function Login() {
 
             {error && (
               <div className="flex flex-col gap-2.5">
-                <div className="rotate-[-0.5deg] bg-white dark:bg-slate-900 border-2 border-magenta rounded-pill-md px-3.5 py-2.5 text-sm font-bold text-magenta-text dark:text-pink-300">
+                <div className="bg-female-light dark:bg-pink-950/40 border-[1.5px] border-female-normal/40 rounded-xl px-3.5 py-2.5 text-sm font-bold text-female-normal dark:text-pink-300">
                   {error}
                 </div>
-                <div className="bg-bg-yellow/40 dark:bg-amber-950/40 border-2 border-dashed border-ink/25 dark:border-amber-700/60 rounded-pill-md p-3 flex items-center justify-between gap-2 text-xs font-bold text-navy dark:text-amber-200">
+                <div className="bg-amber-50 dark:bg-amber-950/30 border-[1.5px] border-amber-200 dark:border-amber-700/60 rounded-xl p-3 flex items-center justify-between gap-2 text-xs font-bold text-sec dark:text-amber-200">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <Headphones size={15} className="text-teal shrink-0" />
+                    <Headphones size={15} className="text-ecosystem-normal shrink-0" />
                     <span className="truncate">نیاز به کمک دارید؟ پشتیبانی:</span>
                   </div>
                   <a
                     href={`https://t.me/${telegramSupportId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 bg-white hover:bg-teal hover:text-white border-2 border-ink text-navy px-2.5 py-1 rounded-pill-sm text-xs font-black transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] shrink-0"
+                    className="inline-flex items-center gap-1.5 bg-white dark:bg-[#1C2536] hover:bg-ecosystem-normal hover:text-white border-[1.5px] border-primary/30 text-sec dark:text-white px-2.5 py-1 rounded-lg text-xs font-bold transition-all shadow-hard-sm shrink-0"
                   >
                     <Send size={11} className="rotate-45" />
                     <span>@{telegramSupportId}</span>
@@ -261,7 +261,6 @@ export default function Login() {
                 variant="teal"
                 size="lg"
                 disabled={busy}
-                rotate="-rotate-[1deg]"
                 className="w-full justify-center text-center"
               >
                 <span className="w-full text-center">{busy ? "در حال ورود..." : "ورود به پنل"}</span>

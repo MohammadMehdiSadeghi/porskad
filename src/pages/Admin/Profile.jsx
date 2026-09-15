@@ -234,12 +234,10 @@ export default function Profile() {
       {/* ══════════════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         {/* کارت ۱: ویرایش مشخصات */}
-        <div className="-rotate-[0.2deg] flex flex-col h-full">
+        <div className="flex flex-col h-full">
           <StickerCard
             theme="white"
             className="h-full flex flex-col"
-            offset="top-[0.25rem] left-[0.25rem] sm:top-[0.35rem] sm:left-[0.35rem]"
-            radius="rounded-tl-[1.75rem] rounded-br-[1.75rem] rounded-tr-none rounded-bl-none"
           >
             <div className="p-5 sm:p-6 flex flex-col justify-between h-full gap-5">
               <div className="flex flex-col gap-4">
@@ -358,12 +356,10 @@ export default function Profile() {
         </div>
 
         {/* کارت ۲: تغییر رمز عبور (بدون درخواست رمز فعلی) */}
-        <div className="rotate-[0.2deg] flex flex-col h-full">
+        <div className="flex flex-col h-full">
           <StickerCard
             theme="white"
             className="h-full flex flex-col"
-            offset="top-[0.25rem] left-[0.25rem] sm:top-[0.35rem] sm:left-[0.35rem]"
-            radius="rounded-tl-[1.75rem] rounded-br-[1.75rem] rounded-tr-none rounded-bl-none"
           >
             <div className="p-5 sm:p-6 flex flex-col justify-between h-full gap-5">
               <div className="flex flex-col gap-4">

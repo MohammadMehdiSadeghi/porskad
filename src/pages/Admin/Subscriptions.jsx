@@ -163,11 +163,11 @@ export default function Subscriptions() {
           </p>
         </div>
         {profile && (
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-800/90 border-2 border-teal/30 dark:border-teal/25 rounded-2xl [corner-shape:squircle] px-4 py-2.5">
-            <ShieldCheck size={18} className="text-teal" />
-            <div className="text-xs font-bold text-ink dark:text-slate-200">
+          <div className="flex items-center gap-2 bg-white dark:bg-[#151C28] border-[1.5px] border-ecosystem-normal/30 rounded-2xl px-4 py-2.5 shadow-hard-sm dark:shadow-dark-hard">
+            <ShieldCheck size={18} className="text-ecosystem-normal" />
+            <div className="text-xs font-bold text-sec dark:text-slate-200">
               طرح فعلی:{" "}
-              <span className="text-teal font-black">
+              <span className="text-ecosystem-normal font-black">
                 {isOwner() ? "مدیریت کل (نامحدود)" : currentPlan.name}
               </span>
             </div>
@@ -177,7 +177,7 @@ export default function Subscriptions() {
 
       {/* کارت طرح‌ها */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-        {planIds.map((pid, idx) => {
+        {planIds.map((pid) => {
           const plan = plans[pid];
           if (!plan || String(pid).startsWith("_")) return null;
           const Icon = PLAN_ICONS[pid] || Sparkles;
@@ -188,23 +188,22 @@ export default function Subscriptions() {
             <StickerCard
               key={plan.id}
               theme={theme}
-              rotate={idx % 2 === 0 ? "-rotate-[0.6deg]" : "rotate-[0.6deg]"}
               className="h-full"
             >
               <div className="p-5 sm:p-6 flex flex-col gap-4 h-full">
                 {/* بج‌های بالا */}
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-xl [corner-shape:squircle] bg-white/80 dark:bg-slate-900/60 border border-ink/10 dark:border-slate-700 flex items-center justify-center shrink-0">
-                      <Icon size={20} className="text-navy dark:text-slate-100" />
+                    <div className="w-10 h-10 rounded-xl bg-white/80 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0">
+                      <Icon size={20} className="text-sec dark:text-slate-100" />
                     </div>
                     <div>
-                      <div className="text-base sm:text-lg font-black text-navy dark:text-white leading-6">{plan.name}</div>
-                      <div className="text-[11px] font-bold text-ink/45 dark:text-slate-400">{plan.nameEn}</div>
+                      <div className="text-base sm:text-lg font-black text-sec dark:text-white leading-6">{plan.name}</div>
+                      <div className="text-[11px] font-bold text-gray-500 dark:text-gray-400">{plan.nameEn}</div>
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    {plan.isPopular && <Badge color="teal" rotate="rotate-[-2deg]">⭐ محبوب‌ترین</Badge>}
+                    {plan.isPopular && <Badge color="teal">⭐ محبوب‌ترین</Badge>}
                     {isCurrent && <Badge color="navy">طرح شما</Badge>}
                   </div>
                 </div>
@@ -301,14 +300,14 @@ export default function Subscriptions() {
                       key={d.days}
                       type="button"
                       onClick={() => handleSelectDuration(d)}
-                      className={`text-right rounded-2xl [corner-shape:squircle] border-2 p-3.5 transition-all cursor-pointer ${
+                      className={`text-right rounded-xl border-[1.5px] p-3.5 transition-all cursor-pointer ${
                         active
-                          ? "border-teal bg-teal/10 dark:bg-teal/20 shadow-[2px_2px_0_0_#2e7068]"
-                          : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-teal/50"
+                          ? "border-ecosystem-normal bg-ecosystem-light dark:bg-ecosystem-darker/40 shadow-hard-sm"
+                          : "border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C2536] hover:border-ecosystem-normal/50"
                       }`}
                     >
-                      <div className="text-sm font-black text-navy dark:text-white">{d.label}</div>
-                      <div className={`text-xs font-bold mt-1 ${active ? "text-teal dark:text-teal-light" : "text-ink/50 dark:text-slate-400"}`}>
+                      <div className="text-sm font-black text-sec dark:text-white">{d.label}</div>
+                      <div className={`text-xs font-bold mt-1 ${active ? "text-ecosystem-darker dark:text-ecosystem-light" : "text-gray-500 dark:text-gray-400"}`}>
                         {(dPriceRial || 0) === 0 ? "رایگان" : fmtToman(dPriceRial)}
                       </div>
                     </button>

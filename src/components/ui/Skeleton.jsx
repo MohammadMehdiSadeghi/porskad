@@ -10,7 +10,7 @@ export default function Skeleton({ className = "", rounded = "rounded-lg", ...pr
   return (
     <div
       aria-hidden="true"
-      className={`skeleton-shimmer relative overflow-hidden bg-ink-light/70 dark:bg-slate-700/40 ${rounded} [corner-shape:squircle] ${className}`}
+      className={`skeleton-shimmer relative overflow-hidden bg-ink-light/70 dark:bg-slate-700/40 ${rounded} ${className}`}
       {...props}
     />
   );
@@ -25,9 +25,9 @@ const tint = {
 };
 
 const radii = {
-  card: "rounded-tl-[1.5rem] rounded-br-[1.5rem] rounded-tr-none rounded-bl-none",
-  cardSm: "rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none",
-  stat: "rounded-tl-[2rem] rounded-br-[2rem] rounded-tr-none rounded-bl-none",
+  card: "rounded-2xl",
+  cardSm: "rounded-xl",
+  stat: "rounded-2xl",
 };
 
 // ─── اسکلتون متنی ───
@@ -54,10 +54,9 @@ export function StatCardSkeleton({ theme = "teal" }) {
     <StickerCard
       theme={theme}
       radius={radii.stat}
-      rotate={theme === "teal" || theme === "navy" ? "-rotate-[1deg]" : "rotate-[1deg]"}
     >
       <div className="flex flex-col items-center text-center px-4 pt-3 pb-5 lg:pt-4 lg:pb-6">
-        <span className="mb-2 lg:mb-4 inline-block w-20 h-6 rounded-xl [corner-shape:squircle] bg-white dark:bg-slate-900 border border-ink/10 dark:border-slate-700 skeleton-shimmer relative overflow-hidden" />
+        <span className="mb-2 lg:mb-4 inline-block w-20 h-6 rounded-xl bg-white dark:bg-slate-900 border border-ink/10 dark:border-slate-700 skeleton-shimmer relative overflow-hidden" />
         <Skeleton className="h-9 lg:h-12 w-24" rounded="rounded-xl" />
         <Skeleton className="h-3 w-16 mt-3" rounded="rounded-md" />
       </div>
@@ -144,7 +143,7 @@ export function FormsListSkeleton() {
       <PageHeaderSkeleton titleW="w-20" btnW="w-24" />
 
       {/* بنر سهمیه */}
-      <div className="bg-white dark:bg-slate-800/90 border-2 border-teal/30 dark:border-teal/30/40 rounded-2xl [corner-shape:squircle] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 -rotate-[0.2deg]">
+      <div className="bg-white dark:bg-slate-800/90 border-2 border-teal/30 dark:border-teal/30/40 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Skeleton className="w-10 h-10" rounded="rounded-xl" />
           <div className="space-y-1.5">
@@ -181,7 +180,7 @@ export function FormsListSkeleton() {
 // ─── کارت خلاصه کوچک — مثل SummaryCard واقعی صفحه پاسخ‌ها ───
 function SummaryMiniSkeleton({ tintKey }) {
   return (
-    <div className="bg-white dark:bg-slate-800/90 rounded-2xl [corner-shape:squircle] border-2 border-ink/10 dark:border-slate-700 p-3.5">
+    <div className="bg-white dark:bg-slate-800/90 rounded-2xl border-2 border-ink/10 dark:border-slate-700 p-3.5">
       <div className="flex items-center gap-2.5">
         <Skeleton className={`w-9 h-9 shrink-0 ${tint[tintKey]}`} rounded="rounded-xl" />
         <div className="space-y-1.5">
@@ -216,7 +215,7 @@ export function ResponsesSkeleton() {
         <SummaryMiniSkeleton tintKey="magenta" />
       </div>
 
-      <div className="flex items-center justify-between bg-white dark:bg-slate-800/90 border-2 border-ink/10 dark:border-slate-700 rounded-2xl [corner-shape:squircle] p-2.5">
+      <div className="flex items-center justify-between bg-white dark:bg-slate-800/90 border-2 border-ink/10 dark:border-slate-700 rounded-2xl p-2.5">
         <div className="flex gap-1.5">
           <Skeleton className="h-8 w-24 bg-teal/20 dark:bg-teal/15" rounded="rounded-xl" />
           <Skeleton className="h-8 w-24" rounded="rounded-xl" />
@@ -262,7 +261,7 @@ export function FormBuilderSkeleton() {
           <div className="p-4 flex flex-col gap-3">
             <Skeleton className="h-5 w-24" rounded="rounded-lg" />
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-2 bg-bg-neutral/80 dark:bg-slate-800/60 rounded-xl [corner-shape:squircle] p-2.5">
+              <div key={i} className="flex items-center gap-2 bg-bg-neutral/80 dark:bg-slate-800/60 rounded-xl p-2.5">
                 <Skeleton className={`w-5 h-5 ${tint.teal}`} rounded="rounded-md" />
                 <Skeleton className="h-3.5 flex-1" rounded="rounded-md" />
               </div>
@@ -296,7 +295,7 @@ export function FormBuilderSkeleton() {
           <div className="p-4 flex flex-col gap-3">
             <Skeleton className="h-5 w-28" rounded="rounded-lg" />
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-center justify-between bg-bg-neutral/80 dark:bg-slate-800/60 rounded-xl [corner-shape:squircle] p-2.5">
+              <div key={i} className="flex items-center justify-between bg-bg-neutral/80 dark:bg-slate-800/60 rounded-xl p-2.5">
                 <Skeleton className="h-4 w-20" rounded="rounded-md" />
                 <Skeleton className="w-10 h-5" rounded="rounded-full" />
               </div>
@@ -383,7 +382,7 @@ export function ShareFormSkeleton() {
         <Skeleton className="h-8 w-28" rounded="rounded-pill-md" />
       </div>
 
-      <div className="bg-bg-mint dark:bg-slate-800/90 border border-teal/20 dark:border-teal/30 rounded-xl [corner-shape:squircle] px-4 py-3 flex items-center gap-3">
+      <div className="bg-bg-mint dark:bg-slate-800/90 border border-teal/20 dark:border-teal/30 rounded-xl px-4 py-3 flex items-center gap-3">
         <Skeleton className={`w-6 h-6 ${tint.teal}`} rounded="rounded-lg" />
         <Skeleton className="h-4 flex-1 max-w-xs" rounded="rounded-md" />
         <Skeleton className="h-8 w-20 ms-auto" rounded="rounded-lg" />

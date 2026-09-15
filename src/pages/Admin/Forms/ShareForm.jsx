@@ -355,14 +355,14 @@ export default function ShareForm() {
       </div>
 
       {/* کد انتخاب شده */}
-      <div className="rotate-[0.2deg]">
-        <StickerCard theme="white" radius="rounded-tl-[1.5rem] rounded-br-[1.5rem] rounded-tr-none rounded-bl-none">
+      <div>
+        <StickerCard theme="white">
           <div className="p-5 sm:p-6 flex flex-col gap-4">
             <div>
-              <h2 className="text-base sm:text-lg font-black text-navy flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-black text-sec dark:text-white flex items-center gap-2">
                 {active.label}
               </h2>
-              <p className="text-sm text-ink/50 mt-1">{active.description}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{active.description}</p>
             </div>
             <CodeBlock code={active.code} label="کد Embed" locked={!form.published} onLocked={handleLockedCopy} />
           </div>
@@ -370,11 +370,11 @@ export default function ShareForm() {
       </div>
 
       {/* پیش‌نمایش بر اساس حالت */}
-      <div className="rotate-[-0.2deg]">
-        <StickerCard theme="white" radius="rounded-tl-[1.5rem] rounded-br-[1.5rem] rounded-tr-none rounded-bl-none">
+      <div>
+        <StickerCard theme="white">
           <div className="p-5 sm:p-6 flex flex-col gap-4">
-            <h2 className="text-base sm:text-lg font-black text-navy">پیش‌نمایش زنده — {active.label}</h2>
-            <div className="border-2 border-dashed border-ink/15 rounded-xl overflow-hidden bg-bg-mint/30" style={{ minHeight: "400px" }}>
+            <h2 className="text-base sm:text-lg font-black text-sec dark:text-white">پیش‌نمایش زنده — {active.label}</h2>
+            <div className="border-[1.5px] border-dashed border-gray-300 dark:border-gray-700 rounded-xl overflow-hidden bg-gray-50 dark:bg-[#1C2536]/30" style={{ minHeight: "400px" }}>
               {!form.published ? (
                 <div className="flex items-center justify-center h-[400px] text-ink/40 text-sm">
                   فرم هنوز منتشر نشده — ابتدا منتشر کنید

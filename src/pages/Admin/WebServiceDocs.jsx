@@ -316,8 +316,8 @@ print(response.json())`,
       {/* ══════════════════════════════════════════════════════════════ */}
       {/* کارت توکن احراز هویت (سراسری، نیم‌عرض، بدون کشیدگی) */}
       {/* ══════════════════════════════════════════════════════════════ */}
-      <div className="-rotate-[0.2deg]">
-        <StickerCard theme="teal" radius="rounded-tl-[1.75rem] rounded-br-[1.75rem] rounded-tr-none rounded-bl-none">
+      <div>
+        <StickerCard theme="teal">
           <div className="p-4 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div className="flex items-start sm:items-center gap-3">
               <div className="p-2.5 sm:p-3 bg-teal/20 text-teal rounded-2xl shrink-0 mt-0.5 sm:mt-0">
@@ -421,7 +421,7 @@ print(response.json())`,
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
             {/* کارت ۱: کنسول تعاملی Swagger */}
-            <div className="rotate-[0.2deg] flex flex-col h-full">
+            <div className="flex flex-col h-full">
               <StickerCard theme="white" className="h-full">
                 <div className="p-5 sm:p-6 flex flex-col justify-between h-full gap-5">
                   <div className="flex flex-col gap-3">
@@ -476,7 +476,7 @@ print(response.json())`,
             </div>
 
             {/* کارت ۲: فایل نقشه استاندارد OpenAPI 3.0 */}
-            <div className="-rotate-[0.2deg] flex flex-col h-full">
+            <div className="flex flex-col h-full">
               <StickerCard theme="white" className="h-full">
                 <div className="p-5 sm:p-6 flex flex-col justify-between h-full gap-5">
                   <div className="flex flex-col gap-3">
@@ -538,7 +538,7 @@ print(response.json())`,
             </div>
 
             {/* کارت ۳: وب‌سرویس و کدهای نمونه REST API */}
-            <div className="rotate-[0.2deg] flex flex-col h-full">
+            <div className="flex flex-col h-full">
               <StickerCard theme="white" className="h-full">
                 <div className="p-5 sm:p-6 flex flex-col justify-between h-full gap-5">
                   <div className="flex flex-col gap-3">

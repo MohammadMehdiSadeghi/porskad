@@ -59,13 +59,13 @@ function UndoToast({ message, onUndo, onDismiss, duration = 6000 }) {
 
   return (
     <div dir="rtl" className="fixed bottom-6 inset-x-0 z-50 flex justify-center px-4 pointer-events-none animate-slide-up">
-      <div className="pointer-events-auto relative overflow-hidden bg-navy text-white rounded-2xl border border-white/10 shadow-2xl shadow-navy/30 flex items-center gap-2.5 sm:gap-3 pr-5 pl-2.5 sm:pl-3 py-3 w-full sm:w-auto sm:min-w-[380px] sm:max-w-md rotate-[0.3deg]">
+      <div className="pointer-events-auto relative overflow-hidden bg-sec dark:bg-[#151C28] text-white rounded-2xl border-[1.5px] border-primary/40 shadow-hard-sm dark:shadow-dark-hard flex items-center gap-2.5 sm:gap-3 pr-5 pl-2.5 sm:pl-3 py-3 w-full sm:w-auto sm:min-w-[380px] sm:max-w-md">
         {/* نوار تاکید رنگی سمت راست */}
-        <span className="absolute inset-y-0 right-0 w-1 bg-gradient-to-b from-teal via-teal/50 to-magenta" />
+        <span className="absolute inset-y-0 right-0 w-1 bg-ecosystem-normal" />
 
         {/* آیکون */}
         <div className="w-10 h-10 shrink-0 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center">
-          <Trash2 size={16} className="text-magenta" />
+          <Trash2 size={16} className="text-female-normal" />
         </div>
 
         {/* پیام */}
@@ -539,19 +539,18 @@ export default function FormsList() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-xl sm:text-3xl font-black text-navy">فرم‌ها</h1>
-          <p className="text-xs sm:text-sm font-semibold text-ink-subtle mt-1">
+          <h1 className="text-xl sm:text-3xl font-black text-sec dark:text-white">فرم‌ها</h1>
+          <p className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400 mt-1">
             {forms.filter((f) => !f.deleted_at).length} فرم — برای ویرایش روی هر فرم بزنید
           </p>
         </div>
         <Button
-          variant="indigo"
+          variant="teal"
           size="sm"
           onClick={() => {
             setShowTypeModal(true);
           }}
           disabled={busy}
-          rotate="-rotate-[1deg]"
         >
           + فرم جدید
         </Button>
@@ -559,27 +558,27 @@ export default function FormsList() {
 
       {/* نوار سهمیه برای کاربر عادی */}
       {!isOwner() && (
-        <div className="bg-white border-2 border-teal/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 -rotate-[0.2deg]">
+        <div className="rokad-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-hard-sm dark:shadow-dark-hard">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-teal/10 text-teal-text flex items-center justify-center font-black text-sm">
+            <div className="w-10 h-10 rounded-xl bg-ecosystem-light dark:bg-ecosystem-darker/60 text-ecosystem-darker dark:text-ecosystem-light flex items-center justify-center font-black text-sm">
               {faNum(activeFormsCount)}/{faNum(maxForms)}
             </div>
             <div>
-              <div className="text-sm font-black text-navy flex items-center gap-2">
+              <div className="text-sm font-black text-sec dark:text-white flex items-center gap-2">
                 <span>سهمیه فرم‌های فعال شما</span>
                 <Badge color={activeFormsCount >= maxForms ? "red" : "green"}>
                   {activeFormsCount >= maxForms ? "تکمیل شده" : `${faNum(maxForms - activeFormsCount)} فرم باقی‌مانده`}
                 </Badge>
               </div>
-              <p className="text-xs font-semibold text-ink-subtle mt-0.5">
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-0.5">
                 تعداد فرم‌های همزمان فعال (منتشر شده) در سامانه
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-28 sm:w-36 bg-ink/10 h-2 rounded-full overflow-hidden">
+            <div className="w-28 sm:w-36 bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
               <div
-                className={`h-full transition-all ${activeFormsCount >= maxForms ? "bg-magenta" : "bg-teal"}`}
+                className={`h-full transition-all ${activeFormsCount >= maxForms ? "bg-female-normal" : "bg-ecosystem-normal"}`}
                 style={{ width: `${Math.min(100, Math.round((activeFormsCount / maxForms) * 100))}%` }}
               />
             </div>
@@ -599,9 +598,9 @@ export default function FormsList() {
           placeholder="جستجوی فرم..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-[200px] bg-white dark:bg-slate-800/90 border-2 border-ink/15 dark:border-slate-700 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy dark:text-white placeholder:text-ink/40 dark:placeholder:text-slate-500 focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none"
+          className="flex-1 min-w-[200px] bg-white dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm font-semibold text-sec dark:text-white placeholder:text-gray-400 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/20 focus:outline-none"
         />
-        <div className="flex items-center gap-0.5 bg-white dark:bg-slate-800/90 border-2 border-ink/15 dark:border-slate-700 rounded-pill-md p-0.5 overflow-x-auto scrollbar-none max-w-full">
+        <div className="flex items-center gap-1 bg-gray-100 dark:bg-[#1C2536] border border-gray-200 dark:border-gray-700 rounded-xl p-1 overflow-x-auto scrollbar-none max-w-full">
           {[
             { key: "all", label: "همه" },
             { key: "published", label: "منتشر" },
@@ -612,9 +611,9 @@ export default function FormsList() {
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`px-3 py-1.5 text-sm font-bold rounded-pill-sm transition-colors cursor-pointer ${filter === f.key
-                  ? f.key === "trash" ? "bg-magenta text-white" : "bg-teal text-white"
-                  : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white"
+              className={`px-3 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-colors cursor-pointer ${filter === f.key
+                  ? f.key === "trash" ? "bg-female-normal text-white shadow-xs" : "bg-ecosystem-normal text-white shadow-xs"
+                  : "text-gray-600 dark:text-gray-400 hover:text-sec dark:hover:text-white"
                 }`}
             >
               {f.label}
@@ -629,7 +628,7 @@ export default function FormsList() {
           icon={<FileText size={48} />}
           title={search ? "فرمی یافت نشد" : filter === "trash" ? "سطل زباله خالی است" : "هنوز فرمی نساخته‌ای!"}
           subtitle={search ? "عبارت جستجو را تغییر دهید." : filter === "trash" ? "فرم حذف‌شده‌ای وجود ندارد." : "با دکمه‌ی «فرم جدید» شروع کن."}
-          action={!search && filter !== "trash" && <Button variant="indigo" size="sm" onClick={() => setShowTypeModal(true)}>+ فرم جدید</Button>}
+          action={!search && filter !== "trash" && <Button variant="teal" size="sm" onClick={() => setShowTypeModal(true)}>+ فرم جدید</Button>}
         />
       ) : (
         <div className="grid sm:grid-cols-2 gap-3 lg:gap-5">
@@ -644,7 +643,7 @@ export default function FormsList() {
               <div
                 key={f.id}
                 data-form-card
-                className={`${i % 2 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"} transition-all duration-200`}
+                className="transition-all duration-200"
               >
                 <StickerCard theme={isTrashed ? "orange" : "white"}>
                   <div

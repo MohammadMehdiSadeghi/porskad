@@ -176,29 +176,28 @@ export default function Dashboard() {
             <span className="live-dot inline-block w-1.5 h-1.5 rounded-full bg-teal mr-1.5 align-middle" />
           </p>
         </div>
-        <Button as={Link} to="/admin/forms" variant="teal" size="sm" rotate="-rotate-[1deg]">
+        <Button as={Link} to="/admin/forms" variant="teal" size="sm">
           مدیریت فرم‌ها
         </Button>
       </div>
 
       {/* آمار کلی */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
-        <StatCard theme="teal" label="فرم‌ها" value={faNum(stats.forms)} caption="کل فرم‌ها" />
-        <StatCard theme="orange" label="پاسخ‌ها" value={faNum(stats.responses)} caption="ثبت‌شدگان" />
-        <StatCard theme="navy" label="تکمیل" value={faNum(stats.complete)} caption="کامل پر شده" />
+        <StatCard theme="ecosystem" title="فرم‌ها" value={stats.forms} subtitle="کل فرم‌های سامانه" />
+        <StatCard theme="college" title="پاسخ‌ها" value={stats.responses} subtitle="ثبت‌شدگان کل" />
+        <StatCard theme="male" title="تکمیل" value={stats.complete} subtitle="پاسخ‌های کامل" />
         <StatCard
-          theme="magenta"
-          label={durationUnit === "min" ? "میانگین زمان (دقیقه)" : "میانگین زمان (ثانیه)"}
+          theme="female"
+          title={durationUnit === "min" ? "میانگین زمان (دقیقه)" : "میانگین زمان (ثانیه)"}
           value={formattedDuration}
-          caption={durationCaption}
+          subtitle={durationCaption}
           onClick={toggleDurationUnit}
-          title="برای تبدیل واحد به دقیقه یا ثانیه کلیک کنید"
         />
       </div>
 
       {/* آخرین پاسخ‌ها */}
       <div>
-        <h2 className="text-lg sm:text-xl font-black text-navy dark:text-white mb-3 sm:mb-4">آخرین پاسخ‌ها</h2>
+        <h2 className="text-base sm:text-lg font-black text-sec dark:text-white mb-3 sm:mb-4">آخرین پاسخ‌ها</h2>
         {recent.length === 0 ? (
           <EmptyState
             icon={<Inbox size={48} />}
@@ -207,62 +206,73 @@ export default function Dashboard() {
             action={<Button as={Link} to="/admin/forms" variant="teal">ساخت اولین فرم</Button>}
           />
         ) : (
-          <div className="rotate-[0.3deg]">
-            <StickerCard theme="white" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
-              {/* دسکتاپ: جدول افقی */}
-              <div className="hidden md:block overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-800">
-                      <th className="text-right font-black px-4 py-3">فرم</th>
-                      <th className="text-right font-black px-4 py-3">زمان ثبت</th>
-                      <th className="text-right font-black px-4 py-3">وضعیت</th>
-                      <th className="text-right font-black px-4 py-3">مدت</th>
-                      <th className="text-right font-black px-4 py-3">دستگاه</th>
+          <div className="rokad-card p-0 overflow-hidden shadow-hard-sm dark:shadow-dark-hard">
+            {/* دسکتاپ: جدول افقی */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-[#F8F9FA] dark:bg-[#1C2536] border-b-[1.5px] border-[#EAEAEA] dark:border-gray-800 text-xs text-[#6C757D] dark:text-gray-400 font-bold">
+                    <th className="text-right px-4 py-3.5">فرم</th>
+                    <th className="text-right px-4 py-3.5">زمان ثبت</th>
+                    <th className="text-right px-4 py-3.5">وضعیت</th>
+                    <th className="text-right px-4 py-3.5">مدت</th>
+                    <th className="text-right px-4 py-3.5">دستگاه</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recent.map((r, i) => (
+                    <tr
+                      key={r.id}
+                      className="border-b border-[#F0F0F0] dark:border-gray-800/70 hover:bg-[#F8F9FA] dark:hover:bg-[#1C2536]/50 transition-colors last:border-0"
+                    >
+                      <td className="px-4 py-3 font-bold text-sec dark:text-slate-100">{formTitleById[r.form_id] ?? "—"}</td>
+                      <td className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">{faRelative(r.submitted_at ?? r.created_at)}</td>
+                      <td className="px-4 py-3">
+                        {r.is_complete ? (
+                          <Badge color="green">کامل</Badge>
+                        ) : (
+                          <Badge color="gray">ناقص</Badge>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">
+                        {r.duration_seconds ? faDuration(r.duration_seconds) : "—"}
+                      </td>
+                      <td className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">{DEVICE_FA[r.device] ?? r.device ?? "—"}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {recent.map((r, i) => (
-                      <tr key={r.id} className={`${i % 2 ? "bg-bg-lavender/60 dark:bg-slate-800/40" : ""} border-b border-ink/5 dark:border-slate-800/60 last:border-0`}>
-                        <td className="px-4 py-3 font-bold text-ink dark:text-slate-100">{formTitleById[r.form_id] ?? "—"}</td>
-                        <td className="px-4 py-3 font-semibold text-ink-subtle dark:text-slate-400">{faRelative(r.submitted_at ?? r.created_at)}</td>
-                        <td className="px-4 py-3">{r.is_complete ? <Badge color="green">کامل</Badge> : <Badge color="gray">ناقص</Badge>}</td>
-                        <td className="px-4 py-3 font-semibold text-ink-subtle dark:text-slate-400">{r.duration_seconds ? faDuration(r.duration_seconds) : "—"}</td>
-                        <td className="px-4 py-3 font-semibold text-ink-subtle dark:text-slate-400">{DEVICE_FA[r.device] ?? r.device ?? "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {/* موبایل: ردیف‌های فشرده — اسکرول عمودی */}
-              <div className="md:hidden max-h-[24rem] overflow-y-auto">
-                <table className="w-full text-xs">
-                  <thead className="sticky top-0 bg-white dark:bg-slate-900 z-10">
-                    <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-800">
-                      <th className="text-right font-black px-2.5 py-2">فرم</th>
-                      <th className="text-right font-black px-2.5 py-2">زمان</th>
-                      <th className="text-center font-black px-2 py-2">وضعیت</th>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* موبایل: ردیف‌های فشرده — اسکرول عمودی */}
+            <div className="md:hidden max-h-[24rem] overflow-y-auto">
+              <table className="w-full text-xs">
+                <thead className="sticky top-0 bg-[#F8F9FA] dark:bg-[#1C2536] border-b border-[#EAEAEA] dark:border-gray-800 text-gray-500 dark:text-gray-400 z-10">
+                  <tr>
+                    <th className="text-right font-bold px-3 py-2.5">فرم</th>
+                    <th className="text-right font-bold px-3 py-2.5">زمان</th>
+                    <th className="text-center font-bold px-3 py-2.5">وضعیت</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recent.map((r) => (
+                    <tr
+                      key={r.id}
+                      className="border-b border-[#F0F0F0] dark:border-gray-800/70 last:border-0"
+                    >
+                      <td className="px-3 py-2.5 font-bold text-sec dark:text-slate-100 max-w-[45%] truncate" title={formTitleById[r.form_id] ?? "—"}>
+                        {formTitleById[r.form_id] ?? "—"}
+                      </td>
+                      <td className="px-3 py-2.5 font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                        {faRelative(r.submitted_at ?? r.created_at)}
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        {r.is_complete ? <Badge color="green">کامل</Badge> : <Badge color="gray">ناقص</Badge>}
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {recent.map((r, i) => (
-                      <tr key={r.id} className={`${i % 2 ? "bg-bg-lavender/40 dark:bg-slate-800/40" : ""} border-b border-ink/5 dark:border-slate-800/60 last:border-0`}
-                        style={{ pageBreakInside: 'avoid' }}>
-                        <td className="px-2.5 py-2 font-bold text-ink dark:text-slate-100 max-w-[45%] truncate" title={formTitleById[r.form_id] ?? "—"}>
-                          {formTitleById[r.form_id] ?? "—"}
-                        </td>
-                        <td className="px-2.5 py-2 font-semibold text-ink-subtle dark:text-slate-400 whitespace-nowrap">
-                          {faRelative(r.submitted_at ?? r.created_at)}
-                        </td>
-                        <td className="px-2 py-2 text-center">
-                          {r.is_complete ? <Badge color="green">کامل</Badge> : <Badge color="gray">ناقص</Badge>}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </StickerCard>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

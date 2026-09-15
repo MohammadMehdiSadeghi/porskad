@@ -455,7 +455,7 @@ export default function Register() {
         noIndex
       />
 
-      <div className="w-full max-w-md -rotate-[0.5deg]">
+      <div className="w-full max-w-md">
         <StickerCard theme="white">
           <div className="p-7 sm:p-9 flex flex-col gap-5">
             {/* هدر داینامیک با انیمیشن روان تغییر متن و مرحله */}
@@ -463,10 +463,10 @@ export default function Register() {
               key={`header-${step}-${smsOtpEnabled}-${googleAuthEnabled}`}
               className="flex flex-col items-center gap-1.5 text-center animate-step-fade"
             >
-              <Badge color="navy" rotate="rotate-[1deg]">
+              <Badge color="navy">
                 {headerInfo.badge}
               </Badge>
-              <h1 className="text-lg sm:text-xl font-black text-navy dark:text-white transition-all tracking-tight leading-snug">
+              <h1 className="text-lg sm:text-xl font-black text-sec dark:text-white transition-all tracking-tight leading-snug">
                 {headerInfo.title}
               </h1>
               <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 max-w-sm leading-relaxed transition-all">
@@ -569,7 +569,7 @@ export default function Register() {
                     </div>
 
                     {error && (
-                      <div className="w-full rotate-[-0.5deg] bg-female-light dark:bg-pink-950/40 border-2 border-female-normal dark:border-pink-600 rounded-pill-md px-3.5 py-2.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">
+                      <div className="w-full bg-female-light dark:bg-pink-950/40 border-[1.5px] border-female-normal/40 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">
                         {error}
                       </div>
                     )}
@@ -630,7 +630,7 @@ export default function Register() {
                     </label>
 
                     {error && (
-                      <div className="rotate-[-0.5deg] bg-female-light dark:bg-pink-950/40 border-2 border-female-normal dark:border-pink-600 rounded-pill-md px-3.5 py-2.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">
+                      <div className="bg-female-light dark:bg-pink-950/40 border-[1.5px] border-female-normal/40 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">
                         {error}
                         {isDuplicateUser && (
                           <div className="mt-2 pt-2 border-t border-female-normal/20">
@@ -647,7 +647,6 @@ export default function Register() {
                       variant="teal"
                       size="md"
                       disabled={busy || !phone.trim()}
-                      rotate="-rotate-[1deg]"
                       className="w-full justify-center text-center mt-1"
                     >
                       <span className="w-full text-center flex items-center justify-center gap-2">
@@ -801,7 +800,7 @@ export default function Register() {
                     </div>
 
                     {error && (
-                      <div className="rotate-[-0.5deg] bg-female-light dark:bg-pink-950/40 border-2 border-female-normal dark:border-pink-600 rounded-pill-md px-3.5 py-2.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">
+                      <div className="bg-female-light dark:bg-pink-950/40 border-[1.5px] border-female-normal/40 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">
                         {error}
                       </div>
                     )}
@@ -811,7 +810,6 @@ export default function Register() {
                       variant="teal"
                       size="md"
                       disabled={busy || otpCode.trim().length < 5}
-                      rotate="-rotate-[1deg]"
                       className="w-full justify-center text-center mt-1"
                     >
                       <span className="w-full text-center flex items-center justify-center gap-2">
@@ -840,7 +838,7 @@ export default function Register() {
                         <span>شماره همراه تایید شد:</span>
                         <span dir="ltr" className="font-mono font-black text-emerald-700 dark:text-emerald-400">{phone}</span>
                       </div>
-                      <Badge color="green" rotate="rotate-0">
+                      <Badge color="green">
                         تایید شد ✓
                       </Badge>
                     </div>
@@ -974,7 +972,7 @@ export default function Register() {
                     )}
 
                     {error && (
-                      <div className="rotate-[-0.5deg] bg-female-light dark:bg-pink-950/40 border-2 border-female-normal dark:border-pink-600 rounded-pill-md px-3.5 py-2.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">
+                      <div className="bg-female-light dark:bg-pink-950/40 border-[1.5px] border-female-normal/40 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">
                         {error}
                       </div>
                     )}
@@ -984,7 +982,6 @@ export default function Register() {
                       variant="teal"
                       size="md"
                       disabled={busy}
-                      rotate="-rotate-[1deg]"
                       className="w-full justify-center text-center mt-2"
                     >
                       <span className="w-full text-center flex items-center justify-center gap-2">

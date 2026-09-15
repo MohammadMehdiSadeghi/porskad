@@ -58,23 +58,20 @@ const BADGE_COLORS = [
 const PLAN_IDENTITY = {
   free: {
     theme: "white",
-    rotate: "md:rotate-[-0.6deg]",
     icon: Rocket,
-    iconWrap: "bg-ecosystem-light text-teal dark:bg-teal/10 dark:text-teal",
+    iconWrap: "bg-ecosystem-light text-ecosystem-darker dark:bg-teal/10 dark:text-teal",
     badgeColor: "gray",
   },
   pro: {
     theme: "teal",
-    rotate: "md:rotate-[0.5deg]",
     icon: Zap,
-    iconWrap: "bg-teal text-white",
+    iconWrap: "bg-ecosystem-normal text-white",
     badgeColor: "teal",
   },
   enterprise: {
     theme: "orange",
-    rotate: "md:rotate-[-0.5deg]",
     icon: Building2,
-    iconWrap: "bg-college-light text-orange dark:bg-orange/60 dark:text-amber-300",
+    iconWrap: "bg-college-light text-college-normal dark:bg-orange/60 dark:text-amber-300",
     badgeColor: "orange",
   },
 };
@@ -334,27 +331,27 @@ export default function PlansSettingsPanel() {
   return (
     <div className="space-y-6">
       {/* ─── Hero: نوار معرفی + اکشن‌ها ─── */}
-      <StickerCard theme="navy" rotate="rotate-[-0.3deg]">
+      <StickerCard theme="navy">
         <div className="p-4 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           <div className="flex items-start gap-3.5">
             <div className="relative shrink-0">
-              <div className="w-12 h-12 rounded-[1.25rem] bg-teal text-white flex items-center justify-center shadow-male rotate-[-3deg] [corner-shape:squircle]">
+              <div className="w-12 h-12 rounded-2xl bg-ecosystem-normal text-white flex items-center justify-center shadow-hard-sm">
                 <Crown size={22} />
               </div>
-              <span className="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-orange text-white flex items-center justify-center shadow-sm rotate-[8deg]">
+              <span className="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-female-normal text-white flex items-center justify-center shadow-xs">
                 <Sparkles size={11} />
               </span>
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-black text-navy dark:text-slate-100">
+              <h3 className="text-base sm:text-lg font-black text-sec dark:text-slate-100">
                 اشتراک‌ها و تعرفه‌ها
               </h3>
-              <p className="text-xs font-semibold text-ink-subtle dark:text-slate-400 mt-1 leading-relaxed max-w-xl">
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1 leading-relaxed max-w-xl">
                 قیمت، سهمیه و امکانات هر طرح همین‌جا ویرایش می‌شود و با ذخیره، برای{" "}
-                <strong className="text-teal dark:text-teal">کل سامانه</strong> اعمال می‌گردد.
+                <strong className="text-ecosystem-normal">کل سامانه</strong> اعمال می‌گردد.
               </p>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2.5">
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-ink-subtle dark:text-slate-500">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-gray-500 dark:text-slate-500">
                   <Database size={11} />
                   {loadingDb
                     ? "در حال بازیابی از سرور…"
@@ -362,12 +359,12 @@ export default function PlansSettingsPanel() {
                     ? `آخرین ذخیره سرور: ${faDateTime(dbTime)}`
                     : "هنوز روی سرور ذخیره نشده (پیش‌فرض‌های کد فعال است)"}
                 </span>
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-ink-subtle dark:text-slate-500">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-gray-500 dark:text-slate-500">
                   <Users size={11} />
                   {faNum(userCounts.total)} کاربر در سامانه (بدون مدیران کل)
                 </span>
                 {dirty && (
-                  <Badge color="magenta" rotate="rotate-[-2deg]" className="!text-[10px] !px-2">
+                  <Badge color="magenta" className="!text-[10px] !px-2">
                     ● تغییر ذخیره‌نشده
                   </Badge>
                 )}
@@ -418,12 +415,12 @@ export default function PlansSettingsPanel() {
           const Icon = idn.icon;
 
           return (
-            <StickerCard key={planKey} theme={idn.theme} rotate={idn.rotate} className="w-full">
+            <StickerCard key={planKey} theme={idn.theme} className="w-full">
               <div className="p-4 sm:p-5 flex flex-col gap-4">
                 {/* سربرگ */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex items-center gap-3">
-                    <div className={`w-11 h-11 rounded-[1.15rem] flex items-center justify-center shrink-0 rotate-[-3deg] [corner-shape:squircle] ${idn.iconWrap}`}>
+                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${idn.iconWrap}`}>
                       <Icon size={19} />
                     </div>
                     <div className="min-w-0">
@@ -568,10 +565,10 @@ export default function PlansSettingsPanel() {
                         <button
                           type="button"
                           onClick={() => toggleFeature(planKey, i)}
-                          className={`shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors [corner-shape:squircle] ${
+                          className={`shrink-0 w-6 h-6 rounded-lg border-[1.5px] flex items-center justify-center transition-colors ${
                             f.included
-                              ? "bg-teal/15 border-teal text-teal"
-                              : "bg-magenta/10 border-magenta/50 text-magenta dark:text-pink-400"
+                              ? "bg-ecosystem-light border-ecosystem-normal text-ecosystem-normal"
+                              : "bg-female-light border-female-normal/50 text-female-normal"
                           }`}
                           title={f.included ? "موجود در طرح — کلیک برای حذف از طرح" : "غیرفعال — کلیک برای فعال"}
                         >
@@ -618,7 +615,7 @@ export default function PlansSettingsPanel() {
       </div>
 
       {/* ─── نمای کلی طرح‌ها (خلاصهٔ فشرده، بدون صفحهٔ جدا) ─── */}
-      <StickerCard theme="white" rotate="rotate-[0.2deg]">
+      <StickerCard theme="white">
         <div className="p-4 sm:p-5">
           <h4 className="text-sm font-black text-navy dark:text-slate-100 flex items-center gap-2 mb-3">
             <ListChecks size={16} className="text-teal" />

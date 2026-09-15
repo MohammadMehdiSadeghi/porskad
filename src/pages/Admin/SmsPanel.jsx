@@ -543,7 +543,7 @@ export default function SmsPanel() {
       {tab === "dashboard" && (
         <div className="flex flex-col gap-6">
           {/* کارت وضعیت حساب و موجودی آموت */}
-          <div className="-rotate-[0.1deg]">
+          <div>
             <StickerCard theme="white">
               <div className="p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-5">
                 <div className="flex items-start gap-4">
@@ -626,7 +626,7 @@ export default function SmsPanel() {
           </div>
 
           {/* راهنمای وب‌هوک دریافت پیامک */}
-          <div className="rotate-[0.1deg]">
+          <div>
             <StickerCard theme="white">
               <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-start gap-3">
@@ -644,7 +644,7 @@ export default function SmsPanel() {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  <div className="bg-slate-100 dark:bg-slate-900 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md px-3 py-1.5 font-mono text-xs text-slate-700 dark:text-slate-300 dir-ltr select-all">
+                  <div className="bg-slate-100 dark:bg-slate-900 border-[1.5px] border-gray-200 dark:border-slate-700 rounded-xl px-3 py-1.5 font-mono text-xs text-slate-700 dark:text-slate-300 dir-ltr select-all">
                     {webhookUrl}
                   </div>
                   <Button variant="navy" size="sm" onClick={copyWebhookUrl}>
@@ -663,7 +663,7 @@ export default function SmsPanel() {
       {/* ══════════════════════════════════════════════════════════════ */}
       {tab === "send" && (
         <div className="flex flex-col gap-6 max-w-3xl">
-          <div className="-rotate-[0.1deg]">
+          <div>
             <StickerCard theme="white">
               <form onSubmit={handleSendSms} className="p-5 sm:p-6 flex flex-col gap-4">
                 <div className="flex items-center justify-between border-b border-ink/10 dark:border-slate-800 pb-3">
@@ -808,7 +808,7 @@ export default function SmsPanel() {
       {/* ══════════════════════════════════════════════════════════════ */}
       {tab === "settings" && (
         <div className="flex flex-col gap-6 max-w-3xl">
-          <div className="rotate-[0.1deg]">
+          <div>
             <StickerCard theme="white">
               <form onSubmit={handleSaveSettings} className="p-5 sm:p-6 flex flex-col gap-5">
                 <div className="border-b border-ink/10 dark:border-slate-800 pb-3">
