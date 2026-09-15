@@ -539,7 +539,7 @@ export default function DiscountCodesPanel() {
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center justify-between text-xs font-bold text-ink-subtle dark:text-slate-400">
                         <span>میزان استفاده:</span>
-                        <span>
+                        <span className="whitespace-nowrap">
                           {faNum(c.usedCount || 0)} از {faNum(c.maxUses)} نفر ({faNum(usagePercent)}٪)
                         </span>
                       </div>

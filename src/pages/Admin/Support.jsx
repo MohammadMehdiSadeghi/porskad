@@ -983,7 +983,7 @@ export default function Support() {
           <div className="flex items-center gap-1 bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 rounded-pill-md p-1 shadow-sm overflow-x-auto scrollbar-none max-w-full">
             <button
               onClick={() => setAdminFilter("all")}
-              className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors ${
+              className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors whitespace-nowrap ${
                 adminFilter === "all" ? "bg-navy text-white dark:bg-teal dark:text-white" : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white"
               }`}
             >
@@ -991,7 +991,7 @@ export default function Support() {
             </button>
             <button
               onClick={() => setAdminFilter("subscriptions")}
-              className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors flex items-center gap-1 ${
+              className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors flex items-center gap-1 whitespace-nowrap ${
                 adminFilter === "subscriptions" ? "bg-amber-600 text-white" : "text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40"
               }`}
             >
@@ -1000,7 +1000,7 @@ export default function Support() {
             </button>
             <button
               onClick={() => setAdminFilter("open")}
-              className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors ${
+              className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors whitespace-nowrap ${
                 adminFilter === "open" ? "bg-orange text-white" : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white"
               }`}
             >
@@ -1008,7 +1008,7 @@ export default function Support() {
             </button>
             <button
               onClick={() => setAdminFilter("answered")}
-              className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors ${
+              className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors whitespace-nowrap ${
                 adminFilter === "answered" ? "bg-teal text-white" : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white"
               }`}
             >
@@ -1016,7 +1016,7 @@ export default function Support() {
             </button>
             <button
               onClick={() => setAdminFilter("closed")}
-              className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors ${
+              className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors whitespace-nowrap ${
                 adminFilter === "closed" ? "bg-slate-700 text-white dark:bg-slate-600" : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white"
               }`}
             >
@@ -1024,7 +1024,7 @@ export default function Support() {
             </button>
             <button
               onClick={() => setAdminFilter("archived")}
-              className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors flex items-center gap-1 ${
+              className={`px-3 py-1 text-xs font-bold rounded-pill-sm transition-colors flex items-center gap-1 whitespace-nowrap ${
                 adminFilter === "archived" ? "bg-purple text-white" : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white"
               }`}
             >
@@ -1082,7 +1082,7 @@ export default function Support() {
         <div className="flex items-center gap-1 bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 rounded-pill-md p-1 w-fit shadow-sm">
           <button
             onClick={() => setUserFilter("active")}
-            className={`px-3.5 py-1 text-xs font-bold rounded-pill-sm transition-colors ${
+            className={`px-3.5 py-1 text-xs font-bold rounded-pill-sm transition-colors whitespace-nowrap ${
               userFilter === "active" ? "bg-navy text-white dark:bg-teal dark:text-white" : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white"
             }`}
           >
@@ -1090,7 +1090,7 @@ export default function Support() {
           </button>
           <button
             onClick={() => setUserFilter("archived")}
-            className={`px-3.5 py-1 text-xs font-bold rounded-pill-sm transition-colors flex items-center gap-1 ${
+            className={`px-3.5 py-1 text-xs font-bold rounded-pill-sm transition-colors flex items-center gap-1 whitespace-nowrap ${
               userFilter === "archived" ? "bg-purple text-white" : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-white"
             }`}
           >
@@ -1780,11 +1780,11 @@ export default function Support() {
                   </div>
                 ) : (
                   <div className="flex items-center justify-between gap-2 p-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 rounded-lg text-xs font-bold text-emerald-900 dark:text-emerald-200">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap">
                       <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
                       <span>
-                        کد <span className="font-mono font-black">{appliedDiscount.code}</span> اعمال شد
-                        ({faNum(appliedDiscount.discountAmountToman.toLocaleString("fa-IR"))} تومان تخفیف)
+                        کد <span className="font-mono font-black">{appliedDiscount.code}</span> اعمال شد{" "}
+                        <span className="whitespace-nowrap font-bold">({faNum(appliedDiscount.discountAmountToman.toLocaleString("fa-IR"))} تومان تخفیف)</span>
                       </span>
                     </div>
                     <button

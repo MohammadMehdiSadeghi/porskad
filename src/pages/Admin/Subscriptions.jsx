@@ -352,11 +352,11 @@ export default function Subscriptions() {
                   </div>
                 ) : (
                   <div className="flex items-center justify-between gap-2 p-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 rounded-xl text-xs font-bold text-emerald-900 dark:text-emerald-200">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap">
                       <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
                       <span>
-                        کد <span className="font-mono font-black">{appliedDiscount.code}</span> اعمال شد
-                        ({faNum(discountAmountToman.toLocaleString("fa-IR"))} تومان تخفیف)
+                        کد <span className="font-mono font-black">{appliedDiscount.code}</span> اعمال شد{" "}
+                        <span className="whitespace-nowrap font-bold">({faNum(discountAmountToman.toLocaleString("fa-IR"))} تومان تخفیف)</span>
                       </span>
                     </div>
                     <button

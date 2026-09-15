@@ -775,12 +775,12 @@ export default function Register() {
                     </div>
 
                     {/* ثانیه‌شمار و دکمه ارسال مجدد */}
-                    <div className="flex items-center justify-between text-xs font-bold px-1 py-0.5">
-                      <span className="text-ink-subtle dark:text-slate-400">
-                        {cooldown > 0 ? "امکان ارسال مجدد:" : "کد قبلی تا زمان ارسال مجدد معتبر است"}
+                    <div className="flex items-center justify-between gap-2 text-xs font-bold px-3 py-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-ink/10 dark:border-slate-700/60 transition-all">
+                      <span className="text-ink-subtle dark:text-slate-400 whitespace-nowrap">
+                        {cooldown > 0 ? "امکان ارسال مجدد:" : "کد قبلی معتبر است"}
                       </span>
                       {cooldown > 0 ? (
-                        <span className="font-mono text-teal font-black bg-teal/10 dark:bg-teal/20 px-2.5 py-1 rounded-md text-xs" dir="ltr">
+                        <span className="font-mono text-teal font-black bg-teal/10 dark:bg-teal/20 px-2.5 py-0.5 rounded-md text-xs whitespace-nowrap" dir="ltr">
                           {formatTimer(cooldown)}
                         </span>
                       ) : (
@@ -788,11 +788,11 @@ export default function Register() {
                           type="button"
                           onClick={handleResendOtp}
                           disabled={remainingResends <= 0 || busy}
-                          className="text-teal hover:underline inline-flex items-center gap-1.5 font-black disabled:opacity-50 disabled:no-underline cursor-pointer"
+                          className="text-teal hover:underline inline-flex items-center gap-1.5 font-black disabled:opacity-50 disabled:no-underline cursor-pointer whitespace-nowrap"
                         >
                           <RefreshCw size={13} className={busy ? "animate-spin" : ""} />
                           <span>ارسال مجدد کد</span>
-                          <span className="text-[10px] text-ink-subtle dark:text-slate-400">
+                          <span className="text-[11px] font-semibold text-ink-subtle dark:text-slate-400 whitespace-nowrap">
                             ({faNum(remainingResends)} بار مجاز)
                           </span>
                         </button>
