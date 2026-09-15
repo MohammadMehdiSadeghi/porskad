@@ -26,16 +26,20 @@ import {
   Settings,
   Crown,
   Code2,
+  ChevronLeft,
+  Plus,
+  Calendar,
 } from "lucide-react";
 import NotificationBell from "../ui/NotificationBell";
 import TabGate from "./TabGate";
 import ThemeToggle from "../ui/ThemeToggle";
-import { faNum } from "../../lib/utils";
+import { faNum, formatToJalali } from "../../lib/utils";
 import {
   useUserTabsConfig,
   loadUserTabsConfigFromDb,
   TAB_STATE_DISABLED,
 } from "../../lib/userTabs";
+
 
 export default function AdminLayout() {
   const { user, profile, loading, logout, isOwner, updateProfile } = useAuth();
@@ -203,19 +207,19 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="h-screen bg-bg-lavender dark:bg-[#0B0F19] text-ink dark:text-slate-100 flex flex-col md:flex-row overflow-hidden transition-colors duration-200">
-      {/* ─── سایدبار دسکتاپ — ثابت در سمت راست ─── */}
-      <aside className="hidden md:flex bg-navy dark:bg-[#0E1526] text-white md:w-60 shrink-0 md:h-screen flex-col overflow-y-auto z-20 border-l border-transparent dark:border-slate-800/80">
-        {/* هدر برند */}
-        <div className="flex items-center justify-between px-3.5 py-3 border-b border-white/10">
-          <span className="inline-flex items-baseline gap-0.5 text-base lg:text-lg font-black rotate-[-2deg] select-none">
-            <span>پرس</span>
-            <span className="text-teal">کاد</span>
-          </span>
-          <span className="text-xs lg:text-xs font-bold bg-teal/25 text-teal rounded-pill-sm px-2 py-0.5 flex items-center gap-1">
+    <div className="h-screen bg-[#F8F9FA] dark:bg-[#0B0F17] text-ink-normal dark:text-[#F1F5F9] flex flex-col md:flex-row overflow-hidden transition-colors duration-200">
+      {/* ─── سایدبار دسکتاپ — ثابت در سمت راست (ROKAD Standards 7.8) ─── */}
+      <aside className="hidden md:flex bg-white dark:bg-[#121824] text-ink-normal dark:text-white w-72 shrink-0 md:h-screen flex-col overflow-y-auto z-20 border-l border-[#EAEAEA] dark:border-gray-800">
+        {/* هدر سایدبار */}
+        <div className="h-20 flex items-center justify-between px-5 border-b border-[#EAEAEA] dark:border-gray-800 shrink-0">
+          <div className="flex items-baseline gap-1 select-none">
+            <span className="text-xl font-black text-sec dark:text-white">پرس</span>
+            <span className="text-xl font-black text-primary">کاد</span>
+          </div>
+          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-ecosystem-light dark:bg-ecosystem-darker/50 text-ecosystem-darker dark:text-ecosystem-light border border-primary/30 flex items-center gap-1">
             {owner ? (
               <>
-                <Crown size={11} className="text-teal" />
+                <Crown size={12} className="text-primary" />
                 <span>مدیریت کل</span>
               </>
             ) : (
@@ -226,10 +230,10 @@ export default function AdminLayout() {
 
         {/* سهمیه ساخت فرم برای کاربر عادی */}
         {!owner && profile && (
-          <div className="mx-2 mt-2 p-2.5 rounded-xl bg-white/5 border border-white/10 text-xs">
-            <div className="flex items-center justify-between text-white/70 font-bold">
+          <div className="mx-3 mt-3 p-3 rounded-xl bg-gray-50 dark:bg-[#151C28] border border-[#EAEAEA] dark:border-gray-800 text-xs">
+            <div className="flex items-center justify-between text-ink-normal/70 dark:text-gray-300 font-bold">
               <span>سهمیه فرم:</span>
-              <span className="text-teal font-extrabold" style={{ fontFamily: '"IRANSansX", Tahoma, sans-serif' }}>
+              <span className="text-primary font-black">
                 {(profile.max_forms >= 999999 || profile.plan === "unlimited")
                   ? "نامحدود ✨"
                   : `${faNum(profile.max_forms ?? 5)} فرم مجاز`}
@@ -238,43 +242,48 @@ export default function AdminLayout() {
           </div>
         )}
 
-
         {/* منو عمودی دسکتاپ */}
-        <nav className="flex flex-col gap-1 px-1.5 lg:px-2 py-2 overflow-y-auto flex-1">
+        <nav className="flex flex-col gap-1.5 px-3 py-4 overflow-y-auto flex-1">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
-                `flex items-center gap-2 whitespace-nowrap shrink-0 rounded-pill-sm px-3 py-2.5
-                 text-xs lg:text-sm font-bold transition-colors ${
-                   isActive
-                     ? "bg-teal text-white shadow-[2px_2px_0_0_rgba(0,0,0,0.25)]"
-                     : "text-white/70 hover:text-white hover:bg-white/10"
-                 }`
+                `flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                  isActive
+                    ? "bg-ecosystem-light dark:bg-ecosystem-darker/60 text-ecosystem-darker dark:text-ecosystem-light border border-primary/40 shadow-[2px_2px_0_#59BBAF]"
+                    : "text-ink-normal/70 dark:text-gray-400 hover:text-sec dark:hover:text-white hover:bg-gray-100/70 dark:hover:bg-white/5 border border-transparent"
+                }`
               }
             >
-              <item.icon size={16} className="shrink-0" />
-              <span className="shrink-0">{item.label}</span>
+              {({ isActive }) => (
+                <>
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <item.icon size={17} className={isActive ? "text-primary shrink-0" : "text-ink-normal/50 dark:text-gray-400 shrink-0"} />
+                    <span className="truncate">{item.label}</span>
+                  </div>
+                  {isActive && <ChevronLeft size={15} className="text-primary shrink-0" />}
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
 
         {/* فوتر سایدبار دسکتاپ */}
-        <div className="mt-auto px-2 py-2.5 border-t border-white/10 flex flex-col items-center gap-2">
-          <div className="text-center w-full min-w-0">
-            <div className="text-xs font-bold text-white/90 truncate">
+        <div className="mt-auto p-4 border-t border-[#EAEAEA] dark:border-gray-800 flex flex-col gap-2.5 bg-gray-50/50 dark:bg-transparent">
+          <div className="text-right w-full min-w-0 px-1">
+            <div className="text-xs font-bold text-sec dark:text-white truncate">
               {profile?.full_name || user.email?.split("@")[0]}
             </div>
-            <div className="text-xs font-medium text-white/40 truncate" dir="ltr">
+            <div className="text-[11px] font-medium text-ink-normal/50 dark:text-gray-400 truncate" dir="ltr">
               {user.email}
             </div>
           </div>
           <button
             type="button"
             onClick={handleLogout}
-            className="flex items-center justify-center gap-1.5 w-full py-1.5 px-2.5 rounded-pill-sm border border-white/15 bg-white/5 hover:bg-rose-500/20 hover:border-rose-400/40 text-white/80 hover:text-rose-200 text-xs font-bold transition-all duration-150 cursor-pointer shadow-xs active:scale-[0.98]"
+            className="rokad-btn-outline w-full py-2 text-xs font-bold justify-center hover:text-rose-600 hover:border-rose-400"
           >
             <LogOut size={13} className="shrink-0" />
             <span>خروج از حساب</span>
@@ -291,43 +300,34 @@ export default function AdminLayout() {
       />
 
       <aside
-        className={`fixed top-0 right-0 h-full w-72 max-w-[85vw] bg-navy dark:bg-[#0E1526] text-white z-[9991] flex flex-col shadow-2xl transition-transform duration-300 ease-out md:hidden ${
+        className={`fixed top-0 right-0 h-full w-72 max-w-[85vw] bg-white dark:bg-[#121824] text-ink-normal dark:text-white z-[9991] flex flex-col shadow-2xl transition-transform duration-300 ease-out md:hidden border-l border-[#EAEAEA] dark:border-gray-800 ${
           mobileNavOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         {/* هدر منوی موبایل */}
-        <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/10 shrink-0">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-[#EAEAEA] dark:border-gray-800 shrink-0">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-baseline gap-0.5 text-lg font-black rotate-[-2deg] select-none">
-              <span>پرس</span>
-              <span className="text-teal">کاد</span>
-            </span>
-            <span className="text-xs font-bold bg-teal/25 text-teal rounded-pill-sm px-2 py-0.5 flex items-center gap-1">
-              {owner ? (
-                <>
-                  <Crown size={11} className="text-teal" />
-                  <span>مدیریت کل</span>
-                </>
-              ) : (
-                "پنل کاربری"
-              )}
+            <span className="text-lg font-black text-sec dark:text-white">پرس</span>
+            <span className="text-lg font-black text-primary">کاد</span>
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-ecosystem-light dark:bg-ecosystem-darker/50 text-ecosystem-darker dark:text-ecosystem-light border border-primary/30">
+              {owner ? "مدیر کل" : "کاربر"}
             </span>
           </div>
           <button
             onClick={() => setMobileNavOpen(false)}
-            className="p-1.5 rounded-lg bg-white/10 text-white/70 hover:text-white hover:bg-white/20 transition-all"
+            className="p-1.5 rounded-lg bg-gray-100 dark:bg-white/10 text-ink-normal dark:text-white hover:bg-gray-200 transition-all"
             title="بستن منو"
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* سهمیه کاربر عادی در موبایل */}
+        {/* سهمیه در موبایل */}
         {!owner && profile && (
-          <div className="mx-3 mt-3 p-2.5 rounded-xl bg-white/5 border border-white/10 text-xs shrink-0">
-            <div className="flex items-center justify-between text-white/70 font-bold">
+          <div className="mx-3 mt-3 p-2.5 rounded-xl bg-gray-50 dark:bg-[#151C28] border border-[#EAEAEA] dark:border-gray-800 text-xs shrink-0">
+            <div className="flex items-center justify-between text-ink-normal/70 dark:text-gray-300 font-bold">
               <span>سهمیه فرم:</span>
-              <span className="text-teal font-extrabold">
+              <span className="text-primary font-black">
                 {(profile.max_forms >= 999999 || profile.plan === "unlimited")
                   ? "نامحدود ✨"
                   : `${faNum(profile.max_forms ?? 5)} فرم مجاز`}
@@ -337,7 +337,7 @@ export default function AdminLayout() {
         )}
 
         {/* لیست لینک‌های منو در موبایل */}
-        <nav className="flex flex-col gap-1 px-3 py-3 overflow-y-auto flex-1">
+        <nav className="flex flex-col gap-1.5 px-3 py-3 overflow-y-auto flex-1">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -345,32 +345,31 @@ export default function AdminLayout() {
               end={item.end}
               onClick={() => setMobileNavOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm font-bold transition-all ${
+                `flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all ${
                   isActive
-                    ? "bg-teal text-white shadow-sm"
-                    : "text-white/70 hover:text-white hover:bg-white/10"
+                    ? "bg-ecosystem-light dark:bg-ecosystem-darker/60 text-ecosystem-darker dark:text-ecosystem-light border border-primary/40 shadow-[2px_2px_0_#59BBAF]"
+                    : "text-ink-normal/70 dark:text-gray-400 hover:text-sec dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 border border-transparent"
                 }`
               }
             >
-              <item.icon size={18} className="shrink-0" />
-              <span>{item.label}</span>
+              {({ isActive }) => (
+                <>
+                  <div className="flex items-center gap-2.5">
+                    <item.icon size={18} className={isActive ? "text-primary shrink-0" : "text-ink-normal/50 dark:text-gray-400 shrink-0"} />
+                    <span>{item.label}</span>
+                  </div>
+                  {isActive && <ChevronLeft size={16} className="text-primary shrink-0" />}
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
 
-        {/* فوتر منوی موبایل همراه با تغییر تم */}
-        <div className="p-3.5 border-t border-white/10 flex flex-col gap-3 shrink-0 bg-navy dark:bg-[#0E1526]">
+        {/* فوتر منوی موبایل */}
+        <div className="p-4 border-t border-[#EAEAEA] dark:border-gray-800 flex flex-col gap-3 shrink-0 bg-gray-50/50 dark:bg-transparent">
           <div className="flex items-center justify-between px-1">
-            <span className="text-xs text-white/70 font-bold">تم پنل:</span>
+            <span className="text-xs text-ink-normal/70 dark:text-gray-400 font-bold">تم پنل:</span>
             <ThemeToggle />
-          </div>
-          <div className="text-center w-full min-w-0">
-            <div className="text-xs font-bold text-white/90 truncate">
-              {profile?.full_name || user.email?.split("@")[0]}
-            </div>
-            <div className="text-xs font-medium text-white/40 truncate" dir="ltr">
-              {user.email}
-            </div>
           </div>
           <button
             type="button"
@@ -378,7 +377,7 @@ export default function AdminLayout() {
               setMobileNavOpen(false);
               handleLogout();
             }}
-            className="flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-pill-sm border border-white/15 bg-white/5 hover:bg-rose-500/20 hover:border-rose-400/40 text-white/80 hover:text-rose-200 text-xs font-bold transition-all duration-150 cursor-pointer shadow-xs active:scale-[0.98]"
+            className="rokad-btn-outline w-full py-2 text-xs font-bold justify-center hover:text-rose-600 hover:border-rose-400"
           >
             <LogOut size={14} className="shrink-0" />
             <span>خروج از حساب</span>
@@ -388,76 +387,56 @@ export default function AdminLayout() {
 
       {/* بخش اصلی: تاپ‌بار بالا + محتوا */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-        {/* هدر بالای صفحه — محل قرارگیری همبرگر منو در موبایل، نوتیفیکیشن‌ها، تم و مشخصات سریع */}
-        <header className="bg-white/90 dark:bg-[#131B2E]/90 backdrop-blur-md border-b border-navy/10 dark:border-slate-800 px-3.5 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between shrink-0 z-20 shadow-xs transition-colors duration-200">
-          {/* سمت راست: دکمه همبرگر در موبایل + مشخصات یا لوگو */}
-          <div className="flex items-center gap-2.5 min-w-0">
-            {/* دکمه همبرگر اختصاصی در موبایل */}
+        {/* هدر بالای صفحه (ROKAD Standards 7.9) */}
+        <header className="h-16 sm:h-20 sticky top-0 z-40 bg-white/90 dark:bg-[#0B0F17]/90 backdrop-blur-md border-b border-[#EAEAEA] dark:border-gray-800 px-4 sm:px-6 flex items-center justify-between shrink-0 transition-colors duration-200">
+          {/* سمت راست: دکمه همبرگر در موبایل + تاریخ زنده شمسی */}
+          <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => setMobileNavOpen(true)}
-              className="md:hidden p-2 rounded-xl bg-navy/5 dark:bg-white/5 hover:bg-navy/10 dark:hover:bg-white/10 text-navy dark:text-white border border-navy/10 dark:border-white/10 active:scale-95 transition-all flex items-center justify-center shrink-0"
+              className="md:hidden p-2 rounded-xl bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-sec dark:text-white border border-gray-200 dark:border-gray-700 transition-all flex items-center justify-center shrink-0"
               title="باز کردن منو"
               aria-label="منوی اصلی"
             >
               <Menu size={20} />
             </button>
 
-            {/* لوگو در موبایل */}
-            <div className="md:hidden flex items-center gap-1">
-              <span className="text-base font-black text-navy dark:text-white rotate-[-2deg] select-none">
-                پرس‌<span className="text-teal">کاد</span>
-              </span>
-            </div>
-
-            {/* مشخصات کاربر در دسکتاپ */}
-            <div className="hidden md:flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-teal/10 dark:bg-teal/20 text-teal flex items-center justify-center font-black text-sm shrink-0 border border-teal/20">
-                {profile?.full_name ? profile.full_name.charAt(0) : <User size={15} />}
-              </div>
-              <div className="min-w-0">
-                <div className="text-xs sm:text-sm font-black text-navy dark:text-white truncate flex items-center gap-2">
-                  <span>{profile?.full_name || user.email?.split("@")[0]}</span>
-                  {owner ? (
-                    <span className="text-xs font-bold bg-teal/20 text-teal px-1.5 py-0.5 rounded-md flex items-center gap-1">
-                      <Crown size={10} />
-                      <span>مدیریت کل</span>
-                    </span>
-                  ) : null}
-                </div>
-                <div className="text-xs sm:text-xs text-ink/40 dark:text-slate-400 font-medium truncate flex items-center gap-1.5">
-                  <span>{user.email}</span>
-                  {!owner && profile?.max_forms && (
-                    <>
-                      <span>•</span>
-                      <span className="text-teal font-bold">
-                        {(profile.max_forms >= 999999 || profile.plan === "unlimited")
-                          ? "پلن نامحدود ✨"
-                          : `${faNum(profile.max_forms)} فرم مجاز`}
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
+            {/* تاریخ زنده شمسی (ROKAD Standards 7.9) */}
+            <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gray-50 dark:bg-[#151C28] border border-gray-200 dark:border-gray-800 text-xs font-bold text-ink-normal/80 dark:text-gray-300">
+              <Calendar size={14} className="text-primary shrink-0" />
+              <span>{formatToJalali(new Date(), { showMonthName: true, includeDayName: true })}</span>
             </div>
           </div>
 
-          {/* سمت چپ: تغییر تم، زنگوله نوتیفیکیشن و دسترسی سریع */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* انتخابگر تم */}
-            <ThemeToggle className="hidden sm:inline-flex" />
-            <ThemeToggle compact className="sm:hidden" />
+          {/* سمت چپ: دکمه ثبت سریع فرم، انتخابگر تم، زنگوله اعلان و پروفایل */}
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+            <button
+              onClick={() => navigate("/admin/forms")}
+              className="rokad-btn-primary px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold"
+            >
+              <Plus size={15} />
+              <span className="hidden sm:inline">فرم جدید</span>
+            </button>
 
-            {/* زنگوله اعلان‌ها در بالا */}
+            <ThemeToggle />
+
             <NotificationBell />
 
-            {/* دسترسی سریع به پشتیبانی در دسکتاپ */}
             <NavLink
-              to="/admin/support"
-              className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-navy/5 dark:bg-white/5 hover:bg-navy/10 dark:hover:bg-white/10 text-navy dark:text-slate-200 text-xs font-bold transition-all border border-navy/10 dark:border-white/10 ${owner || tabsCfg.support?.state !== "disabled" ? "" : "hidden"}`}
-              title="پشتیبانی و تیکت‌ها"
+              to="/admin/profile"
+              className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/80 dark:bg-[#151C28] hover:border-primary/40 transition-all"
+              title="پروفایل کاربری"
             >
-              <Headphones size={14} className="text-teal" />
-              <span>پشتیبانی</span>
+              <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-black text-xs shrink-0">
+                {profile?.full_name ? profile.full_name.charAt(0) : <User size={14} />}
+              </div>
+              <div className="hidden lg:block text-right">
+                <div className="text-xs font-black text-sec dark:text-white truncate max-w-[110px]">
+                  {profile?.full_name || user.email?.split("@")[0]}
+                </div>
+                <div className="text-[10.5px] text-ink-normal/50 dark:text-gray-400 truncate">
+                  {owner ? "مدیر کل" : "کاربر سامانه"}
+                </div>
+              </div>
             </NavLink>
           </div>
         </header>
@@ -468,6 +447,7 @@ export default function AdminLayout() {
             <Outlet />
           ) : (
             <TabGate tabId={activeTabId}>
+
               <Outlet />
             </TabGate>
           )}

@@ -25,23 +25,23 @@ export default function TabGate({ tabId, children }) {
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
       <StickerCard
         theme={maintenance ? "orange" : "magenta"}
-        rotate="rotate-[0.4deg]"
         className="w-full max-w-md"
       >
         <div className="p-7 sm:p-8 flex flex-col items-center gap-4 text-center">
           <div
-            className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center [corner-shape:squircle] rotate-[-3deg] ${
+            className={`w-16 h-16 rounded-2xl flex items-center justify-center ${
               maintenance
-                ? "bg-orange text-white"
-                : "bg-magenta text-white"
+                ? "bg-college-normal text-white shadow-[2px_2px_0_#57390A]"
+                : "bg-female-normal text-white shadow-[2px_2px_0_#4E0920]"
             }`}
           >
             {maintenance ? <Wrench size={30} /> : <Compass size={30} />}
           </div>
 
-          <Badge color={maintenance ? "orange" : "magenta"} rotate="rotate-[-1deg]">
+          <Badge color={maintenance ? "orange" : "magenta"}>
             {maintenance ? "🛠️ در حال بروزرسانی" : "⛔ دسترسی موقتاً متوقف است"}
           </Badge>
+
 
           <h2 className="text-lg font-black text-navy dark:text-white leading-8">
             بخش «{tab?.label || "این قسمت"}»
