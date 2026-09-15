@@ -208,18 +208,18 @@ export default function AdminLayout() {
 
   return (
     <div className="h-screen bg-[#F8F9FA] dark:bg-[#0B0F17] text-ink-normal dark:text-[#F1F5F9] flex flex-col md:flex-row overflow-hidden transition-colors duration-200">
-      {/* ─── سایدبار دسکتاپ — ثابت در سمت راست (ROKAD Standards 7.8) ─── */}
-      <aside className="hidden md:flex bg-white dark:bg-[#121824] text-ink-normal dark:text-white w-72 shrink-0 md:h-screen flex-col overflow-y-auto z-20 border-l border-[#EAEAEA] dark:border-gray-800">
+      {/* ─── سایدبار دسکتاپ — آبی اصیل پرس‌کاد (سرمه‌ای / ناوی) ─── */}
+      <aside className="hidden md:flex bg-navy dark:bg-[#0E1526] text-white w-72 shrink-0 md:h-screen flex-col overflow-y-auto z-20 border-l border-white/10 dark:border-slate-800/80">
         {/* هدر سایدبار */}
-        <div className="h-20 flex items-center justify-between px-5 border-b border-[#EAEAEA] dark:border-gray-800 shrink-0">
+        <div className="h-20 flex items-center justify-between px-5 border-b border-white/10 shrink-0">
           <div className="flex items-baseline gap-1 select-none">
-            <span className="text-xl font-black text-sec dark:text-white">پرس</span>
-            <span className="text-xl font-black text-primary">کاد</span>
+            <span className="text-xl font-black text-white">پرس</span>
+            <span className="text-xl font-black text-teal">کاد</span>
           </div>
-          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-ecosystem-light dark:bg-ecosystem-darker/50 text-ecosystem-darker dark:text-ecosystem-light border border-primary/30 flex items-center gap-1">
+          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-teal/20 text-teal border border-teal/30 flex items-center gap-1">
             {owner ? (
               <>
-                <Crown size={12} className="text-primary" />
+                <Crown size={12} className="text-teal" />
                 <span>مدیریت کل</span>
               </>
             ) : (
@@ -230,10 +230,10 @@ export default function AdminLayout() {
 
         {/* سهمیه ساخت فرم برای کاربر عادی */}
         {!owner && profile && (
-          <div className="mx-3 mt-3 p-3 rounded-xl bg-gray-50 dark:bg-[#151C28] border border-[#EAEAEA] dark:border-gray-800 text-xs">
-            <div className="flex items-center justify-between text-ink-normal/70 dark:text-gray-300 font-bold">
+          <div className="mx-3 mt-3 p-3 rounded-xl bg-white/5 border border-white/10 text-xs">
+            <div className="flex items-center justify-between text-white/80 font-bold">
               <span>سهمیه فرم:</span>
-              <span className="text-primary font-black">
+              <span className="text-teal font-black">
                 {(profile.max_forms >= 999999 || profile.plan === "unlimited")
                   ? "نامحدود ✨"
                   : `${faNum(profile.max_forms ?? 5)} فرم مجاز`}
@@ -252,18 +252,18 @@ export default function AdminLayout() {
               className={({ isActive }) =>
                 `flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                   isActive
-                    ? "bg-ecosystem-light dark:bg-ecosystem-darker/60 text-ecosystem-darker dark:text-ecosystem-light border border-primary/40 shadow-[2px_2px_0_#59BBAF]"
-                    : "text-ink-normal/70 dark:text-gray-400 hover:text-sec dark:hover:text-white hover:bg-gray-100/70 dark:hover:bg-white/5 border border-transparent"
+                    ? "bg-teal text-white shadow-[2px_2px_0_rgba(0,0,0,0.3)] font-black"
+                    : "text-white/75 hover:text-white hover:bg-white/10 border border-transparent"
                 }`
               }
             >
               {({ isActive }) => (
                 <>
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <item.icon size={17} className={isActive ? "text-primary shrink-0" : "text-ink-normal/50 dark:text-gray-400 shrink-0"} />
+                    <item.icon size={17} className={isActive ? "text-white shrink-0" : "text-white/60 shrink-0"} />
                     <span className="truncate">{item.label}</span>
                   </div>
-                  {isActive && <ChevronLeft size={15} className="text-primary shrink-0" />}
+                  {isActive && <ChevronLeft size={15} className="text-white shrink-0" />}
                 </>
               )}
             </NavLink>
@@ -271,19 +271,19 @@ export default function AdminLayout() {
         </nav>
 
         {/* فوتر سایدبار دسکتاپ */}
-        <div className="mt-auto p-4 border-t border-[#EAEAEA] dark:border-gray-800 flex flex-col gap-2.5 bg-gray-50/50 dark:bg-transparent">
+        <div className="mt-auto p-4 border-t border-white/10 flex flex-col gap-2.5 bg-black/15">
           <div className="text-right w-full min-w-0 px-1">
-            <div className="text-xs font-bold text-sec dark:text-white truncate">
+            <div className="text-xs font-bold text-white truncate">
               {profile?.full_name || user.email?.split("@")[0]}
             </div>
-            <div className="text-[11px] font-medium text-ink-normal/50 dark:text-gray-400 truncate" dir="ltr">
+            <div className="text-[11px] font-medium text-white/50 truncate" dir="ltr">
               {user.email}
             </div>
           </div>
           <button
             type="button"
             onClick={handleLogout}
-            className="rokad-btn-outline w-full py-2 text-xs font-bold justify-center hover:text-rose-600 hover:border-rose-400"
+            className="w-full flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-xl border border-white/20 text-white/85 hover:text-white hover:bg-rose-500/20 hover:border-rose-400 transition-all cursor-pointer"
           >
             <LogOut size={13} className="shrink-0" />
             <span>خروج از حساب</span>
@@ -300,22 +300,22 @@ export default function AdminLayout() {
       />
 
       <aside
-        className={`fixed top-0 right-0 h-full w-72 max-w-[85vw] bg-white dark:bg-[#121824] text-ink-normal dark:text-white z-[9991] flex flex-col shadow-2xl transition-transform duration-300 ease-out md:hidden border-l border-[#EAEAEA] dark:border-gray-800 ${
+        className={`fixed top-0 right-0 h-full w-72 max-w-[85vw] bg-navy dark:bg-[#0E1526] text-white z-[9991] flex flex-col shadow-2xl transition-transform duration-300 ease-out md:hidden border-l border-white/10 ${
           mobileNavOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         {/* هدر منوی موبایل */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-[#EAEAEA] dark:border-gray-800 shrink-0">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-white/10 shrink-0">
           <div className="flex items-center gap-2">
-            <span className="text-lg font-black text-sec dark:text-white">پرس</span>
-            <span className="text-lg font-black text-primary">کاد</span>
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-ecosystem-light dark:bg-ecosystem-darker/50 text-ecosystem-darker dark:text-ecosystem-light border border-primary/30">
+            <span className="text-lg font-black text-white">پرس</span>
+            <span className="text-lg font-black text-teal">کاد</span>
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-teal/20 text-teal border border-teal/30">
               {owner ? "مدیر کل" : "کاربر"}
             </span>
           </div>
           <button
             onClick={() => setMobileNavOpen(false)}
-            className="p-1.5 rounded-lg bg-gray-100 dark:bg-white/10 text-ink-normal dark:text-white hover:bg-gray-200 transition-all"
+            className="p-1.5 rounded-lg bg-white/10 text-white/70 hover:text-white hover:bg-white/20 transition-all cursor-pointer"
             title="بستن منو"
           >
             <X size={18} />
@@ -324,10 +324,10 @@ export default function AdminLayout() {
 
         {/* سهمیه در موبایل */}
         {!owner && profile && (
-          <div className="mx-3 mt-3 p-2.5 rounded-xl bg-gray-50 dark:bg-[#151C28] border border-[#EAEAEA] dark:border-gray-800 text-xs shrink-0">
-            <div className="flex items-center justify-between text-ink-normal/70 dark:text-gray-300 font-bold">
+          <div className="mx-3 mt-3 p-2.5 rounded-xl bg-white/5 border border-white/10 text-xs shrink-0">
+            <div className="flex items-center justify-between text-white/80 font-bold">
               <span>سهمیه فرم:</span>
-              <span className="text-primary font-black">
+              <span className="text-teal font-black">
                 {(profile.max_forms >= 999999 || profile.plan === "unlimited")
                   ? "نامحدود ✨"
                   : `${faNum(profile.max_forms ?? 5)} فرم مجاز`}
@@ -347,18 +347,18 @@ export default function AdminLayout() {
               className={({ isActive }) =>
                 `flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all ${
                   isActive
-                    ? "bg-ecosystem-light dark:bg-ecosystem-darker/60 text-ecosystem-darker dark:text-ecosystem-light border border-primary/40 shadow-[2px_2px_0_#59BBAF]"
-                    : "text-ink-normal/70 dark:text-gray-400 hover:text-sec dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 border border-transparent"
+                    ? "bg-teal text-white shadow-[2px_2px_0_rgba(0,0,0,0.3)] font-black"
+                    : "text-white/75 hover:text-white hover:bg-white/10 border border-transparent"
                 }`
               }
             >
               {({ isActive }) => (
                 <>
                   <div className="flex items-center gap-2.5">
-                    <item.icon size={18} className={isActive ? "text-primary shrink-0" : "text-ink-normal/50 dark:text-gray-400 shrink-0"} />
+                    <item.icon size={18} className={isActive ? "text-white shrink-0" : "text-white/60 shrink-0"} />
                     <span>{item.label}</span>
                   </div>
-                  {isActive && <ChevronLeft size={16} className="text-primary shrink-0" />}
+                  {isActive && <ChevronLeft size={16} className="text-white shrink-0" />}
                 </>
               )}
             </NavLink>
@@ -366,9 +366,9 @@ export default function AdminLayout() {
         </nav>
 
         {/* فوتر منوی موبایل */}
-        <div className="p-4 border-t border-[#EAEAEA] dark:border-gray-800 flex flex-col gap-3 shrink-0 bg-gray-50/50 dark:bg-transparent">
+        <div className="p-4 border-t border-white/10 flex flex-col gap-3 shrink-0 bg-black/15">
           <div className="flex items-center justify-between px-1">
-            <span className="text-xs text-ink-normal/70 dark:text-gray-400 font-bold">تم پنل:</span>
+            <span className="text-xs text-white/70 font-bold">تم پنل:</span>
             <ThemeToggle />
           </div>
           <button
@@ -377,7 +377,7 @@ export default function AdminLayout() {
               setMobileNavOpen(false);
               handleLogout();
             }}
-            className="rokad-btn-outline w-full py-2 text-xs font-bold justify-center hover:text-rose-600 hover:border-rose-400"
+            className="w-full flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-xl border border-white/20 text-white/85 hover:text-white hover:bg-rose-500/20 hover:border-rose-400 transition-all cursor-pointer"
           >
             <LogOut size={14} className="shrink-0" />
             <span>خروج از حساب</span>
