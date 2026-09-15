@@ -540,6 +540,7 @@ export default function SuperAdmin() {
     sms_otp_enabled: true,
     google_auth_enabled: true,
     otp_sms_pattern: "کد تایید ثبت‌نام در پرس‌کاد: %code%",
+    otp_pattern_code: "6516",
     otp_line_number: "98",
     otp_cooldown_seconds: 90,
     otp_max_resends: 2,
@@ -884,6 +885,7 @@ export default function SuperAdmin() {
             "google_auth_enabled",
             "registration_enabled",
             "otp_sms_pattern",
+            "otp_pattern_code",
             "otp_line_number",
             "otp_cooldown_seconds",
             "otp_max_resends",
@@ -902,6 +904,7 @@ export default function SuperAdmin() {
               directObj.registration_enabled = r.value === true || r.value === "true";
             }
             if (r.key === "otp_sms_pattern" && r.value) directObj.otp_sms_pattern = String(r.value);
+            if (r.key === "otp_pattern_code" && r.value) directObj.otp_pattern_code = String(r.value);
             if (r.key === "otp_line_number" && r.value) {
               const val = String(r.value);
               directObj.otp_line_number = (val === "Service" || val === "Public") ? "98" : val;
@@ -2850,8 +2853,25 @@ export default function SuperAdmin() {
                 </div>
               </div>
 
-              {/* Grid: Sender Line, Cooldown, Max Resends */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
+              {/* Grid: Pattern Code, Sender Line, Cooldown, Max Resends */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                    Amoot Pattern Code
+                  </label>
+                  <input
+                    type="text"
+                    dir="ltr"
+                    value={sysSettings.otp_pattern_code || "6516"}
+                    onChange={(e) => setSysSettings({ ...sysSettings, otp_pattern_code: e.target.value })}
+                    style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", outline: "none", borderRadius: "4px", fontFamily: "monospace", color: "var(--sa-link)", fontWeight: 700 }}
+                    placeholder="6516"
+                  />
+                  <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
+                    Fast OTP Template Code (Default: <code dir="ltr">6516</code>)
+                  </div>
+                </div>
+
                 <div>
                   <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--sa-text-0)", marginBottom: "0.35rem", textTransform: "uppercase" }}>
                     Sender Line

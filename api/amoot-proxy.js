@@ -403,6 +403,81 @@ export default async function handler(req, res) {
       }
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // ۵. ارسال پیامک با الگو (Send SMS via Amoot SendWithPattern)
+    // ══════════════════════════════════════════════════════════════
+    if (action === "send_pattern_sms") {
+      const { mobile, patternCode, patternValues, token: customToken } = body;
+
+      const cleanMobile = normalizeIranPhone(mobile);
+      if (!isValidIranPhone(cleanMobile)) {
+        return res.status(200).json({
+          success: false,
+          message: "شماره موبایل وارد شده معتبر نمی‌باشد (باید با ۰۹ شروع شود).",
+        });
+      }
+
+      let activeToken = ((customToken || body.token || "") + "").trim();
+      if (!activeToken && adminClient) {
+        try {
+          const { data: dbSettings } = await adminClient
+            .from("sms_settings")
+            .select("amoot_token")
+            .eq("id", 1)
+            .maybeSingle();
+          if (dbSettings?.amoot_token) activeToken = dbSettings.amoot_token;
+        } catch {}
+      }
+
+      if (!activeToken) {
+        activeToken =
+          process.env.AMOOT_TOKEN ||
+          process.env.AMOOT_SMS_TOKEN ||
+          process.env.VITE_AMOOT_TOKEN ||
+          "";
+      }
+
+      if (!activeToken) {
+        return res.status(200).json({
+          success: false,
+          message: "توکن سامانه پیامک آموت یافت نشد.",
+        });
+      }
+
+      const patternPayload = new URLSearchParams({
+        Token: activeToken,
+        token: activeToken,
+        PatternCode: String(patternCode || "6516").trim(),
+        Mobile: cleanMobile,
+        MobileNumbers: cleanMobile,
+        PatternValues: typeof patternValues === "object" ? JSON.stringify(patternValues) : String(patternValues || ""),
+      });
+
+      const sendRes = await fetch("https://portal.amootsms.com/rest/SendWithPattern", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: patternPayload.toString(),
+        signal: AbortSignal.timeout(15000),
+      });
+
+      const sendData = await sendRes.json().catch(() => null);
+
+      if (!sendData) {
+        return res.status(200).json({
+          success: false,
+          message: "عدم دریافت پاسخ از سرور آموت.",
+        });
+      }
+
+      const isSuccess = sendData.Status === "Success" || sendData.Status === "success" || sendData.Status === "OK";
+      return res.status(200).json({
+        success: isSuccess,
+        status: sendData.Status,
+        data: sendData,
+        message: isSuccess ? "پیامک بر اساس الگو با موفقیت ارسال شد." : (translateAmootStatus(sendData.Status) || sendData.Status),
+      });
+    }
+
     return res.status(200).json({ success: true, message: "Amoot Bridge Ready" });
   } catch (err) {
     console.error("Amoot Bridge Error:", err);

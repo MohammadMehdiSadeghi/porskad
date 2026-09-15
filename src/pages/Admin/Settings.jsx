@@ -45,6 +45,7 @@ export default function Settings() {
     default_max_monthly_responses: 100,
     registration_enabled: true,
     otp_sms_pattern: "کد تایید ثبت‌نام در پرس‌کاد: %code%",
+    otp_pattern_code: "6516",
     otp_line_number: "98",
     otp_cooldown_seconds: 90,
     otp_max_resends: 2,
@@ -67,6 +68,7 @@ export default function Settings() {
           default_max_monthly_responses: data.default_max_monthly_responses ?? 100,
           registration_enabled: data.registration_enabled !== false,
           otp_sms_pattern: data.otp_sms_pattern || "کد تایید ثبت‌نام در پرس‌کاد: %code%",
+          otp_pattern_code: data.otp_pattern_code || "6516",
           otp_line_number: (!data.otp_line_number || data.otp_line_number === "Service" || data.otp_line_number === "Public") ? "98" : data.otp_line_number,
           otp_cooldown_seconds: data.otp_cooldown_seconds ?? 90,
           otp_max_resends: data.otp_max_resends ?? 2,
@@ -91,6 +93,7 @@ export default function Settings() {
         default_max_monthly_responses: Math.max(1, Number(settings.default_max_monthly_responses) || 100),
         registration_enabled: Boolean(settings.registration_enabled),
         otp_sms_pattern: settings.otp_sms_pattern?.trim() || "کد تایید ثبت‌نام در پرس‌کاد: %code%",
+        otp_pattern_code: settings.otp_pattern_code?.trim() || "6516",
         otp_line_number: settings.otp_line_number?.trim() || "98",
         otp_cooldown_seconds: Math.max(30, Number(settings.otp_cooldown_seconds) || 90),
         otp_max_resends: Math.max(1, Number(settings.otp_max_resends) || 2),
@@ -416,7 +419,24 @@ export default function Settings() {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-xs font-black text-navy dark:text-slate-200 mb-1.5">
+                  کد الگو در آموت (Pattern Code)
+                </label>
+                <input
+                  type="text"
+                  dir="ltr"
+                  value={settings.otp_pattern_code || "6516"}
+                  onChange={(e) => setSettings({ ...settings, otp_pattern_code: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border-2 border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-bold font-mono text-teal dark:text-teal focus:border-teal outline-none text-center"
+                  placeholder="6516"
+                />
+                <span className="text-[11px] text-ink-subtle dark:text-slate-400 mt-1 block">
+                  ارسال سریع خدماتی (پیش‌فرض: ۶۵۱۶)
+                </span>
+              </div>
+
               <div>
                 <label className="block text-xs font-black text-navy dark:text-slate-200 mb-1.5">
                   خط فرستنده پیامک
