@@ -1030,49 +1030,50 @@ export default function Register() {
         </StickerCard>
       </div>
 
-      {/* مودال پشتیبانی و راهنمایی */}
+      {/* مودال پشتیبانی و راهنمایی با طراحی یکپارچه */}
       <Modal
         open={showSupportModal}
         onClose={() => setShowSupportModal(false)}
         title="راهنمایی و پشتیبانی"
       >
-        <div className="flex flex-col items-center text-center gap-4 py-2">
-          <div className="w-14 h-14 rounded-full bg-teal/10 border-2 border-teal flex items-center justify-center text-teal">
+        <div className="flex flex-col items-center text-center gap-4 py-1">
+          <div className="w-14 h-14 rounded-2xl bg-teal/15 dark:bg-teal/20 border-2 border-teal/40 flex items-center justify-center text-teal shadow-inner">
             <Headphones size={28} />
           </div>
-          <div className="flex flex-col gap-1.5">
-            <h4 className="text-base sm:text-lg font-black text-navy">پشتیبانی و ثبت‌نام</h4>
-            <p className="text-xs sm:text-sm font-semibold text-ink-subtle leading-6 max-w-md">
-              در صورت دریافت نکردن پیامک یا بروز هرگونه مشکل، کارشناسان ما در تلگرام در خدمت شما هستند.
+          <div className="flex flex-col gap-1">
+            <h4 className="text-base sm:text-lg font-black text-sec dark:text-white">پشتیبانی و ثبت‌نام پرس‌کاد</h4>
+            <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 leading-6 max-w-md">
+              در صورت دریافت نکردن پیامک کد تایید یا بروز هرگونه سوال، کارشناسان پشتیبانی ما در تلگرام پاسخگوی شما هستند.
             </p>
           </div>
 
-          <div className="w-full bg-bg-mint border-2 border-ink/20 rounded-pill-md p-4 flex flex-col sm:flex-row items-center justify-between gap-3 mt-1">
-            <div className="flex items-center gap-2 text-navy font-bold text-xs sm:text-sm">
+          <div className="w-full bg-ecosystem-light dark:bg-[#1C2536] border-[1.5px] border-primary/30 dark:border-primary/40 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-right">
+            <div className="flex items-center gap-2.5 text-sec dark:text-slate-200 font-bold text-xs sm:text-sm">
               <Headphones size={18} className="text-teal shrink-0" />
-              <span>ارتباط در تلگرام:</span>
-              <Badge color="yellow">@{telegramSupportId}</Badge>
+              <div className="flex flex-col">
+                <span>ارتباط مستقیم با کارشناس</span>
+                <span className="text-[11px] text-teal font-black">@{telegramSupportId}</span>
+              </div>
             </div>
             <a
               href={`https://t.me/${telegramSupportId}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-teal hover:bg-navy text-white px-4 py-2 rounded-pill-md text-xs sm:text-sm font-black transition-all border-2 border-ink shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary hover:bg-ecosystem-normal-hover text-white px-4 py-2.5 rounded-pill-md text-xs sm:text-sm font-black transition-all border border-ecosystem-dark shadow-[2px_2px_0_#1F413D] hover:shadow-none cursor-pointer"
             >
-              <Send size={14} className="rotate-45" />
-              ارسال پیام در تلگرام
+              <Send size={14} />
+              <span>ارسال پیام در تلگرام</span>
               <ExternalLink size={12} />
             </a>
           </div>
 
-          <Button
-            variant="neutral"
-            size="sm"
+          <button
+            type="button"
             onClick={() => setShowSupportModal(false)}
-            className="mt-1"
+            className="text-xs font-bold text-ink-subtle hover:text-sec dark:hover:text-white py-1 cursor-pointer transition-colors"
           >
             بستن پنجره
-          </Button>
+          </button>
         </div>
       </Modal>
     </div>

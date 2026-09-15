@@ -165,7 +165,7 @@ function EmbedModeCard({ mode, code }) {
         <div className="relative z-10 p-3 flex flex-col items-center gap-2 text-center">
           <div
             className={`w-10 h-10 rounded-xl ${mode.bgClass} flex items-center justify-center transition-all duration-300 ${
-              hovered ? "scale-110 rotate-[-5deg]" : ""
+              hovered ? "scale-105" : ""
             }`}
           >
             <Icon size={18} className={`${mode.textClass} transition-transform duration-300 ${hovered ? "scale-110" : ""}`} />
@@ -225,7 +225,7 @@ function FormEmbedCard({ form, baseUrl, index }) {
   const [selectedMode, setSelectedMode] = useState("inline");
 
   return (
-    <div className={index % 2 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"}>
+    <div>
       <StickerCard theme="white">
         <div className="p-3.5 sm:p-5 flex flex-col gap-2.5 sm:gap-3">
           {/* هدر */}

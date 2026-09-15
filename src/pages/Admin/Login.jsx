@@ -26,6 +26,32 @@ export default function Login() {
   const [smsOtpEnabled, setSmsOtpEnabled] = useState(true);
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [telegramSupportId, setTelegramSupportId] = useState("porskad_support");
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetBusy, setResetBusy] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
+  const [resetError, setResetError] = useState(null);
+
+  async function handleResetPassword(e) {
+    if (e) e.preventDefault();
+    if (!resetEmail.trim()) return;
+    setResetBusy(true);
+    setResetError(null);
+    setResetSuccess(false);
+    try {
+      const redirectUrl = typeof window !== "undefined"
+        ? `${window.location.origin}/admin/profile`
+        : "https://porskad.vercel.app/admin/profile";
+      const { error: resetErr } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
+        redirectTo: redirectUrl,
+      });
+      if (resetErr) throw resetErr;
+      setResetSuccess(true);
+    } catch (err) {
+      setResetError(err?.message || "خطا در ارسال ایمیل بازیابی رمز عبور.");
+    } finally {
+      setResetBusy(false);
+    }
+  }
 
   useEffect(() => {
     async function loadSettings() {
@@ -248,7 +274,7 @@ export default function Login() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 bg-white dark:bg-[#1C2536] hover:bg-ecosystem-normal hover:text-white border-[1.5px] border-primary/30 text-sec dark:text-white px-2.5 py-1 rounded-lg text-xs font-bold transition-all shadow-hard-sm shrink-0"
                   >
-                    <Send size={11} className="rotate-45" />
+                    <Send size={11} />
                     <span>@{telegramSupportId}</span>
                   </a>
                 </div>
@@ -306,49 +332,105 @@ export default function Login() {
         </StickerCard>
       </div>
 
-      {/* مودال فراموشی رمز عبور */}
+      {/* مودال بازیابی رمز عبور با دیزاین هماهنگ و بدون روتیت */}
       <Modal
         open={showForgotModal}
-        onClose={() => setShowForgotModal(false)}
-        title="بازیابی رمز عبور"
+        onClose={() => {
+          setShowForgotModal(false);
+          setResetSuccess(false);
+          setResetError(null);
+        }}
+        title="بازیابی و فراموشی رمز عبور"
       >
-        <div className="flex flex-col items-center text-center gap-4 py-2">
-          <div className="w-14 h-14 rounded-full bg-teal/10 border-2 border-teal flex items-center justify-center text-teal">
+        <div className="flex flex-col items-center text-center gap-4 py-1">
+          <div className="w-14 h-14 rounded-2xl bg-teal/15 dark:bg-teal/20 border-2 border-teal/40 flex items-center justify-center text-teal shadow-inner">
             <KeyRound size={28} />
           </div>
-          <div className="flex flex-col gap-1.5">
-            <h4 className="text-base sm:text-lg font-black text-navy">فراموشی رمز عبور حساب کاربری</h4>
-            <p className="text-xs sm:text-sm font-semibold text-ink-subtle leading-6 max-w-md">
-              برای تغییر یا بازیابی سریع رمز عبور، لطفاً ایمیل حساب خود را به آیدی پشتیبانی تلگرام ارسال فرمایید تا در کمترین زمان رمز عبور شما ریست شود.
+
+          <div className="flex flex-col gap-1 text-center">
+            <h4 className="text-base sm:text-lg font-black text-sec dark:text-white">بازیابی رمز عبور حساب</h4>
+            <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 leading-6 max-w-md">
+              ایمیل حساب کاربری خود را وارد کنید تا لینک بازیابی رمز برای شما ارسال شود، یا مستقیماً با پشتیبانی تلگرام در ارتباط باشید.
             </p>
           </div>
 
-          <div className="w-full bg-bg-mint border-2 border-ink/20 rounded-pill-md p-4 flex flex-col sm:flex-row items-center justify-between gap-3 mt-1">
-            <div className="flex items-center gap-2 text-navy font-bold text-xs sm:text-sm">
+          {/* فرم ارسال لینک بازیابی */}
+          <form
+            onSubmit={handleResetPassword}
+            className="w-full flex flex-col gap-3 bg-white dark:bg-[#151C28] border-[1.5px] border-gray-200 dark:border-gray-700 rounded-2xl p-4 text-right shadow-sm"
+          >
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs sm:text-sm font-extrabold text-sec dark:text-slate-200">
+                ایمیل حساب کاربری
+              </span>
+              <input
+                type="email"
+                dir="ltr"
+                required
+                value={resetEmail}
+                onChange={(e) => {
+                  setResetEmail(e.target.value);
+                  setResetError(null);
+                }}
+                className="w-full bg-slate-50 dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-gray-700 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/20 rounded-xl px-3.5 py-2.5 font-semibold text-sec dark:text-white text-left focus:outline-none transition-all text-xs sm:text-sm"
+                placeholder="name@example.com"
+              />
+            </label>
+
+            {resetSuccess && (
+              <div className="bg-emerald-50 dark:bg-emerald-950/40 border-[1.5px] border-emerald-400/50 rounded-xl p-3 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                <span>لینک بازیابی رمز عبور با موفقیت به ایمیل شما ارسال شد. لطفاً صندوق ورودی و اسپم خود را بررسی کنید.</span>
+              </div>
+            )}
+
+            {resetError && (
+              <div className="bg-female-light dark:bg-pink-950/40 border-[1.5px] border-female-normal/40 rounded-xl p-3 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">
+                {resetError}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              variant="teal"
+              size="md"
+              disabled={resetBusy || !resetEmail.trim()}
+              className="w-full justify-center text-center mt-0.5"
+            >
+              <span className="w-full text-center">
+                {resetBusy ? "در حال ارسال لینک..." : "ارسال لینک بازیابی رمز به ایمیل"}
+              </span>
+            </Button>
+          </form>
+
+          {/* باکس ارتباط با پشتیبانی */}
+          <div className="w-full bg-ecosystem-light dark:bg-[#1C2536] border-[1.5px] border-primary/30 dark:border-primary/40 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-right">
+            <div className="flex items-center gap-2.5 text-sec dark:text-slate-200 font-bold text-xs sm:text-sm">
               <Headphones size={18} className="text-teal shrink-0" />
-              <span>پشتیبانی تلگرام:</span>
-              <Badge color="yellow">@{telegramSupportId}</Badge>
+              <div className="flex flex-col">
+                <span>نیاز به راهنمایی فوری دارید؟</span>
+                <span className="text-[11px] text-ink-subtle dark:text-slate-400 font-normal">پشتیبانی تلگرام پرس‌کاد</span>
+              </div>
             </div>
             <a
               href={`https://t.me/${telegramSupportId}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-teal hover:bg-navy text-white px-4 py-2 rounded-pill-md text-xs sm:text-sm font-black transition-all border-2 border-ink shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary hover:bg-ecosystem-normal-hover text-white px-4 py-2.5 rounded-pill-md text-xs sm:text-sm font-black transition-all border border-ecosystem-dark shadow-[2px_2px_0_#1F413D] hover:shadow-none cursor-pointer"
             >
-              <Send size={14} className="rotate-45" />
-              ارسال پیام در تلگرام
+              <Send size={14} />
+              <span>ارتباط در تلگرام</span>
               <ExternalLink size={12} />
             </a>
           </div>
 
-          <Button
-            variant="neutral"
-            size="sm"
+          <button
+            type="button"
             onClick={() => setShowForgotModal(false)}
-            className="mt-1"
+            className="text-xs font-bold text-ink-subtle hover:text-sec dark:hover:text-white py-1 cursor-pointer transition-colors"
           >
             بستن پنجره
-          </Button>
+          </button>
         </div>
       </Modal>
     </div>

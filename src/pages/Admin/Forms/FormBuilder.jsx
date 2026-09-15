@@ -1563,7 +1563,7 @@ export default function FormBuilder() {
         <div className="flex items-center gap-2">
           <Button as={Link} to="/admin/forms" variant="ghost" size="sm"><ArrowRight size={14} className="ml-1" /> فرم‌ها</Button>
           <h1 className="text-xl sm:text-2xl font-black text-navy">فرم‌ساز</h1>
-          {dirty && <Badge color="orange" rotate="rotate-[2deg]">• تغییرات</Badge>}
+          {dirty && <Badge color="orange">• تغییرات</Badge>}
         </div>
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <Button variant="white" size="sm" onClick={async () => {
@@ -1591,7 +1591,7 @@ export default function FormBuilder() {
       </div>
 
       {/* تنظیمات فرم */}
-      <div className="-rotate-[0.4deg]">
+      <div>
         <StickerCard theme="navy" radius="rounded-tl-[1.75rem] rounded-br-[1.75rem] rounded-tr-none rounded-bl-none">
           <div className="p-5 sm:p-6 flex flex-col gap-4">
             <h2 className="text-base sm:text-lg font-black text-navy flex items-center gap-2">
@@ -1860,7 +1860,7 @@ export default function FormBuilder() {
       {/* سوال‌ها */}
       <div className="flex flex-col gap-4 pb-20 lg:pb-6">
         {/* افزودن سوال جدید — دسته‌بندی شده و شیک */}
-        <div className="rotate-[0.3deg]">
+        <div>
           <StickerCard theme="orange" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
             <div className="p-4 sm:p-5 flex flex-col gap-4">
               <span className="text-sm font-black text-orange flex items-center gap-2">
