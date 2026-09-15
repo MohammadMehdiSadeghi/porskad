@@ -208,7 +208,7 @@ export default async function handler(req, res) {
     let sendErrorMsg = null;
 
     if (amootToken) {
-      // الف) تلاش اول: ارسال با الگو از طریق REST JSON (فرمت استاندارد آموت)
+      // الف) تلاش اول: ارسال مستقیم با الگو SendWithPattern از طریق REST JSON (فرمت استاندارد آموت)
       if (patternCode && !sendSuccess) {
         try {
           const resp = await fetch("https://portal.amootsms.com/rest/SendWithPattern", {
