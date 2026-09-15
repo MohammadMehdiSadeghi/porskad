@@ -384,6 +384,21 @@ html.dark .skeleton-shimmer::after {
     animation: slide-up 0.3s ease-out;
 }
 
+/* ─── انیمیشن جابه‌جایی نرم گام‌های ثبت‌نام (Step Transition) ─── */
+@keyframes step-fade {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.animate-step-fade {
+    animation: step-fade 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* ─── Mobile Typography (< 768px): Polished, balanced headings & text scale (Min font size: 13px) ─── */
 @media (max-width: 767px) {
     .text-xs { font-size: 13px; line-height: 18px; }

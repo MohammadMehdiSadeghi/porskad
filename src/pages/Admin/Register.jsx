@@ -1,6 +1,24 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { Headphones, Send, ExternalLink, HelpCircle, ArrowRight, Check, Phone, ShieldCheck, UserCheck, RefreshCw } from "lucide-react";
+import {
+  Headphones,
+  Send,
+  ExternalLink,
+  HelpCircle,
+  ArrowRight,
+  ArrowLeft,
+  Check,
+  CheckCircle2,
+  Phone,
+  Mail,
+  User,
+  Lock,
+  Edit3,
+  ShieldCheck,
+  UserCheck,
+  RefreshCw,
+  Sparkles,
+} from "lucide-react";
 import PasswordToggle from "../../components/ui/PasswordToggle";
 import StickerCard from "../../components/ui/StickerCard";
 import Button from "../../components/ui/Button";
@@ -8,7 +26,7 @@ import Badge from "../../components/ui/Badge";
 import Modal from "../../components/ui/Modal";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabaseClient";
-import { isValidIranPhone, normalizeIranPhone, isValidPassword } from "../../lib/validators";
+import { isValidIranPhone, normalizeIranPhone, isValidPassword, toEnDigits } from "../../lib/validators";
 import { faNum } from "../../lib/utils";
 import SEO from "../../components/ui/SEO";
 import ThemeToggle from "../../components/ui/ThemeToggle";
@@ -62,7 +80,6 @@ export default function Register() {
       timer = setInterval(() => {
         setCooldown((prev) => {
           if (prev <= 1) {
-            clearInterval(timer);
             setCanResend(true);
             return 0;
           }
@@ -75,7 +92,7 @@ export default function Register() {
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [step, cooldown]);
+  }, [step, cooldown > 0]);
 
   // لود شناسه تلگرام پشتیبانی و وضعیت روش‌های ورود
   useEffect(() => {
@@ -163,7 +180,7 @@ export default function Register() {
     setError(null);
     setIsDuplicateUser(false);
 
-    const clean = normalizeIranPhone(phone);
+    const clean = normalizeIranPhone(toEnDigits(phone));
     if (!isValidIranPhone(clean)) {
       setError("شماره موبایل نامعتبر است. لطفاً شماره صحیح وارد کنید (مثال: ۰۹۱۲۳۴۵۶۷۸۹).");
       return;
@@ -241,14 +258,14 @@ export default function Register() {
     if (e) e.preventDefault();
     setError(null);
 
-    const cleanCode = otpCode.trim().replace(/\D/g, "");
+    const cleanCode = toEnDigits(otpCode).trim().replace(/\D/g, "");
     if (cleanCode.length < 5) {
       setError("لطفاً کد تایید ۵ رقمی را به طور کامل وارد نمایید.");
       return;
     }
 
     setBusy(true);
-    const clean = normalizeIranPhone(phone);
+    const clean = normalizeIranPhone(toEnDigits(phone));
 
     try {
       const res = await fetch("/api/auth-otp", {
@@ -354,6 +371,78 @@ export default function Register() {
     }
   }
 
+  // ─── محاسبه داینامیک عنوان، برچسب و زیرعنوان مرحله جاری بر اساس وضعیت احراز هویت ───
+  const headerInfo = (() => {
+    // حالت ۱: فقط گوگل فعال است (پیامک غیرفعال)
+    if (smsOtpEnabled === false && googleAuthEnabled !== false) {
+      return {
+        badge: "ثبت‌نام مستقیم با حساب گوگل",
+        title: "ورود و ثبت‌نام با Google",
+        subtitle: "ایجاد سریع حساب کاربری و ورود بدون نیاز به رمز عبور یا پیامک",
+        showStepper: false,
+      };
+    }
+
+    // حالت ۲: هر دو روش (موبایل و گوگل) فعال هستند
+    if (smsOtpEnabled !== false && googleAuthEnabled !== false) {
+      if (step === 1) {
+        return {
+          badge: "مرحله ۱ از ۳",
+          title: "ثبت‌نام با شماره همراه یا حساب گوگل",
+          subtitle: "شماره تلفن همراه خود را وارد نمایید یا سریعاً با Google وارد شوید",
+          showStepper: true,
+        };
+      }
+      if (step === 2) {
+        return {
+          badge: "مرحله ۲ از ۳",
+          title: "تایید شماره تلفن همراه",
+          subtitle: `کد تایید ۵ رقمی ارسال‌شده به شماره ${phone ? faNum(phone) : ""} را وارد کنید`,
+          showStepper: true,
+        };
+      }
+      return {
+        badge: "مرحله ۳ از ۳",
+        title: "تکمیل مشخصات و رمز عبور",
+        subtitle: "ایمیل، نام کاربری و رمز عبور خود را برای ورود تعیین فرمایید",
+        showStepper: true,
+      };
+    }
+
+    // حالت ۳: فقط پیامک موبایل فعال است (گوگل غیرفعال)
+    if (smsOtpEnabled !== false && googleAuthEnabled === false) {
+      if (step === 1) {
+        return {
+          badge: "مرحله ۱ از ۳",
+          title: "ثبت‌نام با شماره همراه",
+          subtitle: "شماره همراه خود را وارد کنید تا پیامک کد فعال‌سازی ارسال شود",
+          showStepper: true,
+        };
+      }
+      if (step === 2) {
+        return {
+          badge: "مرحله ۲ از ۳",
+          title: "تایید شماره تلفن همراه",
+          subtitle: `کد تایید ۵ رقمی ارسال‌شده به شماره ${phone ? faNum(phone) : ""} را وارد کنید`,
+          showStepper: true,
+        };
+      }
+      return {
+        badge: "مرحله ۳ از ۳",
+        title: "تکمیل مشخصات و رمز عبور",
+        subtitle: "ایمیل، نام کاربری و رمز عبور خود را برای ورود تعیین فرمایید",
+        showStepper: true,
+      };
+    }
+
+    return {
+      badge: "سامانه فرم‌ساز هوشمند",
+      title: "ثبت‌نام حساب کاربری",
+      subtitle: "فرم‌های هوشمند و بدون نیاز به کدنویسی",
+      showStepper: false,
+    };
+  })();
+
   return (
     <div className="min-h-screen dot-pattern bg-bg-mint dark:bg-dark-canvas flex items-center justify-center p-4 relative font-sans" dir="rtl">
       <div className="absolute top-4 left-4 z-20">
@@ -369,19 +458,41 @@ export default function Register() {
       <div className="w-full max-w-md -rotate-[0.5deg]">
         <StickerCard theme="white">
           <div className="p-7 sm:p-9 flex flex-col gap-5">
-            {/* هدر */}
-            <div className="flex flex-col items-center gap-1.5 text-center">
-              <Badge color="navy" rotate="rotate-[2deg]">
-                پرس‌کاد — سامانه فرم‌ساز هوشمند
+            {/* هدر داینامیک با انیمیشن روان تغییر متن و مرحله */}
+            <div
+              key={`header-${step}-${smsOtpEnabled}-${googleAuthEnabled}`}
+              className="flex flex-col items-center gap-2 text-center animate-step-fade"
+            >
+              <Badge color="navy" rotate="rotate-[1deg]">
+                {headerInfo.badge}
               </Badge>
-              <h1 className="text-xl sm:text-2xl font-black text-navy dark:text-white">
-                {smsOtpEnabled === false ? "ثبت‌نام با گوگل" : "ثبت‌نام حساب کاربری"}
+              <h1 className="text-xl sm:text-2xl font-black text-navy dark:text-white transition-all">
+                {headerInfo.title}
               </h1>
-              <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400">
-                {smsOtpEnabled === false
-                  ? "ثبت‌نام و ورود سریع بدون نیاز به پیامک"
-                  : "فرم‌های هوشمند و جذاب بدون نیاز به کدنویسی"}
+              <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 max-w-xs leading-relaxed transition-all">
+                {headerInfo.subtitle}
               </p>
+
+              {/* نوار پیشرفت مدرن باریک خطی ۳ مرحله‌ای (فقط در مراحل پیامکی) */}
+              {headerInfo.showStepper && (
+                <div className="w-full flex items-center gap-1.5 pt-1.5">
+                  <div
+                    className={`h-1.5 rounded-full flex-1 transition-all duration-500 ${
+                      step >= 1 ? "bg-teal shadow-sm" : "bg-ink/10 dark:bg-slate-700"
+                    }`}
+                  />
+                  <div
+                    className={`h-1.5 rounded-full flex-1 transition-all duration-500 ${
+                      step >= 2 ? "bg-teal shadow-sm" : "bg-ink/10 dark:bg-slate-700"
+                    }`}
+                  />
+                  <div
+                    className={`h-1.5 rounded-full flex-1 transition-all duration-500 ${
+                      step >= 3 ? "bg-teal shadow-sm" : "bg-ink/10 dark:bg-slate-700"
+                    }`}
+                  />
+                </div>
+              )}
             </div>
 
             {/* ══════════════ حالت ثبت‌نام عمومی غیرفعال ══════════════ */}
@@ -438,367 +549,461 @@ export default function Register() {
               </div>
             ) : (
               <>
-                {/* نوار مراحل (Stepper) - فقط در صورت فعال بودن پیامک */}
-                {smsOtpEnabled !== false && (
-                  <div className="flex items-center justify-between border-y border-ink/10 dark:border-slate-700/60 py-3 px-1 text-xs font-black">
-                    <div className={`flex items-center gap-1.5 ${step === 1 ? "text-teal font-black" : step > 1 ? "text-emerald-600 dark:text-emerald-400" : "text-ink/40 dark:text-slate-500"}`}>
-                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${step === 1 ? "bg-teal text-white" : step > 1 ? "bg-emerald-600 text-white" : "bg-ink/10 dark:bg-slate-700 text-ink/60 dark:text-slate-400"}`}>
-                        {step > 1 ? <Check size={12} /> : faNum("1")}
-                      </span>
-                      <span>شماره همراه</span>
-                    </div>
-
-                    <div className="w-6 h-[1.5px] bg-ink/15 dark:bg-slate-700" />
-
-                    <div className={`flex items-center gap-1.5 ${step === 2 ? "text-teal font-black" : step > 2 ? "text-emerald-600 dark:text-emerald-400" : "text-ink/40 dark:text-slate-500"}`}>
-                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${step === 2 ? "bg-teal text-white" : step > 2 ? "bg-emerald-600 text-white" : "bg-ink/10 dark:bg-slate-700 text-ink/60 dark:text-slate-400"}`}>
-                        {step > 2 ? <Check size={12} /> : faNum("2")}
-                      </span>
-                      <span>کد پیامکی</span>
-                    </div>
-
-                    <div className="w-6 h-[1.5px] bg-ink/15 dark:bg-slate-700" />
-
-                    <div className={`flex items-center gap-1.5 ${step === 3 ? "text-teal font-black" : "text-ink/40 dark:text-slate-500"}`}>
-                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${step === 3 ? "bg-teal text-white" : "bg-ink/10 dark:bg-slate-700 text-ink/60 dark:text-slate-400"}`}>
-                        {faNum("3")}
-                      </span>
-                      <span>ایمیل و رمز عبور</span>
-                    </div>
-                  </div>
-                )}
-
-            {/* ══════════════ حالت فقط گوگل (وقتی پیامک غیرفعال است) ══════════════ */}
-            {smsOtpEnabled === false && googleAuthEnabled !== false && (
-              <div className="flex flex-col items-center gap-4 py-2 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-white dark:bg-slate-800 border-2 border-ink dark:border-slate-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center">
-                  <svg width="32" height="32" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                  </svg>
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <h3 className="text-base sm:text-lg font-black text-navy dark:text-white">ورود و ثبت‌نام با گوگل</h3>
-                  <p className="text-xs sm:text-sm text-ink-subtle dark:text-slate-400 max-w-xs leading-relaxed">
-                    با یک کلیک و از طریق حساب جیمیل خود، به سادگی حساب کاربری ایجاد کنید و وارد شوید.
-                  </p>
-                </div>
-
-                {error && (
-                  <div className="w-full rotate-[-0.5deg] bg-female-light dark:bg-pink-950/40 border-2 border-female-normal dark:border-pink-600 rounded-pill-md px-3.5 py-2.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">
-                    {error}
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  onClick={handleGoogleAuth}
-                  disabled={googleBusy}
-                  className="w-full flex items-center justify-center gap-3 bg-white hover:bg-teal/10 dark:bg-slate-800 dark:hover:bg-slate-700 text-ink dark:text-white border-2 border-ink dark:border-slate-600 font-black py-3 px-4 rounded-pill-md transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-sm cursor-pointer"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                  </svg>
-                  <span>{googleBusy ? "در حال اتصال به گوگل..." : "ادامه با حساب کاربری Google"}</span>
-                </button>
-              </div>
-            )}
-
-            {/* ══════════════ مرحله ۱: ورود شماره موبایل ══════════════ */}
-            {smsOtpEnabled !== false && step === 1 && (
-              <form onSubmit={handleSendOtp} className="flex flex-col gap-4">
-                <label className="flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">
-                      شماره تلفن همراه
-                    </span>
-                    <span className="text-xs font-bold text-teal">پیامک تایید</span>
-                  </div>
-                  <div className="relative">
-                    <input
-                      type="tel"
-                      dir="ltr"
-                      required
-                      autoFocus
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/50 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all text-sm tracking-wider"
-                      placeholder="۰۹۱۲۳۴۵۶۷۸۹"
-                      autoComplete="tel"
-                    />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-subtle/60 pointer-events-none">
-                      <Phone size={16} />
-                    </div>
-                  </div>
-                  <span className="text-[11px] text-ink-subtle dark:text-slate-400">
-                    کد فعال‌سازی ۵ رقمی به این شماره ارسال خواهد شد.
-                  </span>
-                </label>
-
-                {error && (
-                  <div className="rotate-[-0.5deg] bg-female-light dark:bg-pink-950/40 border-2 border-female-normal dark:border-pink-600 rounded-pill-md px-3.5 py-2.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">
-                    {error}
-                    {isDuplicateUser && (
-                      <div className="mt-2 pt-2 border-t border-female-normal/20">
-                        <Link to="/admin/login" className="underline font-black text-teal dark:text-teal inline-flex items-center gap-1">
-                          ورود به حساب کاربری ←
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <Button
-                  type="submit"
-                  variant="teal"
-                  size="md"
-                  disabled={busy || !phone.trim()}
-                  rotate="-rotate-[1deg]"
-                  className="w-full justify-center text-center mt-1"
-                >
-                  <span className="w-full text-center">
-                    {busy ? "در حال ارسال کد..." : "دریافت کد تایید پیامکی"}
-                  </span>
-                </Button>
-
-                {/* دکمه ورود با گوگل در مرحله ۱ */}
-                {googleAuthEnabled !== false && (
-                  <>
-                    <div className="flex items-center gap-3 my-0.5">
-                      <div className="flex-1 h-[1px] bg-ink/10 dark:bg-slate-700" />
-                      <span className="text-[11px] font-bold text-ink-subtle dark:text-slate-400">یا ثبت‌نام سریع با</span>
-                      <div className="flex-1 h-[1px] bg-ink/10 dark:bg-slate-700" />
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handleGoogleAuth}
-                      disabled={googleBusy}
-                      className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-ink dark:text-white border-2 border-ink dark:border-slate-600 font-bold py-2.5 px-4 rounded-pill-md transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-xs sm:text-sm cursor-pointer"
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24">
+                {/* ══════════════ حالت فقط گوگل (وقتی پیامک غیرفعال است) ══════════════ */}
+                {smsOtpEnabled === false && googleAuthEnabled !== false && (
+                  <div className="flex flex-col items-center gap-4 py-2 text-center animate-step-fade">
+                    <div className="w-16 h-16 rounded-2xl bg-white dark:bg-slate-800 border-2 border-ink dark:border-slate-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center">
+                      <svg width="32" height="32" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                       </svg>
-                      <span>{googleBusy ? "در حال اتصال به گوگل..." : "ورود یا ثبت‌نام با Google"}</span>
-                    </button>
-                  </>
-                )}
-              </form>
-            )}
+                    </div>
 
-            {/* ══════════════ مرحله ۲: تایید کد OTP ══════════════ */}
-            {smsOtpEnabled !== false && step === 2 && (
-              <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4">
-                <div className="bg-bg-mint dark:bg-slate-800/80 border border-teal/30 rounded-2xl p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs font-bold text-navy dark:text-slate-200">
-                    <Phone size={14} className="text-teal shrink-0" />
-                    <span>ارسال شده به:</span>
-                    <span dir="ltr" className="font-mono text-teal font-black">{phone}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStep(1);
-                      setError(null);
-                    }}
-                    className="text-xs text-ink-subtle hover:text-teal underline font-bold cursor-pointer"
-                  >
-                    تغییر شماره
-                  </button>
-                </div>
+                    <div className="flex flex-col gap-1.5">
+                      <h3 className="text-base sm:text-lg font-black text-navy dark:text-white">ورود و ثبت‌نام با گوگل</h3>
+                      <p className="text-xs sm:text-sm text-ink-subtle dark:text-slate-400 max-w-xs leading-relaxed">
+                        با یک کلیک و از طریق حساب جیمیل خود، به سادگی حساب کاربری ایجاد کنید و وارد شوید.
+                      </p>
+                    </div>
 
-                <label className="flex flex-col gap-1.5">
-                  <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200 text-center">
-                    کد تایید ۵ رقمی را وارد کنید
-                  </span>
-                  <input
-                    ref={otpInputRef}
-                    type="text"
-                    inputMode="numeric"
-                    dir="ltr"
-                    maxLength={5}
-                    required
-                    autoFocus
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-                    className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-3 font-mono font-black text-ink dark:text-white text-center tracking-[0.7em] text-xl focus:outline-none transition-all shadow-inner"
-                    placeholder="•••••"
-                    autoComplete="one-time-code"
-                  />
-                </label>
+                    {error && (
+                      <div className="w-full rotate-[-0.5deg] bg-female-light dark:bg-pink-950/40 border-2 border-female-normal dark:border-pink-600 rounded-pill-md px-3.5 py-2.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">
+                        {error}
+                      </div>
+                    )}
 
-                {/* ثانیه‌شمار و دکمه ارسال مجدد */}
-                <div className="flex items-center justify-between text-xs font-bold px-1">
-                  <span className="text-ink-subtle dark:text-slate-400">
-                    زمان اعتبار و انتظار:
-                  </span>
-                  {cooldown > 0 ? (
-                    <span className="font-mono text-teal font-black bg-teal/10 px-2 py-0.5 rounded-md" dir="ltr">
-                      {formatTimer(cooldown)}
-                    </span>
-                  ) : (
                     <button
                       type="button"
-                      onClick={handleResendOtp}
-                      disabled={remainingResends <= 0 || busy}
-                      className="text-teal hover:underline inline-flex items-center gap-1 font-black disabled:opacity-50 disabled:no-underline cursor-pointer"
+                      onClick={handleGoogleAuth}
+                      disabled={googleBusy}
+                      className="w-full flex items-center justify-center gap-3 bg-white hover:bg-teal/10 dark:bg-slate-800 dark:hover:bg-slate-700 text-ink dark:text-white border-2 border-ink dark:border-slate-600 font-black py-3 px-4 rounded-pill-md transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-sm cursor-pointer"
                     >
-                      <RefreshCw size={12} className={busy ? "animate-spin" : ""} />
-                      <span>ارسال مجدد کد</span>
-                      <span className="text-[10px] text-ink-subtle">
-                        ({faNum(remainingResends)} بار مجاز)
-                      </span>
+                      <svg width="20" height="20" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                      </svg>
+                      <span>{googleBusy ? "در حال اتصال به گوگل..." : "ادامه با حساب کاربری Google"}</span>
                     </button>
-                  )}
-                </div>
-
-                {error && (
-                  <div className="rotate-[-0.5deg] bg-female-light dark:bg-pink-950/40 border-2 border-female-normal dark:border-pink-600 rounded-pill-md px-3.5 py-2.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">
-                    {error}
                   </div>
                 )}
 
-                <Button
-                  type="submit"
-                  variant="teal"
-                  size="md"
-                  disabled={busy || otpCode.trim().length < 5}
-                  rotate="-rotate-[1deg]"
-                  className="w-full justify-center text-center mt-1"
-                >
-                  <span className="w-full text-center">
-                    {busy ? "در حال اعتبارسنجی..." : "تایید و ادامه"}
-                  </span>
-                </Button>
-              </form>
-            )}
-
-            {/* ══════════════ مرحله ۳: نام و رمز عبور ══════════════ */}
-            {step === 3 && (
-              <form onSubmit={handleCompleteRegistration} className="flex flex-col gap-3.5">
-                <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-700/60 rounded-xl p-2.5 flex items-center gap-2 text-xs font-bold text-emerald-800 dark:text-emerald-300">
-                  <ShieldCheck size={16} className="text-emerald-600 shrink-0" />
-                  <span>شماره موبایل شما تایید شد. اکنون ایمیل، نام و رمز عبور ورود خود را تعیین فرمایید.</span>
-                </div>
-
-                <label className="flex flex-col gap-1">
-                  <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">
-                    آدرس ایمیل <span className="text-teal font-black">*</span>
-                  </span>
-                  <input
-                    type="email"
-                    dir="ltr"
-                    required
-                    autoFocus
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/50 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all text-sm"
-                    placeholder="name@example.com"
-                    autoComplete="email"
-                  />
-                  <span className="text-[11px] text-ink-subtle dark:text-slate-400">
-                    از این ایمیل برای ورود و اطلاعیه‌های حساب استفاده خواهد شد.
-                  </span>
-                </label>
-
-                <label className="flex flex-col gap-1">
-                  <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">
-                    نام و نام خانوادگی <span className="text-teal font-black">*</span>
-                  </span>
-                  <input
-                    type="text"
-                    required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/50 dark:placeholder:text-slate-500 focus:outline-none transition-all text-sm"
-                    placeholder="مثلاً: علی محمدی"
-                  />
-                </label>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <label className="flex flex-col gap-1">
-                    <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">
-                      رمز عبور
-                    </span>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        dir="ltr"
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 pl-10 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/50 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all text-sm"
-                        placeholder="حداقل ۶ کاراکتر"
-                        autoComplete="new-password"
-                      />
-                      <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
-                        <PasswordToggle
-                          visible={showPassword}
-                          onToggle={() => setShowPassword(!showPassword)}
-                          size={16}
-                          ariaLabel="نمایش یا مخفی‌سازی رمز عبور"
-                        />
+                {/* ══════════════ مرحله ۱: ورود شماره موبایل ══════════════ */}
+                {smsOtpEnabled !== false && step === 1 && (
+                  <form onSubmit={handleSendOtp} className="flex flex-col gap-4 animate-step-fade">
+                    <label className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">
+                          شماره تلفن همراه
+                        </span>
+                        <span className="text-xs font-bold text-teal flex items-center gap-1">
+                          <Sparkles size={13} />
+                          پیامک تایید هویت
+                        </span>
                       </div>
-                    </div>
-                  </label>
-
-                  <label className="flex flex-col gap-1">
-                    <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">
-                      تکرار رمز عبور
-                    </span>
-                    <div className="relative">
-                      <input
-                        type={showConfirmPassword ? "text" : "password"}
-                        dir="ltr"
-                        required
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md px-3.5 py-2.5 pl-10 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/50 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all text-sm"
-                        placeholder="تکرار رمز"
-                        autoComplete="new-password"
-                      />
-                      <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
-                        <PasswordToggle
-                          visible={showConfirmPassword}
-                          onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
-                          size={16}
-                          ariaLabel="نمایش یا مخفی‌سازی تکرار رمز عبور"
+                      <div className="relative">
+                        <input
+                          type="tel"
+                          dir="ltr"
+                          required
+                          autoFocus
+                          value={phone}
+                          onChange={(e) => {
+                            setPhone(toEnDigits(e.target.value));
+                            setError(null);
+                            setIsDuplicateUser(false);
+                          }}
+                          className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-4 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all text-sm tracking-wider"
+                          placeholder="0912 345 6789"
+                          autoComplete="tel"
                         />
+                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-subtle/60 dark:text-slate-400 pointer-events-none flex items-center justify-center">
+                          <Phone size={18} />
+                        </div>
                       </div>
-                    </div>
-                  </label>
-                </div>
+                      <span className="text-[11px] text-ink-subtle dark:text-slate-400">
+                        کد فعال‌سازی ۵ رقمی به این شماره ارسال خواهد شد.
+                      </span>
+                    </label>
 
-                {error && (
-                  <div className="rotate-[-0.5deg] bg-female-light dark:bg-pink-950/40 border-2 border-female-normal dark:border-pink-600 rounded-pill-md px-3.5 py-2.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">
-                    {error}
-                  </div>
+                    {error && (
+                      <div className="rotate-[-0.5deg] bg-female-light dark:bg-pink-950/40 border-2 border-female-normal dark:border-pink-600 rounded-pill-md px-3.5 py-2.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">
+                        {error}
+                        {isDuplicateUser && (
+                          <div className="mt-2 pt-2 border-t border-female-normal/20">
+                            <Link to="/admin/login" className="underline font-black text-teal dark:text-teal inline-flex items-center gap-1">
+                              ورود به حساب کاربری ←
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <Button
+                      type="submit"
+                      variant="teal"
+                      size="md"
+                      disabled={busy || !phone.trim()}
+                      rotate="-rotate-[1deg]"
+                      className="w-full justify-center text-center mt-1"
+                    >
+                      <span className="w-full text-center flex items-center justify-center gap-2">
+                        {busy ? (
+                          <>
+                            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>در حال ارسال کد...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>دریافت کد تایید پیامکی</span>
+                            <ArrowLeft size={16} />
+                          </>
+                        )}
+                      </span>
+                    </Button>
+
+                    {/* دکمه ورود با گوگل در مرحله ۱ */}
+                    {googleAuthEnabled !== false && (
+                      <>
+                        <div className="flex items-center gap-3 my-0.5">
+                          <div className="flex-1 h-[1px] bg-ink/10 dark:bg-slate-700" />
+                          <span className="text-[11px] font-bold text-ink-subtle dark:text-slate-400">یا ثبت‌نام سریع با</span>
+                          <div className="flex-1 h-[1px] bg-ink/10 dark:bg-slate-700" />
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={handleGoogleAuth}
+                          disabled={googleBusy}
+                          className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-ink dark:text-white border-2 border-ink dark:border-slate-600 font-bold py-2.5 px-4 rounded-pill-md transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-xs sm:text-sm cursor-pointer"
+                        >
+                          <svg width="18" height="18" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                          </svg>
+                          <span>{googleBusy ? "در حال اتصال به گوگل..." : "ورود یا ثبت‌نام با Google"}</span>
+                        </button>
+                      </>
+                    )}
+                  </form>
                 )}
 
-                <Button
-                  type="submit"
-                  variant="teal"
-                  size="md"
-                  disabled={busy}
-                  rotate="-rotate-[1deg]"
-                  className="w-full justify-center text-center mt-2"
-                >
-                  <span className="w-full text-center">
-                    {busy ? "در حال ساخت حساب و ورود..." : "تکمیل ثبت‌نام و ورود به پنل"}
-                  </span>
-                </Button>
-              </form>
-            )}
-            </>
+                {/* ══════════════ مرحله ۲: تایید کد OTP ══════════════ */}
+                {smsOtpEnabled !== false && step === 2 && (
+                  <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4 animate-step-fade">
+                    <div className="bg-bg-mint dark:bg-slate-800/80 border border-teal/30 rounded-2xl p-3 flex items-center justify-between shadow-sm">
+                      <div className="flex items-center gap-2 text-xs font-bold text-navy dark:text-slate-200">
+                        <Phone size={15} className="text-teal shrink-0" />
+                        <span>کد ارسال شده به:</span>
+                        <span dir="ltr" className="font-mono text-teal font-black text-sm">{phone}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStep(1);
+                          setError(null);
+                          setOtpCode("");
+                        }}
+                        className="inline-flex items-center gap-1 text-xs text-ink-subtle hover:text-teal font-bold transition-colors cursor-pointer bg-white dark:bg-slate-700/60 px-2.5 py-1 rounded-pill-sm border border-ink/10 dark:border-slate-600"
+                      >
+                        <Edit3 size={12} />
+                        <span>تغییر شماره</span>
+                      </button>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200 text-center">
+                        کد تایید ۵ رقمی را وارد کنید
+                      </span>
+
+                      {/* نمایش ۵ باکس بصری زیبا برای ارقام کد */}
+                      <div
+                        className="relative flex items-center justify-center gap-2 sm:gap-2.5 my-1 cursor-text"
+                        onClick={() => otpInputRef.current?.focus()}
+                      >
+                        <input
+                          ref={otpInputRef}
+                          type="text"
+                          inputMode="numeric"
+                          dir="ltr"
+                          maxLength={5}
+                          required
+                          autoFocus
+                          value={otpCode}
+                          onChange={(e) => {
+                            const val = toEnDigits(e.target.value).replace(/\D/g, "").slice(0, 5);
+                            setOtpCode(val);
+                            setError(null);
+                          }}
+                          className="absolute inset-0 opacity-0 w-full h-full cursor-text z-10"
+                          autoComplete="one-time-code"
+                        />
+
+                        {[0, 1, 2, 3, 4].map((index) => {
+                          const digit = otpCode[index];
+                          const isCurrent = otpCode.length === index;
+                          const isFilled = digit !== undefined;
+                          return (
+                            <div
+                              key={index}
+                              className={`w-11 sm:w-12 h-14 rounded-xl border-2 flex items-center justify-center font-mono text-xl sm:text-2xl font-black transition-all duration-200 ${
+                                isCurrent
+                                  ? "border-teal ring-4 ring-teal/20 bg-white dark:bg-slate-800 text-teal scale-105 shadow-sm"
+                                  : isFilled
+                                  ? "border-teal/70 bg-teal/5 dark:bg-teal/10 text-navy dark:text-white"
+                                  : "border-ink/20 dark:border-slate-700 bg-white dark:bg-slate-800/60 text-ink-subtle/30"
+                              }`}
+                            >
+                              {digit ? (
+                                <span>{faNum(digit)}</span>
+                              ) : isCurrent ? (
+                                <span className="w-1.5 h-6 bg-teal animate-pulse rounded-full" />
+                              ) : (
+                                <span className="w-2 h-2 rounded-full bg-ink/15 dark:bg-slate-600" />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <p className="text-[11px] text-center text-ink-subtle dark:text-slate-400">
+                        پیامک حاوی کد تایید معمولاً ظرف چند ثانیه دریافت می‌شود.
+                      </p>
+                    </div>
+
+                    {/* ثانیه‌شمار و دکمه ارسال مجدد */}
+                    <div className="flex items-center justify-between text-xs font-bold px-1 py-0.5">
+                      <span className="text-ink-subtle dark:text-slate-400">
+                        زمان ارسال مجدد:
+                      </span>
+                      {cooldown > 0 ? (
+                        <span className="font-mono text-teal font-black bg-teal/10 dark:bg-teal/20 px-2.5 py-1 rounded-md text-xs" dir="ltr">
+                          {formatTimer(cooldown)}
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleResendOtp}
+                          disabled={remainingResends <= 0 || busy}
+                          className="text-teal hover:underline inline-flex items-center gap-1.5 font-black disabled:opacity-50 disabled:no-underline cursor-pointer"
+                        >
+                          <RefreshCw size={13} className={busy ? "animate-spin" : ""} />
+                          <span>ارسال مجدد کد</span>
+                          <span className="text-[10px] text-ink-subtle dark:text-slate-400">
+                            ({faNum(remainingResends)} بار مجاز)
+                          </span>
+                        </button>
+                      )}
+                    </div>
+
+                    {error && (
+                      <div className="rotate-[-0.5deg] bg-female-light dark:bg-pink-950/40 border-2 border-female-normal dark:border-pink-600 rounded-pill-md px-3.5 py-2.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">
+                        {error}
+                      </div>
+                    )}
+
+                    <Button
+                      type="submit"
+                      variant="teal"
+                      size="md"
+                      disabled={busy || otpCode.trim().length < 5}
+                      rotate="-rotate-[1deg]"
+                      className="w-full justify-center text-center mt-1"
+                    >
+                      <span className="w-full text-center flex items-center justify-center gap-2">
+                        {busy ? (
+                          <>
+                            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>در حال اعتبارسنجی...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>تایید کد و ادامه</span>
+                            <ArrowLeft size={16} />
+                          </>
+                        )}
+                      </span>
+                    </Button>
+                  </form>
+                )}
+
+                {/* ══════════════ مرحله ۳: نام و رمز عبور ══════════════ */}
+                {step === 3 && (
+                  <form onSubmit={handleCompleteRegistration} className="flex flex-col gap-3.5 animate-step-fade">
+                    <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-700/60 rounded-xl p-3 flex items-center justify-between gap-2 text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
+                        <span>شماره همراه تایید شد:</span>
+                        <span dir="ltr" className="font-mono font-black text-emerald-700 dark:text-emerald-400">{phone}</span>
+                      </div>
+                      <Badge color="green" rotate="rotate-0">
+                        تایید شد ✓
+                      </Badge>
+                    </div>
+
+                    {/* فیلد ایمیل */}
+                    <label className="flex flex-col gap-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">
+                          آدرس ایمیل <span className="text-teal font-black">*</span>
+                        </span>
+                        <span className="text-[11px] text-ink-subtle dark:text-slate-400">جهت ورود و اطلاعیه‌ها</span>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="email"
+                          dir="ltr"
+                          required
+                          autoFocus
+                          value={email}
+                          onChange={(e) => { setEmail(e.target.value); setError(null); }}
+                          className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-4 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all text-sm"
+                          placeholder="name@example.com"
+                          autoComplete="email"
+                        />
+                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-subtle/60 dark:text-slate-400 pointer-events-none flex items-center justify-center">
+                          <Mail size={17} />
+                        </div>
+                      </div>
+                    </label>
+
+                    {/* فیلد نام و نام خانوادگی */}
+                    <label className="flex flex-col gap-1">
+                      <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">
+                        نام و نام خانوادگی <span className="text-teal font-black">*</span>
+                      </span>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          required
+                          value={fullName}
+                          onChange={(e) => { setFullName(e.target.value); setError(null); }}
+                          className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-4 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 focus:outline-none transition-all text-sm"
+                          placeholder="مثلاً: سارا رضایی"
+                          autoComplete="name"
+                        />
+                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-subtle/60 dark:text-slate-400 pointer-events-none flex items-center justify-center">
+                          <User size={17} />
+                        </div>
+                      </div>
+                    </label>
+
+                    {/* رمز عبور و تکرار */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <label className="flex flex-col gap-1">
+                        <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">
+                          رمز عبور <span className="text-teal font-black">*</span>
+                        </span>
+                        <div className="relative">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            dir="ltr"
+                            required
+                            value={password}
+                            onChange={(e) => { setPassword(e.target.value); setError(null); }}
+                            className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-11 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all text-sm"
+                            placeholder="حداقل ۶ کاراکتر"
+                            autoComplete="new-password"
+                          />
+                          <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-subtle/60 dark:text-slate-400 pointer-events-none flex items-center justify-center">
+                            <Lock size={17} />
+                          </div>
+                          <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                            <PasswordToggle
+                              visible={showPassword}
+                              onToggle={() => setShowPassword(!showPassword)}
+                              size={16}
+                              ariaLabel="نمایش یا مخفی‌سازی رمز عبور"
+                            />
+                          </div>
+                        </div>
+                      </label>
+
+                      <label className="flex flex-col gap-1">
+                        <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">
+                          تکرار رمز عبور <span className="text-teal font-black">*</span>
+                        </span>
+                        <div className="relative">
+                          <input
+                            type={showConfirmPassword ? "text" : "password"}
+                            dir="ltr"
+                            required
+                            value={confirmPassword}
+                            onChange={(e) => { setConfirmPassword(e.target.value); setError(null); }}
+                            className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-11 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all text-sm"
+                            placeholder="تکرار رمز عبور"
+                            autoComplete="new-password"
+                          />
+                          <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-subtle/60 dark:text-slate-400 pointer-events-none flex items-center justify-center">
+                            <Lock size={17} />
+                          </div>
+                          <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                            <PasswordToggle
+                              visible={showConfirmPassword}
+                              onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
+                              size={16}
+                              ariaLabel="نمایش یا مخفی‌سازی تکرار رمز عبور"
+                            />
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+
+                    {/* راهنمای زنده اعتبارسنجی رمز عبور */}
+                    {password && (
+                      <div className="bg-bg-mint dark:bg-slate-800/70 border border-ink/10 dark:border-slate-700 rounded-xl p-2.5 flex flex-col gap-1 text-[11px] font-bold">
+                        <div className={`flex items-center gap-1.5 ${password.length >= 6 ? "text-emerald-600 dark:text-emerald-400" : "text-ink-subtle dark:text-slate-400"}`}>
+                          <Check size={12} className={password.length >= 6 ? "stroke-[3]" : "opacity-40"} />
+                          <span>حداقل ۶ نویسه</span>
+                        </div>
+                        <div className={`flex items-center gap-1.5 ${/[A-Za-z]/.test(password) && /\d/.test(password) ? "text-emerald-600 dark:text-emerald-400" : "text-ink-subtle dark:text-slate-400"}`}>
+                          <Check size={12} className={/[A-Za-z]/.test(password) && /\d/.test(password) ? "stroke-[3]" : "opacity-40"} />
+                          <span>شامل حروف انگلیسی و عدد (مثلاً pors1234)</span>
+                        </div>
+                        {confirmPassword && (
+                          <div className={`flex items-center gap-1.5 ${password === confirmPassword ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                            <Check size={12} className={password === confirmPassword ? "stroke-[3]" : "opacity-40"} />
+                            <span>{password === confirmPassword ? "تطابق رمز و تکرار آن تایید است" : "رمز و تکرار آن یکسان نیستند"}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {error && (
+                      <div className="rotate-[-0.5deg] bg-female-light dark:bg-pink-950/40 border-2 border-female-normal dark:border-pink-600 rounded-pill-md px-3.5 py-2.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">
+                        {error}
+                      </div>
+                    )}
+
+                    <Button
+                      type="submit"
+                      variant="teal"
+                      size="md"
+                      disabled={busy}
+                      rotate="-rotate-[1deg]"
+                      className="w-full justify-center text-center mt-2"
+                    >
+                      <span className="w-full text-center flex items-center justify-center gap-2">
+                        {busy ? (
+                          <>
+                            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>در حال ایجاد حساب و ورود...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>تکمیل ثبت‌نام و ورود به پنل</span>
+                            <ArrowLeft size={16} />
+                          </>
+                        )}
+                      </span>
+                    </Button>
+                  </form>
+                )}
+              </>
             )}
 
             {/* فوتر فرم */}
