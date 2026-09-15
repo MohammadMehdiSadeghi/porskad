@@ -115,6 +115,7 @@ export default function SmsPanel() {
   const [uniqueExtractedPhones, setUniqueExtractedPhones] = useState([]);
   const [extractingContacts, setExtractingContacts] = useState(false);
   const [searchContactFilter, setSearchContactFilter] = useState("");
+  const extractionReqIdRef = useRef(0);
 
   function showToast(msg, type = "success") {
     setToast({ msg, type });
@@ -298,9 +299,11 @@ export default function SmsPanel() {
     if (!formId || !questionIds || questionIds.length === 0) {
       setExtractedContacts([]);
       setUniqueExtractedPhones([]);
+      setExtractingContacts(false);
       return;
     }
 
+    const currentReqId = ++extractionReqIdRef.current;
     setExtractingContacts(true);
     try {
       const qMap = {};
@@ -315,12 +318,12 @@ export default function SmsPanel() {
         .eq("form_id", formId);
 
       if (respError) throw respError;
+      if (currentReqId !== extractionReqIdRef.current) return;
 
       if (!responsesData || responsesData.length === 0) {
         setExtractedContacts([]);
         setUniqueExtractedPhones([]);
         showToast("هنوز هیچ پاسخی برای این فرم ثبت نشده است.", "info");
-        setExtractingContacts(false);
         return;
       }
 
@@ -343,10 +346,13 @@ export default function SmsPanel() {
           .in("question_id", questionIds);
 
         if (ansError) throw ansError;
+        if (currentReqId !== extractionReqIdRef.current) return;
         if (chunkAnswers && chunkAnswers.length > 0) {
           answersData = answersData.concat(chunkAnswers);
         }
       }
+
+      if (currentReqId !== extractionReqIdRef.current) return;
 
       const rawItems = [];
       answersData.forEach((row) => {
@@ -372,7 +378,6 @@ export default function SmsPanel() {
             }
           });
         } else if (val !== null && val !== undefined) {
-          // اگر مقدار یک رشته متنی چندشماره‌ای باشد
           const rawStr = String(val).trim();
           if (rawStr) {
             const normalized = normalizeIranPhone(rawStr);
@@ -406,9 +411,13 @@ export default function SmsPanel() {
       }
     } catch (err) {
       console.error("Extract numbers error:", err);
-      showToast("خطا در استخراج شماره‌های فرم: " + (err.message || ""), "error");
+      if (currentReqId === extractionReqIdRef.current) {
+        showToast("خطا در استخراج شماره‌های فرم: " + (err.message || ""), "error");
+      }
     } finally {
-      setExtractingContacts(false);
+      if (currentReqId === extractionReqIdRef.current) {
+        setExtractingContacts(false);
+      }
     }
   };
 
@@ -454,9 +463,7 @@ export default function SmsPanel() {
 
       setSelectedQuestionIds(defaultPhoneQIds);
       if (defaultPhoneQIds.length > 0) {
-        setTimeout(() => {
-          extractNumbersForQuestions(formId, defaultPhoneQIds, questions);
-        }, 50);
+        extractNumbersForQuestions(formId, defaultPhoneQIds, questions);
       }
     } catch (err) {
       console.error("Failed to load form questions:", err);
@@ -1368,32 +1375,48 @@ export default function SmsPanel() {
 
                   {/* کارت‌های آماری */}
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3.5 rounded-2xl bg-teal/15 border border-teal/30 flex flex-col">
+                    <div className="p-3.5 rounded-2xl bg-teal/15 border border-teal/30 flex flex-col justify-between min-h-[72px]">
                       <span className="text-[11px] font-bold text-teal-text dark:text-teal">شماره‌های یکتا و معتبر:</span>
-                      <strong className="text-2xl font-black text-teal mt-1 font-mono">
-                        {faNum(uniqueExtractedPhones.length)}
-                      </strong>
+                      {extractingContacts ? (
+                        <div className="py-1"><Spinner size="sm" /></div>
+                      ) : (
+                        <strong className="text-2xl font-black text-teal mt-1 font-mono">
+                          {faNum(uniqueExtractedPhones.length)}
+                        </strong>
+                      )}
                     </div>
 
-                    <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 flex flex-col">
+                    <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 flex flex-col justify-between min-h-[72px]">
                       <span className="text-[11px] font-bold text-ink-subtle dark:text-slate-400">کل ورودی‌های خام:</span>
-                      <strong className="text-2xl font-black text-navy dark:text-white mt-1 font-mono">
-                        {faNum(extractedContacts.length)}
-                      </strong>
+                      {extractingContacts ? (
+                        <div className="py-1"><Spinner size="sm" /></div>
+                      ) : (
+                        <strong className="text-2xl font-black text-navy dark:text-white mt-1 font-mono">
+                          {faNum(extractedContacts.length)}
+                        </strong>
+                      )}
                     </div>
 
-                    <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 flex flex-col">
+                    <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 flex flex-col justify-between min-h-[72px]">
                       <span className="text-[11px] font-bold text-ink-subtle dark:text-slate-400">تکراری‌های حذف‌شده:</span>
-                      <strong className="text-xl font-bold text-amber-600 dark:text-amber-400 mt-1 font-mono">
-                        {faNum(Math.max(0, extractedContacts.filter((c) => c.isValid).length - uniqueExtractedPhones.length))}
-                      </strong>
+                      {extractingContacts ? (
+                        <div className="py-1"><Spinner size="sm" /></div>
+                      ) : (
+                        <strong className="text-xl font-bold text-amber-600 dark:text-amber-400 mt-1 font-mono">
+                          {faNum(Math.max(0, extractedContacts.filter((c) => c.isValid).length - uniqueExtractedPhones.length))}
+                        </strong>
+                      )}
                     </div>
 
-                    <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 flex flex-col">
+                    <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 flex flex-col justify-between min-h-[72px]">
                       <span className="text-[11px] font-bold text-ink-subtle dark:text-slate-400">نامعتبر یا ناقص:</span>
-                      <strong className="text-xl font-bold text-rose-500 mt-1 font-mono">
-                        {faNum(extractedContacts.filter((c) => !c.isValid).length)}
-                      </strong>
+                      {extractingContacts ? (
+                        <div className="py-1"><Spinner size="sm" /></div>
+                      ) : (
+                        <strong className="text-xl font-bold text-rose-500 mt-1 font-mono">
+                          {faNum(extractedContacts.filter((c) => !c.isValid).length)}
+                        </strong>
+                      )}
                     </div>
                   </div>
 
@@ -1403,11 +1426,15 @@ export default function SmsPanel() {
                       variant="teal"
                       size="md"
                       onClick={handleImportToSend}
-                      disabled={uniqueExtractedPhones.length === 0}
+                      disabled={extractingContacts || uniqueExtractedPhones.length === 0}
                       className="w-full flex items-center justify-center gap-2 font-black py-3 shadow-md cursor-pointer"
                     >
-                      <Send size={16} />
-                      <span>انتقال به بخش ارسال پیامک ({faNum(uniqueExtractedPhones.length)})</span>
+                      {extractingContacts ? <Spinner size="sm" /> : <Send size={16} />}
+                      <span>
+                        {extractingContacts
+                          ? "در حال استخراج شماره‌ها..."
+                          : `انتقال به بخش ارسال پیامک (${faNum(uniqueExtractedPhones.length)})`}
+                      </span>
                     </Button>
 
                     <div className="grid grid-cols-2 gap-2">
@@ -1415,7 +1442,7 @@ export default function SmsPanel() {
                         variant="navy"
                         size="sm"
                         onClick={handleCopyExtractedPhones}
-                        disabled={uniqueExtractedPhones.length === 0}
+                        disabled={extractingContacts || uniqueExtractedPhones.length === 0}
                         className="flex items-center justify-center gap-1.5 text-xs font-bold"
                       >
                         <Copy size={14} />
@@ -1426,7 +1453,7 @@ export default function SmsPanel() {
                         variant="ghost"
                         size="sm"
                         onClick={handleDownloadTxt}
-                        disabled={uniqueExtractedPhones.length === 0}
+                        disabled={extractingContacts || uniqueExtractedPhones.length === 0}
                         className="flex items-center justify-center gap-1.5 text-xs font-bold border border-ink/10 dark:border-slate-700"
                       >
                         <Download size={14} />
@@ -1443,8 +1470,19 @@ export default function SmsPanel() {
             </div>
           </div>
 
-          {/* پیش‌نمایش جدول شماره‌های استخراج‌شده */}
-          {extractedContacts.length > 0 && (
+          {/* پیش‌نمایش جدول شماره‌های استخراج‌شده یا وضعیت لودینگ */}
+          {extractingContacts ? (
+            <div>
+              <StickerCard theme="white">
+                <div className="p-8 flex flex-col items-center justify-center gap-3 text-center">
+                  <Spinner size="md" />
+                  <span className="text-xs font-bold text-ink-subtle dark:text-slate-400">
+                    در حال واکشی و استخراج هوشمند شماره‌های تماس از پاسخ‌های ثبت‌شده فرم...
+                  </span>
+                </div>
+              </StickerCard>
+            </div>
+          ) : extractedContacts.length > 0 ? (
             <div>
               <StickerCard theme="white">
                 <div className="p-5 sm:p-6 flex flex-col gap-4">
@@ -1539,7 +1577,7 @@ export default function SmsPanel() {
                 </div>
               </StickerCard>
             </div>
-          )}
+          ) : null}
         </div>
       )}
 
