@@ -64,6 +64,7 @@ import {
   ArrowRightLeft,
   User as UserIcon,
   MessageSquare,
+  HelpCircle,
 } from "lucide-react";
 import {
   AreaChart,
@@ -6068,7 +6069,20 @@ export default function SuperAdmin() {
                 key: "t-" + t.id,
                 rawId: t.id,
                 kind: t.entity_type,
-                kindLabel: t.entity_type === "response" ? "Response" : t.entity_type === "form" ? "Form" : t.entity_type,
+                kindLabel:
+                  t.entity_type === "response"
+                    ? "Response"
+                    : t.entity_type === "form"
+                    ? "Form"
+                    : t.entity_type === "question"
+                    ? "Question"
+                    : t.entity_type === "ticket"
+                    ? "Ticket"
+                    : t.entity_type === "tg_config"
+                    ? "Telegram Config"
+                    : t.entity_type === "tg_link"
+                    ? "Telegram Link"
+                    : t.entity_type,
                 label: t.label,
                 at: t.deleted_at,
                 expires: t.expires_at,
@@ -6142,6 +6156,7 @@ export default function SuperAdmin() {
               };
               if (item.kind === "form") existing.formsCount++;
               if (item.kind === "response") existing.responsesCount++;
+              if (item.kind === "question") existing.questionsCount = (existing.questionsCount || 0) + 1;
               existing.totalCount++;
               userStatsMap.set(uid, existing);
             });
@@ -6163,10 +6178,11 @@ export default function SuperAdmin() {
             // Filter items by selected user or all users
             const userScopedItems = trashUserFilter === "all" ? all : all.filter((i) => i.ownerId === trashUserFilter);
 
-            // Filter items by entity type (form, response, user)
+            // Filter items by entity type (form, question, response, user)
             const visibleItems = userScopedItems.filter((i) => {
               if (trashTypeFilter === "all") return true;
               if (trashTypeFilter === "form") return i.kind === "form";
+              if (trashTypeFilter === "question") return i.kind === "question";
               if (trashTypeFilter === "response") return i.kind === "response";
               if (trashTypeFilter === "user") return i.kind === "user";
               return true;
@@ -6310,8 +6326,9 @@ export default function SuperAdmin() {
                               <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "160px" }} dir="ltr">
                                 {u.email}
                               </span>
-                              <div style={{ display: "flex", gap: "0.3rem" }}>
+                              <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap" }}>
                                 {u.formsCount > 0 && <span>{u.formsCount} Forms</span>}
+                                {u.questionsCount > 0 && <span>{u.questionsCount} Questions</span>}
                                 {u.responsesCount > 0 && <span>{u.responsesCount} Responses</span>}
                               </div>
                             </div>
@@ -6393,11 +6410,12 @@ export default function SuperAdmin() {
                         </div>
                       )}
 
-                      {/* Sub-tabs: All | Forms | Responses | Users */}
+                      {/* Sub-tabs: All | Forms | Questions | Responses | Users */}
                       <div style={{ display: "flex", gap: "0.35rem", marginTop: "0.85rem", flexWrap: "wrap" }}>
                         {[
                           { id: "all", label: `All Items (${userScopedItems.length})` },
                           { id: "form", label: `Forms (${userScopedItems.filter((x) => x.kind === "form").length})` },
+                          { id: "question", label: `Questions (${userScopedItems.filter((x) => x.kind === "question").length})` },
                           { id: "response", label: `Responses (${userScopedItems.filter((x) => x.kind === "response").length})` },
                           { id: "user", label: `Users (${userScopedItems.filter((x) => x.kind === "user").length})` },
                         ].map((st) => (
@@ -6549,11 +6567,12 @@ export default function SuperAdmin() {
                             {/* Entity Type Badge */}
                             <span
                               className={`sa-badge ${
-                                i.kind === "form" ? "sa-tag-teal" : i.kind === "response" ? "sa-tag-blue" : "sa-tag-purple"
+                                i.kind === "form" ? "sa-tag-teal" : i.kind === "question" ? "sa-tag-yellow" : i.kind === "response" ? "sa-tag-blue" : "sa-tag-purple"
                               }`}
                               style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
                             >
                               {i.kind === "form" && <FileText size={12} />}
+                              {i.kind === "question" && <HelpCircle size={12} />}
                               {i.kind === "response" && <MessageSquare size={12} />}
                               {i.kind === "user" && <UserIcon size={12} />}
                               {i.kindLabel}
