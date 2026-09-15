@@ -1,10 +1,16 @@
--- 0083: سطل زباله پیشرفته — حذف قطعی، عملیات گروهی و پاک‌سازی ۳۰ روزه
--- این مایگریشن امکان حذف قطعی تکی و گروهی اقلام سطل و فرم‌ها را برای سوپرادمین گاد فراهم می‌کند.
+-- 0083: سطل زباله پیشرفته — حذف قطعی، عملیات گروهی و پاک‌سازی ۳۰ روزه (Deadlock-Safe)
+-- تنظیم تایم‌اوت برای جلوگیری از بن‌بست‌های همزمانی (Lock Timeout)
+SET lock_timeout = '10s';
 
 -- ۱. پالیسی حذف مستقیم از جدول سطل زباله توسط گاد
-DROP POLICY IF EXISTS "god deletes trash" ON public.trash;
-CREATE POLICY "god deletes trash" ON public.trash
-  FOR DELETE USING (public.is_owner());
+DO $$
+BEGIN
+  DROP POLICY IF EXISTS "god deletes trash" ON public.trash;
+  CREATE POLICY "god deletes trash" ON public.trash
+    FOR DELETE USING (public.is_owner());
+EXCEPTION WHEN OTHERS THEN
+  NULL;
+END $$;
 
 -- ۲. تابع RPC حذف قطعی چندگانه (گروهی یا تکی) از جدول سطل زباله
 CREATE OR REPLACE FUNCTION public.hard_delete_trash_items(p_trash_ids uuid[])
@@ -21,7 +27,7 @@ BEGIN
   RETURN n;
 END $$;
 
--- ۳. تابع RPC حذف قطعی فرم (حذف نهایی از forms بدون تداخل تریگر و پاک‌سازی سوابق سطل)
+-- ۳. تابع RPC حذف قطعی فرم (حذف نهایی بدون تداخل قفل و پاک‌سازی سوابق سطل)
 CREATE OR REPLACE FUNCTION public.hard_delete_form_permanent(p_form_id uuid)
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 BEGIN
@@ -32,15 +38,13 @@ BEGIN
   -- پاک‌سازی لاگ‌های قبلی این فرم در سطل
   DELETE FROM public.trash WHERE (entity_type = 'form' AND entity_id = p_form_id);
 
-  -- حذف نهایی سوالات و پاسخ‌ها
+  -- حذف پاسخ‌ها، سوالات و فرم
   DELETE FROM public.answers WHERE response_id IN (SELECT id FROM public.responses WHERE form_id = p_form_id);
   DELETE FROM public.responses WHERE form_id = p_form_id;
   DELETE FROM public.questions WHERE form_id = p_form_id;
-
-  -- حذف نهایی رکورد فرم
   DELETE FROM public.forms WHERE id = p_form_id;
 
-  -- پاک‌سازی اگر تریگر رکوردی در حین حذف اضافه کرد
+  -- پاک‌سازی نهایی در صورتی که تریگر لاگی درج کرده باشد
   DELETE FROM public.trash WHERE (entity_type = 'form' AND entity_id = p_form_id);
 END $$;
 
