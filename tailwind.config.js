@@ -1,7 +1,7 @@
 import defaultTheme from "tailwindcss/defaultTheme";
 import mdTheme from "./tailwind.theme.json";
 
-const md = mdTheme.theme.extend;
+const md = mdTheme?.theme?.extend || {};
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -14,162 +14,179 @@ export default {
         },
         extend: {
             fontFamily: {
-                sans: ["IRANSansX", "Montserrat", "Tahoma", "sans-serif"],
-                ...md.fontFamily,
+                sans: ["var(--font-iransans)", "IRANSansX", "Vazirmatn", "system-ui", "sans-serif"],
             },
             colors: {
-                // ── Dark Mode Surface & Text Tokens ──
-                dark: {
-                    canvas: "#0B0F19",
-                    card: "#131B2E",
-                    surface: "#1A233A",
-                    border: "#232F4A",
-                    borderHover: "#3B4D75",
-                    muted: "#64748B",
-                    text: "#F1F5F9",
-                    subtext: "#94A3B8",
-                },
-
-                // ── Brand Aliases (Design System) ──
+                // ── کدهای رنگی پرسوناها و برند (ROKAD-UI-DESIGN-STANDARDS.md) ──
                 primary: "#59BBAF",
-                "primary-alt": "#59bbaf",
-                "primary-hover": "#50A89E",
                 girl: "#E0195B",
                 third: "#F8A41D",
                 sec: "#202A5A",
 
-                // ── Ecosystem Theme ──
+                // ── Ecosystem Persona (برند اصلی / اکوسیستم) ──
                 ecosystem: {
                     light: "#EEF8F7",
+                    "light-hover": "#E6F5F3",
+                    "light-active": "#CCEAE6",
                     normal: "#59BBAF",
+                    "normal-hover": "#50A89E",
+                    "normal-active": "#47968C",
                     dark: "#438C83",
+                    "dark-hover": "#357069",
+                    "dark-active": "#28544F",
                     darker: "#1F413D",
                 },
 
-                // ── Male Theme ──
+                // ── Male Persona (بخش پسران / ثانویه سازمانی) ──
                 male: {
                     light: "#E9EAEF",
+                    "light-hover": "#DEDFE6",
+                    "light-active": "#BABDCC",
                     normal: "#202A5A",
+                    "normal-hover": "#1D2651",
+                    "normal-active": "#1A2248",
                     dark: "#182044",
+                    "dark-hover": "#131936",
+                    "dark-active": "#0E1328",
                     darker: "#0B0F1F",
                 },
 
-                // ── Female Theme ──
+                // ── Female Persona (بخش دختران / هشدار و تاکید) ──
                 female: {
                     light: "#FCE8EF",
+                    "light-hover": "#FADDE6",
+                    "light-active": "#F5B8CC",
                     normal: "#E0195B",
+                    "normal-hover": "#CA1752",
+                    "normal-active": "#B31449",
                     dark: "#A81344",
+                    "dark-hover": "#860F37",
+                    "dark-active": "#650B29",
                     darker: "#4E0920",
                 },
 
-                // ── College Theme ──
+                // ── College Persona (دانشگاه / پیگیری و در انتظار) ──
                 college: {
                     light: "#FEF6E8",
+                    "light-hover": "#FEF1DD",
+                    "light-active": "#FDE3B9",
                     normal: "#F8A41D",
+                    "normal-hover": "#DF941A",
+                    "normal-active": "#C68317",
                     dark: "#BA7B16",
+                    "dark-hover": "#956211",
+                    "dark-active": "#704A0D",
                     darker: "#57390A",
                 },
 
-                // ── Club Theme ──
+                // ── Club Persona (باشگاه / بنفش ویژه) ──
                 club: {
                     light: "#F0EAF4",
+                    "light-hover": "#E8E0EE",
+                    "light-active": "#CFBEDD",
                     normal: "#652D90",
+                    "normal-hover": "#5B2982",
+                    "normal-active": "#512473",
                     dark: "#4C226C",
+                    "dark-hover": "#3D1B56",
+                    "dark-active": "#2D1441",
                     darker: "#231032",
                 },
 
-                // ── Text & Title (Neutral) ──
+                // ── رنگ‌های خنثی و متون (Neutral / Ink) ──
                 ink: {
-                    DEFAULT: "#292827",
                     light: "#EAEAE9",
+                    "light-hover": "#DFDFDF",
+                    "light-active": "#BDBCBC",
+                    normal: "#292827",
+                    "normal-hover": "#252423",
+                    "normal-active": "#21201F",
                     dark: "#1F1E1D",
                     darker: "#0E0E0E",
+                    DEFAULT: "#292827",
                     faq: "#3d3b3a",
                     subtle: "#777777",
                     soft: "#333230",
                 },
 
-                // ── Accents ──
+                // ── رنگ‌های کمکی وضعیت (Accents) ──
+                accent: {
+                    green: "#009966",
+                    red: "#C60036",
+                    purple: "#8A38F5",
+                },
                 "accent-green": "#009966",
                 "accent-red": "#C60036",
                 "accent-purple": "#8A38F5",
 
-                // ── Legacy aliases (backward compat) ──
-                navy: "#21295a",
+                // ── استانداردهای دارک‌مود پرس‌کاد (Dark Mode Tokens) ──
+                dark: {
+                    canvas: "#0B0F17",
+                    sidebar: "#121824",
+                    card: "#151C28",
+                    surface: "#1C2536",
+                    border: "#242F42",
+                    borderHover: "#3B4D75",
+                    muted: "#94A3B8",
+                    text: "#F1F5F9",
+                    subtext: "#94A3B8",
+                },
+
+                // ── سازگاری نام‌های قدیمی (Backward compatibility) ──
+                navy: "#202A5A",
                 "navy-alt": "#202a5a",
-                "navy-hover": "#15244a",
-                teal: "#58bdaf",
+                "navy-hover": "#1D2651",
+                teal: "#59BBAF",
                 "teal-alt": "#59bbaf",
-                "teal-text": "#347e75",
-                "teal-text-alt": "#2e7068",
-                "teal-wordmark": "#4bb5a8",
-                "teal-light": "#e4f4f2",
-                magenta: "#e0195b",
-                "magenta-text": "#ce1754",
-                orange: "#f4971f",
-                "orange-alt": "#f9a21d",
-                purple: "#4F215A",
+                "teal-text": "#438C83",
+                "teal-text-alt": "#357069",
+                "teal-wordmark": "#50A89E",
+                "teal-light": "#EEF8F7",
+                magenta: "#E0195B",
+                "magenta-text": "#CA1752",
+                orange: "#F8A41D",
+                "orange-alt": "#DF941A",
+                purple: "#652D90",
                 violet: "#5b3e9e",
-
-                // ── Background Surfaces ──
-                "bg-mint": "#f2faf9",
-                "bg-blush": "#fefafb",
-                "bg-lavender": "#f4f5fb",
-                "bg-neutral": "#f6f6f6",
-
-                // ── Theme colors from md ──
-                ...md.colors,
-            },
-            borderRadius: {
-                // ── Design System Radius Tokens ──
-                xs: "5px",
-                sm: "8px",
-                md: "12px",
-                lg: "17px",
-                xl: "24px",
-                "2xl": "34px",
-                pill: "40px",
-
-                // ── Legacy aliases (backward compat) ──
-                "pill-sm": "0.1875rem",
-                "pill-md": "0.5rem",
-                "pill-lg": "0.625rem",
-                badge: "0.475rem",
-                chip: "0.51875rem",
-                "card-sm": "0.8375rem",
-                "card-lg": "2.5625rem",
-                navbar: "1.375rem",
-                "squircle-sm": "0.75rem",
-                "squircle-md": "0.875rem",
-                "squircle-lg": "2.75rem",
-                "squircle-xl": "2.5rem",
-                ...md.borderRadius,
+                "bg-mint": "#EEF8F7",
+                "bg-blush": "#FCE8EF",
+                "bg-lavender": "#E9EAEF",
+                "bg-neutral": "#F8F9FA",
             },
             fontSize: {
-                // ── Design System Typography Scale (Standard & Highly Legible) ──
-                xs: ["0.8125rem", { lineHeight: "1.25rem" }], // 13px — crisp, clear captions & badges
-                sm: ["0.925rem", { lineHeight: "1.45rem" }], // 14.8px — comfortable subtitles & inputs
-                base: ["1.025rem", { lineHeight: "1.6rem" }], // 16.4px — standard body text
-                md: ["1.15rem", { lineHeight: "1.75rem" }], // 18.4px — subheadings & emphasis
-                lg: ["1.35rem", { lineHeight: "1.95rem" }], // 21.6px — section titles
-                xl: ["1.65rem", { lineHeight: "2.35rem" }], // 26.4px — hero subheaders
-                "2xl": ["2.15rem", { lineHeight: "2.85rem" }], // 34.4px — major headings
-                "3xl": ["2.9rem", { lineHeight: "3.6rem" }], // 46.4px — hero titles
-
-                // ── Legacy aliases (backward compat) ──
-                "2xs": "0.81875rem",
-                xs2: "0.89375rem",
-                base2: "0.9375rem",
-                "sm-alt": "0.9875rem",
-                md2: "1rem",
-                lg2: "1.09375rem",
-                xl2: "1.275rem",
-                "2xl2": "2rem",
-                "3xl2": "2.6875rem",
-                "4xl2": "3.325rem",
-                "5xl2": "3.7125rem",
-                "6xl2": "4.40625rem",
-                ...md.fontSize,
+                xs: ["11.5px", "17px"],
+                sm: ["13px", "20px"],
+                base: ["14.5px", "23px"],
+                md: ["16px", "25px"],
+                lg: ["18px", "27px"],
+                xl: ["21px", "29px"],
+                "2xl": ["25px", "34px"],
+                "3xl": ["30px", "39px"],
+                "4xl": ["36px", "46px"],
+            },
+            borderRadius: {
+                xs: "4px",
+                sm: "6px",
+                md: "8px",
+                lg: "10px",
+                xl: "12px",
+                "2xl": "16px",
+                "3xl": "20px",
+                pill: "9999px",
+                full: "9999px",
+            },
+            boxShadow: {
+                ecosystem: "2.75px 2.75px 0 #59BBAF",
+                male: "2.75px 2.75px 0 #202A5A",
+                female: "2.75px 2.75px 0 #E0195B",
+                college: "2.75px 2.75px 0 #F8A41D",
+                club: "2.75px 2.75px 0 #652D90",
+                neutral: "2.75px 2.75px 0 #292827",
+                "hard-sm": "2px 2px 0 rgba(41, 40, 39, 0.8)",
+                "hard-md": "3px 3px 0 rgba(41, 40, 39, 0.9)",
+                "hard-lg": "4px 4px 0 #202A5A",
+                "dark-ecosystem": "2.75px 2.75px 0 #59BBAF",
+                "dark-hard": "3px 3px 0 #59BBAF",
             },
             spacing: {
                 section: "4rem",
@@ -180,29 +197,14 @@ export default {
                 "gutter-md": "4rem",
                 "gutter-lg": "6rem",
                 "gutter-xl": "7.5rem",
-                ...md.spacing,
             },
             maxWidth: {
                 content: "75rem",
                 canvas: "90rem",
                 container: "75rem",
             },
-            boxShadow: {
-                // ── Design System Hard Shadows (Brand Signature) ──
-                ecosystem: "2.75px 2.75px 0 #59BBAF",
-                male: "2.75px 2.75px 0 #202A5A",
-                female: "2.75px 2.75px 0 #E0195B",
-                college: "2.75px 2.75px 0 #F8A41D",
-                club: "2.75px 2.75px 0 #652D90",
-                neutral: "2.75px 2.75px 0 #292827",
-
-                // ── Legacy ──
-                soft: "0 1.25rem 3.75rem -1.25rem rgba(33,41,90,0.25)",
-                navbar: "0 0.0625rem 0.1875rem rgba(0,0,0,0.04), 0 0.5rem 1.25rem rgba(33,41,90,0.05), 0 1.25rem 2.5rem -0.25rem rgba(33,41,90,0.06)",
-                "card-offset": "6px 8px 0 0",
-                "card-offset-sm": "4px 4px 0 0",
-            },
         },
     },
     plugins: [],
 };
+
