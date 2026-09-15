@@ -62,6 +62,8 @@ import {
   Trash2,
   HeartPulse,
   ArrowRightLeft,
+  User as UserIcon,
+  MessageSquare,
 } from "lucide-react";
 import {
   AreaChart,
@@ -176,12 +178,18 @@ export default function SuperAdmin() {
   const [health, setHealth] = useState(null);
   const [healthLoading, setHealthLoading] = useState(false);
 
-  // ─── Trash Tab State ───
+  // ─── Trash Tab State (30-day retention & batch ops) ───
   const [trashItems, setTrashItems] = useState([]);
   const [trashedForms, setTrashedForms] = useState([]);
   const [trashedUsers, setTrashedUsers] = useState([]);
   const [trashLoading, setTrashLoading] = useState(false);
   const [trashUserFilter, setTrashUserFilter] = useState("all");
+  const [trashSelectedKeys, setTrashSelectedKeys] = useState([]);
+  const [trashTypeFilter, setTrashTypeFilter] = useState("all");
+  const [trashUserSearch, setTrashUserSearch] = useState("");
+  const [trashPayloadModal, setTrashPayloadModal] = useState(null);
+  const [trashActionBusy, setTrashActionBusy] = useState(false);
+  const [trashConfirmDeleteModal, setTrashConfirmDeleteModal] = useState(null);
 
   async function loadHealth() {
     setHealthLoading(true);
@@ -306,17 +314,17 @@ export default function SuperAdmin() {
           .select("*")
           .is("restored_at", null)
           .order("deleted_at", { ascending: false })
-          .limit(500),
+          .limit(1000),
         // Forms are soft-deleted; listed in trash bin
         supabase
           .from("forms")
-          .select("id,title,created_by,manager_id,deleted_at,deleted_by")
+          .select("id,title,slug,created_by,manager_id,deleted_at,deleted_by")
           .not("deleted_at", "is", null)
           .order("deleted_at", { ascending: false }),
         // User deletion in this system = deactivation; also listed in trash
         supabase
           .from("profiles")
-          .select("id,full_name,email,is_active,deactivated_by,deactivated_at")
+          .select("id,full_name,email,phone,is_active,deactivated_by,deactivated_at,created_at")
           .eq("is_active", false)
           .order("deactivated_at", { ascending: false, nullsFirst: false }),
       ]);
@@ -325,66 +333,201 @@ export default function SuperAdmin() {
       setTrashedUsers(usersRes.data || []);
     } catch (err) {
       console.error("loadTrash:", err);
+      showToast("Error loading recycle bin: " + err.message, "error");
     } finally {
       setTrashLoading(false);
     }
   }
 
   async function restoreTrashItem(item) {
-    if (!confirm("Restore this item?")) return;
-    const { data, error } = await supabase.rpc("restore_from_trash", {
-      p_trash_id: item.id,
-    });
-    if (error) {
-      alert("Error restoring item: " + error.message);
-      return;
+    setTrashActionBusy(true);
+    try {
+      const { data, error } = await supabase.rpc("restore_from_trash", {
+        p_trash_id: item.id,
+      });
+      if (error) throw error;
+      if (data === "conflict") {
+        showToast("This item already exists in the same location (ID conflict).", "error");
+        return;
+      }
+      if (data !== "restored") {
+        showToast("Could not restore item: " + data, "error");
+        return;
+      }
+      showToast("آیتم با موفقیت بازیابی شد");
+      await loadTrash();
+    } catch (err) {
+      showToast("خطا در بازیابی: " + err.message, "error");
+    } finally {
+      setTrashActionBusy(false);
     }
-    if (data === "conflict") {
-      alert("This item already exists in the same location (ID conflict).");
-      return;
-    }
-    if (data !== "restored") {
-      alert("Could not restore item: " + data);
-      return;
-    }
-    loadTrash();
   }
 
   async function restoreForm(formId) {
-    if (!confirm("Restore this form?")) return;
-    const { error } = await supabase
-      .from("forms")
-      .update({ deleted_at: null })
-      .eq("id", formId);
-    if (error) {
-      alert("Error: " + error.message);
-      return;
+    setTrashActionBusy(true);
+    try {
+      const { error } = await supabase
+        .from("forms")
+        .update({ deleted_at: null })
+        .eq("id", formId);
+      if (error) throw error;
+      showToast("فرم با موفقیت بازیابی شد");
+      await loadTrash();
+    } catch (err) {
+      showToast("خطا در بازیابی فرم: " + err.message, "error");
+    } finally {
+      setTrashActionBusy(false);
     }
-    loadTrash();
   }
 
   async function restoreUser(userId) {
-    if (!confirm("Re-activate and restore this user?")) return;
-    const { error } = await supabase
-      .from("profiles")
-      .update({ is_active: true })
-      .eq("id", userId);
-    if (error) {
-      alert("Error: " + error.message);
-      return;
+    setTrashActionBusy(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_active: true, deactivated_at: null, deactivated_by: null })
+        .eq("id", userId);
+      if (error) throw error;
+      showToast("حساب کاربر با موفقیت فعال و بازیابی شد");
+      await loadTrash();
+      loadUsers();
+    } catch (err) {
+      showToast("خطا در بازیابی کاربر: " + err.message, "error");
+    } finally {
+      setTrashActionBusy(false);
     }
-    loadTrash();
+  }
+
+  async function permanentDeleteItem(item) {
+    setTrashActionBusy(true);
+    try {
+      if (item.kind === "form" && item.isSoftDelete) {
+        // Soft deleted form in forms table
+        const { error: rpcErr } = await supabase.rpc("hard_delete_form_permanent", { p_form_id: item.rawId });
+        if (rpcErr) {
+          const { error } = await supabase.from("forms").delete().eq("id", item.rawId);
+          if (error) throw error;
+        }
+      } else if (item.kind === "user") {
+        // User account
+        const { error: rpcErr } = await supabase.rpc("delete_manager", { p_user_id: item.rawId });
+        if (rpcErr) {
+          const { error } = await supabase.from("profiles").delete().eq("id", item.rawId);
+          if (error) throw error;
+        }
+        loadUsers();
+      } else {
+        // Item in trash table
+        const { error: rpcErr } = await supabase.rpc("hard_delete_trash_items", { p_trash_ids: [item.rawId] });
+        if (rpcErr) {
+          const { error } = await supabase.from("trash").delete().eq("id", item.rawId);
+          if (error) throw error;
+        }
+      }
+      showToast("مورد با موفقیت برای همیشه حذف گردید");
+      setTrashSelectedKeys((prev) => prev.filter((k) => k !== item.key));
+      await loadTrash();
+    } catch (err) {
+      showToast("خطا در حذف دائمی: " + err.message, "error");
+    } finally {
+      setTrashActionBusy(false);
+      setTrashConfirmDeleteModal(null);
+    }
+  }
+
+  async function batchPermanentDelete(items) {
+    if (!items || items.length === 0) return;
+    setTrashActionBusy(true);
+    let successCount = 0;
+    try {
+      const trashItemIds = items.filter((i) => !i.isSoftDelete && i.kind !== "user").map((i) => i.rawId);
+      const formIds = items.filter((i) => i.isSoftDelete && i.kind === "form").map((i) => i.rawId);
+      const userIds = items.filter((i) => i.kind === "user").map((i) => i.rawId);
+
+      if (trashItemIds.length > 0) {
+        const { error: rpcErr } = await supabase.rpc("hard_delete_trash_items", { p_trash_ids: trashItemIds });
+        if (rpcErr) {
+          await supabase.from("trash").delete().in("id", trashItemIds);
+        }
+        successCount += trashItemIds.length;
+      }
+
+      for (const fId of formIds) {
+        const { error: rpcErr } = await supabase.rpc("hard_delete_form_permanent", { p_form_id: fId });
+        if (rpcErr) {
+          await supabase.from("forms").delete().eq("id", fId);
+        }
+        successCount++;
+      }
+
+      for (const uId of userIds) {
+        const { error: rpcErr } = await supabase.rpc("delete_manager", { p_user_id: uId });
+        if (rpcErr) {
+          await supabase.from("profiles").delete().eq("id", uId);
+        }
+        successCount++;
+      }
+
+      showToast(`${successCount} مورد با موفقیت برای همیشه حذف گردید`);
+      setTrashSelectedKeys([]);
+      await loadTrash();
+      if (userIds.length > 0) loadUsers();
+    } catch (err) {
+      showToast("خطا در حذف گروهی: " + err.message, "error");
+    } finally {
+      setTrashActionBusy(false);
+      setTrashConfirmDeleteModal(null);
+    }
+  }
+
+  async function batchRestore(items) {
+    if (!items || items.length === 0) return;
+    setTrashActionBusy(true);
+    let successCount = 0;
+    try {
+      for (const item of items) {
+        if (item.kind === "form" && item.isSoftDelete) {
+          const { error } = await supabase.from("forms").update({ deleted_at: null }).eq("id", item.rawId);
+          if (!error) successCount++;
+        } else if (item.kind === "user") {
+          const { error } = await supabase.from("profiles").update({ is_active: true, deactivated_at: null, deactivated_by: null }).eq("id", item.rawId);
+          if (!error) successCount++;
+        } else {
+          const { data } = await supabase.rpc("restore_from_trash", { p_trash_id: item.rawId });
+          if (data === "restored") successCount++;
+        }
+      }
+      showToast(`${successCount} مورد با موفقیت بازیابی شد`);
+      setTrashSelectedKeys([]);
+      await loadTrash();
+      loadUsers();
+    } catch (err) {
+      showToast("خطا در بازیابی گروهی: " + err.message, "error");
+    } finally {
+      setTrashActionBusy(false);
+    }
   }
 
   async function purgeExpiredTrash() {
-    if (!confirm("Permanently purge expired items older than 30 days?")) return;
-    const { data, error } = await supabase.rpc("purge_expired_trash");
-    if (error) {
-      alert("Error: " + error.message);
-      return;
+    if (!confirm("آیا از پاک‌سازی دائمی اقلام منقضی‌شده با قدمت بیش از ۳۰ روز اطمینان دارید؟")) return;
+    setTrashActionBusy(true);
+    try {
+      const { data, error } = await supabase.rpc("purge_expired_trash");
+      if (error) {
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+        const { error: err1 } = await supabase.from("trash").delete().lt("expires_at", new Date().toISOString());
+        const { error: err2 } = await supabase.from("forms").delete().lt("deleted_at", thirtyDaysAgo);
+        if (err1 && err2) throw err1 || err2;
+        showToast("اقلام منقضی‌شده با موفقیت پاک‌سازی شدند");
+      } else {
+        showToast(`${data || 0} مورد منقضی‌شده برای همیشه پاک‌سازی گردید`);
+      }
+      await loadTrash();
+    } catch (err) {
+      showToast("خطا در پاک‌سازی: " + err.message, "error");
+    } finally {
+      setTrashActionBusy(false);
     }
-    alert((data || 0) + " items permanently purged.");
-    loadTrash();
   }
 
   // ─── System Settings State ───
@@ -5860,60 +6003,81 @@ export default function SuperAdmin() {
         </div>
       )}
 
-      {/* ═══════════ Trash (30-day retention) ═══════════ */}
+      {/* ═══════════ Trash (30-day retention & User-centric drilldown) ═══════════ */}
       {tab === "trash" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          {/* Header Bar */}
           <div className="flex gap-2 items-center" style={{ justifyContent: "space-between", flexWrap: "wrap" }}>
             <div className="sa-section-title" style={{ margin: 0 }}>
               <Trash2 size={18} style={{ verticalAlign: "middle", marginRight: 6 }} />
-              Recycle Bin — Deleted items recoverable for 30 days
+              Recycle Bin (سطل زباله پیشرفته گاد) — اقلام قابل بازیابی تا ۳۰ روز
             </div>
             <div className="flex gap-2">
-              <button type="button" className="sa-btn sa-btn-ghost" onClick={loadTrash} disabled={trashLoading}>
-                {trashLoading ? "…" : "Refresh"}
+              <button
+                type="button"
+                className="sa-btn sa-btn-ghost"
+                onClick={loadTrash}
+                disabled={trashLoading || trashActionBusy}
+              >
+                <RefreshCw size={14} className={trashLoading ? "animate-spin" : ""} style={{ marginRight: 4 }} />
+                Refresh
               </button>
-              <button type="button" className="sa-btn sa-btn-ghost" onClick={purgeExpiredTrash} disabled={trashLoading}>
-                Purge Expired Items
+              <button
+                type="button"
+                className="sa-btn sa-btn-ghost"
+                onClick={purgeExpiredTrash}
+                disabled={trashLoading || trashActionBusy}
+                style={{ color: "var(--sa-danger)", borderColor: "rgba(220, 38, 38, 0.3)" }}
+              >
+                <Trash2 size={14} style={{ marginRight: 4 }} />
+                پاک‌سازی اقلام منقضی (بیش از ۳۰ روز)
               </button>
             </div>
           </div>
 
           {(() => {
             const nameOf = (id) => {
-              const u = users.find((x) => x.id === id);
+              const u = users.find((x) => x.id === id) || trashedUsers.find((x) => x.id === id);
               return u ? u.full_name || u.email : null;
             };
             const dayMs = 86400000;
+
+            // ساخت لیست یکپارچه از اقلام
             const all = [
               ...trashItems.map((t) => ({
                 key: "t-" + t.id,
+                rawId: t.id,
                 kind: t.entity_type,
-                kindFa: { response: "Response", ticket: "Ticket", tg_config: "Bot", tg_link: "Bot Link", question: "Question", form: "Form" }[t.entity_type] || t.entity_type,
+                kindFa: t.entity_type === "response" ? "ورودی" : t.entity_type === "form" ? "فرم" : t.entity_type,
                 label: t.label,
                 at: t.deleted_at,
                 expires: t.expires_at,
                 ownerId: t.user_id,
                 byId: t.deleted_by,
                 byName: t.deleted_by_name,
-                restore: () => restoreTrashItem(t),
+                payload: t.payload,
+                isSoftDelete: false,
               })),
               ...trashedForms.map((f) => ({
                 key: "f-" + f.id,
+                rawId: f.id,
                 kind: "form",
-                kindFa: "Form",
-                label: "Form \"" + (f.title || "?") + "\"",
+                kindFa: "فرم",
+                label: `فرم «${f.title || f.slug || "بدون عنوان"}»`,
                 at: f.deleted_at,
                 expires: new Date(new Date(f.deleted_at).getTime() + 30 * dayMs).toISOString(),
                 ownerId: f.created_by || f.manager_id,
                 byId: f.deleted_by,
                 byName: null,
-                restore: () => restoreForm(f.id),
+                payload: f,
+                isSoftDelete: true,
               })),
               ...trashedUsers.map((u) => ({
                 key: "u-" + u.id,
+                rawId: u.id,
                 kind: "user",
-                kindFa: "User",
-                label: "User Account \"" + (u.full_name || u.email || "?") + "\"",
+                kindFa: "کاربر",
+                label: `حساب کاربر: ${u.full_name || u.email || "بدون نام"}`,
                 at: u.deactivated_at || u.created_at,
                 expires: u.deactivated_at || u.created_at
                   ? new Date(new Date(u.deactivated_at || u.created_at).getTime() + 30 * dayMs).toISOString()
@@ -5921,82 +6085,696 @@ export default function SuperAdmin() {
                 ownerId: u.id,
                 byId: u.deactivated_by,
                 byName: null,
-                restore: () => restoreUser(u.id),
+                payload: u,
+                isSoftDelete: false,
               })),
             ].sort((a, b) => new Date(b.at) - new Date(a.at));
 
-            // User filter options
-            const ownerIds = [...new Set(all.map((i) => i.ownerId).filter(Boolean))];
-            const ownerLabel = (id) => nameOf(id) || "Deleted User (" + String(id).slice(0, 8) + "…)";
-            const visible = trashUserFilter === "all" ? all : all.filter((i) => i.ownerId === trashUserFilter);
+            // جمع‌آوری آمار کاربران دارای اقلام حذفی
+            const userStatsMap = new Map();
+
+            // ابتدا اضافه کردن کاربرانی که خودشان غیرفعال/حذف شده‌اند
+            trashedUsers.forEach((u) => {
+              userStatsMap.set(u.id, {
+                id: u.id,
+                name: u.full_name || u.email || "کاربر ناشناس",
+                email: u.email,
+                isDeactivated: true,
+                formsCount: 0,
+                responsesCount: 0,
+                totalCount: 1,
+              });
+            });
+
+            // محاسبه تعداد فرم‌ها و ورودی‌های هر کاربر
+            all.forEach((item) => {
+              if (item.kind === "user") return;
+              const uid = item.ownerId;
+              if (!uid) return;
+              const existing = userStatsMap.get(uid) || {
+                id: uid,
+                name: nameOf(uid) || `کاربر (${String(uid).slice(0, 8)}…)`,
+                email: users.find((x) => x.id === uid)?.email || "",
+                isDeactivated: trashedUsers.some((x) => x.id === uid),
+                formsCount: 0,
+                responsesCount: 0,
+                totalCount: 0,
+              };
+              if (item.kind === "form") existing.formsCount++;
+              if (item.kind === "response") existing.responsesCount++;
+              existing.totalCount++;
+              userStatsMap.set(uid, existing);
+            });
+
+            // لیست نهایی کاربران مرتب‌شده: ابتدا کاربران غیرفعال/حذف‌شده، سپس بیشترین اقلام
+            const userList = Array.from(userStatsMap.values()).sort((a, b) => {
+              if (a.isDeactivated && !b.isDeactivated) return -1;
+              if (!a.isDeactivated && b.isDeactivated) return 1;
+              return b.totalCount - a.totalCount;
+            });
+
+            // فیلتر جستجوی کاربران
+            const filteredUserList = userList.filter((u) => {
+              if (!trashUserSearch) return true;
+              const q = trashUserSearch.toLowerCase();
+              return (u.name && u.name.toLowerCase().includes(q)) || (u.email && u.email.toLowerCase().includes(q));
+            });
+
+            // اقلام مربوط به کاربر انتخابی یا تمام کاربران
+            const userScopedItems = trashUserFilter === "all" ? all : all.filter((i) => i.ownerId === trashUserFilter);
+
+            // فیلتر بر اساس نوع موجودیت (فرم، ورودی، کاربر)
+            const visibleItems = userScopedItems.filter((i) => {
+              if (trashTypeFilter === "all") return true;
+              if (trashTypeFilter === "form") return i.kind === "form";
+              if (trashTypeFilter === "response") return i.kind === "response";
+              if (trashTypeFilter === "user") return i.kind === "user";
+              return true;
+            });
 
             const daysLeft = (exp) =>
               exp ? Math.max(0, Math.ceil((new Date(exp) - Date.now()) / dayMs)) : null;
+
             const whoDeleted = (i) => {
-              if (!i.byId) return "Unknown";
-              if (i.byId === i.ownerId) return "Self";
-              return nameOf(i.byId) || i.byName || String(i.byId).slice(0, 8);
+              if (!i.byId) return "نامشخص";
+              if (i.byId === i.ownerId) return "خود کاربر";
+              return nameOf(i.byId) || i.byName || "ادمین";
             };
 
+            const selectedItems = visibleItems.filter((i) => trashSelectedKeys.includes(i.key));
+            const isAllSelected = visibleItems.length > 0 && selectedItems.length === visibleItems.length;
+
+            const selectedUserObj = trashUserFilter === "all" ? null : userStatsMap.get(trashUserFilter);
+
+            // تعداد کل موارد منقضی شده (> ۳۰ روز)
+            const expiredCount = all.filter((i) => {
+              const dl = daysLeft(i.expires);
+              return dl !== null && dl === 0;
+            }).length;
+
             return (
-              <>
-                <div className="sa-card">
-                  <div className="flex gap-2 items-center" style={{ flexWrap: "wrap" }}>
-                    <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>Filter by User:</span>
-                    <select
-                      className="sa-input"
-                      style={{ maxWidth: 320 }}
-                      value={trashUserFilter}
-                      onChange={(e) => setTrashUserFilter(e.target.value)}
-                    >
-                      <option value="all">All Users ({all.length} items)</option>
-                      {ownerIds
-                        .sort((a, b) => (ownerLabel(a) || "").localeCompare(ownerLabel(b) || "", "en"))
-                        .map((id) => (
-                          <option key={id} value={id}>
-                            {ownerLabel(id)} ({all.filter((i) => i.ownerId === id).length})
-                          </option>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                {/* ─── دو ستون اصلی: انتخاب کاربر در راست + اقلام در چپ ─── */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1rem", alignItems: "start" }}>
+                  {/* ستون راست: انتخاب کاربر (User Selector) */}
+                  <div className="sa-card" style={{ padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem", maxHeight: "680px" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>
+                        ۱. انتخاب کاربر ({userList.length})
+                      </span>
+                      <span className="sa-tag sa-tag-blue" style={{ fontSize: "0.75rem" }}>
+                        {all.length} مورد در سطل
+                      </span>
+                    </div>
+
+                    {/* جستجوی سریع کاربر */}
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type="text"
+                        placeholder="جستجوی نام یا ایمیل کاربر..."
+                        value={trashUserSearch}
+                        onChange={(e) => setTrashUserSearch(e.target.value)}
+                        className="sa-input"
+                        style={{ width: "100%", paddingRight: "2rem", fontSize: "0.8rem" }}
+                      />
+                      <Search size={14} style={{ position: "absolute", right: "0.6rem", top: "50%", transform: "translateY(-50%)", opacity: 0.5 }} />
+                    </div>
+
+                    {/* لیست اسکرول‌شونده کاربران */}
+                    <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.4rem", flex: 1, paddingRight: "2px" }}>
+                      {/* گزینه مشاهده همه کاربران */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTrashUserFilter("all");
+                          setTrashSelectedKeys([]);
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "0.65rem 0.85rem",
+                          borderRadius: "8px",
+                          border: trashUserFilter === "all" ? "2px solid #59BBAF" : "1px solid var(--sa-border)",
+                          background: trashUserFilter === "all" ? "rgba(89, 187, 175, 0.12)" : "transparent",
+                          color: "inherit",
+                          cursor: "pointer",
+                          textAlign: "right",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <Users size={16} style={{ color: "#59BBAF" }} />
+                          <span style={{ fontWeight: 700, fontSize: "0.85rem" }}>همه کاربران سامانه</span>
+                        </div>
+                        <span className="sa-tag sa-tag-gray" style={{ fontSize: "0.75rem" }}>
+                          {all.length}
+                        </span>
+                      </button>
+
+                      {filteredUserList.map((u) => {
+                        const isSelected = trashUserFilter === u.id;
+                        return (
+                          <button
+                            key={u.id}
+                            type="button"
+                            onClick={() => {
+                              setTrashUserFilter(u.id);
+                              setTrashSelectedKeys([]);
+                            }}
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "0.35rem",
+                              padding: "0.65rem 0.85rem",
+                              borderRadius: "8px",
+                              border: isSelected ? "2px solid #59BBAF" : "1px solid var(--sa-border)",
+                              background: isSelected ? "rgba(89, 187, 175, 0.1)" : "transparent",
+                              color: "inherit",
+                              cursor: "pointer",
+                              textAlign: "right",
+                              transition: "all 0.15s",
+                            }}
+                          >
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", minWidth: 0 }}>
+                                <div
+                                  style={{
+                                    width: "24px",
+                                    height: "24px",
+                                    borderRadius: "50%",
+                                    background: u.isDeactivated ? "rgba(224, 25, 91, 0.2)" : "rgba(89, 187, 175, 0.2)",
+                                    color: u.isDeactivated ? "#E0195B" : "#59BBAF",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontSize: "0.75rem",
+                                    fontWeight: 800,
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  {u.name ? u.name.charAt(0) : "👤"}
+                                </div>
+                                <span style={{ fontWeight: 700, fontSize: "0.85rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {u.name}
+                                </span>
+                              </div>
+                              {u.isDeactivated && (
+                                <span className="sa-tag sa-tag-purple" style={{ fontSize: "0.65rem", padding: "0.15rem 0.4rem", flexShrink: 0 }}>
+                                  کاربر حذف‌شده
+                                </span>
+                              )}
+                            </div>
+
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.75rem", opacity: 0.8 }}>
+                              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "160px" }} dir="ltr">
+                                {u.email}
+                              </span>
+                              <div style={{ display: "flex", gap: "0.3rem" }}>
+                                {u.formsCount > 0 && <span>{u.formsCount} فرم</span>}
+                                {u.responsesCount > 0 && <span>{u.responsesCount} ورودی</span>}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* ستون چپ: اقلام حذفی کاربر انتخابی و عملیات گروهی */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", gridColumn: "span 2" }}>
+                    {/* هدر مشخصات کاربر انتخابی */}
+                    <div className="sa-card" style={{ padding: "1rem" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem" }}>
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <span style={{ fontSize: "1rem", fontWeight: 800 }}>
+                              {trashUserFilter === "all" ? "تمام اقلام سطل زباله (همه کاربران)" : `اقلام کاربر: ${selectedUserObj?.name || trashUserFilter}`}
+                            </span>
+                            {selectedUserObj?.isDeactivated && (
+                              <span className="sa-tag sa-tag-purple" style={{ fontSize: "0.75rem" }}>
+                                حساب کاربری غیرفعال/حذف‌شده
+                              </span>
+                            )}
+                          </div>
+                          {selectedUserObj?.email && (
+                            <div style={{ fontSize: "0.8rem", opacity: 0.7, marginTop: "0.2rem" }} dir="ltr">
+                              {selectedUserObj.email}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* برچسب شمارنده اقلام منقضی‌شده */}
+                        {expiredCount > 0 && (
+                          <div className="sa-tag sa-tag-purple" style={{ fontSize: "0.78rem" }}>
+                            ⚠️ {expiredCount} مورد با قدمت بیش از ۳۰ روز (آماده پاک‌سازی)
+                          </div>
+                        )}
+                      </div>
+
+                      {/* هشدار در صورت حذف بودن خود کاربر */}
+                      {selectedUserObj?.isDeactivated && (
+                        <div
+                          style={{
+                            marginTop: "0.75rem",
+                            padding: "0.75rem",
+                            borderRadius: "8px",
+                            background: "rgba(224, 25, 91, 0.08)",
+                            border: "1px solid rgba(224, 25, 91, 0.25)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            flexWrap: "wrap",
+                            gap: "0.5rem",
+                          }}
+                        >
+                          <div style={{ fontSize: "0.82rem", color: "#E0195B" }}>
+                            <strong>توجه:</strong> حساب کاربری این فرد در سامانه غیرفعال/حذف شده است. تا ۳۰ روز امکان بازگردانی وجود دارد.
+                          </div>
+                          <div style={{ display: "flex", gap: "0.5rem" }}>
+                            <button
+                              type="button"
+                              className="sa-btn sa-btn-primary sa-btn-sm"
+                              onClick={() => restoreUser(selectedUserObj.id)}
+                              disabled={trashActionBusy}
+                            >
+                              ↩️ بازیابی حساب کاربر
+                            </button>
+                            <button
+                              type="button"
+                              className="sa-btn sa-btn-ghost sa-btn-sm"
+                              style={{ color: "#E0195B" }}
+                              onClick={() => permanentDeleteItem({ kind: "user", rawId: selectedUserObj.id, key: "u-" + selectedUserObj.id })}
+                              disabled={trashActionBusy}
+                            >
+                              🗑️ حذف قطعی کاربر
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* زیرتب‌های فیلتر موجودیت: همه | فرم‌ها | ورودی‌ها | کاربر */}
+                      <div style={{ display: "flex", gap: "0.35rem", marginTop: "0.85rem", flexWrap: "wrap" }}>
+                        {[
+                          { id: "all", label: `همه موارد (${userScopedItems.length})` },
+                          { id: "form", label: `فرم‌ها (${userScopedItems.filter((x) => x.kind === "form").length})` },
+                          { id: "response", label: `ورودی‌ها (${userScopedItems.filter((x) => x.kind === "response").length})` },
+                          { id: "user", label: `کاربران (${userScopedItems.filter((x) => x.kind === "user").length})` },
+                        ].map((st) => (
+                          <button
+                            key={st.id}
+                            type="button"
+                            onClick={() => {
+                              setTrashTypeFilter(st.id);
+                              setTrashSelectedKeys([]);
+                            }}
+                            className={`sa-perm ${trashTypeFilter === st.id ? "active" : "inactive"}`}
+                            style={{ fontSize: "0.78rem", padding: "0.35rem 0.75rem", borderRadius: "6px" }}
+                          >
+                            {st.label}
+                          </button>
                         ))}
-                    </select>
+                      </div>
+                    </div>
+
+                    {/* نوار عملیات گروهی (Batch Toolbar) */}
+                    <div
+                      className="sa-card"
+                      style={{
+                        padding: "0.6rem 1rem",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        flexWrap: "wrap",
+                        gap: "0.75rem",
+                        background: selectedItems.length > 0 ? "rgba(89, 187, 175, 0.08)" : "var(--sa-surface-3)",
+                        border: selectedItems.length > 0 ? "1px solid #59BBAF" : "1px solid var(--sa-border)",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer", fontSize: "0.82rem", fontWeight: 700 }}>
+                          <input
+                            type="checkbox"
+                            checked={isAllSelected}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setTrashSelectedKeys(visibleItems.map((i) => i.key));
+                              } else {
+                                setTrashSelectedKeys([]);
+                              }
+                            }}
+                            style={{ width: 16, height: 16, accentColor: "#59BBAF" }}
+                          />
+                          <span>انتخاب همه ({visibleItems.length})</span>
+                        </label>
+
+                        {selectedItems.length > 0 && (
+                          <span className="sa-tag sa-tag-blue" style={{ fontSize: "0.78rem" }}>
+                            {selectedItems.length} مورد انتخاب شده
+                          </span>
+                        )}
+                      </div>
+
+                      {/* دکمه‌های عملیات گروهی */}
+                      {selectedItems.length > 0 ? (
+                        <div style={{ display: "flex", gap: "0.5rem" }}>
+                          <button
+                            type="button"
+                            className="sa-btn sa-btn-primary sa-btn-sm"
+                            onClick={() => batchRestore(selectedItems)}
+                            disabled={trashActionBusy}
+                            style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
+                          >
+                            ↩️ بازیابی موارد انتخابی ({selectedItems.length})
+                          </button>
+                          <button
+                            type="button"
+                            className="sa-btn sa-btn-sm"
+                            style={{
+                              background: "#E0195B",
+                              color: "#fff",
+                              border: "none",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "0.3rem",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => setTrashConfirmDeleteModal({ items: selectedItems, isBatch: true })}
+                            disabled={trashActionBusy}
+                          >
+                            <Trash2 size={13} />
+                            حذف دائمی موارد انتخابی ({selectedItems.length})
+                          </button>
+                          <button
+                            type="button"
+                            className="sa-btn sa-btn-ghost sa-btn-sm"
+                            onClick={() => setTrashSelectedKeys([])}
+                          >
+                            انصراف
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: "0.78rem", opacity: 0.7 }}>
+                          برای حذف یا بازیابی گروهی، چک‌باکس اقلام را تیک بزنید.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* لیست اقلام حذفی */}
+                    {trashLoading && <div className="sa-card">در حال بارگذاری سطل زباله…</div>}
+
+                    {!trashLoading && visibleItems.length === 0 && (
+                      <div className="sa-card" style={{ textAlign: "center", padding: "2.5rem 1rem", opacity: 0.75 }}>
+                        <Trash2 size={32} style={{ margin: "0 auto 0.5rem auto", opacity: 0.5 }} />
+                        <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>هیچ موردی در این بخش یافت نشد 🧹</div>
+                        <div style={{ fontSize: "0.8rem", marginTop: "0.25rem" }}>
+                          سطل زباله برای این کاربر یا فیلتر انتخابی خالی است.
+                        </div>
+                      </div>
+                    )}
+
+                    {!trashLoading &&
+                      visibleItems.map((i) => {
+                        const dl = daysLeft(i.expires);
+                        const isChecked = trashSelectedKeys.includes(i.key);
+
+                        return (
+                          <div
+                            key={i.key}
+                            className="sa-card"
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "0.75rem",
+                              padding: "0.85rem 1rem",
+                              flexWrap: "wrap",
+                              borderRight: isChecked ? "4px solid #59BBAF" : "1px solid var(--sa-border)",
+                              transition: "all 0.15s",
+                            }}
+                          >
+                            {/* چک‌باکس انتخاب سطر */}
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setTrashSelectedKeys((prev) => [...prev, i.key]);
+                                } else {
+                                  setTrashSelectedKeys((prev) => prev.filter((k) => k !== i.key));
+                                }
+                              }}
+                              style={{ width: 16, height: 16, accentColor: "#59BBAF", cursor: "pointer" }}
+                            />
+
+                            {/* نشانگر نوع موجودیت */}
+                            <span
+                              className={`sa-badge ${
+                                i.kind === "form" ? "sa-tag-teal" : i.kind === "response" ? "sa-tag-blue" : "sa-tag-purple"
+                              }`}
+                              style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                            >
+                              {i.kind === "form" && <FileText size={12} />}
+                              {i.kind === "response" && <MessageSquare size={12} />}
+                              {i.kind === "user" && <UserIcon size={12} />}
+                              {i.kindFa}
+                            </span>
+
+                            {/* عنوان و جزئیات موجودیت */}
+                            <div style={{ flex: 1, minWidth: 220 }}>
+                              <div style={{ fontWeight: 700, fontSize: "0.92rem" }}>{i.label}</div>
+                              <div style={{ fontSize: "0.76rem", opacity: 0.75, marginTop: "0.2rem" }}>
+                                مالک: {nameOf(i.ownerId) || "—"} · حذف توسط:{" "}
+                                {whoDeleted(i) === "خود کاربر" ? (
+                                  <b style={{ color: "#59BBAF" }}>خود کاربر</b>
+                                ) : (
+                                  whoDeleted(i)
+                                )}{" "}
+                                · {godDateTime(i.at)}
+                              </div>
+                            </div>
+
+                            {/* تایمر شمارش معکوس ۳۰ روزه تا انقضا */}
+                            <span
+                              style={{
+                                fontSize: "0.76rem",
+                                fontWeight: 700,
+                                color: dl === null ? "#64748b" : dl <= 0 ? "#dc2626" : dl <= 5 ? "#d97706" : "#059669",
+                                flexShrink: 0,
+                                background: dl <= 0 ? "rgba(220,38,38,0.1)" : dl <= 5 ? "rgba(217,119,6,0.1)" : "rgba(5,150,105,0.1)",
+                                padding: "0.2rem 0.5rem",
+                                borderRadius: "6px",
+                              }}
+                            >
+                              {dl === null ? "بدون انقضا" : dl <= 0 ? "⚠️ منقضی‌شده (> ۳۰ روز)" : `${dl} روز مانده تا پاک‌سازی`}
+                            </span>
+
+                            {/* دکمه‌های عملیات تکی */}
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", flexShrink: 0 }}>
+                              {/* مشاهده جزئیات Payload */}
+                              {i.payload && (
+                                <button
+                                  type="button"
+                                  className="sa-btn sa-btn-ghost sa-btn-sm"
+                                  onClick={() => setTrashPayloadModal(i)}
+                                  title="مشاهده محتوای ذخیره‌شده قبل از بازیابی یا حذف"
+                                >
+                                  <Eye size={13} />
+                                </button>
+                              )}
+
+                              {/* بازیابی */}
+                              <button
+                                type="button"
+                                className="sa-btn sa-btn-primary sa-btn-sm"
+                                onClick={() => {
+                                  if (i.kind === "form" && i.isSoftDelete) restoreForm(i.rawId);
+                                  else if (i.kind === "user") restoreUser(i.rawId);
+                                  else restoreTrashItem(i);
+                                }}
+                                disabled={trashActionBusy}
+                              >
+                                ↩️ بازیابی
+                              </button>
+
+                              {/* حذف قطعی */}
+                              <button
+                                type="button"
+                                className="sa-btn sa-btn-ghost sa-btn-sm"
+                                style={{ color: "var(--sa-danger)" }}
+                                onClick={() => setTrashConfirmDeleteModal({ items: [i], isBatch: false })}
+                                disabled={trashActionBusy}
+                                title="حذف قطعی و نهایی از کل پایگاه‌داده"
+                              >
+                                <Trash2 size={13} />
+                                حذف
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
                   </div>
                 </div>
 
-                {trashLoading && <div className="sa-card">Loading trash…</div>}
+                {/* مودال مشاهده جزئیات Payload */}
+                <Modal
+                  open={Boolean(trashPayloadModal)}
+                  onClose={() => setTrashPayloadModal(null)}
+                  title={`جزئیات محتوای سطل زباله (${trashPayloadModal?.kindFa || "مورد"})`}
+                >
+                  {trashPayloadModal && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxHeight: "480px", overflowY: "auto" }}>
+                      <div className="sa-modal-box">
+                        <div style={{ fontWeight: 700, fontSize: "0.9rem" }}>{trashPayloadModal.label}</div>
+                        <div style={{ fontSize: "0.78rem", opacity: 0.75, marginTop: "0.2rem" }}>
+                          شناسه: {trashPayloadModal.rawId} · تاریخ حذف: {godDateTime(trashPayloadModal.at)}
+                        </div>
+                      </div>
 
-                {!trashLoading && visible.length === 0 && (
-                  <div className="sa-card" style={{ textAlign: "center", opacity: 0.7 }}>
-                    Recycle bin is empty 🧹
-                  </div>
-                )}
-
-                {!trashLoading &&
-                  visible.map((i) => {
-                    const dl = daysLeft(i.expires);
-                    return (
-                      <div key={i.key} className="sa-card" style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
-                        <span className="sa-badge" style={{ flexShrink: 0 }}>{i.kindFa}</span>
-                        <div style={{ flex: 1, minWidth: 220 }}>
-                          <div style={{ fontWeight: 700, fontSize: "0.92rem" }}>{i.label}</div>
-                          <div style={{ fontSize: "0.78rem", opacity: 0.75 }}>
-                            Owner: {i.ownerId ? ownerLabel(i.ownerId) : "—"} · Deleted by:{" "}
-                            {whoDeleted(i) === "Self" ? (
-                              <b style={{ color: "#d97706" }}>Self</b>
-                            ) : (
-                              whoDeleted(i)
-                            )}{" "}
-                            · {godDateTime(i.at)}
+                      {/* نمایش پاسخ‌ها اگر ورودی باشد */}
+                      {trashPayloadModal.kind === "response" && trashPayloadModal.payload?.answers && (
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: "0.85rem", marginBottom: "0.4rem" }}>
+                            پاسخ‌های ثبت‌شده کاربر ({trashPayloadModal.payload.answers.length} پاسخ):
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                            {trashPayloadModal.payload.answers.map((a, idx) => (
+                              <div key={idx} className="sa-card" style={{ padding: "0.5rem 0.75rem", fontSize: "0.8rem" }}>
+                                <div style={{ opacity: 0.6, fontSize: "0.72rem" }}>سوال ID: {a.question_id}</div>
+                                <div style={{ fontWeight: 600, marginTop: "0.15rem" }}>
+                                  مقدار: {typeof a.value === "object" ? JSON.stringify(a.value) : String(a.value ?? "—")}
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                        <span style={{ fontSize: "0.78rem", fontWeight: 700, color: dl === null ? "#64748b" : dl <= 5 ? "#dc2626" : "#059669", flexShrink: 0 }}>
-                          {dl === null ? "No expiry" : dl + " days left"}
-                        </span>
-                        <button type="button" className="sa-btn sa-btn-ghost" onClick={i.restore} style={{ flexShrink: 0 }}>
-                          ↩️ Restore
+                      )}
+
+                      {/* نمایش سوالات اگر فرم باشد */}
+                      {trashPayloadModal.kind === "form" && trashPayloadModal.payload?.questions && (
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: "0.85rem", marginBottom: "0.4rem" }}>
+                            سوالات فرم ({trashPayloadModal.payload.questions.length} سوال):
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                            {trashPayloadModal.payload.questions.map((q, idx) => (
+                              <div key={idx} className="sa-card" style={{ padding: "0.5rem 0.75rem", fontSize: "0.8rem" }}>
+                                <div style={{ fontWeight: 700 }}>{idx + 1}. {q.title || "بدون عنوان"} ({q.type})</div>
+                                {q.description && <div style={{ opacity: 0.7, fontSize: "0.75rem" }}>{q.description}</div>}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* کد خام JSON */}
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: "0.85rem", marginBottom: "0.3rem" }}>داده‌های خام JSON (God Inspection):</div>
+                        <pre
+                          style={{
+                            background: "var(--sa-surface-4)",
+                            padding: "0.75rem",
+                            borderRadius: "6px",
+                            fontSize: "0.75rem",
+                            direction: "ltr",
+                            overflowX: "auto",
+                            maxHeight: "220px",
+                          }}
+                        >
+                          {JSON.stringify(trashPayloadModal.payload, null, 2)}
+                        </pre>
+                      </div>
+
+                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.5rem" }}>
+                        <button
+                          type="button"
+                          className="sa-btn sa-btn-primary"
+                          onClick={() => {
+                            if (trashPayloadModal.kind === "form" && trashPayloadModal.isSoftDelete) restoreForm(trashPayloadModal.rawId);
+                            else if (trashPayloadModal.kind === "user") restoreUser(trashPayloadModal.rawId);
+                            else restoreTrashItem(trashPayloadModal);
+                            setTrashPayloadModal(null);
+                          }}
+                        >
+                          ↩️ بازیابی این مورد
+                        </button>
+                        <button type="button" className="sa-btn sa-btn-secondary" onClick={() => setTrashPayloadModal(null)}>
+                          بستن
                         </button>
                       </div>
-                    );
-                  })}
-              </>
+                    </div>
+                  )}
+                </Modal>
+
+                {/* مودال تایید حذف قطعی (تکی یا گروهی) */}
+                <Modal
+                  open={Boolean(trashConfirmDeleteModal)}
+                  onClose={() => setTrashConfirmDeleteModal(null)}
+                  title="تأیید حذف قطعی و غیرقابل بازگشت"
+                >
+                  {trashConfirmDeleteModal && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                      <p style={{ fontSize: "0.88rem", lineHeight: 1.7, margin: 0 }}>
+                        آیا از حذف دائمی{" "}
+                        <strong style={{ color: "var(--sa-danger)" }}>
+                          {trashConfirmDeleteModal.isBatch
+                            ? `${trashConfirmDeleteModal.items.length} مورد انتخابی`
+                            : `«${trashConfirmDeleteModal.items[0]?.label}»`}
+                        </strong>{" "}
+                        اطمینان کامل دارید؟
+                      </p>
+                      <div
+                        style={{
+                          padding: "0.75rem",
+                          borderRadius: "8px",
+                          background: "rgba(220, 38, 38, 0.08)",
+                          border: "1px solid rgba(220, 38, 38, 0.25)",
+                          color: "var(--sa-danger)",
+                          fontSize: "0.8rem",
+                          lineHeight: 1.6,
+                        }}
+                      >
+                        ⚠️ <strong>هشدار مهم:</strong> این عملیات داده‌ها را برای همیشه از سرور و پایگاه‌داده پرس‌کاد پاک خواهد کرد و فضای حافظه/استوریج آزاد خواهد شد. این کار به هیچ عنوان قابل بازگردانی نخواهد بود.
+                      </div>
+
+                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
+                        <button
+                          type="button"
+                          className="sa-btn sa-btn-secondary"
+                          onClick={() => setTrashConfirmDeleteModal(null)}
+                          disabled={trashActionBusy}
+                        >
+                          انصراف
+                        </button>
+                        <button
+                          type="button"
+                          className="sa-btn"
+                          style={{
+                            background: "linear-gradient(135deg, #E0195B 0%, #C60036 100%)",
+                            color: "#fff",
+                            border: "none",
+                            fontWeight: 700,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "0.35rem",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => {
+                            if (trashConfirmDeleteModal.isBatch) {
+                              batchPermanentDelete(trashConfirmDeleteModal.items);
+                            } else {
+                              permanentDeleteItem(trashConfirmDeleteModal.items[0]);
+                            }
+                          }}
+                          disabled={trashActionBusy}
+                        >
+                          <Trash2 size={14} />
+                          {trashActionBusy ? "در حال حذف قطعی..." : "بله، برای همیشه حذف شود"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </Modal>
+              </div>
             );
           })()}
         </div>
