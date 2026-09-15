@@ -825,20 +825,22 @@ export default function SmsPanel() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex gap-1.5 bg-white dark:bg-slate-800 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md p-1.5 overflow-x-auto scrollbar-none shadow-xs">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-pill-sm text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
-              tab === t.id
-                ? "bg-teal text-white shadow-sm"
-                : "text-ink-subtle dark:text-slate-400 hover:text-navy dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
-            }`}
-          >
-            <t.icon size={15} /> {t.label}
-          </button>
-        ))}
+      <div className="w-full min-w-0 max-w-full overflow-hidden">
+        <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800/90 border-2 border-ink/10 dark:border-slate-700/80 rounded-pill-md p-1.5 overflow-x-auto scroll-smooth touch-pan-x overscroll-x-contain shadow-xs">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`shrink-0 flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-pill-sm text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer select-none ${
+                tab === t.id
+                  ? "bg-teal text-white shadow-sm"
+                  : "text-ink-subtle dark:text-slate-400 hover:text-navy dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/60"
+              }`}
+            >
+              <t.icon size={15} className="shrink-0" /> {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ══════════════════════════════════════════════════════════════ */}

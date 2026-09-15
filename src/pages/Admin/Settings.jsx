@@ -169,21 +169,23 @@ export default function Settings() {
       </div>
 
       {/* تب‌ها */}
-      <div className="flex gap-1 bg-white dark:bg-slate-900 border-2 border-ink/10 dark:border-slate-800 rounded-pill-md p-1 overflow-x-auto scrollbar-none max-w-full w-fit">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-pill-sm text-sm font-bold transition-all whitespace-nowrap ${
-              tab === t.id
-                ? "bg-teal text-white shadow-[2px_2px_0_0_rgba(0,0,0,0.15)]"
-                : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-slate-200 hover:bg-bg-lavender dark:hover:bg-slate-800"
-            }`}
-          >
-            <t.icon size={14} />
-            {t.label}
-          </button>
-        ))}
+      <div className="w-full min-w-0 max-w-full overflow-hidden">
+        <div className="flex items-center gap-1 bg-white dark:bg-slate-900 border-2 border-ink/10 dark:border-slate-800 rounded-pill-md p-1 overflow-x-auto scroll-smooth touch-pan-x overscroll-x-contain max-w-full w-fit">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-pill-sm text-sm font-bold transition-all whitespace-nowrap cursor-pointer select-none ${
+                tab === t.id
+                  ? "bg-teal text-white shadow-[2px_2px_0_0_rgba(0,0,0,0.15)]"
+                  : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-slate-200 hover:bg-bg-lavender dark:hover:bg-slate-800"
+              }`}
+            >
+              <t.icon size={14} className="shrink-0" />
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {tab === "general" && (
