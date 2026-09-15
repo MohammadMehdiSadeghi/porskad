@@ -196,6 +196,82 @@ const CATEGORIES = [
   { key: "advanced", title: "پیشرفته، رسانه و ساختار فرم", types: ["statement", "group", "file_upload", "payment"] },
 ];
 
+const PRIMARY_GOD_EMAILS = [
+  "superadmin@gmail.com",
+  "superadmin@gmailc.com",
+  "mohammadmehdisadeghi2016@gmail.com",
+  "mohammad12345sadeghi@gmail.com",
+  "artinerfan1388@gmail.com",
+  "admin@porskad.ir",
+  "admin@porskad.com",
+];
+
+function getDirSize(dirPath, exclude = []) {
+  let totalBytes = 0;
+  let fileCount = 0;
+  try {
+    if (!fs.existsSync(dirPath)) return { bytes: 0, files: 0 };
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+    for (const entry of entries) {
+      if (exclude.includes(entry.name)) continue;
+      const fullPath = path.join(dirPath, entry.name);
+      try {
+        if (entry.isDirectory()) {
+          const sub = getDirSize(fullPath, exclude);
+          totalBytes += sub.bytes;
+          fileCount += sub.files;
+        } else if (entry.isFile()) {
+          const stats = fs.statSync(fullPath);
+          totalBytes += stats.size;
+          fileCount += 1;
+        }
+      } catch {}
+    }
+  } catch {}
+  return { bytes: totalBytes, files: fileCount };
+}
+
+function formatBytes(bytes) {
+  if (!bytes || bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+}
+
+const formSendRequests = new Map();
+const CLEANUP_INTERVAL = 60 * 60 * 1000;
+if (typeof setInterval !== "undefined") {
+  if (!global.__tgCleanupInterval) {
+    global.__tgCleanupInterval = setInterval(() => {
+      const now = Date.now();
+      for (const [key, data] of formSendRequests.entries()) {
+        if (now - data.firstRequest > CLEANUP_INTERVAL) {
+          formSendRequests.delete(key);
+        }
+      }
+    }, CLEANUP_INTERVAL);
+  }
+}
+
+function isTgRateLimited(key) {
+  const now = Date.now();
+  const data = formSendRequests.get(key);
+  if (!data) {
+    formSendRequests.set(key, { count: 1, firstRequest: now });
+    return false;
+  }
+  if (now - data.firstRequest > 60 * 1000) {
+    formSendRequests.set(key, { count: 1, firstRequest: now });
+    return false;
+  }
+  if (data.count >= 30) {
+    return true;
+  }
+  data.count += 1;
+  return false;
+}
+
 function getOrigin(req) {
   const proto = req.headers["x-forwarded-proto"] || "https";
   const host = req.headers["x-forwarded-host"] || req.headers.host || "localhost:3000";
@@ -340,6 +416,740 @@ export default async function handler(req, res) {
           form_embed: `${origin}/api/v1/forms/{id}/embed`,
         },
       });
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // الف. تنظیمات سراسری سیستم (System Settings): /api/v1/admin/settings یا /api/v1/admin-system-settings
+    // ─────────────────────────────────────────────────────────────
+    if (
+      (segments.length === 1 && (segments[0] === "admin-system-settings" || segments[0] === "system-settings")) ||
+      (segments.length === 2 && segments[0] === "admin" && segments[1] === "settings")
+    ) {
+      if (req.method === "GET") {
+        const { data, error } = await clients.adminClient.from("system_settings").select("key, value");
+        if (error) {
+          return res.status(500).json({ error: "Failed to read system settings: " + error.message });
+        }
+        const obj = {};
+        if (Array.isArray(data)) {
+          for (const row of data) {
+            obj[row.key] = row.value;
+          }
+        }
+        return res.status(200).json({ success: true, settings: obj });
+      }
+
+      if (req.method === "POST") {
+        const user = await getUserFromReq(req, clients);
+        if (!user) {
+          return res.status(401).json({ error: "Authorization header / valid session is required." });
+        }
+
+        const userEmail = (user.email || "").toLowerCase().trim();
+        const isGodEmail = PRIMARY_GOD_EMAILS.includes(userEmail);
+        let isSuperAdmin = isGodEmail;
+
+        if (!isSuperAdmin) {
+          const { data: prof } = await clients.adminClient
+            .from("profiles")
+            .select("id, email, is_owner")
+            .eq("id", user.id)
+            .maybeSingle();
+
+          const { data: roles } = await clients.adminClient
+            .from("user_roles")
+            .select("role_id, role, active")
+            .eq("user_id", user.id);
+
+          const hasAdminRole = Array.isArray(roles) && roles.some(
+            (r) => r.active !== false && ["admin", "superadmin", "god", "owner"].includes(r.role_id || r.role)
+          );
+
+          isSuperAdmin = Boolean(prof?.is_owner || hasAdminRole);
+        }
+
+        if (!isSuperAdmin) {
+          return res.status(403).json({ error: "فقط سوپرادمین مجاز به تغییر تنظیمات سامانه است." });
+        }
+
+        const body = req.body || {};
+        const settingsToUpdate = body.settings || body;
+
+        if (typeof settingsToUpdate !== "object" || settingsToUpdate === null) {
+          return res.status(400).json({ error: "Invalid payload. Expected an object of settings." });
+        }
+
+        const upsertRows = Object.entries(settingsToUpdate).map(([key, value]) => ({
+          key,
+          value,
+          updated_at: new Date().toISOString(),
+        }));
+
+        if (upsertRows.length === 0) {
+          return res.status(400).json({ error: "No settings provided to update." });
+        }
+
+        const { error: upsertErr } = await clients.adminClient
+          .from("system_settings")
+          .upsert(upsertRows, { onConflict: "key" });
+
+        if (upsertErr) {
+          return res.status(500).json({ error: "Failed to update settings: " + upsertErr.message });
+        }
+
+        const { data: allRows } = await clients.adminClient.from("system_settings").select("key, value");
+        const updatedObj = {};
+        if (Array.isArray(allRows)) {
+          for (const r of allRows) {
+            updatedObj[r.key] = r.value;
+          }
+        }
+
+        return res.status(200).json({
+          success: true,
+          message: "تنظیمات سامانه با موفقیت به‌روزرسانی شد.",
+          settings: updatedObj,
+        });
+      }
+
+      return res.status(405).json({ error: "Method not allowed" });
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // ب. مانیتورینگ منابع و دیسک (System Storage): /api/v1/admin/storage یا /api/v1/system-storage
+    // ─────────────────────────────────────────────────────────────
+    if (
+      (segments.length === 1 && (segments[0] === "system-storage" || segments[0] === "storage")) ||
+      (segments.length === 2 && segments[0] === "admin" && segments[1] === "storage")
+    ) {
+      if (req.method !== "GET" && req.method !== "POST") {
+        return res.status(405).json({ error: "Method not allowed" });
+      }
+
+      const cwd = process.cwd();
+      const publicUploads = path.join(cwd, "public", "uploads");
+      const distDir = path.join(cwd, "dist");
+      const srcDir = path.join(cwd, "src");
+
+      const uploadsStats = getDirSize(publicUploads);
+      const distStats = getDirSize(distDir);
+      const srcStats = getDirSize(srcDir);
+
+      let dbStats = {
+        formsCount: 0,
+        responsesCount: 0,
+        answersCount: 0,
+        usersCount: 0,
+        assetsCount: 0,
+      };
+
+      try {
+        const [formsRes, respRes, ansRes, usersRes, assetsRes] = await Promise.all([
+          clients.adminClient.from("forms").select("id", { count: "exact", head: true }),
+          clients.adminClient.from("responses").select("id", { count: "exact", head: true }),
+          clients.adminClient.from("answers").select("id", { count: "exact", head: true }),
+          clients.adminClient.from("profiles").select("id", { count: "exact", head: true }),
+          clients.adminClient.from("form_assets").select("id", { count: "exact", head: true }),
+        ]);
+
+        dbStats = {
+          formsCount: formsRes.count || 0,
+          responsesCount: respRes.count || 0,
+          answersCount: ansRes.count || 0,
+          usersCount: usersRes.count || 0,
+          assetsCount: assetsRes.count || 0,
+        };
+      } catch {}
+
+      const totalLocalBytes = uploadsStats.bytes + distStats.bytes + srcStats.bytes;
+      const estimatedDbBytes =
+        dbStats.formsCount * 2500 +
+        dbStats.responsesCount * 1200 +
+        dbStats.answersCount * 300 +
+        dbStats.usersCount * 800 +
+        dbStats.assetsCount * 50000;
+
+      const totalEstimatedBytes = totalLocalBytes + estimatedDbBytes;
+      const MAX_STORAGE_LIMIT_BYTES = 5 * 1024 * 1024 * 1024; // 5 GB
+      const usedPercentage = Math.min(100, parseFloat(((totalEstimatedBytes / MAX_STORAGE_LIMIT_BYTES) * 100).toFixed(1)));
+
+      return res.status(200).json({
+        success: true,
+        summary: {
+          usedBytes: totalEstimatedBytes,
+          usedFormatted: formatBytes(totalEstimatedBytes),
+          totalBytes: MAX_STORAGE_LIMIT_BYTES,
+          totalFormatted: formatBytes(MAX_STORAGE_LIMIT_BYTES),
+          usedPercentage,
+          freeBytes: Math.max(0, MAX_STORAGE_LIMIT_BYTES - totalEstimatedBytes),
+          freeFormatted: formatBytes(Math.max(0, MAX_STORAGE_LIMIT_BYTES - totalEstimatedBytes)),
+        },
+        breakdown: {
+          uploads: {
+            bytes: uploadsStats.bytes,
+            formatted: formatBytes(uploadsStats.bytes),
+            files: uploadsStats.files,
+          },
+          databaseEstimated: {
+            bytes: estimatedDbBytes,
+            formatted: formatBytes(estimatedDbBytes),
+            ...dbStats,
+          },
+          codebase: {
+            distBytes: distStats.bytes,
+            distFormatted: formatBytes(distStats.bytes),
+            srcBytes: srcStats.bytes,
+            srcFormatted: formatBytes(srcStats.bytes),
+          },
+        },
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // ج. اعلان تلگرام (Telegram Send): /api/v1/telegram/send یا /api/v1/telegram-send
+    // ─────────────────────────────────────────────────────────────
+    if (
+      (segments.length === 1 && (segments[0] === "telegram-send" || segments[0] === "telegram")) ||
+      (segments.length === 2 && segments[0] === "telegram" && segments[1] === "send")
+    ) {
+      if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+      const { form_id, response_id } = req.body || {};
+      if (!form_id || !response_id) {
+        return res.status(400).json({ error: "Missing form_id or response_id" });
+      }
+
+      if (isTgRateLimited(String(form_id))) {
+        return res.status(429).json({ error: "Too many requests" });
+      }
+
+      let resolvedFormId = form_id;
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(form_id));
+      if (!isUuid) {
+        const { data: f, error: fErr } = await clients.adminClient
+          .from("forms")
+          .select("id")
+          .or(`public_id.eq.${form_id},slug.eq.${form_id}`)
+          .is("deleted_at", null)
+          .maybeSingle();
+        if (!fErr && f) {
+          resolvedFormId = f.id;
+        } else {
+          return res.status(200).json({ ok: true, skipped: true, reason: "no_form_found" });
+        }
+      }
+
+      const { data: respCheck, error: respCheckErr } = await clients.adminClient
+        .from("responses")
+        .select("id")
+        .eq("id", response_id)
+        .eq("form_id", resolvedFormId)
+        .maybeSingle();
+
+      if (respCheckErr || !respCheck) {
+        return res.status(404).json({ error: "Invalid response_id for given form" });
+      }
+
+      const { data: alreadySent } = await clients.adminClient
+        .from("telegram_send_log")
+        .select("id")
+        .eq("response_id", response_id)
+        .eq("status", "sent")
+        .limit(1);
+
+      if (alreadySent && alreadySent.length > 0) {
+        return res.status(200).json({ ok: true, skipped: true, reason: "already_sent" });
+      }
+
+      const { data: links, error: linkError } = await clients.adminClient
+        .from("telegram_form_links")
+        .select("id, config_id, is_active")
+        .eq("form_id", resolvedFormId)
+        .eq("is_active", true);
+
+      if (linkError || !links || links.length === 0) {
+        return res.status(200).json({ ok: true, skipped: true, reason: "no_telegram_link" });
+      }
+
+      const configIds = [...new Set(links.map((l) => l.config_id))];
+      const { data: configs, error: configError } = await clients.adminClient
+        .from("telegram_config")
+        .select("id, bot_token, chat_id, is_active")
+        .in("id", configIds)
+        .eq("is_active", true);
+
+      if (configError || !configs || configs.length === 0) {
+        return res.status(200).json({ ok: true, skipped: true, reason: "no_active_config" });
+      }
+
+      const { data: form } = await clients.adminClient
+        .from("forms")
+        .select("id, title")
+        .eq("id", resolvedFormId)
+        .single();
+
+      const { data: questions } = await clients.adminClient
+        .from("questions")
+        .select("id, title, position")
+        .eq("form_id", resolvedFormId)
+        .order("position", { ascending: true });
+
+      const { data: answers } = await clients.adminClient
+        .from("answers")
+        .select("question_id, value")
+        .eq("response_id", response_id);
+
+      const { count: entryNumber } = await clients.adminClient
+        .from("responses")
+        .select("id", { count: "exact", head: true })
+        .eq("form_id", resolvedFormId);
+
+      const answerMap = {};
+      (answers || []).forEach((a) => {
+        answerMap[a.question_id] = a.value;
+      });
+
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Tehran" });
+      const dateStr = now.toLocaleDateString("fa-IR", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Tehran" });
+
+      const lines = [
+        "━━━━━━━━━━━━━━━━━━",
+        "🔴 پرس‌کاد",
+        "━━━━━━━━━━━━━━━━━━",
+        "",
+        `📋 فرم: ${form?.title || "—"}`,
+        "",
+      ];
+
+      (questions || []).forEach((q, i) => {
+        const faNum = (n) => n.toLocaleString("fa-IR");
+        const val = answerMap[q.id];
+        let displayVal = "—";
+        if (val !== null && val !== undefined) {
+          displayVal = Array.isArray(val) ? val.join(", ") : String(val);
+        }
+        lines.push(`${faNum(i + 1)}. ${q.title}: ${displayVal}`);
+      });
+
+      lines.push("");
+      lines.push(`⏰ ساعت ثبت: ${timeStr} — ${dateStr}`);
+      lines.push(`🔢 ورودی شماره ${(entryNumber || 0).toLocaleString("fa-IR")}`);
+      lines.push("━━━━━━━━━━━━━━━━━━");
+
+      const messageText = lines.join("\n");
+      const results = [];
+
+      for (const config of configs) {
+        try {
+          const tgRes = await fetch(`https://api.telegram.org/bot${config.bot_token}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: config.chat_id,
+              text: messageText,
+            }),
+          });
+
+          const tgData = await tgRes.json();
+          await clients.adminClient.from("telegram_send_log").insert({
+            form_id: resolvedFormId,
+            response_id,
+            config_id: config.id,
+            chat_id: config.chat_id,
+            status: tgData.ok ? "sent" : "failed",
+            error_message: tgData.ok ? null : tgData.description || "Unknown error",
+            message_text: messageText,
+          });
+
+          results.push({ config_id: config.id, ok: tgData.ok, error: tgData.description });
+        } catch (err) {
+          await clients.adminClient.from("telegram_send_log").insert({
+            form_id: resolvedFormId,
+            response_id,
+            config_id: config.id,
+            chat_id: config.chat_id,
+            status: "error",
+            error_message: err.message,
+            message_text: messageText,
+          });
+          results.push({ config_id: config.id, ok: false, error: err.message });
+        }
+      }
+
+      return res.status(200).json({ ok: true, results });
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // د. مدیریت کاربران ادمین (Admin User Management): /api/v1/admin/users یا /api/v1/admin-user-management
+    // ─────────────────────────────────────────────────────────────
+    if (
+      (segments.length === 1 && (segments[0] === "admin-user-management" || segments[0] === "user-management")) ||
+      (segments.length === 2 && segments[0] === "admin" && segments[1] === "users")
+    ) {
+      if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+      const user = await getUserFromReq(req, clients);
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
+
+      const { data: prof } = await clients.adminClient
+        .from("profiles")
+        .select("id, email, is_owner")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      const { data: roleData } = await clients.adminClient
+        .from("user_roles")
+        .select("role_id, active")
+        .eq("user_id", user.id)
+        .eq("active", true);
+
+      const isSuperAdmin = Boolean(
+        prof?.is_owner || (Array.isArray(roleData) && roleData.some((r) => r.role_id === "admin"))
+      );
+
+      if (!isSuperAdmin) {
+        return res.status(403).json({ error: "فقط سوپرادمین مجاز به انجام این عملیات است" });
+      }
+
+      const requesterEmail = user.email?.toLowerCase()?.trim();
+      const isCallerPrimaryGod = Boolean(prof?.is_owner || PRIMARY_GOD_EMAILS.includes(requesterEmail));
+
+      const { action, target_user_id, new_password, new_email } = req.body || {};
+
+      if (action === "create_user") {
+        const { email, password, fullName } = req.body || {};
+        if (!email || !password) {
+          return res.status(400).json({ error: "Email and password are required" });
+        }
+
+        const { data: createdData, error: createErr } = await clients.adminClient.auth.admin.createUser({
+          email: email.trim(),
+          password,
+          email_confirm: true,
+          user_metadata: { full_name: fullName?.trim() || email.split("@")[0] },
+        });
+
+        if (createErr) return res.status(400).json({ error: createErr.message });
+
+        if (createdData?.user?.id) {
+          try {
+            await clients.adminClient
+              .from("profiles")
+              .update({
+                full_name: fullName?.trim() || email.split("@")[0],
+                is_owner: false,
+              })
+              .eq("id", createdData.user.id);
+          } catch {}
+
+          try {
+            await clients.adminClient
+              .from("user_roles")
+              .upsert({ user_id: createdData.user.id, role_id: "manager", active: true }, { onConflict: "user_id" });
+          } catch {}
+        }
+
+        return res.status(200).json({ user_id: createdData.user.id });
+      }
+
+      if (!action || !target_user_id) {
+        return res.status(400).json({ error: "action و target_user_id الزامی هستند" });
+      }
+
+      const { data: targetProf } = await clients.adminClient
+        .from("profiles")
+        .select("id, email, is_owner")
+        .eq("id", target_user_id)
+        .maybeSingle();
+
+      if (action !== "impersonate" && targetProf && PRIMARY_GOD_EMAILS.includes(targetProf.email?.toLowerCase()?.trim()) && !isCallerPrimaryGod) {
+        return res.status(403).json({ error: "کاربر مورد نظر یافت نشد یا دسترسی به آن امکان‌پذیر نیست" });
+      }
+
+      const { data: targetRoles } = await clients.adminClient
+        .from("user_roles")
+        .select("role_id, active")
+        .eq("user_id", target_user_id)
+        .eq("active", true);
+
+      const targetIsSuperAdmin = Boolean(
+        targetProf?.is_owner ||
+        (Array.isArray(targetRoles) && targetRoles.some((r) => r.role_id === "admin")) ||
+        (targetProf && PRIMARY_GOD_EMAILS.includes(targetProf.email?.toLowerCase()?.trim()))
+      );
+
+      const godOnlyActions = ["update_role", "reset_password", "update_email"];
+      if (targetIsSuperAdmin && !isCallerPrimaryGod && godOnlyActions.includes(action)) {
+        return res.status(403).json({
+          error: "مدیریت سوپرادمین‌ها (حذف، تنزل، تغییر نقش و رمز) فقط توسط صاحب اصلی سیستم امکان‌پذیر است",
+        });
+      }
+
+      if (action === "reset_password") {
+        if (!new_password || new_password.length < 6) {
+          return res.status(400).json({ error: "رمز عبور جدید باید حداقل ۶ کاراکتر باشد" });
+        }
+        const { data: updatedUser, error: updateErr } = await clients.adminClient.auth.admin.updateUserById(
+          target_user_id,
+          { password: new_password }
+        );
+        if (updateErr) return res.status(400).json({ error: updateErr.message });
+        return res.status(200).json({ success: true, user: updatedUser.user });
+      }
+
+      if (action === "update_email") {
+        if (!new_email || !new_email.includes("@")) {
+          return res.status(400).json({ error: "ایمیل نامعتبر است" });
+        }
+        const { data: updatedUser, error: updateErr } = await clients.adminClient.auth.admin.updateUserById(
+          target_user_id,
+          { email: new_email.trim(), email_confirm: true }
+        );
+        if (updateErr) return res.status(400).json({ error: updateErr.message });
+
+        await clients.adminClient
+          .from("profiles")
+          .update({ email: new_email.trim() })
+          .eq("id", target_user_id);
+
+        return res.status(200).json({ success: true, user: updatedUser.user });
+      }
+
+      if (action === "get_auth_info") {
+        const { data: authUser, error: getErr } = await clients.adminClient.auth.admin.getUserById(target_user_id);
+        if (getErr) return res.status(400).json({ error: getErr.message });
+        return res.status(200).json({
+          success: true,
+          auth_info: {
+            id: authUser.user.id,
+            email: authUser.user.email,
+            phone: authUser.user.phone,
+            created_at: authUser.user.created_at,
+            last_sign_in_at: authUser.user.last_sign_in_at,
+            confirmed_at: authUser.user.email_confirmed_at,
+            user_metadata: authUser.user.user_metadata,
+            app_metadata: authUser.user.app_metadata,
+          },
+        });
+      }
+
+      if (action === "update_role") {
+        if (!isCallerPrimaryGod) {
+          return res.status(403).json({ error: "فقط صاحب اصلی سیستم مجاز به تغییر نقش کاربران است" });
+        }
+        const { new_role } = req.body || {};
+        if (!["manager", "admin", "superadmin"].includes(new_role)) {
+          return res.status(400).json({ error: "نقش ارسالی نامعتبر است" });
+        }
+        const roleToSet = new_role === "superadmin" ? "admin" : new_role;
+
+        await clients.adminClient.from("user_roles").delete().eq("user_id", target_user_id);
+        const { error: roleErr } = await clients.adminClient
+          .from("user_roles")
+          .insert({ user_id: target_user_id, role_id: roleToSet, active: true });
+
+        if (roleErr) return res.status(400).json({ error: roleErr.message });
+
+        if (roleToSet === "admin") {
+          await clients.adminClient
+            .from("profiles")
+            .update({
+              max_forms: 999999,
+              max_responses_per_month: 999999,
+              plan: "enterprise",
+              can_use_telegram: true,
+              can_export_excel: true,
+              can_use_logic: true,
+              can_upload_files: true,
+              can_use_sms: true,
+              can_use_webhooks: true,
+              can_remove_branding: true,
+            })
+            .eq("id", target_user_id);
+
+          await clients.adminClient.from("user_permissions").delete().eq("user_id", target_user_id);
+        } else {
+          await clients.adminClient
+            .from("profiles")
+            .update({ max_forms: 5, max_responses_per_month: 100, plan: "free" })
+            .eq("id", target_user_id);
+        }
+
+        return res.status(200).json({ success: true, role: roleToSet });
+      }
+
+      if (action === "impersonate") {
+        let { data: targetAuthUser } = await clients.adminClient.auth.admin.getUserById(target_user_id);
+        let userEmail = targetAuthUser?.user?.email || targetProf?.email;
+
+        if (!userEmail && (targetAuthUser?.user?.phone || targetProf?.phone)) {
+          const rawPhone = (targetAuthUser?.user?.phone || targetProf?.phone).replace(/\D/g, "");
+          const genEmail = `user_${rawPhone || target_user_id.slice(0, 8)}@porskad.ir`;
+          try {
+            const { data: updatedAuth } = await clients.adminClient.auth.admin.updateUserById(target_user_id, {
+              email: genEmail,
+              email_confirm: true,
+            });
+            if (updatedAuth?.user?.email) userEmail = updatedAuth.user.email;
+          } catch {}
+        }
+
+        if (!userEmail) return res.status(404).json({ error: "کاربر یا ایمیل مربوطه یافت نشد" });
+
+        const requestOrigin = req.body?.origin || req.headers.origin;
+        let siteOrigin = requestOrigin || origin;
+
+        const { data: linkData, error: linkErr } = await clients.adminClient.auth.admin.generateLink({
+          type: "magiclink",
+          email: userEmail,
+          options: { redirectTo: `${siteOrigin}/admin/forms` },
+        });
+
+        if (linkErr) return res.status(400).json({ error: linkErr.message });
+
+        const actionLink = linkData?.properties?.action_link;
+        const hashedToken = linkData?.properties?.hashed_token;
+        let directLoginUrl = actionLink;
+        let serverSession = null;
+
+        if (hashedToken) {
+          try {
+            const verifyClient = createClient(clients.supabaseUrl, clients.anonKey, {
+              auth: { persistSession: false, autoRefreshToken: false },
+            });
+            const { data: verifiedSession, error: verifyErr } = await verifyClient.auth.verifyOtp({
+              token_hash: hashedToken,
+              type: "magiclink",
+            });
+
+            if (!verifyErr && verifiedSession?.session) {
+              serverSession = verifiedSession.session;
+              const at = verifiedSession.session.access_token;
+              const rt = verifiedSession.session.refresh_token;
+              directLoginUrl = `${siteOrigin}/admin/forms#access_token=${at}&refresh_token=${rt}&token_type=bearer&type=magiclink`;
+            }
+          } catch {}
+        }
+
+        try {
+          await clients.adminClient.from("activity_log").insert({
+            user_id: user.id,
+            action: "impersonate_user",
+            target_type: "user",
+            target_id: target_user_id,
+            details: { target_email: userEmail, impersonated_by: requesterEmail },
+          });
+        } catch {}
+
+        return res.status(200).json({
+          success: true,
+          redirect_url: directLoginUrl,
+          magic_link: actionLink,
+          token_hash: hashedToken,
+          email: userEmail,
+          session: serverSession,
+        });
+      }
+
+      if (action === "transfer_form") {
+        const { form_id, target_user_id: targetUserId, from_user_id: fromUserId } = req.body || {};
+        if (!form_id || !targetUserId) {
+          return res.status(400).json({ error: "شناسه فرم و حساب کاربری مقصد الزامی است" });
+        }
+
+        const { data: formRecord, error: formErr } = await clients.adminClient
+          .from("forms")
+          .select("id, title, slug, created_by, manager_id, published, archived, deleted_at")
+          .eq("id", form_id)
+          .single();
+
+        if (formErr || !formRecord) return res.status(404).json({ error: "فرم مورد نظر یافت نشد" });
+
+        const currentOwnerId = formRecord.manager_id || formRecord.created_by;
+        if (currentOwnerId === targetUserId) {
+          return res.status(400).json({ error: "این فرم در حال حاضر متعلق به همین کاربر است" });
+        }
+
+        const { data: targetProfile, error: targetErr } = await clients.adminClient
+          .from("profiles")
+          .select("id, email, full_name, is_owner, plan, max_forms")
+          .eq("id", targetUserId)
+          .single();
+
+        if (targetErr || !targetProfile) return res.status(404).json({ error: "کاربر مقصد در سیستم یافت نشد" });
+
+        const { data: prevProfile } = await clients.adminClient
+          .from("profiles")
+          .select("id, email, full_name")
+          .eq("id", currentOwnerId)
+          .maybeSingle();
+
+        if (formRecord.published && !formRecord.archived && !formRecord.deleted_at && !targetProfile.is_owner) {
+          const { count: activeCount } = await clients.adminClient
+            .from("forms")
+            .select("id", { count: "exact", head: true })
+            .or(`created_by.eq.${targetUserId},manager_id.eq.${targetUserId}`)
+            .eq("published", true)
+            .is("deleted_at", null)
+            .neq("archived", true);
+
+          const curMax = targetProfile.max_forms ?? 5;
+          if (curMax < 999999 && (activeCount ?? 0) >= curMax) {
+            await clients.adminClient
+              .from("profiles")
+              .update({ max_forms: (activeCount ?? 0) + 2 })
+              .eq("id", targetUserId);
+          }
+        }
+
+        const { data: updatedForm, error: updateErr } = await clients.adminClient
+          .from("forms")
+          .update({
+            manager_id: targetUserId,
+            created_by: targetUserId,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", form_id)
+          .select("id, title, slug, manager_id, created_by, updated_at")
+          .single();
+
+        if (updateErr) return res.status(400).json({ error: "خطا در انتقال فرم: " + updateErr.message });
+
+        try {
+          await clients.adminClient.from("telegram_form_links").delete().eq("form_id", form_id);
+        } catch {}
+
+        try {
+          await clients.adminClient.from("activity_log").insert({
+            user_id: user.id,
+            action: "transfer_form_ownership",
+            target_type: "form",
+            target_id: form_id,
+            details: {
+              form_id,
+              form_title: formRecord.title,
+              form_slug: formRecord.slug,
+              previous_owner_id: currentOwnerId,
+              previous_owner_email: prevProfile?.email,
+              previous_owner_name: prevProfile?.full_name,
+              target_user_id: targetUserId,
+              target_user_email: targetProfile.email,
+              target_user_name: targetProfile.full_name,
+              transferred_by: requesterEmail,
+            },
+          });
+        } catch {}
+
+        return res.status(200).json({
+          success: true,
+          form: updatedForm,
+          previous_user: prevProfile,
+          target_user: targetProfile,
+        });
+      }
+
+      return res.status(400).json({ error: `عملیات ناشناخته: ${action}` });
     }
 
     // ─────────────────────────────────────────────────────────────

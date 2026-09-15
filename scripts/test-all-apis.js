@@ -98,14 +98,27 @@ async function runTests() {
   }, res2);
   assert(res2.statusCode === 401, "Protected route returns 401 without Bearer token");
 
+  // پیدا کردن داینامیک یک فرم فعال در دیتابیس برای تست
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  const dbClient = createClient(supabaseUrl, serviceKey);
+  const { data: sampleForms } = await dbClient
+    .from("forms")
+    .select("slug")
+    .eq("published", true)
+    .is("deleted_at", null)
+    .limit(1);
+
+  const testSlug = sampleForms?.[0]?.slug || "form-spidermanf";
+
   // 3. Form Detail (Public Form)
-  console.log("\nTest 3: GET /api/v1/forms/hermes-event-feedback");
+  console.log(`\nTest 3: GET /api/v1/forms/${testSlug}`);
   const res3 = createMockRes();
   await apiHandler({
     method: "GET",
-    url: "/api/v1/forms/hermes-event-feedback",
+    url: `/api/v1/forms/${testSlug}`,
     headers: {},
-    query: { route: ["forms", "hermes-event-feedback"] }
+    query: { route: ["forms", testSlug] }
   }, res3);
   assert(res3.statusCode === 200, "Status code is 200 for published form");
   assert(Boolean(res3.data?.form?.title), `Form title retrieved: '${res3.data?.form?.title}'`);
@@ -116,26 +129,26 @@ async function runTests() {
   assert(Array.isArray(res3.data?.logic_rules), "Logic rules array is returned");
 
   // 4. Questions List
-  console.log("\nTest 4: GET /api/v1/forms/hermes-event-feedback/questions");
+  console.log(`\nTest 4: GET /api/v1/forms/${testSlug}/questions`);
   const res4 = createMockRes();
   await apiHandler({
     method: "GET",
-    url: "/api/v1/forms/hermes-event-feedback/questions",
+    url: `/api/v1/forms/${testSlug}/questions`,
     headers: {},
-    query: { route: ["forms", "hermes-event-feedback", "questions"] }
+    query: { route: ["forms", testSlug, "questions"] }
   }, res4);
   assert(res4.statusCode === 200, "Questions endpoint returns 200");
   assert(res4.data?.count === res3.data?.questions?.length, "Questions count matches form details");
 
   // 5. Single Question by ID
   const firstQ = res3.data?.questions?.[0];
-  console.log(`\nTest 5: GET /api/v1/forms/hermes-event-feedback/questions/${firstQ?.id}`);
+  console.log(`\nTest 5: GET /api/v1/forms/${testSlug}/questions/${firstQ?.id}`);
   const res5 = createMockRes();
   await apiHandler({
     method: "GET",
-    url: `/api/v1/forms/hermes-event-feedback/questions/${firstQ?.id}`,
+    url: `/api/v1/forms/${testSlug}/questions/${firstQ?.id}`,
     headers: {},
-    query: { route: ["forms", "hermes-event-feedback", "questions", firstQ?.id] }
+    query: { route: ["forms", testSlug, "questions", firstQ?.id] }
   }, res5);
   assert(res5.statusCode === 200, "Single question endpoint returns 200");
   assert(res5.data?.question?.id === firstQ?.id, "Question ID matches requested question");
@@ -144,13 +157,13 @@ async function runTests() {
   assert(res5.data?.question?.validation !== undefined, "Question has validation field");
 
   // 6. Form Embed Codes
-  console.log("\nTest 6: GET /api/v1/forms/hermes-event-feedback/embed");
+  console.log(`\nTest 6: GET /api/v1/forms/${testSlug}/embed`);
   const res6 = createMockRes();
   await apiHandler({
     method: "GET",
-    url: "/api/v1/forms/hermes-event-feedback/embed",
+    url: `/api/v1/forms/${testSlug}/embed`,
     headers: {},
-    query: { route: ["forms", "hermes-event-feedback", "embed"] }
+    query: { route: ["forms", testSlug, "embed"] }
   }, res6);
   assert(res6.statusCode === 200, "Embed endpoint returns 200");
   assert(Boolean(res6.data?.iframe_code?.includes("<iframe")), "Generates valid iframe code");
@@ -158,24 +171,24 @@ async function runTests() {
   assert(Boolean(res6.data?.react_code?.includes("export function")), "Generates React component code");
 
   // 7. Form Stats Protection
-  console.log("\nTest 7: GET /api/v1/forms/hermes-event-feedback/stats (Unauthorized)");
+  console.log(`\nTest 7: GET /api/v1/forms/${testSlug}/stats (Unauthorized)`);
   const res7 = createMockRes();
   await apiHandler({
     method: "GET",
-    url: "/api/v1/forms/hermes-event-feedback/stats",
+    url: `/api/v1/forms/${testSlug}/stats`,
     headers: {},
-    query: { route: ["forms", "hermes-event-feedback", "stats"] }
+    query: { route: ["forms", testSlug, "stats"] }
   }, res7);
   assert(res7.statusCode === 403, "Stats endpoint correctly restricted with 403 for unauthorized caller");
 
   // 8. Submit Response
-  console.log("\nTest 8: POST /api/v1/forms/hermes-event-feedback/responses (Submit Answer)");
+  console.log(`\nTest 8: POST /api/v1/forms/${testSlug}/responses (Submit Answer)`);
   const res8 = createMockRes();
   await apiHandler({
     method: "POST",
-    url: "/api/v1/forms/hermes-event-feedback/responses",
+    url: `/api/v1/forms/${testSlug}/responses`,
     headers: {},
-    query: { route: ["forms", "hermes-event-feedback", "responses"] },
+    query: { route: ["forms", testSlug, "responses"] },
     body: {
       duration_seconds: 35,
       device: "desktop",
@@ -215,9 +228,9 @@ async function runTests() {
   }));
   await apiHandler({
     method: "POST",
-    url: "/api/v1/forms/hermes-event-feedback/responses",
+    url: `/api/v1/forms/${testSlug}/responses`,
     headers: {},
-    query: { route: ["forms", "hermes-event-feedback", "responses"] },
+    query: { route: ["forms", testSlug, "responses"] },
     body: { answers: oversizedAnswers }
   }, res12);
   assert(res12.statusCode === 400, `Oversized answers array rejected with 400 (Got: ${res12.statusCode})`);
@@ -234,6 +247,67 @@ async function runTests() {
   }, res13);
   assert(res13.statusCode === 404, "404 returned for unknown endpoint");
   assert(Boolean(res13.data?.error?.includes("/admin/web-service")), "404 message guides user to panel docs (/admin/web-service)");
+
+  // 14. Consolidated Route: System Settings
+  console.log("\nTest 14: Consolidated Route: GET /api/v1/admin-system-settings");
+  const res14 = createMockRes();
+  await apiHandler({
+    method: "GET",
+    url: "/api/v1/admin-system-settings",
+    headers: {},
+    query: { route: ["admin-system-settings"] }
+  }, res14);
+  assert(res14.statusCode === 200, "System settings route returns 200");
+  assert(Boolean(res14.data?.settings), "System settings object is returned");
+
+  // 15. Consolidated Route: System Storage
+  console.log("\nTest 15: Consolidated Route: GET /api/v1/system-storage");
+  const res15 = createMockRes();
+  await apiHandler({
+    method: "GET",
+    url: "/api/v1/system-storage",
+    headers: {},
+    query: { route: ["system-storage"] }
+  }, res15);
+  assert(res15.statusCode === 200, "System storage route returns 200");
+  assert(Boolean(res15.data?.summary?.usedFormatted), "Storage breakdown summary returned");
+
+  // 16. Consolidated Route: Telegram Send validation
+  console.log("\nTest 16: Consolidated Route: POST /api/v1/telegram-send validation");
+  const res16 = createMockRes();
+  await apiHandler({
+    method: "POST",
+    url: "/api/v1/telegram-send",
+    headers: {},
+    query: { route: ["telegram-send"] },
+    body: {}
+  }, res16);
+  assert(res16.statusCode === 400, "Missing form_id or response_id returns 400");
+
+  // 17. Consolidated Route: Admin User Management unauthorized check
+  console.log("\nTest 17: Consolidated Route: POST /api/v1/admin-user-management unauthorized check");
+  const res17 = createMockRes();
+  await apiHandler({
+    method: "POST",
+    url: "/api/v1/admin-user-management",
+    headers: {},
+    query: { route: ["admin-user-management"] },
+    body: { action: "create_user" }
+  }, res17);
+  assert(res17.statusCode === 401, "Admin user management returns 401 without auth");
+
+  // 18. Amoot Webhook via amoot-proxy.js
+  console.log("\nTest 18: Amoot Webhook via amoot-proxy.js");
+  const { default: amootHandler } = await import("../api/amoot-proxy.js");
+  const res18 = createMockRes();
+  await amootHandler({
+    method: "GET",
+    url: "/api/webhooks/amoot?DeliveryStatus=Delivered&MessageID=MSG-123",
+    headers: { "x-smscenter-signature": "sig123" },
+    query: { DeliveryStatus: "Delivered", MessageID: "MSG-123", mode: "webhook" },
+  }, res18);
+  assert(res18.statusCode === 200, "Amoot webhook returns 200");
+  assert(res18.data === "OK", "Amoot webhook returns plain text 'OK'");
 
   console.log("\n==================================================");
   console.log(`TOTAL TESTS: ${passed + failed} | PASSED: ${passed} | FAILED: ${failed}`);

@@ -52,25 +52,153 @@ function translateAmootStatus(status) {
   return map[status] || `وضعیت درگاه پیامک: ${status}`;
 }
 
+function cleanWebhookVal(v) {
+  if (v === null || v === undefined) return "";
+  let s = String(v).trim();
+  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+    s = s.slice(1, -1).trim();
+  }
+  return s;
+}
+
 export default async function handler(req, res) {
-  // پشتیبانی آزاد از CORS برای پنل ادمین
+  // پشتیبانی آزاد از CORS برای پنل ادمین و وب‌هوک آموت
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "*");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-SMSCenter-Signature, x-smscenter-signature, *");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
-  }
-
-  if (req.method === "GET") {
-    return res.status(200).json({ status: "ok", service: "Amoot Bridge" });
   }
 
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
   const adminClient = supabaseUrl && serviceKey ? createClient(supabaseUrl, serviceKey) : null;
 
-  const body = req.body || {};
+  let queryParams = {};
+  if (req.query) {
+    for (const [k, v] of Object.entries(req.query)) {
+      queryParams[k] = cleanWebhookVal(v);
+    }
+  }
+
+  let body = req.body || {};
+  if (typeof body === "string" && body.trim()) {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      try {
+        body = Object.fromEntries(new URLSearchParams(body));
+      } catch {
+        body = {};
+      }
+    }
+  }
+
+  let bodyParams = {};
+  if (typeof body === "object" && body !== null) {
+    for (const [k, v] of Object.entries(body)) {
+      bodyParams[k] = cleanWebhookVal(v);
+    }
+  }
+
+  const webhookPayload = { ...queryParams, ...bodyParams };
+  const isWebhook =
+    queryParams.mode === "webhook" ||
+    req.url?.includes("webhook") ||
+    Boolean(req.headers["x-smscenter-signature"]) ||
+    Boolean(webhookPayload.DeliveryType || webhookPayload.DeliveryStatus || webhookPayload.SMSMessageText);
+
+  // ══════════════════════════════════════════════════════════════
+  // ۰. پردازش وب‌هوک وضعیت دلیوری و پیام‌های دریافتی آموت
+  // ══════════════════════════════════════════════════════════════
+  if (isWebhook) {
+    if (adminClient) {
+      try {
+        const deliveryStatus =
+          webhookPayload.DeliveryType ||
+          webhookPayload.DeliveryStatus ||
+          webhookPayload.Status ||
+          webhookPayload.status ||
+          "";
+
+        const deliveryMsgId =
+          webhookPayload.MessageID ||
+          webhookPayload.CampaignID ||
+          webhookPayload.messageId ||
+          webhookPayload.ID ||
+          "";
+
+        const mobile =
+          webhookPayload.Mobile ||
+          webhookPayload.mobile ||
+          webhookPayload.From ||
+          webhookPayload.Sender ||
+          webhookPayload.senderNumber ||
+          "";
+
+        const text =
+          webhookPayload.SMSMessageText ||
+          webhookPayload.MessageText ||
+          webhookPayload.messageText ||
+          webhookPayload.Text ||
+          webhookPayload.text ||
+          "";
+
+        const lineNumber =
+          webhookPayload.LineNumber ||
+          webhookPayload.lineNumber ||
+          webhookPayload.To ||
+          webhookPayload.receiverNumber ||
+          "";
+
+        if (deliveryMsgId && deliveryStatus) {
+          try {
+            await adminClient.from("sms_delivery_reports").insert({
+              message_id: deliveryMsgId,
+              mobile: mobile || null,
+              status: deliveryStatus,
+              delivered_at: new Date().toISOString(),
+              raw_payload: webhookPayload,
+            });
+          } catch {}
+
+          const isDelivered = deliveryStatus.toLowerCase().includes("deliver");
+          const isFailed = deliveryStatus.toLowerCase().includes("fail") || deliveryStatus.toLowerCase().includes("reject");
+
+          await adminClient
+            .from("sms_outbox")
+            .update({
+              status: isDelivered ? "delivered" : isFailed ? "failed" : "sent",
+            })
+            .eq("message_id", deliveryMsgId);
+        }
+
+        if (mobile || text) {
+          await adminClient.from("sms_inbox").insert({
+            amoot_message_id: webhookPayload.MessageID || null,
+            mobile: mobile,
+            line_number: lineNumber,
+            text: text,
+            raw_payload: webhookPayload,
+          });
+        }
+      } catch (err) {
+        console.error("Amoot Webhook processing error:", err);
+      }
+    }
+
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    if (typeof res.send === "function") {
+      return res.status(200).send("OK");
+    }
+    return res.status(200).end("OK");
+  }
+
+  if (req.method === "GET") {
+    return res.status(200).json({ status: "ok", service: "Amoot Bridge" });
+  }
+
   const { action } = body;
 
   try {
