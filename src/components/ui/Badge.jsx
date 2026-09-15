@@ -1,31 +1,30 @@
 import clsx from "./clsx";
 
 const COLORS = {
-  teal: "border-teal-text text-teal-text bg-ecosystem-light dark:border-teal/40 dark:text-teal dark:bg-teal/10",
-  navy: "border-navy text-navy bg-male-light dark:border-blue-500/40 dark:text-blue-300 dark:bg-blue-950/60",
-  indigo: "border-navy text-navy bg-male-light dark:border-blue-500/40 dark:text-blue-300 dark:bg-blue-950/60",
-  magenta: "border-magenta-text text-magenta-text bg-female-light dark:border-pink-500/40 dark:text-pink-300 dark:bg-pink-950/60",
-  orange: "border-orange text-orange bg-college-light dark:border-amber-500/40 dark:text-amber-300 dark:bg-amber-950/60",
-  amber: "border-orange text-orange bg-college-light dark:border-amber-500/40 dark:text-amber-300 dark:bg-amber-950/60",
-  gray: "border-ink-light text-ink-subtle bg-bg-neutral dark:border-slate-700 dark:text-slate-300 dark:bg-slate-800/80",
-  green: "border-accent-green text-accent-green bg-ecosystem-light dark:border-emerald-500/40 dark:text-emerald-300 dark:bg-emerald-950/60",
-  red: "border-accent-red text-accent-red bg-female-light dark:border-rose-500/40 dark:text-rose-300 dark:bg-rose-950/60",
-  ecosystem: "border-ecosystem-normal text-ecosystem-dark bg-ecosystem-light dark:border-teal/40 dark:text-teal dark:bg-teal/10",
-  male: "border-male-normal text-male-normal bg-male-light dark:border-blue-500/40 dark:text-blue-300 dark:bg-blue-950/60",
-  female: "border-female-normal text-female-dark bg-female-light dark:border-pink-500/40 dark:text-pink-300 dark:bg-pink-950/60",
-  college: "border-college-normal text-college-dark bg-college-light dark:border-amber-500/40 dark:text-amber-300 dark:bg-amber-950/60",
-  club: "border-club-normal text-club-dark bg-club-light dark:border-purple/40 dark:text-purple dark:bg-purple/60",
-  purple: "border-purple text-purple bg-purple dark:border-purple/40 dark:text-purple dark:bg-purple/60",
+  teal: "bg-ecosystem-light dark:bg-ecosystem-darker/50 text-ecosystem-darker dark:text-ecosystem-light border-primary/30",
+  ecosystem: "bg-ecosystem-light dark:bg-ecosystem-darker/50 text-ecosystem-darker dark:text-ecosystem-light border-primary/30",
+  navy: "bg-male-light dark:bg-male-darker/60 text-sec dark:text-male-light border-sec/30",
+  male: "bg-male-light dark:bg-male-darker/60 text-sec dark:text-male-light border-sec/30",
+  indigo: "bg-male-light dark:bg-male-darker/60 text-sec dark:text-male-light border-sec/30",
+  magenta: "bg-female-light dark:bg-female-darker/50 text-girl dark:text-female-light border-girl/30",
+  female: "bg-female-light dark:bg-female-darker/50 text-girl dark:text-female-light border-girl/30",
+  orange: "bg-college-light dark:bg-college-darker/50 text-college-darker dark:text-college-light border-third/30",
+  college: "bg-college-light dark:bg-college-darker/50 text-college-darker dark:text-college-light border-third/30",
+  amber: "bg-college-light dark:bg-college-darker/50 text-college-darker dark:text-college-light border-third/30",
+  purple: "bg-club-light dark:bg-club-darker/50 text-club-darker dark:text-club-light border-club/30",
+  club: "bg-club-light dark:bg-club-darker/50 text-club-darker dark:text-club-light border-club/30",
+  gray: "bg-gray-100 dark:bg-slate-800 text-ink-normal/80 dark:text-gray-300 border-gray-200 dark:border-gray-700",
+  neutral: "bg-gray-100 dark:bg-slate-800 text-ink-normal/80 dark:text-gray-300 border-gray-200 dark:border-gray-700",
+  green: "bg-emerald-50 dark:bg-emerald-950/40 text-accent-green dark:text-emerald-300 border-accent-green/30",
+  red: "bg-rose-50 dark:bg-rose-950/40 text-accent-red dark:text-rose-300 border-accent-red/30",
 };
 
 export default function Badge({ color = "teal", rotate = "", className = "", children }) {
   return (
     <span
       className={clsx(
-        "inline-block bg-white dark:bg-slate-900 border rounded-xl [corner-shape:squircle]",
-        "px-2.5 py-0.5 text-[0.8125rem] font-bold whitespace-nowrap shadow-sm",
+        "inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full font-bold text-xs border whitespace-nowrap transition-colors",
         COLORS[color] ?? COLORS.teal,
-        rotate,
         className,
       )}
     >
@@ -33,3 +32,4 @@ export default function Badge({ color = "teal", rotate = "", className = "", chi
     </span>
   );
 }
+

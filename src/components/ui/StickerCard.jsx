@@ -1,67 +1,47 @@
-// ─── کارت استیکری دوسطحی — امضای دیزاین رکاد ───
+// ─── کارت رُکاد (Modern Refined Neo-brutalism) ───
 import clsx from "./clsx";
 
 export const STICKER_THEMES = {
   white: {
-    back: "bg-ink dark:bg-slate-800",
-    border: "border-ink dark:border-slate-700",
-    bg: "bg-white dark:bg-slate-900",
+    card: "bg-white dark:bg-[#151C28] border-gray-200 dark:border-[#242F42] shadow-[2.75px_2.75px_0_#202A5A] dark:shadow-[2.75px_2.75px_0_#59BBAF]",
   },
   teal: {
-    back: "bg-teal-text dark:bg-[#153e3a]",
-    border: "border-teal dark:border-teal",
-    bg: "bg-ecosystem-light dark:bg-[#0d2322]",
-  },
-  navy: {
-    back: "bg-navy-darker dark:bg-[#182544]",
-    border: "border-navy dark:border-blue-500",
-    bg: "bg-male-light dark:bg-[#11182c]",
-  },
-  magenta: {
-    back: "bg-magenta-text dark:bg-[#4e0920]",
-    border: "border-magenta dark:border-pink-500",
-    bg: "bg-female-light dark:bg-[#250d18]",
-  },
-  orange: {
-    back: "bg-[#c57a07] dark:bg-[#57390a]",
-    border: "border-orange dark:border-amber-500",
-    bg: "bg-college-light dark:bg-[#261705]",
+    card: "bg-ecosystem-light dark:bg-[#151C28] border-primary/30 dark:border-primary/40 shadow-[2.75px_2.75px_0_#59BBAF] dark:shadow-[2.75px_2.75px_0_#59BBAF]",
   },
   ecosystem: {
-    back: "bg-ecosystem-dark dark:bg-[#153e3a]",
-    border: "border-ecosystem-normal dark:border-teal",
-    bg: "bg-ecosystem-light dark:bg-[#0d2322]",
+    card: "bg-ecosystem-light dark:bg-[#151C28] border-primary/30 dark:border-primary/40 shadow-[2.75px_2.75px_0_#59BBAF] dark:shadow-[2.75px_2.75px_0_#59BBAF]",
+  },
+  navy: {
+    card: "bg-white dark:bg-[#151C28] border-gray-200 dark:border-[#242F42] shadow-[2.75px_2.75px_0_#202A5A] dark:shadow-[2.75px_2.75px_0_#59BBAF]",
   },
   male: {
-    back: "bg-male-darker dark:bg-[#182544]",
-    border: "border-male-normal dark:border-blue-500",
-    bg: "bg-male-light dark:bg-[#11182c]",
+    card: "bg-male-light dark:bg-[#151C28] border-sec/20 dark:border-sec/40 shadow-[2.75px_2.75px_0_#202A5A] dark:shadow-[2.75px_2.75px_0_#59BBAF]",
+  },
+  magenta: {
+    card: "bg-female-light dark:bg-[#151C28] border-girl/30 dark:border-girl/40 shadow-[2.75px_2.75px_0_#E0195B] dark:shadow-[2.75px_2.75px_0_#E0195B]",
   },
   female: {
-    back: "bg-female-darker dark:bg-[#4e0920]",
-    border: "border-female-normal dark:border-pink-500",
-    bg: "bg-female-light dark:bg-[#250d18]",
+    card: "bg-female-light dark:bg-[#151C28] border-girl/30 dark:border-girl/40 shadow-[2.75px_2.75px_0_#E0195B] dark:shadow-[2.75px_2.75px_0_#E0195B]",
+  },
+  orange: {
+    card: "bg-college-light dark:bg-[#151C28] border-third/30 dark:border-third/40 shadow-[2.75px_2.75px_0_#F8A41D] dark:shadow-[2.75px_2.75px_0_#F8A41D]",
   },
   college: {
-    back: "bg-college-darker dark:bg-[#57390a]",
-    border: "border-college-normal dark:border-amber-500",
-    bg: "bg-college-light dark:bg-[#261705]",
+    card: "bg-college-light dark:bg-[#151C28] border-third/30 dark:border-third/40 shadow-[2.75px_2.75px_0_#F8A41D] dark:shadow-[2.75px_2.75px_0_#F8A41D]",
   },
   club: {
-    back: "bg-club-darker dark:bg-[#231032]",
-    border: "border-club-normal dark:border-purple",
-    bg: "bg-club-light dark:bg-[#1e0d29]",
+    card: "bg-club-light dark:bg-[#151C28] border-club/30 dark:border-club/40 shadow-[2.75px_2.75px_0_#652D90] dark:shadow-[2.75px_2.75px_0_#652D90]",
   },
 };
 
 export default function StickerCard({
   theme = "white",
-  rotate = "",
-  offset = "top-[0.3rem] left-[0.3rem]",
-  radius = "rounded-tl-[1.5rem] rounded-br-[1.5rem] rounded-tr-none rounded-bl-none",
-  border = "border-[0.1875rem]",
+  rotate = "", // backward compat
+  offset = "", // backward compat
+  radius = "rounded-2xl",
+  border = "border-[1.5px]",
   className = "",
-  backClassName = "",
+  backClassName = "", // backward compat
   innerClassName = "",
   children,
   as: Tag = "div",
@@ -69,32 +49,18 @@ export default function StickerCard({
 }) {
   const t = STICKER_THEMES[theme] ?? STICKER_THEMES.white;
   return (
-    <div className={clsx("relative", rotate, className)}>
-      <div
-        aria-hidden="true"
-        className={clsx(
-          "absolute w-full h-full",
-          offset,
-          radius,
-          "[corner-shape:squircle]",
-          t.back,
-          backClassName,
-        )}
-      />
-      <Tag
-        className={clsx(
-          "relative z-10 h-full",
-          radius,
-          "[corner-shape:squircle]",
-          border,
-          t.border,
-          t.bg,
-          innerClassName,
-        )}
-        {...rest}
-      >
-        {children}
-      </Tag>
-    </div>
+    <Tag
+      className={clsx(
+        "relative transition-all duration-200 ease-out",
+        "rounded-2xl border-[1.5px]",
+        t.card,
+        className,
+        innerClassName
+      )}
+      {...rest}
+    >
+      {children}
+    </Tag>
   );
 }
+

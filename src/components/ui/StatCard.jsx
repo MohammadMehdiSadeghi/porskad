@@ -1,103 +1,123 @@
-// ─── StatCard — کارت آماری استیکری فلت و تمیز ───
-// لایه‌ی سایه + بوردر + بج سفید چرخیده + عدد درشت
-const THEMES = {
-  orange: {
-    rotate: "rotate-[1deg] lg:rotate-[2.5deg]",
-    badgeRotate: "rotate-[3deg]",
-    back: "bg-orange-alt dark:bg-black/80",
-    border: "border-orange-alt dark:border-amber-500/50",
-    cardBg: "bg-[#FEF7EC] dark:bg-[#1A1207]",
-    text: "text-orange dark:text-amber-400",
-    badge: "border-orange text-orange dark:border-amber-500/50 dark:text-amber-300 dark:bg-slate-900/90",
-  },
-  navy: {
-    rotate: "-rotate-[1deg] lg:-rotate-[2deg]",
-    badgeRotate: "-rotate-[2.5deg]",
-    back: "bg-navy-alt dark:bg-black/80",
-    border: "border-navy dark:border-blue-500/50",
-    cardBg: "bg-[#F4F5FB] dark:bg-[#0F172A]",
-    text: "text-navy-alt dark:text-sky-300",
-    badge: "border-navy-alt text-navy-alt dark:border-blue-500/50 dark:text-sky-300 dark:bg-slate-900/90",
-  },
-  magenta: {
-    rotate: "rotate-[1deg] lg:rotate-[2.5deg]",
-    badgeRotate: "rotate-[3deg]",
-    back: "bg-magenta dark:bg-black/80",
-    border: "border-magenta dark:border-pink-500/50",
-    cardBg: "bg-[#FEFAFB] dark:bg-[#1F0D18]",
-    text: "text-magenta-text dark:text-pink-400",
-    badge: "border-magenta-text text-magenta-text dark:border-pink-500/50 dark:text-pink-300 dark:bg-slate-900/90",
+// ─── StatCard — کارت آماری رُکاد (ROKAD-UI-DESIGN-STANDARDS.md 7.3) ───
+import React from "react";
+import { toPersianDigits } from "../../lib/utils";
+import { TrendingUp, TrendingDown } from "lucide-react";
+
+const PERSONA_STYLES = {
+  ecosystem: {
+    iconBg: "bg-ecosystem-light dark:bg-ecosystem-darker/50 text-ecosystem-normal dark:text-ecosystem-light",
+    border: "border-primary/30 dark:border-primary/40",
+    shadow: "shadow-[2.75px_2.75px_0_#59BBAF] dark:shadow-[2.75px_2.75px_0_#59BBAF]",
+    textColor: "text-ecosystem-darker dark:text-white",
   },
   teal: {
-    rotate: "-rotate-[1deg] lg:-rotate-[2deg]",
-    badgeRotate: "-rotate-[2.5deg]",
-    back: "bg-teal-alt dark:bg-black/80",
-    border: "border-teal dark:border-teal/50",
-    cardBg: "bg-[#F2FAF9] dark:bg-[#0C1F1E]",
-    text: "text-teal-text dark:text-teal",
-    badge: "border-teal-text text-teal-text dark:border-teal/50 dark:text-teal dark:bg-slate-900/90",
+    iconBg: "bg-ecosystem-light dark:bg-ecosystem-darker/50 text-ecosystem-normal dark:text-ecosystem-light",
+    border: "border-primary/30 dark:border-primary/40",
+    shadow: "shadow-[2.75px_2.75px_0_#59BBAF] dark:shadow-[2.75px_2.75px_0_#59BBAF]",
+    textColor: "text-ecosystem-darker dark:text-white",
+  },
+  male: {
+    iconBg: "bg-male-light dark:bg-male-darker/60 text-sec dark:text-male-light",
+    border: "border-sec/20 dark:border-sec/40",
+    shadow: "shadow-[2.75px_2.75px_0_#202A5A] dark:shadow-[2.75px_2.75px_0_#59BBAF]",
+    textColor: "text-sec dark:text-white",
+  },
+  navy: {
+    iconBg: "bg-male-light dark:bg-male-darker/60 text-sec dark:text-male-light",
+    border: "border-sec/20 dark:border-sec/40",
+    shadow: "shadow-[2.75px_2.75px_0_#202A5A] dark:shadow-[2.75px_2.75px_0_#59BBAF]",
+    textColor: "text-sec dark:text-white",
+  },
+  female: {
+    iconBg: "bg-female-light dark:bg-female-darker/50 text-girl dark:text-female-light",
+    border: "border-girl/30 dark:border-girl/40",
+    shadow: "shadow-[2.75px_2.75px_0_#E0195B] dark:shadow-[2.75px_2.75px_0_#E0195B]",
+    textColor: "text-female-darker dark:text-white",
+  },
+  magenta: {
+    iconBg: "bg-female-light dark:bg-female-darker/50 text-girl dark:text-female-light",
+    border: "border-girl/30 dark:border-girl/40",
+    shadow: "shadow-[2.75px_2.75px_0_#E0195B] dark:shadow-[2.75px_2.75px_0_#E0195B]",
+    textColor: "text-female-darker dark:text-white",
+  },
+  college: {
+    iconBg: "bg-college-light dark:bg-college-darker/50 text-third dark:text-college-light",
+    border: "border-third/30 dark:border-third/40",
+    shadow: "shadow-[2.75px_2.75px_0_#F8A41D] dark:shadow-[2.75px_2.75px_0_#F8A41D]",
+    textColor: "text-college-darker dark:text-white",
+  },
+  orange: {
+    iconBg: "bg-college-light dark:bg-college-darker/50 text-third dark:text-college-light",
+    border: "border-third/30 dark:border-third/40",
+    shadow: "shadow-[2.75px_2.75px_0_#F8A41D] dark:shadow-[2.75px_2.75px_0_#F8A41D]",
+    textColor: "text-college-darker dark:text-white",
+  },
+  club: {
+    iconBg: "bg-club-light dark:bg-club-darker/50 text-club dark:text-club-light",
+    border: "border-club/30 dark:border-club/40",
+    shadow: "shadow-[2.75px_2.75px_0_#652D90] dark:shadow-[2.75px_2.75px_0_#652D90]",
+    textColor: "text-club-darker dark:text-white",
   },
 };
 
 export default function StatCard({
-  theme = "teal",
-  label,
-  value,
-  caption,
-  onClick,
+  theme = "ecosystem",
   title,
+  label, // backward compat for title
+  value,
+  subtitle,
+  caption, // backward compat for subtitle
+  icon: Icon,
+  trend,
+  onClick,
   className = "",
 }) {
-  const t = THEMES[theme] ?? THEMES.teal;
-  const shapeClass =
-    "rounded-tl-[2rem] rounded-br-[2rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]";
+  const p = PERSONA_STYLES[theme] ?? PERSONA_STYLES.ecosystem;
+  const displayTitle = title || label;
+  const displaySubtitle = subtitle || caption;
+  const displayValue = typeof value === "number" ? toPersianDigits(value) : value;
 
   return (
     <div
       onClick={onClick}
-      title={title}
-      className={`relative ${t.rotate} h-full ${onClick ? "cursor-pointer select-none transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]" : ""} ${className}`}
+      className={`relative bg-white dark:bg-[#151C28] rounded-2xl border-[1.5px] ${p.border} ${p.shadow} p-4 sm:p-5 transition-all duration-200 hover:-translate-y-0.5 ${onClick ? "cursor-pointer select-none active:translate-y-0" : ""} ${className}`}
     >
-      {/* لایه‌ی سایه */}
-      <div
-        aria-hidden="true"
-        className={`absolute top-2 left-2 -right-[0.25rem] -bottom-[0.25rem] ${shapeClass} ${t.back}`}
-      />
-      {/* کارت اصلی */}
-      <div
-        data-stat-card
-        className={`relative z-10 h-full flex flex-col items-center text-center overflow-visible
-          ${shapeClass} border-[0.1875rem] ${t.border} ${t.cardBg}
-          px-3 xs:px-4 pt-3 xs:pt-5 pb-3 xs:pb-5 lg:px-5 lg:pt-6 lg:pb-6`}
-      >
-
-        {label && (
-          <span
-            className={`relative z-20 inline-block -mt-1 mb-1.5 xs:mb-2 lg:-mt-1.5 lg:mb-4
-              bg-white dark:bg-slate-900 border-[0.0625rem] rounded-xl [corner-shape:squircle]
-              px-1.5 py-0.5 lg:px-3 lg:py-1 whitespace-nowrap
-              text-xs xs:text-xs lg:text-[0.8rem] font-bold shadow-sm
-              ${t.badgeRotate} ${t.badge}`}
-          >
-            {label}
-          </span>
-        )}
-
-        <div
-          className={`relative z-20 mb-1 xs:mb-1.5 lg:mb-3
-            text-[2rem] xs:text-[2.25rem] lg:text-[3rem] leading-none font-extrabold ${t.text}`}
-        >
-          {value}
-        </div>
-
-        {caption && (
-          <div className={`relative z-20 ${t.text} mt-auto`}>
-            <strong className="block text-xs xs:text-xs lg:text-[0.8rem] font-bold">
-              {caption}
-            </strong>
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <span className="text-xs sm:text-sm font-bold text-ink-normal/70 dark:text-gray-300">
+          {displayTitle}
+        </span>
+        {Icon && (
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${p.iconBg}`}>
+            <Icon className="w-5 h-5" />
           </div>
         )}
       </div>
+
+      <div className="flex items-baseline justify-between gap-2 mt-1">
+        <div className={`font-black text-2xl sm:text-3xl leading-tight ${p.textColor}`}>
+          {displayValue}
+        </div>
+
+        {trend && (
+          <span
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${
+              trend.isPositive
+                ? "bg-emerald-50 text-accent-green dark:bg-emerald-950/40 dark:text-emerald-400 border border-accent-green/30"
+                : "bg-rose-50 text-accent-red dark:bg-rose-950/40 dark:text-rose-400 border border-accent-red/30"
+            }`}
+          >
+            {trend.isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+            <span>{toPersianDigits(trend.value)}</span>
+          </span>
+        )}
+      </div>
+
+      {displaySubtitle && (
+        <p className="text-xs text-ink-normal/60 dark:text-gray-400 mt-2 font-medium truncate">
+          {displaySubtitle}
+        </p>
+      )}
     </div>
   );
 }
+

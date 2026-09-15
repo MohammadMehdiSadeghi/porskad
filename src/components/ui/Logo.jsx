@@ -9,11 +9,12 @@ export default function Logo({ to = "/", size = "md", linked = true, className =
 
   const logo = (
     <span
-      className={`inline-flex items-baseline gap-1 bg-white border-[0.1875rem] border-ink [corner-shape:squircle] ${sizes[size]} font-black shadow-sm select-none`}
+      className={`inline-flex items-baseline gap-1 bg-white dark:bg-[#151C28] border-[1.5px] border-sec/20 dark:border-gray-700 rounded-xl ${sizes[size]} font-black shadow-[2px_2px_0_#202A5A] dark:shadow-[2px_2px_0_#59BBAF] select-none`}
     >
-      <span className="text-navy">پرس</span>
-      <span className="text-teal-text">کاد</span>
+      <span className="text-sec dark:text-white">پرس</span>
+      <span className="text-primary">کاد</span>
     </span>
+
   );
 
   if (!linked) {

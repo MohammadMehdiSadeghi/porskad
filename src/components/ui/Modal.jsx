@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react";
-import StickerCard from "./StickerCard";
 import { X } from "lucide-react";
 
 export default function Modal({ open, onClose, title, children, wide = false, closable = true }) {
@@ -35,39 +34,37 @@ export default function Modal({ open, onClose, title, children, wide = false, cl
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 dark:bg-black/80 backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
       onMouseDown={closable ? handleMouseDown : undefined}
       onMouseUp={closable ? handleMouseUp : undefined}
       role="dialog"
       aria-modal="true"
     >
-      <div className={`w-full ${wide ? "max-w-3xl" : "max-w-xl"} mx-auto`}>
-        <StickerCard
-          theme="white"
-          rotate="-rotate-[0.5deg]"
-          onClick={(e) => e.stopPropagation()}
-          onMouseDown={(e) => e.stopPropagation()}
-          onMouseUp={(e) => e.stopPropagation()}
-        >
-          <div className="max-h-[80vh] overflow-y-auto p-4 sm:p-5">
-            {title && (
-              <div className="flex items-center justify-between gap-3 mb-4">
-                <h3 className="text-lg sm:text-xl font-black text-navy dark:text-white">{title}</h3>
-                {closable && onClose && (
-                  <button
-                    onClick={onClose}
-                    className="w-9 h-9 flex items-center justify-center rounded-pill-md border-2 border-ink dark:border-slate-600 bg-white dark:bg-slate-800 text-ink dark:text-white font-black hover:bg-bg-neutral dark:hover:bg-slate-700 transition-colors cursor-pointer"
-                    aria-label="بستن"
-                  >
-                    <X size={16} />
-                  </button>
-                )}
-              </div>
-            )}
-            {children}
-          </div>
-        </StickerCard>
+      <div
+        className={`w-full ${wide ? "max-w-3xl" : "max-w-xl"} mx-auto rounded-3xl border-2 border-primary/40 shadow-[4px_4px_0_#202A5A] dark:shadow-[4px_4px_0_#59BBAF] bg-white dark:bg-[#151C28] overflow-hidden transition-all animate-in fade-in zoom-in-95 duration-150`}
+        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onMouseUp={(e) => e.stopPropagation()}
+      >
+        <div className="max-h-[85vh] overflow-y-auto p-5 sm:p-6">
+          {title && (
+            <div className="flex items-center justify-between gap-3 mb-5 border-b border-gray-100 dark:border-gray-800 pb-3">
+              <h3 className="text-base sm:text-lg font-black text-sec dark:text-white">{title}</h3>
+              {closable && onClose && (
+                <button
+                  onClick={onClose}
+                  className="w-8 h-8 flex items-center justify-center rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#1C2536] text-ink-normal dark:text-white font-bold hover:bg-gray-100 dark:hover:bg-[#242F42] transition-colors cursor-pointer"
+                  aria-label="بستن"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+          )}
+          {children}
+        </div>
       </div>
     </div>
   );
 }
+
