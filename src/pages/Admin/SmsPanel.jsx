@@ -107,6 +107,7 @@ export default function SmsPanel() {
   const [formsList, setFormsList] = useState([]);
   const [loadingForms, setLoadingForms] = useState(false);
   const [selectedFormId, setSelectedFormId] = useState("");
+  const [formSearchQuery, setFormSearchQuery] = useState("");
   const [formQuestions, setFormQuestions] = useState([]);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [selectedQuestionIds, setSelectedQuestionIds] = useState([]);
@@ -259,7 +260,7 @@ export default function SmsPanel() {
     };
   }, [loadSettings, loadDashboard]);
 
-  // ─── بارگذاری لیست فرم‌ها برای استخراج شماره تماس ───
+  // ─── بارگذاری فقط فرم‌های فعال برای استخراج شماره تماس ───
   const loadFormsList = useCallback(async () => {
     setLoadingForms(true);
     try {
@@ -267,6 +268,7 @@ export default function SmsPanel() {
         .from("forms")
         .select("id, title, slug, created_at, published")
         .is("deleted_at", null)
+        .eq("published", true)
         .order("created_at", { ascending: false });
 
       if (!isGlobalAdmin && user?.id) {
@@ -275,7 +277,8 @@ export default function SmsPanel() {
 
       const { data, error } = await query;
       if (error) throw error;
-      setFormsList(data || []);
+      const activeForms = (data || []).filter((f) => f.published === true);
+      setFormsList(activeForms);
     } catch (err) {
       console.error("Failed to load forms list:", err);
       showToast("خطا در بارگذاری لیست فرم‌ها", "error");
@@ -1123,41 +1126,107 @@ export default function SmsPanel() {
             <div className="lg:col-span-7 flex flex-col gap-5">
               <StickerCard theme="white">
                 <div className="p-5 sm:p-6 flex flex-col gap-5">
-                  {/* ۱. انتخاب فرم */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs font-bold text-ink-subtle dark:text-slate-400 flex items-center justify-between">
-                      <span className="flex items-center gap-1.5">
+                  {/* ۱. انتخاب فرم فعال با قابلیت سرچ */}
+                  <div className="flex flex-col gap-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-ink-subtle dark:text-slate-400 flex items-center gap-1.5">
                         <FileText size={15} className="text-teal" />
-                        ۱. فرم مورد نظر را انتخاب کنید:
-                      </span>
+                        ۱. فرم فعال مورد نظر را انتخاب کنید:
+                      </label>
                       {formsList.length > 0 && (
                         <span className="text-[11px] font-bold text-teal">
-                          {faNum(formsList.length)} فرم موجود در حساب
+                          {faNum(formsList.length)} فرم فعال در سامانه
                         </span>
                       )}
-                    </label>
+                    </div>
 
                     {loadingForms ? (
-                      <div className="flex items-center gap-2 py-3 text-xs font-bold text-ink-subtle">
-                        <Spinner size="sm" /> در حال دریافت لیست فرم‌ها...
+                      <div className="flex items-center gap-2 py-4 text-xs font-bold text-ink-subtle">
+                        <Spinner size="sm" /> در حال دریافت لیست فرم‌های فعال...
                       </div>
                     ) : formsList.length === 0 ? (
                       <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-xs font-bold text-amber-700 dark:text-amber-300">
-                        هیچ فرمی در حساب کاربری شما یافت نشد. لطفاً ابتدا در بخش فرم‌ها یک فرم ایجاد کنید.
+                        هیچ فرم فعالی در حساب کاربری شما یافت نشد. لطفاً در بخش فرم‌ها ابتدا یک فرم را فعال (منتشر) کنید.
                       </div>
                     ) : (
-                      <select
-                        value={selectedFormId}
-                        onChange={(e) => handleSelectForm(e.target.value)}
-                        className={`${inputCls} text-sm`}
-                      >
-                        <option value="">-- انتخاب فرم برای استخراج شماره --</option>
-                        {formsList.map((f) => (
-                          <option key={f.id} value={f.id}>
-                            {f.title || "بدون عنوان"} ({f.slug}) {f.published ? "✓ فعال" : "— پیش‌نویس"}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="flex flex-col gap-2">
+                        {/* فیلد جستجو در فرم‌ها */}
+                        <div className="relative">
+                          <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-subtle dark:text-slate-400 pointer-events-none" />
+                          <input
+                            type="text"
+                            value={formSearchQuery}
+                            onChange={(e) => setFormSearchQuery(e.target.value)}
+                            placeholder="جستجو در بین فرم‌های فعال بر اساس عنوان یا شناسه..."
+                            className={`${inputCls} pr-8.5 pl-8 py-2 text-xs`}
+                          />
+                          {formSearchQuery && (
+                            <button
+                              type="button"
+                              onClick={() => setFormSearchQuery("")}
+                              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-subtle hover:text-rose-500 transition-colors p-1 cursor-pointer"
+                            >
+                              <X size={13} />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* لیست کارت‌های فرم‌های فیلتر شده */}
+                        {(() => {
+                          const q = formSearchQuery.trim().toLowerCase();
+                          const filtered = formsList.filter((f) => {
+                            if (!q) return true;
+                            return (f.title || "").toLowerCase().includes(q) || (f.slug || "").toLowerCase().includes(q);
+                          });
+
+                          if (filtered.length === 0) {
+                            return (
+                              <div className="p-3 text-center text-xs font-semibold text-ink-subtle dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-ink/10 dark:border-slate-800">
+                                هیچ فرم فعالی با عبارت «{formSearchQuery}» پیدا نشد.
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div className="flex flex-col gap-1.5 max-h-56 overflow-y-auto pr-1">
+                              {filtered.map((f) => {
+                                const isSelected = selectedFormId === f.id;
+                                return (
+                                  <div
+                                    key={f.id}
+                                    onClick={() => handleSelectForm(f.id)}
+                                    className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all cursor-pointer select-none ${
+                                      isSelected
+                                        ? "bg-teal/10 border-teal text-navy dark:text-white shadow-xs"
+                                        : "bg-slate-50 dark:bg-slate-800/60 border-ink/5 dark:border-slate-700/60 text-ink-subtle dark:text-slate-300 hover:border-teal/40 dark:hover:border-slate-600 hover:bg-teal/5"
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                                        isSelected ? "border-teal bg-teal text-white" : "border-ink/20 dark:border-slate-600"
+                                      }`}>
+                                        {isSelected && <Check size={10} strokeWidth={3} />}
+                                      </div>
+                                      <div className="flex flex-col min-w-0">
+                                        <span className="text-xs font-bold truncate text-navy dark:text-slate-100">
+                                          {f.title || "بدون عنوان"}
+                                        </span>
+                                        <span className="text-[11px] text-ink-subtle dark:text-slate-400 font-mono" dir="ltr">
+                                          /{f.slug}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                      <Badge color="teal">فعال</Badge>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
+                      </div>
                     )}
                   </div>
 

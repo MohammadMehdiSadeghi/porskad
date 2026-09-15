@@ -14,7 +14,8 @@ export default {
         },
         extend: {
             fontFamily: {
-                sans: ["var(--font-iransans)", "IRANSansX", "Vazirmatn", "system-ui", "sans-serif"],
+                sans: ["IRANSansX", "Vazirmatn", "system-ui", "-apple-system", "sans-serif"],
+                mono: ["IRANSansX", "Montserrat", "ui-monospace", "monospace"],
             },
             colors: {
                 // ── کدهای رنگی پرسوناها و برند (ROKAD-UI-DESIGN-STANDARDS.md) ──

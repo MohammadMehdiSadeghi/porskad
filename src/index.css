@@ -9,8 +9,12 @@
     --color-third: #F8A41D;
     --color-sec: #202A5A;
     --text-normal: #292827;
-    --font-iransans: "IRANSansX", "Vazirmatn", "Montserrat", Tahoma, sans-serif;
-    --font-family: var(--font-iransans), "IRANSansX", "Vazirmatn", -apple-system, sans-serif;
+    --font-iransans: "IRANSansX", "Vazirmatn", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-family: "IRANSansX", "Vazirmatn", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+*, *::before, *::after {
+    font-family: "IRANSansX", "Vazirmatn", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 @layer base {
@@ -19,7 +23,7 @@
         direction: rtl;
         font-size: 14px;
         overflow-x: hidden;
-        font-family: var(--font-family);
+        font-family: "IRANSansX", "Vazirmatn", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     }
     @media (min-width: 640px) {
         html {
@@ -30,7 +34,7 @@
         color-scheme: dark;
     }
     body {
-        font-family: var(--font-family);
+        font-family: "IRANSansX", "Vazirmatn", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         background-color: #F8F9FA;
         color: var(--text-normal);
         direction: rtl;
@@ -40,8 +44,11 @@
         transition-property: background-color, color;
         transition-duration: 200ms;
     }
-    button, input, optgroup, select, textarea {
-        font-family: inherit;
+    button, input, optgroup, select, textarea, table, th, td, pre, code, kbd, samp {
+        font-family: "IRANSansX", "Vazirmatn", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    }
+    .font-mono, [class*="font-mono"] {
+        font-family: "IRANSansX", "Montserrat", monospace !important;
     }
     html.dark body {
         background-color: #0B0F17;
