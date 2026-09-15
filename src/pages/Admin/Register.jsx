@@ -376,9 +376,9 @@ export default function Register() {
     // حالت ۱: فقط گوگل فعال است (پیامک غیرفعال)
     if (smsOtpEnabled === false && googleAuthEnabled !== false) {
       return {
-        badge: "ثبت‌نام مستقیم با حساب گوگل",
-        title: "ورود و ثبت‌نام با Google",
-        subtitle: "ایجاد سریع حساب کاربری و ورود بدون نیاز به رمز عبور یا پیامک",
+        badge: "ثبت‌نام مستقیم",
+        title: "ثبت‌نام با حساب گوگل",
+        subtitle: "ایجاد سریع حساب کاربری بدون نیاز به رمز یا پیامک",
         showStepper: false,
       };
     }
@@ -388,8 +388,8 @@ export default function Register() {
       if (step === 1) {
         return {
           badge: "مرحله ۱ از ۳",
-          title: "ثبت‌نام با شماره همراه یا حساب گوگل",
-          subtitle: "شماره تلفن همراه خود را وارد نمایید یا سریعاً با Google وارد شوید",
+          title: "ثبت‌نام با موبایل یا گوگل",
+          subtitle: "شماره همراه را وارد کنید یا سریع با گوگل ادامه دهید",
           showStepper: true,
         };
       }
@@ -397,14 +397,14 @@ export default function Register() {
         return {
           badge: "مرحله ۲ از ۳",
           title: "تایید شماره تلفن همراه",
-          subtitle: `کد تایید ۵ رقمی ارسال‌شده به شماره ${phone ? faNum(phone) : ""} را وارد کنید`,
+          subtitle: `کد ۵ رقمی ارسال‌شده به ${phone ? faNum(phone) : "شماره"} را وارد کنید`,
           showStepper: true,
         };
       }
       return {
         badge: "مرحله ۳ از ۳",
-        title: "تکمیل مشخصات و رمز عبور",
-        subtitle: "ایمیل، نام کاربری و رمز عبور خود را برای ورود تعیین فرمایید",
+        title: "تکمیل مشخصات کاربری",
+        subtitle: "ایمیل، نام و رمز عبور ورود خود را تعیین فرمایید",
         showStepper: true,
       };
     }
@@ -415,7 +415,7 @@ export default function Register() {
         return {
           badge: "مرحله ۱ از ۳",
           title: "ثبت‌نام با شماره همراه",
-          subtitle: "شماره همراه خود را وارد کنید تا پیامک کد فعال‌سازی ارسال شود",
+          subtitle: "شماره همراه خود را برای دریافت پیامک تایید وارد کنید",
           showStepper: true,
         };
       }
@@ -423,14 +423,14 @@ export default function Register() {
         return {
           badge: "مرحله ۲ از ۳",
           title: "تایید شماره تلفن همراه",
-          subtitle: `کد تایید ۵ رقمی ارسال‌شده به شماره ${phone ? faNum(phone) : ""} را وارد کنید`,
+          subtitle: `کد ۵ رقمی ارسال‌شده به ${phone ? faNum(phone) : "شماره"} را وارد کنید`,
           showStepper: true,
         };
       }
       return {
         badge: "مرحله ۳ از ۳",
-        title: "تکمیل مشخصات و رمز عبور",
-        subtitle: "ایمیل، نام کاربری و رمز عبور خود را برای ورود تعیین فرمایید",
+        title: "تکمیل مشخصات کاربری",
+        subtitle: "ایمیل، نام و رمز عبور ورود خود را تعیین فرمایید",
         showStepper: true,
       };
     }
@@ -461,15 +461,15 @@ export default function Register() {
             {/* هدر داینامیک با انیمیشن روان تغییر متن و مرحله */}
             <div
               key={`header-${step}-${smsOtpEnabled}-${googleAuthEnabled}`}
-              className="flex flex-col items-center gap-2 text-center animate-step-fade"
+              className="flex flex-col items-center gap-1.5 text-center animate-step-fade"
             >
               <Badge color="navy" rotate="rotate-[1deg]">
                 {headerInfo.badge}
               </Badge>
-              <h1 className="text-xl sm:text-2xl font-black text-navy dark:text-white transition-all">
+              <h1 className="text-lg sm:text-xl font-black text-navy dark:text-white transition-all tracking-tight leading-snug">
                 {headerInfo.title}
               </h1>
-              <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 max-w-xs leading-relaxed transition-all">
+              <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 max-w-sm leading-relaxed transition-all">
                 {headerInfo.subtitle}
               </p>
 
