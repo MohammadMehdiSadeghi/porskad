@@ -95,7 +95,7 @@ export default function AdminLayout() {
         { to: "/admin/managers", label: "مدیریت کاربران", icon: Users, end: false },
         { to: "/admin/settings", label: "تنظیمات سامانه", icon: Settings, end: false },
         { to: "/admin/support", label: "تیکت‌های پشتیبانی", icon: Headphones, end: false },
-        { to: "/admin/superadmin", label: "سوپرادمین (God)", icon: Shield, end: false },
+        { to: "/admin/superadmin", label: "SuperAdmin (God)", icon: Shield, end: false },
         { to: "/admin/web-service", label: "مستندات وب سرویس", icon: Code2, end: false },
         { to: "/admin/profile", label: "پروفایل", icon: User, end: false },
       ]

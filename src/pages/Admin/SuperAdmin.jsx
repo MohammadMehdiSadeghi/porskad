@@ -354,10 +354,10 @@ export default function SuperAdmin() {
         showToast("Could not restore item: " + data, "error");
         return;
       }
-      showToast("آیتم با موفقیت بازیابی شد");
+      showToast("Item restored successfully");
       await loadTrash();
     } catch (err) {
-      showToast("خطا در بازیابی: " + err.message, "error");
+      showToast("Error restoring item: " + err.message, "error");
     } finally {
       setTrashActionBusy(false);
     }
@@ -371,10 +371,10 @@ export default function SuperAdmin() {
         .update({ deleted_at: null })
         .eq("id", formId);
       if (error) throw error;
-      showToast("فرم با موفقیت بازیابی شد");
+      showToast("Form restored successfully");
       await loadTrash();
     } catch (err) {
-      showToast("خطا در بازیابی فرم: " + err.message, "error");
+      showToast("Error restoring form: " + err.message, "error");
     } finally {
       setTrashActionBusy(false);
     }
@@ -388,11 +388,11 @@ export default function SuperAdmin() {
         .update({ is_active: true, deactivated_at: null, deactivated_by: null })
         .eq("id", userId);
       if (error) throw error;
-      showToast("حساب کاربر با موفقیت فعال و بازیابی شد");
+      showToast("User account re-activated and restored successfully");
       await loadTrash();
       loadUsers();
     } catch (err) {
-      showToast("خطا در بازیابی کاربر: " + err.message, "error");
+      showToast("Error restoring user: " + err.message, "error");
     } finally {
       setTrashActionBusy(false);
     }
@@ -424,11 +424,11 @@ export default function SuperAdmin() {
           if (error) throw error;
         }
       }
-      showToast("مورد با موفقیت برای همیشه حذف گردید");
+      showToast("Item permanently deleted");
       setTrashSelectedKeys((prev) => prev.filter((k) => k !== item.key));
       await loadTrash();
     } catch (err) {
-      showToast("خطا در حذف دائمی: " + err.message, "error");
+      showToast("Error permanently deleting item: " + err.message, "error");
     } finally {
       setTrashActionBusy(false);
       setTrashConfirmDeleteModal(null);
@@ -468,12 +468,12 @@ export default function SuperAdmin() {
         successCount++;
       }
 
-      showToast(`${successCount} مورد با موفقیت برای همیشه حذف گردید`);
+      showToast(`${successCount} items permanently deleted`);
       setTrashSelectedKeys([]);
       await loadTrash();
       if (userIds.length > 0) loadUsers();
     } catch (err) {
-      showToast("خطا در حذف گروهی: " + err.message, "error");
+      showToast("Error in batch delete: " + err.message, "error");
     } finally {
       setTrashActionBusy(false);
       setTrashConfirmDeleteModal(null);
@@ -497,19 +497,19 @@ export default function SuperAdmin() {
           if (data === "restored") successCount++;
         }
       }
-      showToast(`${successCount} مورد با موفقیت بازیابی شد`);
+      showToast(`${successCount} items restored successfully`);
       setTrashSelectedKeys([]);
       await loadTrash();
       loadUsers();
     } catch (err) {
-      showToast("خطا در بازیابی گروهی: " + err.message, "error");
+      showToast("Error in batch restore: " + err.message, "error");
     } finally {
       setTrashActionBusy(false);
     }
   }
 
   async function purgeExpiredTrash() {
-    if (!confirm("آیا از پاک‌سازی دائمی اقلام منقضی‌شده با قدمت بیش از ۳۰ روز اطمینان دارید؟")) return;
+    if (!confirm("Permanently purge all expired items older than 30 days?")) return;
     setTrashActionBusy(true);
     try {
       const { data, error } = await supabase.rpc("purge_expired_trash");
@@ -518,13 +518,13 @@ export default function SuperAdmin() {
         const { error: err1 } = await supabase.from("trash").delete().lt("expires_at", new Date().toISOString());
         const { error: err2 } = await supabase.from("forms").delete().lt("deleted_at", thirtyDaysAgo);
         if (err1 && err2) throw err1 || err2;
-        showToast("اقلام منقضی‌شده با موفقیت پاک‌سازی شدند");
+        showToast("Expired items purged successfully");
       } else {
-        showToast(`${data || 0} مورد منقضی‌شده برای همیشه پاک‌سازی گردید`);
+        showToast(`${data || 0} expired items permanently purged`);
       }
       await loadTrash();
     } catch (err) {
-      showToast("خطا در پاک‌سازی: " + err.message, "error");
+      showToast("Error purging expired items: " + err.message, "error");
     } finally {
       setTrashActionBusy(false);
     }
@@ -836,7 +836,7 @@ export default function SuperAdmin() {
     try {
       let loadedFromApi = false;
 
-      // ۱. تلاش برای خواندن از اندپوینت سرورلس جهت اطمینان از خواندن تمام کلیدها حتی در صورت محدودیت RLS
+      // 1. Attempt to fetch from serverless endpoint to bypass potential client RLS restrictions
       try {
         const session = (await supabase.auth.getSession())?.data?.session;
         const token = session?.access_token;
@@ -862,7 +862,7 @@ export default function SuperAdmin() {
         console.warn("api/admin-system-settings fetch error:", apiErr);
       }
 
-      // ۲. در صورت در دسترس نبودن API، خواندن از get_system_settings
+      // 2. If serverless API is unavailable, fetch via get_system_settings RPC
       if (!loadedFromApi) {
         const { data, error } = await supabase.rpc("get_system_settings");
         if (!error && data && Object.keys(data).length > 0) {
@@ -875,7 +875,7 @@ export default function SuperAdmin() {
           }));
         }
 
-        // بررسی مستقیم جدول system_settings برای اطمینان از خواندن مقادیر
+        // Direct table query verification for system_settings
         const { data: rows } = await supabase
           .from("system_settings")
           .select("key, value")
@@ -919,13 +919,13 @@ export default function SuperAdmin() {
     }
   }
 
-  // ─── تابع عمومی ذخیره‌سازی مطمئن تنظیمات سامانه با روال دوگانه ───
+  // ─── General Helper: Dual-pipeline reliable system settings persistence ───
   async function persistSystemSettings(nextSettings, successMsg) {
     setSettingsSaving(true);
     let saved = false;
     let errorMsg = null;
 
-    // ۱. ابتدا تلاش برای ذخیره از طریق API سرورلس با توکن سوپرادمین
+    // 1. First attempt via serverless API with SuperAdmin token
     try {
       const session = (await supabase.auth.getSession())?.data?.session;
       const token = session?.access_token;
@@ -945,14 +945,14 @@ export default function SuperAdmin() {
             setSysSettings((prev) => ({ ...prev, ...json.settings }));
           }
         } else {
-          errorMsg = json.error || "خطا در پاسخ سرور";
+          errorMsg = json.error || "Server response error";
         }
       }
     } catch (e) {
       errorMsg = e.message;
     }
 
-    // ۲. فالبک یا همگام‌سازی همزمان با RPC دیتابیس
+    // 2. Fallback or parallel synchronization with database RPC
     try {
       const { data: rpcData, error: rpcErr } = await supabase.rpc("update_system_settings", {
         p_settings: nextSettings,
@@ -969,7 +969,7 @@ export default function SuperAdmin() {
       if (!saved) errorMsg = e.message;
     }
 
-    // ۳. همگام‌سازی مستقیم در جدول system_settings
+    // 3. Direct table synchronization in system_settings
     try {
       const entries = Object.entries(nextSettings).map(([key, value]) => ({ key, value }));
       const { error: tableErr } = await supabase
@@ -6003,14 +6003,14 @@ export default function SuperAdmin() {
         </div>
       )}
 
-      {/* ═══════════ Trash (30-day retention & User-centric drilldown) ═══════════ */}
+      {/* ═══════════ Trash (30-day retention & User-centric drilldown - 100% English) ═══════════ */}
       {tab === "trash" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           {/* Header Bar */}
           <div className="flex gap-2 items-center" style={{ justifyContent: "space-between", flexWrap: "wrap" }}>
             <div className="sa-section-title" style={{ margin: 0 }}>
               <Trash2 size={18} style={{ verticalAlign: "middle", marginRight: 6 }} />
-              Recycle Bin (سطل زباله پیشرفته گاد) — اقلام قابل بازیابی تا ۳۰ روز
+              Recycle Bin (God Mode) — Deleted items recoverable for 30 days
             </div>
             <div className="flex gap-2">
               <button
@@ -6030,7 +6030,7 @@ export default function SuperAdmin() {
                 style={{ color: "var(--sa-danger)", borderColor: "rgba(220, 38, 38, 0.3)" }}
               >
                 <Trash2 size={14} style={{ marginRight: 4 }} />
-                پاک‌سازی اقلام منقضی (بیش از ۳۰ روز)
+                Purge Expired (&gt; 30 days)
               </button>
             </div>
           </div>
@@ -6042,13 +6042,13 @@ export default function SuperAdmin() {
             };
             const dayMs = 86400000;
 
-            // ساخت لیست یکپارچه از اقلام
+            // Unified list of trashed items
             const all = [
               ...trashItems.map((t) => ({
                 key: "t-" + t.id,
                 rawId: t.id,
                 kind: t.entity_type,
-                kindFa: t.entity_type === "response" ? "ورودی" : t.entity_type === "form" ? "فرم" : t.entity_type,
+                kindLabel: t.entity_type === "response" ? "Response" : t.entity_type === "form" ? "Form" : t.entity_type,
                 label: t.label,
                 at: t.deleted_at,
                 expires: t.expires_at,
@@ -6062,8 +6062,8 @@ export default function SuperAdmin() {
                 key: "f-" + f.id,
                 rawId: f.id,
                 kind: "form",
-                kindFa: "فرم",
-                label: `فرم «${f.title || f.slug || "بدون عنوان"}»`,
+                kindLabel: "Form",
+                label: `Form: "${f.title || f.slug || "Untitled"}"`,
                 at: f.deleted_at,
                 expires: new Date(new Date(f.deleted_at).getTime() + 30 * dayMs).toISOString(),
                 ownerId: f.created_by || f.manager_id,
@@ -6076,8 +6076,8 @@ export default function SuperAdmin() {
                 key: "u-" + u.id,
                 rawId: u.id,
                 kind: "user",
-                kindFa: "کاربر",
-                label: `حساب کاربر: ${u.full_name || u.email || "بدون نام"}`,
+                kindLabel: "User",
+                label: `User Account: ${u.full_name || u.email || "Unnamed"}`,
                 at: u.deactivated_at || u.created_at,
                 expires: u.deactivated_at || u.created_at
                   ? new Date(new Date(u.deactivated_at || u.created_at).getTime() + 30 * dayMs).toISOString()
@@ -6090,14 +6090,14 @@ export default function SuperAdmin() {
               })),
             ].sort((a, b) => new Date(b.at) - new Date(a.at));
 
-            // جمع‌آوری آمار کاربران دارای اقلام حذفی
+            // Aggregate user statistics
             const userStatsMap = new Map();
 
-            // ابتدا اضافه کردن کاربرانی که خودشان غیرفعال/حذف شده‌اند
+            // First include deactivated/deleted users
             trashedUsers.forEach((u) => {
               userStatsMap.set(u.id, {
                 id: u.id,
-                name: u.full_name || u.email || "کاربر ناشناس",
+                name: u.full_name || u.email || "Unknown User",
                 email: u.email,
                 isDeactivated: true,
                 formsCount: 0,
@@ -6106,14 +6106,14 @@ export default function SuperAdmin() {
               });
             });
 
-            // محاسبه تعداد فرم‌ها و ورودی‌های هر کاربر
+            // Calculate forms and responses per user
             all.forEach((item) => {
               if (item.kind === "user") return;
               const uid = item.ownerId;
               if (!uid) return;
               const existing = userStatsMap.get(uid) || {
                 id: uid,
-                name: nameOf(uid) || `کاربر (${String(uid).slice(0, 8)}…)`,
+                name: nameOf(uid) || `User (${String(uid).slice(0, 8)}…)`,
                 email: users.find((x) => x.id === uid)?.email || "",
                 isDeactivated: trashedUsers.some((x) => x.id === uid),
                 formsCount: 0,
@@ -6126,24 +6126,24 @@ export default function SuperAdmin() {
               userStatsMap.set(uid, existing);
             });
 
-            // لیست نهایی کاربران مرتب‌شده: ابتدا کاربران غیرفعال/حذف‌شده، سپس بیشترین اقلام
+            // Sorted list of users: deactivated users first, then by highest item count
             const userList = Array.from(userStatsMap.values()).sort((a, b) => {
               if (a.isDeactivated && !b.isDeactivated) return -1;
               if (!a.isDeactivated && b.isDeactivated) return 1;
               return b.totalCount - a.totalCount;
             });
 
-            // فیلتر جستجوی کاربران
+            // Filter users by search
             const filteredUserList = userList.filter((u) => {
               if (!trashUserSearch) return true;
               const q = trashUserSearch.toLowerCase();
               return (u.name && u.name.toLowerCase().includes(q)) || (u.email && u.email.toLowerCase().includes(q));
             });
 
-            // اقلام مربوط به کاربر انتخابی یا تمام کاربران
+            // Filter items by selected user or all users
             const userScopedItems = trashUserFilter === "all" ? all : all.filter((i) => i.ownerId === trashUserFilter);
 
-            // فیلتر بر اساس نوع موجودیت (فرم، ورودی، کاربر)
+            // Filter items by entity type (form, response, user)
             const visibleItems = userScopedItems.filter((i) => {
               if (trashTypeFilter === "all") return true;
               if (trashTypeFilter === "form") return i.kind === "form";
@@ -6156,9 +6156,9 @@ export default function SuperAdmin() {
               exp ? Math.max(0, Math.ceil((new Date(exp) - Date.now()) / dayMs)) : null;
 
             const whoDeleted = (i) => {
-              if (!i.byId) return "نامشخص";
-              if (i.byId === i.ownerId) return "خود کاربر";
-              return nameOf(i.byId) || i.byName || "ادمین";
+              if (!i.byId) return "Unknown";
+              if (i.byId === i.ownerId) return "Self";
+              return nameOf(i.byId) || i.byName || "Admin";
             };
 
             const selectedItems = visibleItems.filter((i) => trashSelectedKeys.includes(i.key));
@@ -6166,7 +6166,7 @@ export default function SuperAdmin() {
 
             const selectedUserObj = trashUserFilter === "all" ? null : userStatsMap.get(trashUserFilter);
 
-            // تعداد کل موارد منقضی شده (> ۳۰ روز)
+            // Total expired count (> 30 days)
             const expiredCount = all.filter((i) => {
               const dl = daysLeft(i.expires);
               return dl !== null && dl === 0;
@@ -6174,24 +6174,24 @@ export default function SuperAdmin() {
 
             return (
               <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                {/* ─── دو ستون اصلی: انتخاب کاربر در راست + اقلام در چپ ─── */}
+                {/* ─── Two-Column Layout: User Selector (Right in LTR / Left in RTL) + Items Panel ─── */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1rem", alignItems: "start" }}>
-                  {/* ستون راست: انتخاب کاربر (User Selector) */}
+                  {/* User Selector Panel */}
                   <div className="sa-card" style={{ padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem", maxHeight: "680px" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                       <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>
-                        ۱. انتخاب کاربر ({userList.length})
+                        1. Select User ({userList.length})
                       </span>
                       <span className="sa-tag sa-tag-blue" style={{ fontSize: "0.75rem" }}>
-                        {all.length} مورد در سطل
+                        {all.length} Items in Trash
                       </span>
                     </div>
 
-                    {/* جستجوی سریع کاربر */}
+                    {/* Quick User Search */}
                     <div style={{ position: "relative" }}>
                       <input
                         type="text"
-                        placeholder="جستجوی نام یا ایمیل کاربر..."
+                        placeholder="Search users by name, email..."
                         value={trashUserSearch}
                         onChange={(e) => setTrashUserSearch(e.target.value)}
                         className="sa-input"
@@ -6200,9 +6200,9 @@ export default function SuperAdmin() {
                       <Search size={14} style={{ position: "absolute", right: "0.6rem", top: "50%", transform: "translateY(-50%)", opacity: 0.5 }} />
                     </div>
 
-                    {/* لیست اسکرول‌شونده کاربران */}
+                    {/* Scrollable User List */}
                     <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.4rem", flex: 1, paddingRight: "2px" }}>
-                      {/* گزینه مشاهده همه کاربران */}
+                      {/* All Users Option */}
                       <button
                         type="button"
                         onClick={() => {
@@ -6219,13 +6219,13 @@ export default function SuperAdmin() {
                           background: trashUserFilter === "all" ? "rgba(89, 187, 175, 0.12)" : "transparent",
                           color: "inherit",
                           cursor: "pointer",
-                          textAlign: "right",
+                          textAlign: "left",
                           transition: "all 0.15s",
                         }}
                       >
                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                           <Users size={16} style={{ color: "#59BBAF" }} />
-                          <span style={{ fontWeight: 700, fontSize: "0.85rem" }}>همه کاربران سامانه</span>
+                          <span style={{ fontWeight: 700, fontSize: "0.85rem" }}>All System Users</span>
                         </div>
                         <span className="sa-tag sa-tag-gray" style={{ fontSize: "0.75rem" }}>
                           {all.length}
@@ -6252,7 +6252,7 @@ export default function SuperAdmin() {
                               background: isSelected ? "rgba(89, 187, 175, 0.1)" : "transparent",
                               color: "inherit",
                               cursor: "pointer",
-                              textAlign: "right",
+                              textAlign: "left",
                               transition: "all 0.15s",
                             }}
                           >
@@ -6281,7 +6281,7 @@ export default function SuperAdmin() {
                               </div>
                               {u.isDeactivated && (
                                 <span className="sa-tag sa-tag-purple" style={{ fontSize: "0.65rem", padding: "0.15rem 0.4rem", flexShrink: 0 }}>
-                                  کاربر حذف‌شده
+                                  Deactivated User
                                 </span>
                               )}
                             </div>
@@ -6291,8 +6291,8 @@ export default function SuperAdmin() {
                                 {u.email}
                               </span>
                               <div style={{ display: "flex", gap: "0.3rem" }}>
-                                {u.formsCount > 0 && <span>{u.formsCount} فرم</span>}
-                                {u.responsesCount > 0 && <span>{u.responsesCount} ورودی</span>}
+                                {u.formsCount > 0 && <span>{u.formsCount} Forms</span>}
+                                {u.responsesCount > 0 && <span>{u.responsesCount} Responses</span>}
                               </div>
                             </div>
                           </button>
@@ -6301,19 +6301,19 @@ export default function SuperAdmin() {
                     </div>
                   </div>
 
-                  {/* ستون چپ: اقلام حذفی کاربر انتخابی و عملیات گروهی */}
+                  {/* Items Panel for Selected User */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", gridColumn: "span 2" }}>
-                    {/* هدر مشخصات کاربر انتخابی */}
+                    {/* User Header Details Card */}
                     <div className="sa-card" style={{ padding: "1rem" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem" }}>
                         <div>
                           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                             <span style={{ fontSize: "1rem", fontWeight: 800 }}>
-                              {trashUserFilter === "all" ? "تمام اقلام سطل زباله (همه کاربران)" : `اقلام کاربر: ${selectedUserObj?.name || trashUserFilter}`}
+                              {trashUserFilter === "all" ? "All Recycle Bin Items (All Users)" : `User Items: ${selectedUserObj?.name || trashUserFilter}`}
                             </span>
                             {selectedUserObj?.isDeactivated && (
                               <span className="sa-tag sa-tag-purple" style={{ fontSize: "0.75rem" }}>
-                                حساب کاربری غیرفعال/حذف‌شده
+                                User Account Deactivated / Deleted
                               </span>
                             )}
                           </div>
@@ -6324,15 +6324,15 @@ export default function SuperAdmin() {
                           )}
                         </div>
 
-                        {/* برچسب شمارنده اقلام منقضی‌شده */}
+                        {/* Expired Items Badge */}
                         {expiredCount > 0 && (
                           <div className="sa-tag sa-tag-purple" style={{ fontSize: "0.78rem" }}>
-                            ⚠️ {expiredCount} مورد با قدمت بیش از ۳۰ روز (آماده پاک‌سازی)
+                            ⚠️ {expiredCount} expired items (&gt; 30 days old)
                           </div>
                         )}
                       </div>
 
-                      {/* هشدار در صورت حذف بودن خود کاربر */}
+                      {/* Deactivated User Alert Banner */}
                       {selectedUserObj?.isDeactivated && (
                         <div
                           style={{
@@ -6349,7 +6349,7 @@ export default function SuperAdmin() {
                           }}
                         >
                           <div style={{ fontSize: "0.82rem", color: "#E0195B" }}>
-                            <strong>توجه:</strong> حساب کاربری این فرد در سامانه غیرفعال/حذف شده است. تا ۳۰ روز امکان بازگردانی وجود دارد.
+                            <strong>Notice:</strong> This user account is currently deactivated / deleted. It is recoverable or can be permanently deleted within 30 days.
                           </div>
                           <div style={{ display: "flex", gap: "0.5rem" }}>
                             <button
@@ -6358,7 +6358,7 @@ export default function SuperAdmin() {
                               onClick={() => restoreUser(selectedUserObj.id)}
                               disabled={trashActionBusy}
                             >
-                              ↩️ بازیابی حساب کاربر
+                              ↩️ Restore User Account
                             </button>
                             <button
                               type="button"
@@ -6367,19 +6367,19 @@ export default function SuperAdmin() {
                               onClick={() => permanentDeleteItem({ kind: "user", rawId: selectedUserObj.id, key: "u-" + selectedUserObj.id })}
                               disabled={trashActionBusy}
                             >
-                              🗑️ حذف قطعی کاربر
+                              🗑️ Delete User Permanently
                             </button>
                           </div>
                         </div>
                       )}
 
-                      {/* زیرتب‌های فیلتر موجودیت: همه | فرم‌ها | ورودی‌ها | کاربر */}
+                      {/* Sub-tabs: All | Forms | Responses | Users */}
                       <div style={{ display: "flex", gap: "0.35rem", marginTop: "0.85rem", flexWrap: "wrap" }}>
                         {[
-                          { id: "all", label: `همه موارد (${userScopedItems.length})` },
-                          { id: "form", label: `فرم‌ها (${userScopedItems.filter((x) => x.kind === "form").length})` },
-                          { id: "response", label: `ورودی‌ها (${userScopedItems.filter((x) => x.kind === "response").length})` },
-                          { id: "user", label: `کاربران (${userScopedItems.filter((x) => x.kind === "user").length})` },
+                          { id: "all", label: `All Items (${userScopedItems.length})` },
+                          { id: "form", label: `Forms (${userScopedItems.filter((x) => x.kind === "form").length})` },
+                          { id: "response", label: `Responses (${userScopedItems.filter((x) => x.kind === "response").length})` },
+                          { id: "user", label: `Users (${userScopedItems.filter((x) => x.kind === "user").length})` },
                         ].map((st) => (
                           <button
                             key={st.id}
@@ -6397,7 +6397,7 @@ export default function SuperAdmin() {
                       </div>
                     </div>
 
-                    {/* نوار عملیات گروهی (Batch Toolbar) */}
+                    {/* Batch Actions Toolbar */}
                     <div
                       className="sa-card"
                       style={{
@@ -6425,17 +6425,17 @@ export default function SuperAdmin() {
                             }}
                             style={{ width: 16, height: 16, accentColor: "#59BBAF" }}
                           />
-                          <span>انتخاب همه ({visibleItems.length})</span>
+                          <span>Select All ({visibleItems.length})</span>
                         </label>
 
                         {selectedItems.length > 0 && (
                           <span className="sa-tag sa-tag-blue" style={{ fontSize: "0.78rem" }}>
-                            {selectedItems.length} مورد انتخاب شده
+                            {selectedItems.length} selected
                           </span>
                         )}
                       </div>
 
-                      {/* دکمه‌های عملیات گروهی */}
+                      {/* Batch Buttons */}
                       {selectedItems.length > 0 ? (
                         <div style={{ display: "flex", gap: "0.5rem" }}>
                           <button
@@ -6445,7 +6445,7 @@ export default function SuperAdmin() {
                             disabled={trashActionBusy}
                             style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
                           >
-                            ↩️ بازیابی موارد انتخابی ({selectedItems.length})
+                            ↩️ Restore Selected ({selectedItems.length})
                           </button>
                           <button
                             type="button"
@@ -6463,32 +6463,32 @@ export default function SuperAdmin() {
                             disabled={trashActionBusy}
                           >
                             <Trash2 size={13} />
-                            حذف دائمی موارد انتخابی ({selectedItems.length})
+                            Delete Selected Permanently ({selectedItems.length})
                           </button>
                           <button
                             type="button"
                             className="sa-btn sa-btn-ghost sa-btn-sm"
                             onClick={() => setTrashSelectedKeys([])}
                           >
-                            انصراف
+                            Clear Selection
                           </button>
                         </div>
                       ) : (
                         <div style={{ fontSize: "0.78rem", opacity: 0.7 }}>
-                          برای حذف یا بازیابی گروهی، چک‌باکس اقلام را تیک بزنید.
+                          Check items to perform batch restore or permanent deletion.
                         </div>
                       )}
                     </div>
 
-                    {/* لیست اقلام حذفی */}
-                    {trashLoading && <div className="sa-card">در حال بارگذاری سطل زباله…</div>}
+                    {/* Trashed Items List */}
+                    {trashLoading && <div className="sa-card">Loading recycle bin…</div>}
 
                     {!trashLoading && visibleItems.length === 0 && (
                       <div className="sa-card" style={{ textAlign: "center", padding: "2.5rem 1rem", opacity: 0.75 }}>
                         <Trash2 size={32} style={{ margin: "0 auto 0.5rem auto", opacity: 0.5 }} />
-                        <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>هیچ موردی در این بخش یافت نشد 🧹</div>
+                        <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>No items found in this section 🧹</div>
                         <div style={{ fontSize: "0.8rem", marginTop: "0.25rem" }}>
-                          سطل زباله برای این کاربر یا فیلتر انتخابی خالی است.
+                          Recycle bin is empty for this user or selected filter.
                         </div>
                       </div>
                     )}
@@ -6512,7 +6512,7 @@ export default function SuperAdmin() {
                               transition: "all 0.15s",
                             }}
                           >
-                            {/* چک‌باکس انتخاب سطر */}
+                            {/* Checkbox */}
                             <input
                               type="checkbox"
                               checked={isChecked}
@@ -6526,7 +6526,7 @@ export default function SuperAdmin() {
                               style={{ width: 16, height: 16, accentColor: "#59BBAF", cursor: "pointer" }}
                             />
 
-                            {/* نشانگر نوع موجودیت */}
+                            {/* Entity Type Badge */}
                             <span
                               className={`sa-badge ${
                                 i.kind === "form" ? "sa-tag-teal" : i.kind === "response" ? "sa-tag-blue" : "sa-tag-purple"
@@ -6536,16 +6536,16 @@ export default function SuperAdmin() {
                               {i.kind === "form" && <FileText size={12} />}
                               {i.kind === "response" && <MessageSquare size={12} />}
                               {i.kind === "user" && <UserIcon size={12} />}
-                              {i.kindFa}
+                              {i.kindLabel}
                             </span>
 
-                            {/* عنوان و جزئیات موجودیت */}
+                            {/* Label & Details */}
                             <div style={{ flex: 1, minWidth: 220 }}>
                               <div style={{ fontWeight: 700, fontSize: "0.92rem" }}>{i.label}</div>
                               <div style={{ fontSize: "0.76rem", opacity: 0.75, marginTop: "0.2rem" }}>
-                                مالک: {nameOf(i.ownerId) || "—"} · حذف توسط:{" "}
-                                {whoDeleted(i) === "خود کاربر" ? (
-                                  <b style={{ color: "#59BBAF" }}>خود کاربر</b>
+                                Owner: {nameOf(i.ownerId) || "—"} · Deleted by:{" "}
+                                {whoDeleted(i) === "Self" ? (
+                                  <b style={{ color: "#59BBAF" }}>Self</b>
                                 ) : (
                                   whoDeleted(i)
                                 )}{" "}
@@ -6553,7 +6553,7 @@ export default function SuperAdmin() {
                               </div>
                             </div>
 
-                            {/* تایمر شمارش معکوس ۳۰ روزه تا انقضا */}
+                            {/* 30-Day Expiration Countdown */}
                             <span
                               style={{
                                 fontSize: "0.76rem",
@@ -6565,24 +6565,24 @@ export default function SuperAdmin() {
                                 borderRadius: "6px",
                               }}
                             >
-                              {dl === null ? "بدون انقضا" : dl <= 0 ? "⚠️ منقضی‌شده (> ۳۰ روز)" : `${dl} روز مانده تا پاک‌سازی`}
+                              {dl === null ? "No expiry" : dl <= 0 ? "⚠️ Expired (> 30 days)" : `${dl} days left until purge`}
                             </span>
 
-                            {/* دکمه‌های عملیات تکی */}
+                            {/* Action Buttons */}
                             <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", flexShrink: 0 }}>
-                              {/* مشاهده جزئیات Payload */}
+                              {/* View Payload Details */}
                               {i.payload && (
                                 <button
                                   type="button"
                                   className="sa-btn sa-btn-ghost sa-btn-sm"
                                   onClick={() => setTrashPayloadModal(i)}
-                                  title="مشاهده محتوای ذخیره‌شده قبل از بازیابی یا حذف"
+                                  title="Inspect stored payload before restore or delete"
                                 >
                                   <Eye size={13} />
                                 </button>
                               )}
 
-                              {/* بازیابی */}
+                              {/* Restore */}
                               <button
                                 type="button"
                                 className="sa-btn sa-btn-primary sa-btn-sm"
@@ -6593,20 +6593,20 @@ export default function SuperAdmin() {
                                 }}
                                 disabled={trashActionBusy}
                               >
-                                ↩️ بازیابی
+                                ↩️ Restore
                               </button>
 
-                              {/* حذف قطعی */}
+                              {/* Permanent Delete */}
                               <button
                                 type="button"
                                 className="sa-btn sa-btn-ghost sa-btn-sm"
                                 style={{ color: "var(--sa-danger)" }}
                                 onClick={() => setTrashConfirmDeleteModal({ items: [i], isBatch: false })}
                                 disabled={trashActionBusy}
-                                title="حذف قطعی و نهایی از کل پایگاه‌داده"
+                                title="Permanently delete from database"
                               >
                                 <Trash2 size={13} />
-                                حذف
+                                Delete
                               </button>
                             </div>
                           </div>
@@ -6615,33 +6615,33 @@ export default function SuperAdmin() {
                   </div>
                 </div>
 
-                {/* مودال مشاهده جزئیات Payload */}
+                {/* Modal: View Stored Payload Details */}
                 <Modal
                   open={Boolean(trashPayloadModal)}
                   onClose={() => setTrashPayloadModal(null)}
-                  title={`جزئیات محتوای سطل زباله (${trashPayloadModal?.kindFa || "مورد"})`}
+                  title={`Trash Item Payload Inspector (${trashPayloadModal?.kindLabel || "Item"})`}
                 >
                   {trashPayloadModal && (
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxHeight: "480px", overflowY: "auto" }}>
                       <div className="sa-modal-box">
                         <div style={{ fontWeight: 700, fontSize: "0.9rem" }}>{trashPayloadModal.label}</div>
                         <div style={{ fontSize: "0.78rem", opacity: 0.75, marginTop: "0.2rem" }}>
-                          شناسه: {trashPayloadModal.rawId} · تاریخ حذف: {godDateTime(trashPayloadModal.at)}
+                          ID: {trashPayloadModal.rawId} · Deleted: {godDateTime(trashPayloadModal.at)}
                         </div>
                       </div>
 
-                      {/* نمایش پاسخ‌ها اگر ورودی باشد */}
+                      {/* Display response answers */}
                       {trashPayloadModal.kind === "response" && trashPayloadModal.payload?.answers && (
                         <div>
                           <div style={{ fontWeight: 700, fontSize: "0.85rem", marginBottom: "0.4rem" }}>
-                            پاسخ‌های ثبت‌شده کاربر ({trashPayloadModal.payload.answers.length} پاسخ):
+                            User Submitted Answers ({trashPayloadModal.payload.answers.length} answers):
                           </div>
                           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
                             {trashPayloadModal.payload.answers.map((a, idx) => (
                               <div key={idx} className="sa-card" style={{ padding: "0.5rem 0.75rem", fontSize: "0.8rem" }}>
-                                <div style={{ opacity: 0.6, fontSize: "0.72rem" }}>سوال ID: {a.question_id}</div>
+                                <div style={{ opacity: 0.6, fontSize: "0.72rem" }}>Question ID: {a.question_id}</div>
                                 <div style={{ fontWeight: 600, marginTop: "0.15rem" }}>
-                                  مقدار: {typeof a.value === "object" ? JSON.stringify(a.value) : String(a.value ?? "—")}
+                                  Value: {typeof a.value === "object" ? JSON.stringify(a.value) : String(a.value ?? "—")}
                                 </div>
                               </div>
                             ))}
@@ -6649,16 +6649,16 @@ export default function SuperAdmin() {
                         </div>
                       )}
 
-                      {/* نمایش سوالات اگر فرم باشد */}
+                      {/* Display form questions */}
                       {trashPayloadModal.kind === "form" && trashPayloadModal.payload?.questions && (
                         <div>
                           <div style={{ fontWeight: 700, fontSize: "0.85rem", marginBottom: "0.4rem" }}>
-                            سوالات فرم ({trashPayloadModal.payload.questions.length} سوال):
+                            Form Questions ({trashPayloadModal.payload.questions.length} questions):
                           </div>
                           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
                             {trashPayloadModal.payload.questions.map((q, idx) => (
                               <div key={idx} className="sa-card" style={{ padding: "0.5rem 0.75rem", fontSize: "0.8rem" }}>
-                                <div style={{ fontWeight: 700 }}>{idx + 1}. {q.title || "بدون عنوان"} ({q.type})</div>
+                                <div style={{ fontWeight: 700 }}>{idx + 1}. {q.title || "Untitled"} ({q.type})</div>
                                 {q.description && <div style={{ opacity: 0.7, fontSize: "0.75rem" }}>{q.description}</div>}
                               </div>
                             ))}
@@ -6666,9 +6666,9 @@ export default function SuperAdmin() {
                         </div>
                       )}
 
-                      {/* کد خام JSON */}
+                      {/* Raw JSON inspection */}
                       <div>
-                        <div style={{ fontWeight: 700, fontSize: "0.85rem", marginBottom: "0.3rem" }}>داده‌های خام JSON (God Inspection):</div>
+                        <div style={{ fontWeight: 700, fontSize: "0.85rem", marginBottom: "0.3rem" }}>Raw JSON Data (God Inspection):</div>
                         <pre
                           style={{
                             background: "var(--sa-surface-4)",
@@ -6695,32 +6695,31 @@ export default function SuperAdmin() {
                             setTrashPayloadModal(null);
                           }}
                         >
-                          ↩️ بازیابی این مورد
+                          ↩️ Restore This Item
                         </button>
                         <button type="button" className="sa-btn sa-btn-secondary" onClick={() => setTrashPayloadModal(null)}>
-                          بستن
+                          Close
                         </button>
                       </div>
                     </div>
                   )}
                 </Modal>
 
-                {/* مودال تایید حذف قطعی (تکی یا گروهی) */}
+                {/* Modal: Confirm Permanent Deletion (Single or Batch) */}
                 <Modal
                   open={Boolean(trashConfirmDeleteModal)}
                   onClose={() => setTrashConfirmDeleteModal(null)}
-                  title="تأیید حذف قطعی و غیرقابل بازگشت"
+                  title="Confirm Permanent Deletion"
                 >
                   {trashConfirmDeleteModal && (
                     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                       <p style={{ fontSize: "0.88rem", lineHeight: 1.7, margin: 0 }}>
-                        آیا از حذف دائمی{" "}
+                        Are you sure you want to permanently delete{" "}
                         <strong style={{ color: "var(--sa-danger)" }}>
                           {trashConfirmDeleteModal.isBatch
-                            ? `${trashConfirmDeleteModal.items.length} مورد انتخابی`
-                            : `«${trashConfirmDeleteModal.items[0]?.label}»`}
-                        </strong>{" "}
-                        اطمینان کامل دارید؟
+                            ? `${trashConfirmDeleteModal.items.length} selected items`
+                            : `"${trashConfirmDeleteModal.items[0]?.label}"`}
+                        </strong>?
                       </p>
                       <div
                         style={{
@@ -6733,7 +6732,7 @@ export default function SuperAdmin() {
                           lineHeight: 1.6,
                         }}
                       >
-                        ⚠️ <strong>هشدار مهم:</strong> این عملیات داده‌ها را برای همیشه از سرور و پایگاه‌داده پرس‌کاد پاک خواهد کرد و فضای حافظه/استوریج آزاد خواهد شد. این کار به هیچ عنوان قابل بازگردانی نخواهد بود.
+                        ⚠️ <strong>Critical Warning:</strong> This operation will permanently delete the data from the server and database to free storage space. This action CANNOT be undone.
                       </div>
 
                       <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
@@ -6743,7 +6742,7 @@ export default function SuperAdmin() {
                           onClick={() => setTrashConfirmDeleteModal(null)}
                           disabled={trashActionBusy}
                         >
-                          انصراف
+                          Cancel
                         </button>
                         <button
                           type="button"
@@ -6768,7 +6767,7 @@ export default function SuperAdmin() {
                           disabled={trashActionBusy}
                         >
                           <Trash2 size={14} />
-                          {trashActionBusy ? "در حال حذف قطعی..." : "بله، برای همیشه حذف شود"}
+                          {trashActionBusy ? "Permanently deleting..." : "Yes, Delete Permanently"}
                         </button>
                       </div>
                     </div>
