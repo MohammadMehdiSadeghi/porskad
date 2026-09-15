@@ -208,38 +208,93 @@ export default async function handler(req, res) {
     let sendErrorMsg = null;
 
     if (amootToken) {
-      // الف) ارسال از طریق الگوی تاییدشده آموت (سریع و بدون بلاک بلک‌لیست)
-      if (patternCode) {
+      // الف) تلاش اول: ارسال با الگو از طریق REST JSON (فرمت استاندارد آموت)
+      if (patternCode && !sendSuccess) {
         try {
-          const patternUrl = "https://portal.amootsms.com/rest/SendWithPattern";
+          const resp = await fetch("https://portal.amootsms.com/rest/SendWithPattern", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              Token: amootToken,
+              token: amootToken,
+              PatternCode: String(patternCode).trim(),
+              Mobile: cleanPhone,
+              Mobiles: cleanPhone,
+              PatternValues: { code: code },
+            }),
+            signal: AbortSignal.timeout(8000),
+          });
+
+          const data = await resp.json().catch(() => null);
+          if (data && (data.Status === "Success" || data.Status === "success" || data.Status === "OK")) {
+            sendSuccess = true;
+            sendErrorMsg = null;
+          } else if (data) {
+            sendErrorMsg = `PatternJSON: ${data.Status || data.Message || JSON.stringify(data)}`;
+          }
+        } catch (err) {
+          sendErrorMsg = `PatternJSON_Err: ${err.message}`;
+        }
+      }
+
+      // ب) تلاش دوم: ارسال با الگو از طریق REST Form-Urlencoded (با فرمت code:12345 و 12345)
+      if (patternCode && !sendSuccess) {
+        try {
           const patternPostData = new URLSearchParams({
             Token: amootToken,
             token: amootToken,
             PatternCode: String(patternCode).trim(),
             Mobile: cleanPhone,
-            MobileNumbers: cleanPhone,
-            PatternValues: JSON.stringify({ code: code, Code: code }),
+            Mobiles: cleanPhone,
+            PatternValues: `code:${code}`,
           });
 
-          const patternResp = await fetch(patternUrl, {
+          const resp = await fetch("https://portal.amootsms.com/rest/SendWithPattern", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: patternPostData.toString(),
-            signal: AbortSignal.timeout(10000),
+            signal: AbortSignal.timeout(8000),
           });
 
-          const patternData = await patternResp.json().catch(() => null);
-          if (patternData && (patternData.Status === "Success" || patternData.Status === "success" || patternData.Status === "OK")) {
+          const data = await resp.json().catch(() => null);
+          if (data && (data.Status === "Success" || data.Status === "success" || data.Status === "OK")) {
             sendSuccess = true;
-          } else if (patternData) {
-            sendErrorMsg = patternData.Status || patternData.Message || JSON.stringify(patternData);
+            sendErrorMsg = null;
+          } else if (data) {
+            sendErrorMsg = `PatternForm: ${data.Status || data.Message || JSON.stringify(data)}`;
           }
         } catch (err) {
-          sendErrorMsg = err.message;
+          sendErrorMsg = `PatternForm_Err: ${err.message}`;
         }
       }
 
-      // ب) اگر ارسال با الگو موفق نبود یا کد الگو خالی بود، ارسال عادی SendSimple به عنوان Fallback
+      // ج) تلاش سوم: وب‌سرویس ASMX SendWithPattern آموت
+      if (patternCode && !sendSuccess) {
+        try {
+          const asmxPostData = new URLSearchParams({
+            UserName: amootToken,
+            Password: "",
+            PatternCode: String(patternCode).trim(),
+            Mobile: cleanPhone,
+            PatternValues: `code:${code}`,
+          });
+
+          const resp = await fetch("https://portal.amootsoft.com/webservice2.asmx/SendWithPattern", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: asmxPostData.toString(),
+            signal: AbortSignal.timeout(8000),
+          });
+
+          const text = await resp.text();
+          if (resp.ok && (text.includes("SendWithPatternResult") || text.includes("<Status>Success</Status>") || (!text.includes("Fault") && !text.includes("Error")))) {
+            sendSuccess = true;
+            sendErrorMsg = null;
+          }
+        } catch {}
+      }
+
+      // د) در صورت ناموفق بودن الگو، ارسال عادی SendSimple به عنوان آخرین Fallback
       if (!sendSuccess) {
         try {
           const simpleUrl = "https://portal.amootsms.com/rest/SendSimple";
