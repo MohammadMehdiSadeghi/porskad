@@ -36,6 +36,14 @@ import {
   ShieldCheck,
   Zap,
   X,
+  Users,
+  CheckSquare,
+  Square,
+  Download,
+  Phone,
+  FileText,
+  ListFilter,
+  Sparkles,
 } from "lucide-react";
 
 const inputCls =
@@ -94,6 +102,18 @@ export default function SmsPanel() {
   const [logLoading, setLogLoading] = useState(false);
   const [searchHistory, setSearchHistory] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+
+  // ─── Form Contacts Extraction State ───
+  const [formsList, setFormsList] = useState([]);
+  const [loadingForms, setLoadingForms] = useState(false);
+  const [selectedFormId, setSelectedFormId] = useState("");
+  const [formQuestions, setFormQuestions] = useState([]);
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState([]);
+  const [extractedContacts, setExtractedContacts] = useState([]);
+  const [uniqueExtractedPhones, setUniqueExtractedPhones] = useState([]);
+  const [extractingContacts, setExtractingContacts] = useState(false);
+  const [searchContactFilter, setSearchContactFilter] = useState("");
 
   function showToast(msg, type = "success") {
     setToast({ msg, type });
@@ -238,6 +258,255 @@ export default function SmsPanel() {
       alive = false;
     };
   }, [loadSettings, loadDashboard]);
+
+  // ─── بارگذاری لیست فرم‌ها برای استخراج شماره تماس ───
+  const loadFormsList = useCallback(async () => {
+    setLoadingForms(true);
+    try {
+      let query = supabase
+        .from("forms")
+        .select("id, title, slug, created_at, published")
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false });
+
+      if (!isGlobalAdmin && user?.id) {
+        query = query.or(`created_by.eq.${user.id},manager_id.eq.${user.id}`);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      setFormsList(data || []);
+    } catch (err) {
+      console.error("Failed to load forms list:", err);
+      showToast("خطا در بارگذاری لیست فرم‌ها", "error");
+    } finally {
+      setLoadingForms(false);
+    }
+  }, [isGlobalAdmin, user?.id]);
+
+  useEffect(() => {
+    if (tab === "form_import" && formsList.length === 0) {
+      loadFormsList();
+    }
+  }, [tab, formsList.length, loadFormsList]);
+
+  // ─── استخراج شماره‌ها برای فیلدهای انتخابی ───
+  const extractNumbersForQuestions = async (formId, questionIds, questionsList = formQuestions) => {
+    if (!formId || !questionIds || questionIds.length === 0) {
+      setExtractedContacts([]);
+      setUniqueExtractedPhones([]);
+      return;
+    }
+
+    setExtractingContacts(true);
+    try {
+      const qMap = {};
+      (questionsList || []).forEach((q) => {
+        qMap[q.id] = q.title;
+      });
+
+      const { data: answersData, error } = await supabase
+        .from("answers")
+        .select("id, response_id, question_id, value, created_at")
+        .in("question_id", questionIds);
+
+      if (error) throw error;
+
+      const rawItems = [];
+      (answersData || []).forEach((row) => {
+        let val = row.value;
+        if (Array.isArray(val)) {
+          val.forEach((item) => {
+            const rawStr = String(item || "").trim();
+            if (rawStr) {
+              const normalized = normalizeIranPhone(rawStr);
+              const valid = isValidIranPhone(normalized);
+              rawItems.push({
+                id: `${row.id}_${rawStr}`,
+                phone: valid ? normalized : rawStr,
+                originalValue: rawStr,
+                questionTitle: qMap[row.question_id] || "فیلد فرم",
+                questionId: row.question_id,
+                responseId: row.response_id,
+                createdAt: row.created_at,
+                isValid: valid,
+              });
+            }
+          });
+        } else if (val !== null && val !== undefined) {
+          const rawStr = String(val).trim();
+          if (rawStr) {
+            const normalized = normalizeIranPhone(rawStr);
+            const valid = isValidIranPhone(normalized);
+            rawItems.push({
+              id: row.id,
+              phone: valid ? normalized : rawStr,
+              originalValue: rawStr,
+              questionTitle: qMap[row.question_id] || "فیلد فرم",
+              questionId: row.question_id,
+              responseId: row.response_id,
+              createdAt: row.created_at,
+              isValid: valid,
+            });
+          }
+        }
+      });
+
+      const validOnly = rawItems.filter((i) => i.isValid);
+      const uniqueList = [...new Set(validOnly.map((i) => i.phone))];
+
+      setExtractedContacts(rawItems);
+      setUniqueExtractedPhones(uniqueList);
+
+      if (uniqueList.length > 0) {
+        showToast(`${faNum(uniqueList.length)} شماره تماس یکتا استخراج گردید.`, "success");
+      } else if (rawItems.length > 0) {
+        showToast("پاسخ‌هایی یافت شد اما شماره موبایل معتبری منطبق بر الگوی ایران نبود.", "info");
+      } else {
+        showToast("هنوز پاسخی برای این فیلدها در فرم ثبت نشده است.", "info");
+      }
+    } catch (err) {
+      console.error("Extract numbers error:", err);
+      showToast("خطا در استخراج شماره‌های فرم", "error");
+    } finally {
+      setExtractingContacts(false);
+    }
+  };
+
+  // ─── انتخاب یک فرم و بارگذاری فیلدها ───
+  const handleSelectForm = async (formId) => {
+    setSelectedFormId(formId);
+    setSelectedQuestionIds([]);
+    setExtractedContacts([]);
+    setUniqueExtractedPhones([]);
+    if (!formId) {
+      setFormQuestions([]);
+      return;
+    }
+
+    setLoadingQuestions(true);
+    try {
+      const { data, error } = await supabase
+        .from("questions")
+        .select("id, form_id, title, type, position")
+        .eq("form_id", formId)
+        .order("position", { ascending: true });
+
+      if (error) throw error;
+      const questions = data || [];
+      setFormQuestions(questions);
+
+      // شناسایی خودکار فیلدهای شماره تماس
+      const defaultPhoneQIds = questions
+        .filter((q) => {
+          const t = (q.type || "").toLowerCase();
+          const title = (q.title || "").toLowerCase();
+          return (
+            t === "phone_ir" ||
+            title.includes("موبایل") ||
+            title.includes("تلفن") ||
+            title.includes("تماس") ||
+            title.includes("شماره") ||
+            title.includes("phone") ||
+            title.includes("mobile")
+          );
+        })
+        .map((q) => q.id);
+
+      setSelectedQuestionIds(defaultPhoneQIds);
+      if (defaultPhoneQIds.length > 0) {
+        setTimeout(() => {
+          extractNumbersForQuestions(formId, defaultPhoneQIds, questions);
+        }, 50);
+      }
+    } catch (err) {
+      console.error("Failed to load form questions:", err);
+      showToast("خطا در دریافت فیلدهای فرم", "error");
+    } finally {
+      setLoadingQuestions(false);
+    }
+  };
+
+  const handleToggleQuestion = (qId) => {
+    const next = selectedQuestionIds.includes(qId)
+      ? selectedQuestionIds.filter((id) => id !== qId)
+      : [...selectedQuestionIds, qId];
+    setSelectedQuestionIds(next);
+    if (selectedFormId) {
+      extractNumbersForQuestions(selectedFormId, next);
+    }
+  };
+
+  const handleSelectAllPhoneFields = () => {
+    const phoneQIds = formQuestions
+      .filter((q) => {
+        const t = (q.type || "").toLowerCase();
+        const title = (q.title || "").toLowerCase();
+        return (
+          t === "phone_ir" ||
+          title.includes("موبایل") ||
+          title.includes("تلفن") ||
+          title.includes("تماس") ||
+          title.includes("شماره")
+        );
+      })
+      .map((q) => q.id);
+
+    const targetIds = phoneQIds.length > 0 ? phoneQIds : formQuestions.map((q) => q.id);
+    setSelectedQuestionIds(targetIds);
+    if (selectedFormId) {
+      extractNumbersForQuestions(selectedFormId, targetIds);
+    }
+  };
+
+  const handleClearSelectedQuestions = () => {
+    setSelectedQuestionIds([]);
+    setExtractedContacts([]);
+    setUniqueExtractedPhones([]);
+  };
+
+  const handleImportToSend = () => {
+    if (uniqueExtractedPhones.length === 0) {
+      showToast("شماره معتبری برای انتقال وجود ندارد.", "error");
+      return;
+    }
+
+    const newMobilesText = uniqueExtractedPhones.join("\n");
+    setRawMobiles((prev) => {
+      if (!prev.trim()) return newMobilesText;
+      const combined = [...new Set([...prev.split(/[\n,;]+/).map((m) => m.trim()), ...uniqueExtractedPhones])];
+      return combined.filter(Boolean).join("\n");
+    });
+
+    setTab("send");
+    showToast(`${faNum(uniqueExtractedPhones.length)} شماره با موفقیت به لیست گیرندگان اضافه شد.`, "success");
+  };
+
+  const handleCopyExtractedPhones = () => {
+    if (uniqueExtractedPhones.length === 0) {
+      showToast("شماره‌ای برای کپی وجود ندارد.", "error");
+      return;
+    }
+    navigator.clipboard.writeText(uniqueExtractedPhones.join("\n"));
+    showToast(`${faNum(uniqueExtractedPhones.length)} شماره در کلیپ‌بورد کپی شد.`, "success");
+  };
+
+  const handleDownloadTxt = () => {
+    if (uniqueExtractedPhones.length === 0) {
+      showToast("شماره‌ای برای دانلود وجود ندارد.", "error");
+      return;
+    }
+    const currentForm = formsList.find((f) => f.id === selectedFormId);
+    const filename = `contacts-${currentForm?.slug || "form"}.txt`;
+    const element = document.createElement("a");
+    const file = new Blob([uniqueExtractedPhones.join("\n")], { type: "text/plain;charset=utf-8" });
+    element.href = URL.createObjectURL(file);
+    element.download = filename;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    showToast("فایل شماره‌ها با موفقیت دانلود شد.", "success");
+  };
 
   useEffect(() => {
     if (tab === "history" || tab === "inbox") {
@@ -450,6 +719,7 @@ export default function SmsPanel() {
   const TABS = [
     { id: "dashboard", label: "داشبورد و وضعیت", icon: BarChart3 },
     { id: "send", label: "ارسال پیامک", icon: Send },
+    { id: "form_import", label: "استخراج شماره از فرم‌ها", icon: Users },
     { id: "history", label: "تاریخچه ارسال‌ها", icon: History },
     { id: "inbox", label: "صندوق دریافتی", icon: Inbox },
     { id: "settings", label: "تنظیمات آموت", icon: Settings },
@@ -668,9 +938,20 @@ export default function SmsPanel() {
                     <label className="text-xs font-bold text-ink-subtle dark:text-slate-400">
                       شماره‌های موبایل گیرندگان (با اینتر یا کاما جدا کنید):
                     </label>
-                    <span className="text-xs font-extrabold text-teal">
-                      {uniqueMobiles.length > 0 ? `${faNum(uniqueMobiles.length)} شماره معتبر شناسایی شد` : "شماره‌ای وارد نشده"}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setTab("form_import")}
+                        className="flex items-center gap-1 text-[11px] font-bold text-teal bg-teal/10 hover:bg-teal/20 px-2.5 py-1 rounded-pill-sm border border-teal/25 transition-all cursor-pointer"
+                        title="استخراج و درون‌ریزی شماره‌ها از پاسخ‌های فرم‌های پرس‌کاد"
+                      >
+                        <Users size={12} />
+                        <span>دریافت شماره از فرم‌ها</span>
+                      </button>
+                      <span className="text-xs font-extrabold text-teal font-mono">
+                        {uniqueMobiles.length > 0 ? `${faNum(uniqueMobiles.length)} شماره` : ""}
+                      </span>
+                    </div>
                   </div>
                   <textarea
                     value={rawMobiles}
@@ -800,6 +1081,381 @@ export default function SmsPanel() {
               </form>
             </StickerCard>
           </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {/* تب استخراج شماره از فرم‌ها (FORM CONTACTS IMPORT) */}
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {tab === "form_import" && (
+        <div className="flex flex-col gap-6">
+          {/* بنر راهنما و سربرگ تب */}
+          <div>
+            <StickerCard theme="white">
+              <div className="p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-12 h-12 rounded-2xl bg-teal/15 text-teal border border-teal/30 flex items-center justify-center shrink-0 shadow-sm">
+                    <Users size={24} />
+                  </div>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-black text-navy dark:text-white flex items-center gap-2">
+                      استخراج هوشمند شماره تماس از فرم‌ها
+                      <Badge color="teal">خودکار و بدون تکراری</Badge>
+                    </h2>
+                    <p className="text-xs font-semibold text-ink-subtle dark:text-slate-400 mt-1 leading-relaxed max-w-2xl">
+                      فرم و فیلدهای شماره تماس (مانند موبایل داوطلب، شماره والدین، معرف و...) را انتخاب کنید تا تمامی شماره‌های واردشده توسط پاسخ‌دهندگان به صورت خودکار نرمال‌سازی و آماده ارسال پیامک گروهی شوند.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button variant="ghost" size="sm" onClick={loadFormsList} disabled={loadingForms}>
+                    <RefreshCw size={14} className={loadingForms ? "animate-spin" : ""} />
+                    <span>بروزرسانی فرم‌ها</span>
+                  </Button>
+                </div>
+              </div>
+            </StickerCard>
+          </div>
+
+          <div className="grid lg:grid-cols-12 gap-6">
+            {/* ستون راست: انتخاب فرم و فیلدهای شماره تماس (7 ستون) */}
+            <div className="lg:col-span-7 flex flex-col gap-5">
+              <StickerCard theme="white">
+                <div className="p-5 sm:p-6 flex flex-col gap-5">
+                  {/* ۱. انتخاب فرم */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-ink-subtle dark:text-slate-400 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <FileText size={15} className="text-teal" />
+                        ۱. فرم مورد نظر را انتخاب کنید:
+                      </span>
+                      {formsList.length > 0 && (
+                        <span className="text-[11px] font-bold text-teal">
+                          {faNum(formsList.length)} فرم موجود در حساب
+                        </span>
+                      )}
+                    </label>
+
+                    {loadingForms ? (
+                      <div className="flex items-center gap-2 py-3 text-xs font-bold text-ink-subtle">
+                        <Spinner size="sm" /> در حال دریافت لیست فرم‌ها...
+                      </div>
+                    ) : formsList.length === 0 ? (
+                      <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-xs font-bold text-amber-700 dark:text-amber-300">
+                        هیچ فرمی در حساب کاربری شما یافت نشد. لطفاً ابتدا در بخش فرم‌ها یک فرم ایجاد کنید.
+                      </div>
+                    ) : (
+                      <select
+                        value={selectedFormId}
+                        onChange={(e) => handleSelectForm(e.target.value)}
+                        className={`${inputCls} text-sm`}
+                      >
+                        <option value="">-- انتخاب فرم برای استخراج شماره --</option>
+                        {formsList.map((f) => (
+                          <option key={f.id} value={f.id}>
+                            {f.title || "بدون عنوان"} ({f.slug}) {f.published ? "✓ فعال" : "— پیش‌نویس"}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+
+                  {/* ۲. انتخاب فیلدهای تماس فرم */}
+                  {selectedFormId && (
+                    <div className="flex flex-col gap-3 pt-3 border-t border-ink/10 dark:border-slate-800">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <label className="text-xs font-bold text-ink-subtle dark:text-slate-400 flex items-center gap-1.5">
+                          <Phone size={15} className="text-teal" />
+                          ۲. فیلدهای شماره تماس را علامت بزنید:
+                        </label>
+                        {formQuestions.length > 0 && (
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={handleSelectAllPhoneFields}
+                              className="text-[11px] font-bold text-teal hover:underline px-2 py-0.5 rounded cursor-pointer"
+                            >
+                              انتخاب همه فیلدهای تماس
+                            </button>
+                            <span className="text-ink/20 dark:text-slate-700">|</span>
+                            <button
+                              type="button"
+                              onClick={handleClearSelectedQuestions}
+                              className="text-[11px] font-bold text-rose-500 hover:underline px-2 py-0.5 rounded cursor-pointer"
+                            >
+                              پاک کردن انتخاب‌ها
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {loadingQuestions ? (
+                        <div className="flex items-center gap-2 py-4 text-xs font-bold text-ink-subtle">
+                          <Spinner size="sm" /> در حال بارگذاری سوالات فرم...
+                        </div>
+                      ) : formQuestions.length === 0 ? (
+                        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-ink-subtle text-center">
+                          این فرم هنوز هیچ سوالی ندارد.
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-2 max-h-72 overflow-y-auto pr-1">
+                          {formQuestions.map((q, idx) => {
+                            const isPhone = (q.type || "").toLowerCase() === "phone_ir" ||
+                              (q.title || "").includes("موبایل") ||
+                              (q.title || "").includes("تلفن") ||
+                              (q.title || "").includes("تماس");
+                            const isSelected = selectedQuestionIds.includes(q.id);
+
+                            return (
+                              <div
+                                key={q.id}
+                                onClick={() => handleToggleQuestion(q.id)}
+                                className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all cursor-pointer select-none ${
+                                  isSelected
+                                    ? "bg-teal/10 border-teal text-navy dark:text-white shadow-xs"
+                                    : "bg-slate-50 dark:bg-slate-800/60 border-ink/5 dark:border-slate-700/60 text-ink-subtle dark:text-slate-300 hover:border-ink/20 dark:hover:border-slate-600"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  {isSelected ? (
+                                    <CheckSquare size={18} className="text-teal shrink-0" />
+                                  ) : (
+                                    <Square size={18} className="text-ink-subtle/50 dark:text-slate-500 shrink-0" />
+                                  )}
+                                  <div className="flex flex-col min-w-0">
+                                    <span className="text-xs font-bold truncate text-navy dark:text-slate-100">
+                                      {q.title || `سوال ${faNum(idx + 1)}`}
+                                    </span>
+                                    <span className="text-[11px] text-ink-subtle dark:text-slate-400 font-medium">
+                                      سوال شماره {faNum(idx + 1)}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  {isPhone ? (
+                                    <Badge color="teal">فیلد تماس</Badge>
+                                  ) : (
+                                    <Badge color="gray">
+                                      {q.type === "short_text"
+                                        ? "متن کوتاه"
+                                        : q.type === "number"
+                                        ? "عدد"
+                                        : q.type}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* دکمه استخراج دستی در صورت نیاز */}
+                      <div className="pt-2">
+                        <Button
+                          variant="teal"
+                          size="sm"
+                          onClick={() => extractNumbersForQuestions(selectedFormId, selectedQuestionIds)}
+                          disabled={extractingContacts || selectedQuestionIds.length === 0}
+                          className="w-full flex items-center justify-center gap-2 font-bold cursor-pointer"
+                        >
+                          {extractingContacts ? <Spinner size="sm" /> : <Sparkles size={15} />}
+                          <span>
+                            {extractingContacts
+                              ? "در حال پردازش و استخراج پاسخ‌ها..."
+                              : `استخراج شماره‌ها از ${faNum(selectedQuestionIds.length)} فیلد انتخابی`}
+                          </span>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </StickerCard>
+            </div>
+
+            {/* ستون چپ: آمار و عملیات ارسال سریع (5 ستون) */}
+            <div className="lg:col-span-5 flex flex-col gap-5">
+              <StickerCard theme="white">
+                <div className="p-5 sm:p-6 flex flex-col gap-5">
+                  <h3 className="text-sm font-extrabold text-navy dark:text-white flex items-center gap-2 border-b border-ink/10 dark:border-slate-800 pb-3">
+                    <Sparkles size={16} className="text-teal" />
+                    خلاصه شماره‌های استخراج‌شده
+                  </h3>
+
+                  {/* کارت‌های آماری */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3.5 rounded-2xl bg-teal/15 border border-teal/30 flex flex-col">
+                      <span className="text-[11px] font-bold text-teal-text dark:text-teal">شماره‌های یکتا و معتبر:</span>
+                      <strong className="text-2xl font-black text-teal mt-1 font-mono">
+                        {faNum(uniqueExtractedPhones.length)}
+                      </strong>
+                    </div>
+
+                    <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 flex flex-col">
+                      <span className="text-[11px] font-bold text-ink-subtle dark:text-slate-400">کل ورودی‌های خام:</span>
+                      <strong className="text-2xl font-black text-navy dark:text-white mt-1 font-mono">
+                        {faNum(extractedContacts.length)}
+                      </strong>
+                    </div>
+
+                    <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 flex flex-col">
+                      <span className="text-[11px] font-bold text-ink-subtle dark:text-slate-400">تکراری‌های حذف‌شده:</span>
+                      <strong className="text-xl font-bold text-amber-600 dark:text-amber-400 mt-1 font-mono">
+                        {faNum(Math.max(0, extractedContacts.filter((c) => c.isValid).length - uniqueExtractedPhones.length))}
+                      </strong>
+                    </div>
+
+                    <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 flex flex-col">
+                      <span className="text-[11px] font-bold text-ink-subtle dark:text-slate-400">نامعتبر یا ناقص:</span>
+                      <strong className="text-xl font-bold text-rose-500 mt-1 font-mono">
+                        {faNum(extractedContacts.filter((c) => !c.isValid).length)}
+                      </strong>
+                    </div>
+                  </div>
+
+                  {/* دکمه‌های عملیات اصلی */}
+                  <div className="flex flex-col gap-2.5 pt-2">
+                    <Button
+                      variant="teal"
+                      size="md"
+                      onClick={handleImportToSend}
+                      disabled={uniqueExtractedPhones.length === 0}
+                      className="w-full flex items-center justify-center gap-2 font-black py-3 shadow-md cursor-pointer"
+                    >
+                      <Send size={16} />
+                      <span>انتقال به بخش ارسال پیامک ({faNum(uniqueExtractedPhones.length)})</span>
+                    </Button>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant="navy"
+                        size="sm"
+                        onClick={handleCopyExtractedPhones}
+                        disabled={uniqueExtractedPhones.length === 0}
+                        className="flex items-center justify-center gap-1.5 text-xs font-bold"
+                      >
+                        <Copy size={14} />
+                        <span>کپی همه شماره‌ها</span>
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleDownloadTxt}
+                        disabled={uniqueExtractedPhones.length === 0}
+                        className="flex items-center justify-center gap-1.5 text-xs font-bold border border-ink/10 dark:border-slate-700"
+                      >
+                        <Download size={14} />
+                        <span>دانلود فایل TXT</span>
+                      </Button>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] font-medium text-ink-subtle dark:text-slate-400 leading-relaxed bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-ink/5 dark:border-slate-800">
+                    💡 با زدن دکمه <strong>«انتقال به بخش ارسال پیامک»</strong>، این شماره‌ها فوراً در فیلد گیرندگان قرار می‌گیرند تا بتوانید متن دلخواه خود را بنویسید و ارسال کنید.
+                  </p>
+                </div>
+              </StickerCard>
+            </div>
+          </div>
+
+          {/* پیش‌نمایش جدول شماره‌های استخراج‌شده */}
+          {extractedContacts.length > 0 && (
+            <div>
+              <StickerCard theme="white">
+                <div className="p-5 sm:p-6 flex flex-col gap-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink/10 dark:border-slate-800 pb-3">
+                    <div className="flex items-center gap-2">
+                      <ListFilter size={18} className="text-teal" />
+                      <h3 className="text-base font-bold text-navy dark:text-white">
+                        پیش‌نمایش شماره‌های استخراج‌شده ({faNum(extractedContacts.length)} رکورد)
+                      </h3>
+                    </div>
+
+                    <div className="relative w-full sm:w-64">
+                      <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-subtle" />
+                      <input
+                        type="text"
+                        value={searchContactFilter}
+                        onChange={(e) => setSearchContactFilter(e.target.value)}
+                        placeholder="جستجو در شماره‌ها..."
+                        className={`${inputCls} pr-8 py-1.5 text-xs`}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-right text-xs">
+                      <thead>
+                        <tr className="bg-slate-100 dark:bg-slate-900/80 text-ink-subtle dark:text-slate-400 font-bold border-b border-gray-200 dark:border-slate-800">
+                          <th className="px-4 py-2.5">ردیف</th>
+                          <th className="px-4 py-2.5">شماره موبایل استاندارد</th>
+                          <th className="px-4 py-2.5">عنوان فیلد در فرم</th>
+                          <th className="px-4 py-2.5">مقدار ورودی کاربر</th>
+                          <th className="px-4 py-2.5 text-center">وضعیت شماره</th>
+                          <th className="px-4 py-2.5">تاریخ ثبت پاسخ</th>
+                          <th className="px-4 py-2.5 text-center">عملیات</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-ink/5 dark:divide-slate-800/60 font-medium">
+                        {extractedContacts
+                          .filter((c) => !searchContactFilter || c.phone.includes(searchContactFilter) || c.originalValue.includes(searchContactFilter))
+                          .slice(0, 100)
+                          .map((c, i) => (
+                            <tr
+                              key={c.id || i}
+                              className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                            >
+                              <td className="px-4 py-2.5 font-bold text-ink-subtle">{faNum(i + 1)}</td>
+                              <td className="px-4 py-2.5 font-bold text-navy dark:text-white font-mono text-xs" dir="ltr">
+                                {c.phone}
+                              </td>
+                              <td className="px-4 py-2.5 text-ink-subtle dark:text-slate-300">
+                                {c.questionTitle}
+                              </td>
+                              <td className="px-4 py-2.5 text-ink-subtle font-mono text-xs" dir="ltr">
+                                {c.originalValue}
+                              </td>
+                              <td className="px-4 py-2.5 text-center">
+                                {c.isValid ? (
+                                  <Badge color="teal">معتبر</Badge>
+                                ) : (
+                                  <Badge color="red">نامعتبر</Badge>
+                                )}
+                              </td>
+                              <td className="px-4 py-2.5 text-ink-subtle">
+                                {c.createdAt ? faDateTime(c.createdAt) : "—"}
+                              </td>
+                              <td className="px-4 py-2.5 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(c.phone);
+                                    showToast(`شماره ${c.phone} کپی شد.`, "success");
+                                  }}
+                                  className="p-1 text-ink-subtle hover:text-teal transition-colors cursor-pointer"
+                                  title="کپی شماره"
+                                >
+                                  <Copy size={14} />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {extractedContacts.length > 100 && (
+                    <div className="text-center py-2 text-xs font-bold text-ink-subtle dark:text-slate-400">
+                      نمایش ۱۰۰ شماره اول از مجموع {faNum(extractedContacts.length)} رکورد (تمامی شماره‌ها در عملیات انتقال و دانلود گنجانده می‌شوند).
+                    </div>
+                  )}
+                </div>
+              </StickerCard>
+            </div>
+          )}
         </div>
       )}
 
