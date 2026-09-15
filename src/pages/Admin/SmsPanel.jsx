@@ -35,6 +35,7 @@ import {
   ArrowUpRight,
   ShieldCheck,
   Zap,
+  X,
 } from "lucide-react";
 
 const inputCls =
@@ -750,19 +751,33 @@ export default function SmsPanel() {
                 {/* فیدبک ارسال */}
                 {sendResult && (
                   <div
-                    className={`p-3.5 rounded-pill-md border-2 text-xs font-bold flex items-center gap-2 ${
+                    className={`p-3 rounded-2xl border text-xs font-bold flex items-center justify-between gap-2 transition-all duration-200 shadow-sm ${
                       sendResult.success
-                        ? "bg-emerald-50 dark:bg-emerald-950/40 border-teal text-teal-text dark:text-emerald-200"
-                        : "bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-700 dark:text-rose-200"
+                        ? "bg-teal/10 border-teal/30 text-navy dark:text-slate-100"
+                        : "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300"
                     }`}
                   >
-                    {sendResult.success ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
-                    <span>{sendResult.message}</span>
-                    {sendResult.campaignId && (
-                      <span className="font-mono mr-auto text-[11px] opacity-80" dir="ltr">
-                        شناسه کمپین: {sendResult.campaignId}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {sendResult.success ? (
+                        <CheckCircle2 size={16} className="text-teal shrink-0" />
+                      ) : (
+                        <AlertTriangle size={16} className="text-rose-500 shrink-0" />
+                      )}
+                      <span>{sendResult.message}</span>
+                      {sendResult.campaignId && (
+                        <span className="font-mono text-[11px] bg-white/70 dark:bg-slate-800/70 px-2 py-0.5 rounded-md border border-teal/20 text-teal" dir="ltr">
+                          شناسه: {sendResult.campaignId}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSendResult(null)}
+                      className="text-ink-subtle hover:text-navy dark:hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
+                      title="بستن پیام"
+                    >
+                      <X size={14} />
+                    </button>
                   </div>
                 )}
 
@@ -935,38 +950,64 @@ export default function SmsPanel() {
                 {/* نتیجه تست اتصال */}
                 {testResult && (
                   <div
-                    className={`p-4 rounded-pill-md border-2 text-xs leading-relaxed flex flex-col gap-1.5 ${
+                    className={`p-3.5 rounded-2xl border text-xs leading-relaxed flex flex-col gap-2.5 transition-all duration-200 shadow-sm ${
                       testResult.success
-                        ? "bg-emerald-50 dark:bg-emerald-950/40 border-teal text-teal-text dark:text-emerald-200"
-                        : "bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-700 dark:text-rose-200"
+                        ? "bg-teal/10 border-teal/30 text-navy dark:text-slate-100"
+                        : "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300"
                     }`}
                   >
-                    <div className="flex items-center gap-2 font-bold">
-                      {testResult.success ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
-                      <span>{testResult.message}</span>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 font-bold">
+                        {testResult.success ? (
+                          <CheckCircle2 size={16} className="text-teal shrink-0" />
+                        ) : (
+                          <AlertTriangle size={16} className="text-rose-500 shrink-0" />
+                        )}
+                        <span className="text-xs font-black">{testResult.message}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setTestResult(null)}
+                        className="text-ink-subtle hover:text-navy dark:hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
+                        title="بستن پیام"
+                      >
+                        <X size={14} />
+                      </button>
                     </div>
+
                     {testResult.success && (
-                      <div className="mt-1 pt-2 border-t border-teal/20 grid grid-cols-2 gap-2 text-xs">
-                        <div>نام اکانت: <strong>{testResult.accountName}</strong></div>
-                        <div>مانده اعتبار: <strong>{faNum((testResult.remaindCreditTomans || 0).toLocaleString())} تومان</strong></div>
-                        <div className="col-span-2">خطوط در دسترس: <code className="font-mono">{testResult.listLineNumbers?.join(" , ")}</code></div>
+                      <div className="flex flex-wrap items-center gap-2 pt-1.5 border-t border-teal/20 text-[11px] font-semibold">
+                        <span className="bg-white/80 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-teal/20 flex items-center gap-1.5 shadow-2xs">
+                          <User size={12} className="text-teal" />
+                          <span>اکانت: <strong className="text-navy dark:text-white">{testResult.accountName || "کاربر آموت"}</strong></span>
+                        </span>
+                        <span className="bg-white/80 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-teal/20 flex items-center gap-1.5 shadow-2xs">
+                          <CreditCard size={12} className="text-teal" />
+                          <span>اعتبار: <strong className="text-teal font-mono">{faNum((testResult.remaindCreditTomans || 0).toLocaleString())} تومان</strong></span>
+                        </span>
+                        {testResult.listLineNumbers?.length > 0 && (
+                          <span className="bg-white/80 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-teal/20 flex items-center gap-1.5 shadow-2xs">
+                            <Smartphone size={12} className="text-teal" />
+                            <span>خطوط فعال: <code className="font-mono text-teal font-bold">{testResult.listLineNumbers.join(", ")}</code></span>
+                          </span>
+                        )}
                       </div>
                     )}
                   </div>
                 )}
 
                 {/* دکمه‌های اقدام */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-ink/10 dark:border-slate-800">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-ink/10 dark:border-slate-800">
                   <Button
                     type="button"
                     variant="navy"
                     size="sm"
                     onClick={handleTestConnection}
                     disabled={testingConnection}
-                    className="flex items-center gap-1.5 font-bold cursor-pointer"
+                    className="flex items-center justify-center gap-1.5 font-bold cursor-pointer rounded-xl h-10 px-4"
                   >
-                    {testingConnection ? <Spinner size="sm" /> : <ShieldCheck size={15} />}
-                    <span>{testingConnection ? "در حال استعلام از آموت..." : "تست اتصال و بررسی اعتبار"}</span>
+                    {testingConnection ? <Spinner size="sm" /> : <ShieldCheck size={16} />}
+                    <span>{testingConnection ? "در حال استعلام از آموت..." : "تست توکن و موجودی"}</span>
                   </Button>
 
                   <Button
@@ -974,10 +1015,10 @@ export default function SmsPanel() {
                     variant="teal"
                     size="sm"
                     disabled={savingSettings}
-                    className="flex items-center gap-1.5 font-bold px-5 cursor-pointer"
+                    className="flex items-center justify-center gap-1.5 font-bold rounded-xl h-10 px-6 cursor-pointer shadow-sm hover:shadow-teal/20 transition-all"
                   >
-                    {savingSettings ? <Spinner size="sm" /> : <Check size={15} />}
-                    <span>{savingSettings ? "در حال ذخیره..." : "ذخیره تغییرات تنظیمات"}</span>
+                    {savingSettings ? <Spinner size="sm" /> : <Check size={16} />}
+                    <span>{savingSettings ? "در حال ذخیره..." : "ذخیره تنظیمات"}</span>
                   </Button>
                 </div>
               </form>
