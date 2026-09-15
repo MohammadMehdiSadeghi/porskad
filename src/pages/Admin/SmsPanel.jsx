@@ -409,24 +409,9 @@ export default function SmsPanel() {
         setSmsText("");
         setRawMobiles("");
 
-        // ثبت لاگ پیامک در کلاینت برای نمایش سریع در تاریخچه
-        try {
-          await supabase.from("sms_outbox").insert(
-            uniqueMobiles.map((m) => ({
-              message_id: String(data.campaignId || ""),
-              mobile: m,
-              text: smsText.trim(),
-              status: "sent",
-              line_number: lineToSend,
-              parts: data.parts || smsPagesCount || 1,
-              cost: data.price ? Number(data.price) / uniqueMobiles.length : 0,
-            }))
-          );
-        } catch {
-          // ignore
-        }
-
-        await Promise.all([loadDashboard(), loadSettings()]);
+        // لاگ پیامک به‌صورت خودکار توسط بک‌اند (amoot-proxy) در دیتابیس درج می‌شود
+        // فراخوانی مجدد جهت به‌روزرسانی داشبورد و تاریخچه بدون ایجاد رکورد تکراری
+        await Promise.all([loadDashboard(), loadSettings(), loadHistory()]);
       } else {
         showToast(data.message || "ارسال پیامک ناموفق بود", "error");
         setSendResult({ success: false, ...data });
