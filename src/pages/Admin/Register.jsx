@@ -777,7 +777,7 @@ export default function Register() {
                     {/* ثانیه‌شمار و دکمه ارسال مجدد */}
                     <div className="flex items-center justify-between text-xs font-bold px-1 py-0.5">
                       <span className="text-ink-subtle dark:text-slate-400">
-                        زمان ارسال مجدد:
+                        {cooldown > 0 ? "امکان ارسال مجدد:" : "کد قبلی تا زمان ارسال مجدد معتبر است"}
                       </span>
                       {cooldown > 0 ? (
                         <span className="font-mono text-teal font-black bg-teal/10 dark:bg-teal/20 px-2.5 py-1 rounded-md text-xs" dir="ltr">

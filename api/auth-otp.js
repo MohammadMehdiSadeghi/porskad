@@ -368,7 +368,8 @@ export default async function handler(req, res) {
 
     // ۶. ذخیره سشن جدید با افزایش شمارنده ارسال مجدد در حافظه و دیتابیس
     const currentResends = existingSession ? existingSession.resends + 1 : 0;
-    const expiresAt = now + 5 * 60 * 1000;
+    // مهلت اعتبار ۶۰ دقیقه (تا زمانی که کاربر درخواست ارسال مجدد ندهد کد قبلی معتبر می‌ماند)
+    const expiresAt = now + 60 * 60 * 1000;
 
     otpSessions.set(cleanPhone, {
       code,
@@ -441,7 +442,7 @@ export default async function handler(req, res) {
     }
 
     if (now > session.expiresAt) {
-      return res.status(400).json({ error: "کد تایید منقضی شده است (مهلت ۵ دقیقه به پایان رسید). لطفاً کد جدید دریافت کنید." });
+      return res.status(400).json({ error: "مهلت اعتبار کد تایید به پایان رسیده است. لطفاً دکمه ارسال مجدد کد را بزنید." });
     }
 
     if (session.attempts >= 5) {
