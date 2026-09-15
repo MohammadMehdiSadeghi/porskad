@@ -27,15 +27,12 @@ export default function ScoreResult({ score, total, details = [], questions = []
 
   return (
     <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }} className="flex flex-col items-center gap-3 sm:gap-4 py-4 sm:py-5 w-full">
-      <div className="relative">
-        <div aria-hidden="true" className={`absolute top-1.5 left-1.5 w-full h-full ${c.backBg} rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]`} />
-        <div className={`relative z-10 ${c.bg} ${c.border} border-2 rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] px-5 sm:px-7 py-4 sm:py-5 min-w-[160px] flex flex-col items-center gap-1.5`}>
-          <motion.div initial={{ rotate: -8 }} animate={{ rotate: [0, -8, 8, -4, 4, 0] }} transition={{ duration: 0.7, delay: 0.2 }}>
-            <IconComponent size={36} className={c.iconColor} />
-          </motion.div>
-          <span className={`text-2xl sm:text-3xl font-black ${c.text}`}>{faNum(score)} از {faNum(total)}</span>
-          <span className="text-xs sm:text-sm font-bold text-ink-subtle">{faNum(pct)}٪</span>
-        </div>
+      <div className={`${c.bg} ${c.border} border-[1.5px] rounded-2xl shadow-hard-sm dark:shadow-dark-hard px-5 sm:px-7 py-4 sm:py-5 min-w-[160px] flex flex-col items-center gap-1.5`}>
+        <motion.div initial={{ rotate: -8 }} animate={{ rotate: [0, -8, 8, -4, 4, 0] }} transition={{ duration: 0.7, delay: 0.2 }}>
+          <IconComponent size={36} className={c.iconColor} />
+        </motion.div>
+        <span className={`text-2xl sm:text-3xl font-black ${c.text}`}>{faNum(score)} از {faNum(total)}</span>
+        <span className="text-xs sm:text-sm font-bold text-gray-500 dark:text-gray-400">{faNum(pct)}٪</span>
       </div>
 
       <p className="text-sm sm:text-base font-bold text-male-normal text-center">{message}</p>
@@ -50,7 +47,7 @@ export default function ScoreResult({ score, total, details = [], questions = []
           {details.map((d, i) => {
             const q = questions.find((q) => q.id === d.questionId);
             return (
-              <div key={i} className={`flex items-center gap-2 text-xs sm:text-sm px-2.5 py-1.5 rounded-pill-md border ${d.correct ? "border-ecosystem-normal/40 bg-ecosystem-light/60" : "border-female-normal/40 bg-female-light/60"}`}>
+              <div key={i} className={`flex items-center gap-2 text-xs sm:text-sm px-2.5 py-1.5 rounded-xl border-[1.5px] ${d.correct ? "border-ecosystem-normal/40 bg-ecosystem-light/60" : "border-female-normal/40 bg-female-light/60"}`}>
                 <span className={`w-5 h-5 sm:w-6 sm:h-6 shrink-0 flex items-center justify-center rounded-full text-xs sm:text-xs font-black ${d.correct ? "bg-ecosystem-normal text-white" : "bg-female-normal text-white"}`}>
                   {d.correct ? <Check size={12} className="stroke-[3]" /> : <X size={12} className="stroke-[3]" />}
                 </span>

@@ -36,10 +36,10 @@ function normalizeConditionGroup(cg) {
 function NotAvailable({ message }) {
   return (
     <div className="min-h-dvh dot-pattern bg-male-light flex items-center justify-center p-3">
-      <div className="w-full max-w-sm -rotate-[0.5deg]">
+      <div className="w-full max-w-sm">
         <StickerCard theme="magenta">
           <div className="p-5 sm:p-6 flex flex-col items-center text-center gap-3">
-            <span className="text-3xl sm:text-4xl rotate-[2deg]"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-female-normal"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+            <span className="text-3xl sm:text-4xl"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-female-normal"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
             <h1 className="text-lg sm:text-xl font-black text-male-normal">این فرم در دسترس نیست</h1>
             <p className="text-sm font-semibold text-ink-subtle leading-6">{message}</p>
           </div>
@@ -448,18 +448,18 @@ export default function FormFill() {
       {step >= 0 && step < total && <div className="w-full max-w-lg mx-auto px-3 pb-1"><ProgressBar value={progressValue} max={visibleTotal} showLabel /></div>}
 
       <main className="flex-1 flex items-start sm:items-center justify-center px-3 sm:px-4 py-3 sm:py-5 overflow-x-hidden">
-        <div className={`w-full max-w-2xl ${step === -1 ? "-rotate-[0.5deg]" : "rotate-[0.3deg]"}`}>
-          <StickerCard theme="white" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
+        <div className="w-full max-w-2xl">
+          <StickerCard theme="white">
             <input type="text" name="website" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[9999rem] w-px h-px opacity-0" />
             <div className="p-4 sm:p-5 lg:p-6 min-h-[18rem] sm:min-h-[20rem] flex flex-col">
               <AnimatePresence mode="wait" custom={dir}>
                 {step === -1 && (
                   <motion.div key="welcome" custom={dir} initial={{ opacity: 0, x: dir * 32 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: dir * -32 }} transition={{ duration: 0.22 }} className="flex-1 flex flex-col items-center text-center justify-center gap-2.5 sm:gap-3">
-                    {visibleTotal > 0 && <Badge color="navy" rotate="rotate-[1.5deg]">{faNum(visibleTotal)} سوال · حدود {faNum(approxMinutes)} دقیقه</Badge>}
-                    <span className="text-3xl sm:text-4xl rotate-[3deg]"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ecosystem-dark dark:text-teal"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+                    {visibleTotal > 0 && <Badge color="navy">{faNum(visibleTotal)} سوال · حدود {faNum(approxMinutes)} دقیقه</Badge>}
+                    <span className="text-3xl sm:text-4xl"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ecosystem-dark dark:text-teal"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
                     <h1 className="text-lg sm:text-xl lg:text-2xl font-black text-male-normal dark:text-white leading-snug">{form.welcome_title}</h1>
                     <p className="font-semibold text-ink-soft dark:text-slate-300 leading-7 text-sm sm:text-base max-w-sm">{form.welcome_message}</p>
-                    <div className="mt-1.5 sm:mt-2"><Button variant="teal" size="md" rotate="-rotate-[1deg]" disabled={visibleTotal === 0} onClick={goNext} className="text-sm sm:text-base">{visibleTotal === 0 ? "این فرم هنوز سوالی ندارد" : "شروع پاسخ‌دهی"}</Button></div>
+                    <div className="mt-1.5 sm:mt-2"><Button variant="teal" size="md" disabled={visibleTotal === 0} onClick={goNext} className="text-sm sm:text-base">{visibleTotal === 0 ? "این فرم هنوز سوالی ندارد" : "شروع پاسخ‌دهی"}</Button></div>
                   </motion.div>
                 )}
 
@@ -467,7 +467,7 @@ export default function FormFill() {
                   <motion.div key={currentQuestion.id} custom={dir} initial={{ opacity: 0, x: dir * 32 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: dir * -32 }} transition={{ duration: 0.2 }} className="flex-1 flex flex-col">
                     <QuestionStep question={currentQuestion} index={currentVisibleIndex - 1} total={visibleTotal} value={answers[currentQuestion.id]} timeSpent={times[currentQuestion.id] ?? 0} onChange={setAnswer} onAdvance={goNext} />
                     {requiredError && (
-                      <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 bg-female-light dark:bg-pink-950/40 border-2 border-female-normal rounded-pill-md px-3 py-2 mt-2.5 sm:mt-3">
+                      <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 bg-female-light dark:bg-pink-950/40 border-[1.5px] border-female-normal rounded-xl px-3 py-2 mt-2.5 sm:mt-3">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-female-normal shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                         <span className="text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">{requiredError}</span>
                       </motion.div>
@@ -477,10 +477,10 @@ export default function FormFill() {
                       {!isLastVisibleStep ? (
                         <Button variant="navy" onClick={goNext} disabled={!!currentValidationError} className={`text-xs sm:text-sm ${currentValidationError ? "opacity-50 cursor-not-allowed" : ""}`}>سوال بعدی</Button>
                       ) : (
-                        <Button variant="magenta" onClick={openConfirm} disabled={submitting || !!currentValidationError} rotate="rotate-[0.5deg]" className={`text-xs sm:text-sm ${currentValidationError && !submitting ? "opacity-50 cursor-not-allowed" : ""}`}>{submitting ? "در حال ثبت..." : "ثبت نهایی"}</Button>
+                        <Button variant="magenta" onClick={openConfirm} disabled={submitting || !!currentValidationError} className={`text-xs sm:text-sm ${currentValidationError && !submitting ? "opacity-50 cursor-not-allowed" : ""}`}>{submitting ? "در حال ثبت..." : "ثبت نهایی"}</Button>
                       )}
                     </div>
-                    {submitError && <div className="mt-2 self-end rotate-[-0.5deg] bg-white dark:bg-slate-800 border-2 border-female-normal rounded-pill-md px-2.5 py-1.5 text-xs sm:text-sm font-bold text-female-normal">{submitError}</div>}
+                    {submitError && <div className="mt-2 self-end bg-female-light dark:bg-pink-950/40 border-[1.5px] border-female-normal rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-bold text-female-normal">{submitError}</div>}
                   </motion.div>
                 )}
 

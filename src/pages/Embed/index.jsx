@@ -158,7 +158,7 @@ function TextInput({ type, value, onChange, autoFocus = true, onEnter, placehold
   const activeAlign = hasValue && isLtrType ? "text-left" : "text-right";
   const resolvedMaxLength = type === "short_text" ? 255 : (customMaxLength ? Number(customMaxLength) : undefined);
 
-  const shared = "w-full border-2 border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-ink dark:text-white placeholder:text-ink/40 dark:placeholder:text-slate-500 placeholder:text-right placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-ecosystem-normal/15 focus:border-ecosystem-normal transition-all duration-200";
+  const shared = "w-full border-[1.5px] border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C2536] rounded-xl px-3.5 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-sec dark:text-white placeholder:text-gray-400 placeholder:text-right placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-ecosystem-normal/20 focus:border-ecosystem-normal transition-all duration-200";
 
   if (type === "long_text") {
     return (
@@ -228,7 +228,7 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
       <select
         value={value || ""}
         onChange={(e) => { const v = e.target.value || null; onChange(v); if (v && onEnter) setTimeout(() => onEnter(), 250); }}
-        className="w-full bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:px-4 sm:py-3.5 font-bold text-sm sm:text-base text-ink dark:text-white focus:outline-none transition-all duration-200 cursor-pointer text-right"
+        className="w-full bg-white dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-gray-700 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/20 rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3.5 font-bold text-sm sm:text-base text-sec dark:text-white focus:outline-none transition-all duration-200 cursor-pointer text-right"
       >
         <option value="">یک گزینه انتخاب کنید...</option>
         {options.map((opt, i) => (
@@ -255,15 +255,14 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
             type="button"
             disabled={disabled}
             onClick={() => isMulti ? handleMultiToggle(opt) : (() => { onChange(opt); if (onEnter) setTimeout(() => onEnter(), 250); })()}
-            className={`relative w-full flex items-center gap-3 p-3 sm:p-3.5 rounded-pill-md [corner-shape:squircle] border-2 transition-all duration-200 text-right cursor-pointer select-none ${
+            className={`relative w-full flex items-center gap-3 p-3 sm:p-3.5 rounded-xl border-[1.5px] transition-all duration-200 text-right cursor-pointer select-none hover:-translate-x-[1px] hover:-translate-y-[1px] ${
               disabled
-                ? "opacity-40 cursor-not-allowed border-ink/10 dark:border-slate-800 bg-black/5 dark:bg-white/5"
+                ? "opacity-40 cursor-not-allowed border-gray-200 dark:border-gray-800 bg-black/5 dark:bg-white/5 hover:translate-none"
                 : selected
-                ? "border-ecosystem-normal bg-ecosystem-light dark:bg-teal/10 rotate-[-0.5deg]"
-                : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink dark:text-slate-200 hover:border-ecosystem-normal/50"
+                ? "border-ecosystem-normal bg-ecosystem-light dark:bg-ecosystem-darker/50 shadow-hard-sm"
+                : "border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C2536] text-sec dark:text-slate-200 hover:border-ecosystem-normal/50"
             }`}
           >
-            {selected && <div aria-hidden="true" className="absolute top-[2px] left-[2px] w-full h-full bg-ecosystem-dark/15 dark:bg-teal/10 rounded-pill-md [corner-shape:squircle] pointer-events-none" />}
             {isMulti ? (
               <span className={`relative z-10 w-7 h-7 sm:w-8 sm:h-8 shrink-0 flex items-center justify-center rounded-md border-2 text-xs font-bold transition-colors duration-200 ${
                 selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 dark:border-slate-600 text-male-normal dark:text-slate-300"
@@ -290,12 +289,12 @@ function YesNoOptions({ value, onChange, onEnter }) {
           key={o.label}
           type="button"
           onClick={() => { onChange(o.label); if (onEnter) setTimeout(() => onEnter(), 250); }}
-          className={`flex items-center justify-center gap-1.5 py-3.5 sm:py-4 rounded-pill-md [corner-shape:squircle] border-2 text-base sm:text-lg font-black transition-all duration-200 cursor-pointer ${
+          className={`flex items-center justify-center gap-1.5 py-3.5 sm:py-4 rounded-xl border-[1.5px] text-base sm:text-lg font-black transition-all duration-200 cursor-pointer hover:-translate-x-[1px] hover:-translate-y-[1px] ${
             value === o.label
               ? o.theme === "ecosystem"
-                ? "border-ecosystem-normal bg-ecosystem-light dark:bg-teal/10 text-ecosystem-dark dark:text-teal"
-                : "border-female-normal bg-female-light dark:bg-pink-950/60 text-female-dark dark:text-pink-300"
-              : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink dark:text-slate-200 hover:border-ink/25"
+                ? "border-ecosystem-normal bg-ecosystem-light dark:bg-ecosystem-darker/50 text-ecosystem-darker dark:text-teal shadow-hard-sm"
+                : "border-female-normal bg-female-light dark:bg-pink-950/60 text-female-normal dark:text-pink-300 shadow-hard-sm"
+              : "border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C2536] text-sec dark:text-slate-200 hover:border-gray-300"
           }`}
         >{o.label}</button>
       ))}
@@ -519,13 +518,12 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
         <CloseButton />
         <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35 }}
           className="relative max-w-lg w-full">
-          <div aria-hidden="true" className="absolute top-[0.1875rem] left-[0.1875rem] w-full h-full bg-male-normal dark:bg-black rounded-tl-[2rem] rounded-br-[2rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
-          <div className="relative z-10 bg-white dark:bg-[#131B2E] border-2 border-male-normal dark:border-slate-700 rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-5 sm:p-6 text-center">
+          <div className="rokad-card p-5 sm:p-6 text-center shadow-hard-sm dark:shadow-dark-hard">
             <div className="flex justify-center mb-3">
               <CheckCircle2 size={48} className="text-ecosystem-normal" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-black text-male-normal dark:text-white mb-2">{schema.exit_title || "ثبت‌نام با موفقیت انجام شد!"}</h1>
-            <p className="text-sm sm:text-base text-ink-soft dark:text-slate-300 leading-7">{schema.exit_message || "ممنون از ثبت‌نام شما."}</p>
+            <h1 className="text-xl sm:text-2xl font-black text-sec dark:text-white mb-2">{schema.exit_title || "ثبت‌نام با موفقیت انجام شد!"}</h1>
+            <p className="text-sm sm:text-base text-gray-500 dark:text-slate-300 leading-7">{schema.exit_message || "ممنون از ثبت‌نام شما."}</p>
             {scoreResult && (
               <ScoreResult score={scoreResult.score} total={scoreResult.total} details={scoreResult.details} questions={questions} />
             )}
@@ -547,14 +545,12 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
       </div>
 
       <main className="flex-1 flex items-start justify-center px-4 sm:px-5 py-4 sm:py-6">
-        <div className="w-full max-w-xl -rotate-[0.3deg]">
-          <div className="relative">
-            <div aria-hidden="true" className="absolute top-2 left-2 w-full h-full bg-male-normal dark:bg-black rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
-            <div className="relative z-10 bg-white dark:bg-[#131B2E] border-2 border-male-normal dark:border-slate-700 rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-5 sm:p-6 lg:p-7">
-              <form onSubmit={handleShowConfirm} className="flex flex-col gap-3.5 sm:gap-4">
-                <div className="text-center mb-0.5">
-                  <h1 className="text-lg sm:text-xl font-black text-male-normal dark:text-white mb-0.5">{schema.title}</h1>
-                  {schema.description && <p className="text-xs sm:text-sm text-ink-subtle dark:text-slate-400">{schema.description}</p>}
+        <div className="w-full max-w-xl">
+          <div className="rokad-card p-5 sm:p-6 lg:p-7 shadow-hard-sm dark:shadow-dark-hard">
+            <form onSubmit={handleShowConfirm} className="flex flex-col gap-3.5 sm:gap-4">
+              <div className="text-center mb-0.5">
+                <h1 className="text-lg sm:text-xl font-black text-sec dark:text-white mb-0.5">{schema.title}</h1>
+                {schema.description && <p className="text-xs sm:text-sm text-gray-500 dark:text-slate-400">{schema.description}</p>}
                   <span className="text-xs font-bold text-ink/50 dark:text-slate-400 bg-bg-neutral dark:bg-slate-800 rounded-pill-sm px-2 py-0.5 mt-1.5 inline-block">{faNum(visibleQuestions.length)} فیلد</span>
                 </div>
 
@@ -619,8 +615,8 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
                           {["بله", "خیر"].map((opt) => (
                             <button key={opt} type="button"
                               onClick={() => { setAnswer(q.id, opt, q); handleBlur(q.id, opt, q); }}
-                            className={`flex items-center justify-center gap-1.5 py-2 sm:py-2.5 rounded-pill-md [corner-shape:squircle] border-2 text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer ${
-                              val === opt ? (opt === "بله" ? "border-ecosystem-normal bg-ecosystem-light text-ecosystem-dark" : "border-female-normal bg-female-light text-female-dark") : "border-ink/10 bg-white text-ink hover:border-ink/25"
+                            className={`flex items-center justify-center gap-1.5 py-2 sm:py-2.5 rounded-xl border-[1.5px] text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer ${
+                              val === opt ? (opt === "بله" ? "border-ecosystem-normal bg-ecosystem-light dark:bg-ecosystem-darker/50 text-ecosystem-darker dark:text-teal shadow-hard-sm" : "border-female-normal bg-female-light dark:bg-pink-950/60 text-female-normal dark:text-pink-300 shadow-hard-sm") : "border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C2536] text-sec dark:text-slate-200 hover:border-gray-300"
                             }`}>{opt}</button>
                           ))}
                         </div>
@@ -660,7 +656,7 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full inline-flex items-center justify-center bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] font-extrabold shadow-[2.75px_2.75px_0_#2e7068] hover:shadow-[3.75px_3.75px_0_#2e7068] hover:scale-[1.02] active:scale-[0.97] transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-sm sm:text-base cursor-pointer"
+                  className="rokad-btn-primary w-full py-2.5 sm:py-3 text-sm sm:text-base"
                 >
                   {submitting ? "در حال ثبت..." : "ارسال پاسخ‌ها"}
                 </button>
@@ -668,8 +664,7 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
               {schema.showBranding && <BrandingBadge formId={formId} />}
             </div>
           </div>
-        </div>
-      </main>
+        </main>
 
       <ConfirmDialog
               open={showConfirm}
@@ -1103,9 +1098,8 @@ export default function EmbedForm() {
       <div id="pcode-embed-root" className={`${isInIframe ? "w-full py-6" : "min-h-[100dvh]"} flex items-center justify-center p-4 bg-transparent`}>
         <CloseButton />
         <div className="relative max-w-sm w-full">
-          <div aria-hidden="true" className="absolute top-2 left-2 w-full h-full bg-male-normal rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
-          <div className="relative z-10 bg-white border-2 border-male-normal rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-4 sm:p-5 text-center">
-            <p className="text-sm sm:text-base font-black text-male-normal">{error}</p>
+          <div className="rokad-card p-4 sm:p-5 text-center shadow-hard-sm">
+            <p className="text-sm sm:text-base font-black text-sec">{error}</p>
           </div>
         </div>
       </div>
@@ -1151,36 +1145,34 @@ export default function EmbedForm() {
       )}
 
       <main className="flex-1 flex items-start justify-center px-4 sm:px-5 py-4 sm:py-6">
-        <div className="w-full max-w-xl -rotate-[0.6deg]">
-          <div className="relative">
-            <div aria-hidden="true" className="absolute top-2 left-2 w-full h-full bg-male-normal dark:bg-black rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]" />
-            <div className="relative z-10 bg-white dark:bg-[#131B2E] border-2 border-male-normal dark:border-slate-700 rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] p-5 sm:p-6 lg:p-7 text-ink dark:text-slate-100">
-              <AnimatePresence mode="wait" custom={dir}>
-                {/* صفحه خوش‌آمد */}
-                {step === -1 && (
-                  <motion.div
-                    key="welcome" custom={dir}
-                    initial={{ opacity: 0, x: dir * 40 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: dir * -40 }}
-                    transition={{ duration: 0.25 }}
-                    className="flex flex-col items-center text-center gap-3.5 sm:gap-4 py-6 sm:py-8"
-                  >
-                    <h1 className="text-lg sm:text-xl font-black text-male-normal dark:text-white">{schema.welcome_title}</h1>
-                    <p className="text-sm sm:text-base text-ink-soft dark:text-slate-300 leading-7">{schema.welcome_message}</p>
-                    {visibleTotal > 0 && <span className="text-xs text-ink/40 dark:text-slate-400 font-bold">{faNum(visibleTotal)} سوال</span>}
-                    <div className="mt-3 sm:mt-4">
-                      <button
-                        type="button"
-                        onClick={goNext}
-                        disabled={visibleTotal === 0}
-                        className="inline-flex items-center justify-center bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-6 sm:px-7 py-2.5 sm:py-3 rounded-pill-md [corner-shape:squircle] font-extrabold shadow-[2.75px_2.75px_0_#2e7068] hover:shadow-[3.75px_3.75px_0_#2e7068] hover:scale-[1.02] active:scale-[0.97] transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-sm sm:text-base cursor-pointer"
-                      >
-                        شروع
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
+        <div className="w-full max-w-xl">
+          <div className="rokad-card p-5 sm:p-6 lg:p-7 text-sec dark:text-slate-100 shadow-hard-sm dark:shadow-dark-hard">
+            <AnimatePresence mode="wait" custom={dir}>
+              {/* صفحه خوش‌آمد */}
+              {step === -1 && (
+                <motion.div
+                  key="welcome" custom={dir}
+                  initial={{ opacity: 0, x: dir * 40 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: dir * -40 }}
+                  transition={{ duration: 0.25 }}
+                  className="flex flex-col items-center text-center gap-3.5 sm:gap-4 py-6 sm:py-8"
+                >
+                  <h1 className="text-lg sm:text-xl font-black text-sec dark:text-white">{schema.welcome_title}</h1>
+                  <p className="text-sm sm:text-base text-gray-500 dark:text-slate-300 leading-7">{schema.welcome_message}</p>
+                  {visibleTotal > 0 && <span className="text-xs text-gray-400 font-bold">{faNum(visibleTotal)} سوال</span>}
+                  <div className="mt-3 sm:mt-4">
+                    <button
+                      type="button"
+                      onClick={goNext}
+                      disabled={visibleTotal === 0}
+                      className="rokad-btn-primary px-6 sm:px-7 py-2.5 sm:py-3 text-sm sm:text-base"
+                    >
+                      شروع
+                    </button>
+                  </div>
+                </motion.div>
+              )}
 
                 {/* سوالات */}
                 {step >= 0 && step < total && currentQuestion && (
@@ -1203,14 +1195,14 @@ export default function EmbedForm() {
                     />
 
                     {requiredError && (
-                      <div className="bg-female-light dark:bg-pink-950/40 border-2 border-female-normal rounded-pill-md [corner-shape:squircle] px-4 py-2.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">{requiredError}</div>
+                      <div className="bg-female-light dark:bg-pink-950/40 border-[1.5px] border-female-normal rounded-xl px-4 py-2.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">{requiredError}</div>
                     )}
 
                     <div className="flex items-center justify-between mt-1.5 sm:mt-2">
                       <button
                         type="button"
                         onClick={goBack}
-                        className="inline-flex items-center justify-center bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-ink dark:text-slate-200 px-3.5 sm:px-4 py-2 rounded-pill-md [corner-shape:squircle] font-extrabold shadow-[2px_2px_0_#cbd5e1] dark:shadow-[2px_2px_0_#000000] hover:bg-slate-200 dark:hover:bg-slate-700 hover:scale-[1.02] active:scale-[0.97] transition-all duration-200 ease-out text-xs sm:text-sm cursor-pointer"
+                        className="rokad-btn-outline px-3.5 sm:px-4 py-2 text-xs sm:text-sm"
                       >
                         برگشت
                       </button>
@@ -1218,7 +1210,7 @@ export default function EmbedForm() {
                         <button
                           type="button"
                           onClick={goNext}
-                          className="inline-flex items-center justify-center bg-male-normal border-2 border-male-dark text-white px-5 sm:px-6 py-2.5 rounded-pill-md [corner-shape:squircle] font-bold shadow-[2.75px_2.75px_0_#0b0f1f] hover:shadow-[3.75px_3.75px_0_#0b0f1f] hover:scale-[1.02] active:scale-[0.97] transition-all duration-200 ease-out text-xs sm:text-sm cursor-pointer"
+                          className="rokad-btn-sec px-5 sm:px-6 py-2 text-xs sm:text-sm"
                         >
                           بعدی ←
                         </button>
@@ -1227,14 +1219,14 @@ export default function EmbedForm() {
                           type="button"
                           onClick={openConfirm}
                           disabled={submitting}
-                          className="inline-flex items-center justify-center bg-ecosystem-normal border-2 border-ecosystem-dark text-white px-5 sm:px-6 py-2.5 rounded-pill-md [corner-shape:squircle] font-bold shadow-[2.75px_2.75px_0_#2e7068] hover:shadow-[3.75px_3.75px_0_#2e7068] hover:scale-[1.02] active:scale-[0.97] transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-xs sm:text-sm cursor-pointer"
+                          className="rokad-btn-primary px-5 sm:px-6 py-2 text-xs sm:text-sm"
                         >
                           {submitting ? "در حال ثبت..." : "ثبت و ارسال"}
                         </button>
                       )}
                     </div>
                     {submitError && (
-                      <div className="bg-female-light dark:bg-pink-950/40 border border-female-normal rounded-pill-md px-3 py-1.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300 self-end">{submitError}</div>
+                      <div className="bg-female-light dark:bg-pink-950/40 border-[1.5px] border-female-normal rounded-xl px-3 py-1.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300 self-end">{submitError}</div>
                     )}
                   </motion.div>
                 )}
@@ -1268,8 +1260,7 @@ export default function EmbedForm() {
               {schema.showBranding && <BrandingBadge formId={formId} />}
             </div>
           </div>
-        </div>
-      </main>
+        </main>
 
       <ConfirmDialog
         open={showConfirm}

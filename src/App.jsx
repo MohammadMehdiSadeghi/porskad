@@ -58,20 +58,19 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-bg-mint flex items-center justify-center p-4">
-          <div className="relative w-full max-w-md rotate-[0.5deg]">
-            <div aria-hidden="true" className="absolute top-2 left-2 w-full h-full bg-navy rounded-[1.5rem] [corner-shape:squircle]" />
-            <div className="relative z-10 bg-white border-2 border-navy rounded-[1.5rem] [corner-shape:squircle] p-8 text-center">
+        <div className="min-h-screen bg-ecosystem-light dark:bg-[#0B0F17] flex items-center justify-center p-4">
+          <div className="w-full max-w-md">
+            <div className="rokad-card p-8 text-center shadow-hard-lg">
               <div className="flex justify-center mb-4 text-amber-500">
                 <AlertTriangle size={44} />
               </div>
-              <h1 className="text-xl font-black text-navy mb-2">خطا در بارگذاری</h1>
-              <p className="text-sm text-ink/50 mb-4">
+              <h1 className="text-xl font-black text-sec dark:text-white mb-2">خطا در بارگذاری</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                 یک خطا رخ داد. لطفاً صفحه را رفرش کنید.
               </p>
               <button
                 onClick={() => window.location.reload()}
-                className="bg-teal text-white px-4 py-2 rounded-[0.625rem] [corner-shape:squircle] text-sm font-bold hover:bg-teal-text transition-colors"
+                className="rokad-btn-primary px-5 py-2 text-sm"
               >
                 رفرش صفحه
               </button>

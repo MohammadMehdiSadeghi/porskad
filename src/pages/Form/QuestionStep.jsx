@@ -49,10 +49,10 @@ function TextInput({ type, value, onChange, error, autoFocus = true, inputRef, o
   const currentLength = value ? String(value).length : 0;
 
   const shared = clsx(
-    "w-full bg-white dark:bg-slate-800 border-2 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3",
-    "font-semibold text-ink dark:text-white text-sm sm:text-base placeholder:text-ink-subtle/60 dark:placeholder:text-slate-500 placeholder:font-medium",
-    "placeholder:text-right placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-ecosystem-normal/15 transition-all duration-200",
-    error ? "border-female-normal" : "border-ink/15 dark:border-slate-700 focus:border-ecosystem-normal",
+    "w-full bg-white dark:bg-[#1C2536] border-[1.5px] rounded-xl px-3.5 py-2.5 sm:py-3",
+    "font-semibold text-sec dark:text-white text-sm sm:text-base placeholder:text-gray-400 placeholder:font-medium",
+    "placeholder:text-right placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-ecosystem-normal/20 transition-all duration-200",
+    error ? "border-female-normal" : "border-gray-200 dark:border-gray-700 focus:border-ecosystem-normal",
   );
 
   if (type === "long_text") {
@@ -176,7 +176,7 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
       <select
         value={value || ""}
         onChange={(e) => { const v = e.target.value || null; onChange(v); }}
-        className="w-full bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:px-4 sm:py-3.5 font-bold text-sm sm:text-base text-ink dark:text-white focus:outline-none transition-all duration-200 cursor-pointer text-right"
+        className="w-full bg-white dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-gray-700 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/20 rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3.5 font-bold text-sm sm:text-base text-sec dark:text-white focus:outline-none transition-all duration-200 cursor-pointer text-right"
       >
         <option value="">یک گزینه انتخاب کنید...</option>
         {options.map((opt, i) => (
@@ -200,13 +200,12 @@ function ChoiceOptions({ options = [], value, onChange, onEnter, displayMode = "
         return (
           <button key={i} type="button" onClick={() => isMulti ? handleMultiToggle(opt) : onChange(opt)}
             disabled={disabled}
-            className={clsx("relative group flex items-center gap-2.5 text-right w-full border-2 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 transition-all duration-200 cursor-pointer hover:-translate-y-px",
-              disabled ? "opacity-40 cursor-not-allowed hover:translate-y-0" : "",
+            className={clsx("relative group flex items-center gap-2.5 text-right w-full border-[1.5px] rounded-xl px-3.5 py-2.5 sm:py-3 transition-all duration-200 cursor-pointer hover:-translate-x-[1px] hover:-translate-y-[1px]",
+              disabled ? "opacity-40 cursor-not-allowed hover:translate-none" : "",
               selected
-                ? "border-ecosystem-normal bg-ecosystem-light dark:bg-teal/10 rotate-[-0.5deg]"
-                : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800/90 hover:border-ecosystem-normal/50 dark:hover:border-teal/50",
+                ? "border-ecosystem-normal bg-ecosystem-light dark:bg-ecosystem-darker/50 shadow-hard-sm"
+                : "border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C2536] hover:border-ecosystem-normal/50",
             )}>
-            {selected && <div aria-hidden="true" className="absolute top-[2px] left-[2px] w-full h-full bg-ecosystem-dark/15 rounded-pill-md [corner-shape:squircle] pointer-events-none" />}
             {isMulti ? (
               <span className={clsx("relative z-10 w-7 h-7 sm:w-8 sm:h-8 shrink-0 flex items-center justify-center rounded-md border-2 font-black text-xs sm:text-sm transition-colors duration-200",
                 selected ? "border-ecosystem-normal bg-ecosystem-normal text-white" : "border-ink/15 dark:border-slate-600 text-male-normal dark:text-slate-300 group-hover:border-ecosystem-normal",
@@ -336,8 +335,8 @@ function YesNoOptions({ value, onChange }) {
           : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800/90 text-ink dark:text-slate-200";
         return (
           <button key={o.label} type="button" onClick={() => { onChange(o.label); }}
-            className={clsx("flex flex-col items-center gap-1.5 border-2 rounded-pill-md [corner-shape:squircle] py-4 sm:py-5 text-base sm:text-lg font-black transition-all duration-200 hover:-translate-y-px cursor-pointer",
-              active, selected && "rotate-[-0.5deg]",
+            className={clsx("flex flex-col items-center gap-1.5 border-[1.5px] rounded-xl py-4 sm:py-5 text-base sm:text-lg font-black transition-all duration-200 hover:-translate-x-[1px] hover:-translate-y-[1px] cursor-pointer",
+              active, selected && "shadow-hard-sm",
             )}>
             <span className="text-xl sm:text-2xl">
               {o.label === "بله"
@@ -788,10 +787,7 @@ export default function QuestionStep({ question, index, total, value, timeSpent,
   const theme = getStepTheme(index);
 
   return (
-    <div className="relative">
-      <div aria-hidden="true" className={clsx("absolute top-1.5 left-1.5 w-full h-full", theme.backBg, "rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle]")} />
-
-      <div className={clsx("relative z-10 flex flex-col gap-3.5 sm:gap-4 rounded-tl-[1rem] rounded-br-[1rem] rounded-tr-none rounded-bl-none [corner-shape:squircle] border-2 p-4 sm:p-5 lg:p-6 transition-colors duration-300 overflow-hidden", theme.bg, theme.border)}>
+    <div className={clsx("flex flex-col gap-3.5 sm:gap-4 rounded-2xl border-[1.5px] p-4 sm:p-5 lg:p-6 shadow-hard-sm dark:shadow-dark-hard transition-colors duration-300", theme.bg, theme.border)}>
         {/* شماره + برچسب */}
         <div className="flex items-center justify-between gap-2">
           <span className={clsx("text-xs sm:text-sm font-black flex items-center gap-1", theme.label)}>
@@ -839,7 +835,7 @@ export default function QuestionStep({ question, index, total, value, timeSpent,
 
         {/* ارور */}
         {error && (
-          <div className="self-start rotate-[-0.5deg] bg-white border-2 border-female-normal rounded-pill-md [corner-shape:squircle] px-2.5 py-1.5 text-xs sm:text-sm font-bold text-female-normal flex items-center gap-1.5">
+          <div className="self-start bg-female-light dark:bg-pink-950/40 border-[1.5px] border-female-normal/40 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-bold text-female-normal flex items-center gap-1.5">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
             {error}
           </div>
@@ -851,6 +847,5 @@ export default function QuestionStep({ question, index, total, value, timeSpent,
           </span>
         )}
       </div>
-    </div>
   );
 }

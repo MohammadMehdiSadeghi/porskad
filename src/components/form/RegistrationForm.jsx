@@ -16,7 +16,7 @@ import ScoreResult from "../ui/ScoreResult";
 import { sendToTelegram } from "../../lib/telegram";
 import { Star, Check, CheckCircle2, AlertCircle, Image, ArrowUp, ArrowDown, Upload, FileCheck, CreditCard, ChevronDown, Info, Layers } from "lucide-react";
 
-const inputCls = "w-full bg-white dark:bg-slate-800 border-2 border-ink/10 dark:border-slate-700 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/15 rounded-pill-md [corner-shape:squircle] px-3.5 py-2.5 sm:py-3 font-semibold text-ink dark:text-white text-sm sm:text-base placeholder:text-ink/40 dark:placeholder:text-slate-500 placeholder:font-medium focus:outline-none transition-all duration-200";
+const inputCls = "w-full bg-white dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-gray-700 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/20 rounded-xl px-3.5 py-2.5 sm:py-3 font-semibold text-sec dark:text-white text-sm sm:text-base placeholder:text-gray-400 placeholder:font-medium focus:outline-none transition-all duration-200";
 
 function isFieldEmpty(v) {
   return v === null || v === undefined || (typeof v === "string" && v.trim() === "") || (Array.isArray(v) && v.length === 0) || (typeof v === "object" && Object.keys(v).length === 0);
@@ -28,7 +28,7 @@ function DropdownChoice({ options = [], value, onChange, placeholder = "یک گ�
       <select
         value={value || ""}
         onChange={(e) => onChange(e.target.value || null)}
-        className="w-full appearance-none bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/15 rounded-pill-md px-4 py-3 font-bold text-sm sm:text-base text-ink dark:text-white focus:outline-none transition-all cursor-pointer text-right pr-4 pl-10"
+        className="w-full appearance-none bg-white dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-gray-700 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/20 rounded-xl px-4 py-3 font-bold text-sm sm:text-base text-sec dark:text-white focus:outline-none transition-all cursor-pointer text-right pr-4 pl-10"
       >
         <option value="">{placeholder}</option>
         {options.map((opt, i) => (
