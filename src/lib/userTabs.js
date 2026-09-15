@@ -54,9 +54,34 @@ export function normalizeUserTabsConfig(raw) {
   return base;
 }
 
+const LOCAL_STORAGE_KEY = "porskad_user_tabs_cache";
+
+function getInitialConfig() {
+  if (typeof window !== "undefined") {
+    try {
+      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (saved) return normalizeUserTabsConfig(JSON.parse(saved));
+    } catch (_) {}
+  }
+  return DEFAULT_USER_TABS_CONFIG;
+}
+
 // ─── کش در حافظهٔ ماژول + رویداد برای همهٔ کامپوننت‌ها ───
-let cacheConfig = null;
+let cacheConfig = getInitialConfig();
 const EVT = "porskad:user_tabs_updated";
+
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (e) => {
+    if (e.key === LOCAL_STORAGE_KEY) {
+      try {
+        if (e.newValue) {
+          cacheConfig = normalizeUserTabsConfig(JSON.parse(e.newValue));
+          window.dispatchEvent(new Event(EVT));
+        }
+      } catch (_) {}
+    }
+  });
+}
 
 export function getUserTabsConfig() {
   return cacheConfig || DEFAULT_USER_TABS_CONFIG;
@@ -72,8 +97,13 @@ export async function loadUserTabsConfigFromDb() {
     if (error) throw error;
     const raw = data?.[USER_TABS_SETTINGS_KEY];
     cacheConfig = normalizeUserTabsConfig(raw);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cacheConfig));
+      } catch (_) {}
+    }
   } catch (e) {
-    if (!cacheConfig) cacheConfig = DEFAULT_USER_TABS_CONFIG;
+    if (!cacheConfig) cacheConfig = getInitialConfig();
   }
   if (typeof window !== "undefined") window.dispatchEvent(new Event(EVT));
   return cacheConfig;

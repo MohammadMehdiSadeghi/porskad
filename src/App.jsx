@@ -7,6 +7,7 @@ import { ThemeProvider } from "./context/ThemeContext";
 import SetupNotice from "./components/ui/SetupNotice";
 import { isSupabaseConfigured } from "./lib/supabaseClient";
 import { loadQuestionTypesConfigFromDb } from "./lib/questionTypes";
+import { loadUserTabsConfigFromDb } from "./lib/userTabs";
 import { AlertTriangle } from "lucide-react";
 
 import FormFill from "./pages/Form";
@@ -92,9 +93,10 @@ class ErrorBoundary extends React.Component {
 }
 
 export default function App() {
-  // همگام‌سازی تنظیمات انواع سوال (فعال/غیرفعال سوپرادمین) با سرور برای همه کاربران
+  // همگام‌سازی تنظیمات انواع سوال و تب‌های کاربری با سرور در زمان لود برنامه
   React.useEffect(() => {
     loadQuestionTypesConfigFromDb().catch(() => {});
+    loadUserTabsConfigFromDb().catch(() => {});
   }, []);
 
   if (!isSupabaseConfigured) {
@@ -111,9 +113,15 @@ export default function App() {
               {/* عمومی — فرم پر کردن */}
               <Route path="/f/:slug" element={<FormFill />} />
 
-              {/* مستندات اختصاصی وب‌سرویس و سوئگر (فقط داخل پنل با الزام لاگین) */}
+              {/* مستندات اختصاصی وب‌سرویس و سوئگر (فقط داخل پنل و با الزام لاگین کامل) */}
               <Route path="/docs" element={<Navigate to="/admin/web-service" replace />} />
+              <Route path="/docs/*" element={<Navigate to="/admin/web-service" replace />} />
               <Route path="/swagger" element={<Navigate to="/admin/web-service" replace />} />
+              <Route path="/swagger/*" element={<Navigate to="/admin/web-service" replace />} />
+              <Route path="/swagger-docs" element={<Navigate to="/admin/web-service" replace />} />
+              <Route path="/swagger-docs/*" element={<Navigate to="/admin/web-service" replace />} />
+              <Route path="/api-docs" element={<Navigate to="/admin/web-service" replace />} />
+              <Route path="/api-docs/*" element={<Navigate to="/admin/web-service" replace />} />
 
               {/* Embed — جاسازی فرم در سایت‌های دیگر */}
               <Route path="/embed/:formId" element={<EmbedForm />} />
