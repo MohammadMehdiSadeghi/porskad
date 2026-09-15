@@ -308,16 +308,51 @@ export default function SmsPanel() {
         qMap[q.id] = q.title;
       });
 
-      const { data: answersData, error } = await supabase
-        .from("answers")
-        .select("id, response_id, question_id, value, created_at")
-        .in("question_id", questionIds);
+      // ۱. دریافت لیست شناسه‌های پاسخ‌های ثبت‌شده برای این فرم
+      const { data: responsesData, error: respError } = await supabase
+        .from("responses")
+        .select("id, created_at")
+        .eq("form_id", formId);
 
-      if (error) throw error;
+      if (respError) throw respError;
+
+      if (!responsesData || responsesData.length === 0) {
+        setExtractedContacts([]);
+        setUniqueExtractedPhones([]);
+        showToast("هنوز هیچ پاسخی برای این فرم ثبت نشده است.", "info");
+        setExtractingContacts(false);
+        return;
+      }
+
+      const respMap = {};
+      const respIds = [];
+      responsesData.forEach((r) => {
+        respMap[r.id] = r.created_at;
+        respIds.push(r.id);
+      });
+
+      // ۲. دریافت پاسخ‌های مربوط به فیلدهای انتخابی به صورت دسته‌ای (Chunked)
+      let answersData = [];
+      const CHUNK_SIZE = 150;
+      for (let i = 0; i < respIds.length; i += CHUNK_SIZE) {
+        const chunk = respIds.slice(i, i + CHUNK_SIZE);
+        const { data: chunkAnswers, error: ansError } = await supabase
+          .from("answers")
+          .select("id, response_id, question_id, value")
+          .in("response_id", chunk)
+          .in("question_id", questionIds);
+
+        if (ansError) throw ansError;
+        if (chunkAnswers && chunkAnswers.length > 0) {
+          answersData = answersData.concat(chunkAnswers);
+        }
+      }
 
       const rawItems = [];
-      (answersData || []).forEach((row) => {
+      answersData.forEach((row) => {
         let val = row.value;
+        const rowCreatedAt = respMap[row.response_id] || null;
+
         if (Array.isArray(val)) {
           val.forEach((item) => {
             const rawStr = String(item || "").trim();
@@ -331,12 +366,13 @@ export default function SmsPanel() {
                 questionTitle: qMap[row.question_id] || "فیلد فرم",
                 questionId: row.question_id,
                 responseId: row.response_id,
-                createdAt: row.created_at,
+                createdAt: rowCreatedAt,
                 isValid: valid,
               });
             }
           });
         } else if (val !== null && val !== undefined) {
+          // اگر مقدار یک رشته متنی چندشماره‌ای باشد
           const rawStr = String(val).trim();
           if (rawStr) {
             const normalized = normalizeIranPhone(rawStr);
@@ -348,7 +384,7 @@ export default function SmsPanel() {
               questionTitle: qMap[row.question_id] || "فیلد فرم",
               questionId: row.question_id,
               responseId: row.response_id,
-              createdAt: row.created_at,
+              createdAt: rowCreatedAt,
               isValid: valid,
             });
           }
@@ -366,11 +402,11 @@ export default function SmsPanel() {
       } else if (rawItems.length > 0) {
         showToast("پاسخ‌هایی یافت شد اما شماره موبایل معتبری منطبق بر الگوی ایران نبود.", "info");
       } else {
-        showToast("هنوز پاسخی برای این فیلدها در فرم ثبت نشده است.", "info");
+        showToast("برای فیلدهای انتخابی، هنوز هیچ پاسخی ثبت نشده است.", "info");
       }
     } catch (err) {
       console.error("Extract numbers error:", err);
-      showToast("خطا در استخراج شماره‌های فرم", "error");
+      showToast("خطا در استخراج شماره‌های فرم: " + (err.message || ""), "error");
     } finally {
       setExtractingContacts(false);
     }
