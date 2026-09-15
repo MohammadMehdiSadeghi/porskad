@@ -608,7 +608,8 @@ export default function SmsPanel() {
 
   // ─── ذخیره تنظیمات ───
   async function handleSaveSettings(e) {
-    e.preventDefault();
+    if (e?.preventDefault) e.preventDefault();
+    if (savingSettings) return;
     setSavingSettings(true);
     try {
       const storedToken = localStorage.getItem(tokenStorageKey) || "";
@@ -632,6 +633,8 @@ export default function SmsPanel() {
       if (finalToken) {
         localStorage.setItem(tokenStorageKey, finalToken);
         setAmootToken(finalToken);
+        setHasTokenInDb(true);
+        setMaskedToken("••••••••" + finalToken.slice(-4));
       }
       const finalLine = (!lineNumber || lineNumber === "Service" || lineNumber === "Public") ? "98" : lineNumber;
       localStorage.setItem(lineStorageKey, finalLine);
@@ -655,16 +658,15 @@ export default function SmsPanel() {
       }
 
       // ارسال به بریج سرورلس با توکن
-      await callAmootProxy("save_settings", {
+      callAmootProxy("save_settings", {
         token: finalToken,
         amoot_token: finalToken,
         line_number: finalLine.trim(),
         sender_name: (senderName || "پرس‌کاد").trim(),
         is_active: isActive,
-      });
+      }).catch((err) => console.warn("Save settings proxy note:", err));
 
       showToast("تنظیمات وب‌سرویس پیامک با موفقیت ذخیره شد.", "success");
-      await loadSettings();
     } catch (err) {
       showToast(err.message || "خطا در ذخیره تنظیمات", "error");
     } finally {
