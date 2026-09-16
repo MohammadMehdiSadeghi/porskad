@@ -433,12 +433,50 @@ body {
   transition: transform 0.08s ease-out;
 }
 
-/* Mermaid SVG styling */
+/* Razor-sharp vector rendering without bitmap raster blur */
 .diagram-canvas svg {
   display: block;
   max-width: 100%;
   height: auto;
-  filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.6));
+  filter: none !important; /* Never use raster drop-shadow on SVG to ensure 100% infinite vector clarity */
+  text-rendering: geometricPrecision !important;
+  shape-rendering: geometricPrecision !important;
+  image-rendering: -webkit-optimize-contrast !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Ultra-high-contrast crisp typography inside diagram nodes */
+.diagram-canvas text,
+.diagram-canvas .nodeLabel,
+.diagram-canvas .label,
+.diagram-canvas .edgeLabel {
+  font-family: 'IRANSansX', 'Vazirmatn', system-ui, -apple-system, sans-serif !important;
+  font-weight: 600 !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Crisp bold strokes for nodes and connectors */
+.diagram-canvas .node rect,
+.diagram-canvas .node circle,
+.diagram-canvas .node polygon,
+.diagram-canvas .node path {
+  shape-rendering: geometricPrecision !important;
+  stroke-width: 2px !important;
+}
+
+.diagram-canvas .edgePath path,
+.diagram-canvas path.flowchart-link {
+  shape-rendering: geometricPrecision !important;
+  stroke-width: 2.2px !important;
+  stroke: #38BDF8 !important;
+}
+
+.diagram-canvas .cluster rect {
+  shape-rendering: geometricPrecision !important;
+  stroke-width: 1.8px !important;
+  stroke: #2DD4BF !important;
 }
 
 /* Mini navigation helper pill */
