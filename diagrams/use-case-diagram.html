@@ -56,6 +56,7 @@
           <span>🎯 نمودار تعاملات بازیگران و موارد کاربرد سامانه</span>
         </div>
         <div class="stage-controls">
+          <span class="zoom-indicator" id="zoomIndicator">100%</span>
           <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
           <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
           <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
@@ -64,6 +65,11 @@
         </div>
       </div>
       <div class="diagram-viewport">
+        <div class="figma-hud-helper">
+          <span>🎯 اسکرول ماوس: زوم فیگما روی نشانگر</span>
+          <span>•</span>
+          <span>🖱️ درگ آزاد یا <kbd>Space</kbd> + درگ: جابجایی</span>
+        </div>
         <div class="diagram-canvas">
           <pre class="mermaid">
 graph LR
