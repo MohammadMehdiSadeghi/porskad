@@ -62,12 +62,12 @@ function UndoToast({ formTitle, onUndo, onDismiss, duration = 6000 }) {
       dir="rtl"
       className="fixed bottom-6 inset-x-0 z-50 flex justify-center px-4 pointer-events-none animate-slide-up"
     >
-      <div className="pointer-events-auto relative overflow-hidden bg-[#0B0F19]/95 dark:bg-[#131B2E]/95 backdrop-blur-2xl border border-teal/40 shadow-[0_20px_50px_rgba(0,0,0,0.6),0_0_25px_rgba(45,212,191,0.2)] rounded-2xl flex items-center gap-3 pr-4 pl-3 py-3 w-full sm:w-auto sm:min-w-[400px] sm:max-w-lg transition-all">
+      <div className="pointer-events-auto relative isolate bg-[#0B0F19] dark:bg-[#131B2E] border border-teal/40 shadow-[0_20px_50px_rgba(0,0,0,0.6),0_0_20px_rgba(45,212,191,0.15)] rounded-2xl flex items-center gap-3 pr-4 pl-3 py-3 w-full sm:w-auto sm:min-w-[400px] sm:max-w-lg transition-all">
         {/* نوار گرادینت عمودی سمت راست */}
         <span className="absolute inset-y-0 right-0 w-1.5 bg-gradient-to-b from-teal to-cyan-400 rounded-r-2xl shadow-[0_0_10px_#2DD4BF]" />
 
         {/* آیکون مدرن زباله */}
-        <div className="w-10 h-10 shrink-0 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shadow-[0_0_12px_rgba(244,63,94,0.25)]">
+        <div className="w-10 h-10 shrink-0 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shadow-[0_0_10px_rgba(244,63,94,0.2)]">
           <Trash2 size={17} />
         </div>
 
@@ -76,19 +76,19 @@ function UndoToast({ formTitle, onUndo, onDismiss, duration = 6000 }) {
           <p className="text-xs sm:text-sm font-extrabold text-white truncate leading-5">
             فرم «<span className="text-teal font-black">{formTitle}</span>» به سطل زباله منتقل شد
           </p>
-          <span className="text-[11px] font-semibold text-slate-400 leading-4 mt-0.5">
+          <span className="text-[11px] font-semibold text-slate-400 leading-4 mt-0.5 whitespace-nowrap">
             امکان بازگردانی تا پایان تایمر
           </span>
         </div>
 
-        {/* دکمه بازگردانی با افکت لوکس پرس‌کاد */}
+        {/* دکمه بازگردانی بدون ماسک مشکی و کاملاً روان */}
         <button
           type="button"
           onClick={() => {
             cancelAnimationFrame(timerRef.current);
             onUndo();
           }}
-          className="shrink-0 flex items-center gap-1.5 bg-gradient-to-r from-teal to-teal-400 hover:from-teal-400 hover:to-teal text-[#0B0F19] font-black rounded-xl px-4 py-2 text-xs shadow-[0_0_16px_rgba(45,212,191,0.45)] hover:shadow-[0_0_24px_rgba(45,212,191,0.65)] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+          className="no-anim shrink-0 flex items-center gap-1.5 bg-teal hover:bg-[#34e2cb] active:bg-[#20b8a4] text-[#0B0F19] font-black rounded-xl px-4 py-2 text-xs border border-teal/30 shadow-[0_0_14px_rgba(45,212,191,0.35)] outline-none focus:outline-none focus:ring-0 active:outline-none select-none transition-colors cursor-pointer whitespace-nowrap"
         >
           <Undo2 size={14} className="stroke-[2.5]" />
           <span>بازگردانی</span>
@@ -101,14 +101,14 @@ function UndoToast({ formTitle, onUndo, onDismiss, duration = 6000 }) {
             cancelAnimationFrame(timerRef.current);
             onDismiss();
           }}
-          className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+          className="no-anim shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/10 outline-none focus:outline-none focus:ring-0 active:outline-none transition-colors cursor-pointer"
           aria-label="بستن"
         >
           <X size={14} />
         </button>
 
-        {/* نوار پیشرفت زمانی پیوسته با لهجه فیروزه‌ای */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/5 overflow-hidden">
+        {/* نوار پیشرفت زمانی پیوسته با گوشه‌های گرد پایینی */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/5 rounded-b-2xl overflow-hidden">
           <div
             className="h-full bg-gradient-to-l from-teal to-cyan-400 shadow-[0_0_10px_#2DD4BF] transition-none"
             style={{ width: `${progress}%` }}
