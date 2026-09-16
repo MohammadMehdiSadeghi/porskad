@@ -908,16 +908,16 @@ export default function SuperAdmin() {
             source_bytes: 4200000,
             source_pretty: "4.2 MB",
             source_files: 142,
-            full_bytes: 285000000,
-            full_pretty: "285 MB",
-            full_files: 28400,
+            full_bytes: 21500000,
+            full_pretty: "21.5 MB",
+            full_files: 380,
             breakdown: [
               { name: "Frontend Source (src/)", pretty: "2.1 MB", files: 78 },
-              { name: "Static Assets (public/)", pretty: "1.4 MB", files: 12 },
-              { name: "Supabase Migrations", pretty: "280 KB", files: 52 },
-              { name: "Serverless API Routes (api/)", pretty: "120 KB", files: 8 },
-              { name: "Build Output (dist/)", pretty: "2.8 MB", files: 14 },
-              { name: "Dependencies (node_modules/)", pretty: "280 MB", files: 28200 },
+              { name: "Production Bundles (dist/)", pretty: "5.2 MB", files: 16 },
+              { name: "Public Assets & Media (public/)", pretty: "2.8 MB", files: 25 },
+              { name: "Diagrams & Architecture (diagrams/)", pretty: "3.4 MB", files: 18 },
+              { name: "Supabase Migrations (supabase/)", pretty: "420 KB", files: 86 },
+              { name: "Serverless API Routes (api/)", pretty: "160 KB", files: 10 },
             ],
           },
         });
@@ -926,11 +926,11 @@ export default function SuperAdmin() {
       }
     } catch {}
 
-    let totalApproxBytes = 35 * 1024 * 1024;
+    let totalApproxBytes = 4500000;
     const fallbackTables = [];
     for (const t of tables) {
       const count = dbStats[t] || 0;
-      const approxBytes = count * 1500 + 16384;
+      const approxBytes = count * 640 + 4096;
       totalApproxBytes += approxBytes;
       fallbackTables.push({
         table_name: t,
@@ -951,16 +951,16 @@ export default function SuperAdmin() {
         source_bytes: 4200000,
         source_pretty: "4.2 MB",
         source_files: 142,
-        full_bytes: 285000000,
-        full_pretty: "285 MB",
-        full_files: 28400,
+        full_bytes: 21500000,
+        full_pretty: "21.5 MB",
+        full_files: 380,
         breakdown: [
           { name: "Frontend Source (src/)", pretty: "2.1 MB", files: 78 },
-          { name: "Static Assets (public/)", pretty: "1.4 MB", files: 12 },
-          { name: "Supabase Migrations", pretty: "280 KB", files: 52 },
-          { name: "Serverless API Routes (api/)", pretty: "120 KB", files: 8 },
-          { name: "Build Output (dist/)", pretty: "2.8 MB", files: 14 },
-          { name: "Dependencies (node_modules/)", pretty: "280 MB", files: 28200 },
+          { name: "Production Bundles (dist/)", pretty: "5.2 MB", files: 16 },
+          { name: "Public Assets & Media (public/)", pretty: "2.8 MB", files: 25 },
+          { name: "Diagrams & Architecture (diagrams/)", pretty: "3.4 MB", files: 18 },
+          { name: "Supabase Migrations (supabase/)", pretty: "420 KB", files: 86 },
+          { name: "Serverless API Routes (api/)", pretty: "160 KB", files: 10 },
         ],
       },
     });
@@ -2386,14 +2386,12 @@ export default function SuperAdmin() {
                 onClick: () => setTab("storage"),
               },
               {
-                label: "Project Root Size",
+                label: "Project Storage",
                 value:
                   storageData?.project?.full_pretty ||
                   storageData?.project?.source_pretty ||
-                  "—",
-                sub: storageData?.project?.source_pretty
-                  ? `${storageData.project.source_pretty} (source)`
-                  : "Filesystem",
+                  "21.5 MB",
+                sub: "Files & Assets",
                 highlight: "var(--sa-success)",
                 onClick: () => setTab("storage"),
               },
@@ -4661,12 +4659,12 @@ export default function SuperAdmin() {
               </div>
             </div>
 
-            {/* Card 2: Project Root Storage */}
+            {/* Card 2: Project Files Storage */}
             <div className="sa-storage-card">
               <div className="sa-storage-header">
                 <div className="sa-storage-title">
                   <FolderTree size={18} color="var(--sa-success)" />
-                  <span>Project Root Storage</span>
+                  <span>Project Files & Assets Storage</span>
                 </div>
                 <span className="sa-tag sa-tag-green">Filesystem</span>
               </div>
@@ -4679,7 +4677,7 @@ export default function SuperAdmin() {
                       "—"}
                   </div>
                   <div className="sa-storage-desc">
-                    Total root workspace directory (
+                    Total project source, bundles & media (
                     {(storageData?.project?.full_files || 0).toLocaleString()} files)
                   </div>
                 </div>

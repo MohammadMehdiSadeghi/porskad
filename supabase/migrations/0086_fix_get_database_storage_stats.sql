@@ -10,6 +10,7 @@ SET search_path = public, pg_temp
 AS $$
 DECLARE
   v_size bigint;
+  v_cluster_size bigint;
   v_tables jsonb;
   v_rows bigint;
 BEGIN
@@ -22,10 +23,17 @@ BEGIN
     RAISE EXCEPTION 'not authorized: superadmin only';
   END IF;
 
-  -- محاسبه حجم واقعی کل دیتابیس در کلاستر پستگرس
-  SELECT pg_database_size(current_database()) INTO v_size;
+  -- محاسبه مجموع حجم واقعی داده‌های جداول کاربری سامانه در اسکیما public (شامل داده، ایندکس‌ها و TOAST)
+  SELECT coalesce(sum(pg_total_relation_size(c.oid)), 0)
+  INTO v_size
+  FROM pg_class c
+  JOIN pg_namespace n ON n.oid = c.relnamespace
+  WHERE n.nspname = 'public' AND c.relkind = 'r';
 
-  -- تفکیک دقیق حجم فیزیکی هر جدول در اسکیما public (شامل داده، ایندکس‌ها و TOAST)
+  -- حجم فیزیکی کلاستر کلی پستگرس
+  SELECT pg_database_size(current_database()) INTO v_cluster_size;
+
+  -- تفکیک دقیق حجم فیزیکی هر جدول در اسکیما public
   SELECT coalesce(jsonb_agg(jsonb_build_object(
            'table_name', t.tbl,
            'name', t.tbl,
@@ -58,6 +66,8 @@ BEGIN
     'db_size_text', pg_size_pretty(v_size),
     'total_db_bytes', v_size,
     'total_db_pretty', pg_size_pretty(v_size),
+    'cluster_size_bytes', v_cluster_size,
+    'cluster_size_pretty', pg_size_pretty(v_cluster_size),
     'tables', v_tables,
     'total_rows', v_rows,
     'estimated', false

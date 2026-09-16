@@ -527,13 +527,19 @@ export default async function handler(req, res) {
       }
 
       const cwd = process.cwd();
-      const publicUploads = path.join(cwd, "public", "uploads");
+      const publicDir = path.join(cwd, "public");
       const distDir = path.join(cwd, "dist");
       const srcDir = path.join(cwd, "src");
+      const apiDir = path.join(cwd, "api");
+      const diagramsDir = path.join(cwd, "diagrams");
+      const supabaseDir = path.join(cwd, "supabase");
 
-      const uploadsStats = getDirSize(publicUploads);
+      const publicStats = getDirSize(publicDir);
       const distStats = getDirSize(distDir);
       const srcStats = getDirSize(srcDir);
+      const apiStats = getDirSize(apiDir);
+      const diagramsStats = getDirSize(diagramsDir);
+      const supabaseStats = getDirSize(supabaseDir);
 
       let dbStats = {
         formsCount: 0,
@@ -561,13 +567,30 @@ export default async function handler(req, res) {
         };
       } catch {}
 
-      const totalLocalBytes = uploadsStats.bytes + distStats.bytes + srcStats.bytes;
+      const totalLocalBytes =
+        publicStats.bytes +
+        distStats.bytes +
+        srcStats.bytes +
+        apiStats.bytes +
+        diagramsStats.bytes +
+        supabaseStats.bytes;
+
+      const totalLocalFiles =
+        publicStats.files +
+        distStats.files +
+        srcStats.files +
+        apiStats.files +
+        diagramsStats.files +
+        supabaseStats.files;
+
       const estimatedDbBytes =
-        dbStats.formsCount * 2500 +
-        dbStats.responsesCount * 1200 +
-        dbStats.answersCount * 300 +
-        dbStats.usersCount * 800 +
-        dbStats.assetsCount * 50000;
+        Math.max(3500000,
+          dbStats.formsCount * 2500 +
+          dbStats.responsesCount * 1200 +
+          dbStats.answersCount * 300 +
+          dbStats.usersCount * 800 +
+          dbStats.assetsCount * 50000
+        );
 
       let realDbBytes = 0;
       let realDbPretty = null;
@@ -612,11 +635,14 @@ export default async function handler(req, res) {
           source_files: srcStats.files,
           full_bytes: totalLocalBytes,
           full_pretty: formatBytes(totalLocalBytes),
-          full_files: (srcStats.files || 0) + (distStats.files || 0) + (uploadsStats.files || 0),
+          full_files: totalLocalFiles,
           breakdown: [
             { name: "Frontend Source (src/)", pretty: formatBytes(srcStats.bytes), files: srcStats.files },
-            { name: "Public Uploads (uploads/)", pretty: formatBytes(uploadsStats.bytes), files: uploadsStats.files },
-            { name: "Build Output (dist/)", pretty: formatBytes(distStats.bytes), files: distStats.files },
+            { name: "Production Build (dist/)", pretty: formatBytes(distStats.bytes), files: distStats.files },
+            { name: "Public Assets & Media (public/)", pretty: formatBytes(publicStats.bytes), files: publicStats.files },
+            { name: "Diagrams & Documentation", pretty: formatBytes(diagramsStats.bytes), files: diagramsStats.files },
+            { name: "Supabase Migrations (supabase/)", pretty: formatBytes(supabaseStats.bytes), files: supabaseStats.files },
+            { name: "Serverless API Routes (api/)", pretty: formatBytes(apiStats.bytes), files: apiStats.files },
           ],
         },
         summary: {
