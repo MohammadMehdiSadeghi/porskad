@@ -225,12 +225,18 @@ export default function Login() {
               />
             </label>
 
-            <label className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-extrabold text-sec dark:text-slate-200">رمز عبور</span>
+                <label htmlFor="login-password-input" className="text-sm font-extrabold text-sec dark:text-slate-200 cursor-pointer">
+                  رمز عبور
+                </label>
                 <button
                   type="button"
-                  onClick={() => setShowForgotModal(true)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowForgotModal(true);
+                  }}
                   className="text-xs font-bold text-ecosystem-normal hover:text-sec dark:hover:text-ecosystem-light transition-colors cursor-pointer"
                 >
                   فراموشی رمز عبور؟
@@ -238,6 +244,7 @@ export default function Login() {
               </div>
               <div className="relative">
                 <input
+                  id="login-password-input"
                   type={showPassword ? "text" : "password"}
                   dir="ltr"
                   required
@@ -256,7 +263,7 @@ export default function Login() {
                   />
                 </div>
               </div>
-            </label>
+            </div>
 
             {error && (
               <div className="flex flex-col gap-2.5">
