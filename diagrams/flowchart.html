@@ -1,256 +1,256 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Flowchart | سامانه فرم‌ساز پرس‌کاد (Porskad)</title>
-  <link rel="stylesheet" href="assets/style.css">
-  <script src="assets/mermaid.min.js"></script>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Flowchart | سامانه فرم‌ساز پرس‌کاد (Porskad)</title>
+ <link rel="stylesheet" href="assets/style.css">
+ <script src="assets/mermaid.min.js"></script>
 </head>
 <body>
-  <div class="container">
-    <header class="top-nav">
-      <a href="index.html" class="brand-section">
-        <div class="brand-logo-icon">P</div>
-        <div class="brand-info">
-          <h1>پرس‌کاد <span>Porskad Blueprints</span></h1>
-          <span>پلتفرم سازمانی ساخت فرم و پرسشنامه</span>
-        </div>
-      </a>
-      <div class="nav-actions">
-        <select class="nav-select" id="diagramNavSelect">
-          <option value="architecture-diagram.html">۱. Architecture Diagram</option>
-          <option value="system-architecture-diagram.html">۲. System Architecture Diagram</option>
-          <option value="system-diagram.html">۳. System Diagram</option>
-          <option value="project-structure-diagram.html">۴. Project Structure Diagram</option>
-          <option value="flowchart.html" selected>۵. Flowchart</option>
-          <option value="mind-map.html">۶. Mind Map</option>
-          <option value="site-map.html">۷. Site Map</option>
-          <option value="uml-diagram.html">۸. UML Diagram</option>
-          <option value="er-diagram.html">۹. ER Diagram</option>
-          <option value="component-diagram.html">۱۰. Component Diagram</option>
-          <option value="data-flow-diagram.html">۱۱. Data Flow Diagram (DFD)</option>
-          <option value="sequence-diagram.html">۱۲. Sequence Diagram</option>
-          <option value="use-case-diagram.html">۱۳. Use Case Diagram</option>
-          <option value="entity-relationship-diagram.html">۱۴. Entity Relationship Diagram (ERD)</option>
-        </select>
-        <a href="index.html" class="btn btn-secondary btn-sm">🏠 خانه دیاگرام‌ها</a>
-      </div>
-    </header>
+ <div class="container">
+ <header class="top-nav">
+ <a href="index.html" class="brand-section">
+ <div class="brand-logo-icon">P</div>
+ <div class="brand-info">
+ <h1>پرس‌کاد <span>Porskad Blueprints</span></h1>
+ <span>پلتفرم سازمانی ساخت فرم و پرسشنامه</span>
+ </div>
+ </a>
+ <div class="nav-actions">
+ <select class="nav-select" id="diagramNavSelect">
+ <option value="architecture-diagram.html">۱. Architecture Diagram</option>
+ <option value="system-architecture-diagram.html">۲. System Architecture Diagram</option>
+ <option value="system-diagram.html">۳. System Diagram</option>
+ <option value="project-structure-diagram.html">۴. Project Structure Diagram</option>
+ <option value="flowchart.html" selected>۵. Flowchart</option>
+ <option value="mind-map.html">۶. Mind Map</option>
+ <option value="site-map.html">۷. Site Map</option>
+ <option value="uml-diagram.html">۸. UML Diagram</option>
+ <option value="er-diagram.html">۹. ER Diagram</option>
+ <option value="component-diagram.html">۱۰. Component Diagram</option>
+ <option value="data-flow-diagram.html">۱۱. Data Flow Diagram (DFD)</option>
+ <option value="sequence-diagram.html">۱۲. Sequence Diagram</option>
+ <option value="use-case-diagram.html">۱۳. Use Case Diagram</option>
+ <option value="entity-relationship-diagram.html">۱۴. Entity Relationship Diagram (ERD)</option>
+ </select>
+ <a href="index.html" class="btn btn-secondary btn-sm">خانه دیاگرام‌ها</a>
+ </div>
+ </header>
 
-    <div class="page-header">
-      <div class="header-meta-row">
-        <span class="badge badge-teal">فلوچارت فرآیندها</span>
-        <span class="badge badge-blue">Process & Decision Flowchart</span>
-        <span class="badge badge-purple">Form Engine & Submission Pipeline</span>
-      </div>
-      <h1 class="page-title">Flowchart (فلوچارت فرآیند ثبت و چرخه حیات فرم)</h1>
-      <p class="page-desc">
-        فلوچارت تفصیلی فرآیندهای عملیاتی پرس‌کاد شامل: مسیر کامل پر کردن فرم توسط پاسخ‌دهنده (بازیابی پیش‌نویس موضعی، اعتبارسنجی تله ربات، اجرای منطق‌های شرطی و پرش‌ها، ثبت اتمیک در دیتابیس، و پاک‌سازی کش) و چرخه حیات ساخت، انتشار و بایگانی فرم توسط طراح.
-      </p>
-    </div>
+ <div class="page-header">
+ <div class="header-meta-row">
+ <span class="badge badge-teal">فلوچارت فرآیندها</span>
+ <span class="badge badge-blue">Process & Decision Flowchart</span>
+ <span class="badge badge-purple">Form Engine & Submission Pipeline</span>
+ </div>
+ <h1 class="page-title">Flowchart (فلوچارت فرآیند ثبت و چرخه حیات فرم)</h1>
+ <p class="page-desc">
+ فلوچارت تفصیلی فرآیندهای عملیاتی پرس‌کاد شامل: مسیر کامل پر کردن فرم توسط پاسخ‌دهنده (بازیابی پیش‌نویس موضعی، اعتبارسنجی تله ربات، اجرای منطق‌های شرطی و پرش‌ها، ثبت اتمیک در دیتابیس، و پاک‌سازی کش) و چرخه حیات ساخت، انتشار و بایگانی فرم توسط طراح.
+ </p>
+ </div>
 
-    <div class="diagram-stage-card">
-      <div class="stage-toolbar">
-        <div class="stage-title">
-          <span>🔄 فلوچارت تصمیم‌گیری و جریان پاسخ‌دهی به فرم</span>
-        </div>
-        <div class="stage-controls">
-          <span class="zoom-indicator" id="zoomIndicator">100%</span>
-          <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
-          <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
-          <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
-          <button class="control-btn" id="fullscreenBtn" title="تمام صفحه">⛶</button>
-          <button class="btn btn-primary btn-sm" id="exportBtn">📥 خروجی SVG</button>
-        </div>
-      </div>
-      <div class="diagram-viewport">
-        <div class="figma-hud-helper">
-          <span>🎯 اسکرول ماوس: زوم فیگما روی نشانگر</span>
-          <span>•</span>
-          <span>🖱️ درگ آزاد یا <kbd>Space</kbd> + درگ: جابجایی</span>
-        </div>
-        <div class="diagram-canvas">
-          <pre class="mermaid">
+ <div class="diagram-stage-card">
+ <div class="stage-toolbar">
+ <div class="stage-title">
+ <span> فلوچارت تصمیم‌گیری و جریان پاسخ‌دهی به فرم</span>
+ </div>
+ <div class="stage-controls">
+ <span class="zoom-indicator" id="zoomIndicator">100%</span>
+ <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
+ <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
+ <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
+ <button class="control-btn" id="fullscreenBtn" title="تمام صفحه"></button>
+ <button class="btn btn-primary btn-sm" id="exportBtn">خروجی SVG</button>
+ </div>
+ </div>
+ <div class="diagram-viewport">
+ <div class="figma-hud-helper">
+ <span>اسکرول ماوس: زوم روی نشانگر</span>
+ <span>•</span>
+ <span>درگ آزاد یا <kbd>Space</kbd> + درگ: جابجایی</span>
+ </div>
+ <div class="diagram-canvas">
+ <pre class="mermaid">
 flowchart TD
-    classDef startEvent fill:#10B981,stroke:#059669,stroke-width:2px,color:#0B0F19,font-weight:bold;
-    classDef processStep fill:#131B2E,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
-    classDef decisionStep fill:#1E293B,stroke:#F59E0B,stroke-width:2px,color:#F8FAFC;
-    classDef rpcStep fill:#1E1B4B,stroke:#A855F7,stroke-width:2px,color:#F8FAFC;
-    classDef endEvent fill:#F43F5E,stroke:#BE123C,stroke-width:2px,color:#F8FAFC,font-weight:bold;
+ classDef startEvent fill:#10B981,stroke:#059669,stroke-width:2px,color:#0B0F19,font-weight:bold;
+ classDef processStep fill:#131B2E,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
+ classDef decisionStep fill:#1E293B,stroke:#F59E0B,stroke-width:2px,color:#F8FAFC;
+ classDef rpcStep fill:#1E1B4B,stroke:#A855F7,stroke-width:2px,color:#F8FAFC;
+ classDef endEvent fill:#F43F5E,stroke:#BE123C,stroke-width:2px,color:#F8FAFC,font-weight:bold;
 
-    START([🚀 شروع: کاربر وارد لینک /f/:slug می‌شود]):::startEvent
+ START([ شروع: کاربر وارد لینک /f/:slug می‌شود]):::startEvent
 
-    FETCH[دریافت اطلاعات فرم و سوالات از API]:::processStep
-    START --> FETCH
+ FETCH[دریافت اطلاعات فرم و سوالات از API]:::processStep
+ START --> FETCH
 
-    CHECK_PUB{آیا فرم وجود دارد<br/>و Published = true است؟}:::decisionStep
-    FETCH --> CHECK_PUB
+ CHECK_PUB{آیا فرم وجود دارد<br/>و Published = true است؟}:::decisionStep
+ FETCH --> CHECK_PUB
 
-    ERR_404[نمایش صفحه فرم غیرفعال یا یافت نشد]:::endEvent
-    CHECK_PUB -- خیر --> ERR_404
+ ERR_404[نمایش صفحه فرم غیرفعال یا یافت نشد]:::endEvent
+ CHECK_PUB -- خیر --> ERR_404
 
-    CHECK_DRAFT{آیا پیش‌نویس ذخیره‌شده<br/>در LocalStorage وجود دارد؟}:::decisionStep
-    CHECK_PUB -- بله --> CHECK_DRAFT
+ CHECK_DRAFT{آیا پیش‌نویس ذخیره‌شده<br/>در LocalStorage وجود دارد؟}:::decisionStep
+ CHECK_PUB -- بله --> CHECK_DRAFT
 
-    RESTORE_DRAFT[بازیابی پاسخ‌های قبلی و رفتن به آخرین سوال]:::processStep
-    INIT_BLANK[شروع از صفحه ورود Welcome Screen]:::processStep
+ RESTORE_DRAFT[بازیابی پاسخ‌های قبلی و رفتن به آخرین سوال]:::processStep
+ INIT_BLANK[شروع از صفحه ورود Welcome Screen]:::processStep
 
-    CHECK_DRAFT -- بله --> RESTORE_DRAFT
-    CHECK_DRAFT -- خیر --> INIT_BLANK
+ CHECK_DRAFT -- بله --> RESTORE_DRAFT
+ CHECK_DRAFT -- خیر --> INIT_BLANK
 
-    RENDER_Q[رندر سوال فعلی با انیمیشن اسلاید و نوار پیشرفت]:::processStep
-    RESTORE_DRAFT --> RENDER_Q
-    INIT_BLANK --> RENDER_Q
+ RENDER_Q[رندر سوال فعلی با انیمیشن اسلاید و نوار پیشرفت]:::processStep
+ RESTORE_DRAFT --> RENDER_Q
+ INIT_BLANK --> RENDER_Q
 
-    USER_INPUT[/ورود پاسخ توسط کاربر: متن، گزینه، امتیاز، شماره/]:::processStep
-    RENDER_Q --> USER_INPUT
+ USER_INPUT[/ورود پاسخ توسط کاربر: متن، گزینه، امتیاز، شماره/]:::processStep
+ RENDER_Q --> USER_INPUT
 
-    VALIDATE{اعتبارسنجی ورودی<br/>اجباری بودن / فرمت موبایل و ایمیل؟}:::decisionStep
-    USER_INPUT --> VALIDATE
+ VALIDATE{اعتبارسنجی ورودی<br/>اجباری بودن / فرمت موبایل و ایمیل؟}:::decisionStep
+ USER_INPUT --> VALIDATE
 
-    SHOW_ERROR[نمایش خطای ولیدیشن با لرزش فیلد Shake Animation]:::processStep
-    VALIDATE -- نامعتبر --> SHOW_ERROR
-    SHOW_ERROR --> USER_INPUT
+ SHOW_ERROR[نمایش خطای ولیدیشن با لرزش فیلد Shake Animation]:::processStep
+ VALIDATE -- نامعتبر --> SHOW_ERROR
+ SHOW_ERROR --> USER_INPUT
 
-    SAVE_LOCAL[ذخیره آنی پاسخ در کش LocalStorage]:::processStep
-    VALIDATE -- معتبر --> SAVE_LOCAL
+ SAVE_LOCAL[ذخیره آنی پاسخ در کش LocalStorage]:::processStep
+ VALIDATE -- معتبر --> SAVE_LOCAL
 
-    EVAL_LOGIC{آیا قانون شرطی فعال وجود دارد؟<br/>Logic Rules Evaluation}:::decisionStep
-    SAVE_LOCAL --> EVAL_LOGIC
+ EVAL_LOGIC{آیا قانون شرطی فعال وجود دارد؟<br/>Logic Rules Evaluation}:::decisionStep
+ SAVE_LOCAL --> EVAL_LOGIC
 
-    JUMP_QUESTION[پرش به سوال هدف بر اساس شرط GO_TO_QUESTION]:::processStep
-    END_BY_LOGIC[هدایت مستقیم به پایان فرم END_FORM]:::processStep
-    NEXT_DEFAULT[رفتن به سوال ترتیبی بعدی]:::processStep
+ JUMP_QUESTION[پرش به سوال هدف بر اساس شرط GO_TO_QUESTION]:::processStep
+ END_BY_LOGIC[هدایت مستقیم به پایان فرم END_FORM]:::processStep
+ NEXT_DEFAULT[رفتن به سوال ترتیبی بعدی]:::processStep
 
-    EVAL_LOGIC -- شرط پرش برقرار شد --> JUMP_QUESTION
-    EVAL_LOGIC -- شرط پایان برقرار شد --> END_BY_LOGIC
-    EVAL_LOGIC -- شرطی برقرار نشد --> NEXT_DEFAULT
+ EVAL_LOGIC -- شرط پرش برقرار شد --> JUMP_QUESTION
+ EVAL_LOGIC -- شرط پایان برقرار شد --> END_BY_LOGIC
+ EVAL_LOGIC -- شرطی برقرار نشد --> NEXT_DEFAULT
 
-    IS_LAST{آیا سوالات تمام شد؟}:::decisionStep
-    NEXT_DEFAULT --> IS_LAST
-    JUMP_QUESTION --> IS_LAST
+ IS_LAST{آیا سوالات تمام شد؟}:::decisionStep
+ NEXT_DEFAULT --> IS_LAST
+ JUMP_QUESTION --> IS_LAST
 
-    IS_LAST -- خیر --> RENDER_Q
+ IS_LAST -- خیر --> RENDER_Q
 
-    CHECK_BOT{بررسی تله ربات Honeypot:<br/>آیا فیلد مخفی پر شده است؟}:::decisionStep
-    IS_LAST -- بله --> CHECK_BOT
-    END_BY_LOGIC --> CHECK_BOT
+ CHECK_BOT{بررسی تله ربات Honeypot:<br/>آیا فیلد مخفی پر شده است؟}:::decisionStep
+ IS_LAST -- بله --> CHECK_BOT
+ END_BY_LOGIC --> CHECK_BOT
 
-    DROP_SPAM[نادیده گرفتن درخواست و مسدودسازی اسپم]:::endEvent
-    CHECK_BOT -- بله، ربات است --> DROP_SPAM
+ DROP_SPAM[نادیده گرفتن درخواست و مسدودسازی اسپم]:::endEvent
+ CHECK_BOT -- بله، ربات است --> DROP_SPAM
 
-    SUBMIT_RPC[فراخوانی تابع امن PostgreSQL<br/>submit_public_response]:::rpcStep
-    CHECK_BOT -- خیر، کاربر واقعی است --> SUBMIT_RPC
+ SUBMIT_RPC[فراخوانی تابع امن PostgreSQL<br/>submit_public_response]:::rpcStep
+ CHECK_BOT -- خیر، کاربر واقعی است --> SUBMIT_RPC
 
-    DB_ATOMIC[ثبت اتمیک در جدول responses و جواب‌ها در answers]:::rpcStep
-    SUBMIT_RPC --> DB_ATOMIC
+ DB_ATOMIC[ثبت اتمیک در جدول responses و جواب‌ها در answers]:::rpcStep
+ SUBMIT_RPC --> DB_ATOMIC
 
-    WS_TRIGGER[تریگر CDC دیتابیس و اعلان به وب‌سوکت Realtime]:::rpcStep
-    DB_ATOMIC --> WS_TRIGGER
+ WS_TRIGGER[تریگر CDC دیتابیس و اعلان به وب‌سوکت Realtime]:::rpcStep
+ DB_ATOMIC --> WS_TRIGGER
 
-    CLEAR_DRAFT[پاک کردن پیش‌نویس از LocalStorage]:::processStep
-    WS_TRIGGER --> CLEAR_DRAFT
+ CLEAR_DRAFT[پاک کردن پیش‌نویس از LocalStorage]:::processStep
+ WS_TRIGGER --> CLEAR_DRAFT
 
-    SHOW_EXIT([نمایش صفحه خروج Exit Screen و پیام تشکر]):::startEvent
-    CLEAR_DRAFT --> SHOW_EXIT
-          </pre>
-        </div>
-      </div>
-    </div>
+ SHOW_EXIT([نمایش صفحه خروج Exit Screen و پیام تشکر]):::startEvent
+ CLEAR_DRAFT --> SHOW_EXIT
+ </pre>
+ </div>
+ </div>
+ </div>
 
-    <div class="spec-grid">
-      <div class="spec-card">
-        <div class="spec-card-header">
-          <div class="spec-icon">🧠</div>
-          <div class="spec-card-title">موتور پرش‌ها و شاخه‌بندی شرطی</div>
-        </div>
-        <ul class="spec-list">
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>ارزیابی ترتیبی با اولویت:</strong> قوانین شرطی (Logic Rules) بر اساس ستون <code>priority</code> ارزیابی شده و اولین شرط صادق اعمال می‌گردد.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>اپراتورهای AND/OR:</strong> پشتیبانی از ترکیب چند شرط همزمان روی مقادیر گزینه‌ها، برابری اعداد و وضعیت امتیازدهی.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>اکشن‌های چهارگانه:</strong> نمایش سوال (SHOW_QUESTION)، مخفی‌سازی (HIDE_QUESTION)، جهش به سوال خاص (GO_TO_QUESTION) و اتمام زودهنگام فرم (END_FORM).</div>
-          </li>
-        </ul>
-      </div>
+ <div class="spec-grid">
+ <div class="spec-card">
+ <div class="spec-card-header">
+ <div class="spec-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+ <div class="spec-card-title">موتور پرش‌ها و شاخه‌بندی شرطی</div>
+ </div>
+ <ul class="spec-list">
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>ارزیابی ترتیبی با اولویت:</strong> قوانین شرطی (Logic Rules) بر اساس ستون <code>priority</code> ارزیابی شده و اولین شرط صادق اعمال می‌گردد.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>اپراتورهای AND/OR:</strong> پشتیبانی از ترکیب چند شرط همزمان روی مقادیر گزینه‌ها، برابری اعداد و وضعیت امتیازدهی.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>اکشن‌های چهارگانه:</strong> نمایش سوال (SHOW_QUESTION)، مخفی‌سازی (HIDE_QUESTION)، جهش به سوال خاص (GO_TO_QUESTION) و اتمام زودهنگام فرم (END_FORM).</div>
+ </li>
+ </ul>
+ </div>
 
-      <div class="spec-card">
-        <div class="spec-card-header">
-          <div class="spec-icon">🛡️</div>
-          <div class="spec-card-title">امنیت و پیشگیری از اسپم</div>
-        </div>
-        <ul class="spec-list">
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>تله ربات نامرئی (Honeypot):</strong> فیلدی بدون نمایش در UI که فقط ربات‌های وب‌اسکریپر آن را پر می‌کنند و باعث رد بی‌سر‌و‌صدای پاسخ می‌شود.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>اعتبارسنجی تایپ سخت‌گیرانه:</strong> اعتبارسنجی شماره‌های موبایل ایران (تبدیل خودکار +98، 0098 و ارقام فارسی به فرمت استاندارد 09xxxxxxxxx).</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>مقاومت در برابر قطعی شبکه:</strong> ذخیره‌سازی وضعیت فرم در مرورگر برای جلوگیری از دست رفتن زمان و پاسخ‌های کاربر.</div>
-          </li>
-        </ul>
-      </div>
+ <div class="spec-card">
+ <div class="spec-card-header">
+ <div class="spec-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+ <div class="spec-card-title">امنیت و پیشگیری از اسپم</div>
+ </div>
+ <ul class="spec-list">
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>تله ربات نامرئی (Honeypot):</strong> فیلدی بدون نمایش در UI که فقط ربات‌های وب‌اسکریپر آن را پر می‌کنند و باعث رد بی‌سر‌و‌صدای پاسخ می‌شود.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>اعتبارسنجی تایپ سخت‌گیرانه:</strong> اعتبارسنجی شماره‌های موبایل ایران (تبدیل خودکار +98، 0098 و ارقام فارسی به فرمت استاندارد 09xxxxxxxxx).</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>مقاومت در برابر قطعی شبکه:</strong> ذخیره‌سازی وضعیت فرم در مرورگر برای جلوگیری از دست رفتن زمان و پاسخ‌های کاربر.</div>
+ </li>
+ </ul>
+ </div>
 
-      <div class="spec-card">
-        <div class="spec-card-header">
-          <div class="spec-icon">⚡</div>
-          <div class="spec-card-title">انتشار داده‌ها و چرخه ریل‌تایم</div>
-        </div>
-        <ul class="spec-list">
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>تراکنش دیتابیس و رویداد CDC:</strong> درج پاسخ در PostgreSQL یک رویداد در سطح تراکنش ایجاد کرده و از طریق وب‌سوکت فینیکس به پنل مانیتورینگ پوش می‌شود.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>محاسبه مدت زمان پاسخ:</strong> ردگیری دقیق مدت زمان صرف‌شده روی تک‌تک سوالات جهت تحلیل هوشمند نرخ ریزش کاربران در پنل مدیریت.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>جلوه‌های صوتی و انیمیشن پایان:</strong> استفاده از افکت کانفتی (Canvas Confetti) در صفحه تشکر پس از تایید موفقیت ثبت در دیتابیس.</div>
-          </li>
-        </ul>
-      </div>
-    </div>
+ <div class="spec-card">
+ <div class="spec-card-header">
+ <div class="spec-icon"><svg class="icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+ <div class="spec-card-title">انتشار داده‌ها و چرخه ریل‌تایم</div>
+ </div>
+ <ul class="spec-list">
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>تراکنش دیتابیس و رویداد CDC:</strong> درج پاسخ در PostgreSQL یک رویداد در سطح تراکنش ایجاد کرده و از طریق وب‌سوکت فینیکس به پنل مانیتورینگ پوش می‌شود.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>محاسبه مدت زمان پاسخ:</strong> ردگیری دقیق مدت زمان صرف‌شده روی تک‌تک سوالات جهت تحلیل هوشمند نرخ ریزش کاربران در پنل مدیریت.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>جلوه‌های صوتی و انیمیشن پایان:</strong> استفاده از افکت کانفتی (Canvas Confetti) در صفحه تشکر پس از تایید موفقیت ثبت در دیتابیس.</div>
+ </li>
+ </ul>
+ </div>
+ </div>
 
-    <footer class="page-footer">
-      <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
-    </footer>
-  </div>
+ <footer class="page-footer">
+ <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
+ </footer>
+ </div>
 
-  <script src="assets/app.js"></script>
-  <script>
-    mermaid.initialize({
-      startOnLoad: true,
-      theme: 'dark',
-      securityLevel: 'loose',
-      flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
-      sequence: { useMaxWidth: false },
-      er: { useMaxWidth: false },
-      themeVariables: {
-        darkMode: true,
-        background: '#080C14',
-        primaryColor: '#131B2E',
-        primaryTextColor: '#FFFFFF',
-        primaryBorderColor: '#2DD4BF',
-        lineColor: '#38BDF8',
-        secondaryColor: '#1A2338',
-        tertiaryColor: '#0F172A',
-        fontFamily: 'IRANSansX, Vazirmatn, sans-serif',
-        fontSize: '15.5px'
-      }
-    });
-  </script>
+ <script src="assets/app.js"></script>
+ <script>
+ mermaid.initialize({
+ startOnLoad: true,
+ theme: 'dark',
+ securityLevel: 'loose',
+ flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
+ sequence: { useMaxWidth: false },
+ er: { useMaxWidth: false },
+ themeVariables: {
+ darkMode: true,
+ background: '#080C14',
+ primaryColor: '#131B2E',
+ primaryTextColor: '#FFFFFF',
+ primaryBorderColor: '#2DD4BF',
+ lineColor: '#38BDF8',
+ secondaryColor: '#1A2338',
+ tertiaryColor: '#0F172A',
+ fontFamily: 'IRANSansX, Vazirmatn, sans-serif',
+ fontSize: '15.5px'
+ }
+ });
+ </script>
 </body>
 </html>

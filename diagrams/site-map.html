@@ -1,220 +1,220 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Site Map | سامانه فرم‌ساز پرس‌کاد (Porskad)</title>
-  <link rel="stylesheet" href="assets/style.css">
-  <script src="assets/mermaid.min.js"></script>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Site Map | سامانه فرم‌ساز پرس‌کاد (Porskad)</title>
+ <link rel="stylesheet" href="assets/style.css">
+ <script src="assets/mermaid.min.js"></script>
 </head>
 <body>
-  <div class="container">
-    <header class="top-nav">
-      <a href="index.html" class="brand-section">
-        <div class="brand-logo-icon">P</div>
-        <div class="brand-info">
-          <h1>پرس‌کاد <span>Porskad Blueprints</span></h1>
-          <span>پلتفرم سازمانی ساخت فرم و پرسشنامه</span>
-        </div>
-      </a>
-      <div class="nav-actions">
-        <select class="nav-select" id="diagramNavSelect">
-          <option value="architecture-diagram.html">۱. Architecture Diagram</option>
-          <option value="system-architecture-diagram.html">۲. System Architecture Diagram</option>
-          <option value="system-diagram.html">۳. System Diagram</option>
-          <option value="project-structure-diagram.html">۴. Project Structure Diagram</option>
-          <option value="flowchart.html">۵. Flowchart</option>
-          <option value="mind-map.html">۶. Mind Map</option>
-          <option value="site-map.html" selected>۷. Site Map</option>
-          <option value="uml-diagram.html">۸. UML Diagram</option>
-          <option value="er-diagram.html">۹. ER Diagram</option>
-          <option value="component-diagram.html">۱۰. Component Diagram</option>
-          <option value="data-flow-diagram.html">۱۱. Data Flow Diagram (DFD)</option>
-          <option value="sequence-diagram.html">۱۲. Sequence Diagram</option>
-          <option value="use-case-diagram.html">۱۳. Use Case Diagram</option>
-          <option value="entity-relationship-diagram.html">۱۴. Entity Relationship Diagram (ERD)</option>
-        </select>
-        <a href="index.html" class="btn btn-secondary btn-sm">🏠 خانه دیاگرام‌ها</a>
-      </div>
-    </header>
+ <div class="container">
+ <header class="top-nav">
+ <a href="index.html" class="brand-section">
+ <div class="brand-logo-icon">P</div>
+ <div class="brand-info">
+ <h1>پرس‌کاد <span>Porskad Blueprints</span></h1>
+ <span>پلتفرم سازمانی ساخت فرم و پرسشنامه</span>
+ </div>
+ </a>
+ <div class="nav-actions">
+ <select class="nav-select" id="diagramNavSelect">
+ <option value="architecture-diagram.html">۱. Architecture Diagram</option>
+ <option value="system-architecture-diagram.html">۲. System Architecture Diagram</option>
+ <option value="system-diagram.html">۳. System Diagram</option>
+ <option value="project-structure-diagram.html">۴. Project Structure Diagram</option>
+ <option value="flowchart.html">۵. Flowchart</option>
+ <option value="mind-map.html">۶. Mind Map</option>
+ <option value="site-map.html" selected>۷. Site Map</option>
+ <option value="uml-diagram.html">۸. UML Diagram</option>
+ <option value="er-diagram.html">۹. ER Diagram</option>
+ <option value="component-diagram.html">۱۰. Component Diagram</option>
+ <option value="data-flow-diagram.html">۱۱. Data Flow Diagram (DFD)</option>
+ <option value="sequence-diagram.html">۱۲. Sequence Diagram</option>
+ <option value="use-case-diagram.html">۱۳. Use Case Diagram</option>
+ <option value="entity-relationship-diagram.html">۱۴. Entity Relationship Diagram (ERD)</option>
+ </select>
+ <a href="index.html" class="btn btn-secondary btn-sm">خانه دیاگرام‌ها</a>
+ </div>
+ </header>
 
-    <div class="page-header">
-      <div class="header-meta-row">
-        <span class="badge badge-teal">نقشه سایت و مسیرها</span>
-        <span class="badge badge-blue">URL Routing & Information Architecture</span>
-        <span class="badge badge-purple">Public & Protected Views</span>
-      </div>
-      <h1 class="page-title">Site Map (نقشه ساختار صفحات و مسیرهای سامانه)</h1>
-      <p class="page-desc">
-        نقشه ساختاری تمام مسیرها (Routes)، دسترسی‌ها، سطوح مجوز (Public vs Authenticated Admin vs Superadmin) و صفحات داخلی سامانه پرس‌کاد به صورت گراف درختی و منظم.
-      </p>
-    </div>
+ <div class="page-header">
+ <div class="header-meta-row">
+ <span class="badge badge-teal">نقشه سایت و مسیرها</span>
+ <span class="badge badge-blue">URL Routing & Information Architecture</span>
+ <span class="badge badge-purple">Public & Protected Views</span>
+ </div>
+ <h1 class="page-title">Site Map (نقشه ساختار صفحات و مسیرهای سامانه)</h1>
+ <p class="page-desc">
+ نقشه ساختاری تمام مسیرها (Routes)، دسترسی‌ها، سطوح مجوز (Public vs Authenticated Admin vs Superadmin) و صفحات داخلی سامانه پرس‌کاد به صورت گراف درختی و منظم.
+ </p>
+ </div>
 
-    <div class="diagram-stage-card">
-      <div class="stage-toolbar">
-        <div class="stage-title">
-          <span>🗺️ درخت سلسله‌مراتبی مسیرها و صفحات سامانه</span>
-        </div>
-        <div class="stage-controls">
-          <span class="zoom-indicator" id="zoomIndicator">100%</span>
-          <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
-          <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
-          <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
-          <button class="control-btn" id="fullscreenBtn" title="تمام صفحه">⛶</button>
-          <button class="btn btn-primary btn-sm" id="exportBtn">📥 خروجی SVG</button>
-        </div>
-      </div>
-      <div class="diagram-viewport">
-        <div class="figma-hud-helper">
-          <span>🎯 اسکرول ماوس: زوم فیگما روی نشانگر</span>
-          <span>•</span>
-          <span>🖱️ درگ آزاد یا <kbd>Space</kbd> + درگ: جابجایی</span>
-        </div>
-        <div class="diagram-canvas">
-          <pre class="mermaid">
+ <div class="diagram-stage-card">
+ <div class="stage-toolbar">
+ <div class="stage-title">
+ <span> درخت سلسله‌مراتبی مسیرها و صفحات سامانه</span>
+ </div>
+ <div class="stage-controls">
+ <span class="zoom-indicator" id="zoomIndicator">100%</span>
+ <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
+ <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
+ <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
+ <button class="control-btn" id="fullscreenBtn" title="تمام صفحه"></button>
+ <button class="btn btn-primary btn-sm" id="exportBtn">خروجی SVG</button>
+ </div>
+ </div>
+ <div class="diagram-viewport">
+ <div class="figma-hud-helper">
+ <span>اسکرول ماوس: زوم روی نشانگر</span>
+ <span>•</span>
+ <span>درگ آزاد یا <kbd>Space</kbd> + درگ: جابجایی</span>
+ </div>
+ <div class="diagram-canvas">
+ <pre class="mermaid">
 graph TD
-    classDef root fill:#0F172A,stroke:#2DD4BF,stroke-width:3px,color:#F8FAFC;
-    classDef pub fill:#131B2E,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
-    classDef auth fill:#2A1B18,stroke:#F59E0B,stroke-width:2px,color:#F8FAFC;
-    classDef adm fill:#162035,stroke:#2DD4BF,stroke-width:2px,color:#F8FAFC;
-    classDef super fill:#1E1B4B,stroke:#A855F7,stroke-width:2px,color:#F8FAFC;
+ classDef root fill:#0F172A,stroke:#2DD4BF,stroke-width:3px,color:#F8FAFC;
+ classDef pub fill:#131B2E,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
+ classDef auth fill:#2A1B18,stroke:#F59E0B,stroke-width:2px,color:#F8FAFC;
+ classDef adm fill:#162035,stroke:#2DD4BF,stroke-width:2px,color:#F8FAFC;
+ classDef super fill:#1E1B4B,stroke:#A855F7,stroke-width:2px,color:#F8FAFC;
 
-    ROOT["🌐 پرس‌کاد (Domain Root: /)"]:::root
+ ROOT[" پرس‌کاد (Domain Root: /)"]:::root
 
-    %% Main Branches
-    ROOT --> PUB_SECT["🟢 بخش عمومی و پاسخ‌دهندگان (Public Area)"]:::pub
-    ROOT --> AUTH_SECT["🔑 پورتال ورود و احراز هویت"]:::auth
-    ROOT --> ADM_SECT["🛡️ پنل ادمین و مدیریت فرم‌ها (Admin Area)"]:::adm
+ %% Main Branches
+ ROOT --> PUB_SECT[" بخش عمومی و پاسخ‌دهندگان (Public Area)"]:::pub
+ ROOT --> AUTH_SECT[" پورتال ورود و احراز هویت"]:::auth
+ ROOT --> ADM_SECT[" پنل ادمین و مدیریت فرم‌ها (Admin Area)"]:::adm
 
-    %% Public Area
-    PUB_SECT --> R_HOME["/ (صفحه اصلی و لندینگ پیج معرفی)"]:::pub
-    PUB_SECT --> R_FORM["/f/:slug (موتور اجرای فرم عمومی با اسلاید)"]:::pub
-    PUB_SECT --> R_EMBED["/embed/:slug (صفحه سبک فریم‌لس جهت تعبیه)"]:::pub
-    PUB_SECT --> R_DOCS["/docs (مستندات و راهنمای ساخت فرم)"]:::pub
-    PUB_SECT --> R_404["* (صفحه ارور ۴۰۴ مسیر یافت نشد)"]:::pub
+ %% Public Area
+ PUB_SECT --> R_HOME["/ (صفحه اصلی و لندینگ پیج معرفی)"]:::pub
+ PUB_SECT --> R_FORM["/f/:slug (موتور اجرای فرم عمومی با اسلاید)"]:::pub
+ PUB_SECT --> R_EMBED["/embed/:slug (صفحه سبک فریم‌لس جهت تعبیه)"]:::pub
+ PUB_SECT --> R_DOCS["/docs (مستندات و راهنمای ساخت فرم)"]:::pub
+ PUB_SECT --> R_404["* (صفحه ارور ۴۰۴ مسیر یافت نشد)"]:::pub
 
-    %% Auth Area
-    AUTH_SECT --> R_LOGIN["/admin/login (ورود ایمیل/رمز یا OTP پیامکی)"]:::auth
-    AUTH_SECT --> R_REG["/admin/register (ثبت‌نام کاربر جدید با سهمیه)"]:::auth
+ %% Auth Area
+ AUTH_SECT --> R_LOGIN["/admin/login (ورود ایمیل/رمز یا OTP پیامکی)"]:::auth
+ AUTH_SECT --> R_REG["/admin/register (ثبت‌نام کاربر جدید با سهمیه)"]:::auth
 
-    %% Admin Area
-    ADM_SECT --> R_DASH["/admin/dashboard (میزکار آماری و آخرین پاسخ‌ها)"]:::adm
-    ADM_SECT --> R_FORMS["/admin/forms (لیست فرم‌ها، جستجو و فیلترها)"]:::adm
-    ADM_SECT --> R_NEW["/admin/forms/new (ساخت فرم جدید)"]:::adm
-    ADM_SECT --> R_FORM_HUB["/admin/forms/:id/* (مرکز عملیات فرم خاص)"]:::adm
-    ADM_SECT --> R_TRASH["/admin/trash (سطل بازیافت ۳۰ روزه فرم‌ها)"]:::adm
-    ADM_SECT --> R_SUPPORT["/admin/support (میز تیکت‌ها و پشتیبانی)"]:::adm
-    ADM_SECT --> R_SETTINGS["/admin/settings (تنظیمات پنل و پروفایل)"]:::adm
+ %% Admin Area
+ ADM_SECT --> R_DASH["/admin/dashboard (میزکار آماری و آخرین پاسخ‌ها)"]:::adm
+ ADM_SECT --> R_FORMS["/admin/forms (لیست فرم‌ها، جستجو و فیلترها)"]:::adm
+ ADM_SECT --> R_NEW["/admin/forms/new (ساخت فرم جدید)"]:::adm
+ ADM_SECT --> R_FORM_HUB["/admin/forms/:id/* (مرکز عملیات فرم خاص)"]:::adm
+ ADM_SECT --> R_TRASH["/admin/trash (سطل بازیافت ۳۰ روزه فرم‌ها)"]:::adm
+ ADM_SECT --> R_SUPPORT["/admin/support (میز تیکت‌ها و پشتیبانی)"]:::adm
+ ADM_SECT --> R_SETTINGS["/admin/settings (تنظیمات پنل و پروفایل)"]:::adm
 
-    %% Form Operations Hub
-    R_FORM_HUB --> F_BUILDER[".../builder (فرم‌ساز ویژوال، سوالات و گزینه‌ها)"]:::adm
-    R_FORM_HUB --> F_LOGIC[".../logic (تعریف قوانین شرطی و شاخه‌بندی)"]:::adm
-    R_FORM_HUB --> F_RESP[".../responses (جدول ثبت‌ها و جزئیات هر پاسخ)"]:::adm
-    R_FORM_HUB --> F_ANALYTICS[".../analytics (نمودارهای تحلیلی و میله‌ای)"]:::adm
-    R_FORM_HUB --> F_SHARE[".../share (لینک کوتاه، کد QR و کد تعبیه)"]:::adm
+ %% Form Operations Hub
+ R_FORM_HUB --> F_BUILDER[".../builder (فرم‌ساز ویژوال، سوالات و گزینه‌ها)"]:::adm
+ R_FORM_HUB --> F_LOGIC[".../logic (تعریف قوانین شرطی و شاخه‌بندی)"]:::adm
+ R_FORM_HUB --> F_RESP[".../responses (جدول ثبت‌ها و جزئیات هر پاسخ)"]:::adm
+ R_FORM_HUB --> F_ANALYTICS[".../analytics (نمودارهای تحلیلی و میله‌ای)"]:::adm
+ R_FORM_HUB --> F_SHARE[".../share (لینک کوتاه، کد QR و کد تعبیه)"]:::adm
 
-    %% Superadmin Capabilities
-    ADM_SECT --> SUPER_SECT["👑 بخش سوپرادمین (Superadmin Only)"]:::super
-    SUPER_SECT --> S_USERS["/admin/users (مدیریت کاربران، نقش‌ها و سهمیه‌ها)"]:::super
-    SUPER_SECT --> S_SYS["/admin/system (تنظیمات خطوط پیامک و درگاه‌ها)"]:::super
-    SUPER_SECT --> S_AUDIT["/admin/audit-logs (لاگ‌های ممیزی امنیتی)"]:::super
-          </pre>
-        </div>
-      </div>
-    </div>
+ %% Superadmin Capabilities
+ ADM_SECT --> SUPER_SECT[" بخش سوپرادمین (Superadmin Only)"]:::super
+ SUPER_SECT --> S_USERS["/admin/users (مدیریت کاربران، نقش‌ها و سهمیه‌ها)"]:::super
+ SUPER_SECT --> S_SYS["/admin/system (تنظیمات خطوط پیامک و درگاه‌ها)"]:::super
+ SUPER_SECT --> S_AUDIT["/admin/audit-logs (لاگ‌های ممیزی امنیتی)"]:::super
+ </pre>
+ </div>
+ </div>
+ </div>
 
-    <div class="spec-grid">
-      <div class="spec-card">
-        <div class="spec-card-header">
-          <div class="spec-icon">🌐</div>
-          <div class="spec-card-title">صفحات عمومی و دسترسی آزاد</div>
-        </div>
-        <ul class="spec-list">
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>مسیر <code>/f/:slug</code>:</strong> رابط کاربری بهینه‌شده برای موبایل و دسکتاپ با سرعت بارگذاری فوق‌العاده بالا بدون وابستگی به پنل مدیریت.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>مسیر <code>/embed/:slug</code>:</strong> رابط کاربری فاقد هدر و فوتر اختصاصی جهت جاسازی یکپارچه درون آی‌فریم در وبلاگ‌ها و سایت‌ها.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>صفحه اصلی <code>/</code>:</strong> نمایش ویژگی‌های سامانه، مقایسه پلن‌ها و امکان ثبت‌نام مستقیم کاربران جدید.</div>
-          </li>
-        </ul>
-      </div>
+ <div class="spec-grid">
+ <div class="spec-card">
+ <div class="spec-card-header">
+ <div class="spec-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+ <div class="spec-card-title">صفحات عمومی و دسترسی آزاد</div>
+ </div>
+ <ul class="spec-list">
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>مسیر <code>/f/:slug</code>:</strong> رابط کاربری بهینه‌شده برای موبایل و دسکتاپ با سرعت بارگذاری فوق‌العاده بالا بدون وابستگی به پنل مدیریت.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>مسیر <code>/embed/:slug</code>:</strong> رابط کاربری فاقد هدر و فوتر اختصاصی جهت جاسازی یکپارچه درون آی‌فریم در وبلاگ‌ها و سایت‌ها.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>صفحه اصلی <code>/</code>:</strong> نمایش ویژگی‌های سامانه، مقایسه پلن‌ها و امکان ثبت‌نام مستقیم کاربران جدید.</div>
+ </li>
+ </ul>
+ </div>
 
-      <div class="spec-card">
-        <div class="spec-card-header">
-          <div class="spec-icon">🎛️</div>
-          <div class="spec-card-title">ناوبری و عملیات فرم‌ها</div>
-        </div>
-        <ul class="spec-list">
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>ساختار زیرمسیرهای تب‌بندی شده:</strong> تفکیک ویرایش سوالات، شرط‌گذاری منطقی، بررسی پاسخ‌ها و نمودارها تحت شناسه فرم واحد (<code>:id</code>).</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>داشبورد تحلیلی:</strong> دسترسی سریع به نرخ تبدیل، درصد تکمیل، مدت زمان پاسخگویی و نمودارهای دایره‌ای و ستونی گزینه‌ها.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>اشتراک‌گذاری هوشمند:</strong> تولید آنی لینک، کپی شورت‌کد، ساخت کیوآر اختصاصی و پیش‌نمایش در ابعاد مختلف.</div>
-          </li>
-        </ul>
-      </div>
+ <div class="spec-card">
+ <div class="spec-card-header">
+ <div class="spec-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+ <div class="spec-card-title">ناوبری و عملیات فرم‌ها</div>
+ </div>
+ <ul class="spec-list">
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>ساختار زیرمسیرهای تب‌بندی شده:</strong> تفکیک ویرایش سوالات، شرط‌گذاری منطقی، بررسی پاسخ‌ها و نمودارها تحت شناسه فرم واحد (<code>:id</code>).</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>داشبورد تحلیلی:</strong> دسترسی سریع به نرخ تبدیل، درصد تکمیل، مدت زمان پاسخگویی و نمودارهای دایره‌ای و ستونی گزینه‌ها.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>اشتراک‌گذاری هوشمند:</strong> تولید آنی لینک، کپی شورت‌کد، ساخت کیوآر اختصاصی و پیش‌نمایش در ابعاد مختلف.</div>
+ </li>
+ </ul>
+ </div>
 
-      <div class="spec-card">
-        <div class="spec-card-header">
-          <div class="spec-icon">🔐</div>
-          <div class="spec-card-title">محافظت از مسیرها (Route Guards)</div>
-        </div>
-        <ul class="spec-list">
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>گارد احراز هویت ری‌اکت:</strong> ریدایرکت خودکار کاربران لاگین‌نشده از تمام صفحات زیرمجموعه <code>/admin/*</code> به <code>/admin/login</code>.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>گارد دسترسی سطح مالک:</strong> عدم امکان مشاهده یا ویرایش فرم‌های متعلق به سایر کاربران توسط ادمین‌های عادی.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>گارد سوپرادمین:</strong> نمایش تب‌های حساس (کاربران، تنظیمات خطوط پیامک، سطل بازیافت کامل) منحصراً برای کاربران با پرچم <code>is_owner = true</code>.</div>
-          </li>
-        </ul>
-      </div>
-    </div>
+ <div class="spec-card">
+ <div class="spec-card-header">
+ <div class="spec-icon"><svg class="icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+ <div class="spec-card-title">محافظت از مسیرها (Route Guards)</div>
+ </div>
+ <ul class="spec-list">
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>گارد احراز هویت ری‌اکت:</strong> ریدایرکت خودکار کاربران لاگین‌نشده از تمام صفحات زیرمجموعه <code>/admin/*</code> به <code>/admin/login</code>.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>گارد دسترسی سطح مالک:</strong> عدم امکان مشاهده یا ویرایش فرم‌های متعلق به سایر کاربران توسط ادمین‌های عادی.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>گارد سوپرادمین:</strong> نمایش تب‌های حساس (کاربران، تنظیمات خطوط پیامک، سطل بازیافت کامل) منحصراً برای کاربران با پرچم <code>is_owner = true</code>.</div>
+ </li>
+ </ul>
+ </div>
+ </div>
 
-    <footer class="page-footer">
-      <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
-    </footer>
-  </div>
+ <footer class="page-footer">
+ <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
+ </footer>
+ </div>
 
-  <script src="assets/app.js"></script>
-  <script>
-    mermaid.initialize({
-      startOnLoad: true,
-      theme: 'dark',
-      securityLevel: 'loose',
-      flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
-      sequence: { useMaxWidth: false },
-      er: { useMaxWidth: false },
-      themeVariables: {
-        darkMode: true,
-        background: '#080C14',
-        primaryColor: '#131B2E',
-        primaryTextColor: '#FFFFFF',
-        primaryBorderColor: '#2DD4BF',
-        lineColor: '#38BDF8',
-        secondaryColor: '#1A2338',
-        tertiaryColor: '#0F172A',
-        fontFamily: 'IRANSansX, Vazirmatn, sans-serif',
-        fontSize: '15.5px'
-      }
-    });
-  </script>
+ <script src="assets/app.js"></script>
+ <script>
+ mermaid.initialize({
+ startOnLoad: true,
+ theme: 'dark',
+ securityLevel: 'loose',
+ flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
+ sequence: { useMaxWidth: false },
+ er: { useMaxWidth: false },
+ themeVariables: {
+ darkMode: true,
+ background: '#080C14',
+ primaryColor: '#131B2E',
+ primaryTextColor: '#FFFFFF',
+ primaryBorderColor: '#2DD4BF',
+ lineColor: '#38BDF8',
+ secondaryColor: '#1A2338',
+ tertiaryColor: '#0F172A',
+ fontFamily: 'IRANSansX, Vazirmatn, sans-serif',
+ fontSize: '15.5px'
+ }
+ });
+ </script>
 </body>
 </html>

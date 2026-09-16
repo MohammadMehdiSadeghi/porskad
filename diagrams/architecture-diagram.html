@@ -1,241 +1,241 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Architecture Diagram | سامانه فرم‌ساز پرس‌کاد (Porskad)</title>
-  <link rel="stylesheet" href="assets/style.css">
-  <script src="assets/mermaid.min.js"></script>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Architecture Diagram | سامانه فرم‌ساز پرس‌کاد (Porskad)</title>
+ <link rel="stylesheet" href="assets/style.css">
+ <script src="assets/mermaid.min.js"></script>
 </head>
 <body>
-  <div class="container">
-    <!-- Navigation Bar -->
-    <header class="top-nav">
-      <a href="index.html" class="brand-section">
-        <div class="brand-logo-icon">P</div>
-        <div class="brand-info">
-          <h1>پرس‌کاد <span>Porskad Blueprints</span></h1>
-          <span>پلتفرم سازمانی ساخت فرم و پرسشنامه</span>
-        </div>
-      </a>
-      <div class="nav-actions">
-        <select class="nav-select" id="diagramNavSelect">
-          <option value="architecture-diagram.html" selected>۱. Architecture Diagram</option>
-          <option value="system-architecture-diagram.html">۲. System Architecture Diagram</option>
-          <option value="system-diagram.html">۳. System Diagram</option>
-          <option value="project-structure-diagram.html">۴. Project Structure Diagram</option>
-          <option value="flowchart.html">۵. Flowchart</option>
-          <option value="mind-map.html">۶. Mind Map</option>
-          <option value="site-map.html">۷. Site Map</option>
-          <option value="uml-diagram.html">۸. UML Diagram</option>
-          <option value="er-diagram.html">۹. ER Diagram</option>
-          <option value="component-diagram.html">۱۰. Component Diagram</option>
-          <option value="data-flow-diagram.html">۱۱. Data Flow Diagram (DFD)</option>
-          <option value="sequence-diagram.html">۱۲. Sequence Diagram</option>
-          <option value="use-case-diagram.html">۱۳. Use Case Diagram</option>
-          <option value="entity-relationship-diagram.html">۱۴. Entity Relationship Diagram (ERD)</option>
-        </select>
-        <a href="index.html" class="btn btn-secondary btn-sm">🏠 خانه دیاگرام‌ها</a>
-      </div>
-    </header>
+ <div class="container">
+ <!-- Navigation Bar -->
+ <header class="top-nav">
+ <a href="index.html" class="brand-section">
+ <div class="brand-logo-icon">P</div>
+ <div class="brand-info">
+ <h1>پرس‌کاد <span>Porskad Blueprints</span></h1>
+ <span>پلتفرم سازمانی ساخت فرم و پرسشنامه</span>
+ </div>
+ </a>
+ <div class="nav-actions">
+ <select class="nav-select" id="diagramNavSelect">
+ <option value="architecture-diagram.html" selected>۱. Architecture Diagram</option>
+ <option value="system-architecture-diagram.html">۲. System Architecture Diagram</option>
+ <option value="system-diagram.html">۳. System Diagram</option>
+ <option value="project-structure-diagram.html">۴. Project Structure Diagram</option>
+ <option value="flowchart.html">۵. Flowchart</option>
+ <option value="mind-map.html">۶. Mind Map</option>
+ <option value="site-map.html">۷. Site Map</option>
+ <option value="uml-diagram.html">۸. UML Diagram</option>
+ <option value="er-diagram.html">۹. ER Diagram</option>
+ <option value="component-diagram.html">۱۰. Component Diagram</option>
+ <option value="data-flow-diagram.html">۱۱. Data Flow Diagram (DFD)</option>
+ <option value="sequence-diagram.html">۱۲. Sequence Diagram</option>
+ <option value="use-case-diagram.html">۱۳. Use Case Diagram</option>
+ <option value="entity-relationship-diagram.html">۱۴. Entity Relationship Diagram (ERD)</option>
+ </select>
+ <a href="index.html" class="btn btn-secondary btn-sm">خانه دیاگرام‌ها</a>
+ </div>
+ </header>
 
-    <!-- Page Header -->
-    <div class="page-header">
-      <div class="header-meta-row">
-        <span class="badge badge-teal">معماری کلان سیستم</span>
-        <span class="badge badge-blue">Enterprise Multi-Tier Architecture</span>
-        <span class="badge badge-emerald">Edge + BaaS + PostgreSQL</span>
-      </div>
-      <h1 class="page-title">Architecture Diagram (دیاگرام معماری کلان)</h1>
-      <p class="page-desc">
-        نمودار معماری لایه‌ای سامانه پرس‌کاد؛ پوشش‌دهنده لایه کلاینت (فرانت‌اند SPA و ویجت‌های امبد)، لایه تحویل محتوا و مسیریابی لبه (Vercel CDN Edge)، پلتفرم باکت بک‌اند (Supabase BaaS: Auth, REST, Realtime, Storage)، لایه پایگاه داده و منطق تراکنشی (PostgreSQL با RLS و تریگرها)، و سرویس‌های خارجی (پیامک کاوه‌نگار، بات تلگرام و درگاه‌های پرداخت).
-      </p>
-    </div>
+ <!-- Page Header -->
+ <div class="page-header">
+ <div class="header-meta-row">
+ <span class="badge badge-teal">معماری کلان سیستم</span>
+ <span class="badge badge-blue">Enterprise Multi-Tier Architecture</span>
+ <span class="badge badge-emerald">Edge + BaaS + PostgreSQL</span>
+ </div>
+ <h1 class="page-title">Architecture Diagram (دیاگرام معماری کلان)</h1>
+ <p class="page-desc">
+ نمودار معماری لایه‌ای سامانه پرس‌کاد؛ پوشش‌دهنده لایه کلاینت (فرانت‌اند SPA و ویجت‌های امبد)، لایه تحویل محتوا و مسیریابی لبه (Vercel CDN Edge)، پلتفرم باکت بک‌اند (Supabase BaaS: Auth, REST, Realtime, Storage)، لایه پایگاه داده و منطق تراکنشی (PostgreSQL با RLS و تریگرها)، و سرویس‌های خارجی (پیامک کاوه‌نگار، بات تلگرام و درگاه‌های پرداخت).
+ </p>
+ </div>
 
-    <!-- Interactive Diagram Stage -->
-    <div class="diagram-stage-card">
-      <div class="stage-toolbar">
-        <div class="stage-title">
-          <span>📐 نمای بصری تعاملی معماری کلان</span>
-        </div>
-        <div class="stage-controls">
-          <span class="zoom-indicator" id="zoomIndicator">100%</span>
-          <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
-          <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
-          <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
-          <button class="control-btn" id="fullscreenBtn" title="تمام صفحه">⛶</button>
-          <button class="btn btn-primary btn-sm" id="exportBtn">📥 خروجی SVG</button>
-        </div>
-      </div>
-      <div class="diagram-viewport">
-        <div class="figma-hud-helper">
-          <span>🎯 اسکرول ماوس: زوم فیگما روی نشانگر</span>
-          <span>•</span>
-          <span>🖱️ درگ آزاد یا <kbd>Space</kbd> + درگ: جابجایی</span>
-        </div>
-        <div class="diagram-canvas">
-          <pre class="mermaid">
+ <!-- Interactive Diagram Stage -->
+ <div class="diagram-stage-card">
+ <div class="stage-toolbar">
+ <div class="stage-title">
+ <span> نمای بصری تعاملی معماری کلان</span>
+ </div>
+ <div class="stage-controls">
+ <span class="zoom-indicator" id="zoomIndicator">100%</span>
+ <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
+ <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
+ <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
+ <button class="control-btn" id="fullscreenBtn" title="تمام صفحه"></button>
+ <button class="btn btn-primary btn-sm" id="exportBtn">خروجی SVG</button>
+ </div>
+ </div>
+ <div class="diagram-viewport">
+ <div class="figma-hud-helper">
+ <span>اسکرول ماوس: زوم روی نشانگر</span>
+ <span>•</span>
+ <span>درگ آزاد یا <kbd>Space</kbd> + درگ: جابجایی</span>
+ </div>
+ <div class="diagram-canvas">
+ <pre class="mermaid">
 graph TB
-    %% Styling and Subgraphs
-    classDef client fill:#131B2E,stroke:#2DD4BF,stroke-width:2px,color:#F8FAFC;
-    classDef edge fill:#1A2338,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
-    classDef baas fill:#162035,stroke:#A855F7,stroke-width:2px,color:#F8FAFC;
-    classDef db fill:#0F172A,stroke:#10B981,stroke-width:2px,color:#F8FAFC;
-    classDef ext fill:#1E1B4B,stroke:#F59E0B,stroke-width:2px,color:#F8FAFC;
+ %% Styling and Subgraphs
+ classDef client fill:#131B2E,stroke:#2DD4BF,stroke-width:2px,color:#F8FAFC;
+ classDef edge fill:#1A2338,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
+ classDef baas fill:#162035,stroke:#A855F7,stroke-width:2px,color:#F8FAFC;
+ classDef db fill:#0F172A,stroke:#10B981,stroke-width:2px,color:#F8FAFC;
+ classDef ext fill:#1E1B4B,stroke:#F59E0B,stroke-width:2px,color:#F8FAFC;
 
-    subgraph CL["🖥️ لایه فرانت‌اند و ارائه‌ی کلاینت (Client Presentation Layer)"]
-        SPA["⚛️ React 18 SPA<br/>Vite + Tailwind CSS<br/>(پنل مدیریت و داشبورد سازمانی)"]:::client
-        Runner["📱 Responsive Form Runner<br/>(موتور پاسخ‌دهی اسلایدی /f/:slug)"]:::client
-        Embed["🧩 Embed Widget Iframe<br/>(ویجت تزریقی در وب‌سایت‌های ثالث)"]:::client
-        LocalCache["💾 LocalStorage Engine<br/>(ذخیره آفلاین پیش‌نویس ۷ روزه)"]:::client
-    end
+ subgraph CL[" لایه فرانت‌اند و ارائه‌ی کلاینت (Client Presentation Layer)"]
+ SPA[" React 18 SPA<br/>Vite + Tailwind CSS<br/>(پنل مدیریت و داشبورد سازمانی)"]:::client
+ Runner[" Responsive Form Runner<br/>(موتور پاسخ‌دهی اسلایدی /f/:slug)"]:::client
+ Embed[" Embed Widget Iframe<br/>(ویجت تزریقی در وب‌سایت‌های ثالث)"]:::client
+ LocalCache[" LocalStorage Engine<br/>(ذخیره آفلاین پیش‌نویس ۷ روزه)"]:::client
+ end
 
-    subgraph ED["⚡ شبکه لبه و مسیریابی (Edge & CDN Delivery Layer)"]
-        VercelCDN["🌐 Vercel Anycast Edge CDN<br/>(TLS 1.3 Termination, Caching & SPA Fallback)"]:::edge
-        EdgeRewrites["🔀 URL Rewriter & Headers<br/>(امبد CORS، هدرهای امنیتی X-Frame-Options)"]:::edge
-    end
+ subgraph ED[" شبکه لبه و مسیریابی (Edge & CDN Delivery Layer)"]
+ VercelCDN[" Vercel Anycast Edge CDN<br/>(TLS 1.3 Termination, Caching & SPA Fallback)"]:::edge
+ EdgeRewrites[" URL Rewriter & Headers<br/>(امبد CORS، هدرهای امنیتی X-Frame-Options)"]:::edge
+ end
 
-    subgraph BA["☁️ پلتفرم ابری بک‌اند (Supabase BaaS Layer)"]
-        GoTrue["🔐 Supabase GoTrue Auth<br/>(احراز هویت ایمیل/رمز و OTP پیامکی)"]:::baas
-        PostgREST["⚡ PostgREST Auto API<br/>(تبدیل مستقیم کوئری به JSON بهینه)"]:::baas
-        RealtimeWS["🟢 Elixir Phoenix Realtime<br/>(کانال‌های WebSockets برای اعلام آنی پاسخ‌ها)"]:::baas
-        StorageEng["📁 Supabase Storage S3<br/>(فایل‌ها، لوگوها و کاور فرم‌ها)"]:::baas
-    end
+ subgraph BA[" پلتفرم ابری بک‌اند (Supabase BaaS Layer)"]
+ GoTrue[" Supabase GoTrue Auth<br/>(احراز هویت ایمیل/رمز و OTP پیامکی)"]:::baas
+ PostgREST[" PostgREST Auto API<br/>(تبدیل مستقیم کوئری به JSON بهینه)"]:::baas
+ RealtimeWS[" Elixir Phoenix Realtime<br/>(کانال‌های WebSockets برای اعلام آنی پاسخ‌ها)"]:::baas
+ StorageEng[" Supabase Storage S3<br/>(فایل‌ها، لوگوها و کاور فرم‌ها)"]:::baas
+ end
 
-    subgraph DB["🗄️ لایه داده و منطق تراکنشی (PostgreSQL Enterprise Core)"]
-        Tables["📋 Core Relations<br/>(forms, questions, responses, answers, profiles)"]:::db
-        RLSPolicies["🛡️ Row Level Security (RLS)<br/>(جداسازی مطلق تیکت‌ها، نقش‌ها و فرم‌ها)"]:::db
-        RPCFuncs["⚙️ Stored Procedures (PL/pgSQL)<br/>(save_form, submit_public_response, god_trash)"]:::db
-        Triggers["⚡ DB Triggers & CDC<br/>(set_updated_at, handle_new_user, audit_logs)"]:::db
-    end
+ subgraph DB[" لایه داده و منطق تراکنشی (PostgreSQL Enterprise Core)"]
+ Tables[" Core Relations<br/>(forms, questions, responses, answers, profiles)"]:::db
+ RLSPolicies[" Row Level Security (RLS)<br/>(جداسازی مطلق تیکت‌ها، نقش‌ها و فرم‌ها)"]:::db
+ RPCFuncs[" Stored Procedures (PL/pgSQL)<br/>(save_form, submit_public_response, god_trash)"]:::db
+ Triggers[" DB Triggers & CDC<br/>(set_updated_at, handle_new_user, audit_logs)"]:::db
+ end
 
-    subgraph EXT["🌐 سرویس‌ها و زیرساخت‌های اکسترنال (External Integrations)"]
-        SMS["📱 Kavenegar / PayamSMS<br/>(ارسال پیامک خوش‌آمد، کد تایید و لاگین)"]:::ext
-        Telegram["🤖 Telegram Bot API<br/>(ارسال اعلان لحظه‌ای ثبت پاسخ به مدیر)"]:::ext
-        Bank["💳 Payment Gateway (Zarinpal)<br/>(خرید اشتراک، پلن‌ها و کد تخفیف)"]:::ext
-    end
+ subgraph EXT[" سرویس‌ها و زیرساخت‌های اکسترنال (External Integrations)"]
+ SMS[" Kavenegar / PayamSMS<br/>(ارسال پیامک خوش‌آمد، کد تایید و لاگین)"]:::ext
+ Telegram[" Telegram Bot API<br/>(ارسال اعلان لحظه‌ای ثبت پاسخ به مدیر)"]:::ext
+ Bank[" Payment Gateway (Zarinpal)<br/>(خرید اشتراک، پلن‌ها و کد تخفیف)"]:::ext
+ end
 
-    %% Flow Connections
-    SPA -->|HTTPS / REST API| VercelCDN
-    Runner -->|HTTPS / REST API| VercelCDN
-    Embed -->|Iframe Loader| VercelCDN
-    Runner <-->|Sync State| LocalCache
+ %% Flow Connections
+ SPA -->|HTTPS / REST API| VercelCDN
+ Runner -->|HTTPS / REST API| VercelCDN
+ Embed -->|Iframe Loader| VercelCDN
+ Runner <-->|Sync State| LocalCache
 
-    VercelCDN --> EdgeRewrites
-    EdgeRewrites -->|JWT Auth Requests| GoTrue
-    EdgeRewrites -->|CRUD Operations / RPC| PostgREST
-    EdgeRewrites -->|WSS Event Stream| RealtimeWS
+ VercelCDN --> EdgeRewrites
+ EdgeRewrites -->|JWT Auth Requests| GoTrue
+ EdgeRewrites -->|CRUD Operations / RPC| PostgREST
+ EdgeRewrites -->|WSS Event Stream| RealtimeWS
 
-    GoTrue -->|Session Verification| Tables
-    PostgREST -->|Authorized Access via Policies| RLSPolicies
-    RLSPolicies -->|Guarded Data Access| Tables
-    PostgREST -->|Complex Transactions| RPCFuncs
-    RPCFuncs --> Tables
-    Tables -->|WAL Change Events| Triggers
-    Triggers -->|Notify WebSocket Channel| RealtimeWS
+ GoTrue -->|Session Verification| Tables
+ PostgREST -->|Authorized Access via Policies| RLSPolicies
+ RLSPolicies -->|Guarded Data Access| Tables
+ PostgREST -->|Complex Transactions| RPCFuncs
+ RPCFuncs --> Tables
+ Tables -->|WAL Change Events| Triggers
+ Triggers -->|Notify WebSocket Channel| RealtimeWS
 
-    GoTrue -.->|ارسال OTP و الگو| SMS
-    RPCFuncs -.->|نوتیفیکیشن وب‌هوک| Telegram
-    SPA -.->|تراکنش‌های مالی ارتقا پلن| Bank
-          </pre>
-        </div>
-      </div>
-    </div>
+ GoTrue -.->|ارسال OTP و الگو| SMS
+ RPCFuncs -.->|نوتیفیکیشن وب‌هوک| Telegram
+ SPA -.->|تراکنش‌های مالی ارتقا پلن| Bank
+ </pre>
+ </div>
+ </div>
+ </div>
 
-    <!-- Detailed Technical Breakdown -->
-    <div class="spec-grid">
-      <div class="spec-card">
-        <div class="spec-card-header">
-          <div class="spec-icon">🏛️</div>
-          <div class="spec-card-title">لایه‌بندی کلان سیستم</div>
-        </div>
-        <ul class="spec-list">
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>کلاینت ری‌اکت ۱۸:</strong> رابط کاربری کامپوننت‌محور با رندرینگ بهینه و بارگذاری اسلایدی بدون لود مجدد صفحه.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>شبکه CDN لبه (Vercel):</strong> توزیع جهانی با زمان تاخیر زیر ۵۰ میلی‌ثانیه و بازنویسی مسیرهای SPA.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>زیرساخت Supabase:</strong> حذف لایه سرور سنتی به نفع معماری بدون سرور (Serverless BaaS) با مقیاس‌پذیری خودکار.</div>
-          </li>
-        </ul>
-      </div>
+ <!-- Detailed Technical Breakdown -->
+ <div class="spec-grid">
+ <div class="spec-card">
+ <div class="spec-card-header">
+ <div class="spec-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+ <div class="spec-card-title">لایه‌بندی کلان سیستم</div>
+ </div>
+ <ul class="spec-list">
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>کلاینت ری‌اکت ۱۸:</strong> رابط کاربری کامپوننت‌محور با رندرینگ بهینه و بارگذاری اسلایدی بدون لود مجدد صفحه.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>شبکه CDN لبه (Vercel):</strong> توزیع جهانی با زمان تاخیر زیر ۵۰ میلی‌ثانیه و بازنویسی مسیرهای SPA.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>زیرساخت Supabase:</strong> حذف لایه سرور سنتی به نفع معماری بدون سرور (Serverless BaaS) با مقیاس‌پذیری خودکار.</div>
+ </li>
+ </ul>
+ </div>
 
-      <div class="spec-card">
-        <div class="spec-card-header">
-          <div class="spec-icon">🛡️</div>
-          <div class="spec-card-title">مکانیزم‌های امنیتی و RLS</div>
-        </div>
-        <ul class="spec-list">
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>امنیت سطح سطر (Row-Level Security):</strong> اعمال مستقیم مجوزها در هسته پایگاه داده روی تمام کوئری‌های کلاینت.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>پروتکل Security Definer:</strong> توابع تراکنشی امن برای ثبت پاسخ عموم بدون نیاز به دسترسی مستقیم جدول‌ها.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>تله ربات (Honeypot Trap):</strong> فیلدهای نامرئی برای تشخیص و مسدودسازی خودکار اسپم‌بات‌ها در فرم‌های عمومی.</div>
-          </li>
-        </ul>
-      </div>
+ <div class="spec-card">
+ <div class="spec-card-header">
+ <div class="spec-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+ <div class="spec-card-title">مکانیزم‌های امنیتی و RLS</div>
+ </div>
+ <ul class="spec-list">
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>امنیت سطح سطر (Row-Level Security):</strong> اعمال مستقیم مجوزها در هسته پایگاه داده روی تمام کوئری‌های کلاینت.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>پروتکل Security Definer:</strong> توابع تراکنشی امن برای ثبت پاسخ عموم بدون نیاز به دسترسی مستقیم جدول‌ها.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>تله ربات (Honeypot Trap):</strong> فیلدهای نامرئی برای تشخیص و مسدودسازی خودکار اسپم‌بات‌ها در فرم‌های عمومی.</div>
+ </li>
+ </ul>
+ </div>
 
-      <div class="spec-card">
-        <div class="spec-card-header">
-          <div class="spec-icon">⚡</div>
-          <div class="spec-card-title">یکپارچه‌سازی و ریل‌تایم</div>
-        </div>
-        <ul class="spec-list">
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>کانال وب‌سوکت فینیکس:</strong> انتشار آنی پاسخ‌های جدید به پنل مدیریت با تاخیر زیر ۳۰۰ میلی‌ثانیه.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>پشتیبانی از تعبیه (Embed Iframe):</strong> کد تزریق فوق سبک برای میزبانی فرم روی وردپرس، لاراول و سایت‌های سازمانی.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>سرویس پیامک و تلگرام:</strong> هشدار لحظه‌ای ورود فرم و ارسال کدهای ورود یکبار مصرف بر بستر کاوه‌نگار.</div>
-          </li>
-        </ul>
-      </div>
-    </div>
+ <div class="spec-card">
+ <div class="spec-card-header">
+ <div class="spec-icon"><svg class="icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+ <div class="spec-card-title">یکپارچه‌سازی و ریل‌تایم</div>
+ </div>
+ <ul class="spec-list">
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>کانال وب‌سوکت فینیکس:</strong> انتشار آنی پاسخ‌های جدید به پنل مدیریت با تاخیر زیر ۳۰۰ میلی‌ثانیه.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>پشتیبانی از تعبیه (Embed Iframe):</strong> کد تزریق فوق سبک برای میزبانی فرم روی وردپرس، لاراول و سایت‌های سازمانی.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>سرویس پیامک و تلگرام:</strong> هشدار لحظه‌ای ورود فرم و ارسال کدهای ورود یکبار مصرف بر بستر کاوه‌نگار.</div>
+ </li>
+ </ul>
+ </div>
+ </div>
 
-    <!-- Footer -->
-    <footer class="page-footer">
-      <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
-    </footer>
-  </div>
+ <!-- Footer -->
+ <footer class="page-footer">
+ <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
+ </footer>
+ </div>
 
-  <script src="assets/app.js"></script>
-  <script>
-    mermaid.initialize({
-      startOnLoad: true,
-      theme: 'dark',
-      securityLevel: 'loose',
-      flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
-      sequence: { useMaxWidth: false },
-      er: { useMaxWidth: false },
-      themeVariables: {
-        darkMode: true,
-        background: '#080C14',
-        primaryColor: '#131B2E',
-        primaryTextColor: '#FFFFFF',
-        primaryBorderColor: '#2DD4BF',
-        lineColor: '#38BDF8',
-        secondaryColor: '#1A2338',
-        tertiaryColor: '#0F172A',
-        fontFamily: 'IRANSansX, Vazirmatn, sans-serif',
-        fontSize: '15.5px'
-      }
-    });
-  </script>
+ <script src="assets/app.js"></script>
+ <script>
+ mermaid.initialize({
+ startOnLoad: true,
+ theme: 'dark',
+ securityLevel: 'loose',
+ flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
+ sequence: { useMaxWidth: false },
+ er: { useMaxWidth: false },
+ themeVariables: {
+ darkMode: true,
+ background: '#080C14',
+ primaryColor: '#131B2E',
+ primaryTextColor: '#FFFFFF',
+ primaryBorderColor: '#2DD4BF',
+ lineColor: '#38BDF8',
+ secondaryColor: '#1A2338',
+ tertiaryColor: '#0F172A',
+ fontFamily: 'IRANSansX, Vazirmatn, sans-serif',
+ fontSize: '15.5px'
+ }
+ });
+ </script>
 </body>
 </html>

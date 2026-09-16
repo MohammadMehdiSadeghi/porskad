@@ -1,8 +1,7 @@
 /* ══════════════════════════════════════════════════════════════════
    پرس‌کاد (Porskad) — استایل‌های سیستم مستندات فنی و دیاگرام‌ها
-   منطبق بر هویت بصری و دیزاین سیستم رکاد / پرس‌کاد
-   رنگ‌ها: Background: #0B0F19 | Surface: #131B2E | Accent: #2DD4BF
-   فونت استاندارد: IRANSansX
+   پشتیبانی دوگانه از Dark Mode و Light Mode
+   فونت استاندارد سازمانی: IRANSansX (بدون هرگونه ایموجی، با آیکون‌های وکتور Lucide)
 ══════════════════════════════════════════════════════════════════ */
 
 @font-face {
@@ -41,6 +40,7 @@
   font-display: swap;
 }
 
+/* ─── دارک مود (پیش‌فرض پرس‌کاد) ─── */
 :root {
   --bg-main: #0B0F19;
   --bg-surface: #131B2E;
@@ -58,13 +58,39 @@
   --text-main: #F8FAFC;
   --text-muted: #94A3B8;
   --text-dim: #64748B;
+  --canvas-bg: #080C14;
+  --canvas-dot-1: rgba(255, 255, 255, 0.08);
+  --canvas-dot-2: rgba(45, 212, 191, 0.06);
   --font-family: 'IRANSansX', 'Vazirmatn', system-ui, -apple-system, sans-serif;
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 20px;
   --radius-xl: 28px;
   --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 1px 1px rgba(255, 255, 255, 0.05);
-  --shadow-glow: 0 0 25px rgba(45, 212, 191, 0.15);
+}
+
+/* ─── لایت مود (تم روشن مدرن و سازمانی) ─── */
+[data-theme="light"] {
+  --bg-main: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #F1F5F9;
+  --bg-card: rgba(255, 255, 255, 0.95);
+  --border-subtle: #E2E8F0;
+  --border-focus: #0D9488;
+  --accent-teal: #0D9488;
+  --accent-teal-glow: rgba(13, 148, 136, 0.2);
+  --accent-cyan: #0284C7;
+  --accent-emerald: #059669;
+  --accent-amber: #D97706;
+  --accent-rose: #E11D48;
+  --accent-purple: #9333EA;
+  --text-main: #0F172A;
+  --text-muted: #475569;
+  --text-dim: #94A3B8;
+  --canvas-bg: #F8FAFC;
+  --canvas-dot-1: rgba(15, 23, 42, 0.08);
+  --canvas-dot-2: rgba(13, 148, 136, 0.06);
+  --shadow-card: 0 4px 20px -4px rgba(0, 0, 0, 0.08), 0 0 1px 1px rgba(0, 0, 0, 0.04);
 }
 
 * {
@@ -81,11 +107,31 @@ body {
   min-height: 100vh;
   line-height: 1.7;
   overflow-x: hidden;
-  background-image: 
-    radial-gradient(circle at 15% 10%, rgba(45, 212, 191, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 85% 90%, rgba(56, 189, 248, 0.06) 0%, transparent 45%),
-    linear-gradient(to bottom, #0B0F19 0%, #070A12 100%);
-  background-attachment: fixed;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* SVG Vector Icon Utility (Lucide style) */
+.icon {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.icon-sm {
+  width: 15px;
+  height: 15px;
+}
+
+.icon-lg {
+  width: 22px;
+  height: 22px;
 }
 
 /* Scrollbar */
@@ -94,10 +140,10 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #0B0F19;
+  background: var(--bg-main);
 }
 ::-webkit-scrollbar-thumb {
-  background: #1E293B;
+  background: var(--border-subtle);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
@@ -116,7 +162,7 @@ body {
   position: sticky;
   top: 16px;
   z-index: 100;
-  background: rgba(19, 27, 46, 0.85);
+  background: var(--bg-surface);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-subtle);
@@ -128,6 +174,7 @@ body {
   justify-content: space-between;
   gap: 16px;
   box-shadow: var(--shadow-card);
+  transition: all 0.25s ease;
 }
 
 .brand-section {
@@ -146,7 +193,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 15px rgba(45, 212, 191, 0.35);
+  box-shadow: 0 4px 15px rgba(45, 212, 191, 0.3);
   color: #0B0F19;
   font-weight: 800;
   font-size: 20px;
@@ -170,11 +217,7 @@ body {
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.nav-select-wrapper {
-  position: relative;
+  gap: 10px;
 }
 
 .nav-select {
@@ -203,7 +246,7 @@ body {
   padding: 8px 16px;
   border-radius: var(--radius-md);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -214,7 +257,6 @@ body {
 .btn-primary {
   background: linear-gradient(135deg, #2DD4BF 0%, #0D9488 100%);
   color: #0B0F19;
-  font-weight: 700;
   box-shadow: 0 4px 15px rgba(45, 212, 191, 0.25);
 }
 
@@ -240,6 +282,26 @@ body {
   font-size: 12px;
 }
 
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle-btn:hover {
+  border-color: var(--accent-teal);
+  color: var(--accent-teal);
+}
+
 /* Header Info Banner */
 .page-header {
   background: var(--bg-surface);
@@ -250,6 +312,7 @@ body {
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-card);
+  transition: all 0.25s ease;
 }
 
 .page-header::before {
@@ -331,6 +394,7 @@ body {
   overflow: hidden;
   margin-bottom: 32px;
   position: relative;
+  transition: all 0.25s ease;
 }
 
 .stage-toolbar {
@@ -403,11 +467,11 @@ body {
   max-height: 750px;
   position: relative;
   overflow: hidden;
-  direction: ltr; /* Force LTR inside canvas for accurate coordinates */
-  background: #080C14;
+  direction: ltr;
+  background: var(--canvas-bg);
   background-image: 
-    radial-gradient(rgba(255, 255, 255, 0.08) 1.2px, transparent 1.2px),
-    radial-gradient(rgba(45, 212, 191, 0.06) 1.2px, transparent 1.2px);
+    radial-gradient(var(--canvas-dot-1) 1.2px, transparent 1.2px),
+    radial-gradient(var(--canvas-dot-2) 1.2px, transparent 1.2px);
   background-size: 28px 28px;
   background-position: center center;
   display: flex;
@@ -417,6 +481,7 @@ body {
   cursor: grab;
   user-select: none;
   touch-action: none;
+  transition: background 0.25s ease;
 }
 
 .diagram-viewport:active {
@@ -438,7 +503,7 @@ body {
   display: block;
   max-width: 100%;
   height: auto;
-  filter: none !important; /* Never use raster drop-shadow on SVG to ensure 100% infinite vector clarity */
+  filter: none !important;
   text-rendering: geometricPrecision !important;
   shape-rendering: geometricPrecision !important;
   image-rendering: -webkit-optimize-contrast !important;
@@ -470,13 +535,109 @@ body {
 .diagram-canvas path.flowchart-link {
   shape-rendering: geometricPrecision !important;
   stroke-width: 2.2px !important;
-  stroke: #38BDF8 !important;
+  stroke: var(--accent-cyan) !important;
 }
 
 .diagram-canvas .cluster rect {
   shape-rendering: geometricPrecision !important;
   stroke-width: 1.8px !important;
+  stroke: var(--accent-teal) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   MIND MAP HIGH-CONTRAST READABILITY & COLOR TIERS
+══════════════════════════════════════════════════════════════════ */
+.diagram-canvas .mindmap-node text,
+.diagram-canvas .mindmap-node tspan {
+  fill: #FFFFFF !important;
+  color: #FFFFFF !important;
+  font-family: 'IRANSansX', 'Vazirmatn', system-ui, sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 14.5px !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
+}
+
+[data-theme="light"] .diagram-canvas .mindmap-node text,
+[data-theme="light"] .diagram-canvas .mindmap-node tspan {
+  fill: #0F172A !important;
+  color: #0F172A !important;
+  text-shadow: none !important;
+}
+
+/* Root node in mind map */
+.diagram-canvas .mindmap-node--root circle,
+.diagram-canvas .mindmap-node--root rect,
+.diagram-canvas .section-root rect,
+.diagram-canvas .section-root circle {
+  fill: #0D9488 !important;
   stroke: #2DD4BF !important;
+  stroke-width: 3px !important;
+}
+
+.diagram-canvas .mindmap-node--root text,
+.diagram-canvas .section-root text {
+  fill: #FFFFFF !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  font-size: 16px !important;
+}
+
+/* Mindmap category branches - Dark Mode */
+.diagram-canvas .section-0 rect,
+.diagram-canvas .section-0 circle {
+  fill: #1E293B !important;
+  stroke: #38BDF8 !important;
+  stroke-width: 2px !important;
+}
+
+.diagram-canvas .section-1 rect,
+.diagram-canvas .section-1 circle {
+  fill: #1A2338 !important;
+  stroke: #818CF8 !important;
+  stroke-width: 2px !important;
+}
+
+.diagram-canvas .section-2 rect,
+.diagram-canvas .section-2 circle {
+  fill: #1E1B4B !important;
+  stroke: #A855F7 !important;
+  stroke-width: 2px !important;
+}
+
+.diagram-canvas .section-3 rect,
+.diagram-canvas .section-3 circle {
+  fill: #0F291E !important;
+  stroke: #10B981 !important;
+  stroke-width: 2px !important;
+}
+
+/* Mindmap category branches - Light Mode */
+[data-theme="light"] .diagram-canvas .section-0 rect,
+[data-theme="light"] .diagram-canvas .section-0 circle {
+  fill: #F1F5F9 !important;
+  stroke: #0284C7 !important;
+  stroke-width: 2px !important;
+}
+
+[data-theme="light"] .diagram-canvas .section-1 rect,
+[data-theme="light"] .diagram-canvas .section-1 circle {
+  fill: #EEF2FF !important;
+  stroke: #6366F1 !important;
+  stroke-width: 2px !important;
+}
+
+[data-theme="light"] .diagram-canvas .section-2 rect,
+[data-theme="light"] .diagram-canvas .section-2 circle {
+  fill: #FAF5FF !important;
+  stroke: #9333EA !important;
+  stroke-width: 2px !important;
+}
+
+[data-theme="light"] .diagram-canvas .section-3 rect,
+[data-theme="light"] .diagram-canvas .section-3 circle {
+  fill: #ECFDF5 !important;
+  stroke: #059669 !important;
+  stroke-width: 2px !important;
 }
 
 /* Mini navigation helper pill */
@@ -484,7 +645,7 @@ body {
   position: absolute;
   bottom: 16px;
   right: 16px;
-  background: rgba(19, 27, 46, 0.9);
+  background: var(--bg-surface);
   backdrop-filter: blur(8px);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
@@ -548,7 +709,6 @@ body {
   justify-content: center;
   background: rgba(45, 212, 191, 0.12);
   color: var(--accent-teal);
-  font-size: 18px;
 }
 
 .spec-card-title {
@@ -656,7 +816,6 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
   color: var(--accent-teal);
   transition: all 0.2s ease;
 }

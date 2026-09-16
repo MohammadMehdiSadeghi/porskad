@@ -1,13 +1,75 @@
 /* ══════════════════════════════════════════════════════════════════
-   پرس‌کاد (Porskad) — موتور بوم تعاملی فیگما (Figma-Like Canvas Engine)
-   پایدار، روان، وسط‌چین خودکار و زوم با چرخ ماوس
+   پرس‌کاد (Porskad) — اسکریپت تعاملی و کنترل تم
+   پشتیبانی کامل از Dark Mode / Light Mode و دکمه‌های آیکونی Lucide
 ══════════════════════════════════════════════════════════════════ */
 
+// SVG Icons (Lucide Style)
+const ICONS = {
+  sun: `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`,
+  moon: `<svg class="icon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`,
+  zoomIn: `<svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>`,
+  zoomOut: `<svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>`,
+  reset: `<svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`,
+  fullscreen: `<svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>`,
+  closeFullscreen: `<svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  download: `<svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`
+};
+
 document.addEventListener('DOMContentLoaded', () => {
+  initThemeManager();
+  initIconReplacements();
   initDiagramViewer();
   initNavigation();
 });
 
+// ─── Theme Manager (Dark / Light Mode) ───
+function initThemeManager() {
+  const savedTheme = localStorage.getItem('porskad_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+
+  // Setup toggle button in header
+  const navActions = document.querySelector('.nav-actions');
+  if (navActions && !document.getElementById('themeToggleBtn')) {
+    const toggleBtn = document.createElement('button');
+    toggleBtn.id = 'themeToggleBtn';
+    toggleBtn.className = 'theme-toggle-btn';
+    toggleBtn.title = savedTheme === 'dark' ? 'تغییر به حالت روشن' : 'تغییر به حالت تاریک';
+    toggleBtn.innerHTML = savedTheme === 'dark' ? ICONS.sun : ICONS.moon;
+
+    toggleBtn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme') || 'dark';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('porskad_theme', next);
+      toggleBtn.innerHTML = next === 'dark' ? ICONS.sun : ICONS.moon;
+      toggleBtn.title = next === 'dark' ? 'تغییر به حالت روشن' : 'تغییر به حالت تاریک';
+    });
+
+    navActions.prepend(toggleBtn);
+  }
+}
+
+// ─── Populate buttons with clean SVG icons ───
+function initIconReplacements() {
+  const zoomIn = document.getElementById('zoomInBtn');
+  if (zoomIn) zoomIn.innerHTML = ICONS.zoomIn;
+
+  const zoomOut = document.getElementById('zoomOutBtn');
+  if (zoomOut) zoomOut.innerHTML = ICONS.zoomOut;
+
+  const reset = document.getElementById('resetZoomBtn');
+  if (reset) reset.innerHTML = ICONS.reset;
+
+  const fs = document.getElementById('fullscreenBtn');
+  if (fs) fs.innerHTML = ICONS.fullscreen;
+
+  const exp = document.getElementById('exportBtn');
+  if (exp) {
+    exp.innerHTML = `${ICONS.download} <span>خروجی SVG</span>`;
+  }
+}
+
+// ─── Interactive Canvas (Figma Engine) ───
 function initDiagramViewer() {
   const viewport = document.querySelector('.diagram-viewport');
   const canvas = document.querySelector('.diagram-canvas');
@@ -20,7 +82,6 @@ function initDiagramViewer() {
   let startX = 0;
   let startY = 0;
 
-  // Ultra-wide Figma zoom range: from 2% to 3000% (30x zoom)
   const minScale = 0.02;
   const maxScale = 30.0;
 
@@ -43,10 +104,9 @@ function initDiagramViewer() {
   // Initial render
   renderTransform();
 
-  // 1. High-Performance Balanced & Responsive Zoom with Mouse Wheel (Figma Standard)
+  // 1. Mouse Wheel Zoom (Cursor-Centric Balanced Curve)
   viewport.addEventListener('wheel', (e) => {
     e.preventDefault();
-    // Balanced responsive damping
     const normalizedDelta = Math.min(Math.max(e.deltaY, -120), 120);
     const zoomFactor = Math.exp(-normalizedDelta * 0.0036);
     const newScale = Math.min(Math.max(scale * zoomFactor, minScale), maxScale);
@@ -62,7 +122,7 @@ function initDiagramViewer() {
     }
   }, { passive: false });
 
-  // Quick double-click to zoom in at cursor (1.5x)
+  // 2. Double-Click to Zoom In at Cursor
   viewport.addEventListener('dblclick', (e) => {
     if (e.target.closest('button') || e.target.closest('a')) return;
     const rect = viewport.getBoundingClientRect();
@@ -76,7 +136,7 @@ function initDiagramViewer() {
     renderTransform();
   });
 
-  // 2. Pan with Mouse Drag (Any button / Spacebar)
+  // 3. Pan with Mouse Drag
   viewport.addEventListener('mousedown', (e) => {
     if (e.target.closest('button') || e.target.closest('a') || e.target.closest('select')) return;
     isPanning = true;
@@ -101,7 +161,7 @@ function initDiagramViewer() {
     }
   });
 
-  // 3. Touch Gestures for Mobile / Tablet
+  // 4. Touch Pan & Zoom for Mobile
   let initialTouchDist = null;
   let initialTouchScale = 1;
 
@@ -143,7 +203,7 @@ function initDiagramViewer() {
     canvas.style.transition = 'transform 0.08s ease-out';
   });
 
-  // 4. Toolbar Controls
+  // 5. Toolbar Buttons
   if (zoomInBtn) {
     zoomInBtn.addEventListener('click', () => {
       scale = Math.min(scale * 1.25, maxScale);
@@ -183,8 +243,9 @@ function initDiagramViewer() {
       const stageCard = document.querySelector('.diagram-stage-card');
       if (stageCard) {
         stageCard.classList.toggle('fullscreen');
-        fullscreenBtn.textContent = stageCard.classList.contains('fullscreen') ? '✕' : '⛶';
-        fullscreenBtn.title = stageCard.classList.contains('fullscreen') ? 'خروج از تمام صفحه' : 'تمام صفحه';
+        const isFs = stageCard.classList.contains('fullscreen');
+        fullscreenBtn.innerHTML = isFs ? ICONS.closeFullscreen : ICONS.fullscreen;
+        fullscreenBtn.title = isFs ? 'خروج از تمام صفحه' : 'تمام صفحه';
       }
     });
   }

@@ -1,229 +1,229 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>System Diagram | سامانه فرم‌ساز پرس‌کاد (Porskad)</title>
-  <link rel="stylesheet" href="assets/style.css">
-  <script src="assets/mermaid.min.js"></script>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>System Diagram | سامانه فرم‌ساز پرس‌کاد (Porskad)</title>
+ <link rel="stylesheet" href="assets/style.css">
+ <script src="assets/mermaid.min.js"></script>
 </head>
 <body>
-  <div class="container">
-    <!-- Navigation Bar -->
-    <header class="top-nav">
-      <a href="index.html" class="brand-section">
-        <div class="brand-logo-icon">P</div>
-        <div class="brand-info">
-          <h1>پرس‌کاد <span>Porskad Blueprints</span></h1>
-          <span>پلتفرم سازمانی ساخت فرم و پرسشنامه</span>
-        </div>
-      </a>
-      <div class="nav-actions">
-        <select class="nav-select" id="diagramNavSelect">
-          <option value="architecture-diagram.html">۱. Architecture Diagram</option>
-          <option value="system-architecture-diagram.html">۲. System Architecture Diagram</option>
-          <option value="system-diagram.html" selected>۳. System Diagram</option>
-          <option value="project-structure-diagram.html">۴. Project Structure Diagram</option>
-          <option value="flowchart.html">۵. Flowchart</option>
-          <option value="mind-map.html">۶. Mind Map</option>
-          <option value="site-map.html">۷. Site Map</option>
-          <option value="uml-diagram.html">۸. UML Diagram</option>
-          <option value="er-diagram.html">۹. ER Diagram</option>
-          <option value="component-diagram.html">۱۰. Component Diagram</option>
-          <option value="data-flow-diagram.html">۱۱. Data Flow Diagram (DFD)</option>
-          <option value="sequence-diagram.html">۱۲. Sequence Diagram</option>
-          <option value="use-case-diagram.html">۱۳. Use Case Diagram</option>
-          <option value="entity-relationship-diagram.html">۱۴. Entity Relationship Diagram (ERD)</option>
-        </select>
-        <a href="index.html" class="btn btn-secondary btn-sm">🏠 خانه دیاگرام‌ها</a>
-      </div>
-    </header>
+ <div class="container">
+ <!-- Navigation Bar -->
+ <header class="top-nav">
+ <a href="index.html" class="brand-section">
+ <div class="brand-logo-icon">P</div>
+ <div class="brand-info">
+ <h1>پرس‌کاد <span>Porskad Blueprints</span></h1>
+ <span>پلتفرم سازمانی ساخت فرم و پرسشنامه</span>
+ </div>
+ </a>
+ <div class="nav-actions">
+ <select class="nav-select" id="diagramNavSelect">
+ <option value="architecture-diagram.html">۱. Architecture Diagram</option>
+ <option value="system-architecture-diagram.html">۲. System Architecture Diagram</option>
+ <option value="system-diagram.html" selected>۳. System Diagram</option>
+ <option value="project-structure-diagram.html">۴. Project Structure Diagram</option>
+ <option value="flowchart.html">۵. Flowchart</option>
+ <option value="mind-map.html">۶. Mind Map</option>
+ <option value="site-map.html">۷. Site Map</option>
+ <option value="uml-diagram.html">۸. UML Diagram</option>
+ <option value="er-diagram.html">۹. ER Diagram</option>
+ <option value="component-diagram.html">۱۰. Component Diagram</option>
+ <option value="data-flow-diagram.html">۱۱. Data Flow Diagram (DFD)</option>
+ <option value="sequence-diagram.html">۱۲. Sequence Diagram</option>
+ <option value="use-case-diagram.html">۱۳. Use Case Diagram</option>
+ <option value="entity-relationship-diagram.html">۱۴. Entity Relationship Diagram (ERD)</option>
+ </select>
+ <a href="index.html" class="btn btn-secondary btn-sm">خانه دیاگرام‌ها</a>
+ </div>
+ </header>
 
-    <!-- Page Header -->
-    <div class="page-header">
-      <div class="header-meta-row">
-        <span class="badge badge-teal">باندری و تعاملات سامانه</span>
-        <span class="badge badge-blue">System Context & Boundary Diagram</span>
-        <span class="badge badge-purple">Actors & Protocols</span>
-      </div>
-      <h1 class="page-title">System Diagram (دیاگرام مرزهای سامانه و بازیگران)</h1>
-      <p class="page-desc">
-        دیاگرام سیاق سامانه (Context Diagram) که مرزهای عملیاتی پلتفرم پرس‌کاد را در تعامل با بازیگران انسانی (پاسخ‌دهندگان، طراحان فرم، مدیران ارشد، کاربران سایت‌های تعبیه‌شده) و سیستم‌های ثالث (اپراتور پیامک، تلگرام، درگاه‌های پرداخت، دامنه‌های خارجی) به همراه پروتکل‌های انتقال داده نمایش می‌دهد.
-      </p>
-    </div>
+ <!-- Page Header -->
+ <div class="page-header">
+ <div class="header-meta-row">
+ <span class="badge badge-teal">باندری و تعاملات سامانه</span>
+ <span class="badge badge-blue">System Context & Boundary Diagram</span>
+ <span class="badge badge-purple">Actors & Protocols</span>
+ </div>
+ <h1 class="page-title">System Diagram (دیاگرام مرزهای سامانه و بازیگران)</h1>
+ <p class="page-desc">
+ دیاگرام سیاق سامانه (Context Diagram) که مرزهای عملیاتی پلتفرم پرس‌کاد را در تعامل با بازیگران انسانی (پاسخ‌دهندگان، طراحان فرم، مدیران ارشد، کاربران سایت‌های تعبیه‌شده) و سیستم‌های ثالث (اپراتور پیامک، تلگرام، درگاه‌های پرداخت، دامنه‌های خارجی) به همراه پروتکل‌های انتقال داده نمایش می‌دهد.
+ </p>
+ </div>
 
-    <!-- Interactive Diagram Stage -->
-    <div class="diagram-stage-card">
-      <div class="stage-toolbar">
-        <div class="stage-title">
-          <span>🌐 دیاگرام سیاق و مرزهای سامانه پرس‌کاد</span>
-        </div>
-        <div class="stage-controls">
-          <span class="zoom-indicator" id="zoomIndicator">100%</span>
-          <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
-          <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
-          <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
-          <button class="control-btn" id="fullscreenBtn" title="تمام صفحه">⛶</button>
-          <button class="btn btn-primary btn-sm" id="exportBtn">📥 خروجی SVG</button>
-        </div>
-      </div>
-      <div class="diagram-viewport">
-        <div class="figma-hud-helper">
-          <span>🎯 اسکرول ماوس: زوم فیگما روی نشانگر</span>
-          <span>•</span>
-          <span>🖱️ درگ آزاد یا <kbd>Space</kbd> + درگ: جابجایی</span>
-        </div>
-        <div class="diagram-canvas">
-          <pre class="mermaid">
+ <!-- Interactive Diagram Stage -->
+ <div class="diagram-stage-card">
+ <div class="stage-toolbar">
+ <div class="stage-title">
+ <span> دیاگرام سیاق و مرزهای سامانه پرس‌کاد</span>
+ </div>
+ <div class="stage-controls">
+ <span class="zoom-indicator" id="zoomIndicator">100%</span>
+ <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
+ <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
+ <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
+ <button class="control-btn" id="fullscreenBtn" title="تمام صفحه"></button>
+ <button class="btn btn-primary btn-sm" id="exportBtn">خروجی SVG</button>
+ </div>
+ </div>
+ <div class="diagram-viewport">
+ <div class="figma-hud-helper">
+ <span>اسکرول ماوس: زوم روی نشانگر</span>
+ <span>•</span>
+ <span>درگ آزاد یا <kbd>Space</kbd> + درگ: جابجایی</span>
+ </div>
+ <div class="diagram-canvas">
+ <pre class="mermaid">
 graph LR
-    classDef actor fill:#1E293B,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
-    classDef boundary fill:#0F172A,stroke:#2DD4BF,stroke-dasharray: 5 5,stroke-width:2px,color:#F8FAFC;
-    classDef internal fill:#131B2E,stroke:#2DD4BF,stroke-width:2px,color:#F8FAFC;
-    classDef external fill:#2A1B18,stroke:#F59E0B,stroke-width:2px,color:#F8FAFC;
+ classDef actor fill:#1E293B,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
+ classDef boundary fill:#0F172A,stroke:#2DD4BF,stroke-dasharray: 5 5,stroke-width:2px,color:#F8FAFC;
+ classDef internal fill:#131B2E,stroke:#2DD4BF,stroke-width:2px,color:#F8FAFC;
+ classDef external fill:#2A1B18,stroke:#F59E0B,stroke-width:2px,color:#F8FAFC;
 
-    subgraph ACTORS["👥 بازیگران و کاربران سامانه"]
-        Resp["👤 پاسخ‌دهنده عمومی<br/>(Anonymous Respondent)"]:::actor
-        Creator["🧑‍💼 سازنده فرم / ادمین<br/>(Form Creator / Owner)"]:::actor
-        SuperAdmin["👑 سوپرادمین سامانه<br/>(Superadmin / God Mode)"]:::actor
-        EmbedVisitor["🌐 بازدیدکننده سایت ثالث<br/>(Embedded Web Visitor)"]:::actor
-    end
+ subgraph ACTORS[" بازیگران و کاربران سامانه"]
+ Resp[" پاسخ‌دهنده عمومی<br/>(Anonymous Respondent)"]:::actor
+ Creator[" سازنده فرم / ادمین<br/>(Form Creator / Owner)"]:::actor
+ SuperAdmin[" سوپرادمین سامانه<br/>(Superadmin / God Mode)"]:::actor
+ EmbedVisitor[" بازدیدکننده سایت ثالث<br/>(Embedded Web Visitor)"]:::actor
+ end
 
-    subgraph SYSTEM_BOUNDARY["🛡️ مرز سیستم پرس‌کاد (Porskad System Boundary)"]
-        LandingPage["🏠 پورتال عمومی و لندینگ<br/>(Landing & Showcase)"]:::internal
-        FormEngine["📝 موتور اجرای فرم اسلایدی<br/>(Slide Form Engine /f/:slug)"]:::internal
-        EmbedEngine["🧩 موتور تعبیه فریم‌لس<br/>(Embed Runner /embed/:slug)"]:::internal
-        AdminPanel["📊 پنل مدیریت و سازنده فرم<br/>(Admin Builder & Analytics)"]:::internal
-        SecurityGateway["🔐 دروازه امنیتی و احراز هویت<br/>(Auth, RLS, Honeypot)"]:::internal
-        DBEngine["🗄️ هسته دیتابیس و پردازش<br/>(PostgreSQL, RPCs, Storage)"]:::internal
-    end
+ subgraph SYSTEM_BOUNDARY[" مرز سیستم پرس‌کاد (Porskad System Boundary)"]
+ LandingPage[" پورتال عمومی و لندینگ<br/>(Landing & Showcase)"]:::internal
+ FormEngine[" موتور اجرای فرم اسلایدی<br/>(Slide Form Engine /f/:slug)"]:::internal
+ EmbedEngine[" موتور تعبیه فریم‌لس<br/>(Embed Runner /embed/:slug)"]:::internal
+ AdminPanel[" پنل مدیریت و سازنده فرم<br/>(Admin Builder & Analytics)"]:::internal
+ SecurityGateway[" دروازه امنیتی و احراز هویت<br/>(Auth, RLS, Honeypot)"]:::internal
+ DBEngine[" هسته دیتابیس و پردازش<br/>(PostgreSQL, RPCs, Storage)"]:::internal
+ end
 
-    subgraph EXTERNAL_SERVICES["🌍 سرویس‌ها و پلتفرم‌های متصل"]
-        Kavenegar["📱 اپراتور پیامک کاوه‌نگار<br/>(OTP, Verification)"]:::external
-        TelegramService["🤖 شبکه ربات تلگرام<br/>(Instant Response Alerts)"]:::external
-        PaymentGateway["💳 درگاه بانکی زرین‌پال<br/>(SaaS Subscriptions)"]:::external
-        ThirdPartySite["🏢 وب‌سایت‌های خارجی<br/>(Wordpress, React, HTML Sites)"]:::external
-    end
+ subgraph EXTERNAL_SERVICES[" سرویس‌ها و پلتفرم‌های متصل"]
+ Kavenegar[" اپراتور پیامک کاوه‌نگار<br/>(OTP, Verification)"]:::external
+ TelegramService[" شبکه ربات تلگرام<br/>(Instant Response Alerts)"]:::external
+ PaymentGateway[" درگاه بانکی زرین‌پال<br/>(SaaS Subscriptions)"]:::external
+ ThirdPartySite[" وب‌سایت‌های خارجی<br/>(Wordpress, React, HTML Sites)"]:::external
+ end
 
-    %% Interactions
-    Resp -->|۱. باز کردن لینک مستقیم /f/:slug<br/>HTTPS GET| FormEngine
-    Resp -->|۲. ثبت جواب‌ها و زمان صرف‌شده<br/>JSON-RPC submit_public_response| SecurityGateway
+ %% Interactions
+ Resp -->|۱. باز کردن لینک مستقیم /f/:slug<br/>HTTPS GET| FormEngine
+ Resp -->|۲. ثبت جواب‌ها و زمان صرف‌شده<br/>JSON-RPC submit_public_response| SecurityGateway
 
-    EmbedVisitor -->|مشاهده فرم در iframe<br/>PostMessage Event| EmbedEngine
-    ThirdPartySite -->|کد تعبیه اسکریپت و آی‌فریم| EmbedEngine
-    EmbedEngine -->|ارسال پاسخ ایمن| SecurityGateway
+ EmbedVisitor -->|مشاهده فرم در iframe<br/>PostMessage Event| EmbedEngine
+ ThirdPartySite -->|کد تعبیه اسکریپت و آی‌فریم| EmbedEngine
+ EmbedEngine -->|ارسال پاسخ ایمن| SecurityGateway
 
-    Creator -->|۳. ورود با ایمیل یا پیامک OTP<br/>GoTrue Auth| SecurityGateway
-    Creator -->|۴. طراحی، ویرایش سوالات و لاجیک<br/>REST API save_form| AdminPanel
-    Creator -->|۵. تحلیل نتایج و دانلود اکسل<br/>UTF-8 BOM CSV / REST| AdminPanel
+ Creator -->|۳. ورود با ایمیل یا پیامک OTP<br/>GoTrue Auth| SecurityGateway
+ Creator -->|۴. طراحی، ویرایش سوالات و لاجیک<br/>REST API save_form| AdminPanel
+ Creator -->|۵. تحلیل نتایج و دانلود اکسل<br/>UTF-8 BOM CSV / REST| AdminPanel
 
-    SuperAdmin -->|۶. مدیریت سراسری، تیکت‌ها و سطل زباله<br/>God-Mode RPCs & Auditing| AdminPanel
+ SuperAdmin -->|۶. مدیریت سراسری، تیکت‌ها و سطل زباله<br/>God-Mode RPCs & Auditing| AdminPanel
 
-    AdminPanel <-->|مدیریت داده‌ها و کوئری‌ها| SecurityGateway
-    SecurityGateway <-->|اعمال RLS و اجرای توابع| DBEngine
-    FormEngine <-->|ارتباط ران‌تایم و اعتبارسنجی| SecurityGateway
+ AdminPanel <-->|مدیریت داده‌ها و کوئری‌ها| SecurityGateway
+ SecurityGateway <-->|اعمال RLS و اجرای توابع| DBEngine
+ FormEngine <-->|ارتباط ران‌تایم و اعتبارسنجی| SecurityGateway
 
-    SecurityGateway -->|ارسال کد یکبار مصرف OTP| Kavenegar
-    DBEngine -->|ارسال اعلان ثبت فرم با هوک| TelegramService
-    AdminPanel -->|پرداخت هزینه اشتراک پلن| PaymentGateway
-          </pre>
-        </div>
-      </div>
-    </div>
+ SecurityGateway -->|ارسال کد یکبار مصرف OTP| Kavenegar
+ DBEngine -->|ارسال اعلان ثبت فرم با هوک| TelegramService
+ AdminPanel -->|پرداخت هزینه اشتراک پلن| PaymentGateway
+ </pre>
+ </div>
+ </div>
+ </div>
 
-    <!-- Technical Analysis -->
-    <div class="spec-grid">
-      <div class="spec-card">
-        <div class="spec-card-header">
-          <div class="spec-icon">🛡️</div>
-          <div class="spec-card-title">مرزبندی و پروتکل‌های امنیتی</div>
-        </div>
-        <ul class="spec-list">
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>جداسازی ترافیک عمومی و مدیریتی:</strong> پاسخ‌دهندگان به هیچ عنوان توکن دسترسی مستقیم به پایگاه داده دریافت نمی‌کنند و تمام تراکنش‌ها از کانال <code>submit_public_response</code> عبور داده می‌شود.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>سیاست‌های امبد و Iframe:</strong> تنظیم هدرهای مجاز برای بارگذاری فرم بدون تداخل کوکی‌های شخص ثالث و ارسال رویدادهای تغییر ارتفاع از طریق <code>postMessage</code>.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>پروتکل‌های رمزنگاری:</strong> تضمین TLS 1.3 برای تمام ارتباطات کلاینت-سرور و هش کلمات عبور با الگوریتم bcrypt.</div>
-          </li>
-        </ul>
-      </div>
+ <!-- Technical Analysis -->
+ <div class="spec-grid">
+ <div class="spec-card">
+ <div class="spec-card-header">
+ <div class="spec-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+ <div class="spec-card-title">مرزبندی و پروتکل‌های امنیتی</div>
+ </div>
+ <ul class="spec-list">
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>جداسازی ترافیک عمومی و مدیریتی:</strong> پاسخ‌دهندگان به هیچ عنوان توکن دسترسی مستقیم به پایگاه داده دریافت نمی‌کنند و تمام تراکنش‌ها از کانال <code>submit_public_response</code> عبور داده می‌شود.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>سیاست‌های امبد و Iframe:</strong> تنظیم هدرهای مجاز برای بارگذاری فرم بدون تداخل کوکی‌های شخص ثالث و ارسال رویدادهای تغییر ارتفاع از طریق <code>postMessage</code>.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>پروتکل‌های رمزنگاری:</strong> تضمین TLS 1.3 برای تمام ارتباطات کلاینت-سرور و هش کلمات عبور با الگوریتم bcrypt.</div>
+ </li>
+ </ul>
+ </div>
 
-      <div class="spec-card">
-        <div class="spec-card-header">
-          <div class="spec-icon">👥</div>
-          <div class="spec-card-title">نقش‌ها و دسترسی‌های بازیگران</div>
-        </div>
-        <ul class="spec-list">
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>پاسخ‌دهنده ناشناس:</strong> ثبت جواب سوالات بدون نیاز به حساب کاربری، با بررسی تله ربات و اعتبارسنجی فرمت ورودی‌ها.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>مالک فرم (Form Creator):</strong> کنترل کامل روی چرخه حیات فرم (ساخت، ویرایش سوالات، شرط‌گذاری منطقی، انتشار، تحلیل آماری).</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>سوپرادمین (Superadmin):</strong> مانیتورینگ کلیه فرم‌ها، مدیریت لاگ‌های سیستمی، مدیریت سطل زباله سراسری و تخصیص سهمیه‌ها.</div>
-          </li>
-        </ul>
-      </div>
+ <div class="spec-card">
+ <div class="spec-card-header">
+ <div class="spec-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+ <div class="spec-card-title">نقش‌ها و دسترسی‌های بازیگران</div>
+ </div>
+ <ul class="spec-list">
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>پاسخ‌دهنده ناشناس:</strong> ثبت جواب سوالات بدون نیاز به حساب کاربری، با بررسی تله ربات و اعتبارسنجی فرمت ورودی‌ها.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>مالک فرم (Form Creator):</strong> کنترل کامل روی چرخه حیات فرم (ساخت، ویرایش سوالات، شرط‌گذاری منطقی، انتشار، تحلیل آماری).</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>سوپرادمین (Superadmin):</strong> مانیتورینگ کلیه فرم‌ها، مدیریت لاگ‌های سیستمی، مدیریت سطل زباله سراسری و تخصیص سهمیه‌ها.</div>
+ </li>
+ </ul>
+ </div>
 
-      <div class="spec-card">
-        <div class="spec-card-header">
-          <div class="spec-icon">📡</div>
-          <div class="spec-card-title">درگاه‌های ادغام شخص ثالث</div>
-        </div>
-        <ul class="spec-list">
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>ارسال پیامک با پترن خدماتی:</strong> اتصال به API کاوه‌نگار با استفاده از متد Verify برای عبور تضمینی از بلک‌لیست تبلیغاتی مخابرات.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>ربات هشدار تلگرام:</strong> ارسال خلاصه پاسخ‌ها با دکمه‌های شیشه‌ای لینک مستقیم به پنل مدیریت بلافاصله پس از ثبت فرم.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>کدهای تعبیه ریسپانسیو:</strong> سازگاری با انواع CMSها و لندینگ پیج‌ها با امکان ریسایز خودکار بر اساس طول سوالات.</div>
-          </li>
-        </ul>
-      </div>
-    </div>
+ <div class="spec-card">
+ <div class="spec-card-header">
+ <div class="spec-icon"><svg class="icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+ <div class="spec-card-title">درگاه‌های ادغام شخص ثالث</div>
+ </div>
+ <ul class="spec-list">
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>ارسال پیامک با پترن خدماتی:</strong> اتصال به API کاوه‌نگار با استفاده از متد Verify برای عبور تضمینی از بلک‌لیست تبلیغاتی مخابرات.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>ربات هشدار تلگرام:</strong> ارسال خلاصه پاسخ‌ها با دکمه‌های شیشه‌ای لینک مستقیم به پنل مدیریت بلافاصله پس از ثبت فرم.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>کدهای تعبیه ریسپانسیو:</strong> سازگاری با انواع CMSها و لندینگ پیج‌ها با امکان ریسایز خودکار بر اساس طول سوالات.</div>
+ </li>
+ </ul>
+ </div>
+ </div>
 
-    <!-- Footer -->
-    <footer class="page-footer">
-      <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
-    </footer>
-  </div>
+ <!-- Footer -->
+ <footer class="page-footer">
+ <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
+ </footer>
+ </div>
 
-  <script src="assets/app.js"></script>
-  <script>
-    mermaid.initialize({
-      startOnLoad: true,
-      theme: 'dark',
-      securityLevel: 'loose',
-      flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
-      sequence: { useMaxWidth: false },
-      er: { useMaxWidth: false },
-      themeVariables: {
-        darkMode: true,
-        background: '#080C14',
-        primaryColor: '#131B2E',
-        primaryTextColor: '#FFFFFF',
-        primaryBorderColor: '#2DD4BF',
-        lineColor: '#38BDF8',
-        secondaryColor: '#1A2338',
-        tertiaryColor: '#0F172A',
-        fontFamily: 'IRANSansX, Vazirmatn, sans-serif',
-        fontSize: '15.5px'
-      }
-    });
-  </script>
+ <script src="assets/app.js"></script>
+ <script>
+ mermaid.initialize({
+ startOnLoad: true,
+ theme: 'dark',
+ securityLevel: 'loose',
+ flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
+ sequence: { useMaxWidth: false },
+ er: { useMaxWidth: false },
+ themeVariables: {
+ darkMode: true,
+ background: '#080C14',
+ primaryColor: '#131B2E',
+ primaryTextColor: '#FFFFFF',
+ primaryBorderColor: '#2DD4BF',
+ lineColor: '#38BDF8',
+ secondaryColor: '#1A2338',
+ tertiaryColor: '#0F172A',
+ fontFamily: 'IRANSansX, Vazirmatn, sans-serif',
+ fontSize: '15.5px'
+ }
+ });
+ </script>
 </body>
 </html>

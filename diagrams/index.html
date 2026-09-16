@@ -1,470 +1,470 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Porskad Architectural Blueprints | سامانه فرم‌ساز پرس‌کاد</title>
-  <link rel="stylesheet" href="assets/style.css">
-  <style>
-    .search-filter-box {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      padding: 20px 24px;
-      margin-bottom: 28px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .search-input {
-      flex: 1;
-      min-width: 260px;
-      background: var(--bg-surface-elevated);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-main);
-      padding: 10px 16px;
-      border-radius: var(--radius-md);
-      font-family: inherit;
-      font-size: 14px;
-      outline: none;
-      transition: all 0.2s;
-    }
-    .search-input:focus {
-      border-color: var(--accent-teal);
-      box-shadow: 0 0 12px var(--accent-teal-glow);
-    }
-    .filter-tags {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .filter-btn {
-      background: var(--bg-surface-elevated);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-muted);
-      padding: 6px 14px;
-      border-radius: 9999px;
-      font-size: 12px;
-      font-family: inherit;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .filter-btn:hover, .filter-btn.active {
-      background: rgba(45, 212, 191, 0.15);
-      border-color: var(--accent-teal);
-      color: var(--accent-teal);
-    }
-    .stats-bar {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-bottom: 32px;
-    }
-    .stat-pill {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 16px 20px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-    .stat-pill-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: var(--radius-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      background: rgba(45, 212, 191, 0.12);
-      color: var(--accent-teal);
-    }
-    .stat-pill-val {
-      font-size: 20px;
-      font-weight: 800;
-      color: var(--text-main);
-    }
-    .stat-pill-lbl {
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-  </style>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Porskad Architectural Blueprints | سامانه فرم‌ساز پرس‌کاد</title>
+ <link rel="stylesheet" href="assets/style.css">
+ <style>
+ .search-filter-box {
+ background: var(--bg-surface);
+ border: 1px solid var(--border-subtle);
+ border-radius: var(--radius-lg);
+ padding: 20px 24px;
+ margin-bottom: 28px;
+ display: flex;
+ align-items: center;
+ gap: 16px;
+ flex-wrap: wrap;
+ }
+ .search-input {
+ flex: 1;
+ min-width: 260px;
+ background: var(--bg-surface-elevated);
+ border: 1px solid var(--border-subtle);
+ color: var(--text-main);
+ padding: 10px 16px;
+ border-radius: var(--radius-md);
+ font-family: inherit;
+ font-size: 14px;
+ outline: none;
+ transition: all 0.2s;
+ }
+ .search-input:focus {
+ border-color: var(--accent-teal);
+ box-shadow: 0 0 12px var(--accent-teal-glow);
+ }
+ .filter-tags {
+ display: flex;
+ gap: 8px;
+ flex-wrap: wrap;
+ }
+ .filter-btn {
+ background: var(--bg-surface-elevated);
+ border: 1px solid var(--border-subtle);
+ color: var(--text-muted);
+ padding: 6px 14px;
+ border-radius: 9999px;
+ font-size: 12px;
+ font-family: inherit;
+ cursor: pointer;
+ transition: all 0.2s;
+ }
+ .filter-btn:hover, .filter-btn.active {
+ background: rgba(45, 212, 191, 0.15);
+ border-color: var(--accent-teal);
+ color: var(--accent-teal);
+ }
+ .stats-bar {
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+ gap: 16px;
+ margin-bottom: 32px;
+ }
+ .stat-pill {
+ background: var(--bg-surface);
+ border: 1px solid var(--border-subtle);
+ border-radius: var(--radius-md);
+ padding: 16px 20px;
+ display: flex;
+ align-items: center;
+ gap: 14px;
+ }
+ .stat-pill-icon {
+ width: 42px;
+ height: 42px;
+ border-radius: var(--radius-sm);
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-size: 20px;
+ background: rgba(45, 212, 191, 0.12);
+ color: var(--accent-teal);
+ }
+ .stat-pill-val {
+ font-size: 20px;
+ font-weight: 800;
+ color: var(--text-main);
+ }
+ .stat-pill-lbl {
+ font-size: 12px;
+ color: var(--text-muted);
+ }
+ </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Top Nav -->
-    <header class="top-nav">
-      <div class="brand-section">
-        <div class="brand-logo-icon">P</div>
-        <div class="brand-info">
-          <h1>پرس‌کاد <span>Architectural Blueprints Hub</span></h1>
-          <span>مرکز مستندات، نقشه‌ها و دیاگرام‌های فنی سیستم</span>
-        </div>
-      </div>
-      <div class="nav-actions">
-        <span class="badge badge-teal">نسخه تولیدی v1.0</span>
-        <a href="architecture-diagram.html" class="btn btn-primary btn-sm">🚀 شروع بررسی دیاگرام‌ها</a>
-      </div>
-    </header>
+ <div class="container">
+ <!-- Top Nav -->
+ <header class="top-nav">
+ <div class="brand-section">
+ <div class="brand-logo-icon">P</div>
+ <div class="brand-info">
+ <h1>پرس‌کاد <span>Architectural Blueprints Hub</span></h1>
+ <span>مرکز مستندات، نقشه‌ها و دیاگرام‌های فنی سیستم</span>
+ </div>
+ </div>
+ <div class="nav-actions">
+ <span class="badge badge-teal">نسخه تولیدی v1.0</span>
+ <a href="architecture-diagram.html" class="btn btn-primary btn-sm">شروع بررسی دیاگرام‌ها</a>
+ </div>
+ </header>
 
-    <!-- Header Banner -->
-    <div class="page-header">
-      <div class="header-meta-row">
-        <span class="badge badge-teal">مستندات مهندسی نرم‌افزار</span>
-        <span class="badge badge-blue">۱۴ دیاگرام تخصصی و استاندارد</span>
-        <span class="badge badge-purple">طراحی سازمانی و آماده ارائه</span>
-      </div>
-      <h1 class="page-title">پرتال جامع دیاگرام‌های فنی و معماری پرس‌کاد (Porskad)</h1>
-      <p class="page-desc">
-        مجموعه کامل و مدون ۱۴ دیاگرام مهندسی نرم‌افزار برای سامانه فرم‌ساز آنلاین پرس‌کاد. طراحی‌شده بر اساس هویت بصری پرس‌کاد (پالت دارک لوکس، لهجه فیروزه‌ای و تایپوگرافی IRANSansX)، همراه با رندر تعاملی برداری Mermaid، کنترل‌های زوم و جابجایی (Pan & Zoom)، حالت تمام صفحه، خروجی باکیفیت SVG و تحلیل‌های فنی عمیق در هر صفحه.
-      </p>
-    </div>
+ <!-- Header Banner -->
+ <div class="page-header">
+ <div class="header-meta-row">
+ <span class="badge badge-teal">مستندات مهندسی نرم‌افزار</span>
+ <span class="badge badge-blue">۱۴ دیاگرام تخصصی و استاندارد</span>
+ <span class="badge badge-purple">طراحی سازمانی و آماده ارائه</span>
+ </div>
+ <h1 class="page-title">پرتال جامع دیاگرام‌های فنی و معماری پرس‌کاد (Porskad)</h1>
+ <p class="page-desc">
+ مجموعه کامل و مدون ۱۴ دیاگرام مهندسی نرم‌افزار برای سامانه فرم‌ساز آنلاین پرس‌کاد. طراحی‌شده بر اساس هویت بصری پرس‌کاد (پالت دارک لوکس، لهجه فیروزه‌ای و تایپوگرافی IRANSansX)، همراه با رندر تعاملی برداری Mermaid، کنترل‌های زوم و جابجایی (Pan & Zoom)، حالت تمام صفحه، خروجی باکیفیت SVG و تحلیل‌های فنی عمیق در هر صفحه.
+ </p>
+ </div>
 
-    <!-- Quick Stats -->
-    <div class="stats-bar">
-      <div class="stat-pill">
-        <div class="stat-pill-icon">📐</div>
-        <div>
-          <div class="stat-pill-val">۱۴ دیاگرام</div>
-          <div class="stat-pill-lbl">طراحی‌شده به صورت HTML مجزا</div>
-        </div>
-      </div>
-      <div class="stat-pill">
-        <div class="stat-pill-icon">🗄️</div>
-        <div>
-          <div class="stat-pill-val">۸۵ مایگریشن</div>
-          <div class="stat-pill-lbl">پوشش دیتابیس Supabase Postgres</div>
-        </div>
-      </div>
-      <div class="stat-pill">
-        <div class="stat-pill-icon">⚡</div>
-        <div>
-          <div class="stat-pill-val">React 18 + Vite</div>
-          <div class="stat-pill-lbl">معماری ماژولار و سبک فرانت‌اند</div>
-        </div>
-      </div>
-      <div class="stat-pill">
-        <div class="stat-pill-icon">🛡️</div>
-        <div>
-          <div class="stat-pill-val">RLS + Honeypot</div>
-          <div class="stat-pill-lbl">امنیت سطح سطر و ضد اسپم</div>
-        </div>
-      </div>
-    </div>
+ <!-- Quick Stats -->
+ <div class="stats-bar">
+ <div class="stat-pill">
+ <div class="stat-pill-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg></div>
+ <div>
+ <div class="stat-pill-val">۱۴ دیاگرام</div>
+ <div class="stat-pill-lbl">طراحی‌شده به صورت HTML مجزا</div>
+ </div>
+ </div>
+ <div class="stat-pill">
+ <div class="stat-pill-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
+ <div>
+ <div class="stat-pill-val">۸۵ مایگریشن</div>
+ <div class="stat-pill-lbl">پوشش دیتابیس Supabase Postgres</div>
+ </div>
+ </div>
+ <div class="stat-pill">
+ <div class="stat-pill-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+ <div>
+ <div class="stat-pill-val">React 18 + Vite</div>
+ <div class="stat-pill-lbl">معماری ماژولار و سبک فرانت‌اند</div>
+ </div>
+ </div>
+ <div class="stat-pill">
+ <div class="stat-pill-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+ <div>
+ <div class="stat-pill-val">RLS + Honeypot</div>
+ <div class="stat-pill-lbl">امنیت سطح سطر و ضد اسپم</div>
+ </div>
+ </div>
+ </div>
 
-    <!-- Filter & Search -->
-    <div class="search-filter-box">
-      <input type="text" id="diagramSearch" class="search-input" placeholder="🔍 جستجو در نام، کلیدواژه‌ها یا توضیحات دیاگرام‌ها...">
-      <div class="filter-tags">
-        <button class="filter-btn active" data-filter="all">همه (۱۴)</button>
-        <button class="filter-btn" data-filter="architecture">معماری و ساختار</button>
-        <button class="filter-btn" data-filter="data">داده‌ها و دیتابیس</button>
-        <button class="filter-btn" data-filter="process">فرآیندها و رفتار</button>
-        <button class="filter-btn" data-filter="frontend">فرانت‌اند و کامپوننت‌ها</button>
-      </div>
-    </div>
+ <!-- Filter & Search -->
+ <div class="search-filter-box">
+ <input type="text" id="diagramSearch" class="search-input" placeholder="جستجو در نام، کلیدواژه‌ها یا توضیحات دیاگرام‌ها...">
+ <div class="filter-tags">
+ <button class="filter-btn active" data-filter="all">همه (۱۴)</button>
+ <button class="filter-btn" data-filter="architecture">معماری و ساختار</button>
+ <button class="filter-btn" data-filter="data">داده‌ها و دیتابیس</button>
+ <button class="filter-btn" data-filter="process">فرآیندها و رفتار</button>
+ <button class="filter-btn" data-filter="frontend">فرانت‌اند و کامپوننت‌ها</button>
+ </div>
+ </div>
 
-    <!-- Grid of 14 Diagrams -->
-    <div class="hub-grid" id="diagramGrid">
+ <!-- Grid of 14 Diagrams -->
+ <div class="hub-grid" id="diagramGrid">
 
-      <!-- 1. Architecture Diagram -->
-      <a href="architecture-diagram.html" class="hub-card" data-category="architecture" data-keywords="architecture multi tier client edge baas supabase postgres vercel cdn">
-        <div>
-          <div class="hub-card-top">
-            <div class="hub-card-icon">🏛️</div>
-            <span class="hub-card-num">#01</span>
-          </div>
-          <h2 class="hub-card-title">Architecture Diagram</h2>
-          <p class="hub-card-desc">
-            معماری کلان لایه‌ای: تفکیک لایه کلاینت SPA، لبه توزیع محتوای Vercel، پلتفرم بک‌اند Supabase، هسته دیتابیس PostgreSQL و درگاه‌های اکسترنال پیامک، تلگرام و زرین‌پال.
-          </p>
-        </div>
-        <div class="hub-card-footer">
-          <span class="badge badge-teal">معماری کلان</span>
-          <span class="hub-card-cta">مشاهده دیاگرام ←</span>
-        </div>
-      </a>
+ <!-- 1. Architecture Diagram -->
+ <a href="architecture-diagram.html" class="hub-card" data-category="architecture" data-keywords="architecture multi tier client edge baas supabase postgres vercel cdn">
+ <div>
+ <div class="hub-card-top">
+ <div class="hub-card-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+ <span class="hub-card-num">#01</span>
+ </div>
+ <h2 class="hub-card-title">Architecture Diagram</h2>
+ <p class="hub-card-desc">
+ معماری کلان لایه‌ای: تفکیک لایه کلاینت SPA، لبه توزیع محتوای Vercel، پلتفرم بک‌اند Supabase، هسته دیتابیس PostgreSQL و درگاه‌های اکسترنال پیامک، تلگرام و زرین‌پال.
+ </p>
+ </div>
+ <div class="hub-card-footer">
+ <span class="badge badge-teal">معماری کلان</span>
+ <span class="hub-card-cta">مشاهده دیاگرام ←</span>
+ </div>
+ </a>
 
-      <!-- 2. System Architecture Diagram -->
-      <a href="system-architecture-diagram.html" class="hub-card" data-category="architecture" data-keywords="system architecture runtime client state rpc gotrue postgrest rls cdc">
-        <div>
-          <div class="hub-card-top">
-            <div class="hub-card-icon">⚙️</div>
-            <span class="hub-card-num">#02</span>
-          </div>
-          <h2 class="hub-card-title">System Architecture Diagram</h2>
-          <p class="hub-card-desc">
-            معماری سامانه‌ای ران‌تایم: وضعیت کلاینت، کش موضعی LocalStorage، اعتبارسنجی سشن JWT، ارتباطات RPC اتمیک، گیت‌وی PostgREST و تریگرهای CDC.
-          </p>
-        </div>
-        <div class="hub-card-footer">
-          <span class="badge badge-blue">ران‌تایم و کانتینرها</span>
-          <span class="hub-card-cta">مشاهده دیاگرام ←</span>
-        </div>
-      </a>
+ <!-- 2. System Architecture Diagram -->
+ <a href="system-architecture-diagram.html" class="hub-card" data-category="architecture" data-keywords="system architecture runtime client state rpc gotrue postgrest rls cdc">
+ <div>
+ <div class="hub-card-top">
+ <div class="hub-card-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></div>
+ <span class="hub-card-num">#02</span>
+ </div>
+ <h2 class="hub-card-title">System Architecture Diagram</h2>
+ <p class="hub-card-desc">
+ معماری سامانه‌ای ران‌تایم: وضعیت کلاینت، کش موضعی LocalStorage، اعتبارسنجی سشن JWT، ارتباطات RPC اتمیک، گیت‌وی PostgREST و تریگرهای CDC.
+ </p>
+ </div>
+ <div class="hub-card-footer">
+ <span class="badge badge-blue">ران‌تایم و کانتینرها</span>
+ <span class="hub-card-cta">مشاهده دیاگرام ←</span>
+ </div>
+ </a>
 
-      <!-- 3. System Diagram -->
-      <a href="system-diagram.html" class="hub-card" data-category="architecture" data-keywords="system diagram context boundary actors protocols respondent creator superadmin embed">
-        <div>
-          <div class="hub-card-top">
-            <div class="hub-card-icon">🌐</div>
-            <span class="hub-card-num">#03</span>
-          </div>
-          <h2 class="hub-card-title">System Diagram</h2>
-          <p class="hub-card-desc">
-            سیاق و مرزهای سامانه (System Boundary): بازیگران انسانی (پاسخ‌دهنده، طراح فرم، سوپرادمین، بازدیدکننده امبد)، پروتکل‌های ارتباطی HTTPS/WSS و مرزهای امنیتی.
-          </p>
-        </div>
-        <div class="hub-card-footer">
-          <span class="badge badge-teal">مرزهای سیستم</span>
-          <span class="hub-card-cta">مشاهده دیاگرام ←</span>
-        </div>
-      </a>
+ <!-- 3. System Diagram -->
+ <a href="system-diagram.html" class="hub-card" data-category="architecture" data-keywords="system diagram context boundary actors protocols respondent creator superadmin embed">
+ <div>
+ <div class="hub-card-top">
+ <div class="hub-card-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+ <span class="hub-card-num">#03</span>
+ </div>
+ <h2 class="hub-card-title">System Diagram</h2>
+ <p class="hub-card-desc">
+ سیاق و مرزهای سامانه (System Boundary): بازیگران انسانی (پاسخ‌دهنده، طراح فرم، سوپرادمین، بازدیدکننده امبد)، پروتکل‌های ارتباطی HTTPS/WSS و مرزهای امنیتی.
+ </p>
+ </div>
+ <div class="hub-card-footer">
+ <span class="badge badge-teal">مرزهای سیستم</span>
+ <span class="hub-card-cta">مشاهده دیاگرام ←</span>
+ </div>
+ </a>
 
-      <!-- 4. Project Structure Diagram -->
-      <a href="project-structure-diagram.html" class="hub-card" data-category="architecture" data-keywords="project structure directory modules src components migrations config vite">
-        <div>
-          <div class="hub-card-top">
-            <div class="hub-card-icon">📁</div>
-            <span class="hub-card-num">#04</span>
-          </div>
-          <h2 class="hub-card-title">Project Structure Diagram</h2>
-          <p class="hub-card-desc">
-            ساختار درختی دایرکتوری‌ها و ماژول‌ها: پوشه سورس src، تفکیک صفحات ادمین و عمومی، کامپوننت‌های فرم‌ساز، کتابخانه‌ها، دسته‌بندی ۸۵ مایگریشن و فایل‌های کانفیگ.
-          </p>
-        </div>
-        <div class="hub-card-footer">
-          <span class="badge badge-purple">کدبیس و مخزن</span>
-          <span class="hub-card-cta">مشاهده دیاگرام ←</span>
-        </div>
-      </a>
+ <!-- 4. Project Structure Diagram -->
+ <a href="project-structure-diagram.html" class="hub-card" data-category="architecture" data-keywords="project structure directory modules src components migrations config vite">
+ <div>
+ <div class="hub-card-top">
+ <div class="hub-card-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+ <span class="hub-card-num">#04</span>
+ </div>
+ <h2 class="hub-card-title">Project Structure Diagram</h2>
+ <p class="hub-card-desc">
+ ساختار درختی دایرکتوری‌ها و ماژول‌ها: پوشه سورس src، تفکیک صفحات ادمین و عمومی، کامپوننت‌های فرم‌ساز، کتابخانه‌ها، دسته‌بندی ۸۵ مایگریشن و فایل‌های کانفیگ.
+ </p>
+ </div>
+ <div class="hub-card-footer">
+ <span class="badge badge-purple">کدبیس و مخزن</span>
+ <span class="hub-card-cta">مشاهده دیاگرام ←</span>
+ </div>
+ </a>
 
-      <!-- 5. Flowchart -->
-      <a href="flowchart.html" class="hub-card" data-category="process" data-keywords="flowchart process workflow form submission honeypot logic rules draft recovery">
-        <div>
-          <div class="hub-card-top">
-            <div class="hub-card-icon">🔄</div>
-            <span class="hub-card-num">#05</span>
-          </div>
-          <h2 class="hub-card-title">Flowchart</h2>
-          <p class="hub-card-desc">
-            فلوچارت فرآیندها و تصمیم‌گیری: گام‌های پاسخ‌دهی به فرم، بازنشانی پیش‌نویس، بررسی تله ربات Honeypot، ارزیابی شروط و پرش‌ها، ثبت تراکنشی RPC و صفحه خروج.
-          </p>
-        </div>
-        <div class="hub-card-footer">
-          <span class="badge badge-emerald">جریان تصمیم‌گیری</span>
-          <span class="hub-card-cta">مشاهده دیاگرام ←</span>
-        </div>
-      </a>
+ <!-- 5. Flowchart -->
+ <a href="flowchart.html" class="hub-card" data-category="process" data-keywords="flowchart process workflow form submission honeypot logic rules draft recovery">
+ <div>
+ <div class="hub-card-top">
+ <div class="hub-card-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/><path d="M6 9v3a3 3 0 0 0 3 3h6"/><path d="M18 12v3"/></svg></div>
+ <span class="hub-card-num">#05</span>
+ </div>
+ <h2 class="hub-card-title">Flowchart</h2>
+ <p class="hub-card-desc">
+ فلوچارت فرآیندها و تصمیم‌گیری: گام‌های پاسخ‌دهی به فرم، بازنشانی پیش‌نویس، بررسی تله ربات Honeypot، ارزیابی شروط و پرش‌ها، ثبت تراکنشی RPC و صفحه خروج.
+ </p>
+ </div>
+ <div class="hub-card-footer">
+ <span class="badge badge-emerald">جریان تصمیم‌گیری</span>
+ <span class="hub-card-cta">مشاهده دیاگرام ←</span>
+ </div>
+ </a>
 
-      <!-- 6. Mind Map -->
-      <a href="mind-map.html" class="hub-card" data-category="architecture" data-keywords="mind map taxonomy features form engine admin analytics security rls saas">
-        <div>
-          <div class="hub-card-top">
-            <div class="hub-card-icon">🧠</div>
-            <span class="hub-card-num">#06</span>
-          </div>
-          <h2 class="hub-card-title">Mind Map</h2>
-          <p class="hub-card-desc">
-            نقشه ذهنی پلتفرم: دسته‌بندی امکانات موتور فرم‌ساز، ماژول‌های تحلیل داده و اکسپورت اکسل فارسی، امنیت و احراز هویت، سطل بازیافت ۳۰ روزه و یکپارچه‌سازی‌ها.
-          </p>
-        </div>
-        <div class="hub-card-footer">
-          <span class="badge badge-blue">درخت فیچرها</span>
-          <span class="hub-card-cta">مشاهده دیاگرام ←</span>
-        </div>
-      </a>
+ <!-- 6. Mind Map -->
+ <a href="mind-map.html" class="hub-card" data-category="architecture" data-keywords="mind map taxonomy features form engine admin analytics security rls saas">
+ <div>
+ <div class="hub-card-top">
+ <div class="hub-card-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><line x1="12" y1="8" x2="5" y2="16"/><line x1="12" y1="8" x2="19" y2="16"/></svg></div>
+ <span class="hub-card-num">#06</span>
+ </div>
+ <h2 class="hub-card-title">Mind Map</h2>
+ <p class="hub-card-desc">
+ نقشه ذهنی پلتفرم: دسته‌بندی امکانات موتور فرم‌ساز، ماژول‌های تحلیل داده و اکسپورت اکسل فارسی، امنیت و احراز هویت، سطل بازیافت ۳۰ روزه و یکپارچه‌سازی‌ها.
+ </p>
+ </div>
+ <div class="hub-card-footer">
+ <span class="badge badge-blue">درخت فیچرها</span>
+ <span class="hub-card-cta">مشاهده دیاگرام ←</span>
+ </div>
+ </a>
 
-      <!-- 7. Site Map -->
-      <a href="site-map.html" class="hub-card" data-category="frontend" data-keywords="site map routes navigation react router admin builder responses embed docs">
-        <div>
-          <div class="hub-card-top">
-            <div class="hub-card-icon">🗺️</div>
-            <span class="hub-card-num">#07</span>
-          </div>
-          <h2 class="hub-card-title">Site Map</h2>
-          <p class="hub-card-desc">
-            نقشه کامل صفحات و مسیرهای URL: تفکیک روت‌های عمومی (/f/:slug, /embed/:slug)، صفحات احراز هویت و مسیرهای محافظت‌شده پنل ادمین (/admin/*).
-          </p>
-        </div>
-        <div class="hub-card-footer">
-          <span class="badge badge-purple">مسیرها و دسترسی</span>
-          <span class="hub-card-cta">مشاهده دیاگرام ←</span>
-        </div>
-      </a>
+ <!-- 7. Site Map -->
+ <a href="site-map.html" class="hub-card" data-category="frontend" data-keywords="site map routes navigation react router admin builder responses embed docs">
+ <div>
+ <div class="hub-card-top">
+ <div class="hub-card-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="4" rx="1"/><rect x="3" y="17" width="6" height="4" rx="1"/><rect x="15" y="17" width="6" height="4" rx="1"/><path d="M12 7v5m0 0H6v5m6-5h6v5"/></svg></div>
+ <span class="hub-card-num">#07</span>
+ </div>
+ <h2 class="hub-card-title">Site Map</h2>
+ <p class="hub-card-desc">
+ نقشه کامل صفحات و مسیرهای URL: تفکیک روت‌های عمومی (/f/:slug, /embed/:slug)، صفحات احراز هویت و مسیرهای محافظت‌شده پنل ادمین (/admin/*).
+ </p>
+ </div>
+ <div class="hub-card-footer">
+ <span class="badge badge-purple">مسیرها و دسترسی</span>
+ <span class="hub-card-cta">مشاهده دیاگرام ←</span>
+ </div>
+ </a>
 
-      <!-- 8. UML Diagram -->
-      <a href="uml-diagram.html" class="hub-card" data-category="data" data-keywords="uml class diagram domain model oop methods composition aggregation">
-        <div>
-          <div class="hub-card-top">
-            <div class="hub-card-icon">📐</div>
-            <span class="hub-card-num">#08</span>
-          </div>
-          <h2 class="hub-card-title">UML Diagram</h2>
-          <p class="hub-card-desc">
-            دیاگرام کلاس شی‌گرا UML: ساختار کلاس‌های دامنه (Form, Question, LogicRule, Response, Answer, UserProfile, TrashItem)، خصوصیات، متدها و روابط ترکیب و ارث‌بری.
-          </p>
-        </div>
-        <div class="hub-card-footer">
-          <span class="badge badge-teal">کلاس و شیءگرایی</span>
-          <span class="hub-card-cta">مشاهده دیاگرام ←</span>
-        </div>
-      </a>
+ <!-- 8. UML Diagram -->
+ <a href="uml-diagram.html" class="hub-card" data-category="data" data-keywords="uml class diagram domain model oop methods composition aggregation">
+ <div>
+ <div class="hub-card-top">
+ <div class="hub-card-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg></div>
+ <span class="hub-card-num">#08</span>
+ </div>
+ <h2 class="hub-card-title">UML Diagram</h2>
+ <p class="hub-card-desc">
+ دیاگرام کلاس شی‌گرا UML: ساختار کلاس‌های دامنه (Form, Question, LogicRule, Response, Answer, UserProfile, TrashItem)، خصوصیات، متدها و روابط ترکیب و ارث‌بری.
+ </p>
+ </div>
+ <div class="hub-card-footer">
+ <span class="badge badge-teal">کلاس و شیءگرایی</span>
+ <span class="hub-card-cta">مشاهده دیاگرام ←</span>
+ </div>
+ </a>
 
-      <!-- 9. ER Diagram -->
-      <a href="er-diagram.html" class="hub-card" data-category="data" data-keywords="er diagram logical entity relationship cardinality 1 to n jsonb hybrid">
-        <div>
-          <div class="hub-card-top">
-            <div class="hub-card-icon">📊</div>
-            <span class="hub-card-num">#09</span>
-          </div>
-          <h2 class="hub-card-title">ER Diagram</h2>
-          <p class="hub-card-desc">
-            مدل رابطه-موجودی مفهومی و منطقی: روابط کاردینالیتی (1:N)، انزوای چندمستاجری، ارتباطات پاسخ‌ها و سوالات، نرمال‌سازی و ستون‌های هیبریدی JSONB.
-          </p>
-        </div>
-        <div class="hub-card-footer">
-          <span class="badge badge-blue">مفهومی و منطقی</span>
-          <span class="hub-card-cta">مشاهده دیاگرام ←</span>
-        </div>
-      </a>
+ <!-- 9. ER Diagram -->
+ <a href="er-diagram.html" class="hub-card" data-category="data" data-keywords="er diagram logical entity relationship cardinality 1 to n jsonb hybrid">
+ <div>
+ <div class="hub-card-top">
+ <div class="hub-card-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
+ <span class="hub-card-num">#09</span>
+ </div>
+ <h2 class="hub-card-title">ER Diagram</h2>
+ <p class="hub-card-desc">
+ مدل رابطه-موجودی مفهومی و منطقی: روابط کاردینالیتی (1:N)، انزوای چندمستاجری، ارتباطات پاسخ‌ها و سوالات، نرمال‌سازی و ستون‌های هیبریدی JSONB.
+ </p>
+ </div>
+ <div class="hub-card-footer">
+ <span class="badge badge-blue">مفهومی و منطقی</span>
+ <span class="hub-card-cta">مشاهده دیاگرام ←</span>
+ </div>
+ </a>
 
-      <!-- 10. Component Diagram -->
-      <a href="component-diagram.html" class="hub-card" data-category="frontend" data-keywords="component diagram react hierarchy renderers ui atoms hooks layout">
-        <div>
-          <div class="hub-card-top">
-            <div class="hub-card-icon">⚛️</div>
-            <span class="hub-card-num">#10</span>
-          </div>
-          <h2 class="hub-card-title">Component Diagram</h2>
-          <p class="hub-card-desc">
-            سلسله‌مراتب کامپوننت‌های ری‌اکت: ساختار درختی App، لایوت‌ها، رندرکننده‌های اختصاصی ۸ نوع سوال، کامپوننت‌های فرم‌ساز و اتم‌های اشتراکی دیزاین سیستم رکاد.
-          </p>
-        </div>
-        <div class="hub-card-footer">
-          <span class="badge badge-purple">کامپوننت‌های UI</span>
-          <span class="hub-card-cta">مشاهده دیاگرام ←</span>
-        </div>
-      </a>
+ <!-- 10. Component Diagram -->
+ <a href="component-diagram.html" class="hub-card" data-category="frontend" data-keywords="component diagram react hierarchy renderers ui atoms hooks layout">
+ <div>
+ <div class="hub-card-top">
+ <div class="hub-card-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+ <span class="hub-card-num">#10</span>
+ </div>
+ <h2 class="hub-card-title">Component Diagram</h2>
+ <p class="hub-card-desc">
+ سلسله‌مراتب کامپوننت‌های ری‌اکت: ساختار درختی App، لایوت‌ها، رندرکننده‌های اختصاصی ۸ نوع سوال، کامپوننت‌های فرم‌ساز و اتم‌های اشتراکی دیزاین سیستم رکاد.
+ </p>
+ </div>
+ <div class="hub-card-footer">
+ <span class="badge badge-purple">کامپوننت‌های UI</span>
+ <span class="hub-card-cta">مشاهده دیاگرام ←</span>
+ </div>
+ </a>
 
-      <!-- 11. Data Flow Diagram (DFD) -->
-      <a href="data-flow-diagram.html" class="hub-card" data-category="process" data-keywords="dfd data flow diagram level 1 processes data stores entities ingestion">
-        <div>
-          <div class="hub-card-top">
-            <div class="hub-card-icon">🌊</div>
-            <span class="hub-card-num">#11</span>
-          </div>
-          <h2 class="hub-card-title">Data Flow Diagram (DFD)</h2>
-          <p class="hub-card-desc">
-            جریان داده‌های سطوح ۱ و ۲: ورودی‌های بیرونی، فرآیندهای پردازشی (پیکربندی، رندر، پالایش اسپم، ثبت اتمیک، ریل‌تایم) و مخازن داده‌های پایدار (Data Stores D1-D6).
-          </p>
-        </div>
-        <div class="hub-card-footer">
-          <span class="badge badge-emerald">جریان داده‌ها</span>
-          <span class="hub-card-cta">مشاهده دیاگرام ←</span>
-        </div>
-      </a>
+ <!-- 11. Data Flow Diagram (DFD) -->
+ <a href="data-flow-diagram.html" class="hub-card" data-category="process" data-keywords="dfd data flow diagram level 1 processes data stores entities ingestion">
+ <div>
+ <div class="hub-card-top">
+ <div class="hub-card-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M2 12h20"/><path d="M17 7l5 5-5 5"/><path d="M7 7l-5 5 5 5"/></svg></div>
+ <span class="hub-card-num">#11</span>
+ </div>
+ <h2 class="hub-card-title">Data Flow Diagram (DFD)</h2>
+ <p class="hub-card-desc">
+ جریان داده‌های سطوح ۱ و ۲: ورودی‌های بیرونی، فرآیندهای پردازشی (پیکربندی، رندر، پالایش اسپم، ثبت اتمیک، ریل‌تایم) و مخازن داده‌های پایدار (Data Stores D1-D6).
+ </p>
+ </div>
+ <div class="hub-card-footer">
+ <span class="badge badge-emerald">جریان داده‌ها</span>
+ <span class="hub-card-cta">مشاهده دیاگرام ←</span>
+ </div>
+ </a>
 
-      <!-- 12. Sequence Diagram -->
-      <a href="sequence-diagram.html" class="hub-card" data-category="process" data-keywords="sequence diagram timeline lifecycles rpc realtime submit websocket">
-        <div>
-          <div class="hub-card-top">
-            <div class="hub-card-icon">⏱️</div>
-            <span class="hub-card-num">#12</span>
-          </div>
-          <h2 class="hub-card-title">Sequence Diagram</h2>
-          <p class="hub-card-desc">
-            توالی زمانی تعاملات: جریان گام‌به‌گام ارسال فرم توسط کاربر، بررسی هانی‌پات، اجرای تابع اتمیک submit_public_response در دیتابیس و ارسال پیام ریل‌تایم وب‌سوکت به ادمین.
-          </p>
-        </div>
-        <div class="hub-card-footer">
-          <span class="badge badge-teal">توالی و زمان‌بندی</span>
-          <span class="hub-card-cta">مشاهده دیاگرام ←</span>
-        </div>
-      </a>
+ <!-- 12. Sequence Diagram -->
+ <a href="sequence-diagram.html" class="hub-card" data-category="process" data-keywords="sequence diagram timeline lifecycles rpc realtime submit websocket">
+ <div>
+ <div class="hub-card-top">
+ <div class="hub-card-icon">⏱</div>
+ <span class="hub-card-num">#12</span>
+ </div>
+ <h2 class="hub-card-title">Sequence Diagram</h2>
+ <p class="hub-card-desc">
+ توالی زمانی تعاملات: جریان گام‌به‌گام ارسال فرم توسط کاربر، بررسی هانی‌پات، اجرای تابع اتمیک submit_public_response در دیتابیس و ارسال پیام ریل‌تایم وب‌سوکت به ادمین.
+ </p>
+ </div>
+ <div class="hub-card-footer">
+ <span class="badge badge-teal">توالی و زمان‌بندی</span>
+ <span class="hub-card-cta">مشاهده دیاگرام ←</span>
+ </div>
+ </a>
 
-      <!-- 13. Use Case Diagram -->
-      <a href="use-case-diagram.html" class="hub-card" data-category="process" data-keywords="use case diagram actors respondent form owner superadmin cron purge">
-        <div>
-          <div class="hub-card-top">
-            <div class="hub-card-icon">🎯</div>
-            <span class="hub-card-num">#13</span>
-          </div>
-          <h2 class="hub-card-title">Use Case Diagram</h2>
-          <p class="hub-card-desc">
-            موارد کاربرد بازیگران: ماتریس ارتباطات و نقش‌ها برای پاسخ‌دهنده ناشناس، طراح فرم، سوپرادمین و سرویس پاکسازی خودکار پس‌زمینه (Purge Daemon).
-          </p>
-        </div>
-        <div class="hub-card-footer">
-          <span class="badge badge-blue">ماتریس کارکردی</span>
-          <span class="hub-card-cta">مشاهده دیاگرام ←</span>
-        </div>
-      </a>
+ <!-- 13. Use Case Diagram -->
+ <a href="use-case-diagram.html" class="hub-card" data-category="process" data-keywords="use case diagram actors respondent form owner superadmin cron purge">
+ <div>
+ <div class="hub-card-top">
+ <div class="hub-card-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+ <span class="hub-card-num">#13</span>
+ </div>
+ <h2 class="hub-card-title">Use Case Diagram</h2>
+ <p class="hub-card-desc">
+ موارد کاربرد بازیگران: ماتریس ارتباطات و نقش‌ها برای پاسخ‌دهنده ناشناس، طراح فرم، سوپرادمین و سرویس پاکسازی خودکار پس‌زمینه (Purge Daemon).
+ </p>
+ </div>
+ <div class="hub-card-footer">
+ <span class="badge badge-blue">ماتریس کارکردی</span>
+ <span class="hub-card-cta">مشاهده دیاگرام ←</span>
+ </div>
+ </a>
 
-      <!-- 14. Entity Relationship Diagram (ERD) -->
-      <a href="entity-relationship-diagram.html" class="hub-card" data-category="data" data-keywords="erd entity relationship diagram physical schema postgresql tables indexes cascade">
-        <div>
-          <div class="hub-card-top">
-            <div class="hub-card-icon">🗄️</div>
-            <span class="hub-card-num">#14</span>
-          </div>
-          <h2 class="hub-card-title">Entity Relationship Diagram (ERD)</h2>
-          <p class="hub-card-desc">
-            طرح فیزیکی کامل پایگاه داده PostgreSQL: کلیه جداول، انواع فیلدها، کلیدهای اصلی PK، کلیدهای خارجی FK، ایندکس‌های بهینه‌ساز، قوانین Cascade و تریگرها.
-          </p>
-        </div>
-        <div class="hub-card-footer">
-          <span class="badge badge-purple">طرح فیزیکی دیتابیس</span>
-          <span class="hub-card-cta">مشاهده دیاگرام ←</span>
-        </div>
-      </a>
+ <!-- 14. Entity Relationship Diagram (ERD) -->
+ <a href="entity-relationship-diagram.html" class="hub-card" data-category="data" data-keywords="erd entity relationship diagram physical schema postgresql tables indexes cascade">
+ <div>
+ <div class="hub-card-top">
+ <div class="hub-card-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+ <span class="hub-card-num">#14</span>
+ </div>
+ <h2 class="hub-card-title">Entity Relationship Diagram (ERD)</h2>
+ <p class="hub-card-desc">
+ طرح فیزیکی کامل پایگاه داده PostgreSQL: کلیه جداول، انواع فیلدها، کلیدهای اصلی PK، کلیدهای خارجی FK، ایندکس‌های بهینه‌ساز، قوانین Cascade و تریگرها.
+ </p>
+ </div>
+ <div class="hub-card-footer">
+ <span class="badge badge-purple">طرح فیزیکی دیتابیس</span>
+ <span class="hub-card-cta">مشاهده دیاگرام ←</span>
+ </div>
+ </a>
 
-    </div>
+ </div>
 
-    <!-- Footer -->
-    <footer class="page-footer">
-      <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
-    </footer>
-  </div>
+ <!-- Footer -->
+ <footer class="page-footer">
+ <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
+ </footer>
+ </div>
 
-  <script>
-    // Search & Filter functionality
-    const searchInput = document.getElementById('diagramSearch');
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    const cards = document.querySelectorAll('.hub-card');
+ <script>
+ // Search & Filter functionality
+ const searchInput = document.getElementById('diagramSearch');
+ const filterButtons = document.querySelectorAll('.filter-btn');
+ const cards = document.querySelectorAll('.hub-card');
 
-    function applyFilters() {
-      const query = searchInput.value.trim().toLowerCase();
-      const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+ function applyFilters() {
+ const query = searchInput.value.trim().toLowerCase();
+ const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
 
-      cards.forEach(card => {
-        const title = card.querySelector('.hub-card-title').textContent.toLowerCase();
-        const desc = card.querySelector('.hub-card-desc').textContent.toLowerCase();
-        const keywords = card.dataset.keywords || '';
-        const category = card.dataset.category || '';
+ cards.forEach(card => {
+ const title = card.querySelector('.hub-card-title').textContent.toLowerCase();
+ const desc = card.querySelector('.hub-card-desc').textContent.toLowerCase();
+ const keywords = card.dataset.keywords || '';
+ const category = card.dataset.category || '';
 
-        const matchesQuery = !query || title.includes(query) || desc.includes(query) || keywords.includes(query);
-        const matchesCategory = activeFilter === 'all' || category === activeFilter;
+ const matchesQuery = !query || title.includes(query) || desc.includes(query) || keywords.includes(query);
+ const matchesCategory = activeFilter === 'all' || category === activeFilter;
 
-        if (matchesQuery && matchesCategory) {
-          card.style.display = 'flex';
-        } else {
-          card.style.display = 'none';
-        }
-      });
-    }
+ if (matchesQuery && matchesCategory) {
+ card.style.display = 'flex';
+ } else {
+ card.style.display = 'none';
+ }
+ });
+ }
 
-    searchInput.addEventListener('input', applyFilters);
+ searchInput.addEventListener('input', applyFilters);
 
-    filterButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        filterButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        applyFilters();
-      });
-    });
-  </script>
+ filterButtons.forEach(btn => {
+ btn.addEventListener('click', () => {
+ filterButtons.forEach(b => b.classList.remove('active'));
+ btn.classList.add('active');
+ applyFilters();
+ });
+ });
+ </script>
 </body>
 </html>

@@ -1,302 +1,302 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UML Diagram | سامانه فرم‌ساز پرس‌کاد (Porskad)</title>
-  <link rel="stylesheet" href="assets/style.css">
-  <script src="assets/mermaid.min.js"></script>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>UML Diagram | سامانه فرم‌ساز پرس‌کاد (Porskad)</title>
+ <link rel="stylesheet" href="assets/style.css">
+ <script src="assets/mermaid.min.js"></script>
 </head>
 <body>
-  <div class="container">
-    <header class="top-nav">
-      <a href="index.html" class="brand-section">
-        <div class="brand-logo-icon">P</div>
-        <div class="brand-info">
-          <h1>پرس‌کاد <span>Porskad Blueprints</span></h1>
-          <span>پلتفرم سازمانی ساخت فرم و پرسشنامه</span>
-        </div>
-      </a>
-      <div class="nav-actions">
-        <select class="nav-select" id="diagramNavSelect">
-          <option value="architecture-diagram.html">۱. Architecture Diagram</option>
-          <option value="system-architecture-diagram.html">۲. System Architecture Diagram</option>
-          <option value="system-diagram.html">۳. System Diagram</option>
-          <option value="project-structure-diagram.html">۴. Project Structure Diagram</option>
-          <option value="flowchart.html">۵. Flowchart</option>
-          <option value="mind-map.html">۶. Mind Map</option>
-          <option value="site-map.html">۷. Site Map</option>
-          <option value="uml-diagram.html" selected>۸. UML Diagram</option>
-          <option value="er-diagram.html">۹. ER Diagram</option>
-          <option value="component-diagram.html">۱۰. Component Diagram</option>
-          <option value="data-flow-diagram.html">۱۱. Data Flow Diagram (DFD)</option>
-          <option value="sequence-diagram.html">۱۲. Sequence Diagram</option>
-          <option value="use-case-diagram.html">۱۳. Use Case Diagram</option>
-          <option value="entity-relationship-diagram.html">۱۴. Entity Relationship Diagram (ERD)</option>
-        </select>
-        <a href="index.html" class="btn btn-secondary btn-sm">🏠 خانه دیاگرام‌ها</a>
-      </div>
-    </header>
+ <div class="container">
+ <header class="top-nav">
+ <a href="index.html" class="brand-section">
+ <div class="brand-logo-icon">P</div>
+ <div class="brand-info">
+ <h1>پرس‌کاد <span>Porskad Blueprints</span></h1>
+ <span>پلتفرم سازمانی ساخت فرم و پرسشنامه</span>
+ </div>
+ </a>
+ <div class="nav-actions">
+ <select class="nav-select" id="diagramNavSelect">
+ <option value="architecture-diagram.html">۱. Architecture Diagram</option>
+ <option value="system-architecture-diagram.html">۲. System Architecture Diagram</option>
+ <option value="system-diagram.html">۳. System Diagram</option>
+ <option value="project-structure-diagram.html">۴. Project Structure Diagram</option>
+ <option value="flowchart.html">۵. Flowchart</option>
+ <option value="mind-map.html">۶. Mind Map</option>
+ <option value="site-map.html">۷. Site Map</option>
+ <option value="uml-diagram.html" selected>۸. UML Diagram</option>
+ <option value="er-diagram.html">۹. ER Diagram</option>
+ <option value="component-diagram.html">۱۰. Component Diagram</option>
+ <option value="data-flow-diagram.html">۱۱. Data Flow Diagram (DFD)</option>
+ <option value="sequence-diagram.html">۱۲. Sequence Diagram</option>
+ <option value="use-case-diagram.html">۱۳. Use Case Diagram</option>
+ <option value="entity-relationship-diagram.html">۱۴. Entity Relationship Diagram (ERD)</option>
+ </select>
+ <a href="index.html" class="btn btn-secondary btn-sm">خانه دیاگرام‌ها</a>
+ </div>
+ </header>
 
-    <div class="page-header">
-      <div class="header-meta-row">
-        <span class="badge badge-teal">طراحی شی‌گرایی سامانه</span>
-        <span class="badge badge-blue">UML Class & Domain Model</span>
-        <span class="badge badge-purple">Entities, Properties & Methods</span>
-      </div>
-      <h1 class="page-title">UML Diagram (دیاگرام کلاس و مدل دامنه UML)</h1>
-      <p class="page-desc">
-        نمودار کلاس UML معرف ساختار شی‌گرا، موجودیت‌های دامنه، روابط ترکیب (Composition)، تجمیع (Aggregation)، فیلدها، نوع داده‌ها و متدهای اجرایی سامانه پرس‌کاد.
-      </p>
-    </div>
+ <div class="page-header">
+ <div class="header-meta-row">
+ <span class="badge badge-teal">طراحی شی‌گرایی سامانه</span>
+ <span class="badge badge-blue">UML Class & Domain Model</span>
+ <span class="badge badge-purple">Entities, Properties & Methods</span>
+ </div>
+ <h1 class="page-title">UML Diagram (دیاگرام کلاس و مدل دامنه UML)</h1>
+ <p class="page-desc">
+ نمودار کلاس UML معرف ساختار شی‌گرا، موجودیت‌های دامنه، روابط ترکیب (Composition)، تجمیع (Aggregation)، فیلدها، نوع داده‌ها و متدهای اجرایی سامانه پرس‌کاد.
+ </p>
+ </div>
 
-    <div class="diagram-stage-card">
-      <div class="stage-toolbar">
-        <div class="stage-title">
-          <span>📐 دیاگرام کلاس‌های دامنه سیستم (UML Class Model)</span>
-        </div>
-        <div class="stage-controls">
-          <span class="zoom-indicator" id="zoomIndicator">100%</span>
-          <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
-          <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
-          <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
-          <button class="control-btn" id="fullscreenBtn" title="تمام صفحه">⛶</button>
-          <button class="btn btn-primary btn-sm" id="exportBtn">📥 خروجی SVG</button>
-        </div>
-      </div>
-      <div class="diagram-viewport">
-        <div class="figma-hud-helper">
-          <span>🎯 اسکرول ماوس: زوم فیگما روی نشانگر</span>
-          <span>•</span>
-          <span>🖱️ درگ آزاد یا <kbd>Space</kbd> + درگ: جابجایی</span>
-        </div>
-        <div class="diagram-canvas">
-          <pre class="mermaid">
+ <div class="diagram-stage-card">
+ <div class="stage-toolbar">
+ <div class="stage-title">
+ <span> دیاگرام کلاس‌های دامنه سیستم (UML Class Model)</span>
+ </div>
+ <div class="stage-controls">
+ <span class="zoom-indicator" id="zoomIndicator">100%</span>
+ <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
+ <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
+ <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
+ <button class="control-btn" id="fullscreenBtn" title="تمام صفحه"></button>
+ <button class="btn btn-primary btn-sm" id="exportBtn">خروجی SVG</button>
+ </div>
+ </div>
+ <div class="diagram-viewport">
+ <div class="figma-hud-helper">
+ <span>اسکرول ماوس: زوم روی نشانگر</span>
+ <span>•</span>
+ <span>درگ آزاد یا <kbd>Space</kbd> + درگ: جابجایی</span>
+ </div>
+ <div class="diagram-canvas">
+ <pre class="mermaid">
 classDiagram
-    class UserProfile {
-        +UUID id
-        +String email
-        +String full_name
-        +String phone
-        +String role
-        +Boolean is_owner
-        +String plan
-        +Integer max_forms
-        +Integer max_responses_per_month
-        +Boolean can_use_telegram
-        +Boolean can_export_excel
-        +canCreateForm() Boolean
-        +isQuotaExceeded() Boolean
-        +hasPermission(String perm) Boolean
-    }
+ class UserProfile {
+ +UUID id
+ +String email
+ +String full_name
+ +String phone
+ +String role
+ +Boolean is_owner
+ +String plan
+ +Integer max_forms
+ +Integer max_responses_per_month
+ +Boolean can_use_telegram
+ +Boolean can_export_excel
+ +canCreateForm() Boolean
+ +isQuotaExceeded() Boolean
+ +hasPermission(String perm) Boolean
+ }
 
-    class Form {
-        +UUID id
-        +String slug
-        +String title
-        +String description
-        +String welcome_title
-        +String welcome_message
-        +String exit_title
-        +String exit_message
-        +Boolean published
-        +String theme_mode
-        +UUID created_by
-        +DateTime created_at
-        +DateTime updated_at
-        +publish() Void
-        +unpublish() Void
-        +clone() Form
-        +softDelete() Void
-    }
+ class Form {
+ +UUID id
+ +String slug
+ +String title
+ +String description
+ +String welcome_title
+ +String welcome_message
+ +String exit_title
+ +String exit_message
+ +Boolean published
+ +String theme_mode
+ +UUID created_by
+ +DateTime created_at
+ +DateTime updated_at
+ +publish() Void
+ +unpublish() Void
+ +clone() Form
+ +softDelete() Void
+ }
 
-    class Question {
-        +UUID id
-        +UUID form_id
-        +QuestionType type
-        +String title
-        +String description
-        +Boolean required
-        +JSON options
-        +Integer position
-        +String placeholder
-        +Boolean is_correct
-        +Integer points
-        +validateAnswer(Any value) Boolean
-        +sanitizeInput(Any raw) Any
-    }
+ class Question {
+ +UUID id
+ +UUID form_id
+ +QuestionType type
+ +String title
+ +String description
+ +Boolean required
+ +JSON options
+ +Integer position
+ +String placeholder
+ +Boolean is_correct
+ +Integer points
+ +validateAnswer(Any value) Boolean
+ +sanitizeInput(Any raw) Any
+ }
 
-    class LogicRule {
-        +UUID id
-        +UUID form_id
-        +String name
-        +Boolean enabled
-        +Integer priority
-        +UUID source_question_id
-        +String group_operator
-        +JSON conditions_json
-        +ActionType action_type
-        +UUID action_target_id
-        +evaluate(Map answers) Boolean
-        +applyAction() NextStep
-    }
+ class LogicRule {
+ +UUID id
+ +UUID form_id
+ +String name
+ +Boolean enabled
+ +Integer priority
+ +UUID source_question_id
+ +String group_operator
+ +JSON conditions_json
+ +ActionType action_type
+ +UUID action_target_id
+ +evaluate(Map answers) Boolean
+ +applyAction() NextStep
+ }
 
-    class Response {
-        +UUID id
-        +UUID form_id
-        +Boolean is_complete
-        +DateTime started_at
-        +DateTime submitted_at
-        +Integer duration_seconds
-        +String device
-        +String browser
-        +String os
-        +String referer
-        +calculateDuration() Integer
-        +complete() Void
-    }
+ class Response {
+ +UUID id
+ +UUID form_id
+ +Boolean is_complete
+ +DateTime started_at
+ +DateTime submitted_at
+ +Integer duration_seconds
+ +String device
+ +String browser
+ +String os
+ +String referer
+ +calculateDuration() Integer
+ +complete() Void
+ }
 
-    class Answer {
-        +UUID id
-        +UUID response_id
-        +UUID question_id
-        +JSON value
-        +Integer time_spent_seconds
-        +getFormattedValue() String
-    }
+ class Answer {
+ +UUID id
+ +UUID response_id
+ +UUID question_id
+ +JSON value
+ +Integer time_spent_seconds
+ +getFormattedValue() String
+ }
 
-    class SupportTicket {
-        +UUID id
-        +UUID user_id
-        +String title
-        +String message
-        +String category
-        +String status
-        +String priority
-        +closeTicket() Void
-    }
+ class SupportTicket {
+ +UUID id
+ +UUID user_id
+ +String title
+ +String message
+ +String category
+ +String status
+ +String priority
+ +closeTicket() Void
+ }
 
-    class TrashItem {
-        +UUID id
-        +UUID original_id
-        +String entity_type
-        +JSON payload
-        +UUID deleted_by
-        +DateTime deleted_at
-        +DateTime expires_at
-        +restore() Void
-        +purge() Void
-    }
+ class TrashItem {
+ +UUID id
+ +UUID original_id
+ +String entity_type
+ +JSON payload
+ +UUID deleted_by
+ +DateTime deleted_at
+ +DateTime expires_at
+ +restore() Void
+ +purge() Void
+ }
 
-    %% Relationships
-    UserProfile "1" -- "0..*" Form : owns
-    UserProfile "1" -- "0..*" SupportTicket : submits
-    UserProfile "1" -- "0..*" TrashItem : deletes
+ %% Relationships
+ UserProfile "1" -- "0..*" Form : owns
+ UserProfile "1" -- "0..*" SupportTicket : submits
+ UserProfile "1" -- "0..*" TrashItem : deletes
 
-    Form "1" *-- "0..*" Question : contains
-    Form "1" *-- "0..*" LogicRule : configures
-    Form "1" -- "0..*" Response : collects
+ Form "1" *-- "0..*" Question : contains
+ Form "1" *-- "0..*" LogicRule : configures
+ Form "1" -- "0..*" Response : collects
 
-    Response "1" *-- "1..*" Answer : composed_of
-    Question "1" -- "0..*" Answer : answered_by
-    Question "1" ..> "0..*" LogicRule : evaluated_by
-          </pre>
-        </div>
-      </div>
-    </div>
+ Response "1" *-- "1..*" Answer : composed_of
+ Question "1" -- "0..*" Answer : answered_by
+ Question "1" ..> "0..*" LogicRule : evaluated_by
+ </pre>
+ </div>
+ </div>
+ </div>
 
-    <div class="spec-grid">
-      <div class="spec-card">
-        <div class="spec-card-header">
-          <div class="spec-icon">🧩</div>
-          <div class="spec-card-title">رابطه ترکیب قوی (Composition)</div>
-        </div>
-        <ul class="spec-list">
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>چرخه حیات سوالات وابسته به فرم:</strong> حذف یا ایجاد فرم به طور مستقیم بر موجودیت‌های <code>Question</code> و <code>LogicRule</code> تاثیر گذاشته و حیات آن‌ها وابسته به فرم والد است.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>ترکیب پاسخ‌ها و جواب‌ها:</strong> هر <code>Response</code> متشکل از مجموعه‌ای از <code>Answer</code>ها است که با حذف سشن پاسخ، جواب‌های مرتبط نیز به صورت آبشاری (Cascade) حذف می‌شوند.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>انعطاف ستون‌های JSONB:</strong> فیلدهای <code>options</code> و <code>conditions_json</code> ساختار متغیر را بدون نیاز به جداول واسط پیچیده ذخیره می‌کنند.</div>
-          </li>
-        </ul>
-      </div>
+ <div class="spec-grid">
+ <div class="spec-card">
+ <div class="spec-card-header">
+ <div class="spec-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+ <div class="spec-card-title">رابطه ترکیب قوی (Composition)</div>
+ </div>
+ <ul class="spec-list">
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>چرخه حیات سوالات وابسته به فرم:</strong> حذف یا ایجاد فرم به طور مستقیم بر موجودیت‌های <code>Question</code> و <code>LogicRule</code> تاثیر گذاشته و حیات آن‌ها وابسته به فرم والد است.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>ترکیب پاسخ‌ها و جواب‌ها:</strong> هر <code>Response</code> متشکل از مجموعه‌ای از <code>Answer</code>ها است که با حذف سشن پاسخ، جواب‌های مرتبط نیز به صورت آبشاری (Cascade) حذف می‌شوند.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>انعطاف ستون‌های JSONB:</strong> فیلدهای <code>options</code> و <code>conditions_json</code> ساختار متغیر را بدون نیاز به جداول واسط پیچیده ذخیره می‌کنند.</div>
+ </li>
+ </ul>
+ </div>
 
-      <div class="spec-card">
-        <div class="spec-card-header">
-          <div class="spec-icon">🛡️</div>
-          <div class="spec-card-title">جداسازی و دسترسی کاربر</div>
-        </div>
-        <ul class="spec-list">
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>ارتباط مالکیتی UserProfile به Form:</strong> ارتباط ۱ به چند تضمین می‌کند که هر فرم دارای یک مالک مشخص است و اعمال مدیریتی تنها توسط همان کاربر یا کاربر دارنده پرچم <code>is_owner = true</code> مجاز است.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>سهمیه‌بندی در UserProfile:</strong> مقادیر سهمیه به طور مستقیم روی آبجکت پروفایل نگهداری شده و متدهای <code>canCreateForm</code> سقف را اعتبارسنجی می‌کنند.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>کپسوله‌سازی سطل زباله (TrashItem):</strong> نگهداری کل وضعیت آبجکت در قالب فیلد JSON به عنوان Snapshot برای بازیابی بدون نقص.</div>
-          </li>
-        </ul>
-      </div>
+ <div class="spec-card">
+ <div class="spec-card-header">
+ <div class="spec-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+ <div class="spec-card-title">جداسازی و دسترسی کاربر</div>
+ </div>
+ <ul class="spec-list">
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>ارتباط مالکیتی UserProfile به Form:</strong> ارتباط ۱ به چند تضمین می‌کند که هر فرم دارای یک مالک مشخص است و اعمال مدیریتی تنها توسط همان کاربر یا کاربر دارنده پرچم <code>is_owner = true</code> مجاز است.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>سهمیه‌بندی در UserProfile:</strong> مقادیر سهمیه به طور مستقیم روی آبجکت پروفایل نگهداری شده و متدهای <code>canCreateForm</code> سقف را اعتبارسنجی می‌کنند.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>کپسوله‌سازی سطل زباله (TrashItem):</strong> نگهداری کل وضعیت آبجکت در قالب فیلد JSON به عنوان Snapshot برای بازیابی بدون نقص.</div>
+ </li>
+ </ul>
+ </div>
 
-      <div class="spec-card">
-        <div class="spec-card-header">
-          <div class="spec-icon">⚙️</div>
-          <div class="spec-card-title">روش‌های اعتبارسنجی و موتور لاجیک</div>
-        </div>
-        <ul class="spec-list">
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>ارزیابی دینامیک شرط‌ها:</strong> متد <code>evaluate(Map answers)</code> خروجی کاربر را با اپراتورهای تعریف‌شده مطابقت می‌دهد.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>محاسبه هوشمند مدت زمان:</strong> تابع <code>calculateDuration</code> تفاوت بین زمان شروع اولین سوال تا ثبت نهایی را به ثانیه ذخیره می‌سازد.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>پشتیبانی از انواع سوالات:</strong> نوع داده <code>QuestionType</code> شامل متادیتای ولیدیشن مختص متن، عدد، ایمیل، موبایل، امتیاز و چندگزینه‌ای است.</div>
-          </li>
-        </ul>
-      </div>
-    </div>
+ <div class="spec-card">
+ <div class="spec-card-header">
+ <div class="spec-icon"><svg class="icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+ <div class="spec-card-title">روش‌های اعتبارسنجی و موتور لاجیک</div>
+ </div>
+ <ul class="spec-list">
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>ارزیابی دینامیک شرط‌ها:</strong> متد <code>evaluate(Map answers)</code> خروجی کاربر را با اپراتورهای تعریف‌شده مطابقت می‌دهد.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>محاسبه هوشمند مدت زمان:</strong> تابع <code>calculateDuration</code> تفاوت بین زمان شروع اولین سوال تا ثبت نهایی را به ثانیه ذخیره می‌سازد.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>پشتیبانی از انواع سوالات:</strong> نوع داده <code>QuestionType</code> شامل متادیتای ولیدیشن مختص متن، عدد، ایمیل، موبایل، امتیاز و چندگزینه‌ای است.</div>
+ </li>
+ </ul>
+ </div>
+ </div>
 
-    <footer class="page-footer">
-      <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
-    </footer>
-  </div>
+ <footer class="page-footer">
+ <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
+ </footer>
+ </div>
 
-  <script src="assets/app.js"></script>
-  <script>
-    mermaid.initialize({
-      startOnLoad: true,
-      theme: 'dark',
-      securityLevel: 'loose',
-      flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
-      sequence: { useMaxWidth: false },
-      er: { useMaxWidth: false },
-      themeVariables: {
-        darkMode: true,
-        background: '#080C14',
-        primaryColor: '#131B2E',
-        primaryTextColor: '#FFFFFF',
-        primaryBorderColor: '#2DD4BF',
-        lineColor: '#38BDF8',
-        secondaryColor: '#1A2338',
-        tertiaryColor: '#0F172A',
-        fontFamily: 'IRANSansX, Vazirmatn, sans-serif',
-        fontSize: '15.5px'
-      }
-    });
-  </script>
+ <script src="assets/app.js"></script>
+ <script>
+ mermaid.initialize({
+ startOnLoad: true,
+ theme: 'dark',
+ securityLevel: 'loose',
+ flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
+ sequence: { useMaxWidth: false },
+ er: { useMaxWidth: false },
+ themeVariables: {
+ darkMode: true,
+ background: '#080C14',
+ primaryColor: '#131B2E',
+ primaryTextColor: '#FFFFFF',
+ primaryBorderColor: '#2DD4BF',
+ lineColor: '#38BDF8',
+ secondaryColor: '#1A2338',
+ tertiaryColor: '#0F172A',
+ fontFamily: 'IRANSansX, Vazirmatn, sans-serif',
+ fontSize: '15.5px'
+ }
+ });
+ </script>
 </body>
 </html>

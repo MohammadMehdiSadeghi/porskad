@@ -1,227 +1,227 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sequence Diagram | سامانه فرم‌ساز پرس‌کاد (Porskad)</title>
-  <link rel="stylesheet" href="assets/style.css">
-  <script src="assets/mermaid.min.js"></script>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Sequence Diagram | سامانه فرم‌ساز پرس‌کاد (Porskad)</title>
+ <link rel="stylesheet" href="assets/style.css">
+ <script src="assets/mermaid.min.js"></script>
 </head>
 <body>
-  <div class="container">
-    <header class="top-nav">
-      <a href="index.html" class="brand-section">
-        <div class="brand-logo-icon">P</div>
-        <div class="brand-info">
-          <h1>پرس‌کاد <span>Porskad Blueprints</span></h1>
-          <span>پلتفرم سازمانی ساخت فرم و پرسشنامه</span>
-        </div>
-      </a>
-      <div class="nav-actions">
-        <select class="nav-select" id="diagramNavSelect">
-          <option value="architecture-diagram.html">۱. Architecture Diagram</option>
-          <option value="system-architecture-diagram.html">۲. System Architecture Diagram</option>
-          <option value="system-diagram.html">۳. System Diagram</option>
-          <option value="project-structure-diagram.html">۴. Project Structure Diagram</option>
-          <option value="flowchart.html">۵. Flowchart</option>
-          <option value="mind-map.html">۶. Mind Map</option>
-          <option value="site-map.html">۷. Site Map</option>
-          <option value="uml-diagram.html">۸. UML Diagram</option>
-          <option value="er-diagram.html">۹. ER Diagram</option>
-          <option value="component-diagram.html">۱۰. Component Diagram</option>
-          <option value="data-flow-diagram.html">۱۱. Data Flow Diagram (DFD)</option>
-          <option value="sequence-diagram.html" selected>۱۲. Sequence Diagram</option>
-          <option value="use-case-diagram.html">۱۳. Use Case Diagram</option>
-          <option value="entity-relationship-diagram.html">۱۴. Entity Relationship Diagram (ERD)</option>
-        </select>
-        <a href="index.html" class="btn btn-secondary btn-sm">🏠 خانه دیاگرام‌ها</a>
-      </div>
-    </header>
+ <div class="container">
+ <header class="top-nav">
+ <a href="index.html" class="brand-section">
+ <div class="brand-logo-icon">P</div>
+ <div class="brand-info">
+ <h1>پرس‌کاد <span>Porskad Blueprints</span></h1>
+ <span>پلتفرم سازمانی ساخت فرم و پرسشنامه</span>
+ </div>
+ </a>
+ <div class="nav-actions">
+ <select class="nav-select" id="diagramNavSelect">
+ <option value="architecture-diagram.html">۱. Architecture Diagram</option>
+ <option value="system-architecture-diagram.html">۲. System Architecture Diagram</option>
+ <option value="system-diagram.html">۳. System Diagram</option>
+ <option value="project-structure-diagram.html">۴. Project Structure Diagram</option>
+ <option value="flowchart.html">۵. Flowchart</option>
+ <option value="mind-map.html">۶. Mind Map</option>
+ <option value="site-map.html">۷. Site Map</option>
+ <option value="uml-diagram.html">۸. UML Diagram</option>
+ <option value="er-diagram.html">۹. ER Diagram</option>
+ <option value="component-diagram.html">۱۰. Component Diagram</option>
+ <option value="data-flow-diagram.html">۱۱. Data Flow Diagram (DFD)</option>
+ <option value="sequence-diagram.html" selected>۱۲. Sequence Diagram</option>
+ <option value="use-case-diagram.html">۱۳. Use Case Diagram</option>
+ <option value="entity-relationship-diagram.html">۱۴. Entity Relationship Diagram (ERD)</option>
+ </select>
+ <a href="index.html" class="btn btn-secondary btn-sm">خانه دیاگرام‌ها</a>
+ </div>
+ </header>
 
-    <div class="page-header">
-      <div class="header-meta-row">
-        <span class="badge badge-teal">توالی زمانی تعاملات</span>
-        <span class="badge badge-blue">Sequence & Interaction Diagram</span>
-        <span class="badge badge-purple">End-to-End Submission & Realtime Push</span>
-      </div>
-      <h1 class="page-title">Sequence Diagram (دیاگرام توالی تراکنش‌ها و رویدادها)</h1>
-      <p class="page-desc">
-        دیاگرام توالی زمانی (Sequence Diagram) سناریوی کلیدی سامانه: ارسال درخواست بارگذاری فرم توسط کلاینت، تعامل با کش لوکال استوریج، اعتبارسنجی قوانین شرطی، ارسال تراکنشی به دیتابیس پستگرس از طریق RPC، ثبت CDC و انتشار بلادرنگ پاسخ جدید به داشبورد ادمین از طریق کانال وب‌سوکت.
-      </p>
-    </div>
+ <div class="page-header">
+ <div class="header-meta-row">
+ <span class="badge badge-teal">توالی زمانی تعاملات</span>
+ <span class="badge badge-blue">Sequence & Interaction Diagram</span>
+ <span class="badge badge-purple">End-to-End Submission & Realtime Push</span>
+ </div>
+ <h1 class="page-title">Sequence Diagram (دیاگرام توالی تراکنش‌ها و رویدادها)</h1>
+ <p class="page-desc">
+ دیاگرام توالی زمانی (Sequence Diagram) سناریوی کلیدی سامانه: ارسال درخواست بارگذاری فرم توسط کلاینت، تعامل با کش لوکال استوریج، اعتبارسنجی قوانین شرطی، ارسال تراکنشی به دیتابیس پستگرس از طریق RPC، ثبت CDC و انتشار بلادرنگ پاسخ جدید به داشبورد ادمین از طریق کانال وب‌سوکت.
+ </p>
+ </div>
 
-    <div class="diagram-stage-card">
-      <div class="stage-toolbar">
-        <div class="stage-title">
-          <span>⏱️ توالی گام‌به‌گام ثبت پاسخ و انتشار ریل‌تایم</span>
-        </div>
-        <div class="stage-controls">
-          <span class="zoom-indicator" id="zoomIndicator">100%</span>
-          <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
-          <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
-          <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
-          <button class="control-btn" id="fullscreenBtn" title="تمام صفحه">⛶</button>
-          <button class="btn btn-primary btn-sm" id="exportBtn">📥 خروجی SVG</button>
-        </div>
-      </div>
-      <div class="diagram-viewport">
-        <div class="figma-hud-helper">
-          <span>🎯 اسکرول ماوس: زوم فیگما روی نشانگر</span>
-          <span>•</span>
-          <span>🖱️ درگ آزاد یا <kbd>Space</kbd> + درگ: جابجایی</span>
-        </div>
-        <div class="diagram-canvas">
-          <pre class="mermaid">
+ <div class="diagram-stage-card">
+ <div class="stage-toolbar">
+ <div class="stage-title">
+ <span>⏱ توالی گام‌به‌گام ثبت پاسخ و انتشار ریل‌تایم</span>
+ </div>
+ <div class="stage-controls">
+ <span class="zoom-indicator" id="zoomIndicator">100%</span>
+ <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
+ <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
+ <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
+ <button class="control-btn" id="fullscreenBtn" title="تمام صفحه"></button>
+ <button class="btn btn-primary btn-sm" id="exportBtn">خروجی SVG</button>
+ </div>
+ </div>
+ <div class="diagram-viewport">
+ <div class="figma-hud-helper">
+ <span>اسکرول ماوس: زوم روی نشانگر</span>
+ <span>•</span>
+ <span>درگ آزاد یا <kbd>Space</kbd> + درگ: جابجایی</span>
+ </div>
+ <div class="diagram-canvas">
+ <pre class="mermaid">
 sequenceDiagram
-    autonumber
-    actor User as 👤 پاسخ‌دهنده (Respondent)
-    participant Client as 📱 موتور فرم‌ساز (React Client)
-    participant Storage as 💾 کش مرورگر (LocalStorage)
-    participant Edge as 🌐 لبه CDN (Vercel)
-    participant SupaAPI as ⚡ API سوپابیس (PostgREST)
-    participant Postgres as 🗄️ هسته دیتابیس (PostgreSQL)
-    participant Realtime as 🟢 سرور ریل‌تایم (Phoenix WS)
-    actor Admin as 🧑‍💼 داشبورد ادمین (Admin Portal)
+ autonumber
+ actor User as پاسخ‌دهنده (Respondent)
+ participant Client as موتور فرم‌ساز (React Client)
+ participant Storage as کش مرورگر (LocalStorage)
+ participant Edge as لبه CDN (Vercel)
+ participant SupaAPI as API سوپابیس (PostgREST)
+ participant Postgres as هسته دیتابیس (PostgreSQL)
+ participant Realtime as سرور ریل‌تایم (Phoenix WS)
+ actor Admin as داشبورد ادمین (Admin Portal)
 
-    %% Session Start
-    User->>Client: ورود به لینک /f/:slug
-    Client->>Storage: بررسی وجود پیش‌نویس موضعی (Check Draft)
-    Storage-->>Client: بازیابی پاسخ‌های ذخیره‌شده (یا شیء خالی)
-    Client->>Edge: GET /forms?slug=eq.:slug&published=eq.true
-    Edge->>SupaAPI: بررسی دسترسی RLS عمومی (anon)
-    SupaAPI->>Postgres: SELECT * FROM forms WHERE slug = :slug
-    Postgres-->>SupaAPI: متادیتای فرم + لیست سوالات و رول‌ها
-    SupaAPI-->>Edge: پاسخ JSON فرم
-    Edge-->>Client: تحویل فرم با سوالات به کلاینت
+ %% Session Start
+ User->>Client: ورود به لینک /f/:slug
+ Client->>Storage: بررسی وجود پیش‌نویس موضعی (Check Draft)
+ Storage-->>Client: بازیابی پاسخ‌های ذخیره‌شده (یا شیء خالی)
+ Client->>Edge: GET /forms?slug=eq.:slug&published=eq.true
+ Edge->>SupaAPI: بررسی دسترسی RLS عمومی (anon)
+ SupaAPI->>Postgres: SELECT * FROM forms WHERE slug = :slug
+ Postgres-->>SupaAPI: متادیتای فرم + لیست سوالات و رول‌ها
+ SupaAPI-->>Edge: پاسخ JSON فرم
+ Edge-->>Client: تحویل فرم با سوالات به کلاینت
 
-    %% Question Answering
-    User->>Client: وارد کردن پاسخ سوال و زدن دکمه تایید / Enter
-    Client->>Client: ولیدیشن محلی (Regex موبایل / اجباری بودن)
-    Client->>Storage: ذخیره آنی جواب در LocalStorage (Auto-Save)
-    Client->>Client: ارزیابی Logic Rules (آیا شرط پرش برقرار است؟)
+ %% Question Answering
+ User->>Client: وارد کردن پاسخ سوال و زدن دکمه تایید / Enter
+ Client->>Client: ولیدیشن محلی (Regex موبایل / اجباری بودن)
+ Client->>Storage: ذخیره آنی جواب در LocalStorage (Auto-Save)
+ Client->>Client: ارزیابی Logic Rules (آیا شرط پرش برقرار است؟)
 
-    %% Submission
-    User->>Client: تکمیل آخرین سوال و ارسال نهایی فرم
-    Client->>Client: بررسی فیلد تله ربات (Honeypot Check == "")
-    Client->>SupaAPI: POST /rpc/submit_public_response(payload)
-    
-    activate Postgres
-    SupaAPI->>Postgres: اجرای تابع SECURITY DEFINER
-    Postgres->>Postgres: بررسی باز بودن فرم و عدم انقضا
-    Postgres->>Postgres: INSERT INTO responses (form_id, device, duration...)
-    Postgres->>Postgres: INSERT INTO answers (response_id, question_id, value...)
-    Postgres->>Postgres: افزایش شمارنده پاسخ‌های ماهانه در profiles
-    Postgres->>Postgres: صدور رویداد PostgreSQL WAL CDC
-    Postgres-->>SupaAPI: وضعیت موفقیت { success: true, response_id: ... }
-    deactivate Postgres
+ %% Submission
+ User->>Client: تکمیل آخرین سوال و ارسال نهایی فرم
+ Client->>Client: بررسی فیلد تله ربات (Honeypot Check == "")
+ Client->>SupaAPI: POST /rpc/submit_public_response(payload)
+ 
+ activate Postgres
+ SupaAPI->>Postgres: اجرای تابع SECURITY DEFINER
+ Postgres->>Postgres: بررسی باز بودن فرم و عدم انقضا
+ Postgres->>Postgres: INSERT INTO responses (form_id, device, duration...)
+ Postgres->>Postgres: INSERT INTO answers (response_id, question_id, value...)
+ Postgres->>Postgres: افزایش شمارنده پاسخ‌های ماهانه در profiles
+ Postgres->>Postgres: صدور رویداد PostgreSQL WAL CDC
+ Postgres-->>SupaAPI: وضعیت موفقیت { success: true, response_id: ... }
+ deactivate Postgres
 
-    SupaAPI-->>Client: تاییدیه ثبت پاسخ (200 OK)
-    Client->>Storage: پاک کردن پیش‌نویس فرم (Draft Cleared)
-    Client->>User: پخش انیمیشن کانفتی و نمایش صفحه تشکر (Exit Screen)
+ SupaAPI-->>Client: تاییدیه ثبت پاسخ (200 OK)
+ Client->>Storage: پاک کردن پیش‌نویس فرم (Draft Cleared)
+ Client->>User: پخش انیمیشن کانفتی و نمایش صفحه تشکر (Exit Screen)
 
-    %% Realtime Push
-    Postgres-)Realtime: رویداد تغییرات جدول (New Row in responses)
-    activate Realtime
-    Realtime-)Admin: ارسال پیام وب‌سوکت (Push New Response Alert)
-    deactivate Realtime
-    Admin->>Admin: نمایش اعلان توست زنده + افزایش شمارنده ثبت‌ها در داشبورد
-          </pre>
-        </div>
-      </div>
-    </div>
+ %% Realtime Push
+ Postgres-)Realtime: رویداد تغییرات جدول (New Row in responses)
+ activate Realtime
+ Realtime-)Admin: ارسال پیام وب‌سوکت (Push New Response Alert)
+ deactivate Realtime
+ Admin->>Admin: نمایش اعلان توست زنده + افزایش شمارنده ثبت‌ها در داشبورد
+ </pre>
+ </div>
+ </div>
+ </div>
 
-    <div class="spec-grid">
-      <div class="spec-card">
-        <div class="spec-card-header">
-          <div class="spec-icon">🛡️</div>
-          <div class="spec-card-title">تراکنش اتمیک در تابع ذخیره‌شده</div>
-        </div>
-        <ul class="spec-list">
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>تضمین عدم ورود ناقص داده:</strong> تابع <code>submit_public_response</code> با تراکنش داخلی، از ثبت ناقص فرم جلوگیری می‌کند؛ در صورت بروز هرگونه خطا تمام عملیات Rollback می‌شود.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>امتیاز امنیتی Security Definer:</strong> به کلاینت پاسخ‌دهنده اجازه می‌دهد بدون دسترسی مستقیم نوشتن در جداول، پاسخ‌های خود را به صورت کنترل‌شده و ایزوله ثبت نماید.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>محاسبه مدت زمان واقعی:</strong> فاصله زمانی بین گام ۱ (لود صفحه) و گام ۱۰ (ثبت نهایی) با دقت میلی‌ثانیه اندازه‌گیری و در فیلد <code>duration_seconds</code> ذخیره می‌شود.</div>
-          </li>
-        </ul>
-      </div>
+ <div class="spec-grid">
+ <div class="spec-card">
+ <div class="spec-card-header">
+ <div class="spec-icon"><svg class="icon icon-lg" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+ <div class="spec-card-title">تراکنش اتمیک در تابع ذخیره‌شده</div>
+ </div>
+ <ul class="spec-list">
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>تضمین عدم ورود ناقص داده:</strong> تابع <code>submit_public_response</code> با تراکنش داخلی، از ثبت ناقص فرم جلوگیری می‌کند؛ در صورت بروز هرگونه خطا تمام عملیات Rollback می‌شود.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>امتیاز امنیتی Security Definer:</strong> به کلاینت پاسخ‌دهنده اجازه می‌دهد بدون دسترسی مستقیم نوشتن در جداول، پاسخ‌های خود را به صورت کنترل‌شده و ایزوله ثبت نماید.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>محاسبه مدت زمان واقعی:</strong> فاصله زمانی بین گام ۱ (لود صفحه) و گام ۱۰ (ثبت نهایی) با دقت میلی‌ثانیه اندازه‌گیری و در فیلد <code>duration_seconds</code> ذخیره می‌شود.</div>
+ </li>
+ </ul>
+ </div>
 
-      <div class="spec-card">
-        <div class="spec-card-header">
-          <div class="spec-icon">⚡</div>
-          <div class="spec-card-title">مسیر لبه و کش موضعی کلاینت</div>
-        </div>
-        <ul class="spec-list">
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>پایداری وضعیت (Persistence):</strong> هر بار تغییر پاسخ بلافاصله در <code>LocalStorage</code> کش می‌شود تا اگر صفحه به طور تصادفی ریفرش شد، کاربر از همان نقطه ادامه دهد.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>ارزیابی شروط در کلاینت بدون تاخیر سرور:</strong> گام ۸ به صورت کاملاً لوکال و بدون نیاز به ارسال درخواست شبکه اجرا می‌شود تا تجربه پاسخ‌دهی روان بماند.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>پاکسازی کش:</strong> بلافاصله پس از دریافت پاسخ 200 از سرور، کلید مربوط به پیش‌نویس فرم به طور خودکار از حافظه مرورگر کاربر حذف می‌شود.</div>
-          </li>
-        </ul>
-      </div>
+ <div class="spec-card">
+ <div class="spec-card-header">
+ <div class="spec-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+ <div class="spec-card-title">مسیر لبه و کش موضعی کلاینت</div>
+ </div>
+ <ul class="spec-list">
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>پایداری وضعیت (Persistence):</strong> هر بار تغییر پاسخ بلافاصله در <code>LocalStorage</code> کش می‌شود تا اگر صفحه به طور تصادفی ریفرش شد، کاربر از همان نقطه ادامه دهد.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>ارزیابی شروط در کلاینت بدون تاخیر سرور:</strong> گام ۸ به صورت کاملاً لوکال و بدون نیاز به ارسال درخواست شبکه اجرا می‌شود تا تجربه پاسخ‌دهی روان بماند.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>پاکسازی کش:</strong> بلافاصله پس از دریافت پاسخ 200 از سرور، کلید مربوط به پیش‌نویس فرم به طور خودکار از حافظه مرورگر کاربر حذف می‌شود.</div>
+ </li>
+ </ul>
+ </div>
 
-      <div class="spec-card">
-        <div class="spec-card-header">
-          <div class="spec-icon">🟢</div>
-          <div class="spec-card-title">انتشار وب‌سوکت فینیکس (Realtime Push)</div>
-        </div>
-        <ul class="spec-list">
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>مکانیسم CDC مبتنی بر WAL:</strong> تغییرات سطح دیتابیس توسط هسته سرور ریل‌تایم مانیتور شده و با کمترین سربار پردازشی به کانال مشترکین ارسال می‌شود.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>شنود در پس‌زمینه پنل ادمین:</strong> هوک <code>useRealtimeSubscription</code> سطر جدید را دریافت و استیت React را بدون نیاز به رفرش صفحه بروز می‌کند.</div>
-          </li>
-          <li class="spec-list-item">
-            <span class="spec-dot"></span>
-            <div><strong>همگام‌سازی اعلان صوتی:</strong> مدیر بلافاصله صدای بیپ آرام و توست حاوی مشخصات پاسخ جدید را مشاهده می‌کند.</div>
-          </li>
-        </ul>
-      </div>
-    </div>
+ <div class="spec-card">
+ <div class="spec-card-header">
+ <div class="spec-icon"><svg class="icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+ <div class="spec-card-title">انتشار وب‌سوکت فینیکس (Realtime Push)</div>
+ </div>
+ <ul class="spec-list">
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>مکانیسم CDC مبتنی بر WAL:</strong> تغییرات سطح دیتابیس توسط هسته سرور ریل‌تایم مانیتور شده و با کمترین سربار پردازشی به کانال مشترکین ارسال می‌شود.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>شنود در پس‌زمینه پنل ادمین:</strong> هوک <code>useRealtimeSubscription</code> سطر جدید را دریافت و استیت React را بدون نیاز به رفرش صفحه بروز می‌کند.</div>
+ </li>
+ <li class="spec-list-item">
+ <span class="spec-dot"></span>
+ <div><strong>همگام‌سازی اعلان صوتی:</strong> مدیر بلافاصله صدای بیپ آرام و توست حاوی مشخصات پاسخ جدید را مشاهده می‌کند.</div>
+ </li>
+ </ul>
+ </div>
+ </div>
 
-    <footer class="page-footer">
-      <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
-    </footer>
-  </div>
+ <footer class="page-footer">
+ <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
+ </footer>
+ </div>
 
-  <script src="assets/app.js"></script>
-  <script>
-    mermaid.initialize({
-      startOnLoad: true,
-      theme: 'dark',
-      securityLevel: 'loose',
-      flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
-      sequence: { useMaxWidth: false },
-      er: { useMaxWidth: false },
-      themeVariables: {
-        darkMode: true,
-        background: '#080C14',
-        primaryColor: '#131B2E',
-        primaryTextColor: '#FFFFFF',
-        primaryBorderColor: '#2DD4BF',
-        lineColor: '#38BDF8',
-        secondaryColor: '#1A2338',
-        tertiaryColor: '#0F172A',
-        fontFamily: 'IRANSansX, Vazirmatn, sans-serif',
-        fontSize: '15.5px'
-      }
-    });
-  </script>
+ <script src="assets/app.js"></script>
+ <script>
+ mermaid.initialize({
+ startOnLoad: true,
+ theme: 'dark',
+ securityLevel: 'loose',
+ flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
+ sequence: { useMaxWidth: false },
+ er: { useMaxWidth: false },
+ themeVariables: {
+ darkMode: true,
+ background: '#080C14',
+ primaryColor: '#131B2E',
+ primaryTextColor: '#FFFFFF',
+ primaryBorderColor: '#2DD4BF',
+ lineColor: '#38BDF8',
+ secondaryColor: '#1A2338',
+ tertiaryColor: '#0F172A',
+ fontFamily: 'IRANSansX, Vazirmatn, sans-serif',
+ fontSize: '15.5px'
+ }
+ });
+ </script>
 </body>
 </html>
