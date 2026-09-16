@@ -5,10 +5,10 @@ import { Plug, RotateCcw } from "lucide-react";
 export default function SetupNotice() {
   return (
     <div className="min-h-screen dot-pattern bg-bg-mint flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl -rotate-[0.5deg]">
+      <div className="w-full max-w-2xl">
         <StickerCard theme="white">
           <div className="p-7 sm:p-10 flex flex-col gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-teal/15 text-teal flex items-center justify-center rotate-[2deg] self-start shadow-xs">
+            <div className="w-14 h-14 rounded-2xl bg-teal/15 text-teal flex items-center justify-center self-start shadow-xs">
               <Plug size={32} />
             </div>
             <h1 className="text-xl sm:text-3xl font-black text-navy">

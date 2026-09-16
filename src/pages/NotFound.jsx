@@ -12,10 +12,10 @@ export default function NotFound() {
         description="صفحه مورد نظر شما وجود ندارد."
         noIndex
       />
-      <div className="w-full max-w-md rotate-[1deg]">
+      <div className="w-full max-w-md">
         <StickerCard theme="orange">
           <div className="p-9 flex flex-col items-center text-center gap-4">
-            <div className="w-20 h-20 rounded-2xl bg-orange/15 text-orange flex items-center justify-center -rotate-[4deg] shadow-sm">
+            <div className="w-20 h-20 rounded-2xl bg-orange/15 text-orange flex items-center justify-center shadow-sm">
               <Compass size={44} />
             </div>
             <h1 className="text-3xl sm:text-4xl font-black text-navy">۴۰۴</h1>

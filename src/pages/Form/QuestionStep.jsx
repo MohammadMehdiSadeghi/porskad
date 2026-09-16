@@ -371,7 +371,7 @@ function LikertScale({ options = [], value, onChange }) {
               className={clsx(
                 "flex flex-col items-center justify-center p-3 sm:p-3.5 rounded-xl border-2 transition-all cursor-pointer text-center",
                 selected
-                  ? "border-teal bg-teal text-white font-black shadow-md scale-[1.02] -rotate-[0.5deg]"
+                  ? "border-teal bg-teal text-white font-black shadow-md scale-[1.02]"
                   : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink dark:text-slate-200 hover:border-teal/50 font-bold"
               )}
             >

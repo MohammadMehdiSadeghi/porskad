@@ -91,7 +91,7 @@ export function DashboardSkeleton() {
 
       <div>
         <Skeleton className="h-6 w-36 mb-3 sm:mb-4" rounded="rounded-lg" />
-        <div className="rotate-[0.3deg]">
+        <div>
           <StickerCard theme="white" radius={radii.cardSm}>
             <div className="px-4 py-3 border-b-2 border-ink/10 dark:border-slate-800 flex items-center gap-6">
               {["w-20", "w-24", "w-16", "w-24", "w-16"].map((w, i) => (
@@ -111,9 +111,9 @@ export function DashboardSkeleton() {
 }
 
 // ─── اسکلتون کارت فرم — مثل StickerCard سفید واقعی با بج و فوتر ───
-function FormCardSkeleton({ flip }) {
+function FormCardSkeleton() {
   return (
-    <StickerCard theme="white" rotate={flip ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"}>
+    <StickerCard theme="white">
       <div className="p-4 sm:p-5 flex flex-col gap-3 min-h-[9.5rem]">
         <div className="flex items-start justify-between gap-3">
           <Skeleton className="h-5 w-3/5" rounded="rounded-lg" />
@@ -323,7 +323,7 @@ export function FormFillSkeleton() {
         <Skeleton className="h-3 w-full" rounded="rounded-full" />
       </div>
       <div className="flex-1 flex items-start sm:items-center justify-center px-3 sm:px-4 py-3 sm:py-5">
-        <div className="w-full max-w-2xl -rotate-[0.5deg]">
+        <div className="w-full max-w-2xl">
           <StickerCard theme="white" radius={radii.cardSm}>
             <div className="p-6 sm:p-8 flex flex-col gap-5">
               <Skeleton className="h-8 w-32 self-center" rounded="rounded-xl" />
@@ -417,7 +417,7 @@ export function ShareFormSkeleton() {
 export function AuthGuardSkeleton() {
   return (
     <div className="min-h-dvh dot-pattern bg-male-light dark:bg-[#0B0F19] flex items-center justify-center p-3" dir="rtl">
-      <div className="w-full max-w-sm -rotate-[0.5deg]">
+      <div className="w-full max-w-sm">
         <StickerCard theme="magenta">
           <div className="p-8 flex flex-col items-center gap-5">
             <Skeleton className="w-14 h-14 bg-magenta/15 dark:bg-pink-500/15" rounded="rounded-2xl" />
