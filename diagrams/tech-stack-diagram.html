@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tech Stack Diagram | سامانه فرم‌ساز پرس‌کاد (Porskad)</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="assets/mermaid.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <!-- Navigation Bar -->
+    <header class="top-nav">
+      <a href="index.html" class="brand-section">
+        <div class="brand-logo-icon">P</div>
+        <div class="brand-info">
+          <h1>پرس‌کاد <span>Porskad Blueprints</span></h1>
+          <span>پلتفرم سازمانی ساخت فرم و پرسشنامه</span>
+        </div>
+      </a>
+      <div class="nav-actions">
+        <select class="nav-select" id="diagramNavSelect">
+          <option value="architecture-diagram.html">۱. Architecture Diagram</option>
+          <option value="system-architecture-diagram.html">۲. System Architecture Diagram</option>
+          <option value="system-diagram.html">۳. System Diagram</option>
+          <option value="project-structure-diagram.html">۴. Project Structure Diagram</option>
+          <option value="flowchart.html">۵. Flowchart</option>
+          <option value="mind-map.html">۶. Mind Map</option>
+          <option value="site-map.html">۷. Site Map</option>
+          <option value="uml-diagram.html">۸. UML Diagram</option>
+          <option value="er-diagram.html">۹. ER Diagram</option>
+          <option value="component-diagram.html">۱۰. Component Diagram</option>
+          <option value="data-flow-diagram.html">۱۱. Data Flow Diagram (DFD)</option>
+          <option value="sequence-diagram.html">۱۲. Sequence Diagram</option>
+          <option value="use-case-diagram.html">۱۳. Use Case Diagram</option>
+          <option value="entity-relationship-diagram.html">۱۴. Entity Relationship Diagram (ERD)</option>
+          <option value="tech-stack-diagram.html" selected>۱۵. Tech Stack & Ecosystem Diagram</option>
+        </select>
+        <a href="index.html" class="btn btn-secondary btn-sm">خانه دیاگرام‌ها</a>
+      </div>
+    </header>
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="header-meta-row">
+        <span class="badge badge-teal">اکوسیستم فنی و زبان‌ها</span>
+        <span class="badge badge-blue">Modern Web & BaaS Stack</span>
+        <span class="badge badge-purple">React 18 + Vite + Supabase + PostgreSQL</span>
+      </div>
+      <h1 class="page-title">Tech Stack & Ecosystem Diagram (پشته فناوری، زبان‌ها و ابزارها)</h1>
+      <p class="page-desc">
+        نقشه جامع معماری فناوری، زبان‌های برنامه‌نویسی، فریم‌ورک‌ها، موتورهای رندرینگ، کتابخانه‌های تخصصی، پایگاه‌داده و سرویس‌های زیرساختی به کار رفته در سامانه پرس‌کاد. این دیاگرام به تفکیک لایه‌های توسعه نشان می‌دهد هر زبان و ابزار در کجای سیستم وظیفه اجرا دارد.
+      </p>
+    </div>
+
+    <!-- Interactive Diagram Stage -->
+    <div class="diagram-stage-card">
+      <div class="stage-toolbar">
+        <div class="stage-title">
+          <span> پشته فناوری، زبان‌های برنامه‌نویسی و لایه‌های اجرایی پرس‌کاد</span>
+        </div>
+        <div class="stage-controls">
+          <span class="zoom-indicator" id="zoomIndicator">100%</span>
+          <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
+          <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
+          <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
+          <button class="control-btn" id="fullscreenBtn" title="تمام صفحه"></button>
+          <button class="btn btn-primary btn-sm" id="exportBtn">خروجی SVG</button>
+        </div>
+      </div>
+      <div class="diagram-viewport">
+        <div class="figma-hud-helper">
+          <span>اسکرول ماوس: زوم روی نشانگر</span>
+          <span>•</span>
+          <span>درگ آزاد یا <kbd>Space</kbd> + درگ: جابجایی</span>
+        </div>
+        <div class="diagram-canvas">
+          <pre class="mermaid">
+graph TB
+  %% Styling Definitions
+  classDef langNode fill:#0F172A,stroke:#2DD4BF,stroke-width:2.5px,color:#F8FAFC;
+  classDef feNode fill:#131B2E,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
+  classDef beNode fill:#1E1B4B,stroke:#A855F7,stroke-width:2px,color:#F8FAFC;
+  classDef dbNode fill:#064E3B,stroke:#10B981,stroke-width:2.5px,color:#F8FAFC;
+  classDef toolNode fill:#1E293B,stroke:#94A3B8,stroke-width:1.5px,color:#F8FAFC;
+  classDef extNode fill:#451A03,stroke:#F59E0B,stroke-width:2px,color:#F8FAFC;
+
+  %% Subgraph 1: Programming & Scripting Languages
+  subgraph LANG[" ۱. زبان‌های برنامه‌نویسی و اسکریپت‌نویسی (Core Languages)"]
+    direction TB
+    L_JS[" JavaScript (ES2022+)<br/>• منطق فرانت‌اند، کامپوننت‌ها و هوک‌ها<br/>• اسکریپت‌های سیستمی و اودیت"]:::langNode
+    L_JSX[" JSX (React Extension)<br/>• ساختار اعلانی رابط کاربری (UI)<br/>• ترکیب منطق جاوااسکریپت و درخت DOM"]:::langNode
+    L_SQL[" SQL & PL/pgSQL<br/>• ۸۵ مایگریشن پایگاه‌داده Postgres<br/>• توابع ذخیره‌شده اتمیک و RLS Policies"]:::langNode
+    L_CSS[" CSS3 & Modern Variables<br/>• استایل‌دهی لوکس، گلس‌مورفیسم و دارک‌مود<br/>• تایپوگرافی IRANSansX و انیمیشن"]:::langNode
+    L_HTML[" HTML5 & Canvas<br/>• اسکلت سمانتیک صفحات و ویجت امبد<br/>• رندر جلوه‌های بصری و جشن تبریک"]:::langNode
+    L_JSON[" JSON & JSONB<br/>• فرمت تنظیمات و کانفیگ‌ها<br/>• ساختار ذخیره گزینه‌ها و شروط پرش"]:::langNode
+    L_PY[" Python (Automation & Audit)<br/>• اسکریپت‌های تست شباهت و پاکسازی کلاس‌ها"]:::langNode
+  end
+
+  %% Subgraph 2: Frontend Frameworks & Libraries
+  subgraph FRONTEND[" ۲. فریم‌ورک و کتابخانه‌های رابط کاربری (Frontend Ecosystem)"]
+    direction TB
+    FE_REACT[" React 18<br/>(هسته SPA، مدیریت State و Context)"]:::feNode
+    FE_VITE[" Vite 5<br/>(باندلر فوق‌سریع و سرور توسعه ESM)"]:::feNode
+    FE_TAILWIND[" Tailwind CSS 3<br/>(سیستم طراحی توکن‌محور و ریسپانسیو)"]:::feNode
+    FE_ROUTER[" React Router DOM 6<br/>(مسیریابی روت‌های عمومی و پنل ادمین)"]:::feNode
+    FE_MOTION[" Framer Motion<br/>(ترنزیشن‌های روان، انیمیشن ورود اسلایدها)"]:::feNode
+    FE_CHARTS[" Recharts<br/>(نمودارهای آماری و بصری‌سازی تحلیل پاسخ‌ها)"]:::feNode
+    FE_XLSX[" SheetJS (XLSX)<br/>(تولید و اکسپورت فایل اکسل فارسی با فرمت RTL)"]:::feNode
+    FE_JALAALI[" Jalaali-JS<br/>(تبدیل و نمایش تقویم خورشیدی و تاریخ شمسی)"]:::feNode
+    FE_LUCIDE[" Lucide React<br/>(مجموعه آیکون‌های وکتور مدرن)"]:::feNode
+  end
+
+  %% Subgraph 3: Backend, BaaS & Database Layer
+  subgraph BACKEND[" ۳. پایگاه داده و بک‌اند سرورلس (Backend & Database)"]
+    direction TB
+    BE_POSTGRES[" PostgreSQL 15 Engine<br/>• هسته پایگاه داده رابطه‌ای<br/>• پشتیبانی بومی از داده‌های ساختاریافته JSONB<br/>• تریگرهای سهمیه‌بندی و پاکسازی خودکار"]:::dbNode
+    BE_SUPABASE[" Supabase Client (@supabase/supabase-js)<br/>• پل ارتباطی مستقیم و امن فرانت‌اند به دیتابیس"]:::beNode
+    BE_AUTH[" GoTrue Auth Engine<br/>• مدیریت نشست کاربر، توکن‌های JWT و هش رمزها"]:::beNode
+    BE_REST[" PostgREST Gateway<br/>• تبدیل مستقیم کوئری‌ها به REST API امن"]:::beNode
+    BE_REALTIME[" Realtime WebSocket Server<br/>• برادکست آنی ارسال فرم‌ها به پنل مدیریت"]:::beNode
+    BE_STORAGE[" Supabase Storage Buckets<br/>• میزبانی تصاویر پس‌زمینه و لوگوی سازمانی"]:::beNode
+  end
+
+  %% Subgraph 4: DevOps, Infrastructure & External Services
+  subgraph INFRA[" ۴. زیرساخت، ابزارهای توسعه و سرویس‌های بیرونی (Infra & Services)"]
+    direction TB
+    IN_VERCEL[" Vercel Global Edge CDN<br/>(میزبانی ابری، روتینگ SPA و کش سریع)"]:::toolNode
+    IN_NODE[" Node.js Runtime<br/>(محیط اجرای اسکریپت‌های تست، بیلد و لایبرری‌ها)"]:::toolNode
+    IN_GIT[" Git & GitHub<br/>(مدیریت نسخه‌بندی کد و CI/CD خودکار)"]:::toolNode
+    EXT_SMS[" پنل‌های پیامکی (KavehNegar / Ahoot)<br/>(ارسال کدهای یکبار مصرف ورود و پیامک تبریک)"]:::extNode
+    EXT_TELEGRAM[" Telegram Bot API<br/>(ارسال اعلان لحظه‌ای ثبت پاسخ به چنل یا گروه)"]:::extNode
+    EXT_PAY[" درگاه پرداخت زرین‌پال<br/>(تسویه حساب و خرید بسته‌های اشتراک)"]:::extNode
+  end
+
+  %% Interconnections Between Layers
+  L_JS --> FE_REACT
+  L_JSX --> FE_REACT
+  FE_REACT --> FE_ROUTER
+  FE_REACT --> FE_MOTION
+  FE_REACT --> FE_CHARTS
+  FE_REACT --> FE_XLSX
+  FE_REACT --> FE_JALAALI
+  FE_REACT --> FE_LUCIDE
+
+  L_CSS --> FE_TAILWIND
+  FE_TAILWIND --> FE_REACT
+  FE_VITE --> FE_REACT
+
+  L_SQL --> BE_POSTGRES
+  L_JSON --> BE_POSTGRES
+
+  FE_REACT --> BE_SUPABASE
+  BE_SUPABASE --> BE_AUTH
+  BE_SUPABASE --> BE_REST
+  BE_SUPABASE --> BE_REALTIME
+  BE_SUPABASE --> BE_STORAGE
+
+  BE_REST --> BE_POSTGRES
+  BE_AUTH --> BE_POSTGRES
+  BE_REALTIME --> BE_POSTGRES
+
+  FE_VITE --> IN_VERCEL
+  L_PY --> IN_NODE
+  L_JS --> IN_NODE
+
+  BE_POSTGRES -.-> EXT_SMS
+  BE_POSTGRES -.-> EXT_TELEGRAM
+  BE_POSTGRES -.-> EXT_PAY
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Technical Analysis Cards -->
+    <div class="spec-grid">
+      <!-- Card 1: Core Languages -->
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon"><svg class="icon" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+          <div class="spec-card-title">زبان‌های برنامه‌نویسی و نحوه استفاده</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>JavaScript (ES2022+) & JSX:</strong> زبان اصلی منطق فرانت‌اند، کامپوننت‌های تعاملی فرم‌ساز، هوک‌های سفارشی (Custom Hooks)، اعتبارسنجی‌ها و اسکریپت‌های نگهداری پروژه.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>SQL & PL/pgSQL:</strong> زبان کدهای بک‌اند درون دیتابیس؛ شامل بیش از ۸۵ فایل مایگریشن، توابع اتمیک بدون نیاز به سرور میانی (مانند <code>submit_public_response</code>) و سیاست‌های امنیتی RLS.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>CSS3 + Tailwind CSS:</strong> طراحی مدرن دارک‌مود با متغیرهای اختصاصی رنگی، تایپوگرافی IRANSansX در ۱۱ وزن، سیستم گلس‌مورفیسم و ترنزیشن‌های نرم.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>Python (Scripts):</strong> زبان اسکریپت‌های خودکارسازی در پوشه <code>scripts/</code> جهت بررسی کلاس‌های بی‌استفاده (Dead Classes) و تست شباهت اسکلتون.</div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Card 2: Frameworks & Libs -->
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon"><svg class="icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+          <div class="spec-card-title">فریم‌ورک‌ها و کتابخانه‌های کلیدی</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>React 18 & Vite 5:</strong> ترکیب مدرن برای بارگذاری فوق‌سریع کلاینت (SPA)، هات ریلودینگ لحظه‌ای در توسعه و تولید باندل فوق‌العاده بهینه برای توزیع پروداکشن.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>Framer Motion:</strong> ایجاد حس پرمیوم و روان در اسلاید سوالات، جابجایی کارت‌ها و انیمیشن‌های لودینگ.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>Recharts & SheetJS (XLSX):</strong> ترکیب ابزارهای بصری تحلیلی برای رسم چارت‌های میله‌ای/دایره‌ای از پاسخ‌ها و دانلود گزارش‌های اکسل با چینش راست‌به‌چپ فارسی.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>Jalaali-JS:</strong> بومی‌سازی کامل تاریخ‌ها به گاه‌شماری خورشیدی، تبدیل تاریخ تولد و ثبت زمان پاسخ‌ها به شمسی.</div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Card 3: Backend & Database Architecture -->
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon"><svg class="icon" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
+          <div class="spec-card-title">معماری بک‌اند و پایگاه‌داده</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>PostgreSQL 15 (Relational + JSONB):</strong> هسته قدرتمند ذخیره‌سازی داده؛ ساختار هیبریدی برای ذخیره اطلاعات عمومی و ذخیره پویا و انعطاف‌پذیر گزینه‌ها در فرمت JSONB.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>Supabase BaaS:</strong> ارائه‌دهنده سرویس‌های احراز هویت (GoTrue با توکن‌های JWT)، ارتباط بلادرنگ وب‌سوکت (Realtime CDC) و ذخیره‌سازی ابری فایل‌ها (Storage).</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>PostgREST Gateway:</strong> تبدیل مستقیم و اتمیک دستورات کلاینت به کوئری‌های بهینه پایگاه‌داده با عبور از فیلترهای Row-Level Security بدون نیاز به سرور سنتی Express/Nest.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>سرویس‌های ثالث:</strong> ارسال پیامک‌های OTP از طریق KavehNegar/Amoot، اتصال ربات اعلان‌های تلگرام و تسویه حساب مالی با درگاه زرین‌پال.</div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Card 4: Architecture Advantages -->
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <div class="spec-card-title">مزایای فنی این پشته فناوری</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>توسعه سریع و بدون سرور (Serverless BaaS):</strong> حذف هزینه‌های سنگین نگهداری سرورهای Node.js سنتی و استفاده حداکثری از قدرت پایگاه‌داده PostgreSQL.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>امنیت توکار در سطح دیتابیس (Zero-Trust RLS):</strong> دسترسی به داده‌ها در عمیق‌ترین لایه با سیاست‌های سفت و سخت RLS کنترل می‌شود و نشت داده میان کاربران غیرممکن است.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>سرعت پاسخ‌دهی بالا:</strong> به لطف توزیع روی لبه Vercel Edge و اجرای کامپوننت‌های فوق‌سبک در فرانت‌اند، فرم‌ها با سرعت خیره‌کننده حتی در اینترنت‌های کند باز می‌شوند.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>قابلیت اطمینان بالا:</strong> ذخیره موقت پاسخ‌ها در LocalStorage مرورگر کاربر تا در صورت قطع لحظه‌ای اتصال اینترنت، پاسخ‌ها از دست نروند.</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Technology Matrix Table -->
+    <div class="diagram-stage-card" style="margin-top: 32px; padding: 24px;">
+      <h3 style="margin-bottom: 18px; font-size: 17px; color: var(--accent-teal); display: flex; align-items: center; gap: 8px;">
+        <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        شناسنامه و ماتریس جامع ابزارها و فناوری‌های پروژه پرس‌کاد
+      </h3>
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: right; font-size: 14px;">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--border-subtle); color: var(--text-muted);">
+              <th style="padding: 12px 14px;">لایه / بخش</th>
+              <th style="padding: 12px 14px;">زبان / فناوری</th>
+              <th style="padding: 12px 14px;">نسخه</th>
+              <th style="padding: 12px 14px;">محل استفاده در پروژه</th>
+              <th style="padding: 12px 14px;">نقش کلیدی و کاربرد</th>
+            </tr>
+          </thead>
+          <tbody style="color: var(--text-main);">
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+              <td style="padding: 12px 14px;"><span class="badge badge-teal">زبان اصلی</span></td>
+              <td style="padding: 12px 14px;"><strong>JavaScript (ESNext) + JSX</strong></td>
+              <td style="padding: 12px 14px;">ES2022</td>
+              <td style="padding: 12px 14px;"><code>src/**/*.jsx</code>, <code>src/**/*.js</code></td>
+              <td style="padding: 12px 14px;">کدهای فرانت‌اند، کامپوننت‌ها، مدیریت State و منطق فرم‌ساز</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+              <td style="padding: 12px 14px;"><span class="badge badge-purple">زبان دیتابیس</span></td>
+              <td style="padding: 12px 14px;"><strong>SQL / PL/pgSQL</strong></td>
+              <td style="padding: 12px 14px;">PostgreSQL 15</td>
+              <td style="padding: 12px 14px;"><code>supabase/migrations/*.sql</code></td>
+              <td style="padding: 12px 14px;">تعریف اسکیما، توابع اتمیک سابمیت، RLS و تریگرهای سهمیه</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+              <td style="padding: 12px 14px;"><span class="badge badge-blue">استایل‌دهی</span></td>
+              <td style="padding: 12px 14px;"><strong>Tailwind CSS + PostCSS</strong></td>
+              <td style="padding: 12px 14px;">v3.4.4</td>
+              <td style="padding: 12px 14px;"><code>tailwind.config.js</code>, <code>index.css</code></td>
+              <td style="padding: 12px 14px;">طراحی رابط کاربری ریسپانسیو، دارک‌مود و کلاس‌های اتمیک</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+              <td style="padding: 12px 14px;"><span class="badge badge-teal">فریم‌ورک کلاینت</span></td>
+              <td style="padding: 12px 14px;"><strong>React</strong></td>
+              <td style="padding: 12px 14px;">v18.3.1</td>
+              <td style="padding: 12px 14px;">هسته کل فرانت‌اند</td>
+              <td style="padding: 12px 14px;">مدیریت وضعیت واکنشی، رندرینگ بهینه و کامپوننت‌بندی ماژولار</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+              <td style="padding: 12px 14px;"><span class="badge badge-blue">باندلر و ساخت</span></td>
+              <td style="padding: 12px 14px;"><strong>Vite</strong></td>
+              <td style="padding: 12px 14px;">v5.4.0</td>
+              <td style="padding: 12px 14px;"><code>vite.config.js</code></td>
+              <td style="padding: 12px 14px;">سرور دولوپمنت پرسرعت، کامپایل ماژول‌ها و ساخت پکیج پروداکشن</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+              <td style="padding: 12px 14px;"><span class="badge badge-purple">بک‌اند و زیرساخت</span></td>
+              <td style="padding: 12px 14px;"><strong>Supabase (PostgreSQL + Auth)</strong></td>
+              <td style="padding: 12px 14px;">v2.45.0</td>
+              <td style="padding: 12px 14px;"><code>src/lib/supabase.js</code></td>
+              <td style="padding: 12px 14px;">احراز هویت سشن JWT، ارتباط بلادرنگ و دسترسی به جداول</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+              <td style="padding: 12px 14px;"><span class="badge badge-emerald">گزارش‌گیری</span></td>
+              <td style="padding: 12px 14px;"><strong>Recharts + SheetJS (XLSX)</strong></td>
+              <td style="padding: 12px 14px;">v2.13 / v0.18</td>
+              <td style="padding: 12px 14px;"><code>src/pages/Admin/Responses.jsx</code></td>
+              <td style="padding: 12px 14px;">رسم نمودارهای آماری تحلیلی و اکسپورت مستقیم اکسل با حروف فارسی</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+              <td style="padding: 12px 14px;"><span class="badge badge-blue">اسکریپتینگ و اتوماسیون</span></td>
+              <td style="padding: 12px 14px;"><strong>Node.js & Python</strong></td>
+              <td style="padding: 12px 14px;">Node 18+ / Py 3</td>
+              <td style="padding: 12px 14px;"><code>scripts/*.js</code>, <code>scripts/*.py</code></td>
+              <td style="padding: 12px 14px;">تست خودکار API، ممیزی کدهای مرده و نگهداری اسکیما</td>
+            </tr>
+            <tr>
+              <td style="padding: 12px 14px;"><span class="badge badge-teal">توزیع و میزبانی</span></td>
+              <td style="padding: 12px 14px;"><strong>Vercel Edge Network</strong></td>
+              <td style="padding: 12px 14px;">Edge CDN</td>
+              <td style="padding: 12px 14px;"><code>vercel.json</code></td>
+              <td style="padding: 12px 14px;">توزیع جهانی استاتیک اس‌پی‌ای، کش هوشمند هدرها و رول‌های ریرایت روت‌ها</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="page-footer">
+      <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
+    </footer>
+  </div>
+
+  <script src="assets/app.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      securityLevel: 'loose',
+      flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
+      themeVariables: {
+        darkMode: true,
+        background: '#080C14',
+        primaryColor: '#131B2E',
+        primaryTextColor: '#FFFFFF',
+        primaryBorderColor: '#2DD4BF',
+        lineColor: '#38BDF8',
+        secondaryColor: '#1A2338',
+        tertiaryColor: '#0F172A',
+        fontFamily: 'IRANSansX, Vazirmatn, sans-serif',
+        fontSize: '15.5px'
+      }
+    });
+  </script>
+</body>
+</html>
