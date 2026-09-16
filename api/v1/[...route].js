@@ -2347,24 +2347,46 @@ export default async function handler(req, res) {
             console.warn("Could not record form in trash table:", trashErr);
           }
 
-          // ۳. اگر کاربر حذف دائمی را زده بود: فرم از جدول forms حذف می‌شود تا در UI کاربر دیده نشود، اما در trash سوپرادمین تا ۳۰ روز می‌ماند
+          const existingSettings = (form.settings && typeof form.settings === "object") ? form.settings : {};
+          const updatedSettings = {
+            ...existingSettings,
+            user_purged: isPermanent,
+            user_purged_at: isPermanent ? nowIso : null,
+            deleted_by: user.id,
+            deleted_by_email: user.email,
+          };
+
+          // ۳. به‌روزرسانی ردیف فرم: همیشه در دیتابیس می‌ماند تا سوپرادمین تا ۳۰ روز به آن و پاسخ‌هایش دسترسی کامل داشته باشد
+          const updatePayload = {
+            deleted_at: nowIso,
+            published: false,
+            settings: updatedSettings,
+          };
+
           if (isPermanent) {
-            const { error: delErr } = await clients.adminClient
-              .from("forms")
-              .delete()
-              .eq("id", form.id);
-            if (delErr) return res.status(400).json({ error: delErr.message });
-            return res.status(200).json({ success: true, message: "فرم با موفقیت از حساب شما حذف شد." });
+            updatePayload.user_purged_at = nowIso;
           }
 
-          // ۴. در حالت پیش‌فرض (حذف نرم به سطل زباله کاربر):
-          const { error: softDelErr } = await clients.adminClient
+          let { error: formUpdateErr } = await clients.adminClient
             .from("forms")
-            .update({ deleted_at: nowIso, published: false })
+            .update(updatePayload)
             .eq("id", form.id);
 
-          if (softDelErr) return res.status(400).json({ error: softDelErr.message });
-          return res.status(200).json({ success: true, message: "فرم به سطل زباله منتقل شد." });
+          // در صورت عدم وجود ستون user_purged_at در دیتابیس فعلی، بدون آن فیلد تلاش مجدد انجام شود
+          if (formUpdateErr && formUpdateErr.message?.includes("user_purged_at")) {
+            delete updatePayload.user_purged_at;
+            const retry = await clients.adminClient
+              .from("forms")
+              .update(updatePayload)
+              .eq("id", form.id);
+            formUpdateErr = retry.error;
+          }
+
+          if (formUpdateErr) return res.status(400).json({ error: formUpdateErr.message });
+          return res.status(200).json({
+            success: true,
+            message: isPermanent ? "فرم برای همیشه از حساب شما حذف شد." : "فرم به سطل زباله منتقل شد."
+          });
         }
 
         return res.status(405).json({ error: "Method not allowed" });

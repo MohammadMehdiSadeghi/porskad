@@ -369,12 +369,34 @@ export default function SuperAdmin() {
 
         const { data: existingForm } = await supabase
           .from("forms")
-          .select("id")
+          .select("id, settings")
           .eq("id", formId)
           .maybeSingle();
 
         if (existingForm) {
-          const { error: upErr } = await supabase.from("forms").update({ deleted_at: null }).eq("id", formId);
+          const nextSettings = {
+            ...(existingForm.settings || {}),
+            user_purged: false,
+            user_purged_at: null,
+          };
+          let { error: upErr } = await supabase
+            .from("forms")
+            .update({
+              deleted_at: null,
+              user_purged_at: null,
+              settings: nextSettings,
+            })
+            .eq("id", formId);
+          if (upErr && upErr.message?.includes("user_purged_at")) {
+            const retry = await supabase
+              .from("forms")
+              .update({
+                deleted_at: null,
+                settings: nextSettings,
+              })
+              .eq("id", formId);
+            upErr = retry.error;
+          }
           if (!upErr) restoredOk = true;
         } else if (p.slug && p.title) {
           const formRow = {
@@ -566,7 +588,22 @@ export default function SuperAdmin() {
     try {
       for (const item of items) {
         if (item.kind === "form" && item.isSoftDelete) {
-          const { error } = await supabase.from("forms").update({ deleted_at: null }).eq("id", item.rawId);
+          const nextSettings = {
+            ...(item.payload?.settings || {}),
+            user_purged: false,
+            user_purged_at: null,
+          };
+          let { error } = await supabase
+            .from("forms")
+            .update({ deleted_at: null, user_purged_at: null, settings: nextSettings })
+            .eq("id", item.rawId);
+          if (error && error.message?.includes("user_purged_at")) {
+            const retry = await supabase
+              .from("forms")
+              .update({ deleted_at: null, settings: nextSettings })
+              .eq("id", item.rawId);
+            error = retry.error;
+          }
           if (!error) successCount++;
         } else if (item.kind === "user") {
           const { error } = await supabase.from("profiles").update({ is_active: true, deactivated_at: null, deactivated_by: null }).eq("id", item.rawId);
@@ -591,7 +628,13 @@ export default function SuperAdmin() {
     if (!confirm("Permanently purge all expired items older than 30 days?")) return;
     setTrashActionBusy(true);
     try {
-      const { data, error } = await supabase.rpc("purge_expired_trash");
+      // تلاش از طریق تابع جدید پاکسازی فرم‌ها و سطل زباله
+      let { data, error } = await supabase.rpc("purge_expired_forms_and_trash");
+      if (error) {
+        const fallback = await supabase.rpc("purge_expired_trash");
+        data = fallback.data;
+        error = fallback.error;
+      }
       if (error) {
         const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
         const { error: err1 } = await supabase.from("trash").delete().lt("expires_at", new Date().toISOString());
@@ -6143,49 +6186,65 @@ export default function SuperAdmin() {
 
             // Unified list of trashed items
             const all = [
-              ...trashItems.map((t) => ({
-                key: "t-" + t.id,
-                rawId: t.id,
-                kind: t.entity_type,
-                kindLabel:
-                  t.entity_type === "response"
-                    ? "Response"
-                    : t.entity_type === "form"
-                    ? "Form"
-                    : t.entity_type === "question"
-                    ? "Question"
-                    : t.entity_type === "ticket"
-                    ? "Ticket"
-                    : t.entity_type === "tg_config"
-                    ? "Telegram Config"
-                    : t.entity_type === "tg_link"
-                    ? "Telegram Link"
-                    : t.entity_type,
-                label: t.label,
-                at: t.deleted_at,
-                expires: t.expires_at,
-                ownerId: t.user_id,
-                byId: t.deleted_by,
-                byName: t.deleted_by_name,
-                payload: t.payload,
-                isSoftDelete: false,
-              })),
+              ...trashItems.map((t) => {
+                const isUserPurged = Boolean(
+                  t.payload?.user_deleted_permanent ||
+                  t.payload?.user_purged ||
+                  t.payload?.settings?.user_purged
+                );
+                return {
+                  key: "t-" + t.id,
+                  rawId: t.id,
+                  kind: t.entity_type,
+                  kindLabel:
+                    t.entity_type === "response"
+                      ? "Response"
+                      : t.entity_type === "form"
+                      ? isUserPurged
+                        ? "Form (User Purged)"
+                        : "Form"
+                      : t.entity_type === "question"
+                      ? "Question"
+                      : t.entity_type === "ticket"
+                      ? "Ticket"
+                      : t.entity_type === "tg_config"
+                      ? "Telegram Config"
+                      : t.entity_type === "tg_link"
+                      ? "Telegram Link"
+                      : t.entity_type,
+                  label: isUserPurged ? `[User Purged] ${t.label}` : t.label,
+                  at: t.deleted_at,
+                  expires: t.expires_at,
+                  ownerId: t.user_id,
+                  byId: t.deleted_by,
+                  byName: t.deleted_by_name,
+                  payload: t.payload,
+                  isSoftDelete: false,
+                  isUserPurged,
+                };
+              }),
               ...trashedForms
                 .filter((f) => !trashItems.some((t) => t.entity_type === "form" && (t.entity_id === f.id || t.id === f.id)))
-                .map((f) => ({
-                  key: "f-" + f.id,
-                  rawId: f.id,
-                  kind: "form",
-                  kindLabel: "Form",
-                  label: `Form: "${f.title || f.slug || "Untitled"}"`,
-                  at: f.deleted_at,
-                  expires: new Date(new Date(f.deleted_at).getTime() + 30 * dayMs).toISOString(),
-                  ownerId: f.created_by || f.manager_id || f.user_id || null,
-                  byId: f.deleted_by || null,
-                  byName: null,
-                  payload: f,
-                  isSoftDelete: true,
-                })),
+                .map((f) => {
+                  const isUserPurged = Boolean(f.user_purged_at || f.settings?.user_purged);
+                  return {
+                    key: "f-" + f.id,
+                    rawId: f.id,
+                    kind: "form",
+                    kindLabel: isUserPurged ? "Form (User Purged)" : "Form",
+                    label: isUserPurged
+                      ? `[User Purged] Form: "${f.title || f.slug || "Untitled"}"`
+                      : `Form: "${f.title || f.slug || "Untitled"}"`,
+                    at: f.deleted_at,
+                    expires: new Date(new Date(f.deleted_at).getTime() + 30 * dayMs).toISOString(),
+                    ownerId: f.created_by || f.manager_id || f.user_id || null,
+                    byId: f.deleted_by || f.settings?.deleted_by || null,
+                    byName: f.settings?.deleted_by_email || null,
+                    payload: f,
+                    isSoftDelete: true,
+                    isUserPurged,
+                  };
+                }),
               ...trashedUsers.map((u) => ({
                 key: "u-" + u.id,
                 rawId: u.id,

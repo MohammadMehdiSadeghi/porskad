@@ -137,10 +137,13 @@ export default function FormsList() {
       if (formsError) throw formsError;
 
       let allForms = formsData ?? [];
-      // کاربر عادی فقط فرم‌های خودش را دریافت می‌کند
+      // کاربر عادی فقط فرم‌های خودش را دریافت می‌کند (و فرم‌های حذف دائمی شده را به هیچ وجه نمی‌بیند)
       if (!isOwner()) {
         allForms = allForms.filter(
-          (f) => f.manager_id === user.id || f.created_by === user.id
+          (f) =>
+            (f.manager_id === user.id || f.created_by === user.id) &&
+            !f.user_purged_at &&
+            !f.settings?.user_purged
         );
       }
 
@@ -161,7 +164,15 @@ export default function FormsList() {
   }, [user, load]);
 
   const activeFormsCount = useMemo(
-    () => forms.filter((f) => f.published && !f.archived && !f.deleted_at).length,
+    () =>
+      forms.filter(
+        (f) =>
+          f.published &&
+          !f.archived &&
+          !f.deleted_at &&
+          !f.user_purged_at &&
+          !f.settings?.user_purged
+      ).length,
     [forms]
   );
   const maxForms = profile?.max_forms ?? 5;
@@ -533,8 +544,9 @@ export default function FormsList() {
     if (!confirm(`حذف دائمی فرم «${form.title}»؟ این فرم از پنل شما پاک خواهد شد.`)) return;
 
     let hardSuccess = false;
+    const nowIso = new Date().toISOString();
 
-    // ۱. ابتدا فراخوانی API رسمی با فلگ permanent=true جهت ثبت اسنپ‌شات کامل در سطل زباله ۳۰ روزه
+    // ۱. ابتدا فراخوانی API رسمی با فلگ permanent=true جهت ثبت اسنپ‌شات کامل در سطل زباله ۳۰ روزه سوپرادمین
     try {
       const apiRes = await fetch(`/api/v1/forms/${form.id}?permanent=true`, {
         method: "DELETE",
@@ -549,9 +561,29 @@ export default function FormsList() {
       console.warn("API permanent delete fallback:", e);
     }
 
-    // ۲. فالبک در صورت عدم پاسخگویی اندپوینت
+    // ۲. فالبک در صورت عدم پاسخگویی اندپوینت: به جای delete فیزیکی، فرم را با فلگ user_purged علامت‌گذاری می‌کنیم
     if (!hardSuccess) {
-      const { error } = await supabase.from("forms").delete().eq("id", form.id);
+      const nextSettings = {
+        ...(form.settings || {}),
+        user_purged: true,
+        user_purged_at: nowIso,
+        deleted_by: user?.id,
+        deleted_by_email: user?.email,
+      };
+
+      const updatePayload = {
+        deleted_at: nowIso,
+        published: false,
+        user_purged_at: nowIso,
+        settings: nextSettings,
+      };
+
+      let { error } = await supabase.from("forms").update(updatePayload).eq("id", form.id);
+      if (error && error.message?.includes("user_purged_at")) {
+        delete updatePayload.user_purged_at;
+        const retry = await supabase.from("forms").update(updatePayload).eq("id", form.id);
+        error = retry.error;
+      }
       if (!error) {
         hardSuccess = true;
       }
@@ -590,14 +622,19 @@ export default function FormsList() {
   const filtered = useMemo(() => {
     let result = forms;
 
+    // کاربران عادی هرگز فرم‌های حذف دائمی شده را نباید ببینند
+    if (!isOwner()) {
+      result = result.filter((f) => !f.user_purged_at && !f.settings?.user_purged);
+    }
+
     if (filter === "trash") {
-      // سطل زباله: فقط فرم‌های حذف‌شده
-      result = result.filter((f) => f.deleted_at);
+      // سطل زباله کاربر: فقط فرم‌های حذف‌شده موقت (نه حذف قطعی)
+      result = result.filter((f) => f.deleted_at && !f.user_purged_at && !f.settings?.user_purged);
     } else if (filter === "archived") {
-      result = result.filter((f) => f.archived && !f.deleted_at);
+      result = result.filter((f) => f.archived && !f.deleted_at && !f.user_purged_at && !f.settings?.user_purged);
     } else {
       // حالت عادی: حذف‌شده و آرشیو‌شده رو نشون نده
-      result = result.filter((f) => !f.deleted_at && !f.archived);
+      result = result.filter((f) => !f.deleted_at && !f.archived && !f.user_purged_at && !f.settings?.user_purged);
       if (filter === "published") result = result.filter((f) => f.published);
       else if (filter === "draft") result = result.filter((f) => !f.published);
     }
@@ -607,10 +644,13 @@ export default function FormsList() {
       result = result.filter((f) => f.title.toLowerCase().includes(s));
     }
     return result;
-  }, [forms, filter, search]);
+  }, [forms, filter, search, isOwner]);
 
-  // شمارنده سطل زباله
-  const trashCount = useMemo(() => forms.filter((f) => f.deleted_at).length, [forms]);
+  // شمارنده سطل زباله (صرفاً موارد حذف موقت)
+  const trashCount = useMemo(
+    () => forms.filter((f) => f.deleted_at && !f.user_purged_at && !f.settings?.user_purged).length,
+    [forms]
+  );
 
   if (loading) return <FormsListSkeleton />;
 
