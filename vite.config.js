@@ -1,11 +1,34 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import fs from "fs";
+import path from "path";
 
 // افزونه توسعه محلی: اجرای مستقیم اندپوینت‌های API در سرور توسعه Vite بدون نیاز به Vercel CLI
 function apiDevPlugin() {
   return {
     name: "api-dev-middleware",
     configureServer(server) {
+      // بارگذاری خودکار مقادیر .env و .env.local در process.env برای اجرای بدون نقص API در محیط محلی
+      try {
+        for (const f of [".env.local", ".env"]) {
+          const p = path.resolve(process.cwd(), f);
+          if (fs.existsSync(p)) {
+            const raw = fs.readFileSync(p, "utf-8");
+            for (const line of raw.split("\n")) {
+              const tr = line.trim();
+              if (tr && !tr.startsWith("#") && tr.includes("=")) {
+                const idx = tr.indexOf("=");
+                const k = tr.slice(0, idx).trim();
+                const v = tr.slice(idx + 1).trim();
+                if (!process.env[k]) process.env[k] = v;
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load env in Vite dev server:", err);
+      }
+
       server.middlewares.use(async (req, res, next) => {
         const url = req.url || "";
         if (url.startsWith("/api/")) {
@@ -100,14 +123,6 @@ function apiDevPlugin() {
 
 export default defineConfig({
   plugins: [react(), apiDevPlugin()],
-  server: {
-    proxy: {
-      "/api": {
-        target: "http://localhost:3000",
-        changeOrigin: true,
-      },
-    },
-  },
   build: {
     outDir: "dist",
     sourcemap: false,

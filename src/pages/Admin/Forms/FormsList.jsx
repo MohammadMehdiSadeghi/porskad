@@ -218,6 +218,15 @@ export default function FormsList() {
         if (resJson.form) {
           createdFormData = resJson.form;
         }
+      } else {
+        const errJson = await apiRes.json().catch(() => ({}));
+        if (errJson.quota_exceeded) {
+          setBusy(false);
+          setShowTypeModal(false);
+          setShowQuotaModal(true);
+          push(errJson.error || "سقف فرم‌های همزمان تکمیل شده است.", "error");
+          return;
+        }
       }
     } catch (e) {
       console.warn("create-form api fallback:", e);
@@ -236,9 +245,23 @@ export default function FormsList() {
       };
 
       let { data, error } = await supabase.from("forms").insert(base).select().single();
-      if (error && error.message?.includes("default_theme")) {
-        delete base.default_theme;
-        const retry = await supabase.from("forms").insert(base).select().single();
+      if (error) {
+        console.warn("Direct insert initial error:", error);
+        const retryBase = { ...base };
+        if (error.message?.includes("default_theme")) delete retryBase.default_theme;
+        if (error.message?.includes("form_type")) delete retryBase.form_type;
+        if (error.message?.includes("manager_id")) delete retryBase.manager_id;
+
+        let retry = await supabase.from("forms").insert(retryBase).select().single();
+        if (retry.error) {
+          const minimalBase = {
+            slug,
+            title,
+            published: false,
+            created_by: currentUserId,
+          };
+          retry = await supabase.from("forms").insert(minimalBase).select().single();
+        }
         data = retry.data;
         error = retry.error;
       }

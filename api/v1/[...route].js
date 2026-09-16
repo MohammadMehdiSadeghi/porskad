@@ -1306,39 +1306,44 @@ export default async function handler(req, res) {
         }
 
         if (req.method === "POST") {
-          // بررسی سقف ساخت فرم بر اساس پلن کاربر
-          const { data: userProfile } = await clients.adminClient
-            .from("profiles")
-            .select("is_owner, plan, max_forms, role")
-            .eq("id", user.id)
-            .maybeSingle();
+          const body = req.body || {};
+          const isPublishing = Boolean(body.published);
 
-          const isUnlimited = Boolean(
-            userProfile?.is_owner ||
-            userProfile?.role === "superadmin" ||
-            userProfile?.plan === "unlimited" ||
-            (userProfile?.max_forms && Number(userProfile.max_forms) >= 999999)
-          );
+          // بررسی سقف فرم‌های فعال فقط در صورتی که فرم منتشر شده (فعال) باشد
+          if (isPublishing) {
+            const { data: userProfile } = await clients.adminClient
+              .from("profiles")
+              .select("is_owner, plan, max_forms, role")
+              .eq("id", user.id)
+              .maybeSingle();
 
-          if (!isUnlimited) {
-            const allowedMax = userProfile?.max_forms ? Number(userProfile.max_forms) : 5;
-            const { count: currentActiveForms } = await clients.adminClient
-              .from("forms")
-              .select("id", { count: "exact", head: true })
-              .or(`manager_id.eq.${user.id},created_by.eq.${user.id}`)
-              .is("deleted_at", null);
+            const isUnlimited = Boolean(
+              userProfile?.is_owner ||
+              userProfile?.role === "superadmin" ||
+              userProfile?.plan === "unlimited" ||
+              (userProfile?.max_forms && Number(userProfile.max_forms) >= 999999)
+            );
 
-            if ((currentActiveForms || 0) >= allowedMax) {
-              return res.status(403).json({
-                error: `سقف ساخت فرم‌های حساب شما تکمیل شده است (حداکثر ${allowedMax} فرم). لطفاً پلن خود را ارتقا دهید.`,
-                quota_exceeded: true,
-                max_forms: allowedMax,
-                current_forms: currentActiveForms,
-              });
+            if (!isUnlimited) {
+              const allowedMax = userProfile?.max_forms ? Number(userProfile.max_forms) : 5;
+              const { count: currentActiveForms } = await clients.adminClient
+                .from("forms")
+                .select("id", { count: "exact", head: true })
+                .or(`manager_id.eq.${user.id},created_by.eq.${user.id}`)
+                .eq("published", true)
+                .is("deleted_at", null);
+
+              if ((currentActiveForms || 0) >= allowedMax) {
+                return res.status(403).json({
+                  error: `سقف فرم‌های همزمان فعال تکمیل شده است (حداکثر ${allowedMax} فرم). لطفاً یکی از فرم‌های فعال را غیرفعال یا بایگانی کنید.`,
+                  quota_exceeded: true,
+                  max_forms: allowedMax,
+                  current_forms: currentActiveForms,
+                });
+              }
             }
           }
 
-          const body = req.body || {};
           const {
             title,
             slug,
@@ -1369,6 +1374,11 @@ export default async function handler(req, res) {
             ? Math.max(1, Math.min(Math.round(Number(max_responses_limit) || 1), 1000000))
             : null;
 
+          const formSettings = {
+            max_responses_limit: safeMaxLimit,
+            prevent_duplicate: Boolean(prevent_duplicate),
+          };
+
           const newFormData = {
             title: cleanTitle.substring(0, 255),
             slug: cleanSlug,
@@ -1384,15 +1394,34 @@ export default async function handler(req, res) {
             created_by: user.id,
             default_theme: ["light", "dark", "system"].includes(default_theme) ? default_theme : "light",
             identifier_mapping: identifier_mapping || null,
-            max_responses_limit: safeMaxLimit,
-            prevent_duplicate: Boolean(prevent_duplicate),
+            settings: formSettings,
           };
 
-          const { data: newForm, error: insertErr } = await clients.adminClient
+          let { data: newForm, error: insertErr } = await clients.adminClient
             .from("forms")
             .insert(newFormData)
             .select()
             .single();
+
+          // فالبک در صورت عدم وجود ستون‌های اختیاری در دیتابیس
+          if (insertErr) {
+            if (insertErr.message?.includes("settings")) {
+              delete newFormData.settings;
+            }
+            if (insertErr.message?.includes("default_theme")) {
+              delete newFormData.default_theme;
+            }
+            if (insertErr.message?.includes("identifier_mapping")) {
+              delete newFormData.identifier_mapping;
+            }
+            const retry = await clients.adminClient
+              .from("forms")
+              .insert(newFormData)
+              .select()
+              .single();
+            newForm = retry.data;
+            insertErr = retry.error;
+          }
 
           if (insertErr) return res.status(400).json({ error: insertErr.message });
 
