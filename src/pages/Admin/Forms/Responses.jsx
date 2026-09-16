@@ -4,6 +4,7 @@ import { supabase } from "../../../lib/supabaseClient";
 import Button from "../../../components/ui/Button";
 import Badge from "../../../components/ui/Badge";
 import Spinner from "../../../components/ui/Spinner";
+import Modal from "../../../components/ui/Modal";
 import { ResponsesSkeleton } from "../../../components/ui/Skeleton";
 import EmptyState from "../../../components/ui/EmptyState";
 import StickerCard from "../../../components/ui/StickerCard";
@@ -1025,6 +1026,7 @@ export default function Responses() {
   const [answers, setAnswers] = useState([]);
   const [tab, setTab] = useState("list");
   const [detail, setDetail] = useState(null); // مودال کامل یک پاسخ
+  const [deletingResponse, setDeletingResponse] = useState(null); // مودال تایید حذف پاسخ
   const [quickQId, setQuickQId] = useState(null); // سوالِ سراسریِ انتخابی در «نمایش سریع پاسخ‌ها» (ستون «پاسخ»)
   const [quickBarOpen, setQuickBarOpen] = useState(false); // باز/بسته بودن نوار «نمایش سریع پاسخ‌ها»
   const [onlyComplete, setOnlyComplete] = useState(false);
@@ -1267,11 +1269,16 @@ export default function Responses() {
     push(`فایل ${format === "excel" ? "Excel" : "CSV"} دانلود شد`);
   }
 
-  async function deleteResponse(r) {
-    if (!confirm("آیا از حذف این پاسخ مطمئنید؟")) return;
+  async function confirmDeleteResponse() {
+    if (!deletingResponse) return;
+    const r = deletingResponse;
+    setDeletingResponse(null);
     const { error } = await supabase.from("responses").delete().eq("id", r.id);
-    if (error) { push("حذف ناموفق بود", "error"); return; }
-    push("پاسخ حذف شد");
+    if (error) {
+      push("حذف ناموفق بود: " + (error.message || ""), "error");
+      return;
+    }
+    push("پاسخ با موفقیت حذف شد");
     setDetail(null);
     load();
   }
@@ -1591,7 +1598,7 @@ export default function Responses() {
                                   <Eye size={14} />
                                 </Button>
                                 <button
-                                  onClick={(e) => { e.stopPropagation(); deleteResponse(r); }}
+                                  onClick={(e) => { e.stopPropagation(); setDeletingResponse(r); }}
                                   className="p-1.5 rounded-lg text-ink/30 dark:text-slate-400 hover:text-magenta-text dark:hover:text-rose-400 hover:bg-magenta/10 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                                   title="حذف پاسخ"
                                 >
@@ -1700,7 +1707,7 @@ export default function Responses() {
                   />
                 </div>
                 <div className="flex items-center justify-between px-6 py-4 border-t border-ink/10 dark:border-slate-800 shrink-0">
-                  <Button variant="red" size="sm" onClick={() => deleteResponse(detail)}>حذف این پاسخ</Button>
+                  <Button variant="red" size="sm" onClick={() => setDeletingResponse(detail)}>حذف این پاسخ</Button>
                   <Button variant="ghost" size="sm" onClick={() => setDetail(null)}>بستن</Button>
                 </div>
               </div>
@@ -1708,6 +1715,37 @@ export default function Responses() {
           </div>
         </div>
       )}
+
+      {/* ─── مودال تایید حذف پاسخ (جایگزین confirm خام مرورگر) ─── */}
+      <Modal open={!!deletingResponse} onClose={() => setDeletingResponse(null)} title="حذف پاسخ">
+        <div className="flex flex-col items-center text-center py-2">
+          <div className="w-14 h-14 rounded-2xl bg-rose-500/15 dark:bg-rose-500/20 border border-rose-500/30 text-rose-500 flex items-center justify-center mb-3 shadow-[0_0_20px_rgba(244,63,94,0.25)]">
+            <Trash2 size={26} />
+          </div>
+          <h3 className="text-base sm:text-lg font-black text-navy dark:text-white mb-2 leading-7">
+            آیا از حذف این پاسخ اطمینان دارید؟
+          </h3>
+          <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 leading-6 max-w-sm mb-6">
+            تمام جواب‌ها و فایل‌های پیوست مربوط به این پاسخ برای همیشه پاک خواهند شد و این عملیات قابل بازگشت نیست.
+          </p>
+          <div className="flex gap-3 w-full justify-center">
+            <button
+              type="button"
+              onClick={confirmDeleteResponse}
+              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-700 hover:to-red-800 text-white font-black text-xs sm:text-sm shadow-[0_0_15px_rgba(225,29,72,0.4)] hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+            >
+              بله، حذف کن
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeletingResponse(null)}
+              className="py-2.5 px-5 rounded-xl border border-gray-200 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-800 text-ink dark:text-slate-300 font-bold text-xs sm:text-sm transition-all cursor-pointer"
+            >
+              انصراف
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

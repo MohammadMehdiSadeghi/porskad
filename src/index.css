@@ -545,12 +545,18 @@ html.dark .skeleton-shimmer::after {
 }
 
 /* ─── انیمیشن slide-up برای Undo Toast ─── */
-@keyframes slide-up {
-    from { transform: translate(-50%, 20px); opacity: 0; }
-    to { transform: translate(-50%, 0); opacity: 1; }
+@keyframes undo-slide-up {
+    from {
+        transform: translateY(28px) scale(0.96);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
 }
 .animate-slide-up {
-    animation: slide-up 0.3s ease-out;
+    animation: undo-slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* ─── انیمیشن جابه‌جایی نرم گام‌های ثبت‌نام (Step Transition) ─── */

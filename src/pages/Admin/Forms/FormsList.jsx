@@ -34,8 +34,8 @@ const FORM_TYPES = [
   },
 ];
 
-// ─── کامپوننت نوتیفیکیشن Undo ───
-function UndoToast({ message, onUndo, onDismiss, duration = 6000 }) {
+// ─── کامپوننت نوتیفیکیشن Undo با دیزاین سیستم پرس‌کاد ───
+function UndoToast({ formTitle, onUndo, onDismiss, duration = 6000 }) {
   const [progress, setProgress] = useState(100);
   const timerRef = useRef(null);
   const startTime = useRef(Date.now());
@@ -58,41 +58,59 @@ function UndoToast({ message, onUndo, onDismiss, duration = 6000 }) {
   }, [duration, onDismiss]);
 
   return (
-    <div dir="rtl" className="fixed bottom-6 inset-x-0 z-50 flex justify-center px-4 pointer-events-none animate-slide-up">
-      <div className="pointer-events-auto relative overflow-hidden bg-sec dark:bg-[#151C28] text-white rounded-2xl border-[1.5px] border-primary/40 shadow-hard-sm dark:shadow-dark-hard flex items-center gap-2.5 sm:gap-3 pr-5 pl-2.5 sm:pl-3 py-3 w-full sm:w-auto sm:min-w-[380px] sm:max-w-md">
-        {/* نوار تاکید رنگی سمت راست */}
-        <span className="absolute inset-y-0 right-0 w-1 bg-ecosystem-normal" />
+    <div
+      dir="rtl"
+      className="fixed bottom-6 inset-x-0 z-50 flex justify-center px-4 pointer-events-none animate-slide-up"
+    >
+      <div className="pointer-events-auto relative overflow-hidden bg-[#0B0F19]/95 dark:bg-[#131B2E]/95 backdrop-blur-2xl border border-teal/40 shadow-[0_20px_50px_rgba(0,0,0,0.6),0_0_25px_rgba(45,212,191,0.2)] rounded-2xl flex items-center gap-3 pr-4 pl-3 py-3 w-full sm:w-auto sm:min-w-[400px] sm:max-w-lg transition-all">
+        {/* نوار گرادینت عمودی سمت راست */}
+        <span className="absolute inset-y-0 right-0 w-1.5 bg-gradient-to-b from-teal to-cyan-400 rounded-r-2xl shadow-[0_0_10px_#2DD4BF]" />
 
-        {/* آیکون */}
-        <div className="w-10 h-10 shrink-0 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center">
-          <Trash2 size={16} className="text-female-normal" />
+        {/* آیکون مدرن زباله */}
+        <div className="w-10 h-10 shrink-0 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shadow-[0_0_12px_rgba(244,63,94,0.25)]">
+          <Trash2 size={17} />
         </div>
 
-        {/* پیام */}
-        <p className="text-sm font-bold leading-6 flex-1 min-w-0">{message}</p>
+        {/* پیام و عنوان */}
+        <div className="flex-1 min-w-0 flex flex-col justify-center">
+          <p className="text-xs sm:text-sm font-extrabold text-white truncate leading-5">
+            فرم «<span className="text-teal font-black">{formTitle}</span>» به سطل زباله منتقل شد
+          </p>
+          <span className="text-[11px] font-semibold text-slate-400 leading-4 mt-0.5">
+            امکان بازگردانی تا پایان تایمر
+          </span>
+        </div>
 
-        {/* دکمه بازگردانی */}
+        {/* دکمه بازگردانی با افکت لوکس پرس‌کاد */}
         <button
-          onClick={() => { cancelAnimationFrame(timerRef.current); onUndo(); }}
-          className="shrink-0 flex items-center gap-1.5 bg-teal hover:bg-teal/85 active:scale-95 text-white rounded-xl px-3.5 py-2 text-xs font-extrabold shadow-lg shadow-teal/30 transition-all cursor-pointer"
+          type="button"
+          onClick={() => {
+            cancelAnimationFrame(timerRef.current);
+            onUndo();
+          }}
+          className="shrink-0 flex items-center gap-1.5 bg-gradient-to-r from-teal to-teal-400 hover:from-teal-400 hover:to-teal text-[#0B0F19] font-black rounded-xl px-4 py-2 text-xs shadow-[0_0_16px_rgba(45,212,191,0.45)] hover:shadow-[0_0_24px_rgba(45,212,191,0.65)] hover:scale-105 active:scale-95 transition-all cursor-pointer"
         >
-          <Undo2 size={13} />
-          بازگردانی
+          <Undo2 size={14} className="stroke-[2.5]" />
+          <span>بازگردانی</span>
         </button>
 
         {/* دکمه بستن */}
         <button
-          onClick={() => { cancelAnimationFrame(timerRef.current); onDismiss(); }}
-          className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-white/35 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-          aria-label="بستن اعلان"
+          type="button"
+          onClick={() => {
+            cancelAnimationFrame(timerRef.current);
+            onDismiss();
+          }}
+          className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+          aria-label="بستن"
         >
           <X size={14} />
         </button>
 
-        {/* نوار پیشرفت */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10 overflow-hidden">
+        {/* نوار پیشرفت زمانی پیوسته با لهجه فیروزه‌ای */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/5 overflow-hidden">
           <div
-            className="h-full bg-gradient-to-l from-teal to-magenta transition-none"
+            className="h-full bg-gradient-to-l from-teal to-cyan-400 shadow-[0_0_10px_#2DD4BF] transition-none"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -111,6 +129,7 @@ export default function FormsList() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [deleting, setDeleting] = useState(null);
+  const [permanentDeleting, setPermanentDeleting] = useState(null);
   const [busy, setBusy] = useState(false);
   const [showTypeModal, setShowTypeModal] = useState(false);
   const [newFormTheme, setNewFormTheme] = useState("light");
@@ -562,9 +581,11 @@ export default function FormsList() {
     load(true);
   }
 
-  // ─── حذف دائمی (از دید کاربر حذف می‌شود اما تا ۳۰ روز در سوپرادمین محفوظ می‌ماند) ───
-  async function permanentDelete(form) {
-    if (!confirm(`حذف دائمی فرم «${form.title}»؟ این فرم از پنل شما پاک خواهد شد.`)) return;
+  // ─── تایید حذف دائمی (از دید کاربر حذف می‌شود اما تا ۳۰ روز در سوپرادمین محفوظ می‌ماند) ───
+  async function confirmPermanentDelete() {
+    if (!permanentDeleting) return;
+    const form = permanentDeleting;
+    setPermanentDeleting(null);
 
     let hardSuccess = false;
     const nowIso = new Date().toISOString();
@@ -617,8 +638,9 @@ export default function FormsList() {
       return;
     }
 
-    push("فرم از لیست شما حذف شد");
+    push("فرم برای همیشه از لیست شما حذف شد");
     setForms((fs) => fs.filter((f) => f.id !== form.id));
+    load(true);
   }
 
   // ─── آرشیو ───
@@ -1010,7 +1032,7 @@ export default function FormsList() {
                       size="sm"
                       onClick={() => {
                         setActionModalForm(null);
-                        permanentDelete(f);
+                        setPermanentDeleting(f);
                       }}
                     >
                       <Trash2 size={14} className="ml-1" /> حذف دائمی فرم
@@ -1200,15 +1222,65 @@ export default function FormsList() {
         )}
       </Modal>
 
-      {/* Delete Modal */}
-      <Modal open={!!deleting} onClose={() => setDeleting(null)} title="انتقال به سطل زباله؟">
-        <p className="text-sm font-semibold text-ink-soft leading-7 mb-5">
-          فرم «<span className="font-black text-magenta-text">{deleting?.title}</span>» به سطل زباله منتقل می‌شود.
-          می‌توانید بعداً آن را بازیابی یا برای همیشه حذف کنید.
-        </p>
-        <div className="flex gap-3 justify-end">
-          <Button variant="red" size="sm" onClick={confirmDelete}>بله، حذف کن</Button>
-          <Button variant="ghost" size="sm" onClick={() => setDeleting(null)}>انصراف</Button>
+      {/* ─── Delete Modal (انتقال به سطل زباله) ─── */}
+      <Modal open={!!deleting} onClose={() => setDeleting(null)} title="انتقال فرم به سطل زباله">
+        <div className="flex flex-col items-center text-center py-2">
+          <div className="w-14 h-14 rounded-2xl bg-rose-500/15 dark:bg-rose-500/20 border border-rose-500/30 text-rose-500 flex items-center justify-center mb-3 shadow-[0_0_20px_rgba(244,63,94,0.25)]">
+            <Trash2 size={26} />
+          </div>
+          <h3 className="text-base sm:text-lg font-black text-navy dark:text-white mb-2 leading-7">
+            فرم «<span className="text-teal">{deleting?.title}</span>» به سطل زباله منتقل شود؟
+          </h3>
+          <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 leading-6 max-w-sm mb-6">
+            این فرم از لیست فعال شما خارج می‌شود، اما تا ۳۰ روز آینده در تب «سطل زباله» محفوظ است و هر زمان بخواهید می‌توانید آن را بازیابی کنید.
+          </p>
+          <div className="flex gap-3 w-full justify-center">
+            <button
+              type="button"
+              onClick={confirmDelete}
+              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white font-black text-xs sm:text-sm shadow-[0_0_15px_rgba(244,63,94,0.35)] hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+            >
+              بله، انتقال به سطل زباله
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeleting(null)}
+              className="py-2.5 px-5 rounded-xl border border-gray-200 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-800 text-ink dark:text-slate-300 font-bold text-xs sm:text-sm transition-all cursor-pointer"
+            >
+              انصراف
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ─── Permanent Delete Modal (حذف دائمی — جایگزین کامل confirm مرورگر) ─── */}
+      <Modal open={!!permanentDeleting} onClose={() => setPermanentDeleting(null)} title="حذف دائمی فرم">
+        <div className="flex flex-col items-center text-center py-2">
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/15 dark:bg-amber-500/20 border border-amber-500/30 text-amber-500 flex items-center justify-center mb-3 shadow-[0_0_20px_rgba(245,158,11,0.25)]">
+            <AlertTriangle size={26} />
+          </div>
+          <h3 className="text-base sm:text-lg font-black text-navy dark:text-white mb-2 leading-7">
+            حذف دائمی فرم «<span className="text-rose-400">{permanentDeleting?.title}</span>»
+          </h3>
+          <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 leading-6 max-w-sm mb-6">
+            آیا از حذف کامل این فرم اطمینان دارید؟ این فرم و تمام دسترسی‌های آن به طور کامل از پنل مدیریت شما پاک خواهد شد.
+          </p>
+          <div className="flex gap-3 w-full justify-center">
+            <button
+              type="button"
+              onClick={confirmPermanentDelete}
+              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-700 hover:to-red-800 text-white font-black text-xs sm:text-sm shadow-[0_0_15px_rgba(225,29,72,0.4)] hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+            >
+              بله، برای همیشه حذف کن
+            </button>
+            <button
+              type="button"
+              onClick={() => setPermanentDeleting(null)}
+              className="py-2.5 px-5 rounded-xl border border-gray-200 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-800 text-ink dark:text-slate-300 font-bold text-xs sm:text-sm transition-all cursor-pointer"
+            >
+              انصراف
+            </button>
+          </div>
         </div>
       </Modal>
 
@@ -1292,7 +1364,7 @@ export default function FormsList() {
       {/* ─── Undo Toast ─── */}
       {undoToast && (
         <UndoToast
-          message={`«${undoToast.title}» به سطل زباله منتقل شد`}
+          formTitle={undoToast.title}
           duration={6000}
           onUndo={async () => {
             // لغو تایمر حذف دائمی
