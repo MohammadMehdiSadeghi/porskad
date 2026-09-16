@@ -354,18 +354,78 @@ export default function SuperAdmin() {
   async function restoreTrashItem(item) {
     setTrashActionBusy(true);
     try {
+      const trashId = item.rawId || item.id;
+      // 1. تلاش از طریق RPC رسمی restore_from_trash
       const { data, error } = await supabase.rpc("restore_from_trash", {
-        p_trash_id: item.id,
+        p_trash_id: trashId,
       });
-      if (error) throw error;
+
+      let restoredOk = !error && (data === "restored" || data === true || data === "ok");
+
+      // 2. در صورت خطا در RPC و نوع فرم بودن: فالبک بازگردانی مستقیم فرم و سوالات
+      if (!restoredOk && item.kind === "form") {
+        const p = item.payload || {};
+        const formId = p.id || item.rawId || item.id;
+
+        const { data: existingForm } = await supabase
+          .from("forms")
+          .select("id")
+          .eq("id", formId)
+          .maybeSingle();
+
+        if (existingForm) {
+          const { error: upErr } = await supabase.from("forms").update({ deleted_at: null }).eq("id", formId);
+          if (!upErr) restoredOk = true;
+        } else if (p.slug && p.title) {
+          const formRow = {
+            id: formId,
+            slug: p.slug,
+            title: p.title,
+            description: p.description || "",
+            welcome_title: p.welcome_title || null,
+            welcome_message: p.welcome_message || null,
+            exit_title: p.exit_title || null,
+            exit_message: p.exit_message || null,
+            published: false,
+            manager_id: p.manager_id || p.created_by,
+            created_by: p.created_by || p.manager_id,
+            form_type: p.form_type || "step_by_step",
+            default_theme: p.default_theme || "light",
+            deleted_at: null,
+            archived: false,
+          };
+          const { error: insErr } = await supabase.from("forms").insert(formRow);
+          if (!insErr) {
+            restoredOk = true;
+            if (Array.isArray(p.questions) && p.questions.length > 0) {
+              for (const q of p.questions) {
+                try {
+                  await supabase.from("questions").insert({ ...q, form_id: formId });
+                } catch {}
+              }
+            }
+          }
+        }
+
+        if (restoredOk) {
+          try {
+            await supabase
+              .from("trash")
+              .update({ restored_at: new Date().toISOString() })
+              .eq("id", trashId);
+          } catch {}
+        }
+      }
+
       if (data === "conflict") {
         showToast("This item already exists in the same location (ID conflict).", "error");
         return;
       }
-      if (data !== "restored") {
-        showToast("Could not restore item: " + data, "error");
+      if (!restoredOk && data && data !== "restored") {
+        showToast("Could not restore item: " + (error?.message || data), "error");
         return;
       }
+
       showToast("Item restored successfully");
       await loadTrash();
     } catch (err) {

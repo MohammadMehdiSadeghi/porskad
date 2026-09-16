@@ -528,15 +528,41 @@ export default function FormsList() {
     load(true);
   }
 
-  // ─── حذف دائمی ───
+  // ─── حذف دائمی (از دید کاربر حذف می‌شود اما تا ۳۰ روز در سوپرادمین محفوظ می‌ماند) ───
   async function permanentDelete(form) {
-    if (!confirm(`حذف دائمی فرم «${form.title}»؟ این عمل غیرقابل بازگشت است.`)) return;
-    const { error } = await supabase.from("forms").delete().eq("id", form.id);
-    if (error) {
-      push("حذف ناموفق بود: " + (error.message || ""), "error");
+    if (!confirm(`حذف دائمی فرم «${form.title}»؟ این فرم از پنل شما پاک خواهد شد.`)) return;
+
+    let hardSuccess = false;
+
+    // ۱. ابتدا فراخوانی API رسمی با فلگ permanent=true جهت ثبت اسنپ‌شات کامل در سطل زباله ۳۰ روزه
+    try {
+      const apiRes = await fetch(`/api/v1/forms/${form.id}?permanent=true`, {
+        method: "DELETE",
+        headers: {
+          Authorization: session?.access_token ? `Bearer ${session.access_token}` : "",
+        },
+      });
+      if (apiRes.ok) {
+        hardSuccess = true;
+      }
+    } catch (e) {
+      console.warn("API permanent delete fallback:", e);
+    }
+
+    // ۲. فالبک در صورت عدم پاسخگویی اندپوینت
+    if (!hardSuccess) {
+      const { error } = await supabase.from("forms").delete().eq("id", form.id);
+      if (!error) {
+        hardSuccess = true;
+      }
+    }
+
+    if (!hardSuccess) {
+      push("حذف ناموفق بود", "error");
       return;
     }
-    push("فرم برای همیشه حذف شد");
+
+    push("فرم از لیست شما حذف شد");
     setForms((fs) => fs.filter((f) => f.id !== form.id));
   }
 

@@ -2308,32 +2308,62 @@ export default async function handler(req, res) {
             return res.status(403).json({ error: "شما اجازه حذف این فرم را ندارید." });
           }
 
-          // حذف نرم (Soft Delete)
+          const isPermanent = req.query?.permanent === "true" || req.query?.permanent === "1" || req.body?.permanent === true;
           const nowIso = new Date().toISOString();
-          const { error: delErr } = await clients.adminClient
-            .from("forms")
-            .update({ deleted_at: nowIso, published: false })
-            .eq("id", form.id);
+          const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-          if (delErr) return res.status(400).json({ error: delErr.message });
+          // ۱. جمع‌آوری تمام سوالات فرم جهت نگهداری قطعی ۳۰ روزه در سطل زباله
+          let formQuestions = [];
+          try {
+            const { data: qData } = await clients.adminClient
+              .from("questions")
+              .select("*")
+              .eq("form_id", form.id)
+              .order("position", { ascending: true });
+            formQuestions = qData || [];
+          } catch {}
 
-          // ثبت همزمان در جدول trash برای پشتیبانی کامل از پنل سوپرادمین
+          // ۲. ضبط و ذخیره امن در جدول trash (با برچسب مشخص و ۳۰ روز مهلت بازیابی در سوپرادمین)
           try {
             const ownerId = form.created_by || form.manager_id || user.id;
             await clients.adminClient.from("trash").insert({
               entity_type: "form",
               entity_id: form.id,
               label: `فرم «${form.title || form.slug || "بدون عنوان"}»`,
-              payload: { ...form, deleted_at: nowIso, published: false },
+              payload: {
+                ...form,
+                questions: formQuestions,
+                deleted_at: nowIso,
+                published: false,
+                user_deleted_permanent: isPermanent,
+              },
               user_id: ownerId,
               deleted_by: user.id,
               deleted_by_name: user.email || "کاربر",
               deleted_at: nowIso,
+              expires_at: expiresAt,
             });
           } catch (trashErr) {
-            console.warn("Could not record soft-deleted form in trash table:", trashErr);
+            console.warn("Could not record form in trash table:", trashErr);
           }
 
+          // ۳. اگر کاربر حذف دائمی را زده بود: فرم از جدول forms حذف می‌شود تا در UI کاربر دیده نشود، اما در trash سوپرادمین تا ۳۰ روز می‌ماند
+          if (isPermanent) {
+            const { error: delErr } = await clients.adminClient
+              .from("forms")
+              .delete()
+              .eq("id", form.id);
+            if (delErr) return res.status(400).json({ error: delErr.message });
+            return res.status(200).json({ success: true, message: "فرم با موفقیت از حساب شما حذف شد." });
+          }
+
+          // ۴. در حالت پیش‌فرض (حذف نرم به سطل زباله کاربر):
+          const { error: softDelErr } = await clients.adminClient
+            .from("forms")
+            .update({ deleted_at: nowIso, published: false })
+            .eq("id", form.id);
+
+          if (softDelErr) return res.status(400).json({ error: softDelErr.message });
           return res.status(200).json({ success: true, message: "فرم به سطل زباله منتقل شد." });
         }
 
