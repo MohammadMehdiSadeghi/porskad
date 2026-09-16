@@ -2849,7 +2849,7 @@ export default function SuperAdmin() {
                     <span>Just now</span>
                   </div>
                   <div style={{ fontWeight: 600 }}>
-                    {(sysSettings.otp_sms_pattern || "کد تایید ثبت‌نام در پرس‌کاد: %code%").replace(/%code%/g, "۴۸۲۹۱")}
+                    {(sysSettings.otp_sms_pattern || "کد تایید ثبت‌نام در پرس‌کاد: %code%").replace(/%code%/g, "۴۸۲۹")}
                   </div>
                 </div>
               </div>

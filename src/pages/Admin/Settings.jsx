@@ -404,7 +404,7 @@ export default function Settings() {
         <StickerCard title="تنظیمات پیامک و کد اعتبارسنجی (OTP)">
           <div className="p-4 sm:p-6 space-y-4">
             <div className="bg-teal/10 dark:bg-teal/10 border border-teal/20 dark:border-teal/30 rounded-2xl p-3.5 text-xs text-navy dark:text-slate-200 leading-relaxed">
-              <strong className="text-teal font-black">الگوی پیامک تایید شماره:</strong> کد ورود ۵ رقمی به‌صورت خودکار جایگزین تگ <code dir="ltr" className="bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded text-teal font-black border border-teal/20">%code%</code> خواهد شد.
+              <strong className="text-teal font-black">الگوی پیامک تایید شماره:</strong> کد ورود ۴ رقمی به‌صورت خودکار جایگزین تگ <code dir="ltr" className="bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded text-teal font-black border border-teal/20">%code%</code> خواهد شد.
             </div>
 
             <div>

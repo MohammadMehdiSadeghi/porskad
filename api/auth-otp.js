@@ -197,8 +197,8 @@ export default async function handler(req, res) {
       }
     }
 
-    // ۴. تولید کد ۵ رقمی ایمن
-    const code = String(Math.floor(10000 + Math.random() * 90000));
+    // ۴. تولید کد ۴ رقمی ایمن
+    const code = String(Math.floor(1000 + Math.random() * 9000));
     const messageText = pattern.includes("%code%")
       ? pattern.replace(/%code%/g, code)
       : `${pattern}\nکد شما: ${code}`;
@@ -396,7 +396,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      message: "کد تایید ۵ رقمی به شماره موبایل شما پیامک شد.",
+      message: "کد تایید ۴ رقمی به شماره موبایل شما پیامک شد.",
       cooldown: cooldownSeconds,
       remainingResends: maxResends - currentResends,
       // در صورت تست لوکال یا عدم وجود توکن برای سهولت توسعه
@@ -409,8 +409,8 @@ export default async function handler(req, res) {
   // ══════════════════════════════════════════════════════════════
   if (action === "verify_otp") {
     const rawCode = toEnDigits(String(body.code || "")).replace(/\D/g, "");
-    if (!rawCode || rawCode.length < 5) {
-      return res.status(400).json({ error: "لطفاً کد تایید ۵ رقمی را کامل وارد نمایید." });
+    if (!rawCode || rawCode.length < 4) {
+      return res.status(400).json({ error: "لطفاً کد تایید ۴ رقمی را کامل وارد نمایید." });
     }
 
     let session = otpSessions.get(cleanPhone);

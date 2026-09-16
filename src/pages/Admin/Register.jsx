@@ -259,8 +259,8 @@ export default function Register() {
     setError(null);
 
     const cleanCode = toEnDigits(otpCode).trim().replace(/\D/g, "");
-    if (cleanCode.length < 5) {
-      setError("لطفاً کد تایید ۵ رقمی را به طور کامل وارد نمایید.");
+    if (cleanCode.length < 4) {
+      setError("لطفاً کد تایید ۴ رقمی را به طور کامل وارد نمایید.");
       return;
     }
 
@@ -397,7 +397,7 @@ export default function Register() {
         return {
           badge: "مرحله ۲ از ۳",
           title: "تایید شماره تلفن همراه",
-          subtitle: `کد ۵ رقمی ارسال‌شده به ${phone ? faNum(phone) : "شماره"} را وارد کنید`,
+          subtitle: `کد ۴ رقمی ارسال‌شده به ${phone ? faNum(phone) : "شماره"} را وارد کنید`,
           showStepper: true,
         };
       }
@@ -423,7 +423,7 @@ export default function Register() {
         return {
           badge: "مرحله ۲ از ۳",
           title: "تایید شماره تلفن همراه",
-          subtitle: `کد ۵ رقمی ارسال‌شده به ${phone ? faNum(phone) : "شماره"} را وارد کنید`,
+          subtitle: `کد ۴ رقمی ارسال‌شده به ${phone ? faNum(phone) : "شماره"} را وارد کنید`,
           showStepper: true,
         };
       }
@@ -625,7 +625,7 @@ export default function Register() {
                         </div>
                       </div>
                       <span className="text-[11px] text-ink-subtle dark:text-slate-400">
-                        کد فعال‌سازی ۵ رقمی به این شماره ارسال خواهد شد.
+                        کد فعال‌سازی ۴ رقمی به این شماره ارسال خواهد شد.
                       </span>
                     </label>
 
@@ -717,10 +717,10 @@ export default function Register() {
 
                     <div className="flex flex-col gap-2">
                       <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200 text-center">
-                        کد تایید ۵ رقمی را وارد کنید
+                        کد تایید ۴ رقمی را وارد کنید
                       </span>
 
-                      {/* نمایش ۵ باکس بصری زیبا برای ارقام کد */}
+                      {/* نمایش ۴ باکس بصری زیبا برای ارقام کد */}
                       <div
                         className="relative flex items-center justify-center gap-2 sm:gap-2.5 my-1 cursor-text"
                         onClick={() => otpInputRef.current?.focus()}
@@ -730,12 +730,12 @@ export default function Register() {
                           type="text"
                           inputMode="numeric"
                           dir="ltr"
-                          maxLength={5}
+                          maxLength={4}
                           required
                           autoFocus
                           value={otpCode}
                           onChange={(e) => {
-                            const val = toEnDigits(e.target.value).replace(/\D/g, "").slice(0, 5);
+                            const val = toEnDigits(e.target.value).replace(/\D/g, "").slice(0, 4);
                             setOtpCode(val);
                             setError(null);
                           }}
@@ -743,7 +743,7 @@ export default function Register() {
                           autoComplete="one-time-code"
                         />
 
-                        {[0, 1, 2, 3, 4].map((index) => {
+                        {[0, 1, 2, 3].map((index) => {
                           const digit = otpCode[index];
                           const isCurrent = otpCode.length === index;
                           const isFilled = digit !== undefined;
@@ -809,7 +809,7 @@ export default function Register() {
                       type="submit"
                       variant="teal"
                       size="md"
-                      disabled={busy || otpCode.trim().length < 5}
+                      disabled={busy || otpCode.trim().length < 4}
                       className="w-full justify-center text-center mt-1"
                     >
                       <span className="w-full text-center flex items-center justify-center gap-2">
