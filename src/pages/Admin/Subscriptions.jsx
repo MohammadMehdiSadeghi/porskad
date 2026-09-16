@@ -182,7 +182,7 @@ export default function Subscriptions() {
 
       {/* کارت طرح‌ها */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-        {planIds.map((pid, idx) => {
+        {planIds.map((pid) => {
           const plan = plans[pid];
           if (!plan || String(pid).startsWith("_")) return null;
           const Icon = PLAN_ICONS[pid] || Sparkles;
@@ -193,7 +193,6 @@ export default function Subscriptions() {
             <StickerCard
               key={plan.id}
               theme={theme}
-              rotate={idx % 2 === 0 ? "-rotate-[0.6deg]" : "rotate-[0.6deg]"}
               className="h-full"
             >
               <div className="p-5 sm:p-6 flex flex-col gap-4 h-full">
@@ -209,7 +208,7 @@ export default function Subscriptions() {
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    {plan.isPopular && <Badge color="teal" rotate="rotate-[-2deg]">⭐ محبوب‌ترین</Badge>}
+                    {plan.isPopular && <Badge color="teal">⭐ محبوب‌ترین</Badge>}
                     {isCurrent && <Badge color="navy">طرح شما</Badge>}
                   </div>
                 </div>

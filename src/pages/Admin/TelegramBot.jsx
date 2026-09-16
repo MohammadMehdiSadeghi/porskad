@@ -421,7 +421,7 @@ export default function TelegramBot() {
       {/* هشدار عدم دسترسی و دعوت به ارسال تیکت */}
       {!canManage && (
         <div>
-          <StickerCard theme="orange" rotate="-rotate-[0.4deg]">
+          <StickerCard theme="orange">
             <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-start gap-3.5">
                 <span className="w-10 h-10 rounded-full bg-orange text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm">

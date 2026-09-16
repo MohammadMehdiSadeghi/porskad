@@ -545,7 +545,7 @@ function EmbedRegistrationForm({ schema, questions, logicRules = [], formId }) {
       </div>
 
       <main className="flex-1 flex items-start justify-center px-4 sm:px-5 py-4 sm:py-6">
-        <div className="w-full max-w-xl -rotate-[0.3deg]">
+        <div className="w-full max-w-xl">
           <div className="rokad-card p-5 sm:p-6 lg:p-7 shadow-hard-sm dark:shadow-dark-hard">
             <form onSubmit={handleShowConfirm} className="flex flex-col gap-3.5 sm:gap-4">
               <div className="text-center mb-0.5">
@@ -1145,7 +1145,7 @@ export default function EmbedForm() {
       )}
 
       <main className="flex-1 flex items-start justify-center px-4 sm:px-5 py-4 sm:py-6">
-        <div className="w-full max-w-xl -rotate-[0.4deg]">
+        <div className="w-full max-w-xl">
           <div className="rokad-card p-5 sm:p-6 lg:p-7 text-sec dark:text-slate-100 shadow-hard-sm dark:shadow-dark-hard">
             <AnimatePresence mode="wait" custom={dir}>
               {/* صفحه خوش‌آمد */}

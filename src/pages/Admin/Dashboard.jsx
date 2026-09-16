@@ -176,7 +176,7 @@ export default function Dashboard() {
             <span className="live-dot inline-block w-1.5 h-1.5 rounded-full bg-teal mr-1.5 align-middle" />
           </p>
         </div>
-        <Button as={Link} to="/admin/forms" variant="teal" size="sm" rotate="-rotate-[1deg]">
+        <Button as={Link} to="/admin/forms" variant="teal" size="sm">
           مدیریت فرم‌ها
         </Button>
       </div>

@@ -23,9 +23,8 @@ export default function Badge({ color = "teal", rotate = "", className = "", chi
   return (
     <span
       className={clsx(
-        "inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full font-bold text-xs border whitespace-nowrap transition-transform duration-150",
+        "inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full font-bold text-xs border whitespace-nowrap transition-colors",
         COLORS[color] ?? COLORS.teal,
-        rotate,
         className,
       )}
     >

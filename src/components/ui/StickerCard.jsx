@@ -36,7 +36,7 @@ export const STICKER_THEMES = {
 
 export default function StickerCard({
   theme = "white",
-  rotate = "",
+  rotate = "", // backward compat
   offset = "", // backward compat
   radius = "rounded-2xl",
   border = "border-[1.5px]",
@@ -54,7 +54,6 @@ export default function StickerCard({
         "relative transition-all duration-200 ease-out",
         "rounded-2xl border-[1.5px]",
         t.card,
-        rotate,
         className,
         innerClassName
       )}

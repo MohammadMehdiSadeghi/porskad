@@ -718,7 +718,6 @@ export default function FormsList() {
         <Button
           variant="teal"
           size="sm"
-          rotate="-rotate-[1deg]"
           onClick={() => {
             setShowTypeModal(true);
           }}
@@ -730,7 +729,7 @@ export default function FormsList() {
 
       {/* نوار سهمیه برای کاربر عادی */}
       {!isOwner() && (
-        <div className="rokad-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-hard-sm dark:shadow-dark-hard -rotate-[0.2deg]">
+        <div className="rokad-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-hard-sm dark:shadow-dark-hard">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-ecosystem-light dark:bg-ecosystem-darker/60 text-ecosystem-darker dark:text-ecosystem-light flex items-center justify-center font-black text-sm">
               {faNum(activeFormsCount)}/{faNum(maxForms)}
@@ -815,9 +814,9 @@ export default function FormsList() {
               <div
                 key={f.id}
                 data-form-card
-                className={`transition-all duration-200 ${i % 2 === 1 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"}`}
+                className="transition-all duration-200"
               >
-                <StickerCard theme={isTrashed ? "orange" : "white"} rotate={i % 2 === 1 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"}>
+                <StickerCard theme={isTrashed ? "orange" : "white"}>
                   <div
                     className={`p-4 sm:p-5 flex flex-col gap-3 ${isTrashed ? "opacity-75" : ""} cursor-pointer select-none`}
                     onClick={(e) => {

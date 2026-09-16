@@ -226,7 +226,7 @@ function FormEmbedCard({ form, baseUrl, index }) {
 
   return (
     <div>
-      <StickerCard theme="white" rotate={index % 2 === 0 ? "-rotate-[0.4deg]" : "rotate-[0.4deg]"}>
+      <StickerCard theme="white">
         <div className="p-3.5 sm:p-5 flex flex-col gap-2.5 sm:gap-3">
           {/* هدر */}
           <div className="flex items-start justify-between gap-2">

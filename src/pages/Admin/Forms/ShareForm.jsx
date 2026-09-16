@@ -356,7 +356,7 @@ export default function ShareForm() {
 
       {/* کد انتخاب شده */}
       <div>
-        <StickerCard theme="white" rotate="-rotate-[0.3deg]">
+        <StickerCard theme="white">
           <div className="p-5 sm:p-6 flex flex-col gap-4">
             <div>
               <h2 className="text-base sm:text-lg font-black text-sec dark:text-white flex items-center gap-2">
@@ -371,7 +371,7 @@ export default function ShareForm() {
 
       {/* پیش‌نمایش بر اساس حالت */}
       <div>
-        <StickerCard theme="white" rotate="rotate-[0.3deg]">
+        <StickerCard theme="white">
           <div className="p-5 sm:p-6 flex flex-col gap-4">
             <h2 className="text-base sm:text-lg font-black text-sec dark:text-white">پیش‌نمایش زنده — {active.label}</h2>
             <div className="border-[1.5px] border-dashed border-gray-300 dark:border-gray-700 rounded-xl overflow-hidden bg-gray-50 dark:bg-[#1C2536]/30" style={{ minHeight: "400px" }}>

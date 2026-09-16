@@ -455,7 +455,7 @@ export default function Register() {
         noIndex
       />
 
-      <div className="w-full max-w-md -rotate-[0.5deg]">
+      <div className="w-full max-w-md">
         <StickerCard theme="white">
           <div className="p-7 sm:p-9 flex flex-col gap-5">
             {/* هدر داینامیک با انیمیشن روان تغییر متن و مرحله */}
@@ -463,7 +463,7 @@ export default function Register() {
               key={`header-${step}-${smsOtpEnabled}-${googleAuthEnabled}`}
               className="flex flex-col items-center gap-1.5 text-center animate-step-fade"
             >
-              <Badge color="navy" rotate="rotate-[1deg]">
+              <Badge color="navy">
                 {headerInfo.badge}
               </Badge>
               <h1 className="text-lg sm:text-xl font-black text-sec dark:text-white transition-all tracking-tight leading-snug">
