@@ -413,18 +413,34 @@ export function ShareFormSkeleton() {
   );
 }
 
-// ─── اسکلتون گارد ورود — کارت مجنتای کوچک روی پترن نقطه‌ای ───
-export function AuthGuardSkeleton() {
+// ─── لودینگ گارد ورود و بارگذاری اول صفحه — کارت صورتی نمادین با لودر اختصاصی ───
+export function AuthGuardSkeleton({ label = "در حال اعتبارسنجی نشست و ورود..." }) {
   return (
-    <div className="min-h-dvh dot-pattern bg-male-light dark:bg-[#0B0F19] flex items-center justify-center p-3" dir="rtl">
-      <div className="w-full max-w-sm">
+    <div className="min-h-dvh dot-pattern bg-male-light dark:bg-[#0B0F19] flex items-center justify-center p-4 select-none" dir="rtl">
+      <div className="w-full max-w-sm animate-fade-in">
         <StickerCard theme="magenta">
-          <div className="p-8 flex flex-col items-center gap-5">
-            <Skeleton className="w-14 h-14 bg-magenta/15 dark:bg-pink-500/15" rounded="rounded-2xl" />
-            <Skeleton className="h-5 w-36" rounded="rounded-lg" />
-            <Skeleton className="h-3.5 w-48" rounded="rounded-md" />
-            <Skeleton className="h-11 w-full" rounded="rounded-xl" />
-            <Skeleton className="h-11 w-full bg-magenta/15 dark:bg-pink-500/15" rounded="rounded-xl" />
+          <div className="p-7 sm:p-8 flex flex-col items-center text-center gap-4">
+            {/* لودر متحرک دو لایه با رنگ صورتی/مجنتا و لهجه برند */}
+            <div className="relative w-14 h-14 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full border-4 border-female-normal/20 animate-ping opacity-30" />
+              <div className="absolute inset-0 rounded-full border-4 border-female-normal/25 dark:border-pink-500/30" />
+              <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-female-normal dark:border-t-pink-400 animate-spin" />
+              <div className="w-3.5 h-3.5 rounded-full bg-female-normal dark:bg-pink-400 animate-pulse shadow-[0_0_12px_rgba(224,25,91,0.5)]" />
+            </div>
+
+            <div className="space-y-1.5">
+              <h2 className="text-base sm:text-lg font-black text-navy dark:text-white tracking-tight">
+                {label}
+              </h2>
+              <p className="text-xs font-semibold text-ink-subtle dark:text-slate-400">
+                لطفاً چند لحظه شکیبا باشید...
+              </p>
+            </div>
+
+            {/* خط پیشرفت مینیاتوری شبیه نئوبروتالیسم */}
+            <div className="w-32 h-1.5 bg-female-normal/15 dark:bg-pink-500/20 rounded-full overflow-hidden mt-1">
+              <div className="h-full w-2/3 bg-female-normal dark:bg-pink-400 rounded-full animate-pulse" />
+            </div>
           </div>
         </StickerCard>
       </div>

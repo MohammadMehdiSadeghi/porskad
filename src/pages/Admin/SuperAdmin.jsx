@@ -8,7 +8,7 @@ import { supabase } from "../../lib/supabaseClient";
 import SEO from "../../components/ui/SEO";
 import Modal from "../../components/ui/Modal";
 import Spinner from "../../components/ui/Spinner";
-import { TableSkeleton, SuperAdminSkeleton } from "../../components/ui/Skeleton";
+import { TableSkeleton, SuperAdminSkeleton, StatCardSkeleton } from "../../components/ui/Skeleton";
 import StickerCard from "../../components/ui/StickerCard";
 import Badge from "../../components/ui/Badge";
 import { godDateTime, godDate, godTime } from "../../lib/utils";
@@ -159,6 +159,7 @@ export default function SuperAdmin() {
   const [selectedTable, setSelectedTable] = useState(null);
   const [tableData, setTableData] = useState([]);
   const [tableCols, setTableCols] = useState([]);
+  const [tableLoading, setTableLoading] = useState(false);
   const [users, setUsers] = useState([]);
   const [admins, setAdmins] = useState([]);
   const [activityLog, setActivityLog] = useState([]);
@@ -1653,6 +1654,7 @@ export default function SuperAdmin() {
 
   async function browseTable(tableName) {
     setSelectedTable(tableName);
+    setTableLoading(true);
     try {
       let q = supabase.from(tableName).select("*").limit(200);
 
@@ -1682,6 +1684,8 @@ export default function SuperAdmin() {
     } catch (err) {
       console.error("browseTable error:", err);
       showToast("Error loading table: " + err.message, "error");
+    } finally {
+      setTableLoading(false);
     }
   }
 
@@ -3897,7 +3901,10 @@ export default function SuperAdmin() {
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))", gap: "1.25rem", alignItems: "start" }}>
+          {transferUsersLoading ? (
+            <TableSkeleton rows={6} cols={4} />
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))", gap: "1.25rem", alignItems: "start" }}>
             {/* Transfer Control Engine Card */}
             <div className="sa-card">
               <div className="sa-card-header">
@@ -4533,6 +4540,7 @@ export default function SuperAdmin() {
               </div>
             </div>
           </div>
+          )}
         </div>
       )}
 
@@ -4837,7 +4845,10 @@ export default function SuperAdmin() {
                   </div>
                 </div>
               </div>
-              <div className="sa-table-wrap">
+              {tableLoading ? (
+                <TableSkeleton rows={8} cols={tableCols.length || 5} />
+              ) : (
+                <div className="sa-table-wrap">
                 <table className="sa-table">
                   <thead>
                     <tr>
@@ -4922,6 +4933,7 @@ export default function SuperAdmin() {
                   </tbody>
                 </table>
               </div>
+              )}
             </div>
           )}
         </div>
@@ -5569,7 +5581,9 @@ export default function SuperAdmin() {
                 </span>
               </div>
               <div className="sa-card-body">
-                {filteredAuthLogs.length === 0 ? (
+                {authLogsLoading ? (
+                  <TableSkeleton rows={8} cols={6} />
+                ) : filteredAuthLogs.length === 0 ? (
                   <div style={{ padding: "2.5rem 1rem", textAlign: "center", color: "var(--sa-text-2)" }}>
                     <Activity size={28} color="var(--sa-text-4)" style={{ margin: "0 auto 0.5rem auto" }} />
                     <p style={{ margin: 0, fontWeight: 700, fontSize: "0.9rem" }}>No auth records match the criteria</p>
@@ -5820,9 +5834,19 @@ export default function SuperAdmin() {
             </div>
           </div>
 
-          {!health ? (
+          {healthLoading ? (
+            <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <StatCardSkeleton theme="teal" />
+                <StatCardSkeleton theme="navy" />
+                <StatCardSkeleton theme="orange" />
+                <StatCardSkeleton theme="magenta" />
+              </div>
+              <TableSkeleton rows={6} cols={4} />
+            </div>
+          ) : !health ? (
             <div className="sa-card" style={{ padding: "1.25rem" }}>
-              {healthLoading ? "Running health checks..." : "Press Refresh to run health checks."}
+              Press Refresh to run health checks.
             </div>
           ) : (
             <>
@@ -6672,7 +6696,7 @@ export default function SuperAdmin() {
                     </div>
 
                     {/* Trashed Items List */}
-                    {trashLoading && <div className="sa-card">Loading recycle bin…</div>}
+                    {trashLoading && <TableSkeleton rows={6} cols={5} />}
 
                     {!trashLoading && visibleItems.length === 0 && (
                       <div className="sa-card" style={{ textAlign: "center", padding: "2.5rem 1rem", opacity: 0.75 }}>

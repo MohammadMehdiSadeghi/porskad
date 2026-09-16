@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, Navigate, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Spinner from "../ui/Spinner";
-import { DashboardSkeleton } from "../ui/Skeleton";
+import { DashboardSkeleton, AuthGuardSkeleton } from "../ui/Skeleton";
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
 import { useToast } from "../ui/Toast";
@@ -71,11 +71,7 @@ export default function AdminLayout() {
   }, [profile, user]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-bg-neutral dark:bg-[#0B0F19] p-6">
-        <DashboardSkeleton />
-      </div>
-    );
+    return <AuthGuardSkeleton label="در حال آماده‌سازی پنل مدیریت..." />;
   }
 
   if (!user) {
