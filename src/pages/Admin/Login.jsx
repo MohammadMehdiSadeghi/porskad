@@ -192,14 +192,14 @@ export default function Login() {
         url="/admin/login"
         noIndex
       />
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md -rotate-[0.6deg]">
         <StickerCard theme="white">
           <form
             onSubmit={handleSubmit}
             className="p-7 sm:p-9 flex flex-col gap-5"
           >
             <div className="flex flex-col items-center gap-2 text-center">
-              <Badge color="navy">
+              <Badge color="navy" rotate="rotate-[2deg]">
                 پرس‌کاد — فرم‌ساز آنلاین
               </Badge>
               <h1 className="text-xl sm:text-2xl font-black text-sec dark:text-white">ورود به حساب</h1>
@@ -293,6 +293,7 @@ export default function Login() {
                 type="submit"
                 variant="teal"
                 size="lg"
+                rotate="-rotate-[0.8deg]"
                 disabled={busy}
                 className="w-full justify-center text-center"
               >

@@ -156,7 +156,7 @@ const SIZES = {
 export default function Button({
   variant = "teal",
   size = "md",
-  rotate = "", // kept for backward compatibility, defaults to clean alignment
+  rotate = "",
   as: Tag = "button",
   className = "",
   layerClassName = "", // backward compatibility prop (no-op)
@@ -175,6 +175,7 @@ export default function Button({
         "hover:-translate-x-[1px] hover:-translate-y-[1px]",
         "active:translate-x-[1.5px] active:translate-y-[1.5px]",
         "disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:transform-none disabled:shadow-none",
+        rotate,
         vClass,
         SIZES[size],
         className,

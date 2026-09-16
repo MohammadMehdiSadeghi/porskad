@@ -927,7 +927,7 @@ export default function Support() {
       {/* بخش راه‌های ارتباطی سریع برای کاربران عادی */}
       {!isOwner() && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <StickerCard theme="teal">
+          <StickerCard theme="teal" rotate="-rotate-[0.5deg]">
             <div className="p-4 sm:p-5 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <span className="w-10 h-10 rounded-full bg-teal text-white flex items-center justify-center">
@@ -949,7 +949,7 @@ export default function Support() {
             </div>
           </StickerCard>
 
-          <StickerCard theme="orange">
+          <StickerCard theme="orange" rotate="rotate-[0.5deg]">
             <div className="p-4 sm:p-5 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <span className="w-10 h-10 rounded-full bg-orange text-white flex items-center justify-center">

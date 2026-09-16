@@ -415,7 +415,7 @@ export default function PlansSettingsPanel() {
           const Icon = idn.icon;
 
           return (
-            <StickerCard key={planKey} theme={idn.theme} className="w-full">
+            <StickerCard key={planKey} theme={idn.theme} className="w-full" rotate={orderIdx % 2 === 0 ? "-rotate-[0.5deg]" : "rotate-[0.5deg]"}>
               <div className="p-4 sm:p-5 flex flex-col gap-4">
                 {/* سربرگ */}
                 <div className="flex items-start justify-between gap-2">
