@@ -43,12 +43,12 @@ function initDiagramViewer() {
   // Initial render
   renderTransform();
 
-  // 1. High-Performance Gentle & Smooth Zoom with Mouse Wheel (Figma-Style Damped Curve)
+  // 1. High-Performance Balanced & Responsive Zoom with Mouse Wheel (Figma Standard)
   viewport.addEventListener('wheel', (e) => {
     e.preventDefault();
-    // Smooth damping: avoids jumping on fast scroll / trackpad
-    const normalizedDelta = Math.min(Math.max(e.deltaY, -100), 100);
-    const zoomFactor = Math.exp(-normalizedDelta * 0.0022);
+    // Balanced responsive damping
+    const normalizedDelta = Math.min(Math.max(e.deltaY, -120), 120);
+    const zoomFactor = Math.exp(-normalizedDelta * 0.0036);
     const newScale = Math.min(Math.max(scale * zoomFactor, minScale), maxScale);
 
     if (newScale !== scale) {
@@ -62,13 +62,13 @@ function initDiagramViewer() {
     }
   }, { passive: false });
 
-  // Quick double-click to gently zoom in at cursor
+  // Quick double-click to zoom in at cursor (1.5x)
   viewport.addEventListener('dblclick', (e) => {
     if (e.target.closest('button') || e.target.closest('a')) return;
     const rect = viewport.getBoundingClientRect();
     const mouseX = e.clientX - rect.left - rect.width / 2;
     const mouseY = e.clientY - rect.top - rect.height / 2;
-    const zoomFactor = e.shiftKey ? 0.75 : 1.35;
+    const zoomFactor = e.shiftKey ? 0.65 : 1.5;
     const newScale = Math.min(Math.max(scale * zoomFactor, minScale), maxScale);
     translateX = mouseX - (mouseX - translateX) * (newScale / scale);
     translateY = mouseY - (mouseY - translateY) * (newScale / scale);
@@ -146,14 +146,14 @@ function initDiagramViewer() {
   // 4. Toolbar Controls
   if (zoomInBtn) {
     zoomInBtn.addEventListener('click', () => {
-      scale = Math.min(scale * 1.15, maxScale);
+      scale = Math.min(scale * 1.25, maxScale);
       renderTransform();
     });
   }
 
   if (zoomOutBtn) {
     zoomOutBtn.addEventListener('click', () => {
-      scale = Math.max(scale / 1.15, minScale);
+      scale = Math.max(scale / 1.25, minScale);
       renderTransform();
     });
   }
