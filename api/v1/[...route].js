@@ -569,12 +569,56 @@ export default async function handler(req, res) {
         dbStats.usersCount * 800 +
         dbStats.assetsCount * 50000;
 
-      const totalEstimatedBytes = totalLocalBytes + estimatedDbBytes;
+      let realDbBytes = 0;
+      let realDbPretty = null;
+      let tablesList = [];
+      let isDbEstimated = true;
+
+      try {
+        const { data: dbStorage, error: rpcErr } = await clients.adminClient.rpc("get_database_storage_stats");
+        if (!rpcErr && dbStorage && (dbStorage.db_size_bytes || dbStorage.total_db_bytes)) {
+          realDbBytes = Number(dbStorage.db_size_bytes || dbStorage.total_db_bytes);
+          realDbPretty = dbStorage.db_size_pretty || dbStorage.total_db_pretty || formatBytes(realDbBytes);
+          tablesList = (dbStorage.tables || []).map((t) => ({
+            table_name: t.name || t.table_name,
+            row_count: t.rows ?? t.row_count ?? 0,
+            bytes: t.bytes ?? t.size_bytes ?? 0,
+            pretty: t.pretty || formatBytes(t.bytes ?? t.size_bytes ?? 0),
+          }));
+          isDbEstimated = false;
+        }
+      } catch (e) {
+        console.warn("Storage RPC error:", e);
+      }
+
+      const effectiveDbBytes = !isDbEstimated ? realDbBytes : estimatedDbBytes;
+      const effectiveDbPretty = !isDbEstimated ? realDbPretty : formatBytes(estimatedDbBytes);
+
+      const totalEstimatedBytes = totalLocalBytes + effectiveDbBytes;
       const MAX_STORAGE_LIMIT_BYTES = 5 * 1024 * 1024 * 1024; // 5 GB
       const usedPercentage = Math.min(100, parseFloat(((totalEstimatedBytes / MAX_STORAGE_LIMIT_BYTES) * 100).toFixed(1)));
 
       return res.status(200).json({
         success: true,
+        database: {
+          db_size_bytes: effectiveDbBytes,
+          db_size_pretty: effectiveDbPretty,
+          tables: tablesList,
+          estimated: isDbEstimated,
+        },
+        project: {
+          source_bytes: srcStats.bytes,
+          source_pretty: formatBytes(srcStats.bytes),
+          source_files: srcStats.files,
+          full_bytes: totalLocalBytes,
+          full_pretty: formatBytes(totalLocalBytes),
+          full_files: (srcStats.files || 0) + (distStats.files || 0) + (uploadsStats.files || 0),
+          breakdown: [
+            { name: "Frontend Source (src/)", pretty: formatBytes(srcStats.bytes), files: srcStats.files },
+            { name: "Public Uploads (uploads/)", pretty: formatBytes(uploadsStats.bytes), files: uploadsStats.files },
+            { name: "Build Output (dist/)", pretty: formatBytes(distStats.bytes), files: distStats.files },
+          ],
+        },
         summary: {
           usedBytes: totalEstimatedBytes,
           usedFormatted: formatBytes(totalEstimatedBytes),
@@ -590,10 +634,11 @@ export default async function handler(req, res) {
             formatted: formatBytes(uploadsStats.bytes),
             files: uploadsStats.files,
           },
-          databaseEstimated: {
-            bytes: estimatedDbBytes,
-            formatted: formatBytes(estimatedDbBytes),
+          database: {
+            bytes: effectiveDbBytes,
+            formatted: effectiveDbPretty,
             ...dbStats,
+            estimated: isDbEstimated,
           },
           codebase: {
             distBytes: distStats.bytes,

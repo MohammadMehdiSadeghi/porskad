@@ -874,20 +874,35 @@ export default function SuperAdmin() {
 
     try {
       const { data: dbStatsData, error: dbErr } = await supabase.rpc("get_database_storage_stats");
-      if (!dbErr && dbStatsData && dbStatsData.total_db_bytes !== undefined) {
-        const tablesList = (dbStatsData.tables || []).map((t) => ({
-          table_name: t.name || t.table_name,
-          row_count: t.rows ?? t.row_count ?? 0,
-          bytes: t.bytes ?? 0,
-          pretty: t.pretty || formatBytes(t.bytes ?? 0),
-        }));
+      const dbSizeBytes =
+        dbStatsData?.db_size_bytes ??
+        dbStatsData?.total_db_bytes ??
+        dbStatsData?.size_bytes ??
+        null;
+
+      if (!dbErr && dbStatsData && dbSizeBytes !== null) {
+        const dbPretty =
+          dbStatsData.total_db_pretty ||
+          dbStatsData.db_size_pretty ||
+          dbStatsData.db_size_text ||
+          formatBytes(dbSizeBytes);
+
+        const tablesList = (dbStatsData.tables || []).map((t) => {
+          const tBytes = t.bytes ?? t.size_bytes ?? 0;
+          return {
+            table_name: t.name || t.table_name,
+            row_count: t.rows ?? t.row_count ?? 0,
+            bytes: tBytes,
+            pretty: t.pretty || formatBytes(tBytes),
+          };
+        });
 
         setStorageData({
           database: {
-            db_size_bytes: dbStatsData.total_db_bytes,
-            db_size_pretty: dbStatsData.total_db_pretty || formatBytes(dbStatsData.total_db_bytes),
+            db_size_bytes: dbSizeBytes,
+            db_size_pretty: dbPretty,
             tables: tablesList,
-            estimated: false,
+            estimated: Boolean(dbStatsData.estimated),
           },
           project: projectData || {
             source_bytes: 4200000,
@@ -911,11 +926,11 @@ export default function SuperAdmin() {
       }
     } catch {}
 
-    let totalApproxBytes = 0;
+    let totalApproxBytes = 35 * 1024 * 1024;
     const fallbackTables = [];
     for (const t of tables) {
       const count = dbStats[t] || 0;
-      const approxBytes = count * 640 + 8192;
+      const approxBytes = count * 1500 + 16384;
       totalApproxBytes += approxBytes;
       fallbackTables.push({
         table_name: t,
