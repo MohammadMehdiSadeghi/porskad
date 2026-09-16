@@ -316,22 +316,33 @@ export default function SuperAdmin() {
           .is("restored_at", null)
           .order("deleted_at", { ascending: false })
           .limit(1000),
-        // Forms are soft-deleted; listed in trash bin
+        // Forms are soft-deleted; listed in trash bin (use select(*) safely)
         supabase
           .from("forms")
-          .select("id,title,slug,created_by,manager_id,deleted_at,deleted_by")
+          .select("*")
           .not("deleted_at", "is", null)
           .order("deleted_at", { ascending: false }),
         // User deletion in this system = deactivation; also listed in trash
         supabase
           .from("profiles")
-          .select("id,full_name,email,phone,is_active,deactivated_by,deactivated_at,created_at")
+          .select("*")
           .eq("is_active", false)
           .order("deactivated_at", { ascending: false, nullsFirst: false }),
       ]);
-      setTrashItems(trashRes.data || []);
-      setTrashedForms(formsRes.data || []);
-      setTrashedUsers(usersRes.data || []);
+
+      let formsList = formsRes?.data;
+      if (formsRes?.error) {
+        console.warn("loadTrash formsRes warning:", formsRes.error);
+        const retryForms = await supabase
+          .from("forms")
+          .select("id,title,slug,created_by,manager_id,deleted_at")
+          .not("deleted_at", "is", null);
+        formsList = retryForms.data;
+      }
+
+      setTrashItems(trashRes?.data || []);
+      setTrashedForms(formsList || []);
+      setTrashedUsers(usersRes?.data || []);
     } catch (err) {
       console.error("loadTrash:", err);
       showToast("Error loading recycle bin: " + err.message, "error");
@@ -372,6 +383,13 @@ export default function SuperAdmin() {
         .update({ deleted_at: null })
         .eq("id", formId);
       if (error) throw error;
+      try {
+        await supabase
+          .from("trash")
+          .update({ restored_at: new Date().toISOString() })
+          .eq("entity_id", formId)
+          .is("restored_at", null);
+      } catch {}
       showToast("Form restored successfully");
       await loadTrash();
     } catch (err) {
@@ -6092,20 +6110,22 @@ export default function SuperAdmin() {
                 payload: t.payload,
                 isSoftDelete: false,
               })),
-              ...trashedForms.map((f) => ({
-                key: "f-" + f.id,
-                rawId: f.id,
-                kind: "form",
-                kindLabel: "Form",
-                label: `Form: "${f.title || f.slug || "Untitled"}"`,
-                at: f.deleted_at,
-                expires: new Date(new Date(f.deleted_at).getTime() + 30 * dayMs).toISOString(),
-                ownerId: f.created_by || f.manager_id,
-                byId: f.deleted_by,
-                byName: null,
-                payload: f,
-                isSoftDelete: true,
-              })),
+              ...trashedForms
+                .filter((f) => !trashItems.some((t) => t.entity_type === "form" && (t.entity_id === f.id || t.id === f.id)))
+                .map((f) => ({
+                  key: "f-" + f.id,
+                  rawId: f.id,
+                  kind: "form",
+                  kindLabel: "Form",
+                  label: `Form: "${f.title || f.slug || "Untitled"}"`,
+                  at: f.deleted_at,
+                  expires: new Date(new Date(f.deleted_at).getTime() + 30 * dayMs).toISOString(),
+                  ownerId: f.created_by || f.manager_id || f.user_id || null,
+                  byId: f.deleted_by || null,
+                  byName: null,
+                  payload: f,
+                  isSoftDelete: true,
+                })),
               ...trashedUsers.map((u) => ({
                 key: "u-" + u.id,
                 rawId: u.id,

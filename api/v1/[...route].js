@@ -2216,7 +2216,8 @@ export default async function handler(req, res) {
           [
             "title", "description", "published", "archived", "slug", "welcome_title",
             "welcome_message", "exit_title", "exit_message", "default_theme",
-            "form_type", "identifier_mapping", "max_responses_limit", "prevent_duplicate", "settings"
+            "form_type", "identifier_mapping", "max_responses_limit", "prevent_duplicate", "settings",
+            "deleted_at"
           ].forEach((k) => {
             if (body[k] !== undefined) patch[k] = body[k];
           });
@@ -2315,6 +2316,24 @@ export default async function handler(req, res) {
             .eq("id", form.id);
 
           if (delErr) return res.status(400).json({ error: delErr.message });
+
+          // ثبت همزمان در جدول trash برای پشتیبانی کامل از پنل سوپرادمین
+          try {
+            const ownerId = form.created_by || form.manager_id || user.id;
+            await clients.adminClient.from("trash").insert({
+              entity_type: "form",
+              entity_id: form.id,
+              label: `فرم «${form.title || form.slug || "بدون عنوان"}»`,
+              payload: { ...form, deleted_at: nowIso, published: false },
+              user_id: ownerId,
+              deleted_by: user.id,
+              deleted_by_name: user.email || "کاربر",
+              deleted_at: nowIso,
+            });
+          } catch (trashErr) {
+            console.warn("Could not record soft-deleted form in trash table:", trashErr);
+          }
+
           return res.status(200).json({ success: true, message: "فرم به سطل زباله منتقل شد." });
         }
 

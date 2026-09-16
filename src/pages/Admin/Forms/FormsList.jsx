@@ -437,20 +437,51 @@ export default function FormsList() {
       return;
     }
     const formToDelete = deleting;
-    const { error } = await supabase.from("forms").update({ deleted_at: new Date().toISOString() }).eq("id", formToDelete.id);
+    const nowIso = new Date().toISOString();
     setDeleting(null);
-    if (error) {
-      push("حذف ناموفق بود", "error");
-      return;
+
+    let deleteSuccess = false;
+
+    // ۱. ابتدا تلاش از طریق API سرور (با دسترسی کامل service_role و ثبت در جدول trash)
+    try {
+      const apiRes = await fetch(`/api/v1/forms/${formToDelete.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: session?.access_token ? `Bearer ${session.access_token}` : "",
+        },
+      });
+      if (apiRes.ok) {
+        deleteSuccess = true;
+      }
+    } catch (e) {
+      console.warn("API delete fallback:", e);
     }
 
-    // حذف از لیست
-    setForms((fs) => fs.filter((f) => f.id !== formToDelete.id));
+    // ۲. فالبک مستقیم با supabase client
+    if (!deleteSuccess) {
+      const { error } = await supabase
+        .from("forms")
+        .update({ deleted_at: nowIso, published: false })
+        .eq("id", formToDelete.id);
+      if (error) {
+        push("حذف ناموفق بود: " + (error.message || ""), "error");
+        return;
+      }
+    }
+
+    // به‌روزرسانی وضعیت در استیت محلی جهت انتقال به تب سطل زباله (نه حذف کامل از آرایه)
+    setForms((fs) =>
+      fs.map((f) =>
+        f.id === formToDelete.id
+          ? { ...f, deleted_at: nowIso, published: false }
+          : f
+      )
+    );
 
     // نمایش Undo toast به مدت ۶ ثانیه
-    setUndoToast(formToDelete);
+    setUndoToast({ ...formToDelete, deleted_at: nowIso, published: false });
 
-    // ذخیره تایمر برای حذف دائمی بعد از ۶ ثانیه
+    // ذخیره تایمر برای لغو toast بعد از ۶ ثانیه
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
     undoTimerRef.current = setTimeout(() => {
       setUndoToast(null);
@@ -459,13 +490,42 @@ export default function FormsList() {
 
   // ─── بازگردانی از سطل زباله ───
   async function restoreForm(form) {
-    const { error } = await supabase.from("forms").update({ deleted_at: null }).eq("id", form.id);
-    if (error) {
-      push("بازیابی ناموفق بود", "error");
-      return;
+    let restoreSuccess = false;
+
+    // ۱. تلاش از طریق API سرور
+    try {
+      const apiRes = await fetch(`/api/v1/forms/${form.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: session?.access_token ? `Bearer ${session.access_token}` : "",
+        },
+        body: JSON.stringify({ deleted_at: null }),
+      });
+      if (apiRes.ok) {
+        restoreSuccess = true;
+      }
+    } catch (e) {
+      console.warn("API restore fallback:", e);
     }
+
+    // ۲. فالبک با supabase client
+    if (!restoreSuccess) {
+      const { error } = await supabase
+        .from("forms")
+        .update({ deleted_at: null })
+        .eq("id", form.id);
+      if (error) {
+        push("بازیابی ناموفق بود: " + (error.message || ""), "error");
+        return;
+      }
+    }
+
     push("فرم بازیابی شد");
-    load();
+    setForms((fs) =>
+      fs.map((f) => (f.id === form.id ? { ...f, deleted_at: null } : f))
+    );
+    load(true);
   }
 
   // ─── حذف دائمی ───
@@ -473,11 +533,11 @@ export default function FormsList() {
     if (!confirm(`حذف دائمی فرم «${form.title}»؟ این عمل غیرقابل بازگشت است.`)) return;
     const { error } = await supabase.from("forms").delete().eq("id", form.id);
     if (error) {
-      push("حذف ناموفق بود", "error");
+      push("حذف ناموفق بود: " + (error.message || ""), "error");
       return;
     }
     push("فرم برای همیشه حذف شد");
-    load();
+    setForms((fs) => fs.filter((f) => f.id !== form.id));
   }
 
   // ─── آرشیو ───
