@@ -58,7 +58,7 @@ function CopyButton({ text, locked = false, onLocked }) {
   return (
     <button
       onClick={handleCopy}
-      className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+      className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap shrink-0 ${
         copied
           ? "bg-green-100 text-green-700 border border-green-200 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-700"
           : "bg-bg-neutral text-ink/70 border border-ink/15 hover:bg-bg-mint hover:text-teal-text hover:border-teal/30 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 dark:hover:text-teal"
@@ -321,7 +321,7 @@ export default function ShareForm() {
               key={t.id}
               type="button"
               onClick={() => setEmbedTheme(t.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 embedTheme === t.id
                   ? "bg-teal text-white shadow-xs font-black"
                   : "bg-navy/5 dark:bg-slate-700/60 text-ink/70 dark:text-slate-300 hover:bg-navy/10 dark:hover:bg-slate-700"

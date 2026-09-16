@@ -168,7 +168,7 @@ export default function Button({
   return (
     <Tag
       className={clsx(
-        "inline-flex items-center justify-center text-center",
+        "inline-flex items-center justify-center text-center whitespace-nowrap shrink-0",
         "rounded-xl border-[1.5px]",
         "font-bold select-none cursor-pointer",
         "transition-all duration-150 ease-out",

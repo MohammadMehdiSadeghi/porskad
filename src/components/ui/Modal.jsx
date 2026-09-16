@@ -41,7 +41,7 @@ export default function Modal({ open, onClose, title, children, wide = false, cl
       aria-modal="true"
     >
       <div
-        className={`w-full ${wide ? "max-w-3xl" : "max-w-xl"} mx-auto rounded-3xl border-2 border-primary/40 shadow-[4px_4px_0_#202A5A] dark:shadow-[4px_4px_0_#59BBAF] bg-white dark:bg-[#151C28] overflow-hidden transition-all animate-in fade-in zoom-in-95 duration-150`}
+        className={`w-full ${wide ? "max-w-3xl" : "max-w-xl"} mx-auto rounded-3xl border border-primary/30 dark:border-teal/30 shadow-[0_20px_50px_rgba(0,0,0,0.35)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.6),0_0_25px_rgba(45,212,191,0.12)] bg-white dark:bg-[#131B2E] overflow-hidden transition-all animate-in fade-in zoom-in-95 duration-150`}
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
         onMouseUp={(e) => e.stopPropagation()}
@@ -49,7 +49,7 @@ export default function Modal({ open, onClose, title, children, wide = false, cl
         <div className="max-h-[85vh] overflow-y-auto p-5 sm:p-6">
           {title && (
             <div className="flex items-center justify-between gap-3 mb-5 border-b border-gray-100 dark:border-gray-800 pb-3">
-              <h3 className="text-base sm:text-lg font-black text-sec dark:text-white">{title}</h3>
+              <h3 className="text-base sm:text-lg font-black text-sec dark:text-white truncate min-w-0">{title}</h3>
               {closable && onClose && (
                 <button
                   onClick={onClose}

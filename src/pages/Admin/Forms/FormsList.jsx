@@ -782,7 +782,7 @@ export default function FormsList() {
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`px-3 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-colors cursor-pointer ${filter === f.key
+              className={`px-3.5 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-colors cursor-pointer whitespace-nowrap shrink-0 ${filter === f.key
                   ? f.key === "trash" ? "bg-female-normal text-white shadow-xs" : "bg-ecosystem-normal text-white shadow-xs"
                   : "text-gray-600 dark:text-gray-400 hover:text-sec dark:hover:text-white"
                 }`}
@@ -912,13 +912,13 @@ export default function FormsList() {
                           e.stopPropagation();
                           setActionModalForm(f);
                         }}
-                        className="w-full py-2 px-3 rounded-pill-sm text-xs font-bold transition-all flex items-center justify-between bg-navy/5 hover:bg-teal hover:text-white text-navy border border-navy/10 group cursor-pointer"
+                        className="w-full py-2 px-3 rounded-pill-sm text-xs font-bold transition-all flex items-center justify-between gap-2 bg-navy/5 hover:bg-teal hover:text-white text-navy border border-navy/10 group cursor-pointer"
                       >
-                        <span className="flex items-center gap-1.5">
-                          <Settings size={14} className="text-teal group-hover:text-white transition-colors" />
-                          <span>مدیریت و عملیات فرم</span>
+                        <span className="flex items-center gap-1.5 min-w-0">
+                          <Settings size={14} className="text-teal group-hover:text-white transition-colors shrink-0" />
+                          <span className="whitespace-nowrap">مدیریت و عملیات فرم</span>
                         </span>
-                        <span className="text-xs font-bold text-ink/40 group-hover:text-white/90">
+                        <span className="text-xs font-bold text-ink/40 group-hover:text-white/90 whitespace-nowrap shrink-0">
                           گزینه‌ها ←
                         </span>
                       </button>
@@ -1238,14 +1238,14 @@ export default function FormsList() {
             <button
               type="button"
               onClick={confirmDelete}
-              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white font-black text-xs sm:text-sm shadow-[0_0_15px_rgba(244,63,94,0.35)] hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white font-black text-xs sm:text-sm shadow-[0_0_15px_rgba(244,63,94,0.35)] hover:scale-[1.02] active:scale-95 transition-all cursor-pointer whitespace-nowrap"
             >
               بله، انتقال به سطل زباله
             </button>
             <button
               type="button"
               onClick={() => setDeleting(null)}
-              className="py-2.5 px-5 rounded-xl border border-gray-200 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-800 text-ink dark:text-slate-300 font-bold text-xs sm:text-sm transition-all cursor-pointer"
+              className="py-2.5 px-5 rounded-xl border border-gray-200 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-800 text-ink dark:text-slate-300 font-bold text-xs sm:text-sm transition-all cursor-pointer whitespace-nowrap"
             >
               انصراف
             </button>
@@ -1269,14 +1269,14 @@ export default function FormsList() {
             <button
               type="button"
               onClick={confirmPermanentDelete}
-              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-700 hover:to-red-800 text-white font-black text-xs sm:text-sm shadow-[0_0_15px_rgba(225,29,72,0.4)] hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-700 hover:to-red-800 text-white font-black text-xs sm:text-sm shadow-[0_0_15px_rgba(225,29,72,0.4)] hover:scale-[1.02] active:scale-95 transition-all cursor-pointer whitespace-nowrap"
             >
               بله، برای همیشه حذف کن
             </button>
             <button
               type="button"
               onClick={() => setPermanentDeleting(null)}
-              className="py-2.5 px-5 rounded-xl border border-gray-200 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-800 text-ink dark:text-slate-300 font-bold text-xs sm:text-sm transition-all cursor-pointer"
+              className="py-2.5 px-5 rounded-xl border border-gray-200 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-800 text-ink dark:text-slate-300 font-bold text-xs sm:text-sm transition-all cursor-pointer whitespace-nowrap"
             >
               انصراف
             </button>

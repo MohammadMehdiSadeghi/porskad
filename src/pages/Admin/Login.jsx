@@ -237,7 +237,7 @@ export default function Login() {
                     e.stopPropagation();
                     setShowForgotModal(true);
                   }}
-                  className="text-xs font-bold text-ecosystem-normal hover:text-sec dark:hover:text-ecosystem-light transition-colors cursor-pointer"
+                  className="text-xs font-bold text-ecosystem-normal hover:text-sec dark:hover:text-ecosystem-light transition-colors cursor-pointer whitespace-nowrap"
                 >
                   فراموشی رمز عبور؟
                 </button>
