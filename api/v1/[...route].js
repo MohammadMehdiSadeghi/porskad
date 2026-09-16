@@ -614,8 +614,10 @@ export default async function handler(req, res) {
         console.warn("Storage RPC error:", e);
       }
 
-      const effectiveDbBytes = !isDbEstimated ? realDbBytes : estimatedDbBytes;
-      const effectiveDbPretty = !isDbEstimated ? realDbPretty : formatBytes(estimatedDbBytes);
+      const baseDbBytes = 5.4 * 1024 * 1024;
+      const rawCalculated = !isDbEstimated ? realDbBytes : estimatedDbBytes;
+      const effectiveDbBytes = rawCalculated >= 4.5 * 1024 * 1024 ? rawCalculated : Math.round(baseDbBytes + (rawCalculated || 0));
+      const effectiveDbPretty = formatBytes(effectiveDbBytes);
 
       const totalEstimatedBytes = totalLocalBytes + effectiveDbBytes;
       const MAX_STORAGE_LIMIT_BYTES = 5 * 1024 * 1024 * 1024; // 5 GB
