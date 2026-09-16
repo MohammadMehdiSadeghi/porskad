@@ -255,16 +255,21 @@ graph TB
     mermaid.initialize({
       startOnLoad: true,
       theme: 'dark',
+      securityLevel: 'loose',
+      flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
+      sequence: { useMaxWidth: false },
+      er: { useMaxWidth: false },
       themeVariables: {
         darkMode: true,
-        background: '#090D16',
+        background: '#080C14',
         primaryColor: '#131B2E',
-        primaryTextColor: '#F8FAFC',
+        primaryTextColor: '#FFFFFF',
         primaryBorderColor: '#2DD4BF',
         lineColor: '#38BDF8',
         secondaryColor: '#1A2338',
         tertiaryColor: '#0F172A',
-        fontFamily: 'IRANSansX, sans-serif'
+        fontFamily: 'IRANSansX, Vazirmatn, sans-serif',
+        fontSize: '15.5px'
       }
     });
   </script>
