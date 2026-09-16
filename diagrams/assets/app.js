@@ -1,14 +1,14 @@
 /* ══════════════════════════════════════════════════════════════════
-   پرس‌کاد (Porskad) — موتور بوم تعاملی شبیه فیگما (Figma-Like Canvas Engine)
-   زوم دقیق روی مکان نشانگر ماوس، جابجایی با Spacebar / کلید وسط، و فیت خودکار
+   پرس‌کاد (Porskad) — موتور بوم تعاملی فیگما (Figma-Like Canvas Engine)
+   پایدار، روان، وسط‌چین خودکار و زوم با چرخ ماوس
 ══════════════════════════════════════════════════════════════════ */
 
 document.addEventListener('DOMContentLoaded', () => {
-  initFigmaCanvas();
+  initDiagramViewer();
   initNavigation();
 });
 
-function initFigmaCanvas() {
+function initDiagramViewer() {
   const viewport = document.querySelector('.diagram-viewport');
   const canvas = document.querySelector('.diagram-canvas');
   if (!viewport || !canvas) return;
@@ -17,16 +17,12 @@ function initFigmaCanvas() {
   let translateX = 0;
   let translateY = 0;
   let isPanning = false;
-  let isSpacePressed = false;
-  let startMouseX = 0;
-  let startMouseY = 0;
-  let startTranslateX = 0;
-  let startTranslateY = 0;
+  let startX = 0;
+  let startY = 0;
 
-  const minScale = 0.15;
+  const minScale = 0.2;
   const maxScale = 5.0;
 
-  // Zoom display element
   const zoomIndicator = document.getElementById('zoomIndicator');
   const zoomInBtn = document.getElementById('zoomInBtn');
   const zoomOutBtn = document.getElementById('zoomOutBtn');
@@ -34,200 +30,123 @@ function initFigmaCanvas() {
   const fullscreenBtn = document.getElementById('fullscreenBtn');
   const exportBtn = document.getElementById('exportBtn');
 
-  function updateTransform() {
+  function renderTransform() {
     canvas.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-    // Move background dot-grid with pan & zoom for realistic infinite canvas
     viewport.style.backgroundPosition = `${translateX}px ${translateY}px`;
-    viewport.style.backgroundSize = `${28 * scale}px ${28 * scale}px`;
-
+    viewport.style.backgroundSize = `${Math.round(28 * Math.min(Math.max(scale, 0.6), 2))}px ${Math.round(28 * Math.min(Math.max(scale, 0.6), 2))}px`;
     if (zoomIndicator) {
       zoomIndicator.textContent = `${Math.round(scale * 100)}%`;
     }
   }
 
-  // Auto-center and fit diagram to viewport on initial load
-  function fitToScreen() {
-    setTimeout(() => {
-      const svg = canvas.querySelector('svg');
-      if (!svg) {
-        // Retry if mermaid is still rendering
-        setTimeout(fitToScreen, 200);
-        return;
-      }
+  // Initial render
+  renderTransform();
 
-      const svgRect = svg.getBoundingClientRect();
-      const viewportRect = viewport.getBoundingClientRect();
-
-      if (svgRect.width === 0 || svgRect.height === 0) return;
-
-      const svgRawWidth = svg.viewBox?.baseVal?.width || svgRect.width;
-      const svgRawHeight = svg.viewBox?.baseVal?.height || svgRect.height;
-
-      const padding = 80;
-      const availableWidth = viewportRect.width - padding;
-      const availableHeight = viewportRect.height - padding;
-
-      const scaleX = availableWidth / svgRawWidth;
-      const scaleY = availableHeight / svgRawHeight;
-      scale = Math.min(Math.max(Math.min(scaleX, scaleY), 0.5), 1.25);
-
-      // Center in viewport
-      translateX = (viewportRect.width - svgRawWidth * scale) / 2;
-      translateY = Math.max((viewportRect.height - svgRawHeight * scale) / 2, 40);
-
-      updateTransform();
-    }, 250);
-  }
-
-  // Run fit on start
-  fitToScreen();
-
-  // 1. FIGMA-STYLE CURSOR-CENTRIC MOUSE WHEEL ZOOM
+  // 1. Zoom with Mouse Wheel (Smooth Cursor-Centric Zoom)
   viewport.addEventListener('wheel', (e) => {
     e.preventDefault();
-
-    const rect = viewport.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-
-    // Trackpad pinch or mouse wheel
     const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
     const newScale = Math.min(Math.max(scale * zoomFactor, minScale), maxScale);
 
     if (newScale !== scale) {
-      // Keep point under cursor fixed:
+      const rect = viewport.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left - rect.width / 2;
+      const mouseY = e.clientY - rect.top - rect.height / 2;
       translateX = mouseX - (mouseX - translateX) * (newScale / scale);
       translateY = mouseY - (mouseY - translateY) * (newScale / scale);
       scale = newScale;
-      updateTransform();
+      renderTransform();
     }
   }, { passive: false });
 
-  // 2. SPACEBAR & MIDDLE CLICK HANDLING (JUST LIKE FIGMA)
-  window.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' && !isSpacePressed && document.activeElement.tagName !== 'INPUT') {
-      isSpacePressed = true;
-      viewport.classList.add('spacebar-active');
-    }
-  });
-
-  window.addEventListener('keyup', (e) => {
-    if (e.code === 'Space') {
-      isSpacePressed = false;
-      viewport.classList.remove('spacebar-active');
-      if (!isPanning) viewport.classList.remove('panning');
-    }
-  });
-
-  // 3. PANNING WITH MOUSE DRAG
+  // 2. Pan with Mouse Drag (Any button / Spacebar)
   viewport.addEventListener('mousedown', (e) => {
-    // Middle click (button 1), Spacebar + Left Click, or direct Left Click on canvas backdrop
-    const isMiddleClick = e.button === 1;
-    const isLeftClick = e.button === 0;
-
-    if (isMiddleClick || isSpacePressed || isLeftClick) {
-      if (e.target.closest('button') || e.target.closest('a') || e.target.closest('select')) return;
-      isPanning = true;
-      startMouseX = e.clientX;
-      startMouseY = e.clientY;
-      startTranslateX = translateX;
-      startTranslateY = translateY;
-      viewport.classList.add('panning');
-      e.preventDefault();
-    }
+    if (e.target.closest('button') || e.target.closest('a') || e.target.closest('select')) return;
+    isPanning = true;
+    startX = e.clientX - translateX;
+    startY = e.clientY - translateY;
+    viewport.style.cursor = 'grabbing';
+    canvas.style.transition = 'none';
   });
 
   window.addEventListener('mousemove', (e) => {
     if (!isPanning) return;
-    const deltaX = e.clientX - startMouseX;
-    const deltaY = e.clientY - startMouseY;
-    translateX = startTranslateX + deltaX;
-    translateY = startTranslateY + deltaY;
-    updateTransform();
+    translateX = e.clientX - startX;
+    translateY = e.clientY - startY;
+    renderTransform();
   });
 
   window.addEventListener('mouseup', () => {
     if (isPanning) {
       isPanning = false;
-      viewport.classList.remove('panning');
+      viewport.style.cursor = 'grab';
+      canvas.style.transition = 'transform 0.08s ease-out';
     }
   });
 
-  // 4. TOUCH PINCH-TO-ZOOM AND TOUCH PAN (MOBILE & TABLET)
-  let initialPinchDistance = null;
-  let initialPinchScale = 1;
+  // 3. Touch Gestures for Mobile / Tablet
+  let initialTouchDist = null;
+  let initialTouchScale = 1;
 
   viewport.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
       isPanning = true;
-      startMouseX = e.touches[0].clientX;
-      startMouseY = e.touches[0].clientY;
-      startTranslateX = translateX;
-      startTranslateY = translateY;
+      startX = e.touches[0].clientX - translateX;
+      startY = e.touches[0].clientY - translateY;
+      canvas.style.transition = 'none';
     } else if (e.touches.length === 2) {
       isPanning = false;
-      initialPinchDistance = Math.hypot(
+      initialTouchDist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
-      initialPinchScale = scale;
+      initialTouchScale = scale;
     }
   }, { passive: true });
 
   viewport.addEventListener('touchmove', (e) => {
     if (isPanning && e.touches.length === 1) {
-      const deltaX = e.touches[0].clientX - startMouseX;
-      const deltaY = e.touches[0].clientY - startMouseY;
-      translateX = startTranslateX + deltaX;
-      translateY = startTranslateY + deltaY;
-      updateTransform();
-    } else if (e.touches.length === 2 && initialPinchDistance) {
-      const currentDistance = Math.hypot(
+      translateX = e.touches[0].clientX - startX;
+      translateY = e.touches[0].clientY - startY;
+      renderTransform();
+    } else if (e.touches.length === 2 && initialTouchDist) {
+      const currentDist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
-      const pinchFactor = currentDistance / initialPinchDistance;
-      const newScale = Math.min(Math.max(initialPinchScale * pinchFactor, minScale), maxScale);
-      scale = newScale;
-      updateTransform();
+      const factor = currentDist / initialTouchDist;
+      scale = Math.min(Math.max(initialTouchScale * factor, minScale), maxScale);
+      renderTransform();
     }
   }, { passive: true });
 
   viewport.addEventListener('touchend', () => {
     isPanning = false;
-    initialPinchDistance = null;
+    initialTouchDist = null;
+    canvas.style.transition = 'transform 0.08s ease-out';
   });
 
-  // 5. TOOLBAR BUTTON CONTROLS
+  // 4. Toolbar Controls
   if (zoomInBtn) {
     zoomInBtn.addEventListener('click', () => {
-      const rect = viewport.getBoundingClientRect();
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-      const newScale = Math.min(scale * 1.25, maxScale);
-      translateX = centerX - (centerX - translateX) * (newScale / scale);
-      translateY = centerY - (centerY - translateY) * (newScale / scale);
-      scale = newScale;
-      updateTransform();
+      scale = Math.min(scale * 1.25, maxScale);
+      renderTransform();
     });
   }
 
   if (zoomOutBtn) {
     zoomOutBtn.addEventListener('click', () => {
-      const rect = viewport.getBoundingClientRect();
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-      const newScale = Math.max(scale / 1.25, minScale);
-      translateX = centerX - (centerX - translateX) * (newScale / scale);
-      translateY = centerY - (centerY - translateY) * (newScale / scale);
-      scale = newScale;
-      updateTransform();
+      scale = Math.max(scale / 1.25, minScale);
+      renderTransform();
     });
   }
 
   if (resetZoomBtn) {
     resetZoomBtn.addEventListener('click', () => {
-      fitToScreen();
+      scale = 1;
+      translateX = 0;
+      translateY = 0;
+      renderTransform();
     });
   }
 
@@ -238,7 +157,6 @@ function initFigmaCanvas() {
         stageCard.classList.toggle('fullscreen');
         fullscreenBtn.textContent = stageCard.classList.contains('fullscreen') ? '✕' : '⛶';
         fullscreenBtn.title = stageCard.classList.contains('fullscreen') ? 'خروج از تمام صفحه' : 'تمام صفحه';
-        setTimeout(fitToScreen, 100);
       }
     });
   }
