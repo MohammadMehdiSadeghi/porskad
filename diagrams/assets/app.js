@@ -20,8 +20,9 @@ function initDiagramViewer() {
   let startX = 0;
   let startY = 0;
 
-  const minScale = 0.2;
-  const maxScale = 5.0;
+  // Ultra-wide Figma zoom range: from 2% to 3000% (30x zoom)
+  const minScale = 0.02;
+  const maxScale = 30.0;
 
   const zoomIndicator = document.getElementById('zoomIndicator');
   const zoomInBtn = document.getElementById('zoomInBtn');
@@ -33,7 +34,7 @@ function initDiagramViewer() {
   function renderTransform() {
     canvas.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
     viewport.style.backgroundPosition = `${translateX}px ${translateY}px`;
-    viewport.style.backgroundSize = `${Math.round(28 * Math.min(Math.max(scale, 0.6), 2))}px ${Math.round(28 * Math.min(Math.max(scale, 0.6), 2))}px`;
+    viewport.style.backgroundSize = `${Math.round(28 * Math.min(Math.max(scale, 0.4), 3))}px ${Math.round(28 * Math.min(Math.max(scale, 0.4), 3))}px`;
     if (zoomIndicator) {
       zoomIndicator.textContent = `${Math.round(scale * 100)}%`;
     }
@@ -42,10 +43,11 @@ function initDiagramViewer() {
   // Initial render
   renderTransform();
 
-  // 1. Zoom with Mouse Wheel (Smooth Cursor-Centric Zoom)
+  // 1. High-Performance Deep Zoom with Mouse Wheel (Figma-Style Cursor-Centric)
   viewport.addEventListener('wheel', (e) => {
     e.preventDefault();
-    const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
+    // Faster, deeper zoom curve
+    const zoomFactor = e.deltaY < 0 ? 1.25 : 0.8;
     const newScale = Math.min(Math.max(scale * zoomFactor, minScale), maxScale);
 
     if (newScale !== scale) {
@@ -58,6 +60,20 @@ function initDiagramViewer() {
       renderTransform();
     }
   }, { passive: false });
+
+  // Quick double-click to zoom in at cursor (like Figma / Maps)
+  viewport.addEventListener('dblclick', (e) => {
+    if (e.target.closest('button') || e.target.closest('a')) return;
+    const rect = viewport.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left - rect.width / 2;
+    const mouseY = e.clientY - rect.top - rect.height / 2;
+    const zoomFactor = e.shiftKey ? 0.5 : 2.0;
+    const newScale = Math.min(Math.max(scale * zoomFactor, minScale), maxScale);
+    translateX = mouseX - (mouseX - translateX) * (newScale / scale);
+    translateY = mouseY - (mouseY - translateY) * (newScale / scale);
+    scale = newScale;
+    renderTransform();
+  });
 
   // 2. Pan with Mouse Drag (Any button / Spacebar)
   viewport.addEventListener('mousedown', (e) => {
@@ -129,20 +145,31 @@ function initDiagramViewer() {
   // 4. Toolbar Controls
   if (zoomInBtn) {
     zoomInBtn.addEventListener('click', () => {
-      scale = Math.min(scale * 1.25, maxScale);
+      scale = Math.min(scale * 1.4, maxScale);
       renderTransform();
     });
   }
 
   if (zoomOutBtn) {
     zoomOutBtn.addEventListener('click', () => {
-      scale = Math.max(scale / 1.25, minScale);
+      scale = Math.max(scale / 1.4, minScale);
       renderTransform();
     });
   }
 
   if (resetZoomBtn) {
     resetZoomBtn.addEventListener('click', () => {
+      scale = 1;
+      translateX = 0;
+      translateY = 0;
+      renderTransform();
+    });
+  }
+
+  if (zoomIndicator) {
+    zoomIndicator.style.cursor = 'pointer';
+    zoomIndicator.title = 'کلیک برای بازنشانی به ۱۰۰٪';
+    zoomIndicator.addEventListener('click', () => {
       scale = 1;
       translateX = 0;
       translateY = 0;
