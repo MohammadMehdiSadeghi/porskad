@@ -43,11 +43,12 @@ function initDiagramViewer() {
   // Initial render
   renderTransform();
 
-  // 1. High-Performance Deep Zoom with Mouse Wheel (Figma-Style Cursor-Centric)
+  // 1. High-Performance Gentle & Smooth Zoom with Mouse Wheel (Figma-Style Damped Curve)
   viewport.addEventListener('wheel', (e) => {
     e.preventDefault();
-    // Faster, deeper zoom curve
-    const zoomFactor = e.deltaY < 0 ? 1.25 : 0.8;
+    // Smooth damping: avoids jumping on fast scroll / trackpad
+    const normalizedDelta = Math.min(Math.max(e.deltaY, -100), 100);
+    const zoomFactor = Math.exp(-normalizedDelta * 0.0022);
     const newScale = Math.min(Math.max(scale * zoomFactor, minScale), maxScale);
 
     if (newScale !== scale) {
@@ -61,13 +62,13 @@ function initDiagramViewer() {
     }
   }, { passive: false });
 
-  // Quick double-click to zoom in at cursor (like Figma / Maps)
+  // Quick double-click to gently zoom in at cursor
   viewport.addEventListener('dblclick', (e) => {
     if (e.target.closest('button') || e.target.closest('a')) return;
     const rect = viewport.getBoundingClientRect();
     const mouseX = e.clientX - rect.left - rect.width / 2;
     const mouseY = e.clientY - rect.top - rect.height / 2;
-    const zoomFactor = e.shiftKey ? 0.5 : 2.0;
+    const zoomFactor = e.shiftKey ? 0.75 : 1.35;
     const newScale = Math.min(Math.max(scale * zoomFactor, minScale), maxScale);
     translateX = mouseX - (mouseX - translateX) * (newScale / scale);
     translateY = mouseY - (mouseY - translateY) * (newScale / scale);
@@ -145,14 +146,14 @@ function initDiagramViewer() {
   // 4. Toolbar Controls
   if (zoomInBtn) {
     zoomInBtn.addEventListener('click', () => {
-      scale = Math.min(scale * 1.4, maxScale);
+      scale = Math.min(scale * 1.15, maxScale);
       renderTransform();
     });
   }
 
   if (zoomOutBtn) {
     zoomOutBtn.addEventListener('click', () => {
-      scale = Math.max(scale / 1.4, minScale);
+      scale = Math.max(scale / 1.15, minScale);
       renderTransform();
     });
   }
