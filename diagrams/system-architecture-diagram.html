@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Architecture Diagram | سامانه فرم‌ساز پرس‌کاد (Porskad)</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <!-- Navigation Bar -->
+    <header class="top-nav">
+      <a href="index.html" class="brand-section">
+        <div class="brand-logo-icon">P</div>
+        <div class="brand-info">
+          <h1>پرس‌کاد <span>Porskad Blueprints</span></h1>
+          <span>پلتفرم سازمانی ساخت فرم و پرسشنامه</span>
+        </div>
+      </a>
+      <div class="nav-actions">
+        <select class="nav-select" id="diagramNavSelect">
+          <option value="architecture-diagram.html">۱. Architecture Diagram</option>
+          <option value="system-architecture-diagram.html" selected>۲. System Architecture Diagram</option>
+          <option value="system-diagram.html">۳. System Diagram</option>
+          <option value="project-structure-diagram.html">۴. Project Structure Diagram</option>
+          <option value="flowchart.html">۵. Flowchart</option>
+          <option value="mind-map.html">۶. Mind Map</option>
+          <option value="site-map.html">۷. Site Map</option>
+          <option value="uml-diagram.html">۸. UML Diagram</option>
+          <option value="er-diagram.html">۹. ER Diagram</option>
+          <option value="component-diagram.html">۱۰. Component Diagram</option>
+          <option value="data-flow-diagram.html">۱۱. Data Flow Diagram (DFD)</option>
+          <option value="sequence-diagram.html">۱۲. Sequence Diagram</option>
+          <option value="use-case-diagram.html">۱۳. Use Case Diagram</option>
+          <option value="entity-relationship-diagram.html">۱۴. Entity Relationship Diagram (ERD)</option>
+        </select>
+        <a href="index.html" class="btn btn-secondary btn-sm">🏠 خانه دیاگرام‌ها</a>
+      </div>
+    </header>
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="header-meta-row">
+        <span class="badge badge-teal">معماری سامانه‌ای</span>
+        <span class="badge badge-blue">Detailed Runtime Architecture</span>
+        <span class="badge badge-purple">Client State + BaaS Cluster</span>
+      </div>
+      <h1 class="page-title">System Architecture Diagram (دیاگرام معماری سامانه)</h1>
+      <p class="page-desc">
+        نمودار فنی جریان‌های ران‌تایم، کانتینرهای اجرایی، ارتباطات داده‌ای و زیرسیستم‌های نرم‌افزاری پرس‌کاد. این دیاگرام نشان‌دهنده نحوه تعامل موتور رندرینگ فرم، مدیریت وضعیت کلاینت (State Management)، سشن‌های احراز هویت، گیت‌وی لبه Vercel، موتور PostgREST و کلاستر پایگاه داده PostgreSQL همراه با مکانیسم‌های RPC اتمیک است.
+      </p>
+    </div>
+
+    <!-- Interactive Diagram Stage -->
+    <div class="diagram-stage-card">
+      <div class="stage-toolbar">
+        <div class="stage-title">
+          <span>⚙️ نمودار معماری سامانه و ران‌تایم نرم‌افزار</span>
+        </div>
+        <div class="stage-controls">
+          <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
+          <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
+          <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
+          <button class="control-btn" id="fullscreenBtn" title="تمام صفحه">⛶</button>
+          <button class="btn btn-primary btn-sm" id="exportBtn">📥 خروجی SVG</button>
+        </div>
+      </div>
+      <div class="diagram-viewport">
+        <div class="diagram-canvas">
+          <pre class="mermaid">
+graph TB
+    classDef clientModule fill:#131B2E,stroke:#2DD4BF,stroke-width:2px,color:#F8FAFC;
+    classDef edgeModule fill:#1E293B,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
+    classDef serviceModule fill:#1E1B4B,stroke:#A855F7,stroke-width:2px,color:#F8FAFC;
+    classDef dataModule fill:#0F172A,stroke:#10B981,stroke-width:2px,color:#F8FAFC;
+    classDef extModule fill:#2A1B18,stroke:#F59E0B,stroke-width:2px,color:#F8FAFC;
+
+    subgraph CLIENT_TIER["📱 لایه ران‌تایم کلاینت (Client Runtime Environment)"]
+        subgraph ROUTING["مسیرها و ویوها (React Router v6)"]
+            PublicApp["🌐 Public Form Engine<br/>(/f/:slug, /embed/:slug)"]:::clientModule
+            AdminApp["🎛️ Admin Management Portal<br/>(/admin/*, Builder, Analytics)"]:::clientModule
+        end
+
+        subgraph STATE_LAYER["مدیریت حالت و کش موضعی"]
+            AuthCtx["🔑 AuthContext & Session<br/>(JWT Token, User Profile)"]:::clientModule
+            RealtimeHook["🔔 useRealtimeSubscription<br/>(شنود رویدادهای ثبت فرم)"]:::clientModule
+            DraftStore["📦 LocalStorage Draft Engine<br/>(نگه‌داری جواب‌ها تا ۷ روز)"]:::clientModule
+            LogicEngine["🔀 Form Logic Processor<br/>(پرش‌ها، نمایش و اعتبارسنجی)"]:::clientModule
+        end
+    end
+
+    subgraph EDGE_TIER["⚡ زیرساخت لبه و پراکسی (Edge & Proxy Layer)"]
+        EdgeDNS["🌐 Vercel Global Edge Ingress<br/>(DNS Anycast & SSL Termination)"]:::edgeModule
+        StaticAssets["📦 Static Asset CDN Cache<br/>(Vite Bundles, Fonts, Images)"]:::edgeModule
+        ProxyRewriter["🛡️ Security & Rewrites Engine<br/>(CORS Headers, Iframe Policy, Anti-DDoS)"]:::edgeModule
+    end
+
+    subgraph BAAS_TIER["☁️ سرویس‌های بک‌اند (Supabase BaaS Architecture)"]
+        AuthService["🔐 GoTrue Auth Engine<br/>(Password Hashing, OTP Generation)"]:::serviceModule
+        APIGateway["⚡ PostgREST Gateway<br/>(REST API over Postgres, Filter & Sorting)"]:::serviceModule
+        WSCluster["🟢 Phoenix Realtime Channels<br/>(WebSockets Pub/Sub, Heartbeat)"]:::serviceModule
+        StorageBucket["🗂️ File Storage Service<br/>(Form Covers, Uploaded Assets)"]:::serviceModule
+    end
+
+    subgraph DATABASE_TIER["🗄️ کلاستر پایگاه داده (PostgreSQL DB Layer)"]
+        subgraph SECURITY_FIREWALL["حفاظت داده و فایروال داخلی"]
+            RLS["🛡️ Row-Level Security Engine<br/>(ارزیابی سیاست‌ها بر پایه auth.uid)"]:::dataModule
+        end
+        subgraph TRANSACTIONAL_RPC["توابع ذخیره‌شده (PL/pgSQL RPCs)"]
+            RPCSave["⚙️ save_form()<br/>(ذخیره اتمیک فرم، سوالات و رول‌ها)"]:::dataModule
+            RPCSubmit["⚙️ submit_public_response()<br/>(ثبت پاسخ عموم بدون نیاز به لاگین)"]:::dataModule
+            RPCTrash["⚙️ god_trash_recovery()<br/>(سیستم سطل زباله ۳۰ روزه امن)"]:::dataModule
+        end
+        subgraph STORAGE_SCHEMA["طرحواره داده‌ها (Relational Schema)"]
+            T_Forms["📁 forms, questions, logic_rules"]:::dataModule
+            T_Responses["📝 responses, answers"]:::dataModule
+            T_Profiles["👤 profiles, user_roles, user_quotas"]:::dataModule
+            T_Logs["📜 sms_logs, audit_logs, trash_items"]:::dataModule
+        end
+        subgraph DB_TRIGGERS["تریگرها و رویدادها (CDC)"]
+            T_Triggers["⚡ WAL Change Capture<br/>(Notify Realtime on New Response)"]:::dataModule
+        end
+    end
+
+    subgraph EXTERNAL_TIER["🌐 درگاه‌ها و ارتباطات بیرونی"]
+        SMS_API["📱 Kavenegar SMS Gateway<br/>(ارسال پیامک خوش‌آمد، کد لاگین)"]:::extModule
+        TG_API["🤖 Telegram Bot API<br/>(ارسال نوتیفیکیشن ثبت فرم جدید)"]:::extModule
+        ZARINPAL["💳 درگاه پرداخت زرین‌پال<br/>(تراکنش‌های تمدید و ارتقا پلن)"]:::extModule
+    end
+
+    %% Wiring
+    PublicApp --> DraftStore
+    PublicApp --> LogicEngine
+    AdminApp --> AuthCtx
+    AdminApp --> RealtimeHook
+
+    PublicApp -->|HTTPS / GET| EdgeDNS
+    AdminApp -->|HTTPS / REST| EdgeDNS
+
+    EdgeDNS --> StaticAssets
+    EdgeDNS --> ProxyRewriter
+
+    ProxyRewriter -->|Auth Verification| AuthService
+    ProxyRewriter -->|Data Query & RPC Call| APIGateway
+    ProxyRewriter -->|WSS Realtime Connection| WSCluster
+
+    AuthService --> RLS
+    APIGateway --> RLS
+    APIGateway --> RPCSave
+    APIGateway --> RPCSubmit
+    APIGateway --> RPCTrash
+
+    RLS --> T_Forms
+    RLS --> T_Responses
+    RLS --> T_Profiles
+    RLS --> T_Logs
+
+    RPCSave --> T_Forms
+    RPCSubmit --> T_Responses
+    RPCTrash --> T_Logs
+
+    T_Responses --> T_Triggers
+    T_Triggers --> WSCluster
+    WSCluster -->|WebSockets Push| RealtimeHook
+
+    AuthService -.->|ارسال OTP| SMS_API
+    RPCSubmit -.->|اعلان لحظه‌ای| TG_API
+    AdminApp -.->|تراکنش مالی| ZARINPAL
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Technical Analysis -->
+    <div class="spec-grid">
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">🔄</div>
+          <div class="spec-card-title">معماری تراکنشی RPC اتمیک</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>تضمین ACID در ثبت پاسخ:</strong> تابع <code>submit_public_response</code> رکورد پاسخ اصلی و تمام جواب‌ها را در یک تراکنش یکپارچه درج می‌کند.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>حفظ تمامیت فرم‌ساز:</strong> تابع <code>save_form</code> بروزرسانی عنوان، تنظیمات، سوالات و رول‌های منطقی را همزمان و ایمن مدیریت می‌کند.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>سطل بازیافت هوشمند:</strong> پشتیبانی از Soft-delete و امکان بازیابی آنی فرم‌ها و سوالات تا ۳۰ روز قبل از حذف قطعی.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">⚡</div>
+          <div class="spec-card-title">موتور پردازش منطقی و کش کلاینت</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>موتور قوانین شرطی (Logic Engine):</strong> ارزیابی لحظه‌ای شروط چندگانه (AND/OR) روی جواب‌ها برای تغییر مسیر پرسش‌ها بدون تاخیر سرور.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>تداوم پاسخ‌ها در LocalStorage:</strong> حفظ پاسخ‌ها هنگام قطع برق یا بسته‌شدن ناگهانی تب مرورگر کاربر تا ۷ روز.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>ردگیری متادیتای پاسخ:</strong> استخراج دقیق نوع دستگاه (موبایل/تبلت/دسکتاپ)، مرورگر و سیستم‌عامل با رعایت استانداردهای حریم خصوصی.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">🔐</div>
+          <div class="spec-card-title">مرزهای امنیتی و چندمستاجری (Multi-Tenancy)</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>جداسازی داده‌ها (Tenant Isolation):</strong> هر سازنده فرم تنها به داده‌های فرم‌های ایجادشده توسط خود دسترسی دارد.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>کنترل سهمیه داینامیک:</strong> محدودسازی تعداد فرم‌های فعال، سقف پاسخ‌های ماهانه و دسترسی به خروجی اکسل بر اساس پلن کاربر.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>سوپرادمین گاد-مود:</strong> دسترسی‌های سطح بالا با ثبت کامل ردپای امنیتی در جدول لاگ ممیزی (Audit Logs).</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="page-footer">
+      <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
+    </footer>
+  </div>
+
+  <script src="assets/app.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#090D16',
+        primaryColor: '#131B2E',
+        primaryTextColor: '#F8FAFC',
+        primaryBorderColor: '#2DD4BF',
+        lineColor: '#38BDF8',
+        secondaryColor: '#1A2338',
+        tertiaryColor: '#0F172A',
+        fontFamily: 'IRANSansX, sans-serif'
+      }
+    });
+  </script>
+</body>
+</html>

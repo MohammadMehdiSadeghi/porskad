@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Structure Diagram | سامانه فرم‌ساز پرس‌کاد (Porskad)</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="top-nav">
+      <a href="index.html" class="brand-section">
+        <div class="brand-logo-icon">P</div>
+        <div class="brand-info">
+          <h1>پرس‌کاد <span>Porskad Blueprints</span></h1>
+          <span>پلتفرم سازمانی ساخت فرم و پرسشنامه</span>
+        </div>
+      </a>
+      <div class="nav-actions">
+        <select class="nav-select" id="diagramNavSelect">
+          <option value="architecture-diagram.html">۱. Architecture Diagram</option>
+          <option value="system-architecture-diagram.html">۲. System Architecture Diagram</option>
+          <option value="system-diagram.html">۳. System Diagram</option>
+          <option value="project-structure-diagram.html" selected>۴. Project Structure Diagram</option>
+          <option value="flowchart.html">۵. Flowchart</option>
+          <option value="mind-map.html">۶. Mind Map</option>
+          <option value="site-map.html">۷. Site Map</option>
+          <option value="uml-diagram.html">۸. UML Diagram</option>
+          <option value="er-diagram.html">۹. ER Diagram</option>
+          <option value="component-diagram.html">۱۰. Component Diagram</option>
+          <option value="data-flow-diagram.html">۱۱. Data Flow Diagram (DFD)</option>
+          <option value="sequence-diagram.html">۱۲. Sequence Diagram</option>
+          <option value="use-case-diagram.html">۱۳. Use Case Diagram</option>
+          <option value="entity-relationship-diagram.html">۱۴. Entity Relationship Diagram (ERD)</option>
+        </select>
+        <a href="index.html" class="btn btn-secondary btn-sm">🏠 خانه دیاگرام‌ها</a>
+      </div>
+    </header>
+
+    <div class="page-header">
+      <div class="header-meta-row">
+        <span class="badge badge-teal">ساختار کدهای پروژه</span>
+        <span class="badge badge-blue">Repository & Directory Architecture</span>
+        <span class="badge badge-purple">Src, Migrations, Components & Config</span>
+      </div>
+      <h1 class="page-title">Project Structure Diagram (دیاگرام ساختار دایرکتوری و ماژول‌ها)</h1>
+      <p class="page-desc">
+        نمودار معماری سلسله‌مراتبی مخزن سورس‌کد پروژه پرس‌کاد، سازمان‌دهی لایه‌های فرانت‌اند (React 18، صفحات، لایوت‌ها، کامپوننت‌های فرم‌ساز)، کتابخانه‌های کاربردی (Lib & Utils)، دسته‌بندی ۸۵+ مایگریشن SQL سوپابیس، فایل‌های پیکربندی و دارایی‌های عمومی (Assets & Fonts).
+      </p>
+    </div>
+
+    <div class="diagram-stage-card">
+      <div class="stage-toolbar">
+        <div class="stage-title">
+          <span>📁 درخت سلسله‌مراتبی ساختار فایل‌ها و ماژول‌های پروژه</span>
+        </div>
+        <div class="stage-controls">
+          <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
+          <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
+          <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
+          <button class="control-btn" id="fullscreenBtn" title="تمام صفحه">⛶</button>
+          <button class="btn btn-primary btn-sm" id="exportBtn">📥 خروجی SVG</button>
+        </div>
+      </div>
+      <div class="diagram-viewport">
+        <div class="diagram-canvas">
+          <pre class="mermaid">
+graph TD
+    classDef rootNode fill:#0F172A,stroke:#2DD4BF,stroke-width:3px,color:#F8FAFC;
+    classDef dirNode fill:#131B2E,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
+    classDef fileNode fill:#1E293B,stroke:#94A3B8,stroke-width:1px,color:#F8FAFC;
+    classDef sqlNode fill:#1E1B4B,stroke:#A855F7,stroke-width:2px,color:#F8FAFC;
+
+    ROOT["📦 porskad (Root)"]:::rootNode
+
+    %% Level 1
+    ROOT --> SRC["📁 src/ (Source Code)"]:::dirNode
+    ROOT --> SUPA["📁 supabase/ (Backend & DB)"]:::dirNode
+    ROOT --> PUB["📁 public/ (Static Assets)"]:::dirNode
+    ROOT --> CONF["⚙️ Configs & Tooling"]:::fileNode
+
+    %% Configs
+    CONF --> C1["vite.config.js (Vite Bundler & Base URL)"]:::fileNode
+    CONF --> C2["tailwind.config.js (Rokad Design Tokens)"]:::fileNode
+    CONF --> C3["vercel.json (SPA Rewrites & Edge Headers)"]:::fileNode
+    CONF --> C4["package.json (React 18, Lucide, Canvas-confetti)"]:::fileNode
+
+    %% Public
+    PUB --> P_FONTS["📁 fonts/ (IRANSansX 11 Weights)"]:::dirNode
+    PUB --> P_LOADER["loader.js (Script Embed Engine)"]:::fileNode
+    PUB --> P_ASSETS["📁 assets/ (StatCard Textures)"]:::dirNode
+
+    %% Supabase
+    SUPA --> S_MIG["📁 migrations/ (85+ Incremental SQL Scripts)"]:::sqlNode
+    S_MIG --> M_CORE["0001-0005: Core Tables & Initial RLS"]:::sqlNode
+    S_MIG --> M_LOGIC["0006-0013: Logic Rules & Embed IDs"]:::sqlNode
+    S_MIG --> M_SEC["0014-0044: Security Hardening & Permissions"]:::sqlNode
+    S_MIG --> M_SAAS["0045-0065: Multi-Tenant Quotas & SMS"]:::sqlNode
+    S_MIG --> M_TRASH["0066-0084: God-Mode 30-Day Trash & Recovery"]:::sqlNode
+
+    %% SRC Branches
+    SRC --> S_PAGES["📁 pages/ (Routed Views)"]:::dirNode
+    SRC --> S_COMPS["📁 components/ (UI & Layout)"]:::dirNode
+    SRC --> S_LIB["📁 lib/ (Shared Utilities)"]:::dirNode
+    SRC --> S_CTX["📁 context/ (React Global State)"]:::dirNode
+    SRC --> S_ENTRY["App.jsx & main.jsx (Routing & Providers)"]:::fileNode
+
+    %% Pages
+    S_PAGES --> P_ADM["📁 Admin/ (Dashboard, Builder, Responses, Users)"]:::dirNode
+    S_PAGES --> P_FRM["📁 Form/ (Public Slide Runner & ThankYou)"]:::dirNode
+    S_PAGES --> P_EMB["📁 Embed/ (Chromeless Embed Form)"]:::dirNode
+    S_PAGES --> P_LND["📁 Landing/ (Rokad Design Hero & Features)"]:::dirNode
+
+    %% Components
+    S_COMPS --> C_UI["📁 ui/ (StickerCard, Button, Badge, Modal, Toast)"]:::dirNode
+    S_COMPS --> C_LAY["📁 layout/ (AdminLayout, PublicNav, Sidebar)"]:::dirNode
+    S_COMPS --> C_FRM["📁 form/ (QuestionEditor, LogicBuilder, Renderers)"]:::dirNode
+
+    %% Lib
+    S_LIB --> L_SB["supabaseClient.js (Supabase SDK Client)"]:::fileNode
+    S_LIB --> L_VAL["validators.js (Phone IR, Email, Required)"]:::fileNode
+    S_LIB --> L_CSV["csv.js (Persian Excel UTF-8 BOM Exporter)"]:::fileNode
+    S_LIB --> L_UTL["utils.js (Jalali Dates, Device Detection)"]:::fileNode
+    S_LIB --> L_QTP["questionTypes.js (Metadata for 8 Question Types)"]:::fileNode
+
+    %% Context
+    S_CTX --> CTX_AUTH["AuthContext.jsx (Supabase GoTrue Sessions)"]:::fileNode
+    S_CTX --> CTX_THEME["ThemeContext.jsx (Dark Theme Persistence)"]:::fileNode
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-grid">
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">⚛️</div>
+          <div class="spec-card-title">معماری ماژولار فرانت‌اند (src)</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>جداسازی صفحات ادمین و عمومی:</strong> بخش پنل ادمین (<code>src/pages/Admin</code>) با اعتبارسنجی سشن و رول‌های کاربری محافظت می‌شود در حالی که صفحات فرم (<code>src/pages/Form</code>) برای رندر سریع و سبک بهینه‌سازی شده‌اند.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>دیزاین سیستم رکاد در components/ui:</strong> شامل کارت‌های استیکر سه‌بعدی، دکمه‌های شیشه‌ای، مودال‌ها و توست‌های اختصاصی.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>کتابخانه‌های اختصاصی (lib):</strong> موتور اعتبارسنجی شماره موبایل ایران، خروجی اکسل با انکودینگ UTF-8 BOM برای جلوگیری از به‌هم‌ریختگی حروف فارسی.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">🗄️</div>
+          <div class="spec-card-title">تکامل مایگریشن‌های دیتابیس (supabase)</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>۸۵ مایگریشن افزایشی:</strong> ساختار دیتابیس طی یک متدولوژی کاملاً افزایشی (Incremental) بدون از بین رفتن داده‌های پیشین توسعه یافته است.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>جداسازی منطق لاجیک و پرش‌ها:</strong> پیاده‌سازی قوانین شرطی در مایگریشن‌های ۰۰۰۶ تا ۰۰۰۹ و بهینه‌سازی RPC ذخیره‌سازی.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>سطل بازیافت سراسری (God Trash):</strong> اضافه شدن مکانیزم نگهداری ۳۰ روزه و بازگردانی دسته‌ای در مایگریشن‌های ۰۰۷۵ تا ۰۰۸۴.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">🔀</div>
+          <div class="spec-card-title">توزیع استاتیک و CDN لبه</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>اسکریپت Loader تعبیه:</strong> فایل <code>public/loader.js</code> جهت ایجاد آی‌فریم خودکار با قابلیت تنظیم خودکار ارتفاع در وبلاگ‌ها و سایت‌ها.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>توزیع تایپوگرافی IRANSansX:</strong> ارائه ۱۱ وزن کامل فونت در پوشه <code>public/fonts</code> با قابلیت Caching دائمی در مرورگر.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>پیکربندی Vercel Rewrites:</strong> هدایت تمام درخواست‌های SPA به <code>/index.html</code> با پشتیبانی از کدهای وضعیت مناسب.</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <footer class="page-footer">
+      <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
+    </footer>
+  </div>
+
+  <script src="assets/app.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#090D16',
+        primaryColor: '#131B2E',
+        primaryTextColor: '#F8FAFC',
+        primaryBorderColor: '#2DD4BF',
+        lineColor: '#38BDF8',
+        secondaryColor: '#1A2338',
+        tertiaryColor: '#0F172A',
+        fontFamily: 'IRANSansX, sans-serif'
+      }
+    });
+  </script>
+</body>
+</html>

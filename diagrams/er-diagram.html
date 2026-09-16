@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ER Diagram | سامانه فرم‌ساز پرس‌کاد (Porskad)</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="top-nav">
+      <a href="index.html" class="brand-section">
+        <div class="brand-logo-icon">P</div>
+        <div class="brand-info">
+          <h1>پرس‌کاد <span>Porskad Blueprints</span></h1>
+          <span>پلتفرم سازمانی ساخت فرم و پرسشنامه</span>
+        </div>
+      </a>
+      <div class="nav-actions">
+        <select class="nav-select" id="diagramNavSelect">
+          <option value="architecture-diagram.html">۱. Architecture Diagram</option>
+          <option value="system-architecture-diagram.html">۲. System Architecture Diagram</option>
+          <option value="system-diagram.html">۳. System Diagram</option>
+          <option value="project-structure-diagram.html">۴. Project Structure Diagram</option>
+          <option value="flowchart.html">۵. Flowchart</option>
+          <option value="mind-map.html">۶. Mind Map</option>
+          <option value="site-map.html">۷. Site Map</option>
+          <option value="uml-diagram.html">۸. UML Diagram</option>
+          <option value="er-diagram.html" selected>۹. ER Diagram</option>
+          <option value="component-diagram.html">۱۰. Component Diagram</option>
+          <option value="data-flow-diagram.html">۱۱. Data Flow Diagram (DFD)</option>
+          <option value="sequence-diagram.html">۱۲. Sequence Diagram</option>
+          <option value="use-case-diagram.html">۱۳. Use Case Diagram</option>
+          <option value="entity-relationship-diagram.html">۱۴. Entity Relationship Diagram (ERD)</option>
+        </select>
+        <a href="index.html" class="btn btn-secondary btn-sm">🏠 خانه دیاگرام‌ها</a>
+      </div>
+    </header>
+
+    <div class="page-header">
+      <div class="header-meta-row">
+        <span class="badge badge-teal">مدل داده مفهومی و منطقی</span>
+        <span class="badge badge-blue">Logical Entity-Relationship Diagram</span>
+        <span class="badge badge-purple">Cardinality & Business Associations</span>
+      </div>
+      <h1 class="page-title">ER Diagram (دیاگرام منطقی موجودیت-ارتباط)</h1>
+      <p class="page-desc">
+        نمودار ارتباط موجودیت‌های مفهومی و منطقی (Logical ER Diagram) سامانه پرس‌کاد، نمایش‌دهنده کاردینالیتی روابط (1:1، 1:N، M:N)، ماهیت موجودیت‌های فرم‌ساز، سابمیشن‌ها، سهمیه‌ها و پشتیبانی سازمانی.
+      </p>
+    </div>
+
+    <div class="diagram-stage-card">
+      <div class="stage-toolbar">
+        <div class="stage-title">
+          <span>📊 مدل رابطه-موجودی مفهومی و منطقی پرس‌کاد</span>
+        </div>
+        <div class="stage-controls">
+          <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
+          <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
+          <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
+          <button class="control-btn" id="fullscreenBtn" title="تمام صفحه">⛶</button>
+          <button class="btn btn-primary btn-sm" id="exportBtn">📥 خروجی SVG</button>
+        </div>
+      </div>
+      <div class="diagram-viewport">
+        <div class="diagram-canvas">
+          <pre class="mermaid">
+erDiagram
+    PROFILES ||--o{ FORMS : "ایجاد و مالکیت دارد (1 به N)"
+    PROFILES ||--o{ SUPPORT_TICKETS : "ثبت می‌کند (1 به N)"
+    PROFILES ||--o{ SMS_LOGS : "دریافت می‌کند (1 به N)"
+    PROFILES ||--o{ TRASH_ITEMS : "حذف می‌کند (1 به N)"
+
+    FORMS ||--|{ QUESTIONS : "شامل می‌شود (1 به N الزامی)"
+    FORMS ||--o{ LOGIC_RULES : "تعریف می‌کند (1 به N)"
+    FORMS ||--o{ RESPONSES : "دریافت می‌کند (1 به N)"
+
+    QUESTIONS ||--o{ ANSWERS : "پاسخ داده می‌شود (1 به N)"
+    QUESTIONS ||--o{ LOGIC_RULES : "مبنای شرط است (1 به N)"
+    QUESTIONS ||--o{ LOGIC_RULES : "هدف پرش است (1 به N)"
+
+    RESPONSES ||--|{ ANSWERS : "تشکیل شده از (1 به N الزامی)"
+
+    PROFILES {
+        uuid id PK
+        string email
+        string phone
+        string role
+        boolean is_owner
+        string plan
+        int max_forms
+        int max_responses_per_month
+    }
+
+    FORMS {
+        uuid id PK
+        string slug UK
+        string title
+        string description
+        boolean published
+        string theme_mode
+        uuid created_by FK
+        datetime created_at
+    }
+
+    QUESTIONS {
+        uuid id PK
+        uuid form_id FK
+        string type
+        string title
+        boolean required
+        jsonb options
+        int position
+        int points
+    }
+
+    LOGIC_RULES {
+        uuid id PK
+        uuid form_id FK
+        string name
+        boolean enabled
+        int priority
+        uuid source_question_id FK
+        string group_operator
+        jsonb conditions_json
+        string action_type
+        uuid action_target_id FK
+    }
+
+    RESPONSES {
+        uuid id PK
+        uuid form_id FK
+        boolean is_complete
+        datetime started_at
+        datetime submitted_at
+        int duration_seconds
+        string device
+        string browser
+        string os
+    }
+
+    ANSWERS {
+        uuid id PK
+        uuid response_id FK
+        uuid question_id FK
+        jsonb value
+        int time_spent_seconds
+    }
+
+    SUPPORT_TICKETS {
+        uuid id PK
+        uuid user_id FK
+        string title
+        string message
+        string status
+        string priority
+    }
+
+    TRASH_ITEMS {
+        uuid id PK
+        uuid original_id
+        string entity_type
+        jsonb payload
+        uuid deleted_by FK
+        datetime deleted_at
+        datetime expires_at
+    }
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-grid">
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">🔗</div>
+          <div class="spec-card-title">کاردینالیتی و جامعیت ارجاعی</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>رابطه 1 به N فرم‌ها و سوالات:</strong> هر فرم حداقل صفر تا بی‌نهایت سوال دارد، و حذف فرم با قید <code>ON DELETE CASCADE</code> به پاکسازی خودکار سوالات مرتبط می‌انجامد.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>ارجاع خودبه‌خودی منطقی در سوالات:</strong> قوانین شرطی (Logic Rules) هم به سوال مبدا (منبع ورودی شرط) و هم به سوال مقصد (هدف پرش) ارجاع می‌دهند.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>حذف مستقل پاسخ‌ها:</strong> ارتباط بین <code>responses</code> و <code>answers</code> موجب می‌شود هر پاسخ ثبت‌شده حتی در صورت تغییر فرمت سوال، جواب‌های ثبت‌شده تاریخی خود را حفظ کند.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">📐</div>
+          <div class="spec-card-title">نرمال‌سازی و ستون‌های هیبرید JSONB</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>استفاده هوشمند از JSONB:</strong> گزینه‌های سوالات چندگزینه‌ای و آرایه شروط شرطی در قالب JSONB ذخیره می‌شوند تا از سربار جداول واسط غیرضروری جلوگیری شود.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>نرمال‌سازی در سطح سوم (3NF):</strong> کلیه جداول اصلی دارای کلیدهای اصلی UUID بوده و فاقد وابستگی‌های انتقالی نامطلوب هستند.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>حفظ سوابق با اسنپ‌شات در TRASH_ITEMS:</strong> به جای نگهداری فیلدهای پیچیده بازگشت، کل حالت داده به صورت Payload درون سطل بازیافت آرشیو می‌شود.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">⚡</div>
+          <div class="spec-card-title">بهینه‌سازی کارایی و کوئری‌ها</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>ایندکس‌های ترکیبی:</strong> ایندکس روی <code>(form_id, position)</code> برای بازیابی بدون مکث و مرتب سوالات فرم در کلاینت.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>ایندکس پاسخ‌ها:</strong> ایندکس بر اساس <code>(form_id, created_at DESC)</code> جهت واکشی سریع آخرین پاسخ‌ها در داشبورد ادمین.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>اسلاگ منحصربه‌فرد (Slug):</strong> ایندکس Unique روی ستون slug در جدول forms برای لود فرم با آدرس‌های اختصاصی بدون اسکن کل جدول.</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <footer class="page-footer">
+      <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
+    </footer>
+  </div>
+
+  <script src="assets/app.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#090D16',
+        primaryColor: '#131B2E',
+        primaryTextColor: '#F8FAFC',
+        primaryBorderColor: '#2DD4BF',
+        lineColor: '#38BDF8',
+        secondaryColor: '#1A2338',
+        tertiaryColor: '#0F172A',
+        fontFamily: 'IRANSansX, sans-serif'
+      }
+    });
+  </script>
+</body>
+</html>

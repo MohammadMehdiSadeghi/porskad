@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Use Case Diagram | سامانه فرم‌ساز پرس‌کاد (Porskad)</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="top-nav">
+      <a href="index.html" class="brand-section">
+        <div class="brand-logo-icon">P</div>
+        <div class="brand-info">
+          <h1>پرس‌کاد <span>Porskad Blueprints</span></h1>
+          <span>پلتفرم سازمانی ساخت فرم و پرسشنامه</span>
+        </div>
+      </a>
+      <div class="nav-actions">
+        <select class="nav-select" id="diagramNavSelect">
+          <option value="architecture-diagram.html">۱. Architecture Diagram</option>
+          <option value="system-architecture-diagram.html">۲. System Architecture Diagram</option>
+          <option value="system-diagram.html">۳. System Diagram</option>
+          <option value="project-structure-diagram.html">۴. Project Structure Diagram</option>
+          <option value="flowchart.html">۵. Flowchart</option>
+          <option value="mind-map.html">۶. Mind Map</option>
+          <option value="site-map.html">۷. Site Map</option>
+          <option value="uml-diagram.html">۸. UML Diagram</option>
+          <option value="er-diagram.html">۹. ER Diagram</option>
+          <option value="component-diagram.html">۱۰. Component Diagram</option>
+          <option value="data-flow-diagram.html">۱۱. Data Flow Diagram (DFD)</option>
+          <option value="sequence-diagram.html">۱۲. Sequence Diagram</option>
+          <option value="use-case-diagram.html" selected>۱۳. Use Case Diagram</option>
+          <option value="entity-relationship-diagram.html">۱۴. Entity Relationship Diagram (ERD)</option>
+        </select>
+        <a href="index.html" class="btn btn-secondary btn-sm">🏠 خانه دیاگرام‌ها</a>
+      </div>
+    </header>
+
+    <div class="page-header">
+      <div class="header-meta-row">
+        <span class="badge badge-teal">ماتریس بازیگران و عملکردها</span>
+        <span class="badge badge-blue">UML Use Case Diagram</span>
+        <span class="badge badge-purple">Actors, Operations & Boundaries</span>
+      </div>
+      <h1 class="page-title">Use Case Diagram (دیاگرام موارد کاربرد)</h1>
+      <p class="page-desc">
+        نمودار جامع موارد کاربرد (Use Case) سیستم پرس‌کاد، شامل بازیگران سیستم (پاسخ‌دهنده عمومی، طراح فرم، سوپرادمین و سرویس‌های خودکار پس‌زمینه) و موارد کاربرد مرتبط با ایجاد فرم، پرش‌های شرطی، تحلیل نتایج، سطل زباله و مدیریت سهمیه‌ها.
+      </p>
+    </div>
+
+    <div class="diagram-stage-card">
+      <div class="stage-toolbar">
+        <div class="stage-title">
+          <span>🎯 نمودار تعاملات بازیگران و موارد کاربرد سامانه</span>
+        </div>
+        <div class="stage-controls">
+          <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
+          <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
+          <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
+          <button class="control-btn" id="fullscreenBtn" title="تمام صفحه">⛶</button>
+          <button class="btn btn-primary btn-sm" id="exportBtn">📥 خروجی SVG</button>
+        </div>
+      </div>
+      <div class="diagram-viewport">
+        <div class="diagram-canvas">
+          <pre class="mermaid">
+graph LR
+    classDef actor fill:#1E293B,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
+    classDef usecase fill:#131B2E,stroke:#2DD4BF,stroke-width:2px,color:#F8FAFC;
+    classDef superUC fill:#1E1B4B,stroke:#A855F7,stroke-width:2px,color:#F8FAFC;
+    classDef autoUC fill:#0F172A,stroke:#10B981,stroke-width:2px,color:#F8FAFC;
+
+    %% Actors
+    subgraph ACTORS["👥 بازیگران"]
+        A_RESP["👤 پاسخ‌دهنده عمومی<br/>(Respondent)"]:::actor
+        A_CREATOR["🧑‍💼 سازنده فرم / ادمین<br/>(Form Owner)"]:::actor
+        A_SUPER["👑 سوپرادمین سامانه<br/>(Superadmin)"]:::actor
+        A_CRON["⚙️ پردازشگر پس‌زمینه<br/>(System Daemon)"]:::actor
+    end
+
+    %% Use Cases
+    subgraph BOUNDARY["🛡️ مرز کارکردی سامانه پرس‌کاد (Porskad Scope)"]
+        %% Respondent
+        UC_FILL(["پر کردن فرم اسلایدی"]):::usecase
+        UC_DRAFT(["بازیابی خودکار پیش‌نویس"]):::usecase
+        UC_SUBMIT(["ثبت نهایی و دریافت تاییدیه"]):::usecase
+
+        %% Creator
+        UC_AUTH(["ورود با ایمیل یا پیامک OTP"]):::usecase
+        UC_CREATE(["ایجاد فرم و ویرایش اسلاگ"]):::usecase
+        UC_QUESTIONS(["افزودن و مرتب‌سازی سوالات"]):::usecase
+        UC_LOGIC(["تنظیم قوانین شرطی و پرش‌ها"]):::usecase
+        UC_PUBLISH(["انتشار یا تعلیق فرم"]):::usecase
+        UC_SHARE(["تولید کد آی‌فریم و QR"]):::usecase
+        UC_VIEW_RESP(["مشاهده جدول پاسخ‌ها"]):::usecase
+        UC_EXPORT(["خروجی اکسل فارسی UTF-8"]):::usecase
+        UC_ANALYTICS(["تحلیل نموداری سوالات"]):::usecase
+        UC_TRASH_USER(["انتقال فرم به سطل زباله"]):::usecase
+        UC_RESTORE_USER(["بازیابی فرم تا ۳۰ روز"]):::usecase
+
+        %% Superadmin
+        UC_MANAGE_USERS(["مدیریت کاربران و تغییر نقش‌ها"]):::superUC
+        UC_QUOTA(["تخصیص پلن و سهمیه فرم‌ها"]):::superUC
+        UC_SMS_CFG(["پیکربندی خطوط پیامک و OTP"]):::superUC
+        UC_GOD_TRASH(["سطل زباله سراسری و حذف دائم"]):::superUC
+        UC_AUDIT(["مشاهده لاگ‌های ممیزی امنیتی"]):::superUC
+
+        %% System Cron
+        UC_PURGE(["پاک‌سازی خودکار سطل پس از ۳۰ روز"]):::autoUC
+    end
+
+    %% Links - Respondent
+    A_RESP --> UC_FILL
+    UC_FILL -.->|شامل می‌شود include| UC_DRAFT
+    UC_FILL --> UC_SUBMIT
+
+    %% Links - Creator
+    A_CREATOR --> UC_AUTH
+    A_CREATOR --> UC_CREATE
+    A_CREATOR --> UC_QUESTIONS
+    A_CREATOR --> UC_LOGIC
+    A_CREATOR --> UC_PUBLISH
+    A_CREATOR --> UC_SHARE
+    A_CREATOR --> UC_VIEW_RESP
+    A_CREATOR --> UC_EXPORT
+    A_CREATOR --> UC_ANALYTICS
+    A_CREATOR --> UC_TRASH_USER
+    A_CREATOR --> UC_RESTORE_USER
+
+    %% Links - Superadmin
+    A_SUPER --> UC_MANAGE_USERS
+    A_SUPER --> UC_QUOTA
+    A_SUPER --> UC_SMS_CFG
+    A_SUPER --> UC_GOD_TRASH
+    A_SUPER --> UC_AUDIT
+    A_SUPER -.->|به ارث می‌برد| A_CREATOR
+
+    %% Links - Cron
+    A_CRON --> UC_PURGE
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-grid">
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">👤</div>
+          <div class="spec-card-title">موارد کاربرد پاسخ‌دهنده (Respondent)</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>پر کردن بدون احراز هویت:</strong> دسترسی بدون نیاز به ساخت اکانت به فرم‌های عمومی از طریق لینک یا کد تعبیه در سایت‌های ثالث.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>بازیابی خودکار پیش‌نویس (Auto-draft):</strong> تداوم پاسخ‌ها در صورت خروج ناخواسته یا رفرش مرورگر با پشتیبانی ۷ روزه.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>اعتبارسنجی زنده:</strong> بررسی صحت شماره موبایل ایران، ایمیل و پاسخ به سوالات الزامی با انیمیشن راهنما.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">🧑‍💼</div>
+          <div class="spec-card-title">موارد کاربرد طراح فرم (Form Owner)</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>فرم‌ساز ماژولار:</strong> تعریف نامحدود سوالات در ۸ دسته، تغییر ترتیب با درگ، تعریف گزینه‌ها و متن‌های راهنما.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>طراحی منطق پرش:</strong> ساخت سناریوهای شرطی پیچیده جهت هدایت کاربر به سوالات مربوطه یا اتمام زودرس پرسشنامه.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>تحلیل و خروجی داده‌ها:</strong> دریافت گزارش کامل اکسل فارسی و پایش لحظه‌ای ثبت پاسخ‌ها با وب‌سوکت.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">👑</div>
+          <div class="spec-card-title">موارد کاربرد سوپرادمین و سرویس پس‌زمینه</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>گاد مود و ممیزی:</strong> نظارت بر کل فرم‌های ایجادشده در پلتفرم، سهمیه‌ها و دسترسی مستقیم به لاگ‌های تغییرات.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>تنظیمات مخابراتی پیامک:</strong> مدیریت خطوط اختصاصی کاوه‌نگار، الگوهای OTP و متن‌های پیامکی سامانه.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>سرویس خودکار پاک‌سازی:</strong> اجرای دوره‌ای فرآیند حذف فیزیکی رکوردهایی که بیش از ۳۰ روز در سطل بازیافت مانده‌اند.</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <footer class="page-footer">
+      <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
+    </footer>
+  </div>
+
+  <script src="assets/app.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#090D16',
+        primaryColor: '#131B2E',
+        primaryTextColor: '#F8FAFC',
+        primaryBorderColor: '#2DD4BF',
+        lineColor: '#38BDF8',
+        secondaryColor: '#1A2338',
+        tertiaryColor: '#0F172A',
+        fontFamily: 'IRANSansX, sans-serif'
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Component Diagram | سامانه فرم‌ساز پرس‌کاد (Porskad)</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="top-nav">
+      <a href="index.html" class="brand-section">
+        <div class="brand-logo-icon">P</div>
+        <div class="brand-info">
+          <h1>پرس‌کاد <span>Porskad Blueprints</span></h1>
+          <span>پلتفرم سازمانی ساخت فرم و پرسشنامه</span>
+        </div>
+      </a>
+      <div class="nav-actions">
+        <select class="nav-select" id="diagramNavSelect">
+          <option value="architecture-diagram.html">۱. Architecture Diagram</option>
+          <option value="system-architecture-diagram.html">۲. System Architecture Diagram</option>
+          <option value="system-diagram.html">۳. System Diagram</option>
+          <option value="project-structure-diagram.html">۴. Project Structure Diagram</option>
+          <option value="flowchart.html">۵. Flowchart</option>
+          <option value="mind-map.html">۶. Mind Map</option>
+          <option value="site-map.html">۷. Site Map</option>
+          <option value="uml-diagram.html">۸. UML Diagram</option>
+          <option value="er-diagram.html">۹. ER Diagram</option>
+          <option value="component-diagram.html" selected>۱۰. Component Diagram</option>
+          <option value="data-flow-diagram.html">۱۱. Data Flow Diagram (DFD)</option>
+          <option value="sequence-diagram.html">۱۲. Sequence Diagram</option>
+          <option value="use-case-diagram.html">۱۳. Use Case Diagram</option>
+          <option value="entity-relationship-diagram.html">۱۴. Entity Relationship Diagram (ERD)</option>
+        </select>
+        <a href="index.html" class="btn btn-secondary btn-sm">🏠 خانه دیاگرام‌ها</a>
+      </div>
+    </header>
+
+    <div class="page-header">
+      <div class="header-meta-row">
+        <span class="badge badge-teal">معماری کامپوننت‌های فرانت‌اند</span>
+        <span class="badge badge-blue">React 18 Component Hierarchy</span>
+        <span class="badge badge-purple">Renderers, Layouts & UI Primitives</span>
+      </div>
+      <h1 class="page-title">Component Diagram (دیاگرام کامپوننت‌های ری‌اکت)</h1>
+      <p class="page-desc">
+        ساختار درختی و اتصالات وابستگی کامپوننت‌های فرانت‌اند، شامل روت اصلی (App)، ارائه‌دهنده‌های کانتکست (Context Providers)، لایوت‌ها، صفحات و کامپوننت‌های اختصاصی موتور اجرای فرم و رندرهای انواع سوالات.
+      </p>
+    </div>
+
+    <div class="diagram-stage-card">
+      <div class="stage-toolbar">
+        <div class="stage-title">
+          <span>⚛️ نمودار سلسله‌مراتب و ارتباطات کامپوننت‌های React</span>
+        </div>
+        <div class="stage-controls">
+          <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
+          <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
+          <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
+          <button class="control-btn" id="fullscreenBtn" title="تمام صفحه">⛶</button>
+          <button class="btn btn-primary btn-sm" id="exportBtn">📥 خروجی SVG</button>
+        </div>
+      </div>
+      <div class="diagram-viewport">
+        <div class="diagram-canvas">
+          <pre class="mermaid">
+graph TD
+    classDef rootComp fill:#0F172A,stroke:#2DD4BF,stroke-width:3px,color:#F8FAFC;
+    classDef ctxComp fill:#1E1B4B,stroke:#A855F7,stroke-width:2px,color:#F8FAFC;
+    classDef pageComp fill:#131B2E,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
+    classDef subComp fill:#1A2338,stroke:#10B981,stroke-width:2px,color:#F8FAFC;
+    classDef atomComp fill:#1E293B,stroke:#94A3B8,stroke-width:1px,color:#F8FAFC;
+
+    APP["⚛️ App.jsx (Root Router)"]:::rootComp
+
+    %% Context Providers
+    APP --> AUTH_P["🔐 AuthProvider"]:::ctxComp
+    APP --> THEME_P["🎨 ThemeProvider"]:::ctxComp
+
+    %% Major Views
+    AUTH_P --> PUBLIC_R["🌐 Public Router"]:::pageComp
+    AUTH_P --> ADMIN_R["🛡️ Protected Admin Router"]:::pageComp
+
+    %% Public Pages
+    PUBLIC_R --> LANDING["🏠 LandingPage.jsx"]:::pageComp
+    PUBLIC_R --> FORM_PAGE["📱 PublicFormPage.jsx (/f/:slug)"]:::pageComp
+    PUBLIC_R --> EMBED_PAGE["🧩 EmbedFormPage.jsx (/embed/:slug)"]:::pageComp
+
+    %% Form Engine Sub-components
+    FORM_PAGE --> SLIDE_ENGINE["🎬 FormRunner.jsx (Slide Engine)"]:::subComp
+    SLIDE_ENGINE --> WELCOME_VIEW["👋 WelcomeCard.jsx"]:::subComp
+    SLIDE_ENGINE --> PROGRESS_BAR["📊 ProgressBar.jsx"]:::subComp
+    SLIDE_ENGINE --> Q_DISPATCHER["🔀 QuestionDispatcher.jsx"]:::subComp
+    SLIDE_ENGINE --> EXIT_VIEW["🎉 ExitCard.jsx (ThankYou & Confetti)"]:::subComp
+
+    %% Question Renderers
+    Q_DISPATCHER --> R_TEXT["✏️ ShortTextQuestion.jsx"]:::atomComp
+    Q_DISPATCHER --> R_LONG["📝 LongTextQuestion.jsx"]:::atomComp
+    Q_DISPATCHER --> R_CHOICE["🔘 ChoiceQuestion.jsx"]:::atomComp
+    Q_DISPATCHER --> R_PHONE["📱 PhoneIRQuestion.jsx"]:::atomComp
+    Q_DISPATCHER --> R_RATING["⭐ RatingQuestion.jsx"]:::atomComp
+    Q_DISPATCHER --> R_YESNO["⚖️ YesNoQuestion.jsx"]:::atomComp
+    Q_DISPATCHER --> R_NUMBER["🔢 NumberQuestion.jsx"]:::atomComp
+
+    %% Admin Portal Pages
+    ADMIN_R --> ADM_LAYOUT["🏛️ AdminLayout.jsx (Nav, Sidebar, Header)"]:::pageComp
+    ADM_LAYOUT --> DASH_VIEW["📊 Dashboard.jsx"]:::subComp
+    ADM_LAYOUT --> FORMS_LIST["📁 FormsList.jsx"]:::subComp
+    ADM_LAYOUT --> BUILDER_VIEW["🛠️ FormBuilder.jsx"]:::subComp
+    ADM_LAYOUT --> RESPONSES_VIEW["📋 ResponsesView.jsx"]:::subComp
+    ADM_LAYOUT --> ANALYTICS_VIEW["📈 AnalyticsView.jsx"]:::subComp
+    ADM_LAYOUT --> TRASH_VIEW["🗑️ TrashView.jsx"]:::subComp
+
+    %% Builder & Analytics Sub-components
+    BUILDER_VIEW --> Q_EDITOR["✏️ QuestionEditor.jsx"]:::atomComp
+    BUILDER_VIEW --> LOGIC_BUILDER["🔀 LogicRuleBuilder.jsx"]:::atomComp
+    BUILDER_VIEW --> LIVE_PREVIEW["👁️ FormPreviewModal.jsx"]:::atomComp
+
+    RESPONSES_VIEW --> RESP_TABLE["📄 ResponsesTable.jsx"]:::atomComp
+    RESPONSES_VIEW --> CSV_EXPORT["📥 ExportCsvButton.jsx"]:::atomComp
+
+    ANALYTICS_VIEW --> BAR_CHART["📊 QuestionBarChart.jsx"]:::atomComp
+    ANALYTICS_VIEW --> DEVICE_DONUT["🍩 DeviceBreakdown.jsx"]:::atomComp
+
+    %% Shared UI Atoms
+    ADM_LAYOUT -.-> UI_STICKER["🃏 StickerCard.jsx"]:::atomComp
+    ADM_LAYOUT -.-> UI_BTN["🔘 Button.jsx"]:::atomComp
+    ADM_LAYOUT -.-> UI_MODAL["🪟 Modal.jsx"]:::atomComp
+    ADM_LAYOUT -.-> UI_TOAST["🍞 RealtimeToast.jsx"]:::atomComp
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-grid">
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">🧩</div>
+          <div class="spec-card-title">طراحی ماژولار رندرهای سوال (Renderers)</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>الگوی توزیع‌کننده (Dispatcher Pattern):</strong> کامپوننت <code>QuestionDispatcher</code> با بررسی فیلد <code>question.type</code> کامپوننت رندرکننده متناظر را فراخوانی می‌کند.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>جداسازی منطق ولیدیشن:</strong> هر رندرکننده مسئول پاکسازی ورودی کاربر، بررسی الزامات و مدیریت کیبورد (Enter برای سوال بعدی) است.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>انتقال اسلایدی با Framer/CSS:</strong> انیمیشن‌های ورود و خروج نرم با حداقل رندر مجدد (Re-render) برای حفظ حداکثر فریم‌ریت در موبایل.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">🏛️</div>
+          <div class="spec-card-title">لایوت و پنل مدیریت</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>لایوت یکپارچه AdminLayout:</strong> مدیریت سایدبار تاشو، منوی کاربر، شمارنده وضعیت سهمیه و سیستم نمایش توست‌های ریل‌تایم.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>ویرایشگر فرم‌ساز زنده:</strong> شامل پنل سوالات با قابلیت جابجایی ترتیبی، ویرایش عنوان، توضیحات، گزینه‌ها و پیش‌نمایش درجا.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>سطل بازیافت ۳۰ روزه:</strong> کامپوننت <code>TrashView</code> جهت رصد آیتم‌های حذف‌شده، مهلت باقی‌مانده و بازیابی دسته‌ای.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">⚛️</div>
+          <div class="spec-card-title">اتم‌های اشتراکی دیزاین سیستم رکاد</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>کارت‌های استیکر سه‌بعدی (StickerCard):</strong> کارت‌های ویژه با بافت گرافیکی پس‌زمینه و زاویه شکست نور جهت نمایش سنجه‌ها.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>مودال و دراپ‌داون‌های پرتال:</strong> کامپوننت‌های مودال با پورتال React جهت خروج از لایوت DOM اصلی و جلوگیری از باگ‌های z-index.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>توست‌های وب‌سوکت:</strong> کامپوننت اعلان که به هوک ریل‌تایم گوش می‌دهد و ورود هر ثبت فرم را با لرزش و صدا اعلام می‌دارد.</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <footer class="page-footer">
+      <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
+    </footer>
+  </div>
+
+  <script src="assets/app.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#090D16',
+        primaryColor: '#131B2E',
+        primaryTextColor: '#F8FAFC',
+        primaryBorderColor: '#2DD4BF',
+        lineColor: '#38BDF8',
+        secondaryColor: '#1A2338',
+        tertiaryColor: '#0F172A',
+        fontFamily: 'IRANSansX, sans-serif'
+      }
+    });
+  </script>
+</body>
+</html>

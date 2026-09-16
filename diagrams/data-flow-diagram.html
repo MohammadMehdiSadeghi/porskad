@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Flow Diagram (DFD) | سامانه فرم‌ساز پرس‌کاد (Porskad)</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="top-nav">
+      <a href="index.html" class="brand-section">
+        <div class="brand-logo-icon">P</div>
+        <div class="brand-info">
+          <h1>پرس‌کاد <span>Porskad Blueprints</span></h1>
+          <span>پلتفرم سازمانی ساخت فرم و پرسشنامه</span>
+        </div>
+      </a>
+      <div class="nav-actions">
+        <select class="nav-select" id="diagramNavSelect">
+          <option value="architecture-diagram.html">۱. Architecture Diagram</option>
+          <option value="system-architecture-diagram.html">۲. System Architecture Diagram</option>
+          <option value="system-diagram.html">۳. System Diagram</option>
+          <option value="project-structure-diagram.html">۴. Project Structure Diagram</option>
+          <option value="flowchart.html">۵. Flowchart</option>
+          <option value="mind-map.html">۶. Mind Map</option>
+          <option value="site-map.html">۷. Site Map</option>
+          <option value="uml-diagram.html">۸. UML Diagram</option>
+          <option value="er-diagram.html">۹. ER Diagram</option>
+          <option value="component-diagram.html">۱۰. Component Diagram</option>
+          <option value="data-flow-diagram.html" selected>۱۱. Data Flow Diagram (DFD)</option>
+          <option value="sequence-diagram.html">۱۲. Sequence Diagram</option>
+          <option value="use-case-diagram.html">۱۳. Use Case Diagram</option>
+          <option value="entity-relationship-diagram.html">۱۴. Entity Relationship Diagram (ERD)</option>
+        </select>
+        <a href="index.html" class="btn btn-secondary btn-sm">🏠 خانه دیاگرام‌ها</a>
+      </div>
+    </header>
+
+    <div class="page-header">
+      <div class="header-meta-row">
+        <span class="badge badge-teal">جریان داده‌های سیستم</span>
+        <span class="badge badge-blue">Level 1 & Level 2 Data Flow Diagram (DFD)</span>
+        <span class="badge badge-purple">Processes, Stores & Data Channels</span>
+      </div>
+      <h1 class="page-title">Data Flow Diagram - DFD (دیاگرام جریان داده‌ها)</h1>
+      <p class="page-desc">
+        دیاگرام جریان داده‌های سیستم (DFD) در سطوح ۱ و ۲، نشان‌دهنده ورودی‌های بیرونی، فرآیندهای پردازش فرم، اعتبارسنجی تله ربات، مخازن داده پایدار (Data Stores) و جریان انتشار ریل‌تایم پاسخ‌ها در پرس‌کاد.
+      </p>
+    </div>
+
+    <div class="diagram-stage-card">
+      <div class="stage-toolbar">
+        <div class="stage-title">
+          <span>🌊 جریان داده‌ها و فرآیندهای سامانه (DFD Level 1)</span>
+        </div>
+        <div class="stage-controls">
+          <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
+          <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
+          <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
+          <button class="control-btn" id="fullscreenBtn" title="تمام صفحه">⛶</button>
+          <button class="btn btn-primary btn-sm" id="exportBtn">📥 خروجی SVG</button>
+        </div>
+      </div>
+      <div class="diagram-viewport">
+        <div class="diagram-canvas">
+          <pre class="mermaid">
+graph LR
+    classDef entity fill:#1E293B,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
+    classDef process fill:#131B2E,stroke:#2DD4BF,stroke-width:2px,color:#F8FAFC;
+    classDef store fill:#0F172A,stroke:#A855F7,stroke-dasharray: 4 2,stroke-width:2px,color:#F8FAFC;
+    classDef external fill:#2A1B18,stroke:#F59E0B,stroke-width:2px,color:#F8FAFC;
+
+    %% Entities
+    E_RESP["👤 پاسخ‌دهنده فرم"]:::entity
+    E_CREATOR["🧑‍💼 طراح / ادمین فرم"]:::entity
+    E_TELEGRAM["🤖 ربات تلگرام"]:::external
+    E_SMS["📱 اپراتور کاوه‌نگار"]:::external
+
+    %% Processes
+    P1["1.0<br/>مدیریت و احراز هویت<br/>(Auth & Quota Control)"]:::process
+    P2["2.0<br/>طراحی و پیکربندی فرم<br/>(Form Builder & Logic)"]:::process
+    P3["3.0<br/>رندر و ارزیابی شروط<br/>(Runtime Logic Evaluation)"]:::process
+    P4["4.0<br/>پالایش اسپم و ثبت اتمیک<br/>(Validation & Submission)"]:::process
+    P5["5.0<br/>پردازش تحلیلی و اکسپورت<br/>(Analytics & CSV Engine)"]:::process
+    P6["6.0<br/>سامانه اعلان ریل‌تایم<br/>(Realtime Dispatcher)"]:::process
+
+    %% Data Stores
+    D1[("D1: جدول فرم‌ها forms")]:::store
+    D2[("D2: سوالات questions")]:::store
+    D3[("D3: قوانین شرطی logic_rules")]:::store
+    D4[("D4: ثبت‌ها responses")]:::store
+    D5[("D5: پاسخ‌ها answers")]:::store
+    D6[("D6: پروفایل و سهمیه‌ها profiles")]:::store
+
+    %% Data Flows
+    E_CREATOR -->|درخواست لاگین / سهمیه| P1
+    P1 <-->|بررسی سهمیه و رول| D6
+    P1 -->|کد تایید OTP| E_SMS
+
+    E_CREATOR -->|تعریف سوالات و لاجیک| P2
+    P2 -->|بررسی سقف فرم مجاز| D6
+    P2 -->|ذخیره تنظیمات فرم| D1
+    P2 -->|ذخیره سوالات| D2
+    P2 -->|ذخیره رول‌ها| D3
+
+    E_RESP -->|درخواست اسلاگ فرم| P3
+    D1 -->|اطلاعات فرم منتشرشده| P3
+    D2 -->|لیست سوالات مرتب| P3
+    D3 -->|قوانین شرطی| P3
+    P3 -->|تحویل ساختار اسلایدی سوالات| E_RESP
+
+    E_RESP -->|ارسال پاسخ‌ها + تله ربات + متادیتا| P4
+    P4 -->|درج هدر پاسخ| D4
+    P4 -->|درج پاسخ‌های سوالات| D5
+    P4 -->|افزایش شمارنده پاسخ ماهانه| D6
+
+    P4 -->|تریگر پاسخ جدید| P6
+    P6 -->|اعلان زنده وب‌سوکت| E_CREATOR
+    P6 -->|ارسال متن اعلان تلگرام| E_TELEGRAM
+
+    E_CREATOR -->|درخواست گزارش و آمار| P5
+    D4 -->|واکشی پاسخ‌ها| P5
+    D5 -->|واکشی جزییات جواب‌ها| P5
+    P5 -->|دانلود فایل اکسل / نمودارها| E_CREATOR
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-grid">
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">🌊</div>
+          <div class="spec-card-title">جریان داده‌های ثبت پاسخ (Ingestion Flow)</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>جریان ورودی خام:</strong> پاسخ‌دهنده بسته داده‌ای شامل مقادیر پاسخ، متادیتای دستگاه (موبایل/دسکتاپ)، مدت زمان سپری‌شده و فیلد هانی‌پات را ارسال می‌کند.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>پردازش در فرآیند ۴.۰:</strong> تله ربات بررسی شده و با فراخوانی تابع RPC در دیتابیس، همزمان دو مخزن داده D4 (ثبت پاسخ) و D5 (تک‌تک جواب‌ها) آپدیت می‌شوند.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>به‌روزرسانی خودکار سهمیه:</strong> فرآیند به طور اتمیک تعداد پاسخ‌های ماهانه در D6 را یک واحد افزایش می‌دهد.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">⚡</div>
+          <div class="spec-card-title">موتور پخش بلادرنگ (Realtime Stream)</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>رویدادهای سطح گزارش تغییرات (CDC):</strong> اضافه شدن سطر جدید به مخزن D4 بلافاصله فرآیند ۶.۰ را تحریک می‌کند.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>جریان داده به ادمین:</strong> بسته داده خلاصه پاسخ به کانال وب‌سوکت مرورگر ادمین تزریق شده و ویجت‌های آماری بدون رفرش صفحه بالا می‌روند.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>جریان وب‌هوک به تلگرام:</strong> ربات تلگرام متن اعلان حاوی عنوان فرم، تاریخ شمسی و شناسه ثبت را برای مالک فرم ارسال می‌کند.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">💾</div>
+          <div class="spec-card-title">انزوای مخازن داده (Data Stores)</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>مخازن D1, D2, D3:</strong> پیکربندی ساختار پرسشنامه که فقط برای فرم‌های منتشرشده (published=true) به فرآیند رندرینگ ۳.۰ داده می‌دهند.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>مخزن D6 (پروفایل‌ها):</strong> کنترل سقف مجاز، وضعیت پلن، دسترسی به خروجی اکسل و مشخصات حساب کاربری.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>مخزن D4 و D5 (پاسخ‌ها):</strong> ایزوله کامل با سیاست‌های RLS؛ پاسخ‌دهنده هرگز دسترسی خواندن این مخازن را ندارد.</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <footer class="page-footer">
+      <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
+    </footer>
+  </div>
+
+  <script src="assets/app.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#090D16',
+        primaryColor: '#131B2E',
+        primaryTextColor: '#F8FAFC',
+        primaryBorderColor: '#2DD4BF',
+        lineColor: '#38BDF8',
+        secondaryColor: '#1A2338',
+        tertiaryColor: '#0F172A',
+        fontFamily: 'IRANSansX, sans-serif'
+      }
+    });
+  </script>
+</body>
+</html>

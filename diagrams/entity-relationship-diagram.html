@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entity Relationship Diagram (ERD) | سامانه فرم‌ساز پرس‌کاد (Porskad)</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="top-nav">
+      <a href="index.html" class="brand-section">
+        <div class="brand-logo-icon">P</div>
+        <div class="brand-info">
+          <h1>پرس‌کاد <span>Porskad Blueprints</span></h1>
+          <span>پلتفرم سازمانی ساخت فرم و پرسشنامه</span>
+        </div>
+      </a>
+      <div class="nav-actions">
+        <select class="nav-select" id="diagramNavSelect">
+          <option value="architecture-diagram.html">۱. Architecture Diagram</option>
+          <option value="system-architecture-diagram.html">۲. System Architecture Diagram</option>
+          <option value="system-diagram.html">۳. System Diagram</option>
+          <option value="project-structure-diagram.html">۴. Project Structure Diagram</option>
+          <option value="flowchart.html">۵. Flowchart</option>
+          <option value="mind-map.html">۶. Mind Map</option>
+          <option value="site-map.html">۷. Site Map</option>
+          <option value="uml-diagram.html">۸. UML Diagram</option>
+          <option value="er-diagram.html">۹. ER Diagram</option>
+          <option value="component-diagram.html">۱۰. Component Diagram</option>
+          <option value="data-flow-diagram.html">۱۱. Data Flow Diagram (DFD)</option>
+          <option value="sequence-diagram.html">۱۲. Sequence Diagram</option>
+          <option value="use-case-diagram.html">۱۳. Use Case Diagram</option>
+          <option value="entity-relationship-diagram.html" selected>۱۴. Entity Relationship Diagram (ERD)</option>
+        </select>
+        <a href="index.html" class="btn btn-secondary btn-sm">🏠 خانه دیاگرام‌ها</a>
+      </div>
+    </header>
+
+    <div class="page-header">
+      <div class="header-meta-row">
+        <span class="badge badge-teal">طرح فیزیکی پایگاه داده</span>
+        <span class="badge badge-blue">Physical Relational Database Schema</span>
+        <span class="badge badge-purple">PostgreSQL 15+ & Supabase RLS</span>
+      </div>
+      <h1 class="page-title">Entity Relationship Diagram - ERD (طرح فیزیکی پایگاه داده)</h1>
+      <p class="page-desc">
+        دیاگرام فیزیکی کامل پایگاه داده رابطه‌ای (Physical ERD) سامانه پرس‌کاد، منطبق بر ۸۵ مایگریشن SQL سوپابیس؛ شامل کلیدهای اصلی (PK)، کلیدهای خارجی (FK)، انواع داده‌های دقیق دیتابیس (UUID, JSONB, Timestamptz)، قوانین ارجاعی On Delete Cascade و ایندکس‌های بهینه‌ساز.
+      </p>
+    </div>
+
+    <div class="diagram-stage-card">
+      <div class="stage-toolbar">
+        <div class="stage-title">
+          <span>🗄️ شمای فیزیکی جداول دیتابیس PostgreSQL و ارتباطات</span>
+        </div>
+        <div class="stage-controls">
+          <button class="control-btn" id="zoomInBtn" title="بزرگ‌نمایی">+</button>
+          <button class="control-btn" id="zoomOutBtn" title="کوچک‌نمایی">−</button>
+          <button class="control-btn" id="resetZoomBtn" title="بازنشانی زوم">↺</button>
+          <button class="control-btn" id="fullscreenBtn" title="تمام صفحه">⛶</button>
+          <button class="btn btn-primary btn-sm" id="exportBtn">📥 خروجی SVG</button>
+        </div>
+      </div>
+      <div class="diagram-viewport">
+        <div class="diagram-canvas">
+          <pre class="mermaid">
+erDiagram
+    profiles ||--o{ forms : "created_by"
+    profiles ||--o{ support_tickets : "user_id"
+    profiles ||--o{ sms_logs : "user_id"
+    profiles ||--o{ trash_items : "deleted_by"
+    profiles ||--o{ user_roles : "user_id"
+
+    forms ||--|{ questions : "form_id"
+    forms ||--o{ logic_rules : "form_id"
+    forms ||--o{ responses : "form_id"
+
+    questions ||--o{ answers : "question_id"
+    questions ||--o{ logic_rules : "source_question_id"
+    questions ||--o{ logic_rules : "action_target_id"
+
+    responses ||--|{ answers : "response_id"
+
+    roles ||--o{ user_roles : "role_id"
+    roles ||--o{ role_permissions : "role_id"
+
+    profiles {
+        uuid id PK "references auth.users"
+        text email "nullable"
+        text full_name "nullable"
+        text phone "nullable"
+        text role "check: admin, viewer, manager"
+        boolean is_active "default true"
+        boolean is_owner "default false"
+        integer max_forms "default 5"
+        integer max_responses_per_month "default 100"
+        text plan "default free"
+        boolean can_use_telegram "default true"
+        boolean can_export_excel "default true"
+        timestamptz created_at "default now()"
+        timestamptz updated_at "default now()"
+    }
+
+    forms {
+        uuid id PK "gen_random_uuid()"
+        text slug UK "check regex a-z0-9-"
+        text title "default فرم بدون عنوان"
+        text description "default ''"
+        text welcome_title "default سلام!"
+        text welcome_message "default ''"
+        text exit_title "default تمام شد!"
+        text exit_message "default ''"
+        boolean published "default false"
+        text theme_mode "default 'dark'"
+        text primary_color "default '#2DD4BF'"
+        uuid created_by FK "references profiles(id)"
+        boolean is_deleted "default false"
+        timestamptz deleted_at "nullable"
+        timestamptz created_at "default now()"
+        timestamptz updated_at "default now()"
+    }
+
+    questions {
+        uuid id PK "gen_random_uuid()"
+        uuid form_id FK "references forms(id) on delete cascade"
+        text type "check: short_text, long_text, phone_ir, choice, email, number, rating, yes_no"
+        text title "not null default 'سوال جدید'"
+        text description "default ''"
+        boolean required "default true"
+        jsonb options "default '[]'::jsonb"
+        integer position "default 0"
+        text placeholder "default ''"
+        boolean is_correct "nullable"
+        integer points "default 0"
+        boolean is_deleted "default false"
+        timestamptz created_at "default now()"
+    }
+
+    logic_rules {
+        uuid id PK "gen_random_uuid()"
+        uuid form_id FK "references forms(id) on delete cascade"
+        text name "default ''"
+        boolean enabled "default true"
+        integer priority "default 0"
+        uuid source_question_id FK "references questions(id)"
+        text group_operator "check: AND, OR"
+        jsonb conditions_json "default '[]'::jsonb"
+        text action_type "check: SHOW_QUESTION, HIDE_QUESTION, GO_TO_QUESTION, END_FORM"
+        uuid action_target_id FK "references questions(id)"
+        timestamptz created_at "default now()"
+        timestamptz updated_at "default now()"
+    }
+
+    responses {
+        uuid id PK "gen_random_uuid()"
+        uuid form_id FK "references forms(id) on delete cascade"
+        boolean is_complete "default false"
+        timestamptz started_at "default now()"
+        timestamptz submitted_at "nullable"
+        integer duration_seconds "nullable"
+        text device "mobile, tablet, desktop"
+        text browser "Chrome, Safari, Firefox..."
+        text os "Windows, Android, iOS..."
+        text user_agent "nullable"
+        text referer "nullable"
+        timestamptz created_at "default now()"
+    }
+
+    answers {
+        uuid id PK "gen_random_uuid()"
+        uuid response_id FK "references responses(id) on delete cascade"
+        uuid question_id FK "references questions(id) on delete cascade"
+        jsonb value "any user response"
+        integer time_spent_seconds "nullable"
+    }
+
+    support_tickets {
+        uuid id PK "gen_random_uuid()"
+        uuid user_id FK "references profiles(id)"
+        text title "not null"
+        text message "not null"
+        text category "support, billing, bug"
+        text status "open, in_progress, resolved, closed"
+        text priority "low, medium, high"
+        timestamptz created_at "default now()"
+        timestamptz updated_at "default now()"
+    }
+
+    sms_logs {
+        uuid id PK "gen_random_uuid()"
+        uuid user_id FK "references profiles(id)"
+        text phone "not null"
+        text message "not null"
+        text status "sent, failed, pending"
+        text provider_response "nullable"
+        timestamptz created_at "default now()"
+    }
+
+    trash_items {
+        uuid id PK "gen_random_uuid()"
+        uuid original_id "not null"
+        text entity_type "form, question"
+        jsonb payload "serialized row state"
+        uuid deleted_by FK "references profiles(id)"
+        timestamptz deleted_at "default now()"
+        timestamptz expires_at "default now() + 30 days"
+    }
+
+    roles {
+        text id PK "admin, manager, viewer"
+        text name "not null"
+        text description "default ''"
+    }
+
+    user_roles {
+        uuid id PK "gen_random_uuid()"
+        uuid user_id FK "references profiles(id)"
+        text role_id FK "references roles(id)"
+    }
+
+    role_permissions {
+        text role_id PK,FK "references roles(id)"
+        text permission_id PK "permission string"
+    }
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-grid">
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">🗄️</div>
+          <div class="spec-card-title">طراحی ایندکس‌ها و کارایی کوئری‌ها</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>ایندکس B-Tree دوگانه questions:</strong> ایندکس ترکیبی <code>questions_form_id_idx ON questions (form_id, position)</code> برای رندر فوق‌سریع و مرتب سوالات.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>ایندکس واکشی پاسخ‌ها:</strong> ایندکس <code>responses_form_id_idx ON responses (form_id, created_at DESC)</code> جهت پیمایش سریع تاریخچه ثبت‌ها در داشبورد.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>ایندکس معکوس جواب‌ها:</strong> ایندکس‌های جداگانه روی <code>response_id</code> و <code>question_id</code> برای تجمیع‌های آماری بدون اسکن کامل جدول.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">🛡️</div>
+          <div class="spec-card-title">مکانیزم‌های یکپارچگی ارجاعی (Referential Integrity)</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>رفتار ON DELETE CASCADE:</strong> حذف یک فرم منجر به پاکسازی خودکار سوالات، رول‌های شرطی، پاسخ‌ها و جواب‌های وابسته به آن می‌گردد.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>رفتار ON DELETE SET NULL:</strong> با حذف یک سوال، ارجاعات آن در ستون‌های <code>source_question_id</code> و <code>action_target_id</code> به null تبدیل می‌شوند تا از شکستن قوانین جلوگیری شود.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>یکپارچگی سشن‌های کاربر:</strong> جدول <code>profiles</code> با کلید اصلی ارجاع داده شده به <code>auth.users(id) ON DELETE CASCADE</code> کامپکت می‌ماند.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <div class="spec-icon">⚡</div>
+          <div class="spec-card-title">تریگرها و اتوماسیون داده‌ای</div>
+        </div>
+        <ul class="spec-list">
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>به‌روزرسانی خودکار <code>updated_at</code>:</strong> تریگر <code>forms_set_updated_at</code> زمان دقیق آخرین تغییر فرم را بدون نیاز به ارسال از کلاینت مدیریت می‌کند.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>ثبت پروفایل خودکار:</strong> تریگر <code>on_auth_user_created</code> بلافاصله پس از ثبت نام هر کاربر جدید، رکورد پروفایل با مقادیر پیش‌فرض سهمیه پلن رایگان را می‌سازد.</div>
+          </li>
+          <li class="spec-list-item">
+            <span class="spec-dot"></span>
+            <div><strong>مدیریت سطل بازیافت ۳۰ روزه:</strong> نگهداری ستون <code>expires_at</code> با مقدار پیش‌فرض <code>now() + interval '30 days'</code> برای پاک‌سازی بدون سربار.</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <footer class="page-footer">
+      <p>سامانه فرم‌ساز آنلاین پرس‌کاد (Porskad) — اسناد فنی و معماری مهندسی نرم‌افزار</p>
+    </footer>
+  </div>
+
+  <script src="assets/app.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#090D16',
+        primaryColor: '#131B2E',
+        primaryTextColor: '#F8FAFC',
+        primaryBorderColor: '#2DD4BF',
+        lineColor: '#38BDF8',
+        secondaryColor: '#1A2338',
+        tertiaryColor: '#0F172A',
+        fontFamily: 'IRANSansX, sans-serif'
+      }
+    });
+  </script>
+</body>
+</html>
