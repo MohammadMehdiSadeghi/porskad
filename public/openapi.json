@@ -47,6 +47,22 @@
     {
       "name": "Embed",
       "description": "کدهای آماده امبد (آی‌فریم، اسکریپت SDK، کامپوننت ری‌اکت) و لینک‌های مستقیم"
+    },
+    {
+      "name": "Telegram",
+      "description": "ارسال خودکار و لحظه‌ای پاسخ‌های دریافتی به بات‌ها و کانال‌های تلگرام"
+    },
+    {
+      "name": "Storage & Database",
+      "description": "بررسی سلامت و آمار تفکیکی حجم دیتابیس، استوریج و پروژه‌ها"
+    },
+    {
+      "name": "System Settings",
+      "description": "مدیریت و خواندن تنظیمات سراسری، محدودیت‌ها و الگوهای سامانه"
+    },
+    {
+      "name": "Admin User Management",
+      "description": "عملیات مدیریتی سوپرادمین بر حساب‌های کاربری و سهمیه‌ها"
     }
   ],
   "paths": {
@@ -1093,6 +1109,270 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/telegram/send": {
+      "post": {
+        "tags": [
+          "Telegram"
+        ],
+        "summary": "ارسال دستی یا خودکار یک پاسخ ثبت‌شده به ربات تلگرام",
+        "description": "دریافت شناسه فرم و شناسه پاسخ، ساخت پیام شکیل با مشخصات کامل ورودی‌ها و ارسال مستقیم به کانال/گروه مقصد پیکربندی‌شده.",
+        "operationId": "sendTelegramNotification",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "form_id",
+                  "response_id"
+                ],
+                "properties": {
+                  "form_id": {
+                    "type": "string",
+                    "description": "شناسه فرم (UUID یا Slug یا Public ID)"
+                  },
+                  "response_id": {
+                    "type": "string",
+                    "description": "شناسه پاسخ ثبت‌شده (UUID)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "نتیجه ارسال به تلگرام",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "sent": {
+                      "type": "integer"
+                    },
+                    "skipped": {
+                      "type": "boolean"
+                    },
+                    "reason": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "پارامترهای ارسالی ناقص است",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "فرم یا پاسخ مورد نظر یافت نشد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage": {
+      "get": {
+        "tags": [
+          "Storage & Database"
+        ],
+        "summary": "دریافت آمار دقیق حجم دیتابیس و فایل‌های سیستمی",
+        "description": "گزارش تفکیکی حجم جدول‌ها، تعداد رکوردها، حجم پوشه‌های عمومی و محاسبه متریک‌های مصرفی دیتابیس.",
+        "operationId": "getSystemStorageStats",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "آمار دیسک و دیتابیس",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "disk": {
+                      "type": "object"
+                    },
+                    "database": {
+                      "type": "object"
+                    },
+                    "tables": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "نیاز به احراز هویت دارد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/settings": {
+      "get": {
+        "tags": [
+          "System Settings"
+        ],
+        "summary": "دریافت تنظیمات و محدودیت‌های عمومی سامانه",
+        "description": "دریافت کلیدها و مقادیر عمومی سامانه نظیر پیش‌فرض‌های سهمیه، الگوهای پیامک و عناوین سایت.",
+        "operationId": "getSystemSettings",
+        "responses": {
+          "200": {
+            "description": "لیست تنظیمات سامانه",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "settings": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "System Settings"
+        ],
+        "summary": "به‌روزرسانی تنظیمات و سهمیه‌های سراسری (مخصوص سوپرادمین)",
+        "description": "تغییر و ذخیره کلیدهای پیکربندی عمومی سیستم در دیتابیس.",
+        "operationId": "updateSystemSettings",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "settings": {
+                    "type": "object",
+                    "description": "آبجکت کلید-مقداری تنظیمات"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "تنظیمات با موفقیت ذخیره شد"
+          },
+          "403": {
+            "description": "دسترسی غیرمجاز (تنها سوپرادمین مجاز است)"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users": {
+      "post": {
+        "tags": [
+          "Admin User Management"
+        ],
+        "summary": "مدیریت و اعمال تغییرات روی کاربران (مخصوص سوپرادمین)",
+        "description": "امکان مسدودسازی (ban)، رفع انسداد (unban)، تغییر طرح، ریست رمز و جعل هویت موقت کاربر.",
+        "operationId": "adminUserAction",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "action",
+                  "target_user_id"
+                ],
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "ban_user",
+                      "unban_user",
+                      "set_plan",
+                      "update_password",
+                      "impersonate"
+                    ]
+                  },
+                  "target_user_id": {
+                    "type": "string",
+                    "description": "شناسه کاربری کاربر مقصد"
+                  },
+                  "plan": {
+                    "type": "string",
+                    "description": "طرح جدید در صورت انتخاب set_plan"
+                  },
+                  "new_password": {
+                    "type": "string",
+                    "description": "رمز عبور جدید در صورت update_password"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "عملیات با موفقیت انجام شد"
+          },
+          "403": {
+            "description": "دسترسی غیرمجاز"
           }
         }
       }

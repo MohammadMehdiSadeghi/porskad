@@ -6,6 +6,7 @@ import { supabase } from "../../lib/supabaseClient";
 import Button from "../../components/ui/Button";
 import StickerCard from "../../components/ui/StickerCard";
 import SEO from "../../components/ui/SEO";
+import { SettingsSkeleton } from "../../components/ui/Skeleton";
 import {
   Settings as SettingsIcon,
   Shield,
@@ -128,6 +129,10 @@ export default function Settings() {
         </div>
       </div>
     );
+  }
+
+  if (loading) {
+    return <SettingsSkeleton />;
   }
 
   return (

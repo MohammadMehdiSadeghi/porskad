@@ -30,6 +30,7 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import Modal from "../../components/ui/Modal";
 import SEO from "../../components/ui/SEO";
+import { SubscriptionsSkeleton } from "../../components/ui/Skeleton";
 
 // ════════════════════════════════════════════════════════
 // صفحه «اشتراک‌ها» — کاربر طرح فعلی‌اش را می‌بیند و برای
@@ -140,6 +141,10 @@ export default function Subscriptions() {
     navigate(
       `/admin/support?category=subscription&subject=${encodeURIComponent(subject)}&message=${encodeURIComponent(message)}`
     );
+  }
+
+  if (!profile) {
+    return <SubscriptionsSkeleton />;
   }
 
   return (

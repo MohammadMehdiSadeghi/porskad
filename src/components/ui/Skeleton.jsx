@@ -431,3 +431,278 @@ export function AuthGuardSkeleton() {
     </div>
   );
 }
+
+// ─── اسکلتون پنل سوپرادمین (گاد پنل) — هدر + کارت‌های متریک + تب‌بار + جدول داده ───
+export function SuperAdminSkeleton() {
+  return (
+    <div className="flex flex-col gap-6 w-full max-w-[1600px] mx-auto pb-12" dir="rtl">
+      {/* هدر پنل و بج‌های وضعیت */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <Skeleton className="w-8 h-8 bg-teal/20" rounded="rounded-xl" />
+            <Skeleton className="h-7 w-48" rounded="rounded-xl" />
+            <Skeleton className="h-6 w-20 bg-teal/20" rounded="rounded-full" />
+          </div>
+          <Skeleton className="h-3.5 w-64 mt-2" rounded="rounded-md" />
+        </div>
+        <div className="flex items-center gap-2.5">
+          <Skeleton className="h-9 w-24" rounded="rounded-pill-md" />
+          <Skeleton className="h-9 w-28 bg-teal/20" rounded="rounded-pill-md" />
+        </div>
+      </div>
+
+      {/* شبکه کارت‌های شاخص‌های کلیدی (KPIs) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
+        <StatCardSkeleton theme="teal" />
+        <StatCardSkeleton theme="navy" />
+        <StatCardSkeleton theme="orange" />
+        <StatCardSkeleton theme="magenta" />
+      </div>
+
+      {/* نوار جستجو و تب‌های ناوبری گاد پنل */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 border-2 border-ink/10 dark:border-slate-800 rounded-2xl p-2 sm:p-2.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+          <Skeleton className="h-9 w-24 bg-teal/20" rounded="rounded-pill-md" />
+          <Skeleton className="h-9 w-20" rounded="rounded-pill-md" />
+          <Skeleton className="h-9 w-20" rounded="rounded-pill-md" />
+          <Skeleton className="h-9 w-24" rounded="rounded-pill-md" />
+          <Skeleton className="h-9 w-20" rounded="rounded-pill-md" />
+        </div>
+        <Skeleton className="h-9 w-48 sm:w-60" rounded="rounded-pill-md" />
+      </div>
+
+      {/* جدول داده با هدر و ردیف‌های Zebra */}
+      <StickerCard theme="white" radius={radii.cardSm}>
+        <div className="px-5 py-4 border-b-2 border-ink/10 dark:border-slate-800 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            {["w-24", "w-36", "w-28", "w-20", "w-24"].map((w, i) => (
+              <Skeleton key={i} className={`${w} h-4`} rounded="rounded-md" />
+            ))}
+          </div>
+          <Skeleton className="h-8 w-20" rounded="rounded-md" />
+        </div>
+        <div className="divide-y divide-ink/5 dark:divide-slate-800">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <TableRowSkeleton key={i} cols={5} zebra={i % 2 === 1} />
+          ))}
+        </div>
+      </StickerCard>
+    </div>
+  );
+}
+
+// ─── اسکلتون صفحه تنظیمات — هدر + تب‌ها + کارت فرم تنظیمات ───
+export function SettingsSkeleton() {
+  return (
+    <div className="space-y-6 mx-auto max-w-5xl pb-12" dir="rtl">
+      {/* هدر صفحه */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="w-7 h-7 bg-teal/20" rounded="rounded-lg" />
+            <Skeleton className="h-7 w-60" rounded="rounded-xl" />
+          </div>
+          <Skeleton className="h-3.5 w-72 mt-2" rounded="rounded-md" />
+        </div>
+        <Skeleton className="h-10 w-32 bg-teal/25" rounded="rounded-pill-md" />
+      </div>
+
+      {/* تب‌ها */}
+      <div className="flex gap-1.5 bg-white dark:bg-slate-900 border-2 border-ink/10 dark:border-slate-800 rounded-pill-md p-1 w-fit">
+        <Skeleton className="h-9 w-28 bg-teal/20" rounded="rounded-pill-sm" />
+        <Skeleton className="h-9 w-28" rounded="rounded-pill-sm" />
+        <Skeleton className="h-9 w-28" rounded="rounded-pill-sm" />
+      </div>
+
+      {/* کارت تنظیمات */}
+      <StickerCard theme="white">
+        <div className="p-6 flex flex-col gap-6">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-32" rounded="rounded-md" />
+            <Skeleton className="h-11 w-full" rounded="rounded-xl" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-40" rounded="rounded-md" />
+              <Skeleton className="h-11 w-full" rounded="rounded-xl" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-44" rounded="rounded-md" />
+              <Skeleton className="h-11 w-full" rounded="rounded-xl" />
+            </div>
+          </div>
+          <div className="divide-y divide-ink/5 dark:divide-slate-800 pt-2">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="py-4 flex items-center justify-between">
+                <div className="space-y-1.5">
+                  <Skeleton className="h-4 w-48" rounded="rounded-md" />
+                  <Skeleton className="h-3 w-64" rounded="rounded-md" />
+                </div>
+                <Skeleton className="w-12 h-6" rounded="rounded-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </StickerCard>
+    </div>
+  );
+}
+
+// ─── اسکلتون صفحه اشتراک‌ها — هدر + ۳ کارت طرح قیمت‌گذاری ───
+export function SubscriptionsSkeleton() {
+  return (
+    <div className="flex flex-col gap-6 max-w-6xl mx-auto pb-12" dir="rtl">
+      {/* هدر صفحه */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="w-7 h-7 bg-amber-500/20" rounded="rounded-lg" />
+            <Skeleton className="h-7 w-48" rounded="rounded-xl" />
+          </div>
+          <Skeleton className="h-3.5 w-80 mt-2" rounded="rounded-md" />
+        </div>
+        <Skeleton className="h-10 w-44" rounded="rounded-2xl" />
+      </div>
+
+      {/* کارت‌های طرح‌ها */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+        {[0, 1, 2].map((i) => (
+          <StickerCard key={i} theme={i === 1 ? "teal" : "white"}>
+            <div className="p-6 flex flex-col gap-5 min-h-[420px]">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Skeleton className="h-6 w-24" rounded="rounded-lg" />
+                  <Skeleton className="h-3.5 w-36" rounded="rounded-md" />
+                </div>
+                <Skeleton className="w-10 h-10" rounded="rounded-xl" />
+              </div>
+              <div className="py-3 border-y border-ink/10 dark:border-slate-800">
+                <Skeleton className="h-9 w-32" rounded="rounded-xl" />
+              </div>
+              <div className="space-y-3 flex-1">
+                {[0, 1, 2, 3, 4].map((f) => (
+                  <div key={f} className="flex items-center gap-2.5">
+                    <Skeleton className="w-4 h-4 bg-teal/20" rounded="rounded-full" />
+                    <Skeleton className="h-3.5 flex-1" rounded="rounded-md" />
+                  </div>
+                ))}
+              </div>
+              <Skeleton className={`h-11 w-full ${i === 1 ? "bg-white/40" : "bg-teal/25"}`} rounded="rounded-pill-md" />
+            </div>
+          </StickerCard>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── اسکلتون صفحه حساب کاربری (Profile) ───
+export function ProfileSkeleton() {
+  return (
+    <div className="flex flex-col gap-6 max-w-5xl mx-auto w-full pb-12" dir="rtl">
+      {/* هدر */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <Skeleton className="h-7 w-36" rounded="rounded-xl" />
+          <Skeleton className="h-3.5 w-60 mt-2" rounded="rounded-md" />
+        </div>
+        <Skeleton className="h-9 w-40" rounded="rounded-pill-md" />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        {/* کارت مشخصات فردی */}
+        <div className="md:col-span-7">
+          <StickerCard theme="white">
+            <div className="p-6 flex flex-col gap-4">
+              <Skeleton className="h-5 w-32" rounded="rounded-lg" />
+              <div className="space-y-2">
+                <Skeleton className="h-3.5 w-24" rounded="rounded-md" />
+                <Skeleton className="h-11 w-full" rounded="rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-3.5 w-20" rounded="rounded-md" />
+                <Skeleton className="h-11 w-full" rounded="rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-3.5 w-24" rounded="rounded-md" />
+                <Skeleton className="h-11 w-full" rounded="rounded-xl" />
+              </div>
+              <Skeleton className="h-10 w-32 bg-teal/25 mt-2" rounded="rounded-pill-md" />
+            </div>
+          </StickerCard>
+        </div>
+
+        {/* کارت امنیت و رمز عبور */}
+        <div className="md:col-span-5">
+          <StickerCard theme="white">
+            <div className="p-6 flex flex-col gap-4">
+              <Skeleton className="h-5 w-28" rounded="rounded-lg" />
+              <div className="space-y-2">
+                <Skeleton className="h-3.5 w-20" rounded="rounded-md" />
+                <Skeleton className="h-11 w-full" rounded="rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-3.5 w-24" rounded="rounded-md" />
+                <Skeleton className="h-11 w-full" rounded="rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-3.5 w-28" rounded="rounded-md" />
+                <Skeleton className="h-11 w-full" rounded="rounded-xl" />
+              </div>
+              <Skeleton className="h-10 w-full bg-navy/20 dark:bg-slate-700/50 mt-2" rounded="rounded-pill-md" />
+            </div>
+          </StickerCard>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── اسکلتون صفحه اتصال به تلگرام (TelegramBot) ───
+export function TelegramBotSkeleton() {
+  return (
+    <div className="flex flex-col gap-6 max-w-5xl mx-auto w-full pb-12" dir="rtl">
+      {/* هدر */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="w-7 h-7 bg-teal/20" rounded="rounded-lg" />
+            <Skeleton className="h-7 w-44" rounded="rounded-xl" />
+          </div>
+          <Skeleton className="h-3.5 w-52 mt-2" rounded="rounded-md" />
+        </div>
+        <Skeleton className="h-9 w-36" rounded="rounded-pill-md" />
+      </div>
+
+      {/* تب‌ها */}
+      <div className="flex gap-1 bg-white dark:bg-slate-900 border-2 border-ink/10 dark:border-slate-800 rounded-pill-md p-1 w-fit">
+        <Skeleton className="h-9 w-28 bg-teal/20" rounded="rounded-pill-sm" />
+        <Skeleton className="h-9 w-28" rounded="rounded-pill-sm" />
+        <Skeleton className="h-9 w-28" rounded="rounded-pill-sm" />
+      </div>
+
+      {/* فرم پیکربندی ربات */}
+      <StickerCard theme="white">
+        <div className="p-6 flex flex-col gap-5">
+          <Skeleton className="h-5 w-36" rounded="rounded-lg" />
+          <div className="space-y-2">
+            <Skeleton className="h-3.5 w-24" rounded="rounded-md" />
+            <Skeleton className="h-11 w-full" rounded="rounded-xl" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Skeleton className="h-3.5 w-20" rounded="rounded-md" />
+              <Skeleton className="h-11 w-full" rounded="rounded-xl" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-3.5 w-28" rounded="rounded-md" />
+              <Skeleton className="h-11 w-full" rounded="rounded-xl" />
+            </div>
+          </div>
+          <Skeleton className="h-10 w-36 bg-teal/25 mt-1" rounded="rounded-pill-md" />
+        </div>
+      </StickerCard>
+    </div>
+  );
+}

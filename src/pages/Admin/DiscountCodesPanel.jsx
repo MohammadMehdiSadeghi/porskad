@@ -28,6 +28,7 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import Modal from "../../components/ui/Modal";
 import StickerCard from "../../components/ui/StickerCard";
+import Skeleton from "../../components/ui/Skeleton";
 import {
   Ticket,
   Plus,
@@ -447,8 +448,20 @@ export default function DiscountCodesPanel() {
 
       {/* لیست کدهای تخفیف */}
       {loading ? (
-        <div className="p-12 text-center text-sm font-bold text-ink-subtle dark:text-slate-400">
-          در حال بارگذاری کدهای تخفیف...
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="bg-white dark:bg-slate-800 border-2 border-ink/10 dark:border-slate-700 rounded-2xl p-5 flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-6 w-32" rounded="rounded-lg" />
+                <Skeleton className="h-6 w-16" rounded="rounded-pill" />
+              </div>
+              <Skeleton className="h-4 w-48" rounded="rounded-md" />
+              <div className="pt-2 border-t border-ink/5 dark:border-slate-700/50 flex items-center justify-between">
+                <Skeleton className="h-4 w-24" rounded="rounded-md" />
+                <Skeleton className="h-8 w-20" rounded="rounded-xl" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : filteredCodes.length === 0 ? (
         <div className="bg-white dark:bg-slate-800/60 border-2 border-dashed border-ink/15 dark:border-slate-700 rounded-2xl p-8 text-center flex flex-col items-center gap-3">

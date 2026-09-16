@@ -9,6 +9,7 @@ import Button from "../../components/ui/Button";
 import StickerCard from "../../components/ui/StickerCard";
 import Badge from "../../components/ui/Badge";
 import SEO from "../../components/ui/SEO";
+import { ProfileSkeleton } from "../../components/ui/Skeleton";
 import {
   Crown,
   Lock,
@@ -178,6 +179,10 @@ export default function Profile() {
     } finally {
       setSavingPassword(false);
     }
+  }
+
+  if (!profile) {
+    return <ProfileSkeleton />;
   }
 
   return (

@@ -1060,26 +1060,62 @@ print(response.json())`,
                         <tr>
                           <td className="py-3 px-3"><Badge color="red">DELETE</Badge></td>
                           <td className="py-3 px-3 font-mono dir-ltr text-left text-teal font-bold">/api/v1/forms/:id</td>
-                          <td className="py-3 px-3">حذف کامل یک فرم و داده‌های مرتبط</td>
+                          <td className="py-3 px-3">انتقال فرم به سطل زباله (با مهلت بازیابی ۳۰ روزه) یا حذف دائمی</td>
                           <td className="py-3 px-3 text-center"><Badge color="teal">توکن لازم</Badge></td>
                         </tr>
                         <tr>
                           <td className="py-3 px-3"><Badge color="blue">GET</Badge></td>
+                          <td className="py-3 px-3 font-mono dir-ltr text-left text-teal font-bold">/api/v1/forms/:id/questions</td>
+                          <td className="py-3 px-3">دریافت لیست تمام سوالات و منطق‌های پرش فرم</td>
+                          <td className="py-3 px-3 text-center"><Badge color="teal">توکن لازم</Badge></td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-3"><Badge color="green">POST</Badge></td>
+                          <td className="py-3 px-3 font-mono dir-ltr text-left text-teal font-bold">/api/v1/forms/:id/questions</td>
+                          <td className="py-3 px-3">افزودن سوال جدید به فرم با تنظیمات و گزینه‌ها</td>
+                          <td className="py-3 px-3 text-center"><Badge color="teal">توکن لازم</Badge></td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-3"><Badge color="blue">GET</Badge></td>
+                          <td className="py-3 px-3 font-mono dir-ltr text-left text-teal font-bold">/api/v1/forms/:id/stats</td>
+                          <td className="py-3 px-3">آمار کامل فرم (تعداد پاسخ‌ها، بازدیدها، درصد تکمیل)</td>
+                          <td className="py-3 px-3 text-center"><Badge color="teal">توکن لازم</Badge></td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-3"><Badge color="blue">GET</Badge></td>
+                          <td className="py-3 px-3 font-mono dir-ltr text-left text-teal font-bold">/api/v1/forms/:id/embed</td>
+                          <td className="py-3 px-3">دریافت کدهای آماده تعبیه درون سایت (iframe و popover)</td>
+                          <td className="py-3 px-3 text-center"><Badge color="gray">عمومی</Badge></td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-3"><Badge color="blue">GET</Badge></td>
                           <td className="py-3 px-3 font-mono dir-ltr text-left text-teal font-bold">/api/v1/forms/:id/responses</td>
-                          <td className="py-3 px-3">دریافت پاسخ‌ها و ورودی‌های ثبت‌شده یک فرم</td>
+                          <td className="py-3 px-3">دریافت پاسخ‌ها و ورودی‌های ثبت‌شده یک فرم با فیلتر و صفحه‌بندی</td>
                           <td className="py-3 px-3 text-center"><Badge color="teal">توکن لازم</Badge></td>
                         </tr>
                         <tr>
                           <td className="py-3 px-3"><Badge color="green">POST</Badge></td>
                           <td className="py-3 px-3 font-mono dir-ltr text-left text-teal font-bold">/api/v1/forms/:id/responses</td>
-                          <td className="py-3 px-3">ثبت پاسخ جدید برای یک فرم (ارسال فرم)</td>
+                          <td className="py-3 px-3">ثبت پاسخ جدید برای یک فرم (ارسال فرم توسط پاسخ‌دهنده)</td>
+                          <td className="py-3 px-3 text-center"><Badge color="gray">عمومی</Badge></td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-3"><Badge color="green">POST</Badge></td>
+                          <td className="py-3 px-3 font-mono dir-ltr text-left text-teal font-bold">/api/v1/telegram/send</td>
+                          <td className="py-3 px-3">ارسال خودکار مشخصات یک پاسخ به ربات و کانال تلگرام</td>
+                          <td className="py-3 px-3 text-center"><Badge color="teal">توکن لازم</Badge></td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-3"><Badge color="blue">GET</Badge></td>
+                          <td className="py-3 px-3 font-mono dir-ltr text-left text-teal font-bold">/api/v1/question-types</td>
+                          <td className="py-3 px-3">فهرست و متادیتای تمام ۲۰ نوع سوال استاندارد پرس‌کاد</td>
                           <td className="py-3 px-3 text-center"><Badge color="gray">عمومی</Badge></td>
                         </tr>
                         <tr>
                           <td className="py-3 px-3"><Badge color="blue">GET</Badge></td>
-                          <td className="py-3 px-3 font-mono dir-ltr text-left text-teal font-bold">/api/v1/system/health</td>
-                          <td className="py-3 px-3">بررسی سلامت سرور، زمان کارکرد و وضعیت دیتابیس</td>
-                          <td className="py-3 px-3 text-center"><Badge color="gray">عمومی</Badge></td>
+                          <td className="py-3 px-3 font-mono dir-ltr text-left text-teal font-bold">/api/v1/storage</td>
+                          <td className="py-3 px-3">آمار تفکیکی حجم دیتابیس، جداول و فایل‌های پروژه</td>
+                          <td className="py-3 px-3 text-center"><Badge color="teal">توکن لازم</Badge></td>
                         </tr>
                       </tbody>
                     </table>

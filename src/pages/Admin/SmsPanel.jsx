@@ -9,7 +9,7 @@ import StatCard from "../../components/ui/StatCard";
 import StickerCard from "../../components/ui/StickerCard";
 import EmptyState from "../../components/ui/EmptyState";
 import Spinner from "../../components/ui/Spinner";
-import { TableSkeleton, DashboardSkeleton } from "../../components/ui/Skeleton";
+import Skeleton, { TableSkeleton, DashboardSkeleton } from "../../components/ui/Skeleton";
 import SEO from "../../components/ui/SEO";
 import PasswordToggle from "../../components/ui/PasswordToggle";
 import {
@@ -1188,8 +1188,9 @@ export default function SmsPanel() {
                     </div>
 
                     {loadingForms ? (
-                      <div className="flex items-center gap-2 py-4 text-xs font-bold text-ink-subtle">
-                        <Spinner size="sm" /> در حال دریافت لیست فرم‌های فعال...
+                      <div className="flex flex-col gap-2 py-1">
+                        <Skeleton className="h-10 w-full" rounded="rounded-xl" />
+                        <Skeleton className="h-10 w-full" rounded="rounded-xl" />
                       </div>
                     ) : formsList.length === 0 ? (
                       <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-xs font-bold text-amber-700 dark:text-amber-300">
@@ -1284,8 +1285,10 @@ export default function SmsPanel() {
                       </div>
 
                       {loadingQuestions ? (
-                        <div className="flex items-center gap-2 py-4 text-xs font-bold text-ink-subtle">
-                          <Spinner size="sm" /> در حال بارگذاری سوالات فرم...
+                        <div className="flex flex-col gap-2 py-1">
+                          <Skeleton className="h-9 w-full" rounded="rounded-xl" />
+                          <Skeleton className="h-9 w-full" rounded="rounded-xl" />
+                          <Skeleton className="h-9 w-full" rounded="rounded-xl" />
                         </div>
                       ) : formQuestions.length === 0 ? (
                         <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-ink-subtle text-center">
@@ -1382,7 +1385,7 @@ export default function SmsPanel() {
                     <div className="p-3.5 rounded-2xl bg-teal/15 border border-teal/30 flex flex-col justify-between min-h-[72px]">
                       <span className="text-[11px] font-bold text-teal-text dark:text-teal">شماره‌های یکتا و معتبر:</span>
                       {extractingContacts ? (
-                        <div className="py-1"><Spinner size="sm" /></div>
+                        <Skeleton className="h-7 w-16 mt-1 bg-teal/30" rounded="rounded-md" />
                       ) : (
                         <strong className="text-2xl font-black text-teal mt-1 font-mono">
                           {faNum(uniqueExtractedPhones.length)}
@@ -1393,7 +1396,7 @@ export default function SmsPanel() {
                     <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 flex flex-col justify-between min-h-[72px]">
                       <span className="text-[11px] font-bold text-ink-subtle dark:text-slate-400">کل ورودی‌های خام:</span>
                       {extractingContacts ? (
-                        <div className="py-1"><Spinner size="sm" /></div>
+                        <Skeleton className="h-7 w-16 mt-1" rounded="rounded-md" />
                       ) : (
                         <strong className="text-2xl font-black text-navy dark:text-white mt-1 font-mono">
                           {faNum(extractedContacts.length)}
@@ -1404,7 +1407,7 @@ export default function SmsPanel() {
                     <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 flex flex-col justify-between min-h-[72px]">
                       <span className="text-[11px] font-bold text-ink-subtle dark:text-slate-400">تکراری‌های حذف‌شده:</span>
                       {extractingContacts ? (
-                        <div className="py-1"><Spinner size="sm" /></div>
+                        <Skeleton className="h-7 w-14 mt-1" rounded="rounded-md" />
                       ) : (
                         <strong className="text-xl font-bold text-amber-600 dark:text-amber-400 mt-1 font-mono">
                           {faNum(Math.max(0, extractedContacts.filter((c) => c.isValid).length - uniqueExtractedPhones.length))}
@@ -1415,7 +1418,7 @@ export default function SmsPanel() {
                     <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 flex flex-col justify-between min-h-[72px]">
                       <span className="text-[11px] font-bold text-ink-subtle dark:text-slate-400">نامعتبر یا ناقص:</span>
                       {extractingContacts ? (
-                        <div className="py-1"><Spinner size="sm" /></div>
+                        <Skeleton className="h-7 w-14 mt-1" rounded="rounded-md" />
                       ) : (
                         <strong className="text-xl font-bold text-rose-500 mt-1 font-mono">
                           {faNum(extractedContacts.filter((c) => !c.isValid).length)}

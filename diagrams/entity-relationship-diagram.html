@@ -79,6 +79,10 @@ erDiagram
  profiles ||--o{ sms_logs : "user_id"
  profiles ||--o{ trash_items : "deleted_by"
  profiles ||--o{ user_roles : "user_id"
+ profiles ||--o{ telegram_config : "user_id"
+ forms ||--o{ telegram_form_links : "form_id"
+ telegram_config ||--o{ telegram_form_links : "config_id"
+ responses ||--o{ telegram_send_log : "response_id"
 
  forms ||--|{ questions : "form_id"
  forms ||--o{ logic_rules : "form_id"

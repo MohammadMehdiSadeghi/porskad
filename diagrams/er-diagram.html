@@ -78,6 +78,10 @@ erDiagram
  PROFILES ||--o{ SUPPORT_TICKETS : "ثبت می‌کند (1 به N)"
  PROFILES ||--o{ SMS_LOGS : "دریافت می‌کند (1 به N)"
  PROFILES ||--o{ TRASH_ITEMS : "حذف می‌کند (1 به N)"
+ PROFILES ||--o{ TELEGRAM_CONFIG : "پیکربندی می‌کند (1 به N)"
+ FORMS ||--o{ TELEGRAM_FORM_LINKS : "متصل می‌شود (1 به N)"
+ TELEGRAM_CONFIG ||--o{ TELEGRAM_FORM_LINKS : "متصل می‌کند (1 به N)"
+ RESPONSES ||--o{ TELEGRAM_SEND_LOG : "ارسال ثبت می‌کند (1 به N)"
 
  FORMS ||--|{ QUESTIONS : "شامل می‌شود (1 به N الزامی)"
  FORMS ||--o{ LOGIC_RULES : "تعریف می‌کند (1 به N)"
@@ -172,6 +176,47 @@ erDiagram
  uuid deleted_by FK
  datetime deleted_at
  datetime expires_at
+ }
+
+ TELEGRAM_CONFIG {
+ uuid id PK
+ uuid user_id FK
+ string bot_token
+ string chat_id
+ string chat_title
+ boolean is_active
+ datetime created_at
+ }
+
+ TELEGRAM_FORM_LINKS {
+ uuid id PK
+ uuid form_id FK
+ uuid config_id FK
+ boolean is_active
+ }
+
+ TELEGRAM_SEND_LOG {
+ uuid id PK
+ uuid response_id FK
+ uuid form_id FK
+ string status
+ datetime sent_at
+ }
+
+ SYSTEM_SETTINGS {
+ string key PK
+ jsonb value
+ datetime updated_at
+ }
+
+ DISCOUNT_CODES {
+ string code PK
+ string discount_type
+ int amount
+ datetime expires_at
+ int max_uses
+ int used_count
+ boolean is_active
  }
  </pre>
  </div>

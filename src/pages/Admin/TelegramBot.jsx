@@ -9,7 +9,7 @@ import StickerCard from "../../components/ui/StickerCard";
 import Modal from "../../components/ui/Modal";
 import EmptyState from "../../components/ui/EmptyState";
 import Spinner from "../../components/ui/Spinner";
-import { TableSkeleton } from "../../components/ui/Skeleton";
+import { TableSkeleton, TelegramBotSkeleton } from "../../components/ui/Skeleton";
 import SEO from "../../components/ui/SEO";
 import {
   Send,
@@ -381,6 +381,10 @@ export default function TelegramBot() {
     { id: "links", label: "لینک فرم‌ها", icon: Link2 },
     { id: "log", label: "تاریخچه ارسال", icon: History },
   ];
+
+  if (loading) {
+    return <TelegramBotSkeleton />;
+  }
 
   return (
     <div className="flex flex-col gap-8">
