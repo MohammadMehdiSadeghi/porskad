@@ -559,9 +559,6 @@ async function dispatchTelegramNotification(clients, formId, responseId, options
   lines.push("");
   lines.push(`⏰ زمان ثبت: ${timeStr} — ${dateStr}`);
   lines.push(`🔢 ورودی شماره ${faNum(entryNumber)}`);
-  if (isForce) {
-    lines.push("📌 (ارسال مجدد دستی توسط مدیریت)");
-  }
   lines.push("━━━━━━━━━━━━━━━━━━");
 
   let messageText = lines.join("\n");

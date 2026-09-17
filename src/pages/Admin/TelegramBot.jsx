@@ -31,6 +31,7 @@ import {
   Calendar,
   User,
   FileText,
+  CheckSquare,
 } from "lucide-react";
 
 const inputCls =
@@ -80,6 +81,9 @@ export default function TelegramBot() {
   const [previewResponse, setPreviewResponse] = useState(null);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [sendingResponseId, setSendingResponseId] = useState(null);
+  const [manualSelectedIds, setManualSelectedIds] = useState([]);
+  const [batchSending, setBatchSending] = useState(false);
+  const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
 
   // ─── Toast ───
   const [toast, setToast] = useState(null);
@@ -211,6 +215,7 @@ export default function TelegramBot() {
 
   // ─── Manual Dispatch (SuperAdmin) ───
   const loadManualFormResponses = useCallback(async (fId) => {
+    setManualSelectedIds([]);
     if (!fId) {
       setManualResponses([]);
       setManualQuestions([]);
@@ -302,6 +307,50 @@ export default function TelegramBot() {
     }
   }
 
+  async function handleBatchManualDispatch() {
+    if (!manualFormId || manualSelectedIds.length === 0 || batchSending) return;
+    setBatchSending(true);
+    const total = manualSelectedIds.length;
+    setBatchProgress({ current: 0, total });
+    let successCount = 0;
+    let failCount = 0;
+
+    try {
+      for (let i = 0; i < total; i++) {
+        const respId = manualSelectedIds[i];
+        setBatchProgress({ current: i + 1, total });
+        try {
+          const res = await sendToTelegram(manualFormId, respId, { force: true });
+          if (res.ok) {
+            successCount++;
+          } else {
+            failCount++;
+          }
+        } catch {
+          failCount++;
+        }
+        // وقفه کوتاه ۱۲۰ میلی‌ثانیه‌ای برای مهار نرخ ارسال تلگرام
+        if (i < total - 1) {
+          await new Promise((r) => setTimeout(r, 120));
+        }
+      }
+
+      if (successCount > 0) {
+        showToast(`${faNum(successCount)} پاسخ با موفقیت به چت تلگرام ارسال شد.`);
+        setManualSelectedIds([]);
+        loadSendLog();
+      }
+      if (failCount > 0) {
+        showToast(`${faNum(failCount)} پاسخ به دلیل عدم اتصال یا خطای تلگرام ارسال نشد.`, "error");
+      }
+    } catch (err) {
+      showToast("خطا در ارسال گروهی: " + err.message, "error");
+    } finally {
+      setBatchSending(false);
+      setBatchProgress({ current: 0, total: 0 });
+    }
+  }
+
   function buildPreviewMessage(responseObj) {
     if (!responseObj) return "";
     const fTitle = formTitleById[manualFormId] || "—";
@@ -344,7 +393,6 @@ export default function TelegramBot() {
 
     lines.push("");
     lines.push(`⏰ زمان ثبت: ${timeStr} — ${dateStr}`);
-    lines.push("📌 (ارسال مجدد دستی توسط مدیریت)");
     lines.push("━━━━━━━━━━━━━━━━━━");
 
     return lines.join("\n");
@@ -1319,107 +1367,195 @@ export default function TelegramBot() {
                     </div>
                   </div>
 
-                  <StickerCard theme="white">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-700">
-                            <th className="text-center font-black px-4 py-3 w-16">ورودی #</th>
-                            <th className="text-right font-black px-4 py-3">زمان دقیق ثبت</th>
-                            <th className="text-right font-black px-4 py-3">چکیده پاسخ‌ها</th>
-                            <th className="text-center font-black px-4 py-3">عملیات</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {manualResponses
-                            .filter((r) => {
-                              if (!manualSearch.trim()) return true;
-                              const q = manualSearch.trim().toLowerCase();
-                              const rAns = manualAnswers[r.id] || {};
-                              return Object.values(rAns).some((v) =>
-                                String(v ?? "").toLowerCase().includes(q)
-                              );
-                            })
-                            .map((r, i) => {
-                              const rAns = manualAnswers[r.id] || {};
-                              const subDate = r.submitted_at || r.created_at;
-                              const isSending = sendingResponseId === r.id;
+                  {(() => {
+                    const filtered = manualResponses.filter((r) => {
+                      if (!manualSearch.trim()) return true;
+                      const q = manualSearch.trim().toLowerCase();
+                      const rAns = manualAnswers[r.id] || {};
+                      return Object.values(rAns).some((v) =>
+                        String(v ?? "").toLowerCase().includes(q)
+                      );
+                    });
 
-                              // خلاصه سه پاسخ اول
-                              const summarySnippets = manualQuestions
-                                .slice(0, 3)
-                                .map((q) => {
-                                  const val = rAns[q.id];
-                                  if (!val) return null;
-                                  return `${q.title}: ${typeof val === "object" ? JSON.stringify(val) : String(val)}`;
-                                })
-                                .filter(Boolean);
+                    const isAllSelected =
+                      filtered.length > 0 &&
+                      filtered.every((r) => manualSelectedIds.includes(r.id));
 
-                              return (
-                                <tr
-                                  key={r.id}
-                                  className={`${
-                                    i % 2 ? "bg-bg-lavender/60 dark:bg-slate-800/40" : ""
-                                  } border-b border-ink/5 dark:border-slate-800 last:border-0`}
-                                >
-                                  <td className="px-4 py-3 text-center font-extrabold text-xs text-navy dark:text-slate-300">
-                                    {faNum(manualResponses.length - i)}
-                                  </td>
-                                  <td className="px-4 py-3 font-semibold text-xs text-ink-subtle dark:text-slate-400 whitespace-nowrap">
-                                    {subDate ? faDateTime(subDate) : "—"}
-                                    <span className="block text-[10px] text-ink-subtle/70">
-                                      ({subDate ? faRelative(subDate) : "—"})
-                                    </span>
-                                  </td>
-                                  <td className="px-4 py-3 text-xs font-semibold text-ink dark:text-slate-200 max-w-md">
-                                    {summarySnippets.length > 0 ? (
-                                      <div className="flex flex-col gap-0.5 truncate">
-                                        {summarySnippets.map((s, idx) => (
-                                          <span key={idx} className="truncate">
-                                            • {s}
-                                          </span>
-                                        ))}
-                                      </div>
-                                    ) : (
-                                      <span className="text-ink-subtle italic">بدون پاسخ متنی</span>
-                                    )}
-                                  </td>
-                                  <td className="px-4 py-3 text-center whitespace-nowrap">
-                                    <div className="flex items-center justify-center gap-2">
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setPreviewResponse(r);
-                                          setPreviewModalOpen(true);
-                                        }}
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill-sm border border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-navy dark:text-slate-200 hover:border-teal hover:text-teal dark:hover:text-teal hover:bg-teal/5 transition-all cursor-pointer shadow-sm active:scale-95"
-                                        title="مشاهده متن کامل گزارش ارسالی"
-                                      >
-                                        <Eye size={13} className="text-teal shrink-0" />
-                                        <span>پیش‌نمایش</span>
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleManualDispatch(r)}
-                                        disabled={isSending}
-                                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-pill-sm bg-teal hover:bg-teal-600 text-xs font-bold text-white transition-all cursor-pointer shadow-[2px_2px_0_#1F413D] active:translate-x-[1px] active:translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
-                                        title="ارسال مستقیم به چت تلگرام با تاریخ واقعی"
-                                      >
-                                        <Send
-                                          size={13}
-                                          className={isSending ? "animate-spin shrink-0" : "shrink-0"}
-                                        />
-                                        <span>{isSending ? "در حال ارسال..." : "ارسال به تلگرام"}</span>
-                                      </button>
-                                    </div>
-                                  </td>
+                    return (
+                      <>
+                        {/* نوار عملیات ارسال دسته‌جمعی / همزمان */}
+                        {manualSelectedIds.length > 0 && (
+                          <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-teal/10 dark:bg-teal/15 border-2 border-teal/40 rounded-xl animate-in fade-in duration-200">
+                            <div className="flex items-center gap-2">
+                              <CheckSquare size={18} className="text-teal shrink-0" />
+                              <span className="text-xs sm:text-sm font-black text-navy dark:text-slate-100">
+                                {faNum(manualSelectedIds.length)} پاسخ برای ارسال انتخاب شده است
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setManualSelectedIds([])}
+                                disabled={batchSending}
+                                className="px-3 py-1.5 rounded-pill-sm border border-ink/20 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-ink-subtle hover:text-rose-500 transition-colors cursor-pointer"
+                              >
+                                لغو انتخاب
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleBatchManualDispatch}
+                                disabled={batchSending}
+                                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-pill-sm bg-teal hover:bg-teal-600 text-white text-xs font-bold shadow-[2px_2px_0_#1F413D] active:translate-x-[1px] active:translate-y-[1px] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <Send size={13} className={batchSending ? "animate-spin shrink-0" : "shrink-0"} />
+                                <span>
+                                  {batchSending
+                                    ? `در حال ارسال (${faNum(batchProgress.current)} از ${faNum(batchProgress.total)})...`
+                                    : `ارسال همزمان به تلگرام (${faNum(manualSelectedIds.length)})`}
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        <StickerCard theme="white">
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-700">
+                                  <th className="text-center font-black px-3 py-3 w-10">
+                                    <input
+                                      type="checkbox"
+                                      checked={isAllSelected}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          const setIds = new Set([
+                                            ...manualSelectedIds,
+                                            ...filtered.map((r) => r.id),
+                                          ]);
+                                          setManualSelectedIds([...setIds]);
+                                        } else {
+                                          const filteredSet = new Set(filtered.map((r) => r.id));
+                                          setManualSelectedIds(
+                                            manualSelectedIds.filter((id) => !filteredSet.has(id))
+                                          );
+                                        }
+                                      }}
+                                      className="w-4 h-4 accent-teal cursor-pointer rounded"
+                                      title="انتخاب همه پاسخ‌های این لیست"
+                                    />
+                                  </th>
+                                  <th className="text-center font-black px-3 py-3 w-16">ورودی #</th>
+                                  <th className="text-right font-black px-4 py-3">زمان دقیق ثبت</th>
+                                  <th className="text-right font-black px-4 py-3">چکیده پاسخ‌ها</th>
+                                  <th className="text-center font-black px-4 py-3">عملیات</th>
                                 </tr>
-                              );
-                            })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </StickerCard>
+                              </thead>
+                              <tbody>
+                                {filtered.map((r, i) => {
+                                  const rAns = manualAnswers[r.id] || {};
+                                  const subDate = r.submitted_at || r.created_at;
+                                  const isSending = sendingResponseId === r.id;
+                                  const isChecked = manualSelectedIds.includes(r.id);
+
+                                  // خلاصه سه پاسخ اول
+                                  const summarySnippets = manualQuestions
+                                    .slice(0, 3)
+                                    .map((q) => {
+                                      const val = rAns[q.id];
+                                      if (!val) return null;
+                                      return `${q.title}: ${typeof val === "object" ? JSON.stringify(val) : String(val)}`;
+                                    })
+                                    .filter(Boolean);
+
+                                  return (
+                                    <tr
+                                      key={r.id}
+                                      className={`${
+                                        isChecked
+                                          ? "bg-teal/10 dark:bg-teal/20"
+                                          : i % 2
+                                          ? "bg-bg-lavender/60 dark:bg-slate-800/40"
+                                          : ""
+                                      } border-b border-ink/5 dark:border-slate-800 last:border-0 hover:bg-teal/5 transition-colors`}
+                                    >
+                                      <td className="px-3 py-3 text-center">
+                                        <input
+                                          type="checkbox"
+                                          checked={isChecked}
+                                          onChange={(e) => {
+                                            if (e.target.checked) {
+                                              setManualSelectedIds((prev) => [...prev, r.id]);
+                                            } else {
+                                              setManualSelectedIds((prev) =>
+                                                prev.filter((id) => id !== r.id)
+                                              );
+                                            }
+                                          }}
+                                          className="w-4 h-4 accent-teal cursor-pointer rounded"
+                                        />
+                                      </td>
+                                      <td className="px-3 py-3 text-center font-extrabold text-xs text-navy dark:text-slate-300">
+                                        {faNum(manualResponses.length - i)}
+                                      </td>
+                                      <td className="px-4 py-3 font-semibold text-xs text-ink-subtle dark:text-slate-400 whitespace-nowrap">
+                                        {subDate ? faDateTime(subDate) : "—"}
+                                        <span className="block text-[10px] text-ink-subtle/70">
+                                          ({subDate ? faRelative(subDate) : "—"})
+                                        </span>
+                                      </td>
+                                      <td className="px-4 py-3 text-xs font-semibold text-ink dark:text-slate-200 max-w-md">
+                                        {summarySnippets.length > 0 ? (
+                                          <div className="flex flex-col gap-0.5 truncate">
+                                            {summarySnippets.map((s, idx) => (
+                                              <span key={idx} className="truncate">
+                                                • {s}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <span className="text-ink-subtle italic">بدون پاسخ متنی</span>
+                                        )}
+                                      </td>
+                                      <td className="px-4 py-3 text-center whitespace-nowrap">
+                                        <div className="flex items-center justify-center gap-2">
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setPreviewResponse(r);
+                                              setPreviewModalOpen(true);
+                                            }}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill-sm border border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-navy dark:text-slate-200 hover:border-teal hover:text-teal dark:hover:text-teal hover:bg-teal/5 transition-all cursor-pointer shadow-sm active:scale-95"
+                                            title="مشاهده متن کامل گزارش ارسالی"
+                                          >
+                                            <Eye size={13} className="text-teal shrink-0" />
+                                            <span>پیش‌نمایش</span>
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleManualDispatch(r)}
+                                            disabled={isSending || batchSending}
+                                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-pill-sm bg-teal hover:bg-teal-600 text-xs font-bold text-white transition-all cursor-pointer shadow-[2px_2px_0_#1F413D] active:translate-x-[1px] active:translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                                            title="ارسال مستقیم به چت تلگرام با تاریخ واقعی"
+                                          >
+                                            <Send
+                                              size={13}
+                                              className={isSending ? "animate-spin shrink-0" : "shrink-0"}
+                                            />
+                                            <span>{isSending ? "در حال ارسال..." : "ارسال به تلگرام"}</span>
+                                          </button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </StickerCard>
+                      </>
+                    );
+                  })()}
                 </div>
               ) : (
                 <EmptyState
