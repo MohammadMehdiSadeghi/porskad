@@ -146,10 +146,10 @@ export default function TelegramBot() {
       }
       const userFormIds = new Set(allForms.map((f) => f.id));
 
-      // انتخاب‌گر ربات: فرم‌های موجود (نه آرشیو + نه زباله‌دان)
+      // انتخاب‌گر ربات: منحصراً فرم‌های فعال (منتشر شده + بدون آرشیو + بدون حذف)
       setActiveForms(
         allForms.filter(
-          (f) => !f.archived && !f.deleted_at,
+          (f) => f.published && !f.archived && !f.deleted_at,
         ),
       );
 
@@ -929,14 +929,14 @@ export default function TelegramBot() {
                                     <optgroup key={who} label={who}>
                                       {list.map((f) => (
                                         <option key={f.id} value={f.id}>
-                                          {f.title} {!f.published ? "(پیش‌نویس)" : ""}
+                                          {f.title}
                                         </option>
                                       ))}
                                     </optgroup>
                                   ))
                               : activeForms.map((f) => (
                                   <option key={f.id} value={f.id}>
-                                    {f.title} {!f.published ? "(پیش‌نویس)" : ""}
+                                    {f.title}
                                   </option>
                                 ))}
                           </select>
@@ -1238,36 +1238,42 @@ export default function TelegramBot() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end pt-2 border-t border-ink/5 dark:border-slate-800">
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-bold text-navy dark:text-slate-200 mb-1">
-                    انتخاب فرم *
+                    انتخاب فرم (فقط فرم‌های فعال) *
                   </label>
-                  <select
-                    value={manualFormId}
-                    onChange={(e) => {
-                      const fId = e.target.value;
-                      setManualFormId(fId);
-                      loadManualFormResponses(fId);
-                    }}
-                    className={inputCls}
-                  >
-                    <option value="">یک فرم را انتخاب کنید...</option>
-                    {Object.entries(
-                      forms.reduce((g, f) => {
-                        const who = ownerNames[ownerOf(f)] || "سایر فرم‌ها";
-                        (g[who] = g[who] || []).push(f);
-                        return g;
-                      }, {}),
-                    )
-                      .sort((a, b) => a[0].localeCompare(b[0], "fa"))
-                      .map(([who, list]) => (
-                        <optgroup key={who} label={who}>
-                          {list.map((f) => (
-                            <option key={f.id} value={f.id}>
-                              {f.title} {!f.published ? "(پیش‌نویس)" : ""}
-                            </option>
-                          ))}
-                        </optgroup>
-                      ))}
-                  </select>
+                  {activeForms.length === 0 ? (
+                    <div className={inputCls + " opacity-60"}>
+                      فرم فعالی وجود ندارد
+                    </div>
+                  ) : (
+                    <select
+                      value={manualFormId}
+                      onChange={(e) => {
+                        const fId = e.target.value;
+                        setManualFormId(fId);
+                        loadManualFormResponses(fId);
+                      }}
+                      className={inputCls}
+                    >
+                      <option value="">یک فرم فعال را انتخاب کنید...</option>
+                      {Object.entries(
+                        activeForms.reduce((g, f) => {
+                          const who = ownerNames[ownerOf(f)] || "سایر فرم‌ها";
+                          (g[who] = g[who] || []).push(f);
+                          return g;
+                        }, {}),
+                      )
+                        .sort((a, b) => a[0].localeCompare(b[0], "fa"))
+                        .map(([who, list]) => (
+                          <optgroup key={who} label={who}>
+                            {list.map((f) => (
+                              <option key={f.id} value={f.id}>
+                                {f.title}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
+                    </select>
+                  )}
                 </div>
 
                 {manualFormId && (
