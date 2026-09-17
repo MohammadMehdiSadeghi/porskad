@@ -590,22 +590,36 @@ export default function FormsList() {
     let hardSuccess = false;
     const nowIso = new Date().toISOString();
 
-    // ۱. ابتدا فراخوانی API رسمی با فلگ permanent=true جهت ثبت اسنپ‌شات کامل در سطل زباله ۳۰ روزه سوپرادمین
+    // ۱. فراخوانی RPC امن دیتابیس جهت ثبت در سطل زباله سوپرادمین و حذف قطعی از دید کاربر
     try {
-      const apiRes = await fetch(`/api/v1/forms/${form.id}?permanent=true`, {
-        method: "DELETE",
-        headers: {
-          Authorization: session?.access_token ? `Bearer ${session.access_token}` : "",
-        },
+      const { data: rpcData, error: rpcErr } = await supabase.rpc("user_permanent_delete_form", {
+        p_form_id: form.id,
       });
-      if (apiRes.ok) {
+      if (!rpcErr && (rpcData?.ok || rpcData === true)) {
         hardSuccess = true;
       }
     } catch (e) {
-      console.warn("API permanent delete fallback:", e);
+      console.warn("RPC permanent delete fallback:", e);
     }
 
-    // ۲. فالبک در صورت عدم پاسخگویی اندپوینت: به جای delete فیزیکی، فرم را با فلگ user_purged علامت‌گذاری می‌کنیم
+    // ۲. فالبک از طریق وب‌سرویس سرور با فلگ permanent=true
+    if (!hardSuccess) {
+      try {
+        const apiRes = await fetch(`/api/v1/forms/${form.id}?permanent=true`, {
+          method: "DELETE",
+          headers: {
+            Authorization: session?.access_token ? `Bearer ${session.access_token}` : "",
+          },
+        });
+        if (apiRes.ok) {
+          hardSuccess = true;
+        }
+      } catch (e) {
+        console.warn("API permanent delete fallback:", e);
+      }
+    }
+
+    // ۳. فالبک مستقیم در کلاینت
     if (!hardSuccess) {
       const nextSettings = {
         ...(form.settings || {}),

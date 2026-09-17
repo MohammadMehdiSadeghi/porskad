@@ -314,10 +314,11 @@ export default function SuperAdmin() {
         supabase
           .from("trash")
           .select("*")
+          .in("entity_type", ["form", "user"])
           .is("restored_at", null)
           .order("deleted_at", { ascending: false })
           .limit(1000),
-        // Forms are soft-deleted; listed in trash bin (use select(*) safely)
+        // Only forms purged by user from their own trash are retained in SuperAdmin trash
         supabase
           .from("forms")
           .select("*")
@@ -331,18 +332,27 @@ export default function SuperAdmin() {
           .order("deactivated_at", { ascending: false, nullsFirst: false }),
       ]);
 
-      let formsList = formsRes?.data;
+      let rawForms = formsRes?.data;
       if (formsRes?.error) {
         console.warn("loadTrash formsRes warning:", formsRes.error);
         const retryForms = await supabase
           .from("forms")
-          .select("id,title,slug,created_by,manager_id,deleted_at")
+          .select("id,title,slug,created_by,manager_id,deleted_at,settings")
           .not("deleted_at", "is", null);
-        formsList = retryForms.data;
+        rawForms = retryForms.data;
       }
 
-      setTrashItems(trashRes?.data || []);
-      setTrashedForms(formsList || []);
+      // Filter: strictly only user-purged forms (forms removed from the user's trash bin)
+      const purgedForms = (rawForms || []).filter(
+        (f) => Boolean(f.user_purged_at || f.settings?.user_purged || f.settings?.user_deleted_permanent)
+      );
+
+      const validTrashItems = (trashRes?.data || []).filter(
+        (t) => t.entity_type === "form" || t.entity_type === "user"
+      );
+
+      setTrashItems(validTrashItems);
+      setTrashedForms(purgedForms);
       setTrashedUsers(usersRes?.data || []);
     } catch (err) {
       console.error("loadTrash:", err);
@@ -6222,35 +6232,23 @@ export default function SuperAdmin() {
             };
             const dayMs = 86400000;
 
-            // Unified list of trashed items
+            // Unified list of trashed items (STRICTLY only user-purged forms and deactivated users)
+            const validTrashItems = trashItems.filter((t) => t.entity_type === "form" || t.entity_type === "user");
+
+            // Filter trashedForms to strictly user-purged forms only
+            const purgedFormsOnly = trashedForms.filter(
+              (f) => Boolean(f.user_purged_at || f.settings?.user_purged || f.settings?.user_deleted_permanent)
+            );
+
             const all = [
-              ...trashItems.map((t) => {
-                const isUserPurged = Boolean(
-                  t.payload?.user_deleted_permanent ||
-                  t.payload?.user_purged ||
-                  t.payload?.settings?.user_purged
-                );
+              ...validTrashItems.map((t) => {
+                const isForm = t.entity_type === "form";
                 return {
                   key: "t-" + t.id,
                   rawId: t.id,
                   kind: t.entity_type,
-                  kindLabel:
-                    t.entity_type === "response"
-                      ? "Response"
-                      : t.entity_type === "form"
-                      ? isUserPurged
-                        ? "Form (User Purged)"
-                        : "Form"
-                      : t.entity_type === "question"
-                      ? "Question"
-                      : t.entity_type === "ticket"
-                      ? "Ticket"
-                      : t.entity_type === "tg_config"
-                      ? "Telegram Config"
-                      : t.entity_type === "tg_link"
-                      ? "Telegram Link"
-                      : t.entity_type,
-                  label: isUserPurged ? `[User Purged] ${t.label}` : t.label,
+                  kindLabel: isForm ? "Form (User Purged)" : "User Account",
+                  label: isForm ? `[User Purged] ${t.label}` : t.label,
                   at: t.deleted_at,
                   expires: t.expires_at,
                   ownerId: t.user_id,
@@ -6258,36 +6256,35 @@ export default function SuperAdmin() {
                   byName: t.deleted_by_name,
                   payload: t.payload,
                   isSoftDelete: false,
-                  isUserPurged,
+                  isUserPurged: isForm,
+                  nonRestorable: isForm, // User-purged forms cannot be restored
                 };
               }),
-              ...trashedForms
-                .filter((f) => !trashItems.some((t) => t.entity_type === "form" && (t.entity_id === f.id || t.id === f.id)))
+              ...purgedFormsOnly
+                .filter((f) => !validTrashItems.some((t) => t.entity_type === "form" && (t.entity_id === f.id || t.id === f.id)))
                 .map((f) => {
-                  const isUserPurged = Boolean(f.user_purged_at || f.settings?.user_purged);
                   return {
                     key: "f-" + f.id,
                     rawId: f.id,
                     kind: "form",
-                    kindLabel: isUserPurged ? "Form (User Purged)" : "Form",
-                    label: isUserPurged
-                      ? `[User Purged] Form: "${f.title || f.slug || "Untitled"}"`
-                      : `Form: "${f.title || f.slug || "Untitled"}"`,
-                    at: f.deleted_at,
-                    expires: new Date(new Date(f.deleted_at).getTime() + 30 * dayMs).toISOString(),
+                    kindLabel: "Form (User Purged)",
+                    label: `[User Purged] Form: "${f.title || f.slug || "Untitled"}"`,
+                    at: f.user_purged_at || f.deleted_at,
+                    expires: new Date(new Date(f.user_purged_at || f.deleted_at).getTime() + 30 * dayMs).toISOString(),
                     ownerId: f.created_by || f.manager_id || f.user_id || null,
                     byId: f.deleted_by || f.settings?.deleted_by || null,
                     byName: f.settings?.deleted_by_email || null,
                     payload: f,
                     isSoftDelete: true,
-                    isUserPurged,
+                    isUserPurged: true,
+                    nonRestorable: true, // User-purged forms cannot be restored
                   };
                 }),
               ...trashedUsers.map((u) => ({
                 key: "u-" + u.id,
                 rawId: u.id,
                 kind: "user",
-                kindLabel: "User",
+                kindLabel: "User Account",
                 label: `User Account: ${u.full_name || u.email || "Unnamed"}`,
                 at: u.deactivated_at || u.created_at,
                 expires: u.deactivated_at || u.created_at
@@ -6298,10 +6295,12 @@ export default function SuperAdmin() {
                 byName: null,
                 payload: u,
                 isSoftDelete: false,
+                isUserPurged: false,
+                nonRestorable: false,
               })),
             ].sort((a, b) => new Date(b.at) - new Date(a.at));
 
-            // Aggregate user statistics
+            // Aggregate user statistics (only forms and users)
             const userStatsMap = new Map();
 
             // First include deactivated/deleted users
@@ -6312,12 +6311,11 @@ export default function SuperAdmin() {
                 email: u.email,
                 isDeactivated: true,
                 formsCount: 0,
-                responsesCount: 0,
                 totalCount: 1,
               });
             });
 
-            // Calculate forms and responses per user
+            // Calculate forms per user
             all.forEach((item) => {
               if (item.kind === "user") return;
               const uid = item.ownerId;
@@ -6328,12 +6326,9 @@ export default function SuperAdmin() {
                 email: users.find((x) => x.id === uid)?.email || "",
                 isDeactivated: trashedUsers.some((x) => x.id === uid),
                 formsCount: 0,
-                responsesCount: 0,
                 totalCount: 0,
               };
               if (item.kind === "form") existing.formsCount++;
-              if (item.kind === "response") existing.responsesCount++;
-              if (item.kind === "question") existing.questionsCount = (existing.questionsCount || 0) + 1;
               existing.totalCount++;
               userStatsMap.set(uid, existing);
             });
@@ -6355,12 +6350,10 @@ export default function SuperAdmin() {
             // Filter items by selected user or all users
             const userScopedItems = trashUserFilter === "all" ? all : all.filter((i) => i.ownerId === trashUserFilter);
 
-            // Filter items by entity type (form, question, response, user)
+            // Filter items by entity type (all, form, user)
             const visibleItems = userScopedItems.filter((i) => {
               if (trashTypeFilter === "all") return true;
               if (trashTypeFilter === "form") return i.kind === "form";
-              if (trashTypeFilter === "question") return i.kind === "question";
-              if (trashTypeFilter === "response") return i.kind === "response";
               if (trashTypeFilter === "user") return i.kind === "user";
               return true;
             });
@@ -6504,9 +6497,7 @@ export default function SuperAdmin() {
                                 {u.email}
                               </span>
                               <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap" }}>
-                                {u.formsCount > 0 && <span>{u.formsCount} Forms</span>}
-                                {u.questionsCount > 0 && <span>{u.questionsCount} Questions</span>}
-                                {u.responsesCount > 0 && <span>{u.responsesCount} Responses</span>}
+                                {u.formsCount > 0 && <span>{u.formsCount} Purged Forms</span>}
                               </div>
                             </div>
                           </button>
@@ -6587,14 +6578,12 @@ export default function SuperAdmin() {
                         </div>
                       )}
 
-                      {/* Sub-tabs: All | Forms | Questions | Responses | Users */}
+                      {/* Sub-tabs: All | User-Purged Forms | Deleted Users */}
                       <div style={{ display: "flex", gap: "0.35rem", marginTop: "0.85rem", flexWrap: "wrap" }}>
                         {[
                           { id: "all", label: `All Items (${userScopedItems.length})` },
-                          { id: "form", label: `Forms (${userScopedItems.filter((x) => x.kind === "form").length})` },
-                          { id: "question", label: `Questions (${userScopedItems.filter((x) => x.kind === "question").length})` },
-                          { id: "response", label: `Responses (${userScopedItems.filter((x) => x.kind === "response").length})` },
-                          { id: "user", label: `Users (${userScopedItems.filter((x) => x.kind === "user").length})` },
+                          { id: "form", label: `Purged Forms (${userScopedItems.filter((x) => x.kind === "form").length})` },
+                          { id: "user", label: `Deleted Users (${userScopedItems.filter((x) => x.kind === "user").length})` },
                         ].map((st) => (
                           <button
                             key={st.id}
@@ -6652,16 +6641,21 @@ export default function SuperAdmin() {
 
                       {/* Batch Buttons */}
                       {selectedItems.length > 0 ? (
-                        <div style={{ display: "flex", gap: "0.5rem" }}>
-                          <button
-                            type="button"
-                            className="sa-btn sa-btn-primary sa-btn-sm"
-                            onClick={() => batchRestore(selectedItems)}
-                            disabled={trashActionBusy}
-                            style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
-                          >
-                            ↩️ Restore Selected ({selectedItems.length})
-                          </button>
+                        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+                          {selectedItems.some((i) => !i.nonRestorable) && (
+                            <button
+                              type="button"
+                              className="sa-btn sa-btn-primary sa-btn-sm"
+                              onClick={() => {
+                                const restorable = selectedItems.filter((i) => !i.nonRestorable);
+                                batchRestore(restorable);
+                              }}
+                              disabled={trashActionBusy}
+                              style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
+                            >
+                              ↩️ Restore User Accounts ({selectedItems.filter((i) => !i.nonRestorable).length})
+                            </button>
+                          )}
                           <button
                             type="button"
                             className="sa-btn sa-btn-sm"
@@ -6678,7 +6672,7 @@ export default function SuperAdmin() {
                             disabled={trashActionBusy}
                           >
                             <Trash2 size={13} />
-                            Delete Selected Permanently ({selectedItems.length})
+                            Delete Permanently ({selectedItems.length})
                           </button>
                           <button
                             type="button"
@@ -6744,14 +6738,11 @@ export default function SuperAdmin() {
                             {/* Entity Type Badge */}
                             <span
                               className={`sa-badge ${
-                                i.kind === "form" ? "sa-tag-teal" : i.kind === "question" ? "sa-tag-yellow" : i.kind === "response" ? "sa-tag-blue" : "sa-tag-purple"
+                                i.kind === "form" ? "sa-tag-teal" : "sa-tag-purple"
                               }`}
                               style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
                             >
-                              {i.kind === "form" && <FileText size={12} />}
-                              {i.kind === "question" && <HelpCircle size={12} />}
-                              {i.kind === "response" && <MessageSquare size={12} />}
-                              {i.kind === "user" && <UserIcon size={12} />}
+                              {i.kind === "form" ? <FileText size={12} /> : <UserIcon size={12} />}
                               {i.kindLabel}
                             </span>
 
@@ -6792,25 +6783,34 @@ export default function SuperAdmin() {
                                   type="button"
                                   className="sa-btn sa-btn-ghost sa-btn-sm"
                                   onClick={() => setTrashPayloadModal(i)}
-                                  title="Inspect stored payload before restore or delete"
+                                  title="Inspect stored payload before purge or delete"
                                 >
                                   <Eye size={13} />
                                 </button>
                               )}
 
-                              {/* Restore */}
-                              <button
-                                type="button"
-                                className="sa-btn sa-btn-primary sa-btn-sm"
-                                onClick={() => {
-                                  if (i.kind === "form" && i.isSoftDelete) restoreForm(i.rawId);
-                                  else if (i.kind === "user") restoreUser(i.rawId);
-                                  else restoreTrashItem(i);
-                                }}
-                                disabled={trashActionBusy}
-                              >
-                                ↩️ Restore
-                              </button>
+                              {/* Restore or Non-restorable Badge */}
+                              {i.nonRestorable ? (
+                                <span
+                                  className="sa-tag sa-tag-purple"
+                                  style={{ fontSize: "0.74rem", padding: "0.25rem 0.55rem", opacity: 0.85 }}
+                                  title="این فرم توسط کاربر از سطل زباله پاک شده و غیرقابل بازگردانی است"
+                                >
+                                  🚫 Non-restorable
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="sa-btn sa-btn-primary sa-btn-sm"
+                                  onClick={() => {
+                                    if (i.kind === "user") restoreUser(i.rawId);
+                                    else restoreTrashItem(i);
+                                  }}
+                                  disabled={trashActionBusy}
+                                >
+                                  ↩️ Restore Account
+                                </button>
+                              )}
 
                               {/* Permanent Delete */}
                               <button
@@ -6846,7 +6846,7 @@ export default function SuperAdmin() {
                         </div>
                       </div>
 
-                      {/* Display response answers */}
+                      {/* Display response answers if any */}
                       {trashPayloadModal.kind === "response" && trashPayloadModal.payload?.answers && (
                         <div>
                           <div style={{ fontWeight: 700, fontSize: "0.85rem", marginBottom: "0.4rem" }}>
@@ -6901,18 +6901,19 @@ export default function SuperAdmin() {
                       </div>
 
                       <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.5rem" }}>
-                        <button
-                          type="button"
-                          className="sa-btn sa-btn-primary"
-                          onClick={() => {
-                            if (trashPayloadModal.kind === "form" && trashPayloadModal.isSoftDelete) restoreForm(trashPayloadModal.rawId);
-                            else if (trashPayloadModal.kind === "user") restoreUser(trashPayloadModal.rawId);
-                            else restoreTrashItem(trashPayloadModal);
-                            setTrashPayloadModal(null);
-                          }}
-                        >
-                          ↩️ Restore This Item
-                        </button>
+                        {!trashPayloadModal.nonRestorable && (
+                          <button
+                            type="button"
+                            className="sa-btn sa-btn-primary"
+                            onClick={() => {
+                              if (trashPayloadModal.kind === "user") restoreUser(trashPayloadModal.rawId);
+                              else restoreTrashItem(trashPayloadModal);
+                              setTrashPayloadModal(null);
+                            }}
+                          >
+                            ↩️ Restore Account
+                          </button>
+                        )}
                         <button type="button" className="sa-btn sa-btn-secondary" onClick={() => setTrashPayloadModal(null)}>
                           Close
                         </button>

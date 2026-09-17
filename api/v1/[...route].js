@@ -1669,11 +1669,14 @@ export default async function handler(req, res) {
       // شناسه فرم: segments[1] (می‌تواند UUID، public_id یا slug باشد)
       const formIdentifier = segments[1];
 
-      async function findForm() {
+      async function findForm(allowDeleted = false) {
         if (!formIdentifier || typeof formIdentifier !== "string" || !/^[a-zA-Z0-9_-]{1,100}$/.test(formIdentifier)) {
           return null;
         }
-        let q = clients.adminClient.from("forms").select("*").is("deleted_at", null);
+        let q = clients.adminClient.from("forms").select("*");
+        if (!allowDeleted) {
+          q = q.is("deleted_at", null);
+        }
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(formIdentifier);
         if (isUuid) {
           q = q.or(`id.eq.${formIdentifier},public_id.eq.${formIdentifier},slug.eq.${formIdentifier}`);
@@ -2370,7 +2373,8 @@ export default async function handler(req, res) {
 
       // 3.6 دریافت، ویرایش یا حذف تکی فرم: /api/v1/forms/:id
       if (segments.length === 2) {
-        const form = await findForm();
+        const allowDeleted = req.method === "DELETE" || req.method === "PUT";
+        const form = await findForm(allowDeleted);
         if (!form) return res.status(404).json({ error: "فرم یافت نشد." });
 
         if (req.method === "GET") {
