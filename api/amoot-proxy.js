@@ -1111,7 +1111,11 @@ export default async function handler(req, res) {
                 scheduled_sms_id: item.id,
               }));
 
-              await adminClient.from("sms_outbox").insert(outboxRows).catch(() => {});
+              try {
+                await adminClient.from("sms_outbox").insert(outboxRows);
+              } catch (outboxErr) {
+                console.warn("Outbox insert note:", outboxErr);
+              }
 
               totalSuccess += batchMobiles.length;
             } else {
@@ -1138,7 +1142,11 @@ export default async function handler(req, res) {
                 scheduled_sms_id: item.id,
               }));
 
-              await adminClient.from("sms_outbox").insert(outboxRows).catch(() => {});
+              try {
+                await adminClient.from("sms_outbox").insert(outboxRows);
+              } catch (outboxErr) {
+                console.warn("Outbox insert note:", outboxErr);
+              }
 
               totalFailed += batchMobiles.length;
             }
