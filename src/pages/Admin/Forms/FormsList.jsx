@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabaseClient";
 import StickerCard from "../../../components/ui/StickerCard";
 import Button from "../../../components/ui/Button";
@@ -123,6 +123,7 @@ export default function FormsList() {
   const { push } = useToast();
   const { hasPermission, canManage, user, profile, isOwner, session } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [forms, setForms] = useState([]);
   const [counts, setCounts] = useState({});
@@ -136,6 +137,24 @@ export default function FormsList() {
   const [showQuotaModal, setShowQuotaModal] = useState(false);
   const [publishPromptForm, setPublishPromptForm] = useState(null);
   const [actionModalForm, setActionModalForm] = useState(null);
+
+  // ─── باز شدن مستقیم مودال ساخت فرم با کلیک از هدر یا آدرس /admin/forms?create=1 ───
+  useEffect(() => {
+    if (searchParams.get("create") === "1" || searchParams.get("create") === "true") {
+      setShowTypeModal(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete("create");
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
+  useEffect(() => {
+    function handleOpenCreateModal() {
+      setShowTypeModal(true);
+    }
+    window.addEventListener("porskad:open-create-form", handleOpenCreateModal);
+    return () => window.removeEventListener("porskad:open-create-form", handleOpenCreateModal);
+  }, []);
 
   // ─── Undo state ───
   const [undoToast, setUndoToast] = useState(null);
@@ -298,7 +317,10 @@ export default function FormsList() {
     setShowTypeModal(false);
     push(isRegistration ? "فرم ثبت‌نامی ساخته شد!" : "فرم جدید ساخته شد!");
     push("فرم فعلاً پیش‌نویس است — بعد از انتشار، لینک آن قابل کپی و بازدید می‌شود.", "warning", 5500);
-    navigate(`/admin/forms/${createdFormData.id}`);
+    // پس از ساخت فرم، کاربر به تب فرم‌ها هدایت شده و لیست فرم‌ها به‌روزرسانی می‌شود
+    setFilter("all");
+    await load();
+    navigate("/admin/forms", { replace: true });
   }
 
   async function togglePublish(form) {

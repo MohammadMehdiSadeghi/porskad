@@ -406,11 +406,19 @@ export default function AdminLayout() {
           {/* سمت چپ: دکمه ثبت سریع فرم، انتخابگر تم، زنگوله اعلان و پروفایل */}
           <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
             <button
-              onClick={() => navigate("/admin/forms")}
-              className="rokad-btn-primary px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold"
+              type="button"
+              onClick={() => {
+                if (location.pathname === "/admin/forms") {
+                  window.dispatchEvent(new CustomEvent("porskad:open-create-form"));
+                } else {
+                  navigate("/admin/forms?create=1");
+                }
+              }}
+              className="rokad-btn-primary px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold flex items-center gap-1.5 cursor-pointer"
+              title="افزودن فرم جدید"
             >
               <Plus size={15} />
-              <span className="hidden sm:inline">فرم جدید</span>
+              <span className="hidden sm:inline">افزودن فرم</span>
             </button>
 
             <ThemeToggle />
