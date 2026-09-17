@@ -74,59 +74,41 @@
  <div class="diagram-canvas">
  <pre class="mermaid">
 sequenceDiagram
- autonumber
- actor User as پاسخ‌دهنده (Respondent)
- participant Client as موتور فرم‌ساز (React Client)
- participant Storage as کش مرورگر (LocalStorage)
- participant Edge as لبه CDN (Vercel)
- participant SupaAPI as API سوپابیس (PostgREST)
- participant Postgres as هسته دیتابیس (PostgreSQL)
- participant Realtime as سرور ریل‌تایم (Phoenix WS)
- actor Admin as داشبورد ادمین (Admin Portal)
+  autonumber
+  actor User as پاسخ‌دهنده (Respondent)
+  actor Admin as مدیر فرم (Admin)
+  participant Client as فرانت‌اند پرس‌کاد (React SPA)
+  participant Vercel as لایه سرورلس (Vercel API)
+  participant DB as پایگاه داده (PostgreSQL)
+  participant Realtime as وب‌سوکت ریل‌تایم (Supabase Realtime)
+  participant Amoot as درگاه پیامک آموت (Amoot SMS)
+  participant TG as ربات تلگرام (Telegram Bot)
 
- %% Session Start
- User->>Client: ورود به لینک /f/:slug
- Client->>Storage: بررسی وجود پیش‌نویس موضعی (Check Draft)
- Storage-->>Client: بازیابی پاسخ‌های ذخیره‌شده (یا شیء خالی)
- Client->>Edge: GET /forms?slug=eq.:slug&published=eq.true
- Edge->>SupaAPI: بررسی دسترسی RLS عمومی (anon)
- SupaAPI->>Postgres: SELECT * FROM forms WHERE slug = :slug
- Postgres-->>SupaAPI: متادیتای فرم + لیست سوالات و رول‌ها
- SupaAPI-->>Edge: پاسخ JSON فرم
- Edge-->>Client: تحویل فرم با سوالات به کلاینت
+  Note over User,Client: سناریو ۱: تکمیل و ثبت پاسخ فرم
+  User->>Client: تکمیل اسلایدی ۲۰ نوع سوال و کلیک دکمه ارسال
+  Client->>DB: فراخوانی تابع RPC (submit_public_response)
+  DB->>DB: ثبت اتمیک رکورد در جدول responses و answers
+  DB->>Realtime: انتشار رویداد INSERT به کانال وب‌سوکت
+  Realtime-->>Admin: به‌روزرسانی زنده شمارنده داشبورد و جدول پاسخ‌ها
+  DB-->>Client: بازگشت شناسه پاسخ و نمایش پیام تبریک/تغییر مسیر
+  Client->>Vercel: ارسال درخواست به /api/v1/telegram/send
+  Vercel->>TG: ارسال ساختار فرمت‌شده پاسخ به چت‌آیدی مدیر
+  TG-->>Vercel: تایید ارسال (200 OK)
+  Vercel->>DB: درج لاگ در جدول telegram_send_log
 
- %% Question Answering
- User->>Client: وارد کردن پاسخ سوال و زدن دکمه تایید / Enter
- Client->>Client: ولیدیشن محلی (Regex موبایل / اجباری بودن)
- Client->>Storage: ذخیره آنی جواب در LocalStorage (Auto-Save)
- Client->>Client: ارزیابی Logic Rules (آیا شرط پرش برقرار است؟)
-
- %% Submission
- User->>Client: تکمیل آخرین سوال و ارسال نهایی فرم
- Client->>Client: بررسی فیلد تله ربات (Honeypot Check == "")
- Client->>SupaAPI: POST /rpc/submit_public_response(payload)
- 
- activate Postgres
- SupaAPI->>Postgres: اجرای تابع SECURITY DEFINER
- Postgres->>Postgres: بررسی باز بودن فرم و عدم انقضا
- Postgres->>Postgres: INSERT INTO responses (form_id, device, duration...)
- Postgres->>Postgres: INSERT INTO answers (response_id, question_id, value...)
- Postgres->>Postgres: افزایش شمارنده پاسخ‌های ماهانه در profiles
- Postgres->>Postgres: صدور رویداد PostgreSQL WAL CDC
- Postgres-->>SupaAPI: وضعیت موفقیت { success: true, response_id: ... }
- deactivate Postgres
-
- SupaAPI-->>Client: تاییدیه ثبت پاسخ (200 OK)
- Client->>Storage: پاک کردن پیش‌نویس فرم (Draft Cleared)
- Client->>User: پخش انیمیشن کانفتی و نمایش صفحه تشکر (Exit Screen)
-
- %% Realtime Push
- Postgres-)Realtime: رویداد تغییرات جدول (New Row in responses)
- activate Realtime
- Realtime-)Admin: ارسال پیام وب‌سوکت (Push New Response Alert)
- deactivate Realtime
- Admin->>Admin: نمایش اعلان توست زنده + افزایش شمارنده ثبت‌ها در داشبورد
- </pre>
+  Note over Admin,Amoot: سناریو ۲: زمانبندی و ارسال خودکار پیامک
+  Admin->>Client: انتخاب تاریخ شمسی و ساعت در JalaliDateTimePicker
+  Client->>Vercel: ارسال درخواست به /api/amoot-proxy با اکشن schedule_sms
+  Vercel->>Vercel: نرمال‌سازی شماره‌های موبایل و حذف موارد نامعتبر و تکراری
+  Vercel->>DB: درج در جدول scheduled_sms و scheduled_sms_recipients و sms_outbox
+  DB-->>Client: تایید زمانبندی و بازگشت شناسه
+  loop بررسی دوره‌ای در هر دقیقه (Vercel Cron)
+    Vercel->>DB: استعلام رکوردهای status='pending' که زمانشان فرارسیده
+    Vercel->>Amoot: ارسال دسته‌ای پیامک‌ها از طریق SendSimple
+    Amoot-->>Vercel: بازگشت CampaignID و وضعیت موفق
+    Vercel->>DB: به‌روزرسانی وضعیت scheduled_sms و sms_outbox به sent
+  end
+</pre>
  </div>
  </div>
  </div>

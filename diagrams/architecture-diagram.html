@@ -77,68 +77,76 @@
  <div class="diagram-canvas">
  <pre class="mermaid">
 graph TB
- %% Styling and Subgraphs
- classDef client fill:#131B2E,stroke:#2DD4BF,stroke-width:2px,color:#F8FAFC;
- classDef edge fill:#1A2338,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
- classDef baas fill:#162035,stroke:#A855F7,stroke-width:2px,color:#F8FAFC;
- classDef db fill:#0F172A,stroke:#10B981,stroke-width:2px,color:#F8FAFC;
- classDef ext fill:#1E1B4B,stroke:#F59E0B,stroke-width:2px,color:#F8FAFC;
+  %% Class styles
+  classDef default font-family:IRANSansX;
 
- subgraph CL[" لایه فرانت‌اند و ارائه‌ی کلاینت (Client Presentation Layer)"]
- SPA[" React 18 SPA<br/>Vite + Tailwind CSS<br/>(پنل مدیریت و داشبورد سازمانی)"]:::client
- Runner[" Responsive Form Runner<br/>(موتور پاسخ‌دهی اسلایدی /f/:slug)"]:::client
- Embed[" Embed Widget Iframe<br/>(ویجت تزریقی در وب‌سایت‌های ثالث)"]:::client
- LocalCache[" LocalStorage Engine<br/>(ذخیره آفلاین پیش‌نویس ۷ روزه)"]:::client
- end
+  subgraph CL[" لایه فرانت‌اند و ارائه کلاینت (Client Presentation Layer)"]
+    direction TB
+    SPA["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>React 18 SPA</span><span class='d-card-badge d-badge-teal'>Core App</span></div><div class='d-card-sub'>Vite 5 + Tailwind CSS • پنل مدیریت، فرم‌ساز تعاملی، داشبورد و پنل پیامک</div><div class='d-card-tags'><span class='d-tag'>SPA</span><span class='d-tag'>IRANSansX</span></div></div>"]
+    Runner["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Form Runner Engine</span><span class='d-card-badge d-badge-blue'>Engine</span></div><div class='d-card-sub'>موتور پاسخ‌دهی اسلایدی تمام صفحه /f/:slug با ۲۰ نوع سوال و منطق پرش</div><div class='d-card-tags'><span class='d-tag'>RTL</span><span class='d-tag'>20 Q-Types</span></div></div>"]
+    Embed["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Embed SDK & Iframe</span><span class='d-card-badge d-badge-purple'>Widget</span></div><div class='d-card-sub'>اسکریپت تزریقی خودتنظیم و کدهای تعبیه درون‌سایتی (Iframe, SDK, React)</div><div class='d-card-tags'><span class='d-tag'>iframe-resizer</span></div></div>"]
+    LocalCache["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Offline Cache Storage</span><span class='d-card-badge d-badge-amber'>Cache</span></div><div class='d-card-sub'>ذخیره‌سازی هوشمند پیش‌نویس پاسخ‌ها با ماندگاری ۷ روزه در کلاینت</div><div class='d-card-tags'><span class='d-tag'>LocalStorage</span></div></div>"]
+  end
 
- subgraph ED[" شبکه لبه و مسیریابی (Edge & CDN Delivery Layer)"]
- VercelCDN[" Vercel Anycast Edge CDN<br/>(TLS 1.3 Termination, Caching & SPA Fallback)"]:::edge
- EdgeRewrites[" URL Rewriter & Headers<br/>(امبد CORS، هدرهای امنیتی X-Frame-Options)"]:::edge
- end
+  subgraph ED[" شبکه لبه، توزیع و سرورلس (Edge, CDN & Serverless Routes)"]
+    direction TB
+    VercelCDN["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Vercel Anycast Edge</span><span class='d-card-badge d-badge-blue'>Global CDN</span></div><div class='d-card-sub'>ترمینیشن امن SSL/TLS، کش هوشمند فایل‌های استاتیک و روتینگ SPA</div></div>"]
+    ServerlessAPI["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Serverless API Routes</span><span class='d-card-badge d-badge-teal'>/api/v1</span></div><div class='d-card-sub'>هندلرهای نود: Amoot Proxy، تلگرام، مدیریت سطل زباله و OpenAPI Docs</div><div class='d-card-tags'><span class='d-tag'>Node.js</span><span class='d-tag'>OpenAPI 3.0</span></div></div>"]
+    CronDispatcher["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Cron Dispatcher</span><span class='d-card-badge d-badge-rose'>Background Job</span></div><div class='d-card-sub'>پردازشگر خودکار پیامک‌های زماندار /api/cron/process-scheduled-sms</div><div class='d-card-tags'><span class='d-tag'>Vercel Cron</span><span class='d-tag'>1-Min Loop</span></div></div>"]
+  end
 
- subgraph BA[" پلتفرم ابری بک‌اند (Supabase BaaS Layer)"]
- GoTrue[" Supabase GoTrue Auth<br/>(احراز هویت ایمیل/رمز و OTP پیامکی)"]:::baas
- PostgREST[" PostgREST Auto API<br/>(تبدیل مستقیم کوئری به JSON بهینه)"]:::baas
- RealtimeWS[" Elixir Phoenix Realtime<br/>(کانال‌های WebSockets برای اعلام آنی پاسخ‌ها)"]:::baas
- StorageEng[" Supabase Storage S3<br/>(فایل‌ها، لوگوها و کاور فرم‌ها)"]:::baas
- end
+  subgraph BA[" لایه پلتفرم ابری بک‌اند (Supabase BaaS Layer)"]
+    direction TB
+    GoTrue["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Supabase GoTrue Auth</span><span class='d-card-badge d-badge-purple'>Auth</span></div><div class='d-card-sub'>احراز هویت توکنی JWT، ورود پیامکی OTP و اعتبارسنجی نقش‌ها</div></div>"]
+    PostgREST["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>PostgREST Gateway</span><span class='d-card-badge d-badge-teal'>REST API</span></div><div class='d-card-sub'>تبدیل بلادرنگ متدهای HTTP به کوئری‌های بهینه PostgreSQL</div></div>"]
+    RealtimeWS["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Phoenix Realtime WS</span><span class='d-card-badge d-badge-emerald'>WebSockets</span></div><div class='d-card-sub'>برادکست زنده پاسخ‌ها و هشدارهای جدید به کلاینت بدون رفرش</div></div>"]
+    StorageEng["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Supabase Storage</span><span class='d-card-badge d-badge-amber'>S3 Bucket</span></div><div class='d-card-sub'>ذخیره‌سازی و بهینه‌سازی تصاویر پس‌زمینه، آیکون‌ها و فایل‌های پیوست</div></div>"]
+  end
 
- subgraph DB[" لایه داده و منطق تراکنشی (PostgreSQL Enterprise Core)"]
- Tables[" Core Relations<br/>(forms, questions, responses, answers, profiles)"]:::db
- RLSPolicies[" Row Level Security (RLS)<br/>(جداسازی مطلق تیکت‌ها، نقش‌ها و فرم‌ها)"]:::db
- RPCFuncs[" Stored Procedures (PL/pgSQL)<br/>(save_form, submit_public_response, god_trash)"]:::db
- Triggers[" DB Triggers & CDC<br/>(set_updated_at, handle_new_user, audit_logs)"]:::db
- end
+  subgraph DB[" پایگاه داده و منطق تراکنشی (PostgreSQL Enterprise Core)"]
+    direction TB
+    Tables["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Core Relations</span><span class='d-card-badge d-badge-emerald'>PostgreSQL 15</span></div><div class='d-card-sub'>forms, questions, responses, answers, scheduled_sms, outbox, profiles, trash</div></div>"]
+    RLSPolicies["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Row Level Security</span><span class='d-card-badge d-badge-emerald'>RLS</span></div><div class='d-card-sub'>تفکیک داده‌های کاربران و ایزولاسیون کامل فرم‌ها در سطح دیتابیس</div></div>"]
+    RPCFuncs["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>PL/pgSQL Procedures</span><span class='d-card-badge d-badge-emerald'>RPC</span></div><div class='d-card-sub'>توابع اتمیک: submit_public_response, god_trash, log_telegram</div></div>"]
+    Triggers["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Triggers & CDC</span><span class='d-card-badge d-badge-emerald'>Triggers</span></div><div class='d-card-sub'>تریگرهای بازرسی، سهمیه‌بندی پاسخ‌ها و اطلاع‌رسانی خودکار به وب‌سوکت</div></div>"]
+  end
 
- subgraph EXT[" سرویس‌ها و زیرساخت‌های اکسترنال (External Integrations)"]
- SMS[" Kavenegar / PayamSMS<br/>(ارسال پیامک خوش‌آمد، کد تایید و لاگین)"]:::ext
- Telegram[" Telegram Bot API<br/>(ارسال اعلان لحظه‌ای ثبت پاسخ به مدیر)"]:::ext
- Bank[" Payment Gateway (Zarinpal)<br/>(خرید اشتراک، پلن‌ها و کد تخفیف)"]:::ext
- end
+  subgraph EXT[" سرویس‌ها و یکپارچه‌سازی‌های اکسترنال (External Integrations)"]
+    direction TB
+    AmootSMS["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Amoot SMS Gateway</span><span class='d-card-badge d-badge-amber'>SMS Service</span></div><div class='d-card-sub'>ارسال آنی، الگوهای خدماتی OTP و دیسپچ پیامک‌های زماندار با خطوط اختصاصی</div></div>"]
+    Telegram["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Telegram Bot API</span><span class='d-card-badge d-badge-blue'>Telegram</span></div><div class='d-card-sub'>ارسال پیام با فرمت پیشرفته به ربات‌ها و کانال‌های مدیریتی</div></div>"]
+    Zarinpal["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Zarinpal Gateway</span><span class='d-card-badge d-badge-purple'>Payment</span></div><div class='d-card-sub'>درگاه پرداخت آنلاین شاپرک، اعتبارسنجی تراکنش‌ها و ارتقای پلن</div></div>"]
+  end
 
- %% Flow Connections
- SPA -->|HTTPS / REST API| VercelCDN
- Runner -->|HTTPS / REST API| VercelCDN
- Embed -->|Iframe Loader| VercelCDN
- Runner <-->|Sync State| LocalCache
+  %% Flow Connections
+  SPA -->|HTTPS / REST API| VercelCDN
+  Runner -->|HTTPS / REST API| VercelCDN
+  Embed -->|Iframe Loader| VercelCDN
+  Runner <-->|Sync Draft State| LocalCache
 
- VercelCDN --> EdgeRewrites
- EdgeRewrites -->|JWT Auth Requests| GoTrue
- EdgeRewrites -->|CRUD Operations / RPC| PostgREST
- EdgeRewrites -->|WSS Event Stream| RealtimeWS
+  VercelCDN --> ServerlessAPI
+  VercelCDN --> GoTrue
+  VercelCDN --> PostgREST
+  VercelCDN --> RealtimeWS
+  CronDispatcher -->|Batch Send SMS| AmootSMS
+  CronDispatcher -->|Update Status| Tables
 
- GoTrue -->|Session Verification| Tables
- PostgREST -->|Authorized Access via Policies| RLSPolicies
- RLSPolicies -->|Guarded Data Access| Tables
- PostgREST -->|Complex Transactions| RPCFuncs
- RPCFuncs --> Tables
- Tables -->|WAL Change Events| Triggers
- Triggers -->|Notify WebSocket Channel| RealtimeWS
+  ServerlessAPI -->|Proxy SMS API| AmootSMS
+  ServerlessAPI -->|Direct Alert Dispatch| Telegram
+  ServerlessAPI -->|Admin / God Operations| Tables
 
- GoTrue -.->|ارسال OTP و الگو| SMS
- RPCFuncs -.->|نوتیفیکیشن وب‌هوک| Telegram
- SPA -.->|تراکنش‌های مالی ارتقا پلن| Bank
- </pre>
+  GoTrue -->|Session Verification| Tables
+  PostgREST -->|Guarded Access via Policies| RLSPolicies
+  RLSPolicies -->|Guarded Data Access| Tables
+  PostgREST -->|Complex Transactions| RPCFuncs
+  RPCFuncs --> Tables
+  Tables -->|WAL Events & CDC| Triggers
+  Triggers -->|Broadcast Event| RealtimeWS
+
+  GoTrue -.->|ارسال OTP پیامکی| AmootSMS
+  RPCFuncs -.->|نوتیفیکیشن لحظه‌ای| Telegram
+  SPA -.->|تراکنش مالی و شارژ| Zarinpal
+</pre>
  </div>
  </div>
  </div>

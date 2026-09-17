@@ -73,73 +73,42 @@
  </div>
  <div class="diagram-canvas">
  <pre class="mermaid">
-graph TD
- classDef rootComp fill:#0F172A,stroke:#2DD4BF,stroke-width:3px,color:#F8FAFC;
- classDef ctxComp fill:#1E1B4B,stroke:#A855F7,stroke-width:2px,color:#F8FAFC;
- classDef pageComp fill:#131B2E,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
- classDef subComp fill:#1A2338,stroke:#10B981,stroke-width:2px,color:#F8FAFC;
- classDef atomComp fill:#1E293B,stroke:#94A3B8,stroke-width:1px,color:#F8FAFC;
+graph TB
+  subgraph UI_ADMIN[" ۱. کامپوننت‌های پنل مدیریت (Admin UI Layer)"]
+    Dashboard["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Dashboard</span><span class='d-card-badge d-badge-teal'>Page</span></div><div class='d-card-sub'>کارت‌های آماری، جدول زنده آخرین پاسخ‌ها و میانگین زمان</div></div>"]
+    FormsList["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>FormsList</span><span class='d-card-badge d-badge-teal'>Page</span></div><div class='d-card-sub'>مدیریت فرم‌ها، تغییر وضعیت انتشار، کپی لینک و حذف امن</div></div>"]
+    FormBuilder["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>FormBuilder</span><span class='d-card-badge d-badge-blue'>Core Tool</span></div><div class='d-card-sub'>سازنده تعاملی، تعریف شروط پرش، ویرایش گزینه‌ها و پیش‌نمایش</div></div>"]
+    SmsPanel["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>SmsPanel</span><span class='d-card-badge d-badge-amber'>SMS System</span></div><div class='d-card-sub'>ارسال آنی، پیام‌های زماندار، تقویم جلالی، سوابق و تنظیمات درگاه</div></div>"]
+    ResponsesComp["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Responses</span><span class='d-card-badge d-badge-purple'>Analytics</span></div><div class='d-card-sub'>جدول فیلتردار، نمودارهای آماری، لاگ تلگرام و خروجی اکسل</div></div>"]
+    WebServiceDocsComp["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>WebServiceDocs</span><span class='d-card-badge d-badge-blue'>Docs</span></div><div class='d-card-sub'>کنسول Swagger، راهنمای OpenAPI 3.0 و نمونه کدهای ۴ زبان</div></div>"]
+  end
 
- APP[" App.jsx (Root Router)"]:::rootComp
+  subgraph UI_SHARED[" ۲. کامپوننت‌های پایه و سیستم طراحی رُکاد (Rokad UI Components)"]
+    StatCard["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>StatCard</span><span class='d-card-badge d-badge-teal'>UI</span></div><div class='d-card-sub'>کارت آماری نئوبروتالیست با تم‌های ۴ گانه و اعداد فارسی</div></div>"]
+    StickerCard["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>StickerCard</span><span class='d-card-badge d-badge-teal'>UI</span></div><div class='d-card-sub'>کانتینر اصلی با سایه سخت ۲.۷۵ پیکسل برند رُکاد</div></div>"]
+    JalaliPicker["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>JalaliDateTimePicker</span><span class='d-card-badge d-badge-amber'>Date/Time</span></div><div class='d-card-sub'>انتخابگر تاریخ و ساعت شمسی با دکمه‌های استاندارد ۴ پیکسلی</div></div>"]
+    ButtonComp["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Button</span><span class='d-card-badge d-badge-teal'>UI</span></div><div class='d-card-sub'>دکمه‌های ۴ گانه اکوسیستم، سرمه‌ای، دختر و کالج</div></div>"]
+    ToastComp["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Toast & Modal</span><span class='d-card-badge d-badge-blue'>Feedback</span></div><div class='d-card-sub'>پیام‌های وضعیت ریل‌تایم و پنجره‌های تایید عملیات</div></div>"]
+  end
 
- %% Context Providers
- APP --> AUTH_P[" AuthProvider"]:::ctxComp
- APP --> THEME_P[" ThemeProvider"]:::ctxComp
+  subgraph RUNNER_COMP[" ۳. کامپوننت‌های پاسخ‌دهی و امبد (Form Runner & Embed)"]
+    QuestionStep["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>QuestionStep</span><span class='d-card-badge d-badge-blue'>Runner</span></div><div class='d-card-sub'>رندرکننده ۲۰ نوع سوال تخصصی با کنترل کیبورد و لمسی</div></div>"]
+    LogicEngine["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>LogicEngine</span><span class='d-card-badge d-badge-purple'>Rules</span></div><div class='d-card-sub'>موتور ارزیابی شروط پرش و نمایش سوالات بعدی</div></div>"]
+    EmbedView["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>EmbedView</span><span class='d-card-badge d-badge-purple'>Embed</span></div><div class='d-card-sub'>نمایشگر واکنش‌گرا و سبک بدون هدر برای سایت‌های خارجی</div></div>"]
+  end
 
- %% Major Views
- AUTH_P --> PUBLIC_R[" Public Router"]:::pageComp
- AUTH_P --> ADMIN_R[" Protected Admin Router"]:::pageComp
-
- %% Public Pages
- PUBLIC_R --> LANDING[" LandingPage.jsx"]:::pageComp
- PUBLIC_R --> FORM_PAGE[" PublicFormPage.jsx (/f/:slug)"]:::pageComp
- PUBLIC_R --> EMBED_PAGE[" EmbedFormPage.jsx (/embed/:slug)"]:::pageComp
-
- %% Form Engine Sub-components
- FORM_PAGE --> SLIDE_ENGINE[" FormRunner.jsx (Slide Engine)"]:::subComp
- SLIDE_ENGINE --> WELCOME_VIEW[" WelcomeCard.jsx"]:::subComp
- SLIDE_ENGINE --> PROGRESS_BAR[" ProgressBar.jsx"]:::subComp
- SLIDE_ENGINE --> Q_DISPATCHER[" QuestionDispatcher.jsx"]:::subComp
- SLIDE_ENGINE --> EXIT_VIEW[" ExitCard.jsx (ThankYou & Confetti)"]:::subComp
-
- %% Question Renderers
- Q_DISPATCHER --> R_TEXT[" ShortTextQuestion.jsx"]:::atomComp
- Q_DISPATCHER --> R_LONG[" LongTextQuestion.jsx"]:::atomComp
- Q_DISPATCHER --> R_CHOICE[" ChoiceQuestion.jsx"]:::atomComp
- Q_DISPATCHER --> R_PHONE[" PhoneIRQuestion.jsx"]:::atomComp
- Q_DISPATCHER --> R_RATING["⭐ RatingQuestion.jsx"]:::atomComp
- Q_DISPATCHER --> R_YESNO[" YesNoQuestion.jsx"]:::atomComp
- Q_DISPATCHER --> R_NUMBER[" NumberQuestion.jsx"]:::atomComp
-
- %% Admin Portal Pages
- ADMIN_R --> ADM_LAYOUT[" AdminLayout.jsx (Nav, Sidebar, Header)"]:::pageComp
- ADM_LAYOUT --> DASH_VIEW[" Dashboard.jsx"]:::subComp
- ADM_LAYOUT --> FORMS_LIST[" FormsList.jsx"]:::subComp
- ADM_LAYOUT --> BUILDER_VIEW[" FormBuilder.jsx"]:::subComp
- ADM_LAYOUT --> RESPONSES_VIEW[" ResponsesView.jsx"]:::subComp
- ADM_LAYOUT --> ANALYTICS_VIEW[" AnalyticsView.jsx"]:::subComp
- ADM_LAYOUT --> TRASH_VIEW[" TrashView.jsx"]:::subComp
-
- %% Builder & Analytics Sub-components
- BUILDER_VIEW --> Q_EDITOR[" QuestionEditor.jsx"]:::atomComp
- BUILDER_VIEW --> LOGIC_BUILDER[" LogicRuleBuilder.jsx"]:::atomComp
- BUILDER_VIEW --> LIVE_PREVIEW[" FormPreviewModal.jsx"]:::atomComp
-
- RESPONSES_VIEW --> RESP_TABLE[" ResponsesTable.jsx"]:::atomComp
- RESPONSES_VIEW --> CSV_EXPORT[" ExportCsvButton.jsx"]:::atomComp
-
- ANALYTICS_VIEW --> BAR_CHART[" QuestionBarChart.jsx"]:::atomComp
- ANALYTICS_VIEW --> DEVICE_DONUT[" DeviceBreakdown.jsx"]:::atomComp
-
- %% Shared UI Atoms
- ADM_LAYOUT -.-> UI_STICKER["🃏 StickerCard.jsx"]:::atomComp
- ADM_LAYOUT -.-> UI_BTN[" Button.jsx"]:::atomComp
- ADM_LAYOUT -.-> UI_MODAL[" Modal.jsx"]:::atomComp
- ADM_LAYOUT -.-> UI_TOAST[" RealtimeToast.jsx"]:::atomComp
- ADM_LAYOUT -.-> UI_SKELETON[" Skeleton.jsx (Shimmer Placeholders)"]:::atomComp
- ADM_LAYOUT -.-> UI_CONFIRM[" ConfirmDialog.jsx"]:::atomComp
- ADM_LAYOUT -.-> UI_PASS[" PasswordToggle.jsx"]:::atomComp
- </pre>
+  %% Relations
+  Dashboard --> StatCard
+  Dashboard --> StickerCard
+  SmsPanel --> JalaliPicker
+  SmsPanel --> StickerCard
+  SmsPanel --> ButtonComp
+  FormsList --> StickerCard
+  FormBuilder --> LogicEngine
+  ResponsesComp --> StatCard
+  QuestionStep --> LogicEngine
+  EmbedView --> QuestionStep
+</pre>
  </div>
  </div>
  </div>

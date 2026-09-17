@@ -74,79 +74,50 @@
  <div class="diagram-canvas">
  <pre class="mermaid">
 graph LR
- classDef actor fill:#1E293B,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
- classDef usecase fill:#131B2E,stroke:#2DD4BF,stroke-width:2px,color:#F8FAFC;
- classDef superUC fill:#1E1B4B,stroke:#A855F7,stroke-width:2px,color:#F8FAFC;
- classDef autoUC fill:#0F172A,stroke:#10B981,stroke-width:2px,color:#F8FAFC;
+  Admin["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>مدیر سازمان / ادمین</span><span class='d-card-badge d-badge-teal'>Admin</span></div><div class='d-card-sub'>کاربر صاحب فرم و مدیر سیستم</div></div>"]
+  Respondent["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>مخاطب و پاسخ‌دهنده</span><span class='d-card-badge d-badge-blue'>Respondent</span></div><div class='d-card-sub'>کاربر عمومی پرکننده فرم</div></div>"]
+  CronSystem["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>سیستم زمانبند خودکار</span><span class='d-card-badge d-badge-rose'>Background Cron</span></div><div class='d-card-sub'>جابز دوره‌ای سرور</div></div>"]
 
- %% Actors
- subgraph ACTORS[" بازیگران"]
- A_RESP[" پاسخ‌دهنده عمومی<br/>(Respondent)"]:::actor
- A_CREATOR[" سازنده فرم / ادمین<br/>(Form Owner)"]:::actor
- A_SUPER[" سوپرادمین سامانه<br/>(Superadmin)"]:::actor
- A_CRON[" پردازشگر پس‌زمینه<br/>(System Daemon)"]:::actor
- end
+  subgraph UC_FORMS[" مدیریت فرم‌ها و پاسخ‌ها "]
+    UC1[" ساخت و ویرایش فرم با ۲۰ نوع سوال "]
+    UC2[" تعیین شروط پرش و منطق نمایش "]
+    UC3[" مشاهده داشبورد و آمار تحلیلی زنده "]
+    UC4[" اکسپورت خروجی اکسل و گزارشات "]
+    UC5[" بازیافت فرم‌ها از سطل زباله ۳۰ روزه "]
+  end
 
- %% Use Cases
- subgraph BOUNDARY[" مرز کارکردی سامانه پرس‌کاد (Porskad Scope)"]
- %% Respondent
- UC_FILL(["پر کردن فرم اسلایدی"]):::usecase
- UC_DRAFT(["بازیابی خودکار پیش‌نویس"]):::usecase
- UC_SUBMIT(["ثبت نهایی و دریافت تاییدیه"]):::usecase
+  subgraph UC_SMS[" پنل پیامک و اطلاع‌رسانی "]
+    UC6[" ارسال فوری پیامک با خط اختصاصی ۹۸ "]
+    UC7[" ثبت ارسال زمان‌بندی‌شده با تقویم جلالی "]
+    UC8[" مشاهده سوابق کل و جزئیات گیرندگان "]
+    UC9[" اتصال به ربات و کانال تلگرام "]
+    UC10[" دیسپچ خودکار پیامک‌های زماندار "]
+  end
 
- %% Creator
- UC_AUTH(["ورود با ایمیل یا پیامک OTP"]):::usecase
- UC_CREATE(["ایجاد فرم و ویرایش اسلاگ"]):::usecase
- UC_QUESTIONS(["افزودن و مرتب‌سازی سوالات"]):::usecase
- UC_LOGIC(["تنظیم قوانین شرطی و پرش‌ها"]):::usecase
- UC_PUBLISH(["انتشار یا تعلیق فرم"]):::usecase
- UC_SHARE(["تولید کد آی‌فریم و QR"]):::usecase
- UC_VIEW_RESP(["مشاهده جدول پاسخ‌ها"]):::usecase
- UC_EXPORT(["خروجی اکسل فارسی UTF-8"]):::usecase
- UC_ANALYTICS(["تحلیل نموداری سوالات"]):::usecase
- UC_TRASH_USER(["انتقال فرم به سطل زباله"]):::usecase
- UC_RESTORE_USER(["بازیابی فرم تا ۳۰ روز"]):::usecase
+  subgraph UC_RUNNER[" تجربه پاسخ‌دهی فرم "]
+    UC11[" مشاهده اسلایدی سوالات فرم "]
+    UC12[" آپلود امن فایل و تصاویر پیوست "]
+    UC13[" ذخیره آفلاین پیش‌نویس پاسخ‌ها "]
+    UC14[" ثبت نهایی و تاییدیه پاسخ "]
+  end
 
- %% Superadmin
- UC_MANAGE_USERS(["مدیریت کاربران و تغییر نقش‌ها"]):::superUC
- UC_QUOTA(["تخصیص پلن و سهمیه فرم‌ها"]):::superUC
- UC_SMS_CFG(["پیکربندی خطوط پیامک و OTP"]):::superUC
- UC_GOD_TRASH(["سطل زباله سراسری و حذف دائم"]):::superUC
- UC_AUDIT(["مشاهده لاگ‌های ممیزی امنیتی"]):::superUC
+  Admin --> UC1
+  Admin --> UC2
+  Admin --> UC3
+  Admin --> UC4
+  Admin --> UC5
+  Admin --> UC6
+  Admin --> UC7
+  Admin --> UC8
+  Admin --> UC9
 
- %% System Cron
- UC_PURGE(["پاک‌سازی خودکار سطل پس از ۳۰ روز"]):::autoUC
- end
+  CronSystem --> UC10
 
- %% Links - Respondent
- A_RESP --> UC_FILL
- UC_FILL -.->|شامل می‌شود include| UC_DRAFT
- UC_FILL --> UC_SUBMIT
-
- %% Links - Creator
- A_CREATOR --> UC_AUTH
- A_CREATOR --> UC_CREATE
- A_CREATOR --> UC_QUESTIONS
- A_CREATOR --> UC_LOGIC
- A_CREATOR --> UC_PUBLISH
- A_CREATOR --> UC_SHARE
- A_CREATOR --> UC_VIEW_RESP
- A_CREATOR --> UC_EXPORT
- A_CREATOR --> UC_ANALYTICS
- A_CREATOR --> UC_TRASH_USER
- A_CREATOR --> UC_RESTORE_USER
-
- %% Links - Superadmin
- A_SUPER --> UC_MANAGE_USERS
- A_SUPER --> UC_QUOTA
- A_SUPER --> UC_SMS_CFG
- A_SUPER --> UC_GOD_TRASH
- A_SUPER --> UC_AUDIT
- A_SUPER -.->|به ارث می‌برد| A_CREATOR
-
- %% Links - Cron
- A_CRON --> UC_PURGE
- </pre>
+  Respondent --> UC11
+  Respondent --> UC12
+  Respondent --> UC13
+  Respondent --> UC14
+</pre>
  </div>
  </div>
  </div>

@@ -77,104 +77,54 @@
  <div class="diagram-canvas">
  <pre class="mermaid">
 graph TB
- classDef clientModule fill:#131B2E,stroke:#2DD4BF,stroke-width:2px,color:#F8FAFC;
- classDef edgeModule fill:#1E293B,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
- classDef serviceModule fill:#1E1B4B,stroke:#A855F7,stroke-width:2px,color:#F8FAFC;
- classDef dataModule fill:#0F172A,stroke:#10B981,stroke-width:2px,color:#F8FAFC;
- classDef extModule fill:#2A1B18,stroke:#F59E0B,stroke-width:2px,color:#F8FAFC;
+  subgraph USER_TIER[" ۱. لایه کاربران و مشتریان (Client & End-Users)"]
+    AdminUser["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>مدیران سازمان و ادمین‌ها</span><span class='d-card-badge d-badge-teal'>Admin</span></div><div class='d-card-sub'>داشبورد آماری، فرم‌ساز، پنل پیامک و خروجی اکسل</div></div>"]
+    Respondent["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>پاسخ‌دهندگان و مخاطبان</span><span class='d-card-badge d-badge-blue'>Respondent</span></div><div class='d-card-sub'>موبایل، تبلت و دسکتاپ از طریق لینک اختصاصی یا امبد</div></div>"]
+    ThirdPartySite["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>وب‌سایت‌های ثالث و پورتال‌ها</span><span class='d-card-badge d-badge-purple'>Embed</span></div><div class='d-card-sub'>میزبانی فرم درون وردپرس، ری‌اکت یا فریم‌ورک‌های وب</div></div>"]
+  end
 
- subgraph CLIENT_TIER[" لایه ران‌تایم کلاینت (Client Runtime Environment)"]
- subgraph ROUTING["مسیرها و ویوها (React Router v6)"]
- PublicApp[" Public Form Engine<br/>(/f/:slug, /embed/:slug)"]:::clientModule
- AdminApp[" Admin Management Portal<br/>(/admin/*, Builder, Analytics)"]:::clientModule
- end
+  subgraph EDGE_ROUTING[" ۲. لایه توزیع لبه و سرورلس (Edge Network & Serverless)"]
+    EdgeRouter["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Vercel Edge Network</span><span class='d-card-badge d-badge-blue'>CDN</span></div><div class='d-card-sub'>مسیریابی SPA، مدیریت هدرهای CORS و گواهی SSL</div></div>"]
+    AmootProxyRoute["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Amoot SMS Proxy</span><span class='d-card-badge d-badge-amber'>/api/amoot-proxy</span></div><div class='d-card-sub'>هندلر ارسال پیامک آنی، الگو و زمانبندی بدون محدودیت کلاینت</div></div>"]
+    TelegramRoute["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Telegram API Route</span><span class='d-card-badge d-badge-blue'>/api/v1/telegram</span></div><div class='d-card-sub'>دیسپچر امن اعلان‌های فوری به چت‌آیدی‌ها و کانال‌ها</div></div>"]
+    CronHandler["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Scheduled SMS Cron</span><span class='d-card-badge d-badge-rose'>/api/cron/...</span></div><div class='d-card-sub'>بررسی دقیقه‌ای سرور برای ارسال پیام‌های زماندار سررسیده‌شده</div></div>"]
+  end
 
- subgraph STATE_LAYER["مدیریت حالت و کش موضعی"]
- AuthCtx[" AuthContext & Session<br/>(JWT Token, User Profile)"]:::clientModule
- RealtimeHook[" useRealtimeSubscription<br/>(شنود رویدادهای ثبت فرم)"]:::clientModule
- DraftStore[" LocalStorage Draft Engine<br/>(نگه‌داری جواب‌ها تا ۷ روز)"]:::clientModule
- LogicEngine[" Form Logic Processor<br/>(پرش‌ها، نمایش و اعتبارسنجی)"]:::clientModule
- end
- end
+  subgraph CORE_SERVICES[" ۳. لایه هسته و منطق تجاری (Core Application Services)"]
+    FormBuilderSvc["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Form Builder Engine</span><span class='d-card-badge d-badge-teal'>Builder</span></div><div class='d-card-sub'>مدیریت ۲۰ نوع سوال، منطق شرطی، تم‌بندی و اعتبارسنجی</div></div>"]
+    ResponsePipeline["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Response Submission Pipeline</span><span class='d-card-badge d-badge-blue'>Pipeline</span></div><div class='d-card-sub'>اعتبارسنجی ورودی، ثبت اتمیک در دیتابیس و توزیع رویدادها</div></div>"]
+    SmsDispatchSvc["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>SMS & Campaign Service</span><span class='d-card-badge d-badge-amber'>SMS Engine</span></div><div class='d-card-sub'>مدیریت خطوط ۹۸، حذف تکراری‌ها، بالانس شارژ و ثبت در Outbox</div></div>"]
+    AnalyticsSvc["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Analytics & Export</span><span class='d-card-badge d-badge-purple'>Analytics</span></div><div class='d-card-sub'>محاسبه میانگین زمان، نرخ تکمیل و اکسپورت اکسل/CSV</div></div>"]
+  end
 
- subgraph EDGE_TIER[" زیرساخت لبه و پراکسی (Edge & Proxy Layer)"]
- EdgeDNS[" Vercel Global Edge Ingress<br/>(DNS Anycast & SSL Termination)"]:::edgeModule
- StaticAssets[" Static Asset CDN Cache<br/>(Vite Bundles, Fonts, Images)"]:::edgeModule
- ProxyRewriter[" Security & Rewrites Engine<br/>(CORS Headers, Iframe Policy, Anti-DDoS)"]:::edgeModule
- end
+  subgraph PERSISTENCE[" ۴. لایه پایگاه داده و ذخیره‌سازی ابری (PostgreSQL BaaS)"]
+    PostgresDB["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>PostgreSQL 15</span><span class='d-card-badge d-badge-emerald'>Database</span></div><div class='d-card-sub'>جداول اصلی، RLS، تایم‌اسکیل سوابق پیامک و متادیتا</div></div>"]
+    RealtimeHub["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Realtime WebSocket Hub</span><span class='d-card-badge d-badge-emerald'>Live Hub</span></div><div class='d-card-sub'>برادکست آنی به داشبورد و جدول آخرین پاسخ‌ها</div></div>"]
+    StorageBucket["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>Supabase Storage</span><span class='d-card-badge d-badge-amber'>Assets</span></div><div class='d-card-sub'>باکت فایل‌های رسانه‌ای، لوگوی فرم‌ها و پیوست‌ها</div></div>"]
+  end
 
- subgraph BAAS_TIER[" سرویس‌های بک‌اند (Supabase BaaS Architecture)"]
- AuthService[" GoTrue Auth Engine<br/>(Password Hashing, OTP Generation)"]:::serviceModule
- APIGateway[" PostgREST Gateway<br/>(REST API over Postgres, Filter & Sorting)"]:::serviceModule
- WSCluster[" Phoenix Realtime Channels<br/>(WebSockets Pub/Sub, Heartbeat)"]:::serviceModule
- StorageBucket[" File Storage Service<br/>(Form Covers, Uploaded Assets)"]:::serviceModule
- end
+  %% Connections
+  AdminUser --> EdgeRouter
+  Respondent --> EdgeRouter
+  ThirdPartySite --> EdgeRouter
 
- subgraph DATABASE_TIER[" کلاستر پایگاه داده (PostgreSQL DB Layer)"]
- subgraph SECURITY_FIREWALL["حفاظت داده و فایروال داخلی"]
- RLS[" Row-Level Security Engine<br/>(ارزیابی سیاست‌ها بر پایه auth.uid)"]:::dataModule
- end
- subgraph TRANSACTIONAL_RPC["توابع ذخیره‌شده (PL/pgSQL RPCs)"]
- RPCSave[" save_form()<br/>(ذخیره اتمیک فرم، سوالات و رول‌ها)"]:::dataModule
- RPCSubmit[" submit_public_response()<br/>(ثبت پاسخ عموم بدون نیاز به لاگین)"]:::dataModule
- RPCTrash[" god_trash_recovery()<br/>(سیستم سطل زباله ۳۰ روزه امن)"]:::dataModule
- end
- subgraph STORAGE_SCHEMA["طرحواره داده‌ها (Relational Schema)"]
- T_Forms[" forms, questions, logic_rules"]:::dataModule
- T_Responses[" responses, answers"]:::dataModule
- T_Profiles[" profiles, user_roles, user_quotas"]:::dataModule
- T_Logs[" sms_logs, audit_logs, trash_items"]:::dataModule
- end
- subgraph DB_TRIGGERS["تریگرها و رویدادها (CDC)"]
- T_Triggers[" WAL Change Capture<br/>(Notify Realtime on New Response)"]:::dataModule
- end
- end
+  EdgeRouter --> FormBuilderSvc
+  EdgeRouter --> ResponsePipeline
+  EdgeRouter --> AmootProxyRoute
+  EdgeRouter --> TelegramRoute
+  CronHandler --> SmsDispatchSvc
 
- subgraph EXTERNAL_TIER[" درگاه‌ها و ارتباطات بیرونی"]
- SMS_API[" Kavenegar SMS Gateway<br/>(ارسال پیامک خوش‌آمد، کد لاگین)"]:::extModule
- TG_API[" Telegram Bot API<br/>(ارسال نوتیفیکیشن ثبت فرم جدید)"]:::extModule
- ZARINPAL[" درگاه پرداخت زرین‌پال<br/>(تراکنش‌های تمدید و ارتقا پلن)"]:::extModule
- end
+  AmootProxyRoute --> SmsDispatchSvc
+  ResponsePipeline --> PostgresDB
+  ResponsePipeline --> TelegramRoute
+  SmsDispatchSvc --> PostgresDB
+  FormBuilderSvc --> PostgresDB
+  AnalyticsSvc --> PostgresDB
 
- %% Wiring
- PublicApp --> DraftStore
- PublicApp --> LogicEngine
- AdminApp --> AuthCtx
- AdminApp --> RealtimeHook
-
- PublicApp -->|HTTPS / GET| EdgeDNS
- AdminApp -->|HTTPS / REST| EdgeDNS
-
- EdgeDNS --> StaticAssets
- EdgeDNS --> ProxyRewriter
-
- ProxyRewriter -->|Auth Verification| AuthService
- ProxyRewriter -->|Data Query & RPC Call| APIGateway
- ProxyRewriter -->|WSS Realtime Connection| WSCluster
-
- AuthService --> RLS
- APIGateway --> RLS
- APIGateway --> RPCSave
- APIGateway --> RPCSubmit
- APIGateway --> RPCTrash
-
- RLS --> T_Forms
- RLS --> T_Responses
- RLS --> T_Profiles
- RLS --> T_Logs
-
- RPCSave --> T_Forms
- RPCSubmit --> T_Responses
- RPCTrash --> T_Logs
-
- T_Responses --> T_Triggers
- T_Triggers --> WSCluster
- WSCluster -->|WebSockets Push| RealtimeHook
-
- AuthService -.->|ارسال OTP| SMS_API
- RPCSubmit -.->|اعلان لحظه‌ای| TG_API
- AdminApp -.->|تراکنش مالی| ZARINPAL
- </pre>
+  PostgresDB --> RealtimeHub
+  RealtimeHub --> AdminUser
+  StorageBucket --> Respondent
+</pre>
  </div>
  </div>
  </div>

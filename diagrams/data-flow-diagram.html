@@ -74,64 +74,41 @@
  <div class="diagram-canvas">
  <pre class="mermaid">
 graph LR
- classDef entity fill:#1E293B,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC;
- classDef process fill:#131B2E,stroke:#2DD4BF,stroke-width:2px,color:#F8FAFC;
- classDef store fill:#0F172A,stroke:#A855F7,stroke-dasharray: 4 2,stroke-width:2px,color:#F8FAFC;
- classDef external fill:#2A1B18,stroke:#F59E0B,stroke-width:2px,color:#F8FAFC;
+  subgraph ENTITIES[" مراجعین و سامانه‌های متصل (External Entities)"]
+    AdminUser["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>مدیر سامانه / سازمان</span><span class='d-card-badge d-badge-teal'>Admin</span></div><div class='d-card-sub'>ایجاد فرم، ارسال پیامک و مشاهده تحلیل‌ها</div></div>"]
+    RespondentUser["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>پاسخ‌دهنده</span><span class='d-card-badge d-badge-blue'>User</span></div><div class='d-card-sub'>تکمیل سوالات و ارسال پاسخ از طریق وب یا موبایل</div></div>"]
+    AmootGateway["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>وب‌سرویس پیامک آموت</span><span class='d-card-badge d-badge-amber'>SMS API</span></div><div class='d-card-sub'>دریافت و ارسال درخواست‌های آنی و زماندار</div></div>"]
+    TelegramPlatform["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>پیام‌رسان تلگرام</span><span class='d-card-badge d-badge-blue'>Bot API</span></div><div class='d-card-sub'>دریافت اعلان بلادرنگ ثبت ورودی‌ها</div></div>"]
+  end
 
- %% Entities
- E_RESP[" پاسخ‌دهنده فرم"]:::entity
- E_CREATOR[" طراح / ادمین فرم"]:::entity
- E_TELEGRAM[" ربات تلگرام"]:::external
- E_SMS[" اپراتور کاوه‌نگار"]:::external
+  subgraph PROCESSES[" فرآیندهای پردازش داده (Data Processing Engines)"]
+    P1["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>۱. موتور ارزیابی و ساخت فرم</span><span class='d-card-badge d-badge-teal'>Process</span></div><div class='d-card-sub'>اعتبارسنجی ۲۰ نوع فیلد و ذخیره شروط پرش</div></div>"]
+    P2["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>۲. خط لوله ثبت پاسخ</span><span class='d-card-badge d-badge-blue'>Process</span></div><div class='d-card-sub'>اعتبارسنجی مقادیر، ثبت اتمیک در Postgres و اعلان ریل‌تایم</div></div>"]
+    P3["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>۳. موتور زمانبندی پیامک</span><span class='d-card-badge d-badge-amber'>Process</span></div><div class='d-card-sub'>فیلتر شماره‌های نامعتبر، حذف تکراری‌ها و ثبت صف Outbox</div></div>"]
+    P4["<div class='d-card'><div class='d-card-header'><span class='d-card-title'>۴. کران جاب ارسال خودکار</span><span class='d-card-badge d-badge-rose'>Process</span></div><div class='d-card-sub'>بررسی دقیقه‌ای سررسیدها و دیسپچ دسته‌ای به آموت</div></div>"]
+  end
 
- %% Processes
- P1["1.0<br/>مدیریت و احراز هویت<br/>(Auth & Quota Control)"]:::process
- P2["2.0<br/>طراحی و پیکربندی فرم<br/>(Form Builder & Logic)"]:::process
- P3["3.0<br/>رندر و ارزیابی شروط<br/>(Runtime Logic Evaluation)"]:::process
- P4["4.0<br/>پالایش اسپم و ثبت اتمیک<br/>(Validation & Submission)"]:::process
- P5["5.0<br/>پردازش تحلیلی و اکسپورت<br/>(Analytics & CSV Engine)"]:::process
- P6["6.0<br/>سامانه اعلان ریل‌تایم<br/>(Realtime Dispatcher)"]:::process
+  subgraph DATA_STORES[" مخازن داده پایگاه داده (Data Stores)"]
+    DB_FORMS[("مخزن فرم‌ها و سوالات (forms & questions)")]
+    DB_RESPONSES[("مخزن پاسخ‌ها و ورودی‌ها (responses & answers)")]
+    DB_SMS[("مخزن پیامک و زمانبندی (scheduled_sms & sms_outbox)")]
+    DB_TG[("مخزن لاگ تلگرام (telegram_send_log)")]
+  end
 
- %% Data Stores
- D1[("D1: جدول فرم‌ها forms")]:::store
- D2[("D2: سوالات questions")]:::store
- D3[("D3: قوانین شرطی logic_rules")]:::store
- D4[("D4: ثبت‌ها responses")]:::store
- D5[("D5: پاسخ‌ها answers")]:::store
- D6[("D6: پروفایل و سهمیه‌ها profiles")]:::store
+  AdminUser -->|تعریف فرم و سوالات| P1
+  P1 -->|ذخیره ساختار فرم| DB_FORMS
 
- %% Data Flows
- E_CREATOR -->|درخواست لاگین / سهمیه| P1
- P1 <-->|بررسی سهمیه و رول| D6
- P1 -->|کد تایید OTP| E_SMS
+  RespondentUser -->|ارسال پاسخ‌ها| P2
+  P2 -->|ثبت ورودی‌ها| DB_RESPONSES
+  P2 -->|ارسال هشدار ثبت پاسخ| TelegramPlatform
+  P2 -->|ثبت لاگ ارسال| DB_TG
 
- E_CREATOR -->|تعریف سوالات و لاجیک| P2
- P2 -->|بررسی سقف فرم مجاز| D6
- P2 -->|ذخیره تنظیمات فرم| D1
- P2 -->|ذخیره سوالات| D2
- P2 -->|ذخیره رول‌ها| D3
-
- E_RESP -->|درخواست اسلاگ فرم| P3
- D1 -->|اطلاعات فرم منتشرشده| P3
- D2 -->|لیست سوالات مرتب| P3
- D3 -->|قوانین شرطی| P3
- P3 -->|تحویل ساختار اسلایدی سوالات| E_RESP
-
- E_RESP -->|ارسال پاسخ‌ها + تله ربات + متادیتا| P4
- P4 -->|درج هدر پاسخ| D4
- P4 -->|درج پاسخ‌های سوالات| D5
- P4 -->|افزایش شمارنده پاسخ ماهانه| D6
-
- P4 -->|تریگر پاسخ جدید| P6
- P6 -->|اعلان زنده وب‌سوکت| E_CREATOR
- P6 -->|ارسال متن اعلان تلگرام| E_TELEGRAM
-
- E_CREATOR -->|درخواست گزارش و آمار| P5
- D4 -->|واکشی پاسخ‌ها| P5
- D5 -->|واکشی جزییات جواب‌ها| P5
- P5 -->|دانلود فایل اکسل / نمودارها| E_CREATOR
- </pre>
+  AdminUser -->|تنظیم و ارسال پیامک| P3
+  P3 -->|ذخیره گیرندگان و زمانبندی| DB_SMS
+  P4 -->|کوئری پیام‌های سررسیده| DB_SMS
+  P4 -->|ارسال وب‌سرویس| AmootGateway
+  AmootGateway -->|گزارش دلیوری| DB_SMS
+</pre>
  </div>
  </div>
  </div>
