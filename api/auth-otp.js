@@ -215,110 +215,20 @@ export default async function handler(req, res) {
       ? pattern.replace(/%code%/g, code)
       : `${pattern}\nکد شما: ${code}`;
 
-    // ۵. ارسال پیامک از طریق درگاه آموت (ارسال بر اساس الگوی تاییدشده آموت / SendWithPattern)
+    // ۵. ارسال پیامک از طریق درگاه آموت (ارسال فوق‌سریع بر اساس الگوی خدماتی / SendWithPattern)
     let sendSuccess = false;
     let sendErrorMsg = null;
+    const patternIdNum = Number(patternCode) || 6528;
 
     if (amootToken) {
-      // الف) تلاش اول: وب‌سرویس استاندارد ارسال با الگو SendWithPattern با متد JSON (توصیه‌شده آموت)
-      if (patternCode && !sendSuccess) {
-        try {
-          const resp = await fetch("https://portal.amootsms.com/rest/SendWithPattern", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              Token: amootToken,
-              token: amootToken,
-              PatternCode: String(patternCode).trim(),
-              Mobile: cleanPhone,
-              Mobiles: cleanPhone,
-              PatternValues: { code: code },
-            }),
-            signal: AbortSignal.timeout(8000),
-          });
-
-          const data = await resp.json().catch(() => null);
-          if (data && (data.Status === "Success" || data.Status === "success" || data.Status === "OK")) {
-            sendSuccess = true;
-            sendErrorMsg = null;
-          } else if (data) {
-            sendErrorMsg = `PatternJSON: ${data.Status || data.Message || JSON.stringify(data)}`;
-          }
-        } catch (err) {
-          sendErrorMsg = `PatternJSON_Err: ${err.message}`;
-        }
-      }
-
-      // ب) تلاش دوم: ارسال با الگو SendWithPattern به صورت Form URL-encoded با شیء JSON رشته‌شده در PatternValues
-      if (patternCode && !sendSuccess) {
+      // الف) تلاش اول: ارسال با الگو از طریق REST با پارامتر PatternCodeID و مقدار مستقیم کد (سریع‌ترین حالت آموت)
+      if (!sendSuccess) {
         try {
           const patternPostData = new URLSearchParams({
             Token: amootToken,
             token: amootToken,
-            PatternCode: String(patternCode).trim(),
-            Mobile: cleanPhone,
-            Mobiles: cleanPhone,
-            MobileNumbers: cleanPhone,
-            PatternValues: JSON.stringify({ code: code, Code: code }),
-          });
-
-          const resp = await fetch("https://portal.amootsms.com/rest/SendWithPattern", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: patternPostData.toString(),
-            signal: AbortSignal.timeout(8000),
-          });
-
-          const data = await resp.json().catch(() => null);
-          if (data && (data.Status === "Success" || data.Status === "success" || data.Status === "OK")) {
-            sendSuccess = true;
-            sendErrorMsg = null;
-          } else if (data) {
-            sendErrorMsg = `PatternForm_JSON: ${data.Status || data.Message || JSON.stringify(data)}`;
-          }
-        } catch (err) {
-          sendErrorMsg = `PatternForm_JSON_Err: ${err.message}`;
-        }
-      }
-
-      // ج) تلاش سوم: ارسال با الگو SendWithPattern به صورت Form URL-encoded با کلید code:1234
-      if (patternCode && !sendSuccess) {
-        try {
-          const patternPostData = new URLSearchParams({
-            Token: amootToken,
-            token: amootToken,
-            PatternCode: String(patternCode).trim(),
-            Mobile: cleanPhone,
-            Mobiles: cleanPhone,
-            PatternValues: `code:${code}`,
-          });
-
-          const resp = await fetch("https://portal.amootsms.com/rest/SendWithPattern", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: patternPostData.toString(),
-            signal: AbortSignal.timeout(8000),
-          });
-
-          const data = await resp.json().catch(() => null);
-          if (data && (data.Status === "Success" || data.Status === "success" || data.Status === "OK")) {
-            sendSuccess = true;
-            sendErrorMsg = null;
-          } else if (data) {
-            sendErrorMsg = `PatternForm_KeyValue: ${data.Status || data.Message || JSON.stringify(data)}`;
-          }
-        } catch (err) {
-          sendErrorMsg = `PatternForm_KeyValue_Err: ${err.message}`;
-        }
-      }
-
-      // د) تلاش چهارم: ارسال با الگو فقط با مقدار متغیر عددی به تنهایی
-      if (patternCode && !sendSuccess) {
-        try {
-          const patternPostData = new URLSearchParams({
-            Token: amootToken,
-            token: amootToken,
-            PatternCode: String(patternCode).trim(),
+            PatternCodeID: String(patternIdNum),
+            PatternCode: String(patternIdNum),
             Mobile: cleanPhone,
             Mobiles: cleanPhone,
             PatternValues: code,
@@ -328,7 +238,7 @@ export default async function handler(req, res) {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: patternPostData.toString(),
-            signal: AbortSignal.timeout(8000),
+            signal: AbortSignal.timeout(5000),
           });
 
           const data = await resp.json().catch(() => null);
@@ -336,10 +246,74 @@ export default async function handler(req, res) {
             sendSuccess = true;
             sendErrorMsg = null;
           } else if (data) {
-            sendErrorMsg = `PatternForm_RawVal: ${data.Status || data.Message || JSON.stringify(data)}`;
+            sendErrorMsg = data.Status || data.Message || JSON.stringify(data);
           }
         } catch (err) {
-          sendErrorMsg = `PatternForm_RawVal_Err: ${err.message}`;
+          sendErrorMsg = err.message;
+        }
+      }
+
+      // ب) تلاش دوم: در صورت نیاز به فرمت کلید-مقدار code:1234
+      if (!sendSuccess) {
+        try {
+          const patternPostData = new URLSearchParams({
+            Token: amootToken,
+            token: amootToken,
+            PatternCodeID: String(patternIdNum),
+            PatternCode: String(patternIdNum),
+            Mobile: cleanPhone,
+            Mobiles: cleanPhone,
+            PatternValues: `code:${code}`,
+          });
+
+          const resp = await fetch("https://portal.amootsms.com/rest/SendWithPattern", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: patternPostData.toString(),
+            signal: AbortSignal.timeout(5000),
+          });
+
+          const data = await resp.json().catch(() => null);
+          if (data && (data.Status === "Success" || data.Status === "success" || data.Status === "OK")) {
+            sendSuccess = true;
+            sendErrorMsg = null;
+          } else if (data) {
+            sendErrorMsg = data.Status || data.Message || JSON.stringify(data);
+          }
+        } catch (err) {
+          sendErrorMsg = err.message;
+        }
+      }
+
+      // ج) تلاش سوم: در صورت نیاز به شیء JSON رشته‌شده در PatternValues
+      if (!sendSuccess) {
+        try {
+          const patternPostData = new URLSearchParams({
+            Token: amootToken,
+            token: amootToken,
+            PatternCodeID: String(patternIdNum),
+            PatternCode: String(patternIdNum),
+            Mobile: cleanPhone,
+            Mobiles: cleanPhone,
+            PatternValues: JSON.stringify({ code: code }),
+          });
+
+          const resp = await fetch("https://portal.amootsms.com/rest/SendWithPattern", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: patternPostData.toString(),
+            signal: AbortSignal.timeout(5000),
+          });
+
+          const data = await resp.json().catch(() => null);
+          if (data && (data.Status === "Success" || data.Status === "success" || data.Status === "OK")) {
+            sendSuccess = true;
+            sendErrorMsg = null;
+          } else if (data) {
+            sendErrorMsg = data.Status || data.Message || JSON.stringify(data);
+          }
+        } catch (err) {
+          sendErrorMsg = err.message;
         }
       }
 

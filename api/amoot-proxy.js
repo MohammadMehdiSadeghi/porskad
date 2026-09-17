@@ -576,6 +576,7 @@ export default async function handler(req, res) {
       const patternPayload = new URLSearchParams({
         Token: activeToken,
         token: activeToken,
+        PatternCodeID: String(patternCode || "6528").trim(),
         PatternCode: String(patternCode || "6528").trim(),
         Mobile: cleanMobile,
         MobileNumbers: cleanMobile,
