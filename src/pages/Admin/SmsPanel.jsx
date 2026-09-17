@@ -1924,9 +1924,9 @@ export default function SmsPanel() {
                 subtitle="می‌توانید با استفاده از فرم بالا، اولین پیامک زمان‌دار خود را برای ارسال در آینده ثبت کنید."
               />
             ) : (
-              <div className="overflow-hidden">
-                <StickerCard theme="white">
-                  <div className="overflow-x-auto">
+              <div>
+                <StickerCard theme="white" className="overflow-hidden">
+                  <div className="overflow-x-auto rounded-2xl">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/60 text-xs">
@@ -2940,9 +2940,9 @@ export default function SmsPanel() {
               subtitle="کلیه پیامک‌های ارسالی با درگاه آموت در این جدول ثبت و نگهداری می‌شوند."
             />
           ) : (
-            <div className="overflow-hidden">
-              <StickerCard theme="white">
-                <div className="overflow-x-auto">
+            <div>
+              <StickerCard theme="white" className="overflow-hidden">
+                <div className="overflow-x-auto rounded-2xl">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/60 text-xs">
