@@ -1353,6 +1353,39 @@ html.dark ::-webkit-scrollbar-thumb {
     }
 }
 
+/* ─── پشتیبانی جامع از چینش راست‌چین پلیس‌هولدر در فایرفاکس و تمام مرورگرها ─── */
+.placeholder-right::placeholder {
+    text-align: right !important;
+    direction: rtl !important;
+}
+
+.placeholder-right::-moz-placeholder {
+    text-align: right !important;
+    direction: rtl !important;
+    opacity: 1 !important;
+}
+
+.placeholder-right:-moz-placeholder {
+    text-align: right !important;
+    direction: rtl !important;
+    opacity: 1 !important;
+}
+
+.placeholder-right::-webkit-input-placeholder {
+    text-align: right !important;
+    direction: rtl !important;
+}
+
+.placeholder-right:-ms-input-placeholder {
+    text-align: right !important;
+    direction: rtl !important;
+}
+
+input.placeholder-right:placeholder-shown {
+    text-align: right !important;
+    direction: rtl !important;
+}
+
 
 
 

@@ -606,7 +606,8 @@ export default function Register() {
                       </div>
                       <div className="relative">
                         <input
-                          type="tel"
+                          type="text"
+                          inputMode="tel"
                           dir={phone ? "ltr" : "rtl"}
                           required
                           autoFocus
@@ -616,9 +617,13 @@ export default function Register() {
                             setError(null);
                             setIsDuplicateUser(false);
                           }}
-                          className={`w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-4 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder:text-right focus:outline-none transition-all text-sm ${
+                          className={`w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-4 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder-right focus:outline-none transition-all text-sm ${
                             phone ? "text-left tracking-wider font-mono" : "text-right tracking-normal"
                           }`}
+                          style={{
+                            textAlign: phone ? "left" : "right",
+                            direction: phone ? "ltr" : "rtl",
+                          }}
                           placeholder="۰۹۱۲ ۳۴۵ ۶۷۸۹"
                           autoComplete="tel"
                         />
@@ -905,7 +910,7 @@ export default function Register() {
                             required
                             value={password}
                             onChange={(e) => { setPassword(e.target.value); setError(null); }}
-                            className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-11 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder:text-right text-left focus:outline-none transition-all text-sm"
+                            className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-11 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder-right text-left focus:outline-none transition-all text-sm"
                             placeholder="حداقل ۶ کاراکتر"
                             autoComplete="new-password"
                           />
@@ -934,7 +939,7 @@ export default function Register() {
                             required
                             value={confirmPassword}
                             onChange={(e) => { setConfirmPassword(e.target.value); setError(null); }}
-                            className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-11 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder:text-right text-left focus:outline-none transition-all text-sm"
+                            className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-11 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder-right text-left focus:outline-none transition-all text-sm"
                             placeholder="تکرار رمز عبور"
                             autoComplete="new-password"
                           />
