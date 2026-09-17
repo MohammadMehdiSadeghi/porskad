@@ -1178,22 +1178,21 @@ export default function TelegramBot() {
                           {isOwner() && (
                             <td className="px-4 py-3 text-center whitespace-nowrap">
                               {log.form_id && log.response_id ? (
-                                <Button
-                                  variant="ghost"
-                                  size="xs"
+                                <button
+                                  type="button"
                                   onClick={() => handleResend(log.form_id, log.response_id)}
                                   disabled={resendingId === log.response_id || !canManage}
                                   title="ارسال مجدد این ورودی به تلگرام با تاریخ واقعی"
-                                  className="!text-teal hover:!bg-teal/10 font-bold"
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill-sm border border-teal/30 bg-teal/10 hover:bg-teal/20 text-xs font-bold text-teal dark:text-teal transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   <RefreshCw
-                                    size={12}
-                                    className={resendingId === log.response_id ? "animate-spin ml-1" : "ml-1"}
+                                    size={13}
+                                    className={resendingId === log.response_id ? "animate-spin shrink-0" : "shrink-0"}
                                   />
-                                  {resendingId === log.response_id ? "در حال ارسال..." : "ارسال مجدد"}
-                                </Button>
+                                  <span>{resendingId === log.response_id ? "در حال ارسال..." : "ارسال مجدد"}</span>
+                                </button>
                               ) : (
-                                "—"
+                                <span className="text-ink-subtle text-xs">—</span>
                               )}
                             </td>
                           )}
@@ -1331,7 +1330,7 @@ export default function TelegramBot() {
                             <th className="text-center font-black px-4 py-3 w-16">ورودی #</th>
                             <th className="text-right font-black px-4 py-3">زمان دقیق ثبت</th>
                             <th className="text-right font-black px-4 py-3">چکیده پاسخ‌ها</th>
-                            <th className="text-center font-black px-4 py-3">عملیات ارسال</th>
+                            <th className="text-center font-black px-4 py-3">عملیات</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1389,32 +1388,32 @@ export default function TelegramBot() {
                                     )}
                                   </td>
                                   <td className="px-4 py-3 text-center whitespace-nowrap">
-                                    <div className="flex items-center justify-center gap-1.5">
-                                      <Button
-                                        variant="outline"
-                                        size="xs"
+                                    <div className="flex items-center justify-center gap-2">
+                                      <button
+                                        type="button"
                                         onClick={() => {
                                           setPreviewResponse(r);
                                           setPreviewModalOpen(true);
                                         }}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill-sm border border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-navy dark:text-slate-200 hover:border-teal hover:text-teal dark:hover:text-teal hover:bg-teal/5 transition-all cursor-pointer shadow-sm active:scale-95"
                                         title="مشاهده متن کامل گزارش ارسالی"
                                       >
-                                        <Eye size={12} className="ml-1" />
-                                        پیش‌نمایش
-                                      </Button>
-                                      <Button
-                                        variant="teal"
-                                        size="xs"
+                                        <Eye size={13} className="text-teal shrink-0" />
+                                        <span>پیش‌نمایش</span>
+                                      </button>
+                                      <button
+                                        type="button"
                                         onClick={() => handleManualDispatch(r)}
                                         disabled={isSending}
+                                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-pill-sm bg-teal hover:bg-teal-600 text-xs font-bold text-white transition-all cursor-pointer shadow-[2px_2px_0_#1F413D] active:translate-x-[1px] active:translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                                         title="ارسال مستقیم به چت تلگرام با تاریخ واقعی"
                                       >
                                         <Send
-                                          size={12}
-                                          className={isSending ? "animate-spin ml-1" : "ml-1"}
+                                          size={13}
+                                          className={isSending ? "animate-spin shrink-0" : "shrink-0"}
                                         />
-                                        {isSending ? "در حال ارسال..." : "ارسال به تلگرام"}
-                                      </Button>
+                                        <span>{isSending ? "در حال ارسال..." : "ارسال به تلگرام"}</span>
+                                      </button>
                                     </div>
                                   </td>
                                 </tr>
