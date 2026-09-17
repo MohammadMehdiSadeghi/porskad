@@ -172,6 +172,7 @@ export default function FormsList() {
   const [showQuotaModal, setShowQuotaModal] = useState(false);
   const [publishPromptForm, setPublishPromptForm] = useState(null);
   const [actionModalForm, setActionModalForm] = useState(null);
+  const [confirmPermanentInsideModal, setConfirmPermanentInsideModal] = useState(false);
 
   // ─── باز شدن مستقیم مودال ساخت فرم با کلیک از هدر یا آدرس /admin/forms?create=1 ───
   useEffect(() => {
@@ -654,11 +655,12 @@ export default function FormsList() {
     load(true);
   }
 
-  // ─── تایید حذف دائمی (از دید کاربر حذف می‌شود اما تا ۳۰ روز در سوپرادمین محفوظ می‌ماند) ───
-  async function confirmPermanentDelete() {
-    if (!permanentDeleting) return;
-    const form = permanentDeleting;
+  // ─── تایید حذف دائمی (از دید کاربر به طور کامل حذف می‌شود) ───
+  async function confirmPermanentDelete(targetForm = null) {
+    const form = (targetForm && targetForm.id) ? targetForm : permanentDeleting;
+    if (!form || !form.id) return;
     setPermanentDeleting(null);
+    setConfirmPermanentInsideModal(false);
 
     const nowIso = new Date().toISOString();
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -763,7 +765,7 @@ export default function FormsList() {
         .eq("id", form.id);
     }
 
-    push("فرم با موفقیت حذف شد و جهت نگهداری به بایگانی ۳۰ روزه سوپرادمین منتقل گردید.", "success");
+    push("فرم برای همیشه از لیست شما حذف شد.", "success");
     load(true);
   }
 
@@ -1027,26 +1029,57 @@ export default function FormsList() {
                       </div>
                     )}
 
-                    {/* دکمه استاندارد عملیات و مدیریت فرم بر اساس دیزاین سیستم رُکاد */}
+                    {/* دکمه عملیات و مدیریت فرم بر اساس دیزاین سیستم پرس‌کاد */}
                     <div className="pt-1 mt-auto">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActionModalForm(f);
-                        }}
-                        className="w-full justify-between group"
-                      >
-                        <span className="flex items-center gap-2 min-w-0">
-                          <Settings size={14} className="text-teal group-hover:text-white transition-colors shrink-0" />
-                          <span>مدیریت و عملیات فرم</span>
-                        </span>
-                        <span className="text-xs font-bold opacity-80 group-hover:opacity-100 whitespace-nowrap shrink-0">
-                          گزینه‌ها ←
-                        </span>
-                      </Button>
+                      {isTrashed ? (
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="teal"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              restoreForm(f);
+                            }}
+                            className="flex-1 justify-center"
+                          >
+                            <Undo2 size={13} className="ml-1" />
+                            <span>بازیابی</span>
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="danger"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPermanentDeleting(f);
+                            }}
+                            className="flex-1 justify-center"
+                          >
+                            <Trash2 size={13} className="ml-1" />
+                            <span>حذف دائمی</span>
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActionModalForm(f);
+                          }}
+                          className="w-full justify-between group"
+                        >
+                          <span className="flex items-center gap-2 min-w-0">
+                            <Settings size={14} className="text-teal group-hover:text-white transition-colors shrink-0" />
+                            <span>مدیریت و عملیات فرم</span>
+                          </span>
+                          <span className="text-xs font-bold opacity-80 group-hover:opacity-100 whitespace-nowrap shrink-0">
+                            گزینه‌ها ←
+                          </span>
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </StickerCard>
@@ -1056,10 +1089,13 @@ export default function FormsList() {
         </div>
       )}
 
-      {/* ─── مودال پاپ‌آپ عملیات فرم مخصوص سوپرادمین ─── */}
+      {/* ─── مودال پاپ‌آپ عملیات فرم ─── */}
       <Modal
         open={Boolean(actionModalForm)}
-        onClose={() => setActionModalForm(null)}
+        onClose={() => {
+          setActionModalForm(null);
+          setConfirmPermanentInsideModal(false);
+        }}
         title="مدیریت و عملیات فرم"
       >
         {actionModalForm && (() => {
@@ -1145,27 +1181,64 @@ export default function FormsList() {
                 <span className="text-xs font-black text-sec dark:text-slate-200">گزینه‌های دسترسی و عملیات:</span>
 
                 {isTrashed ? (
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    <Button
-                      variant="teal"
-                      size="sm"
-                      onClick={() => {
-                        setActionModalForm(null);
-                        restoreForm(f);
-                      }}
-                    >
-                      <Undo2 size={14} className="ml-1" /> بازیابی فرم
-                    </Button>
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => {
-                        setActionModalForm(null);
-                        setPermanentDeleting(f);
-                      }}
-                    >
-                      <Trash2 size={14} className="ml-1" /> حذف دائمی فرم
-                    </Button>
+                  <div className="flex flex-col gap-3">
+                    {confirmPermanentInsideModal ? (
+                      <div className="p-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 flex flex-col gap-3 text-right">
+                        <div className="flex items-center gap-2 text-rose-400 font-black text-sm">
+                          <AlertTriangle size={18} className="text-rose-400 shrink-0" />
+                          <span>تایید نهایی حذف دائمی فرم</span>
+                        </div>
+                        <p className="text-xs sm:text-sm font-semibold text-slate-300 leading-6">
+                          آیا مطمئن هستید که می‌خواهید فرم «<span className="text-rose-400 font-bold">{f.title}</span>» را برای همیشه حذف کنید؟ این عملیات غیرقابل بازگشت است.
+                        </p>
+                        <div className="flex items-center gap-2.5 justify-end pt-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setConfirmPermanentInsideModal(false)}
+                          >
+                            انصراف
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="danger"
+                            size="sm"
+                            onClick={() => {
+                              setConfirmPermanentInsideModal(false);
+                              setActionModalForm(null);
+                              confirmPermanentDelete(f);
+                            }}
+                          >
+                            <Trash2 size={14} className="ml-1" /> بله، برای همیشه حذف کن
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        <Button
+                          type="button"
+                          variant="teal"
+                          size="sm"
+                          onClick={() => {
+                            setActionModalForm(null);
+                            restoreForm(f);
+                          }}
+                        >
+                          <Undo2 size={14} className="ml-1" /> بازیابی فرم
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="danger"
+                          size="sm"
+                          onClick={() => {
+                            setConfirmPermanentInsideModal(true);
+                          }}
+                        >
+                          <Trash2 size={14} className="ml-1" /> حذف دائمی فرم
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <>
@@ -1388,21 +1461,21 @@ export default function FormsList() {
       </Modal>
 
       {/* ─── Permanent Delete Modal (حذف دائمی — جایگزین کامل confirm مرورگر) ─── */}
-      <Modal open={!!permanentDeleting} onClose={() => setPermanentDeleting(null)} title="حذف دائمی فرم">
+      <Modal open={!!permanentDeleting} onClose={() => setPermanentDeleting(null)} title="تایید حذف دائمی فرم">
         <div className="flex flex-col items-center text-center py-2">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/15 dark:bg-amber-500/20 border border-amber-500/30 text-amber-500 flex items-center justify-center mb-3 shadow-[0_0_20px_rgba(245,158,11,0.25)]">
+          <div className="w-14 h-14 rounded-2xl bg-rose-500/15 dark:bg-rose-500/20 border border-rose-500/30 text-rose-500 flex items-center justify-center mb-3 shadow-[0_0_20px_rgba(244,63,94,0.25)]">
             <AlertTriangle size={26} />
           </div>
           <h3 className="text-base sm:text-lg font-black text-navy dark:text-white mb-2 leading-7">
             حذف دائمی فرم «<span className="text-rose-400">{permanentDeleting?.title}</span>»
           </h3>
           <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 leading-6 max-w-sm mb-6">
-            آیا از حذف کامل این فرم اطمینان دارید؟ این فرم و تمام دسترسی‌های آن به طور کامل از پنل مدیریت شما پاک خواهد شد.
+            آیا از حذف دائمی این فرم اطمینان دارید؟ این فرم و تمام داده‌های آن برای همیشه از لیست شما حذف خواهد شد و دیگر در سطل زباله نیز نمایش داده نمی‌شود.
           </p>
           <div className="flex gap-3 w-full justify-center">
             <button
               type="button"
-              onClick={confirmPermanentDelete}
+              onClick={() => confirmPermanentDelete(permanentDeleting)}
               className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-700 hover:to-red-800 text-white font-black text-xs sm:text-sm shadow-[0_0_15px_rgba(225,29,72,0.4)] hover:scale-[1.02] active:scale-95 transition-all cursor-pointer whitespace-nowrap"
             >
               بله، برای همیشه حذف کن
