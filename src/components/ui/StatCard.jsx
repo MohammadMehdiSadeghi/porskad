@@ -80,7 +80,7 @@ export default function StatCard({
   return (
     <div
       onClick={onClick}
-      className={`relative bg-white dark:bg-[#151C28] rounded-2xl border-[1.5px] ${p.border} ${p.shadow} p-4 sm:p-5 transition-all duration-200 hover:-translate-y-0.5 ${onClick ? "cursor-pointer select-none active:translate-y-0" : ""} ${className}`}
+      className={`relative bg-white dark:bg-[#151C28] rounded-2xl border-[1.5px] ${p.border} ${p.shadow} p-4 sm:p-5 transition-all duration-200 ${onClick ? "cursor-pointer select-none active:scale-[0.99]" : ""} ${className}`}
     >
       <div className="flex items-center justify-between gap-3 mb-3">
         <span className="text-xs sm:text-sm font-bold text-ink-normal/70 dark:text-gray-300">

@@ -170,22 +170,12 @@
     border: 1.5px solid #EAEAEA;
     border-radius: 16px;
     box-shadow: 2.75px 2.75px 0 #202A5A;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.rokad-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 3.5px 3.5px 0 #202A5A;
 }
 html.dark .rokad-card,
 .dark .rokad-card {
     background: #151C28;
     border-color: #242F42;
     box-shadow: 2.75px 2.75px 0 #59BBAF;
-}
-html.dark .rokad-card:hover,
-.dark .rokad-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 3.5px 3.5px 0 #59BBAF;
 }
 
 /* دکمه اصلی سبز رُکاد */
