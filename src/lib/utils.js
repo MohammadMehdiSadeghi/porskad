@@ -387,83 +387,12 @@ export function generateUuid() {
   );
 }
 
-// ─── تشخیص مدل و نوع فرم برای نمایش بج متناسب با دیزاین سیستم ───
+// ─── تشخیص مدل فرم (منحصراً دو مدل: مرحله به مرحله یا ثبت‌نامی) ───
 export function getFormModelBadge(form) {
   if (!form) return { label: "مرحله به مرحله", color: "teal" };
-
   const fType = String(form.form_type || "").trim().toLowerCase();
-  const title = String(form.title || "").trim().toLowerCase();
-
-  // ۱. پیش‌ثبت‌نام صریح (مانند فرم پیش ثبت نام هنرستان رکاد)
-  if (title.includes("پیش ثبت") || title.includes("پیش‌ثبت") || title.includes("پیشثبت")) {
-    return { label: "پیش‌ثبت‌نام", color: "orange" };
-  }
-
-  // ۲. آزمون، کوئیز و تست
-  if (
-    form.settings?.is_quiz ||
-    form.settings?.has_score ||
-    title.includes("آزمون") ||
-    title.includes("ازمون") ||
-    title.includes("کوئیز") ||
-    title.includes("کوییز") ||
-    title.includes("امتحان") ||
-    title.includes("تست")
-  ) {
-    return { label: "آزمون", color: "purple" };
-  }
-
-  // ۳. نظرسنجی و ارزیابی رضایت
-  if (
-    title.includes("نظرسنجی") ||
-    title.includes("نظر سنجی") ||
-    title.includes("رضایت") ||
-    title.includes("بازخورد") ||
-    title.includes("ارزیابی") ||
-    title.includes("نقد")
-  ) {
-    return { label: "نظرسنجی", color: "teal" };
-  }
-
-  // ۴. استخدامی و همکاری
-  if (
-    title.includes("استخدام") ||
-    title.includes("همکاری") ||
-    title.includes("رزومه") ||
-    title.includes("شغلی") ||
-    title.includes("جذب")
-  ) {
-    return { label: "استخدامی", color: "navy" };
-  }
-
-  // ۵. تماس، ارتباط و مشاوره
-  if (
-    title.includes("تماس") ||
-    title.includes("ارتباط") ||
-    title.includes("مشاوره") ||
-    title.includes("پشتیبانی") ||
-    title.includes("شکایت")
-  ) {
-    return { label: "تماس و مشاوره", color: "magenta" };
-  }
-
-  // ۶. ثبت سفارش و خرید
-  if (
-    title.includes("سفارش") ||
-    title.includes("خرید") ||
-    title.includes("فروش") ||
-    title.includes("پرداخت") ||
-    title.includes("فاکتور") ||
-    title.includes("رزرو")
-  ) {
-    return { label: "ثبت سفارش", color: "green" };
-  }
-
-  // ۷. بر اساس مدل ساختاری فرم در پلتفرم پرس‌کاد
   if (fType === "registration") {
     return { label: "ثبت‌نامی", color: "orange" };
   }
-
-  // پیش‌فرض استاندارد پرس‌کاد: فرم ساختار مرحله به مرحله
   return { label: "مرحله به مرحله", color: "teal" };
 }
