@@ -512,7 +512,7 @@ export default function Register() {
                 <div className="w-full flex flex-col gap-2.5 pt-2">
                   <Link
                     to="/admin/login"
-                    className="w-full flex items-center justify-center gap-2 bg-teal text-white font-bold py-2.5 px-4 rounded-pill-md shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-xs sm:text-sm cursor-pointer transition-all"
+                    className="w-full flex items-center justify-center gap-2 bg-teal text-white font-bold py-2.5 px-4 rounded-xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-xs sm:text-sm cursor-pointer transition-all"
                   >
                     ورود به حساب کاربری موجود
                   </Link>
@@ -521,7 +521,7 @@ export default function Register() {
                       href={`https://t.me/${telegramSupportId}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full flex items-center justify-center gap-2 bg-white dark:bg-slate-800 text-ink dark:text-white border-2 border-ink dark:border-slate-600 font-bold py-2.5 px-4 rounded-pill-md text-xs sm:text-sm transition-all hover:bg-slate-50 dark:hover:bg-slate-700"
+                      className="w-full flex items-center justify-center gap-2 bg-white dark:bg-slate-800 text-ink dark:text-white border-2 border-ink dark:border-slate-600 font-bold py-2.5 px-4 rounded-xl text-xs sm:text-sm transition-all hover:bg-slate-50 dark:hover:bg-slate-700"
                     >
                       <Headphones size={15} className="text-teal" />
                       ارتباط با پشتیبانی در تلگرام
@@ -542,7 +542,7 @@ export default function Register() {
                 </div>
                 <Link
                   to="/admin/login"
-                  className="w-full flex items-center justify-center gap-2 bg-teal text-white font-bold py-2.5 px-4 rounded-pill-md shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none text-xs sm:text-sm cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 bg-teal text-white font-bold py-2.5 px-4 rounded-xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none text-xs sm:text-sm cursor-pointer"
                 >
                   ورود به حساب کاربری
                 </Link>
@@ -578,7 +578,7 @@ export default function Register() {
                       type="button"
                       onClick={handleGoogleAuth}
                       disabled={googleBusy}
-                      className="w-full flex items-center justify-center gap-3 bg-white hover:bg-teal/10 dark:bg-slate-800 dark:hover:bg-slate-700 text-ink dark:text-white border-2 border-ink dark:border-slate-600 font-black py-3 px-4 rounded-pill-md transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-sm cursor-pointer"
+                      className="w-full flex items-center justify-center gap-3 bg-white hover:bg-teal/10 dark:bg-slate-800 dark:hover:bg-slate-700 text-ink dark:text-white border-2 border-ink dark:border-slate-600 font-black py-3 px-4 rounded-xl transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-sm cursor-pointer"
                     >
                       <svg width="20" height="20" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -617,7 +617,7 @@ export default function Register() {
                             setError(null);
                             setIsDuplicateUser(false);
                           }}
-                          className={`w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-4 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder-right focus:outline-none transition-all text-sm ${
+                          className={`w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-xl pr-11 pl-4 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder-right focus:outline-none transition-all text-sm ${
                             phone ? "text-left tracking-wider font-mono" : "text-right tracking-normal"
                           }`}
                           style={{
@@ -684,7 +684,7 @@ export default function Register() {
                           type="button"
                           onClick={handleGoogleAuth}
                           disabled={googleBusy}
-                          className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-ink dark:text-white border-2 border-ink dark:border-slate-600 font-bold py-2.5 px-4 rounded-pill-md transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-xs sm:text-sm cursor-pointer"
+                          className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-ink dark:text-white border-2 border-ink dark:border-slate-600 font-bold py-2.5 px-4 rounded-xl transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-xs sm:text-sm cursor-pointer"
                         >
                           <svg width="18" height="18" viewBox="0 0 24 24">
                             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -715,7 +715,7 @@ export default function Register() {
                           setError(null);
                           setOtpCode("");
                         }}
-                        className="inline-flex items-center gap-1 text-xs text-ink-subtle hover:text-teal font-bold transition-colors cursor-pointer bg-white dark:bg-slate-700/60 px-2.5 py-1 rounded-pill-sm border border-ink/10 dark:border-slate-600"
+                        className="inline-flex items-center gap-1 text-xs text-ink-subtle hover:text-teal font-bold transition-colors cursor-pointer bg-white dark:bg-slate-700/60 px-2.5 py-1 rounded-lg border border-ink/10 dark:border-slate-600"
                       >
                         <Edit3 size={12} />
                         <span>تغییر شماره</span>
@@ -727,8 +727,9 @@ export default function Register() {
                         کد تایید ۴ رقمی را وارد کنید
                       </span>
 
-                      {/* نمایش ۴ باکس بصری زیبا برای ارقام کد */}
+                      {/* نمایش ۴ باکس بصری زیبا برای ارقام کد با چینش چپ‌به‌راست (LTR) */}
                       <div
+                        dir="ltr"
                         className="relative flex items-center justify-center gap-2 sm:gap-2.5 my-1 cursor-text"
                         onClick={() => otpInputRef.current?.focus()}
                       >
@@ -757,7 +758,8 @@ export default function Register() {
                           return (
                             <div
                               key={index}
-                              className={`w-11 sm:w-12 h-14 rounded-xl border-2 flex items-center justify-center font-mono text-xl sm:text-2xl font-black transition-all duration-200 ${
+                              dir="ltr"
+                              className={`w-11 sm:w-12 h-14 rounded-xl border-2 flex items-center justify-center font-mono text-xl sm:text-2xl font-black transition-all duration-200 select-none ${
                                 isCurrent
                                   ? "border-teal ring-4 ring-teal/20 bg-white dark:bg-slate-800 text-teal scale-105 shadow-sm"
                                   : isFilled
@@ -766,7 +768,7 @@ export default function Register() {
                               }`}
                             >
                               {digit ? (
-                                <span>{faNum(digit)}</span>
+                                <span dir="ltr" className="font-mono text-xl sm:text-2xl font-black">{faNum(digit)}</span>
                               ) : isCurrent ? (
                                 <span className="w-1.5 h-6 bg-teal animate-pulse rounded-full" />
                               ) : (
@@ -866,7 +868,7 @@ export default function Register() {
                           autoFocus
                           value={email}
                           onChange={(e) => { setEmail(e.target.value); setError(null); }}
-                          className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-4 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all text-sm"
+                          className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-xl pr-11 pl-4 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all text-sm"
                           placeholder="name@example.com"
                           autoComplete="email"
                         />
@@ -887,7 +889,7 @@ export default function Register() {
                           required
                           value={fullName}
                           onChange={(e) => { setFullName(e.target.value); setError(null); }}
-                          className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-4 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 focus:outline-none transition-all text-sm"
+                          className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-xl pr-11 pl-4 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 focus:outline-none transition-all text-sm"
                           placeholder="مثلاً: سارا رضایی"
                           autoComplete="name"
                         />
@@ -910,7 +912,7 @@ export default function Register() {
                             required
                             value={password}
                             onChange={(e) => { setPassword(e.target.value); setError(null); }}
-                            className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-11 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder-right text-left focus:outline-none transition-all text-sm"
+                            className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-xl pr-11 pl-11 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder-right text-left focus:outline-none transition-all text-sm"
                             placeholder="حداقل ۶ کاراکتر"
                             autoComplete="new-password"
                           />
@@ -939,7 +941,7 @@ export default function Register() {
                             required
                             value={confirmPassword}
                             onChange={(e) => { setConfirmPassword(e.target.value); setError(null); }}
-                            className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-11 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder-right text-left focus:outline-none transition-all text-sm"
+                            className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-xl pr-11 pl-11 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder-right text-left focus:outline-none transition-all text-sm"
                             placeholder="تکرار رمز عبور"
                             autoComplete="new-password"
                           />

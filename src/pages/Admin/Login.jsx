@@ -312,7 +312,7 @@ export default function Login() {
                     type="button"
                     onClick={handleGoogleLogin}
                     disabled={googleBusy || busy}
-                    className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-ink dark:text-white border-2 border-ink dark:border-slate-600 font-bold py-2.5 px-4 rounded-pill-md transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-xs sm:text-sm cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-ink dark:text-white border-2 border-ink dark:border-slate-600 font-bold py-2.5 px-4 rounded-xl transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-xs sm:text-sm cursor-pointer"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24">
                       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -329,7 +329,7 @@ export default function Login() {
                 <span>حساب کاربری ندارید؟</span>
                 <Link
                   to="/register"
-                  className="text-[13px] font-extrabold text-teal hover:underline inline-flex items-center gap-1 bg-teal/10 hover:bg-teal/20 px-3 py-1.5 rounded-pill-sm transition-all"
+                  className="text-[13px] font-extrabold text-teal hover:underline inline-flex items-center gap-1 bg-teal/10 hover:bg-teal/20 px-3 py-1.5 rounded-lg transition-all"
                 >
                   ثبت‌نام رایگان
                 </Link>
@@ -423,7 +423,7 @@ export default function Login() {
               href={`https://t.me/${telegramSupportId}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary hover:bg-ecosystem-normal-hover text-white px-4 py-2.5 rounded-pill-md text-xs sm:text-sm font-black transition-all border border-ecosystem-dark shadow-[2px_2px_0_#1F413D] hover:shadow-none cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary hover:bg-ecosystem-normal-hover text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all border border-ecosystem-dark shadow-[2px_2px_0_#1F413D] hover:shadow-none cursor-pointer"
             >
               <Send size={14} />
               <span>ارتباط در تلگرام</span>
