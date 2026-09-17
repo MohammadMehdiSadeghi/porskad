@@ -196,7 +196,28 @@ curl -X POST "${baseUrl}/forms/YOUR_FORM_SLUG_OR_ID/responses" \\
     ]
   }'
 
-# 7. Get all 20 question types metadata
+# 7. Send SMS via Amoot SMS Web Service
+curl -X POST "${origin}/api/amoot-proxy" \\
+  -H "Authorization: Bearer ${token ? token.substring(0, 15) + "..." : "YOUR_ACCESS_TOKEN"}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "action": "send_sms",
+    "mobiles": ["09123456789"],
+    "text": "سلام! کد پیگیری سفارش: ۱۲۳۴۵",
+    "lineNumber": "98"
+  }'
+
+# 8. Dispatch Telegram Notification
+curl -X POST "${baseUrl}/telegram/send" \\
+  -H "Authorization: Bearer ${token ? token.substring(0, 15) + "..." : "YOUR_ACCESS_TOKEN"}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "form_id": "YOUR_FORM_UUID",
+    "response_id": "YOUR_RESPONSE_UUID",
+    "force": true
+  }'
+
+# 9. Get all 20 question types metadata
 curl -X GET "${baseUrl}/question-types"`,
 
     js: `// JavaScript (Fetch API / async-await)
@@ -223,7 +244,20 @@ async function getResponses(formSlugOrId) {
   console.log("Total responses:", data.total, data.responses);
 }
 
-// 3. Submit response
+// 3. Send SMS via Amoot Proxy
+async function sendSms(mobiles, text) {
+  const res = await fetch("${origin}/api/amoot-proxy", {
+    method: "POST",
+    headers: {
+      "Authorization": \`Bearer \${TOKEN}\`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ action: "send_sms", mobiles, text, lineNumber: "98" })
+  });
+  return await res.json();
+}
+
+// 4. Submit response
 async function submitAnswers(formSlugOrId, answers) {
   const res = await fetch(\`\${BASE}/forms/\${formSlugOrId}/responses\`, {
     method: "POST",
@@ -253,10 +287,16 @@ def get_form(form_id):
     print("Questions Count:", len(data.get("questions", [])))
     return data
 
-# 2. Get form statistics
-def get_stats(form_id):
-    resp = requests.get(f"{BASE_URL}/forms/{form_id}/stats", headers=headers)
-    print("Stats:", resp.json())
+# 2. Send SMS
+def send_sms(mobiles, text):
+    payload = {
+        "action": "send_sms",
+        "mobiles": mobiles,
+        "text": text,
+        "lineNumber": "98"
+    }
+    resp = requests.post("${origin}/api/amoot-proxy", json=payload, headers=headers)
+    return resp.json()
 
 # 3. Submit response
 def submit_response(form_id, answers):

@@ -234,12 +234,15 @@ export default function WebServiceDocs() {
     handleCopyText(token, "token");
   }
 
+  const [selectedCategory, setSelectedCategory] = useState("forms");
+
   const codeSnippets = {
-    curl: `curl -X GET "${apiUrl}/forms" \\
+    forms: {
+      curl: `curl -X GET "${apiUrl}/forms" \\
   -H "Authorization: Bearer ${token || "YOUR_TOKEN"}" \\
   -H "Content-Type: application/json"`,
 
-    javascript: `// دریافت لیست فرم‌ها با fetch در جاوااسکریپت
+      javascript: `// دریافت لیست فرم‌ها با fetch در جاوااسکریپت
 const response = await fetch("${apiUrl}/forms", {
   method: "GET",
   headers: {
@@ -251,7 +254,7 @@ const response = await fetch("${apiUrl}/forms", {
 const data = await response.json();
 console.log(data);`,
 
-    python: `# دریافت لیست فرم‌ها با کتابخانه requests در پایتون
+      python: `# دریافت لیست فرم‌ها با کتابخانه requests در پایتون
 import requests
 
 url = "${apiUrl}/forms"
@@ -262,7 +265,232 @@ headers = {
 
 response = requests.get(url, headers=headers)
 print(response.json())`,
+
+      php: `<?php
+// دریافت لیست فرم‌ها با cURL در PHP
+$ch = curl_init("${apiUrl}/forms");
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "Authorization: Bearer ${token || "YOUR_TOKEN"}",
+    "Content-Type: application/json"
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+$data = json_decode($response, true);
+print_r($data);
+?>`,
+    },
+
+    sms_send: {
+      curl: `curl -X POST "${origin}/api/amoot-proxy" \\
+  -H "Authorization: Bearer ${token || "YOUR_TOKEN"}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "action": "send_sms",
+    "mobiles": ["09123456789"],
+    "text": "سلام! کد پیگیری شما: ۱۲۳۴۵",
+    "lineNumber": "98"
+  }'`,
+
+      javascript: `// ارسال پیامک فوری از طریق وب‌سرویس آموت
+const response = await fetch("${origin}/api/amoot-proxy", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer ${token || "YOUR_TOKEN"}",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    action: "send_sms",
+    mobiles: ["09123456789"],
+    text: "سلام! کد پیگیری شما: ۱۲۳۴۵",
+    lineNumber: "98"
+  })
+});
+
+const result = await response.json();
+console.log("SMS Result:", result);`,
+
+      python: `# ارسال پیامک با وب‌سرویس در پایتون
+import requests
+
+url = "${origin}/api/amoot-proxy"
+headers = {
+    "Authorization": "Bearer ${token || "YOUR_TOKEN"}",
+    "Content-Type": "application/json"
+}
+payload = {
+    "action": "send_sms",
+    "mobiles": ["09123456789"],
+    "text": "سلام! کد پیگیری شما: ۱۲۳۴۵",
+    "lineNumber": "98"
+}
+
+response = requests.post(url, json=payload, headers=headers)
+print(response.json())`,
+
+      php: `<?php
+// ارسال پیامک با PHP
+$ch = curl_init("${origin}/api/amoot-proxy");
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "Authorization: Bearer ${token || "YOUR_TOKEN"}",
+    "Content-Type: application/json"
+]);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+    "action" => "send_sms",
+    "mobiles" => ["09123456789"],
+    "text" => "سلام! کد پیگیری شما: ۱۲۳۴۵",
+    "lineNumber" => "98"
+]));
+
+$response = curl_exec($ch);
+curl_close($ch);
+print_r(json_decode($response, true));
+?>`,
+    },
+
+    sms_scheduled: {
+      curl: `curl -X POST "${origin}/api/amoot-proxy" \\
+  -H "Authorization: Bearer ${token || "YOUR_TOKEN"}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "action": "schedule_sms",
+    "mobiles": ["09123456789", "09351234567"],
+    "text": "یادآوری: جلسه فردا ساعت ۱۰ صبح برگزار می‌شود.",
+    "scheduledAt": "2026-09-20T10:00:00.000Z",
+    "lineNumber": "98"
+  }'`,
+
+      javascript: `// ثبت ارسال زمان‌بندی‌شده پیامک
+const response = await fetch("${origin}/api/amoot-proxy", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer ${token || "YOUR_TOKEN"}",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    action: "schedule_sms",
+    mobiles: ["09123456789"],
+    text: "یادآوری: جلسه فردا ساعت ۱۰ صبح برگزار می‌شود.",
+    scheduledAt: "2026-09-20T10:00:00.000Z",
+    lineNumber: "98"
+  })
+});
+
+const result = await response.json();
+console.log("Scheduled SMS Result:", result);`,
+
+      python: `# ثبت زمانبندی پیامک در پایتون
+import requests
+
+url = "${origin}/api/amoot-proxy"
+headers = {
+    "Authorization": "Bearer ${token || "YOUR_TOKEN"}",
+    "Content-Type": "application/json"
+}
+payload = {
+    "action": "schedule_sms",
+    "mobiles": ["09123456789"],
+    "text": "یادآوری جلسه فردا ساعت ۱۰ صبح",
+    "scheduledAt": "2026-09-20T10:00:00.000Z",
+    "lineNumber": "98"
+}
+
+response = requests.post(url, json=payload, headers=headers)
+print(response.json())`,
+
+      php: `<?php
+// ثبت زمانبندی پیامک با PHP
+$ch = curl_init("${origin}/api/amoot-proxy");
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "Authorization: Bearer ${token || "YOUR_TOKEN"}",
+    "Content-Type: application/json"
+]);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+    "action" => "schedule_sms",
+    "mobiles" => ["09123456789"],
+    "text" => "یادآوری جلسه فردا ساعت ۱۰ صبح",
+    "scheduledAt" => "2026-09-20T10:00:00.000Z",
+    "lineNumber" => "98"
+]));
+
+$response = curl_exec($ch);
+curl_close($ch);
+print_r(json_decode($response, true));
+?>`,
+    },
+
+    telegram: {
+      curl: `curl -X POST "${apiUrl}/telegram/send" \\
+  -H "Authorization: Bearer ${token || "YOUR_TOKEN"}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "form_id": "YOUR_FORM_UUID",
+    "response_id": "YOUR_RESPONSE_UUID",
+    "force": true
+  }'`,
+
+      javascript: `// ارسال اعلان پاسخ فرم به تلگرام
+const response = await fetch("${apiUrl}/telegram/send", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer ${token || "YOUR_TOKEN"}",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    form_id: "YOUR_FORM_UUID",
+    response_id: "YOUR_RESPONSE_UUID",
+    force: true
+  })
+});
+
+const result = await response.json();
+console.log("Telegram Dispatch Result:", result);`,
+
+      python: `# ارسال اعلان پاسخ به تلگرام در پایتون
+import requests
+
+url = "${apiUrl}/telegram/send"
+headers = {
+    "Authorization": "Bearer ${token || "YOUR_TOKEN"}",
+    "Content-Type": "application/json"
+}
+payload = {
+    "form_id": "YOUR_FORM_UUID",
+    "response_id": "YOUR_RESPONSE_UUID",
+    "force": True
+}
+
+response = requests.post(url, json=payload, headers=headers)
+print(response.json())`,
+
+      php: `<?php
+// ارسال نوتیفیکیشن پاسخ به تلگرام با PHP
+$ch = curl_init("${apiUrl}/telegram/send");
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "Authorization: Bearer ${token || "YOUR_TOKEN"}",
+    "Content-Type: application/json"
+]);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+    "form_id" => "YOUR_FORM_UUID",
+    "response_id" => "YOUR_RESPONSE_UUID",
+    "force" => true
+]));
+
+$response = curl_exec($ch);
+curl_close($ch);
+print_r(json_decode($response, true));
+?>`,
+    },
   };
+
+  const currentSnippet = codeSnippets[selectedCategory]?.[selectedLang] || codeSnippets.forms.curl;
 
   function handleCopySnippet(text) {
     if (!text) return;
@@ -969,47 +1197,75 @@ print(response.json())`,
               <StickerCard theme="white">
                 <div className="p-5 sm:p-6 flex flex-col gap-4">
                   <div className="flex flex-wrap items-center justify-between gap-2.5 border-b-2 border-ink/5 dark:border-slate-800 pb-3">
-                    <div className="flex items-center gap-2">
-                      <Code2 size={18} className="text-teal shrink-0" />
-                      <span className="text-xs sm:text-sm font-black text-navy dark:text-white">
-                        نمونه کدهای آماده اتصال (با توکن شما):
-                      </span>
-                    </div>
+                    <div className="flex flex-col gap-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2.5">
+                        <div className="flex items-center gap-2">
+                          <Code2 size={18} className="text-teal shrink-0" />
+                          <span className="text-xs sm:text-sm font-black text-navy dark:text-white">
+                            نمونه کدهای آماده اتصال (با توکن شما):
+                          </span>
+                        </div>
 
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-pill-md">
-                        {[
-                          { id: "curl", label: "cURL" },
-                          { id: "javascript", label: "JavaScript" },
-                          { id: "python", label: "Python" },
-                        ].map((lang) => (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-pill-md">
+                            {[
+                              { id: "curl", label: "cURL" },
+                              { id: "javascript", label: "JavaScript" },
+                              { id: "python", label: "Python" },
+                              { id: "php", label: "PHP" },
+                            ].map((lang) => (
+                              <button
+                                key={lang.id}
+                                onClick={() => setSelectedLang(lang.id)}
+                                className={`px-2.5 py-1 rounded-pill-sm text-xs font-extrabold transition-all cursor-pointer ${
+                                  selectedLang === lang.id
+                                    ? "bg-teal text-white shadow-xs"
+                                    : "text-ink-subtle hover:text-navy dark:hover:text-white"
+                                }`}
+                              >
+                                {lang.label}
+                              </button>
+                            ))}
+                          </div>
+
                           <button
-                            key={lang.id}
-                            onClick={() => setSelectedLang(lang.id)}
-                            className={`px-3 py-1 rounded-pill-sm text-xs font-extrabold transition-all cursor-pointer ${
-                              selectedLang === lang.id
-                                ? "bg-teal text-white shadow-xs"
-                                : "text-ink-subtle hover:text-navy dark:hover:text-white"
+                            type="button"
+                            onClick={() => handleCopySnippet(currentSnippet)}
+                            className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-white/10"
+                          >
+                            {copiedSnippet ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                            <span>{copiedSnippet ? "کپی شد" : "کپی کد"}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* تب‌های دسته‌بندی موضوعی نمونه کدها */}
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                        {[
+                          { id: "forms", label: "📋 مدیریت فرم‌ها" },
+                          { id: "sms_send", label: "💬 ارسال فوری پیامک" },
+                          { id: "sms_scheduled", label: "⏰ پیامک زمانبندی‌شده" },
+                          { id: "telegram", label: "🤖 اعلان تلگرام" },
+                        ].map((cat) => (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => setSelectedCategory(cat.id)}
+                            className={`px-3 py-1.5 rounded-lg font-black transition-all cursor-pointer whitespace-nowrap ${
+                              selectedCategory === cat.id
+                                ? "bg-navy dark:bg-slate-800 text-white dark:text-teal shadow-xs border border-navy/20 dark:border-teal/30"
+                                : "bg-slate-100 dark:bg-slate-900/60 text-ink-subtle hover:text-navy dark:hover:text-white border border-transparent"
                             }`}
                           >
-                            {lang.label}
+                            {cat.label}
                           </button>
                         ))}
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={() => handleCopySnippet(codeSnippets[selectedLang])}
-                        className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-white/10"
-                      >
-                        {copiedSnippet ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-                        <span>{copiedSnippet ? "کپی شد" : "کپی کد"}</span>
-                      </button>
                     </div>
                   </div>
 
                   <div className="relative bg-slate-900 text-slate-100 rounded-xl p-4 font-mono text-xs dir-ltr text-left overflow-x-auto max-w-full">
-                    <pre className="whitespace-pre">{codeSnippets[selectedLang]}</pre>
+                    <pre className="whitespace-pre">{currentSnippet}</pre>
                   </div>
                 </div>
               </StickerCard>
@@ -1098,6 +1354,12 @@ print(response.json())`,
                           <td className="py-3 px-3 font-mono dir-ltr text-left text-teal font-bold">/api/v1/forms/:id/responses</td>
                           <td className="py-3 px-3">ثبت پاسخ جدید برای یک فرم (ارسال فرم توسط پاسخ‌دهنده)</td>
                           <td className="py-3 px-3 text-center"><Badge color="gray">عمومی</Badge></td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-3"><Badge color="green">POST</Badge></td>
+                          <td className="py-3 px-3 font-mono dir-ltr text-left text-teal font-bold">/api/amoot-proxy</td>
+                          <td className="py-3 px-3">وب‌سرویس جامع ارسال و زمانبندی پیامک آموت (تکی، گروهی، پترن، لیست و لغو زماندار)</td>
+                          <td className="py-3 px-3 text-center"><Badge color="teal">توکن لازم</Badge></td>
                         </tr>
                         <tr>
                           <td className="py-3 px-3"><Badge color="green">POST</Badge></td>

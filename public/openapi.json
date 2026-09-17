@@ -63,6 +63,10 @@
     {
       "name": "Admin User Management",
       "description": "عملیات مدیریتی سوپرادمین بر حساب‌های کاربری و سهمیه‌ها"
+    },
+    {
+      "name": "SMS & Scheduled Dispatch",
+      "description": "ارسال پیامک تکی و گروهی، پیام‌های زمانبندی‌شده، بررسی اعتبار و وب‌سرویس آموت"
     }
   ],
   "paths": {
@@ -1118,59 +1122,31 @@
         "tags": [
           "Telegram"
         ],
-        "summary": "ارسال دستی یا خودکار یک پاسخ ثبت‌شده به ربات تلگرام",
-        "description": "دریافت شناسه فرم و شناسه پاسخ، ساخت پیام شکیل با مشخصات کامل ورودی‌ها و ارسال مستقیم به کانال/گروه مقصد پیکربندی‌شده.",
+        "summary": "ارسال مستقیم یا مجدد اعلان پاسخ به ربات/کانال تلگرام",
+        "description": "ارسال متن کامل پاسخ ثبت‌شده همراه با عنوان فرم، شماره ورودی، و مقادیر پاسخ‌دهنده به چت‌آیدی‌ها یا ربات‌های تلگرامی متصل به فرم.",
         "operationId": "sendTelegramNotification",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": [
-                  "form_id",
-                  "response_id"
-                ],
-                "properties": {
-                  "form_id": {
-                    "type": "string",
-                    "description": "شناسه فرم (UUID یا Slug یا Public ID)"
-                  },
-                  "response_id": {
-                    "type": "string",
-                    "description": "شناسه پاسخ ثبت‌شده (UUID)"
-                  }
-                }
+                "$ref": "#/components/schemas/TelegramSendRequest"
+              },
+              "example": {
+                "form_id": "d9b2d63d-a233-4f9e-a89c-3080e7bc2a12",
+                "response_id": "e83a45c7-124b-47e9-a3cd-41e976c6d048",
+                "force": true
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "نتیجه ارسال به تلگرام",
+            "description": "نتیجه دیسپچ پیام تلگرام",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": {
-                      "type": "boolean"
-                    },
-                    "sent": {
-                      "type": "integer"
-                    },
-                    "skipped": {
-                      "type": "boolean"
-                    },
-                    "reason": {
-                      "type": "string"
-                    }
-                  }
+                  "$ref": "#/components/schemas/TelegramSendResponse"
                 }
               }
             }
@@ -1185,8 +1161,8 @@
               }
             }
           },
-          "404": {
-            "description": "فرم یا پاسخ مورد نظر یافت نشد",
+          "429": {
+            "description": "محدودیت نرخ ارسال (Rate limit)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1373,6 +1349,108 @@
           },
           "403": {
             "description": "دسترسی غیرمجاز"
+          }
+        }
+      }
+    },
+    "/api/amoot-proxy": {
+      "post": {
+        "tags": [
+          "SMS & Scheduled Dispatch"
+        ],
+        "summary": "وب‌سرویس جامع ارسال و زمانبندی پیامک (Amoot SMS Proxy)",
+        "description": "ارسال پیامک تکی و گروهی، ارسال با الگو (پترن OTP)، ثبت و مدیریت پیامک‌های زماندار، تست اتصال، دریافت مانده شارژ و خطوط اختصاصی از طریق وب‌سرویس آموت.",
+        "operationId": "amootSmsProxy",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AmootProxyRequest"
+              },
+              "examples": {
+                "sendSimple": {
+                  "summary": "ارسال پیامک متنی ساده",
+                  "value": {
+                    "action": "send_sms",
+                    "mobiles": [
+                      "09123456789",
+                      "09351234567"
+                    ],
+                    "text": "سلام! کد رهگیری شما: ۱۲۳۴۵",
+                    "lineNumber": "98"
+                  }
+                },
+                "sendPattern": {
+                  "summary": "ارسال پیامک بر اساس الگو (پترن)",
+                  "value": {
+                    "action": "send_pattern_sms",
+                    "mobile": "09123456789",
+                    "patternCode": "6516",
+                    "patternValues": {
+                      "code": "849201"
+                    }
+                  }
+                },
+                "scheduleSms": {
+                  "summary": "ثبت ارسال زمان‌بندی‌شده در آینده",
+                  "value": {
+                    "action": "schedule_sms",
+                    "mobiles": [
+                      "09123456789"
+                    ],
+                    "text": "یادآوری رویداد فردا ساعت ۱۰ صبح",
+                    "scheduledAt": "2026-09-20T10:00:00.000Z",
+                    "lineNumber": "98",
+                    "sourceType": "manual"
+                  }
+                },
+                "testConnection": {
+                  "summary": "بررسی اتصال و مانده شارژ پنل",
+                  "value": {
+                    "action": "test_connection"
+                  }
+                },
+                "getScheduledList": {
+                  "summary": "دریافت لیست پیامک‌های زماندار",
+                  "value": {
+                    "action": "get_scheduled_sms_list",
+                    "status": "pending",
+                    "page": 1,
+                    "limit": 20
+                  }
+                },
+                "cancelScheduled": {
+                  "summary": "لغو پیامک زماندار در انتظار",
+                  "value": {
+                    "action": "cancel_scheduled_sms",
+                    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "نتیجه اجرای عملیات پیامک",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AmootProxyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "خطای اعتبارسنجی ورودی یا خطای سرویس‌دهنده پیامک",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -2463,6 +2541,221 @@
           "error": {
             "type": "string",
             "example": "خطای اعتبارسنجی یا عدم دسترسی"
+          }
+        }
+      },
+      "AmootProxyRequest": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "send_sms",
+              "send_pattern_sms",
+              "schedule_sms",
+              "get_scheduled_sms_list",
+              "get_scheduled_sms_detail",
+              "cancel_scheduled_sms",
+              "test_connection",
+              "get_settings",
+              "save_settings"
+            ],
+            "description": "نوع عملیات پیامک"
+          },
+          "mobiles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "شماره‌های موبایل مقصد (فرمت ایران ۰۹۱۲۳۴۵۶۷۸۹)"
+          },
+          "mobile": {
+            "type": "string",
+            "description": "شماره موبایل تک گیرنده"
+          },
+          "text": {
+            "type": "string",
+            "description": "متن پیامک"
+          },
+          "lineNumber": {
+            "type": "string",
+            "description": "شماره خط فرستنده (مانند 98 یا خط اختصاصی)",
+            "default": "98"
+          },
+          "patternCode": {
+            "type": "string",
+            "description": "شناسه یا کد الگوی تعریف‌شده در پنل آموت"
+          },
+          "patternValues": {
+            "type": "object",
+            "description": "متغیرهای الگو به صورت کلید و مقدار"
+          },
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "تاریخ و زمان دقیق ارسال زماندار (ISO 8601)"
+          },
+          "sourceType": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "form"
+            ],
+            "default": "manual",
+            "description": "منبع ایجاد زمانبندی"
+          },
+          "sourceFormId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "شناسه فرم مربوطه در صورت ارسال خودکار از فرم"
+          },
+          "id": {
+            "type": "string",
+            "description": "شناسه پیام زماندار جهت مشاهده جزئیات یا لغو"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "all",
+              "pending",
+              "sent",
+              "failed",
+              "canceled"
+            ],
+            "description": "فیلتر وضعیت در دریافت لیست زماندار"
+          },
+          "page": {
+            "type": "integer",
+            "default": 1
+          },
+          "limit": {
+            "type": "integer",
+            "default": 20
+          }
+        }
+      },
+      "AmootProxyResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "example": "Success"
+          },
+          "message": {
+            "type": "string",
+            "example": "پیامک با موفقیت به ۱ شماره ارسال شد."
+          },
+          "campaignId": {
+            "type": "string",
+            "example": "189347291"
+          },
+          "price": {
+            "type": "number",
+            "example": 1450
+          },
+          "parts": {
+            "type": "integer",
+            "example": 1
+          },
+          "count": {
+            "type": "integer",
+            "example": 1
+          },
+          "accountName": {
+            "type": "string",
+            "example": "حساب تجاری پرس‌کاد"
+          },
+          "remaindCredit": {
+            "type": "number",
+            "example": 5000000
+          },
+          "remaindCreditTomans": {
+            "type": "number",
+            "example": 500000
+          },
+          "listLineNumbers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "98",
+              "5000123456"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "total_count": {
+            "type": "integer",
+            "example": 1
+          },
+          "removed_invalid_count": {
+            "type": "integer",
+            "example": 0
+          },
+          "removed_duplicate_count": {
+            "type": "integer",
+            "example": 0
+          }
+        }
+      },
+      "TelegramSendRequest": {
+        "type": "object",
+        "required": [
+          "form_id",
+          "response_id"
+        ],
+        "properties": {
+          "form_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "شناسه یکتای فرم"
+          },
+          "response_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "شناسه یکتای پاسخ ثبت‌شده"
+          },
+          "force": {
+            "type": "boolean",
+            "default": false,
+            "description": "ارسال فوری و رد شدن از بررسی‌های تکرار"
+          }
+        }
+      },
+      "TelegramSendResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": true
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "config_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "ok": {
+                  "type": "boolean"
+                },
+                "error": {
+                  "type": "string",
+                  "nullable": true
+                }
+              }
+            }
           }
         }
       }
