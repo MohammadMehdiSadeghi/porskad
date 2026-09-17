@@ -572,29 +572,23 @@ export default async function handler(req, res) {
         });
       }
 
-      const otpCodeVal = typeof patternValues === "object" ? (patternValues.code || "") : String(patternValues || "");
       const patternPayload = new URLSearchParams({
         Token: activeToken,
         token: activeToken,
-        PatternCodeID: String(patternCode || "6528").trim(),
-        PatternCode: String(patternCode || "6528").trim(),
+        PatternCode: String(patternCode || "6516").trim(),
         Mobile: cleanMobile,
         MobileNumbers: cleanMobile,
-        Code: otpCodeVal,
-        code: otpCodeVal,
         PatternValues: typeof patternValues === "object" ? JSON.stringify(patternValues) : String(patternValues || ""),
       });
 
-      // ارسال مستقیم به وب‌سرویس SendWithPattern آموت
-      let sendRes = await fetch("https://portal.amootsms.com/rest/SendWithPattern", {
+      const sendRes = await fetch("https://portal.amootsms.com/rest/SendWithPattern", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: patternPayload.toString(),
         signal: AbortSignal.timeout(15000),
-      }).catch(() => null);
+      });
 
-      let sendData = sendRes ? await sendRes.json().catch(() => null) : null;
-      let isSuccess = sendData && (sendData.Status === "Success" || sendData.Status === "success" || sendData.Status === "OK");
+      const sendData = await sendRes.json().catch(() => null);
 
       if (!sendData) {
         return res.status(200).json({
@@ -603,11 +597,614 @@ export default async function handler(req, res) {
         });
       }
 
+      const isSuccess = sendData.Status === "Success" || sendData.Status === "success" || sendData.Status === "OK";
       return res.status(200).json({
         success: isSuccess,
         status: sendData.Status,
         data: sendData,
         message: isSuccess ? "پیامک بر اساس الگو با موفقیت ارسال شد." : (translateAmootStatus(sendData.Status) || sendData.Status),
+      });
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // ۶. ثبت پیام زماندار (Schedule SMS)
+    // ══════════════════════════════════════════════════════════════
+    if (action === "schedule_sms") {
+      const {
+        mobiles,
+        text,
+        lineNumber,
+        scheduledAt,
+        sourceType = "manual",
+        sourceFormId = null,
+      } = body;
+
+      if (!adminClient) {
+        return res.status(500).json({ success: false, message: "اتصال به پایگاه داده برقرار نیست." });
+      }
+
+      if (!text || !text.trim()) {
+        return res.status(400).json({ success: false, message: "متن پیامک نمی‌تواند خالی باشد." });
+      }
+
+      if (text.trim().length > 1000) {
+        return res.status(400).json({ success: false, message: "متن پیامک حداکثر می‌تواند ۱۰۰۰ کاراکتر باشد." });
+      }
+
+      if (!scheduledAt) {
+        return res.status(400).json({ success: false, message: "تاریخ و ساعت ارسال پیامک مشخص نشده است." });
+      }
+
+      const scheduledDate = new Date(scheduledAt);
+      if (isNaN(scheduledDate.getTime())) {
+        return res.status(400).json({ success: false, message: "فرمت تاریخ و ساعت ارسال نامعتبر است." });
+      }
+
+      // حداقل ۲ دقیقه بعد از زمان کنونی
+      const now = Date.now();
+      const minScheduledTime = now + 90 * 1000; // با ۱۰ ثانیه حاشیه برای تاخیر شبکه
+      if (scheduledDate.getTime() < minScheduledTime) {
+        return res.status(400).json({
+          success: false,
+          message: "زمان ارسال باید حداقل ۲ دقیقه بعد از زمان کنونی باشد.",
+        });
+      }
+
+      // نرمال‌سازی شماره‌ها و گزارش وضعیت
+      let rawList = [];
+      if (Array.isArray(mobiles)) {
+        rawList = mobiles.map((m) => String(m || "").trim()).filter(Boolean);
+      } else if (typeof mobiles === "string") {
+        rawList = mobiles.split(/[\n,;]+/).map((m) => m.trim()).filter(Boolean);
+      }
+
+      let validMobiles = [];
+      let invalidCount = 0;
+
+      for (const item of rawList) {
+        const norm = normalizeIranPhone(item);
+        if (isValidIranPhone(norm)) {
+          validMobiles.push(norm);
+        } else {
+          invalidCount++;
+        }
+      }
+
+      const totalValidRaw = validMobiles.length;
+      const uniqueMobiles = [...new Set(validMobiles)];
+      const duplicateCount = totalValidRaw - uniqueMobiles.length;
+
+      if (uniqueMobiles.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "هیچ شماره موبایل معتبری برای زمانبندی یافت نشد (شماره‌ها باید با ۰۹ شروع شوند).",
+        });
+      }
+
+      const maxLimit = Number(process.env.MAX_SCHEDULED_RECIPIENTS || 5000);
+      if (uniqueMobiles.length > maxLimit) {
+        return res.status(400).json({
+          success: false,
+          message: `حداکثر تعداد گیرندگان در هر نوبت زمانبندی ${maxLimit.toLocaleString("fa-IR")} شماره است.`,
+        });
+      }
+
+      // استخراج کاربر جاری
+      let userId = body.user_id || null;
+      if (!userId) {
+        const authHeader = req.headers.authorization;
+        if (authHeader) {
+          const token = authHeader.replace("Bearer ", "").trim();
+          try {
+            const { data: { user } } = await adminClient.auth.getUser(token);
+            if (user?.id) userId = user.id;
+          } catch {}
+        }
+      }
+
+      const finalLine = (!lineNumber || lineNumber === "Service" || lineNumber === "Public") ? "98" : lineNumber;
+
+      // درج در جدول scheduled_sms
+      const { data: scheduledRow, error: insertError } = await adminClient
+        .from("scheduled_sms")
+        .insert({
+          user_id: userId,
+          message: text.trim(),
+          sender_number: finalLine,
+          source_type: sourceType === "form" ? "form" : "manual",
+          source_form_id: sourceFormId || null,
+          scheduled_at: scheduledDate.toISOString(),
+          status: "pending",
+          total_count: uniqueMobiles.length,
+          success_count: 0,
+          failed_count: 0,
+          attempts: 0,
+        })
+        .select()
+        .single();
+
+      if (insertError || !scheduledRow) {
+        console.error("Error creating scheduled_sms:", insertError);
+        return res.status(500).json({
+          success: false,
+          message: "خطا در ثبت اطلاعات زمانبندی در پایگاه داده: " + (insertError?.message || ""),
+        });
+      }
+
+      // درج دسته‌ای گیرندگان در scheduled_sms_recipients (دسته‌های ۵۰۰ تایی)
+      const recipientRows = uniqueMobiles.map((mob) => ({
+        scheduled_sms_id: scheduledRow.id,
+        mobile: mob,
+        status: "pending",
+      }));
+
+      const BATCH_SIZE = 500;
+      for (let i = 0; i < recipientRows.length; i += BATCH_SIZE) {
+        const batch = recipientRows.slice(i, i + BATCH_SIZE);
+        const { error: batchErr } = await adminClient
+          .from("scheduled_sms_recipients")
+          .insert(batch);
+        if (batchErr) {
+          console.warn("Recipients batch insert warning:", batchErr);
+        }
+      }
+
+      return res.status(200).json({
+        success: true,
+        id: scheduledRow.id,
+        scheduled_sms: scheduledRow,
+        total_count: uniqueMobiles.length,
+        removed_invalid_count: invalidCount,
+        removed_duplicate_count: duplicateCount,
+        message: `زمانبندی پیامک برای تاریخ و ساعت انتخابی با ${uniqueMobiles.length.toLocaleString("fa-IR")} گیرنده با موفقیت ثبت شد.`,
+      });
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // ۷. دریافت لیست پیام‌های زماندار (Get Scheduled SMS List)
+    // ══════════════════════════════════════════════════════════════
+    if (action === "get_scheduled_sms_list") {
+      if (!adminClient) {
+        return res.status(500).json({ success: false, message: "اتصال به پایگاه داده برقرار نیست." });
+      }
+
+      const { status = "all", search = "", page = 1, limit = 20, fromDate, toDate } = body;
+      const offset = (Number(page) - 1) * Number(limit);
+
+      let query = adminClient
+        .from("scheduled_sms")
+        .select("*, forms:source_form_id(id, title, slug)", { count: "exact" })
+        .order("scheduled_at", { ascending: false });
+
+      if (status && status !== "all") {
+        query = query.eq("status", status);
+      }
+
+      if (search && search.trim()) {
+        query = query.ilike("message", `%${search.trim()}%`);
+      }
+
+      if (fromDate) {
+        query = query.gte("scheduled_at", new Date(fromDate).toISOString());
+      }
+      if (toDate) {
+        query = query.lte("scheduled_at", new Date(toDate).toISOString());
+      }
+
+      query = query.range(offset, offset + Number(limit) - 1);
+
+      const { data, count, error } = await query;
+      if (error) {
+        return res.status(500).json({ success: false, message: error.message });
+      }
+
+      return res.status(200).json({
+        success: true,
+        list: data || [],
+        total: count || 0,
+        page: Number(page),
+        limit: Number(limit),
+      });
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // ۸. دریافت جزئیات پیام زماندار و گیرندگان (Get Scheduled SMS Detail)
+    // ══════════════════════════════════════════════════════════════
+    if (action === "get_scheduled_sms_detail") {
+      const { id } = body;
+      if (!id) {
+        return res.status(400).json({ success: false, message: "شناسه پیام مشخص نشده است." });
+      }
+
+      if (!adminClient) {
+        return res.status(500).json({ success: false, message: "اتصال به پایگاه داده برقرار نیست." });
+      }
+
+      const { data: scheduledItem, error: fetchErr } = await adminClient
+        .from("scheduled_sms")
+        .select("*, forms:source_form_id(id, title, slug)")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (fetchErr || !scheduledItem) {
+        return res.status(404).json({ success: false, message: "پیام زماندار مورد نظر یافت نشد." });
+      }
+
+      const { data: recipients, error: recErr } = await adminClient
+        .from("scheduled_sms_recipients")
+        .select("*")
+        .eq("scheduled_sms_id", id)
+        .order("id", { ascending: true })
+        .limit(1000);
+
+      return res.status(200).json({
+        success: true,
+        scheduledSms: scheduledItem,
+        recipients: recipients || [],
+      });
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // ۹. لغو پیام زماندار (Cancel Scheduled SMS)
+    // ══════════════════════════════════════════════════════════════
+    if (action === "cancel_scheduled_sms") {
+      const { id } = body;
+      if (!id) {
+        return res.status(400).json({ success: false, message: "شناسه پیام مشخص نشده است." });
+      }
+
+      if (!adminClient) {
+        return res.status(500).json({ success: false, message: "اتصال به پایگاه داده برقرار نیست." });
+      }
+
+      const { data: target, error: fetchErr } = await adminClient
+        .from("scheduled_sms")
+        .select("id, status")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (fetchErr || !target) {
+        return res.status(404).json({ success: false, message: "پیام زماندار یافت نشد." });
+      }
+
+      if (target.status !== "pending") {
+        return res.status(400).json({
+          success: false,
+          message: `تنها پیام‌های در وضعیت «در انتظار» قابل لغو هستند (وضعیت فعلی: ${target.status}).`,
+        });
+      }
+
+      const { error: updateErr } = await adminClient
+        .from("scheduled_sms")
+        .update({
+          status: "canceled",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+
+      if (updateErr) {
+        return res.status(500).json({ success: false, message: "خطا در لغو زمانبندی: " + updateErr.message });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "زمانبندی ارسال پیامک با موفقیت لغو گردید.",
+      });
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // ۱۰. پردازش و دیسپچ صف پیام‌های زماندار (Dispatch Scheduled SMS)
+    // ══════════════════════════════════════════════════════════════
+    if (action === "dispatch_scheduled_sms") {
+      if (!adminClient) {
+        return res.status(500).json({ success: false, message: "اتصال به پایگاه داده برقرار نیست." });
+      }
+
+      const nowIso = new Date().toISOString();
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+
+      // ۱. رکوردهای واجد شرایط را بخوان: status = 'pending' AND scheduled_at <= NOW() AND (locked_at IS NULL OR locked_at < NOW() - 10m)
+      const { data: candidates, error: candErr } = await adminClient
+        .from("scheduled_sms")
+        .select("*")
+        .eq("status", "pending")
+        .lte("scheduled_at", nowIso)
+        .or(`locked_at.is.null,locked_at.lte.${tenMinutesAgo}`)
+        .order("scheduled_at", { ascending: true })
+        .limit(10);
+
+      if (candErr) {
+        console.error("Scheduled SMS candidates query error:", candErr);
+        return res.status(500).json({ success: false, message: candErr.message });
+      }
+
+      if (!candidates || candidates.length === 0) {
+        return res.status(200).json({
+          success: true,
+          processedCount: 0,
+          message: "هیچ پیام زمانداری در انتظار ارسال نیست.",
+        });
+      }
+
+      // دریافت توکن فعال آموت
+      let activeToken = process.env.AMOOT_TOKEN || process.env.AMOOT_SMS_TOKEN || process.env.VITE_AMOOT_TOKEN || "";
+      let defaultLine = "98";
+
+      try {
+        const { data: dbSettings } = await adminClient
+          .from("sms_settings")
+          .select("amoot_token, line_number, is_active")
+          .eq("id", 1)
+          .maybeSingle();
+
+        if (dbSettings) {
+          if (dbSettings.amoot_token) activeToken = dbSettings.amoot_token;
+          if (dbSettings.line_number && dbSettings.line_number !== "Public" && dbSettings.line_number !== "Service") {
+            defaultLine = dbSettings.line_number;
+          }
+        }
+      } catch {}
+
+      const results = [];
+
+      for (const item of candidates) {
+        // ۲. قفل موقت رکورد
+        const lockRes = await adminClient
+          .from("scheduled_sms")
+          .update({
+            status: "processing",
+            locked_at: new Date().toISOString(),
+            attempts: (item.attempts || 0) + 1,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", item.id)
+          .eq("status", "pending");
+
+        if (lockRes.error) {
+          console.warn(`Could not lock scheduled_sms #${item.id}:`, lockRes.error);
+          continue;
+        }
+
+        // ۳. بررسی انقضا (اگر بیش از ۶ ساعت عقب افتاده باشد)
+        const scheduledTime = new Date(item.scheduled_at).getTime();
+        const sixHoursAgoTime = Date.now() - 6 * 60 * 60 * 1000;
+        if (scheduledTime < sixHoursAgoTime) {
+          const expiredErr = "منقضی شده (تاخیر بیش از ۶ ساعت در سرور)";
+          await adminClient
+            .from("scheduled_sms")
+            .update({
+              status: "failed",
+              last_error: "expired",
+              locked_at: null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", item.id);
+
+          await sendBotReportSafe({
+            id: item.id,
+            scheduled_at: item.scheduled_at,
+            sender_number: item.sender_number || defaultLine,
+            message: item.message,
+            total_count: item.total_count,
+            success_count: 0,
+            failed_count: item.total_count,
+            status: "failed",
+            last_error: expiredErr,
+          });
+
+          await adminClient
+            .from("scheduled_sms")
+            .update({ bot_notified_at: new Date().toISOString() })
+            .eq("id", item.id);
+
+          results.push({ id: item.id, status: "expired" });
+          continue;
+        }
+
+        // بررسی وجود توکن
+        if (!activeToken) {
+          const tokenErr = "توکن وب‌سرویس آموت در سامانه تعریف نشده است.";
+          await adminClient
+            .from("scheduled_sms")
+            .update({
+              status: "failed",
+              last_error: tokenErr,
+              locked_at: null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", item.id);
+
+          await sendBotReportSafe({
+            id: item.id,
+            scheduled_at: item.scheduled_at,
+            sender_number: item.sender_number || defaultLine,
+            message: item.message,
+            total_count: item.total_count,
+            success_count: 0,
+            failed_count: item.total_count,
+            status: "failed",
+            last_error: tokenErr,
+          });
+
+          results.push({ id: item.id, status: "failed", error: tokenErr });
+          continue;
+        }
+
+        // ۴. واکشی گیرندگان
+        const { data: recipients, error: recErr } = await adminClient
+          .from("scheduled_sms_recipients")
+          .select("id, mobile")
+          .eq("scheduled_sms_id", item.id);
+
+        if (recErr || !recipients || recipients.length === 0) {
+          await adminClient
+            .from("scheduled_sms")
+            .update({
+              status: "failed",
+              last_error: "هیچ گیرنده‌ای برای این پیامک یافت نشد.",
+              locked_at: null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", item.id);
+          continue;
+        }
+
+        let totalSuccess = 0;
+        let totalFailed = 0;
+        let lastErrorText = null;
+        let lastProviderResponse = null;
+        const lineToSend = (!item.sender_number || item.sender_number === "Public" || item.sender_number === "Service")
+          ? defaultLine
+          : item.sender_number;
+
+        // ۵. دسته‌های ۱۰۰ تایی گیرندگان
+        const BATCH_SIZE = 100;
+        for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+          const batch = recipients.slice(i, i + BATCH_SIZE);
+          const batchMobiles = batch.map((r) => r.mobile);
+          const batchIds = batch.map((r) => r.id);
+
+          try {
+            const amootPayload = {
+              token: activeToken,
+              Mobiles: batchMobiles.join(","),
+              SMSMessageText: item.message.trim(),
+              LineNumber: lineToSend,
+            };
+
+            const sendRes = await fetch("https://portal.amootsms.com/rest/SendSimple", {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams(amootPayload).toString(),
+              signal: AbortSignal.timeout(20000),
+            });
+
+            const sendData = await sendRes.json().catch(() => null);
+            lastProviderResponse = sendData;
+
+            if (sendData && sendData.Status === "Success") {
+              const campaignId = String(sendData.CampaignID || "");
+              const partsCount = Number(sendData.SMSPagesCount) || 1;
+              const pricePerMsg = batchMobiles.length > 0 ? (Number(sendData.Price) || 0) / batchMobiles.length : 0;
+
+              // بروزرسانی وضعیت گیرندگان این دسته
+              await adminClient
+                .from("scheduled_sms_recipients")
+                .update({
+                  status: "sent",
+                  provider_message_id: campaignId,
+                  updated_at: new Date().toISOString(),
+                })
+                .in("id", batchIds);
+
+              // ثبت در تاریخچه سایت (sms_outbox) با برچسب زماندار
+              const outboxRows = batchMobiles.map((mob) => ({
+                message_id: campaignId,
+                mobile: mob,
+                text: item.message.trim(),
+                status: "sent",
+                line_number: lineToSend,
+                parts: partsCount,
+                cost: pricePerMsg,
+                is_scheduled: true,
+                scheduled_sms_id: item.id,
+              }));
+
+              await adminClient.from("sms_outbox").insert(outboxRows).catch(() => {});
+
+              totalSuccess += batchMobiles.length;
+            } else {
+              const rawStatus = sendData?.Status || "Failed";
+              const errorFa = translateAmootStatus(rawStatus);
+              lastErrorText = errorFa;
+
+              await adminClient
+                .from("scheduled_sms_recipients")
+                .update({
+                  status: "failed",
+                  error_message: errorFa,
+                  updated_at: new Date().toISOString(),
+                })
+                .in("id", batchIds);
+
+              const outboxRows = batchMobiles.map((mob) => ({
+                mobile: mob,
+                text: item.message.trim(),
+                status: "failed",
+                error_message: errorFa,
+                line_number: lineToSend,
+                is_scheduled: true,
+                scheduled_sms_id: item.id,
+              }));
+
+              await adminClient.from("sms_outbox").insert(outboxRows).catch(() => {});
+
+              totalFailed += batchMobiles.length;
+            }
+          } catch (netErr) {
+            console.error(`Batch send error for scheduled_sms #${item.id}:`, netErr);
+            lastErrorText = netErr.message || "خطای ارتباط با درگاه پیامک";
+            totalFailed += batchMobiles.length;
+
+            await adminClient
+              .from("scheduled_sms_recipients")
+              .update({
+                status: "failed",
+                error_message: lastErrorText,
+                updated_at: new Date().toISOString(),
+              })
+              .in("id", batchIds);
+          }
+        }
+
+        // ۶. جمع‌بندی وضعیت نهایی رکورد
+        const finalStatus = totalSuccess > 0 ? "sent" : "failed";
+
+        await adminClient
+          .from("scheduled_sms")
+          .update({
+            status: finalStatus,
+            success_count: totalSuccess,
+            failed_count: totalFailed,
+            total_count: recipients.length,
+            last_error: lastErrorText,
+            provider_response: lastProviderResponse,
+            locked_at: null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", item.id);
+
+        // ۷. ارسال گزارش به ربات
+        await sendBotReportSafe({
+          id: item.id,
+          scheduled_at: item.scheduled_at,
+          sender_number: lineToSend,
+          message: item.message,
+          total_count: recipients.length,
+          success_count: totalSuccess,
+          failed_count: totalFailed,
+          status: finalStatus,
+          last_error: lastErrorText,
+        });
+
+        await adminClient
+          .from("scheduled_sms")
+          .update({ bot_notified_at: new Date().toISOString() })
+          .eq("id", item.id);
+
+        results.push({
+          id: item.id,
+          status: finalStatus,
+          successCount: totalSuccess,
+          failedCount: totalFailed,
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        processedCount: results.length,
+        results,
       });
     }
 
@@ -618,5 +1215,96 @@ export default async function handler(req, res) {
       success: false,
       message: err.message || "خطای ارتباط با سرور",
     });
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// توابع کمکی گزارش‌دهی به ربات (Bot Reporting)
+// ══════════════════════════════════════════════════════════════
+function formatJalaliDateTimeSafe(isoString) {
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return "—";
+    const dateStr = new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+      timeZone: "Asia/Tehran",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(d);
+    const timeStr = new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+      timeZone: "Asia/Tehran",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(d);
+    return { dateStr, timeStr };
+  } catch {
+    return { dateStr: "—", timeStr: "—" };
+  }
+}
+
+async function sendBotReportSafe({
+  id,
+  scheduled_at,
+  sender_number,
+  message,
+  total_count,
+  success_count,
+  failed_count,
+  status,
+  last_error,
+}) {
+  const botToken = (process.env.BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN || "").trim().replace(/^bot/i, "");
+  const botChatId = (process.env.BOT_CHAT_ID || process.env.TELEGRAM_CHAT_ID || "").trim();
+  const botApiBase = (process.env.BOT_API_BASE || "https://api.telegram.org").trim().replace(/\/$/, "");
+
+  if (!botToken || !botChatId) {
+    return;
+  }
+
+  const { dateStr, timeStr } = formatJalaliDateTimeSafe(scheduled_at);
+  const statusFaMap = {
+    sent: "ارسال شد",
+    failed: "ناموفق",
+    canceled: "لغو شده",
+    processing: "در حال ارسال",
+    pending: "در انتظار ارسال",
+  };
+  const statusFa = statusFaMap[status] || status;
+
+  const previewText = (message || "").trim().slice(0, 60);
+
+  let reportText =
+`📤 گزارش ارسال زماندار
+
+شناسه: #${id}
+زمان مقرر: ${dateStr} — ${timeStr}
+خط ارسال: ${sender_number}
+
+متن: ${previewText}${message && message.length > 60 ? "..." : ""}
+
+گیرندگان: ${total_count}
+✅ موفق: ${success_count}
+❌ ناموفق: ${failed_count}
+
+وضعیت نهایی: ${statusFa}`;
+
+  if (last_error && status === "failed") {
+    reportText += `\n⚠️ علت: ${last_error}`;
+  }
+
+  try {
+    const url = `${botApiBase}/bot${botToken}/sendMessage`;
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: botChatId,
+        text: reportText,
+      }),
+      signal: AbortSignal.timeout(8000),
+    });
+  } catch (err) {
+    console.warn("Scheduled SMS Bot report sending failed (silently caught):", err?.message);
   }
 }

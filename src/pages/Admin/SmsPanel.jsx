@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { faNum, faDateTime } from "../../lib/utils";
+import { faNum, faDateTime, faDate } from "../../lib/utils";
 import { normalizeIranPhone, isValidIranPhone } from "../../lib/validators";
 import { supabase } from "../../lib/supabaseClient";
 import Button from "../../components/ui/Button";
@@ -12,6 +12,7 @@ import Spinner from "../../components/ui/Spinner";
 import Skeleton, { TableSkeleton, DashboardSkeleton } from "../../components/ui/Skeleton";
 import SEO from "../../components/ui/SEO";
 import PasswordToggle from "../../components/ui/PasswordToggle";
+import JalaliDateTimePicker from "../../components/ui/JalaliDateTimePicker";
 import {
   MessageSquare,
   Send,
@@ -44,6 +45,15 @@ import {
   FileText,
   ListFilter,
   Sparkles,
+  CalendarClock,
+  Clock,
+  Calendar,
+  Layers,
+  Ban,
+  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
+  Info,
 } from "lucide-react";
 
 const inputCls =
@@ -95,6 +105,41 @@ export default function SmsPanel() {
   const [sendingSms, setSendingSms] = useState(false);
   const [sendResult, setSendResult] = useState(null);
 
+  // ─── Scheduled SMS State ───
+  const [schedSourceType, setSchedSourceType] = useState("manual"); // 'manual' | 'form'
+  const [schedFormId, setSchedFormId] = useState("");
+  const [schedFormQuestions, setSchedFormQuestions] = useState([]);
+  const [schedLoadingQuestions, setSchedLoadingQuestions] = useState(false);
+  const [schedSelectedQIds, setSchedSelectedQIds] = useState([]);
+  const [schedExtractedContacts, setSchedExtractedContacts] = useState([]);
+  const [schedUniquePhones, setSchedUniquePhones] = useState([]);
+  const [schedExtracting, setSchedExtracting] = useState(false);
+  const [schedRawMobiles, setSchedRawMobiles] = useState("");
+  const [schedText, setSchedText] = useState("");
+  const [schedLineNumber, setSchedLineNumber] = useState("98");
+  const [schedDateTime, setSchedDateTime] = useState(() => {
+    const d = new Date(Date.now() + 15 * 60 * 1000);
+    return d.toISOString();
+  });
+  const [schedulingSubmitting, setSchedulingSubmitting] = useState(false);
+  const [scheduleFeedback, setScheduleFeedback] = useState(null);
+
+  // ─── Scheduled SMS Queue & Logs ───
+  const [scheduledList, setScheduledList] = useState([]);
+  const [scheduledTotal, setScheduledTotal] = useState(0);
+  const [scheduledPage, setScheduledPage] = useState(1);
+  const [scheduledStatusFilter, setScheduledStatusFilter] = useState("all");
+  const [scheduledSearch, setScheduledSearch] = useState("");
+  const [scheduledLoading, setScheduledLoading] = useState(false);
+  const [cancelingId, setCancelingId] = useState(null);
+
+  // ─── Scheduled SMS Detail Modal ───
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [selectedScheduledItem, setSelectedScheduledItem] = useState(null);
+  const [selectedRecipients, setSelectedRecipients] = useState([]);
+  const [recipientSearchFilter, setRecipientSearchFilter] = useState("");
+
   // ─── Dashboard & Logs State ───
   const [stats, setStats] = useState({ outboxToday: 0, outboxMonth: 0, inboxToday: 0, successRate: null });
   const [outbox, setOutbox] = useState([]);
@@ -102,6 +147,7 @@ export default function SmsPanel() {
   const [logLoading, setLogLoading] = useState(false);
   const [searchHistory, setSearchHistory] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterOutboxType, setFilterOutboxType] = useState("all"); // 'all' | 'scheduled' | 'instant'
 
   // ─── Form Contacts Extraction State ───
   const [formsList, setFormsList] = useState([]);
@@ -117,6 +163,7 @@ export default function SmsPanel() {
   const [extractingContacts, setExtractingContacts] = useState(false);
   const [searchContactFilter, setSearchContactFilter] = useState("");
   const extractionReqIdRef = useRef(0);
+  const schedExtractionReqIdRef = useRef(0);
 
   function showToast(msg, type = "success") {
     setToast({ msg, type });
@@ -150,6 +197,7 @@ export default function SmsPanel() {
       if (storedLine) {
         const clean = (storedLine === "Service" || storedLine === "Public") ? "98" : storedLine;
         setLineNumber(clean);
+        setSchedLineNumber(clean);
       }
       if (storedSender) setSenderName(storedSender);
       if (storedActive !== null) setIsActive(storedActive === "true");
@@ -173,6 +221,7 @@ export default function SmsPanel() {
             if (dbSettings.line_number) {
               const clean = (dbSettings.line_number === "Service" || dbSettings.line_number === "Public") ? "98" : dbSettings.line_number;
               setLineNumber(clean);
+              setSchedLineNumber(clean);
             }
             if (dbSettings.sender_name) setSenderName(dbSettings.sender_name);
             if (dbSettings.is_active !== undefined && dbSettings.is_active !== null) {
@@ -250,6 +299,49 @@ export default function SmsPanel() {
     setLogLoading(false);
   }, []);
 
+  // ─── بارگذاری صف پیام‌های زماندار ───
+  const loadScheduledQueue = useCallback(async () => {
+    setScheduledLoading(true);
+    try {
+      const data = await callAmootProxy("get_scheduled_sms_list", {
+        status: scheduledStatusFilter,
+        search: scheduledSearch,
+        page: scheduledPage,
+        limit: 20,
+      });
+
+      if (data?.success) {
+        setScheduledList(data.list || []);
+        setScheduledTotal(data.total || 0);
+      } else {
+        // فالبک از پایگاه داده مستقیم
+        let q = supabase
+          .from("scheduled_sms")
+          .select("*, forms:source_form_id(id, title, slug)", { count: "exact" })
+          .order("scheduled_at", { ascending: false });
+
+        if (scheduledStatusFilter !== "all") {
+          q = q.eq("status", scheduledStatusFilter);
+        }
+        if (scheduledSearch.trim()) {
+          q = q.ilike("message", `%${scheduledSearch.trim()}%`);
+        }
+
+        const offset = (scheduledPage - 1) * 20;
+        q = q.range(offset, offset + 19);
+
+        const { data: dbRows, count } = await q;
+        setScheduledList(dbRows || []);
+        setScheduledTotal(count || 0);
+      }
+    } catch (err) {
+      console.error("Load scheduled queue error:", err);
+    } finally {
+      setScheduledLoading(false);
+    }
+  }, [callAmootProxy, scheduledStatusFilter, scheduledSearch, scheduledPage]);
+
+  // ─── بارگذاری اولیه صفحه ───
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -262,7 +354,17 @@ export default function SmsPanel() {
     };
   }, [loadSettings, loadDashboard]);
 
-  // ─── بارگذاری فقط فرم‌های فعال برای استخراج شماره تماس ───
+  // رفرش صف زمانبندی در زمان باز بودن تب زماندار
+  useEffect(() => {
+    if (tab === "scheduled") {
+      loadScheduledQueue();
+      if (formsList.length === 0) {
+        loadFormsList();
+      }
+    }
+  }, [tab, loadScheduledQueue]);
+
+  // ─── بارگذاری فرم‌های فعال ───
   const loadFormsList = useCallback(async () => {
     setLoadingForms(true);
     try {
@@ -317,7 +419,7 @@ export default function SmsPanel() {
     }
   }, [tab, formsList.length, loadFormsList]);
 
-  // ─── استخراج شماره‌ها برای فیلدهای انتخابی ───
+  // ─── استخراج شماره‌ها برای فیلدهای انتخابی (تب فرم ایمپورت) ───
   const extractNumbersForQuestions = async (formId, questionIds, questionsList = formQuestions) => {
     if (!formId || !questionIds || questionIds.length === 0) {
       setExtractedContacts([]);
@@ -334,7 +436,6 @@ export default function SmsPanel() {
         qMap[q.id] = q.title;
       });
 
-      // ۱. دریافت لیست شناسه‌های پاسخ‌های ثبت‌شده برای این فرم
       const { data: responsesData, error: respError } = await supabase
         .from("responses")
         .select("id, created_at")
@@ -357,7 +458,6 @@ export default function SmsPanel() {
         respIds.push(r.id);
       });
 
-      // ۲. دریافت پاسخ‌های مربوط به فیلدهای انتخابی به صورت دسته‌ای (Chunked)
       let answersData = [];
       const CHUNK_SIZE = 150;
       for (let i = 0; i < respIds.length; i += CHUNK_SIZE) {
@@ -444,7 +544,154 @@ export default function SmsPanel() {
     }
   };
 
-  // ─── انتخاب یک فرم و بارگذاری فیلدها ───
+  // ─── استخراج شماره‌ها برای فرم زماندار ───
+  const extractNumbersForSchedForm = async (formId, questionIds, questionsList = schedFormQuestions) => {
+    if (!formId || !questionIds || questionIds.length === 0) {
+      setSchedExtractedContacts([]);
+      setSchedUniquePhones([]);
+      setSchedExtracting(false);
+      return;
+    }
+
+    const currentReqId = ++schedExtractionReqIdRef.current;
+    setSchedExtracting(true);
+    try {
+      const qMap = {};
+      (questionsList || []).forEach((q) => {
+        qMap[q.id] = q.title;
+      });
+
+      const { data: responsesData, error: respError } = await supabase
+        .from("responses")
+        .select("id, created_at")
+        .eq("form_id", formId);
+
+      if (respError) throw respError;
+      if (currentReqId !== schedExtractionReqIdRef.current) return;
+
+      if (!responsesData || responsesData.length === 0) {
+        setSchedExtractedContacts([]);
+        setSchedUniquePhones([]);
+        showToast("هنوز هیچ پاسخی برای این فرم ثبت نشده است.", "info");
+        return;
+      }
+
+      const respIds = responsesData.map((r) => r.id);
+      let answersData = [];
+      const CHUNK_SIZE = 150;
+      for (let i = 0; i < respIds.length; i += CHUNK_SIZE) {
+        const chunk = respIds.slice(i, i + CHUNK_SIZE);
+        const { data: chunkAnswers, error: ansError } = await supabase
+          .from("answers")
+          .select("id, response_id, question_id, value")
+          .in("response_id", chunk)
+          .in("question_id", questionIds);
+
+        if (ansError) throw ansError;
+        if (currentReqId !== schedExtractionReqIdRef.current) return;
+        if (chunkAnswers && chunkAnswers.length > 0) {
+          answersData = answersData.concat(chunkAnswers);
+        }
+      }
+
+      if (currentReqId !== schedExtractionReqIdRef.current) return;
+
+      const rawItems = [];
+      answersData.forEach((row) => {
+        let val = row.value;
+        if (Array.isArray(val)) {
+          val.forEach((item) => {
+            const rawStr = String(item || "").trim();
+            if (rawStr) {
+              const norm = normalizeIranPhone(rawStr);
+              if (isValidIranPhone(norm)) rawItems.push(norm);
+            }
+          });
+        } else if (val !== null && val !== undefined) {
+          const rawStr = String(val).trim();
+          if (rawStr) {
+            const norm = normalizeIranPhone(rawStr);
+            if (isValidIranPhone(norm)) rawItems.push(norm);
+          }
+        }
+      });
+
+      const uniqueList = [...new Set(rawItems)];
+      setSchedExtractedContacts(rawItems);
+      setSchedUniquePhones(uniqueList);
+
+      if (uniqueList.length > 0) {
+        showToast(`${faNum(uniqueList.length)} شماره مخاطب معتبر از فرم استخراج شد.`, "success");
+      }
+    } catch (err) {
+      console.error("Scheduled Form Extract error:", err);
+    } finally {
+      if (currentReqId === schedExtractionReqIdRef.current) {
+        setSchedExtracting(false);
+      }
+    }
+  };
+
+  const handleSelectSchedForm = async (formId) => {
+    setSchedFormId(formId);
+    setSchedSelectedQIds([]);
+    setSchedExtractedContacts([]);
+    setSchedUniquePhones([]);
+    if (!formId) {
+      setSchedFormQuestions([]);
+      return;
+    }
+
+    setSchedLoadingQuestions(true);
+    try {
+      const { data, error } = await supabase
+        .from("questions")
+        .select("id, form_id, title, type, position")
+        .eq("form_id", formId)
+        .order("position", { ascending: true });
+
+      if (error) throw error;
+      const questions = data || [];
+      setSchedFormQuestions(questions);
+
+      const defaultPhoneQIds = questions
+        .filter((q) => {
+          const t = (q.type || "").toLowerCase();
+          const title = (q.title || "").toLowerCase();
+          return (
+            t === "phone_ir" ||
+            title.includes("موبایل") ||
+            title.includes("تلفن") ||
+            title.includes("تماس") ||
+            title.includes("شماره") ||
+            title.includes("phone") ||
+            title.includes("mobile")
+          );
+        })
+        .map((q) => q.id);
+
+      setSchedSelectedQIds(defaultPhoneQIds);
+      if (defaultPhoneQIds.length > 0) {
+        extractNumbersForSchedForm(formId, defaultPhoneQIds, questions);
+      }
+    } catch (err) {
+      console.error("Failed to load form questions:", err);
+      showToast("خطا در دریافت فیلدهای فرم", "error");
+    } finally {
+      setSchedLoadingQuestions(false);
+    }
+  };
+
+  const handleToggleSchedQuestion = (qId) => {
+    const next = schedSelectedQIds.includes(qId)
+      ? schedSelectedQIds.filter((id) => id !== qId)
+      : [...schedSelectedQIds, qId];
+    setSchedSelectedQIds(next);
+    if (schedFormId) {
+      extractNumbersForSchedForm(schedFormId, next);
+    }
+  };
+
   const handleSelectForm = async (formId) => {
     setSelectedFormId(formId);
     setSelectedQuestionIds([]);
@@ -467,7 +714,6 @@ export default function SmsPanel() {
       const questions = data || [];
       setFormQuestions(questions);
 
-      // شناسایی خودکار فیلدهای شماره تماس
       const defaultPhoneQIds = questions
         .filter((q) => {
           const t = (q.type || "").toLowerCase();
@@ -549,6 +795,24 @@ export default function SmsPanel() {
 
     setTab("send");
     showToast(`${faNum(uniqueExtractedPhones.length)} شماره با موفقیت به لیست گیرندگان اضافه شد.`, "success");
+  };
+
+  const handleImportToScheduled = () => {
+    if (uniqueExtractedPhones.length === 0) {
+      showToast("شماره معتبری برای انتقال وجود ندارد.", "error");
+      return;
+    }
+
+    const newMobilesText = uniqueExtractedPhones.join("\n");
+    setSchedRawMobiles((prev) => {
+      if (!prev.trim()) return newMobilesText;
+      const combined = [...new Set([...prev.split(/[\n,;]+/).map((m) => m.trim()), ...uniqueExtractedPhones])];
+      return combined.filter(Boolean).join("\n");
+    });
+    setSchedSourceType("manual");
+
+    setTab("scheduled");
+    showToast(`${faNum(uniqueExtractedPhones.length)} شماره با موفقیت به بخش پیام‌های زماندار منتقل شد.`, "success");
   };
 
   const handleCopyExtractedPhones = () => {
@@ -647,9 +911,7 @@ export default function SmsPanel() {
               .eq("id", 1)
               .maybeSingle();
             finalToken = existing?.amoot_token || "";
-          } catch {
-            // ignore
-          }
+          } catch {}
         }
       }
 
@@ -664,7 +926,6 @@ export default function SmsPanel() {
       localStorage.setItem(senderStorageKey, senderName || "پرس‌کاد");
       localStorage.setItem(activeStorageKey, String(isActive));
 
-      // تلاش برای ذخیره مستقیم در پایگاه داده (برای سوپرادمین)
       if (isGlobalAdmin) {
         try {
           await supabase.from("sms_settings").upsert({
@@ -680,7 +941,6 @@ export default function SmsPanel() {
         }
       }
 
-      // ارسال به بریج سرورلس با توکن
       callAmootProxy("save_settings", {
         token: finalToken,
         amoot_token: finalToken,
@@ -704,7 +964,6 @@ export default function SmsPanel() {
     .filter(isValidIranPhone);
   const uniqueMobiles = [...new Set(parsedMobiles)];
 
-  // تشخیص کاراکتر فارسی و محاسبه تعداد صفحات
   const isPersianSms = /[\u0600-\u06FF]/.test(smsText);
   const charCount = smsText.length;
   let smsPagesCount = 1;
@@ -716,7 +975,27 @@ export default function SmsPanel() {
     else smsPagesCount = Math.ceil(charCount / 153);
   }
 
-  // ─── ارسال پیامک ───
+  // ─── مشخصات متن پیامک زماندار ───
+  const schedParsedManualMobiles = schedRawMobiles
+    .split(/[\n,;]+/)
+    .map((m) => normalizeIranPhone(m.trim()))
+    .filter(isValidIranPhone);
+  const schedUniqueManualMobiles = [...new Set(schedParsedManualMobiles)];
+
+  const activeSchedMobiles = schedSourceType === "form" ? schedUniquePhones : schedUniqueManualMobiles;
+
+  const isSchedPersian = /[\u0600-\u06FF]/.test(schedText);
+  const schedCharCount = schedText.length;
+  let schedPagesCount = 1;
+  if (isSchedPersian) {
+    if (schedCharCount <= 70) schedPagesCount = 1;
+    else schedPagesCount = Math.ceil(schedCharCount / 67);
+  } else {
+    if (schedCharCount <= 160) schedPagesCount = 1;
+    else schedPagesCount = Math.ceil(schedCharCount / 153);
+  }
+
+  // ─── ارسال پیامک آنی ───
   async function handleSendSms(e) {
     e.preventDefault();
     if (uniqueMobiles.length === 0) {
@@ -749,9 +1028,6 @@ export default function SmsPanel() {
         setSendResult({ success: true, ...data });
         setSmsText("");
         setRawMobiles("");
-
-        // لاگ پیامک به‌صورت خودکار توسط بک‌اند (amoot-proxy) در دیتابیس درج می‌شود
-        // فراخوانی مجدد جهت به‌روزرسانی داشبورد و تاریخچه بدون ایجاد رکورد تکراری
         await Promise.all([loadDashboard(), loadSettings(), loadHistory()]);
       } else {
         showToast(data.message || "ارسال پیامک ناموفق بود", "error");
@@ -762,6 +1038,112 @@ export default function SmsPanel() {
       setSendResult({ success: false, message: err.message });
     } finally {
       setSendingSms(false);
+    }
+  }
+
+  // ─── ثبت پیام زماندار جدید ───
+  async function handleCreateSchedule(e) {
+    if (e?.preventDefault) e.preventDefault();
+    if (schedulingSubmitting) return;
+
+    if (activeSchedMobiles.length === 0) {
+      showToast("لطفاً حداقل یک شماره موبایل معتبر برای زمانبندی وارد یا از فرم استخراج کنید.", "error");
+      return;
+    }
+    if (!schedText.trim()) {
+      showToast("متن پیامک نمی‌تواند خالی باشد.", "error");
+      return;
+    }
+
+    const schedDateObj = new Date(schedDateTime);
+    const minAllowedTime = Date.now() + 90 * 1000;
+    if (isNaN(schedDateObj.getTime()) || schedDateObj.getTime() < minAllowedTime) {
+      showToast("زمان ارسال باید حداقل ۲ دقیقه بعد از زمان کنونی باشد.", "error");
+      return;
+    }
+
+    setSchedulingSubmitting(true);
+    setScheduleFeedback(null);
+    try {
+      const lineToSend = (!schedLineNumber || schedLineNumber === "Service" || schedLineNumber === "Public")
+        ? "98"
+        : schedLineNumber;
+
+      const data = await callAmootProxy("schedule_sms", {
+        mobiles: activeSchedMobiles,
+        text: schedText.trim(),
+        lineNumber: lineToSend,
+        scheduledAt: schedDateObj.toISOString(),
+        sourceType: schedSourceType,
+        sourceFormId: schedSourceType === "form" ? schedFormId : null,
+      });
+
+      if (data?.success) {
+        showToast(data.message || "پیام زماندار با موفقیت در صف ارسال ثبت گردید.", "success");
+        setScheduleFeedback({
+          success: true,
+          message: data.message,
+          total: data.total_count,
+          removedInvalid: data.removed_invalid_count,
+          removedDuplicates: data.removed_duplicate_count,
+        });
+
+        // پاکسازی فرم بعد از موفقیت
+        setSchedText("");
+        if (schedSourceType === "manual") {
+          setSchedRawMobiles("");
+        }
+
+        // بروزرسانی صف
+        await loadScheduledQueue();
+      } else {
+        showToast(data?.message || "خطا در ثبت زمانبندی پیامک", "error");
+        setScheduleFeedback({ success: false, message: data?.message });
+      }
+    } catch (err) {
+      showToast(err.message || "خطا در ارتباط با سرور", "error");
+      setScheduleFeedback({ success: false, message: err.message });
+    } finally {
+      setSchedulingSubmitting(false);
+    }
+  }
+
+  // ─── لغو پیام زماندار ───
+  async function handleCancelScheduled(id) {
+    if (!window.confirm("آیا از لغو این پیام زماندار اطمینان دارید؟")) return;
+    setCancelingId(id);
+    try {
+      const data = await callAmootProxy("cancel_scheduled_sms", { id });
+      if (data?.success) {
+        showToast("پیام زماندار با موفقیت لغو گردید.", "success");
+        await loadScheduledQueue();
+      } else {
+        showToast(data?.message || "خطا در لغو پیام زماندار", "error");
+      }
+    } catch (err) {
+      showToast(err.message || "خطا در لغو پیام", "error");
+    } finally {
+      setCancelingId(null);
+    }
+  }
+
+  // ─── مشاهده جزئیات پیام زماندار ───
+  async function handleOpenDetail(item) {
+    setSelectedScheduledItem(item);
+    setSelectedRecipients([]);
+    setRecipientSearchFilter("");
+    setDetailModalOpen(true);
+    setDetailLoading(true);
+    try {
+      const data = await callAmootProxy("get_scheduled_sms_detail", { id: item.id });
+      if (data?.success) {
+        setSelectedScheduledItem(data.scheduledSms || item);
+        setSelectedRecipients(data.recipients || []);
+      }
+    } catch (err) {
+      console.error("Load scheduled detail error:", err);
+    } finally {
+      setDetailLoading(false);
     }
   }
 
@@ -784,21 +1166,44 @@ export default function SmsPanel() {
       item.mobile?.includes(searchHistory) ||
       item.text?.toLowerCase().includes(searchHistory.toLowerCase());
     const matchesStatus = filterStatus === "all" || item.status === filterStatus;
-    return matchesSearch && matchesStatus;
+    const matchesType =
+      filterOutboxType === "all" ||
+      (filterOutboxType === "scheduled" && Boolean(item.is_scheduled || item.scheduled_sms_id)) ||
+      (filterOutboxType === "instant" && !item.is_scheduled && !item.scheduled_sms_id);
+    return matchesSearch && matchesStatus && matchesType;
   });
 
   const TABS = [
     { id: "dashboard", label: "داشبورد و وضعیت", icon: BarChart3 },
-    { id: "send", label: "ارسال پیامک", icon: Send },
+    { id: "send", label: "ارسال آنی پیامک", icon: Send },
+    { id: "scheduled", label: "ارسال پیام زماندار", icon: CalendarClock },
     { id: "form_import", label: "استخراج شماره از فرم‌ها", icon: Users },
     { id: "history", label: "تاریخچه ارسال‌ها", icon: History },
     { id: "inbox", label: "صندوق دریافتی", icon: Inbox },
     { id: "settings", label: "تنظیمات آموت", icon: Settings },
   ];
 
+  // برچسب‌ها و رنگ‌های وضعیت پیام زماندار
+  const getScheduledStatusBadge = (status) => {
+    switch (status) {
+      case "pending":
+        return <Badge color="gray">در انتظار ارسال</Badge>;
+      case "processing":
+        return <Badge color="blue">در حال ارسال</Badge>;
+      case "sent":
+        return <Badge color="teal">ارسال شد</Badge>;
+      case "failed":
+        return <Badge color="red">ناموفق</Badge>;
+      case "canceled":
+        return <Badge color="orange">لغو شده</Badge>;
+      default:
+        return <Badge color="gray">{status}</Badge>;
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full">
-      <SEO title="پنل پیامک آموت" description="ارسال، مدیریت و تنظیمات وب‌سرویس پیامک آموت — پرس‌کاد" url="/admin/sms" noIndex />
+      <SEO title="سامانه پیامک آموت" description="ارسال آنی و زماندار، مدیریت و تنظیمات وب‌سرویس پیامک آموت — پرس‌کاد" url="/admin/sms" noIndex />
 
       {/* Toast Notification */}
       {toast && (
@@ -822,7 +1227,7 @@ export default function SmsPanel() {
             سامانه پیامک آموت
           </h1>
           <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 mt-0.5">
-            ارسال پیامک، استعلام اعتبار و مدیریت درگاه وب‌سرویس آموت (Amoot SMS)
+            ارسال آنی و زماندار پیامک، استخراج شماره از فرم‌ها و مدیریت درگاه وب‌سرویس آموت
           </p>
         </div>
 
@@ -988,7 +1393,7 @@ export default function SmsPanel() {
       )}
 
       {/* ══════════════════════════════════════════════════════════════ */}
-      {/* ۲. تب ارسال پیامک (SEND SMS) */}
+      {/* ۲. تب ارسال آنی پیامک (SEND SMS) */}
       {/* ══════════════════════════════════════════════════════════════ */}
       {tab === "send" && (
         <div className="flex flex-col gap-6 max-w-3xl">
@@ -1158,7 +1563,638 @@ export default function SmsPanel() {
       )}
 
       {/* ══════════════════════════════════════════════════════════════ */}
-      {/* تب استخراج شماره از فرم‌ها (FORM CONTACTS IMPORT) */}
+      {/* ۳. تب ارسال پیام زماندار (SCHEDULED SMS) */}
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {tab === "scheduled" && (
+        <div className="flex flex-col gap-6">
+          {/* فرم ثبت زمانبندی پیامک */}
+          <div>
+            <StickerCard theme="white">
+              <form onSubmit={handleCreateSchedule} className="p-5 sm:p-6 flex flex-col gap-5">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink/10 dark:border-slate-800 pb-3">
+                  <div>
+                    <h2 className="text-base sm:text-lg font-black text-navy dark:text-white flex items-center gap-2">
+                      <CalendarClock size={20} className="text-teal" />
+                      ثبت زمانبندی جدید ارسال پیامک
+                    </h2>
+                    <p className="text-xs font-semibold text-ink-subtle dark:text-slate-400 mt-1">
+                      پیامک شما در تاریخ و ساعت مقرر به‌صورت کاملاً خودکار به گیرندگان ارسال خواهد شد.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-ink-subtle dark:text-slate-400">خط ارسال:</span>
+                    <select
+                      value={schedLineNumber}
+                      onChange={(e) => setSchedLineNumber(e.target.value)}
+                      className={`${inputCls} !py-1 !px-2.5 !w-auto text-xs font-mono`}
+                    >
+                      <option value="98">98 (خط پیش‌فرض)</option>
+                      {availableLines
+                        .filter((l) => l && !["Public", "Service", "98"].includes(l))
+                        .map((line) => (
+                          <option key={line} value={line}>
+                            {line}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* ۱. انتخاب منبع شماره‌ها (استخراج از فرم یا دستی) */}
+                <div className="flex flex-col gap-3">
+                  <label className="text-xs font-bold text-ink-subtle dark:text-slate-400 flex items-center gap-1.5">
+                    <Users size={15} className="text-teal" />
+                    ۱. منبع شماره‌های گیرندگان:
+                  </label>
+
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <label
+                      onClick={() => setSchedSourceType("manual")}
+                      className={`flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer select-none transition-all ${
+                        schedSourceType === "manual"
+                          ? "bg-teal/10 border-teal text-navy dark:text-white shadow-xs"
+                          : "bg-slate-50 dark:bg-slate-800/60 border-ink/5 dark:border-slate-700/60 text-ink-subtle dark:text-slate-300"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="schedSource"
+                        checked={schedSourceType === "manual"}
+                        onChange={() => setSchedSourceType("manual")}
+                        className="text-teal focus:ring-teal"
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-black">ورود دستی شماره‌ها</span>
+                        <span className="text-[11px] text-ink-subtle dark:text-slate-400">
+                          جای‌گذاری مستقیم لیست شماره‌ها در کادر متنی
+                        </span>
+                      </div>
+                    </label>
+
+                    <label
+                      onClick={() => setSchedSourceType("form")}
+                      className={`flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer select-none transition-all ${
+                        schedSourceType === "form"
+                          ? "bg-teal/10 border-teal text-navy dark:text-white shadow-xs"
+                          : "bg-slate-50 dark:bg-slate-800/60 border-ink/5 dark:border-slate-700/60 text-ink-subtle dark:text-slate-300"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="schedSource"
+                        checked={schedSourceType === "form"}
+                        onChange={() => setSchedSourceType("form")}
+                        className="text-teal focus:ring-teal"
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-black">استخراج هوشمند از فرم‌های پرس‌کاد</span>
+                        <span className="text-[11px] text-ink-subtle dark:text-slate-400">
+                          انتخاب فرم و شماره تماس پاسخ‌دهندگان فرم‌ها
+                        </span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* اگر منبع = استخراج از فرم */}
+                {schedSourceType === "form" && (
+                  <div className="flex flex-col gap-3 p-4 rounded-2xl bg-teal/5 dark:bg-teal/10 border border-teal/20">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-navy dark:text-slate-200 flex items-center gap-1.5">
+                        <FileText size={14} className="text-teal" />
+                        فرم مورد نظر را انتخاب نمایید:
+                      </span>
+                      {schedUniquePhones.length > 0 && (
+                        <span className="text-xs font-black text-teal font-mono bg-teal/15 px-2.5 py-1 rounded-lg">
+                          {faNum(schedUniquePhones.length)} شماره یکتا آماده زمانبندی
+                        </span>
+                      )}
+                    </div>
+
+                    <select
+                      value={schedFormId}
+                      onChange={(e) => handleSelectSchedForm(e.target.value)}
+                      className={inputCls}
+                    >
+                      <option value="">-- انتخاب فرم فعال ({faNum(formsList.length)} فرم موجود) --</option>
+                      {formsList.map((f) => (
+                        <option key={f.id} value={f.id}>
+                          {f.title || "بدون عنوان"} ({f.slug})
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* فیلدهای سوالات فرم */}
+                    {schedFormId && (
+                      <div className="flex flex-col gap-2 pt-2">
+                        <span className="text-xs font-bold text-ink-subtle dark:text-slate-300">
+                          فیلدهای شماره تماس این فرم:
+                        </span>
+                        {schedLoadingQuestions ? (
+                          <Skeleton className="h-12 w-full" rounded="rounded-xl" />
+                        ) : schedFormQuestions.length === 0 ? (
+                          <div className="text-xs font-semibold text-ink-subtle">سوالی در این فرم یافت نشد.</div>
+                        ) : (
+                          <div className="grid sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                            {schedFormQuestions.map((q) => {
+                              const isChecked = schedSelectedQIds.includes(q.id);
+                              return (
+                                <div
+                                  key={q.id}
+                                  onClick={() => handleToggleSchedQuestion(q.id)}
+                                  className={`flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer select-none transition-all ${
+                                    isChecked
+                                      ? "bg-teal/15 border-teal text-navy dark:text-white font-bold"
+                                      : "bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-ink-subtle"
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2 truncate">
+                                    {isChecked ? <CheckSquare size={15} className="text-teal shrink-0" /> : <Square size={15} className="shrink-0" />}
+                                    <span className="truncate">{q.title || "بدون عنوان"}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* اگر منبع = ورود دستی */}
+                {schedSourceType === "manual" && (
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-ink-subtle dark:text-slate-400">
+                        شماره‌های موبایل گیرندگان (با اینتر یا کاما جدا کنید):
+                      </label>
+                      <span className="text-xs font-extrabold text-teal font-mono">
+                        {schedUniqueManualMobiles.length > 0 ? `${faNum(schedUniqueManualMobiles.length)} شماره معتبر` : ""}
+                      </span>
+                    </div>
+                    <textarea
+                      value={schedRawMobiles}
+                      onChange={(e) => setSchedRawMobiles(e.target.value)}
+                      rows={3}
+                      className={`${inputCls} font-mono text-xs leading-relaxed`}
+                      placeholder={"09123456789\n09351112233\n09198887766"}
+                      dir="ltr"
+                    />
+                    <p className="text-[11px] font-semibold text-ink-subtle dark:text-slate-500">
+                      شماره‌های تکراری به صورت خودکار حذف شده و ارقام فارسی تصحیح می‌گردند.
+                    </p>
+                  </div>
+                )}
+
+                {/* ۲. متن پیامک */}
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-ink-subtle dark:text-slate-400">
+                      ۲. متن پیامک زماندار:
+                    </label>
+                    <div className="flex items-center gap-3 text-xs font-bold">
+                      <span className="text-ink-subtle dark:text-slate-400">
+                        زبان: <strong className="text-navy dark:text-white">{isSchedPersian ? "فارسی" : "لاتین"}</strong>
+                      </span>
+                      <span className="text-ink-subtle dark:text-slate-400">
+                        کاراکتر: <strong className="text-teal font-mono">{faNum(schedCharCount)}</strong>
+                      </span>
+                      <span className="bg-teal/15 text-teal px-2 py-0.5 rounded-lg font-bold">
+                        تعداد صفحه: {faNum(schedPagesCount)}
+                      </span>
+                    </div>
+                  </div>
+                  <textarea
+                    value={schedText}
+                    onChange={(e) => setSchedText(e.target.value)}
+                    rows={4}
+                    className={`${inputCls} text-sm leading-relaxed`}
+                    placeholder="متن پیامک ارسالی را در این بخش بنویسید..."
+                  />
+                </div>
+
+                {/* ۳. انتخاب‌گر تاریخ و زمان شمسی (JalaliDateTimePicker) */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-ink-subtle dark:text-slate-400">
+                    ۳. زمان مقرر ارسال:
+                  </label>
+                  <JalaliDateTimePicker
+                    value={schedDateTime}
+                    onChange={(isoStr) => setSchedDateTime(isoStr)}
+                    minMinutesAhead={2}
+                    disabled={schedulingSubmitting}
+                  />
+                </div>
+
+                {/* پیام فیدبک ثبت */}
+                {scheduleFeedback && (
+                  <div
+                    className={`p-3.5 rounded-2xl border text-xs font-bold flex flex-col gap-2 transition-all shadow-sm ${
+                      scheduleFeedback.success
+                        ? "bg-teal/10 border-teal/30 text-navy dark:text-slate-100"
+                        : "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        {scheduleFeedback.success ? (
+                          <CheckCircle2 size={18} className="text-teal shrink-0" />
+                        ) : (
+                          <AlertTriangle size={18} className="text-rose-500 shrink-0" />
+                        )}
+                        <span>{scheduleFeedback.message}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setScheduleFeedback(null)}
+                        className="text-ink-subtle hover:text-navy p-1 rounded-lg cursor-pointer"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+
+                    {scheduleFeedback.success && (
+                      <div className="flex flex-wrap items-center gap-3 pt-1 border-t border-teal/20 text-[11px]">
+                        <span>کل گیرندگان: <strong className="font-mono text-teal">{faNum(scheduleFeedback.total)}</strong></span>
+                        {scheduleFeedback.removedDuplicates > 0 && (
+                          <span className="text-amber-600 dark:text-amber-400">تکراری‌های حذف‌شده: <strong>{faNum(scheduleFeedback.removedDuplicates)}</strong></span>
+                        )}
+                        {scheduleFeedback.removedInvalid > 0 && (
+                          <span className="text-rose-500">شماره‌های نامعتبر: <strong>{faNum(scheduleFeedback.removedInvalid)}</strong></span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* دکمه ثبت زمانبندی */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-ink/10 dark:border-slate-800">
+                  <div className="text-xs text-ink-subtle dark:text-slate-400 font-semibold flex items-center gap-1.5">
+                    <Info size={14} className="text-teal shrink-0" />
+                    <span>پیام‌ها توسط کرون‌جاب خودکار سرور در لحظه موعود ارسال خواهند شد.</span>
+                  </div>
+
+                  <Button
+                    variant="teal"
+                    size="md"
+                    type="submit"
+                    disabled={schedulingSubmitting || activeSchedMobiles.length === 0 || !schedText.trim()}
+                    className="flex items-center justify-center gap-2 font-black px-6 py-2.5 cursor-pointer shadow-md"
+                  >
+                    {schedulingSubmitting ? <Spinner size="sm" /> : <CalendarClock size={16} />}
+                    <span>{schedulingSubmitting ? "در حال ثبت زمانبندی..." : `تایید و زمانبندی پیامک (${faNum(activeSchedMobiles.length)} گیرنده)`}</span>
+                  </Button>
+                </div>
+              </form>
+            </StickerCard>
+          </div>
+
+          {/* جدول صف پیام‌های زماندار */}
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-base sm:text-lg font-black text-navy dark:text-white flex items-center gap-2">
+                  <Layers size={18} className="text-teal" />
+                  صف پیام‌های زماندار ({faNum(scheduledTotal)} مورد)
+                </h2>
+                <p className="text-xs text-ink-subtle dark:text-slate-400 font-semibold mt-0.5">
+                  لیست و وضعیت لحظه‌ای پیام‌های در انتظار، در حال ارسال و ارسالی
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative">
+                  <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-subtle" />
+                  <input
+                    type="text"
+                    value={scheduledSearch}
+                    onChange={(e) => {
+                      setScheduledSearch(e.target.value);
+                      setScheduledPage(1);
+                    }}
+                    placeholder="جستجو در متن پیام..."
+                    className={inputCls + " !py-1.5 !pr-9 text-xs"}
+                  />
+                </div>
+
+                <select
+                  value={scheduledStatusFilter}
+                  onChange={(e) => {
+                    setScheduledStatusFilter(e.target.value);
+                    setScheduledPage(1);
+                  }}
+                  className={inputCls + " !py-1.5 text-xs !w-auto"}
+                >
+                  <option value="all">همه وضعیت‌ها</option>
+                  <option value="pending">در انتظار ارسال</option>
+                  <option value="processing">در حال ارسال</option>
+                  <option value="sent">ارسال شده</option>
+                  <option value="failed">ناموفق</option>
+                  <option value="canceled">لغو شده</option>
+                </select>
+
+                <Button variant="ghost" size="sm" onClick={loadScheduledQueue} disabled={scheduledLoading}>
+                  <RefreshCw size={14} className={scheduledLoading ? "animate-spin" : ""} />
+                </Button>
+              </div>
+            </div>
+
+            {scheduledLoading ? (
+              <TableSkeleton rows={5} cols={6} />
+            ) : scheduledList.length === 0 ? (
+              <EmptyState
+                icon={<CalendarClock size={48} />}
+                title="پیام زمانداری در صف ثبت نشده است"
+                subtitle="می‌توانید با استفاده از فرم بالا، اولین پیامک زماندار خود را برای ارسال در آینده ثبت کنید."
+              />
+            ) : (
+              <div className="overflow-hidden">
+                <StickerCard theme="white">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/60 text-xs">
+                          <th className="text-right font-black px-4 py-3">شناسه</th>
+                          <th className="text-right font-black px-4 py-3">متن پیامک</th>
+                          <th className="text-center font-black px-4 py-3">گیرندگان</th>
+                          <th className="text-right font-black px-4 py-3">زمان مقرر ارسال (شمسی)</th>
+                          <th className="text-center font-black px-4 py-3">وضعیت</th>
+                          <th className="text-center font-black px-4 py-3">نتیجه</th>
+                          <th className="text-center font-black px-4 py-3">عملیات</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {scheduledList.map((item, i) => (
+                          <tr
+                            key={item.id}
+                            className={`${
+                              i % 2 ? "bg-slate-50/50 dark:bg-slate-800/40" : ""
+                            } border-b border-ink/5 dark:border-slate-800/60 last:border-0 hover:bg-slate-100/50 dark:hover:bg-slate-700/40 transition-colors`}
+                          >
+                            <td className="px-4 py-3 font-mono font-bold text-teal text-xs" dir="ltr">
+                              #{item.id}
+                            </td>
+
+                            <td className="px-4 py-3 font-semibold text-ink-subtle dark:text-slate-300 text-xs max-w-xs truncate" title={item.message}>
+                              {item.message?.slice(0, 45)}
+                              {item.message?.length > 45 ? "..." : ""}
+                            </td>
+
+                            <td className="px-4 py-3 text-center text-xs font-bold text-navy dark:text-white font-mono">
+                              {faNum(item.total_count)}
+                            </td>
+
+                            <td className="px-4 py-3 text-xs font-semibold text-navy dark:text-slate-200">
+                              <div className="flex flex-col">
+                                <span>{faDateTime(item.scheduled_at)}</span>
+                                {item.status === "pending" && (
+                                  <span className="text-[10px] text-teal font-medium">
+                                    {(() => {
+                                      const diff = new Date(item.scheduled_at).getTime() - Date.now();
+                                      if (diff <= 0) return "سررسید شده";
+                                      const mins = Math.round(diff / 60000);
+                                      if (mins > 60) return `${faNum(Math.floor(mins / 60))} ساعت دیگر`;
+                                      return `${faNum(mins)} دقیقه دیگر`;
+                                    })()}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            <td className="px-4 py-3 text-center">
+                              {getScheduledStatusBadge(item.status)}
+                            </td>
+
+                            <td className="px-4 py-3 text-center text-xs font-bold">
+                              {item.status === "sent" || item.status === "failed" ? (
+                                <div className="flex items-center justify-center gap-1.5 text-[11px] font-mono">
+                                  <span className="text-emerald-600 dark:text-emerald-400">موفق {faNum(item.success_count)}</span>
+                                  <span>/</span>
+                                  <span className="text-rose-500">ناموفق {faNum(item.failed_count)}</span>
+                                </div>
+                              ) : (
+                                <span className="text-ink-subtle text-[11px]">—</span>
+                              )}
+                            </td>
+
+                            <td className="px-4 py-3 text-center">
+                              <div className="flex items-center justify-center gap-1.5">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleOpenDetail(item)}
+                                  className="!py-1 !px-2 text-xs text-navy dark:text-slate-200 hover:text-teal font-bold"
+                                  title="مشاهده جزئیات و گیرندگان"
+                                >
+                                  <Eye size={14} />
+                                  <span className="hidden sm:inline">جزئیات</span>
+                                </Button>
+
+                                {item.status === "pending" && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleCancelScheduled(item.id)}
+                                    disabled={cancelingId === item.id}
+                                    className="!py-1 !px-2 text-xs text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 font-bold"
+                                    title="لغو زمانبندی پیامک"
+                                  >
+                                    {cancelingId === item.id ? <Spinner size="sm" /> : <Ban size={14} />}
+                                    <span className="hidden sm:inline">لغو</span>
+                                  </Button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* صفحه‌بندی */}
+                  {scheduledTotal > 20 && (
+                    <div className="flex items-center justify-between p-4 border-t border-ink/10 dark:border-slate-800 text-xs">
+                      <span className="text-ink-subtle">
+                        نمایش صفحه {faNum(scheduledPage)} از {faNum(Math.ceil(scheduledTotal / 20))} ({faNum(scheduledTotal)} کل)
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={scheduledPage <= 1}
+                          onClick={() => setScheduledPage((p) => Math.max(1, p - 1))}
+                        >
+                          <ChevronRight size={14} />
+                          <span>قبلی</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={scheduledPage >= Math.ceil(scheduledTotal / 20)}
+                          onClick={() => setScheduledPage((p) => p + 1)}
+                        >
+                          <span>بعدی</span>
+                          <ChevronLeft size={14} />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </StickerCard>
+              </div>
+            )}
+          </div>
+
+          {/* Modal مشاهده جزئیات پیام زماندار */}
+          {detailModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+              <div className="bg-white dark:bg-[#131B2E] border-[1.5px] border-gray-200 dark:border-[#242F42] rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                {/* Modal Header */}
+                <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <CalendarClock size={20} className="text-teal" />
+                    <h3 className="text-base font-black text-navy dark:text-white">
+                      جزئیات پیام زماندار #{selectedScheduledItem?.id}
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDetailModalOpen(false)}
+                    className="p-1.5 rounded-xl text-ink-subtle hover:text-navy hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                {/* Modal Body */}
+                <div className="p-5 overflow-y-auto flex flex-col gap-4">
+                  {selectedScheduledItem && (
+                    <div className="grid sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 text-xs">
+                      <div>
+                        <span className="text-ink-subtle block font-semibold">زمان مقرر ارسال:</span>
+                        <strong className="text-navy dark:text-white mt-0.5 block">{faDateTime(selectedScheduledItem.scheduled_at)}</strong>
+                      </div>
+                      <div>
+                        <span className="text-ink-subtle block font-semibold">وضعیت کلی:</span>
+                        <div className="mt-1">{getScheduledStatusBadge(selectedScheduledItem.status)}</div>
+                      </div>
+                      <div>
+                        <span className="text-ink-subtle block font-semibold">خط فرستنده:</span>
+                        <strong className="font-mono text-teal mt-0.5 block">{selectedScheduledItem.sender_number || "98"}</strong>
+                      </div>
+                      <div>
+                        <span className="text-ink-subtle block font-semibold">نتیجه ارسال:</span>
+                        <strong className="font-mono text-navy dark:text-white mt-0.5 block">
+                          موفق: {faNum(selectedScheduledItem.success_count || 0)} / ناموفق: {faNum(selectedScheduledItem.failed_count || 0)}
+                        </strong>
+                      </div>
+                      <div className="sm:col-span-2 pt-2 border-t border-gray-200/60 dark:border-slate-700/60">
+                        <span className="text-ink-subtle block font-semibold">متن پیامک:</span>
+                        <p className="text-navy dark:text-slate-200 mt-1 font-medium leading-relaxed bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-gray-200 dark:border-slate-800">
+                          {selectedScheduledItem.message}
+                        </p>
+                      </div>
+                      {selectedScheduledItem.last_error && (
+                        <div className="sm:col-span-2 text-rose-500 bg-rose-50 dark:bg-rose-950/40 p-2.5 rounded-xl border border-rose-200 dark:border-rose-900 font-bold">
+                          علت خطا: {selectedScheduledItem.last_error}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* لیست تک‌تک گیرندگان */}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-black text-navy dark:text-white">
+                        لیست گیرندگان ({faNum(selectedRecipients.length)} شماره)
+                      </h4>
+
+                      <input
+                        type="text"
+                        value={recipientSearchFilter}
+                        onChange={(e) => setRecipientSearchFilter(e.target.value)}
+                        placeholder="جستجو در شماره گیرنده..."
+                        className={`${inputCls} !py-1 !px-2.5 text-xs !w-48`}
+                      />
+                    </div>
+
+                    {detailLoading ? (
+                      <Skeleton className="h-32 w-full" rounded="rounded-xl" />
+                    ) : selectedRecipients.length === 0 ? (
+                      <div className="text-center py-6 text-xs text-ink-subtle">گیرنده‌ای ثبت نشده است.</div>
+                    ) : (
+                      <div className="max-h-60 overflow-y-auto border border-gray-200 dark:border-slate-700 rounded-2xl">
+                        <table className="w-full text-right text-xs">
+                          <thead>
+                            <tr className="bg-slate-100 dark:bg-slate-900 text-ink-subtle font-bold border-b border-gray-200 dark:border-slate-700">
+                              <th className="px-3 py-2">ردیف</th>
+                              <th className="px-3 py-2">شماره موبایل</th>
+                              <th className="px-3 py-2 text-center">وضعیت</th>
+                              <th className="px-3 py-2">شناسه پیام درگاه</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100 dark:divide-slate-800 font-medium">
+                            {selectedRecipients
+                              .filter((r) => !recipientSearchFilter || r.mobile?.includes(recipientSearchFilter))
+                              .map((r, i) => (
+                                <tr key={r.id || i} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                                  <td className="px-3 py-2 text-ink-subtle font-bold">{faNum(i + 1)}</td>
+                                  <td className="px-3 py-2 font-mono font-bold text-navy dark:text-white" dir="ltr">{r.mobile}</td>
+                                  <td className="px-3 py-2 text-center">
+                                    <Badge
+                                      color={
+                                        r.status === "sent" ? "teal" : r.status === "failed" ? "red" : "gray"
+                                      }
+                                    >
+                                      {r.status === "sent" ? "ارسال شد" : r.status === "failed" ? "ناموفق" : "در انتظار"}
+                                    </Badge>
+                                  </td>
+                                  <td className="px-3 py-2 font-mono text-[11px] text-ink-subtle" dir="ltr">
+                                    {r.provider_message_id || r.error_message || "—"}
+                                  </td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Modal Footer */}
+                <div className="flex items-center justify-between p-4 border-t border-gray-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60">
+                  {selectedScheduledItem?.status === "pending" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        handleCancelScheduled(selectedScheduledItem.id);
+                        setDetailModalOpen(false);
+                      }}
+                      className="text-rose-500 hover:bg-rose-50 font-bold text-xs"
+                    >
+                      <Ban size={14} />
+                      <span>لغو این زمانبندی</span>
+                    </Button>
+                  )}
+                  <Button
+                    variant="teal"
+                    size="sm"
+                    onClick={() => setDetailModalOpen(false)}
+                    className="mr-auto font-bold text-xs"
+                  >
+                    بستن
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {/* ۴. تب استخراج شماره از فرم‌ها (FORM CONTACTS IMPORT) */}
       {/* ══════════════════════════════════════════════════════════════ */}
       {tab === "form_import" && (
         <div className="flex flex-col gap-6">
@@ -1176,7 +2212,7 @@ export default function SmsPanel() {
                       <Badge color="teal">خودکار و بدون تکراری</Badge>
                     </h2>
                     <p className="text-xs font-semibold text-ink-subtle dark:text-slate-400 mt-1 leading-relaxed max-w-2xl">
-                      فرم و فیلدهای شماره تماس (مانند موبایل داوطلب، شماره والدین، معرف و...) را انتخاب کنید تا تمامی شماره‌های واردشده توسط پاسخ‌دهندگان به صورت خودکار نرمال‌سازی و آماده ارسال پیامک گروهی شوند.
+                      فرم و فیلدهای شماره تماس (مانند موبایل داوطلب، شماره والدین، معرف و...) را انتخاب کنید تا تمامی شماره‌های واردشده توسط پاسخ‌دهندگان به صورت خودکار نرمال‌سازی و آماده ارسال پیامک شوند.
                     </p>
                   </div>
                 </div>
@@ -1221,7 +2257,6 @@ export default function SmsPanel() {
                       </div>
                     ) : (
                       <div className="flex flex-col gap-2">
-                        {/* فیلد جستجوی زنده در صورت وجود فرم‌ها */}
                         {formsList.length > 2 && (
                           <div className="relative">
                             <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-subtle dark:text-slate-400 pointer-events-none flex items-center justify-center">
@@ -1397,7 +2432,6 @@ export default function SmsPanel() {
                         </div>
                       )}
 
-                      {/* دکمه استخراج دستی در صورت نیاز */}
                       <div className="pt-2">
                         <Button
                           variant="teal"
@@ -1420,7 +2454,7 @@ export default function SmsPanel() {
               </StickerCard>
             </div>
 
-            {/* ستون چپ: آمار و عملیات ارسال سریع (5 ستون) */}
+            {/* ستون چپ: آمار و عملیات انتقال شماره‌ها (5 ستون) */}
             <div className="lg:col-span-5 flex flex-col gap-5">
               <StickerCard theme="white">
                 <div className="p-5 sm:p-6 flex flex-col gap-5">
@@ -1477,32 +2511,39 @@ export default function SmsPanel() {
                   </div>
 
                   {/* دکمه‌های عملیات اصلی */}
-                  <div className="flex flex-col gap-2.5 pt-2">
+                  <div className="flex flex-col gap-2 pt-2">
                     <Button
                       variant="teal"
                       size="md"
-                      onClick={handleImportToSend}
+                      onClick={handleImportToScheduled}
                       disabled={extractingContacts || uniqueExtractedPhones.length === 0}
-                      className="w-full flex items-center justify-center gap-2 font-black py-3 shadow-md cursor-pointer"
+                      className="w-full flex items-center justify-center gap-2 font-black py-2.5 shadow-md cursor-pointer"
                     >
-                      {extractingContacts ? <Spinner size="sm" /> : <Send size={16} />}
-                      <span>
-                        {extractingContacts
-                          ? "در حال استخراج شماره‌ها..."
-                          : `انتقال به بخش ارسال پیامک (${faNum(uniqueExtractedPhones.length)})`}
-                      </span>
+                      <CalendarClock size={16} />
+                      <span>انتقال به بخش پیام زماندار ({faNum(uniqueExtractedPhones.length)})</span>
                     </Button>
 
-                    <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="navy"
+                      size="md"
+                      onClick={handleImportToSend}
+                      disabled={extractingContacts || uniqueExtractedPhones.length === 0}
+                      className="w-full flex items-center justify-center gap-2 font-black py-2.5 cursor-pointer"
+                    >
+                      <Send size={15} />
+                      <span>انتقال به بخش ارسال آنی</span>
+                    </Button>
+
+                    <div className="grid grid-cols-2 gap-2 pt-1">
                       <Button
-                        variant="navy"
+                        variant="ghost"
                         size="sm"
                         onClick={handleCopyExtractedPhones}
                         disabled={extractingContacts || uniqueExtractedPhones.length === 0}
-                        className="flex items-center justify-center gap-1.5 text-xs font-bold"
+                        className="flex items-center justify-center gap-1.5 text-xs font-bold border border-ink/10 dark:border-slate-700"
                       >
                         <Copy size={14} />
-                        <span>کپی همه شماره‌ها</span>
+                        <span>کپی شماره‌ها</span>
                       </Button>
 
                       <Button
@@ -1513,32 +2554,17 @@ export default function SmsPanel() {
                         className="flex items-center justify-center gap-1.5 text-xs font-bold border border-ink/10 dark:border-slate-700"
                       >
                         <Download size={14} />
-                        <span>دانلود فایل TXT</span>
+                        <span>دانلود TXT</span>
                       </Button>
                     </div>
                   </div>
-
-                  <p className="text-[11px] font-medium text-ink-subtle dark:text-slate-400 leading-relaxed bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-ink/5 dark:border-slate-800">
-                    💡 با زدن دکمه <strong>«انتقال به بخش ارسال پیامک»</strong>، این شماره‌ها فوراً در فیلد گیرندگان قرار می‌گیرند تا بتوانید متن دلخواه خود را بنویسید و ارسال کنید.
-                  </p>
                 </div>
               </StickerCard>
             </div>
           </div>
 
-          {/* پیش‌نمایش جدول شماره‌های استخراج‌شده یا وضعیت لودینگ */}
-          {extractingContacts ? (
-            <div>
-              <StickerCard theme="white">
-                <div className="p-8 flex flex-col items-center justify-center gap-3 text-center">
-                  <Spinner size="md" />
-                  <span className="text-xs font-bold text-ink-subtle dark:text-slate-400">
-                    در حال واکشی و استخراج هوشمند شماره‌های تماس از پاسخ‌های ثبت‌شده فرم...
-                  </span>
-                </div>
-              </StickerCard>
-            </div>
-          ) : extractedContacts.length > 0 ? (
+          {/* پیش‌نمایش جدول شماره‌های استخراج‌شده */}
+          {extractedContacts.length > 0 && (
             <div>
               <StickerCard theme="white">
                 <div className="p-5 sm:p-6 flex flex-col gap-4">
@@ -1633,12 +2659,12 @@ export default function SmsPanel() {
                 </div>
               </StickerCard>
             </div>
-          ) : null}
+          )}
         </div>
       )}
 
       {/* ══════════════════════════════════════════════════════════════ */}
-      {/* ۳. تب تنظیمات پیامک (SETTINGS) */}
+      {/* ۵. تب تنظیمات پیامک (SETTINGS) */}
       {/* ══════════════════════════════════════════════════════════════ */}
       {tab === "settings" && (
         <div className="flex flex-col gap-6 max-w-3xl">
@@ -1698,9 +2724,6 @@ export default function SmsPanel() {
                       </button>
                     )}
                   </div>
-                  <p className="text-[11px] font-semibold text-ink-subtle dark:text-slate-500">
-                    توکن فعال در این فیلد باقی می‌ماند. برای جایگزینی، روی «پاک کردن» کلیک کنید و توکن جدید را ثبت و ذخیره نمایید.
-                  </p>
                 </div>
 
                 {/* خط فرستنده و نام امضا */}
@@ -1724,9 +2747,6 @@ export default function SmsPanel() {
                           </option>
                         ))}
                     </select>
-                    <span className="text-[11px] text-ink-subtle dark:text-slate-500">
-                      خط فعال اکانت شما: <strong className="text-teal font-mono">98</strong> (خط پیش‌فرض ارسال پیامک سامانه).
-                    </span>
                   </div>
 
                   <div className="flex flex-col gap-1.5">
@@ -1862,7 +2882,7 @@ export default function SmsPanel() {
       )}
 
       {/* ══════════════════════════════════════════════════════════════ */}
-      {/* ۴. تب تاریخچه ارسال‌ها (HISTORY) */}
+      {/* ۶. تب تاریخچه ارسال‌ها (HISTORY) */}
       {/* ══════════════════════════════════════════════════════════════ */}
       {tab === "history" && (
         <div className="flex flex-col gap-4">
@@ -1872,7 +2892,7 @@ export default function SmsPanel() {
               سوابق پیامک‌های ارسالی
             </h2>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <div className="relative">
                 <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-subtle" />
                 <input
@@ -1883,6 +2903,17 @@ export default function SmsPanel() {
                   className={inputCls + " !py-1.5 !pr-9 text-xs"}
                 />
               </div>
+
+              {/* فیلتر نوع ارسال */}
+              <select
+                value={filterOutboxType}
+                onChange={(e) => setFilterOutboxType(e.target.value)}
+                className={inputCls + " !py-1.5 text-xs !w-auto"}
+              >
+                <option value="all">همه انواع ارسال</option>
+                <option value="scheduled">فقط زماندار</option>
+                <option value="instant">فقط آنی / فوری</option>
+              </select>
 
               <select
                 value={filterStatus}
@@ -1902,7 +2933,7 @@ export default function SmsPanel() {
           </div>
 
           {logLoading ? (
-            <TableSkeleton rows={5} cols={5} />
+            <TableSkeleton rows={5} cols={6} />
           ) : filteredOutbox.length === 0 ? (
             <EmptyState
               icon={<History size={48} />}
@@ -1918,6 +2949,7 @@ export default function SmsPanel() {
                       <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/60 text-xs">
                         <th className="text-right font-black px-4 py-3">موبایل گیرنده</th>
                         <th className="text-right font-black px-4 py-3">متن پیامک</th>
+                        <th className="text-center font-black px-4 py-3">نوع ارسال</th>
                         <th className="text-center font-black px-4 py-3">خط فرستنده</th>
                         <th className="text-center font-black px-4 py-3">صفحات</th>
                         <th className="text-center font-black px-4 py-3">وضعیت</th>
@@ -1925,51 +2957,67 @@ export default function SmsPanel() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredOutbox.map((o, i) => (
-                        <tr
-                          key={o.id}
-                          className={`${
-                            i % 2 ? "bg-slate-50/50 dark:bg-slate-800/40" : ""
-                          } border-b border-ink/5 dark:border-slate-800/60 last:border-0 hover:bg-slate-100/50 dark:hover:bg-slate-700/40 transition-colors`}
-                        >
-                          <td className="px-4 py-3 font-bold text-navy dark:text-slate-200 font-mono text-xs" dir="ltr">
-                            {o.mobile}
-                          </td>
-                          <td className="px-4 py-3 font-semibold text-ink-subtle dark:text-slate-300 text-xs max-w-xs truncate" title={o.text}>
-                            {o.text}
-                          </td>
-                          <td className="px-4 py-3 text-center text-xs font-mono text-ink-subtle dark:text-slate-400">
-                            {(!o.line_number || o.line_number === "Public" || o.line_number === "Service") ? "98" : o.line_number}
-                          </td>
-                          <td className="px-4 py-3 text-center text-xs font-bold text-ink-subtle dark:text-slate-400">
-                            {faNum(o.parts || 1)}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <Badge
-                              color={
-                                o.status === "delivered"
-                                  ? "green"
+                      {filteredOutbox.map((o, i) => {
+                        const isSched = Boolean(o.is_scheduled || o.scheduled_sms_id);
+                        return (
+                          <tr
+                            key={o.id}
+                            className={`${
+                              i % 2 ? "bg-slate-50/50 dark:bg-slate-800/40" : ""
+                            } border-b border-ink/5 dark:border-slate-800/60 last:border-0 hover:bg-slate-100/50 dark:hover:bg-slate-700/40 transition-colors`}
+                          >
+                            <td className="px-4 py-3 font-bold text-navy dark:text-slate-200 font-mono text-xs" dir="ltr">
+                              {o.mobile}
+                            </td>
+                            <td className="px-4 py-3 font-semibold text-ink-subtle dark:text-slate-300 text-xs max-w-xs truncate" title={o.text}>
+                              {o.text}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              {isSched ? (
+                                <span className="inline-flex items-center gap-1 bg-purple/10 text-purple dark:text-purple-300 border border-purple/20 px-2 py-0.5 rounded-lg text-[11px] font-bold">
+                                  <CalendarClock size={12} />
+                                  <span>زماندار</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800 text-ink-subtle dark:text-slate-400 border border-gray-200 dark:border-slate-700 px-2 py-0.5 rounded-lg text-[11px] font-bold">
+                                  <Zap size={12} />
+                                  <span>فوری</span>
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-center text-xs font-mono text-ink-subtle dark:text-slate-400">
+                              {(!o.line_number || o.line_number === "Public" || o.line_number === "Service") ? "98" : o.line_number}
+                            </td>
+                            <td className="px-4 py-3 text-center text-xs font-bold text-ink-subtle dark:text-slate-400">
+                              {faNum(o.parts || 1)}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <Badge
+                                color={
+                                  o.status === "delivered"
+                                    ? "green"
+                                    : o.status === "sent"
+                                    ? "teal"
+                                    : o.status === "failed"
+                                    ? "red"
+                                    : "gray"
+                                }
+                              >
+                                {o.status === "delivered"
+                                  ? "تحویل شده"
                                   : o.status === "sent"
-                                  ? "teal"
+                                  ? "ارسال شده"
                                   : o.status === "failed"
-                                  ? "red"
-                                  : "gray"
-                              }
-                            >
-                              {o.status === "delivered"
-                                ? "تحویل شده"
-                                : o.status === "sent"
-                                ? "ارسال شده"
-                                : o.status === "failed"
-                                ? "خطا در ارسال"
-                                : "در انتظار"}
-                            </Badge>
-                          </td>
-                          <td className="px-4 py-3 text-xs font-semibold text-ink-subtle dark:text-slate-400">
-                            {faDateTime(o.created_at)}
-                          </td>
-                        </tr>
-                      ))}
+                                  ? "خطا در ارسال"
+                                  : "در انتظار"}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-3 text-xs font-semibold text-ink-subtle dark:text-slate-400">
+                              {faDateTime(o.created_at)}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -1980,7 +3028,7 @@ export default function SmsPanel() {
       )}
 
       {/* ══════════════════════════════════════════════════════════════ */}
-      {/* ۵. تب صندوق دریافتی (INBOX) */}
+      {/* ۷. تب صندوق دریافتی (INBOX) */}
       {/* ══════════════════════════════════════════════════════════════ */}
       {tab === "inbox" && (
         <div className="flex flex-col gap-4">
