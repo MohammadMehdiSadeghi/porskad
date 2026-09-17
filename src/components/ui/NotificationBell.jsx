@@ -2,7 +2,7 @@ import { useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useNotifications } from "../../context/NotificationContext";
-import { Bell, BellOff, Volume2, VolumeX, Trash2, CheckCheck, X, Inbox, MessageSquare, Headphones, Lock, Unlock } from "lucide-react";
+import { Bell, BellOff, Volume2, VolumeX, Trash2, CheckCheck, X, Inbox, MessageSquare, Headphones, Lock, Unlock, UserPlus } from "lucide-react";
 import { faDateTime } from "../../lib/utils";
 
 /**
@@ -291,12 +291,25 @@ export default function NotificationBell() {
                     let badgeClass = "bg-ink/5 text-ink/60 dark:bg-slate-800 dark:text-slate-300";
                     let IconComponent = Bell;
                     let iconColorClass = "text-navy/70 dark:text-slate-300";
+                    let unreadCardClass = "bg-gradient-to-l from-teal/10 via-white to-white dark:from-teal/40 dark:via-[#131B2E] dark:to-[#131B2E] border-teal/25 dark:border-teal/30 shadow-xs hover:from-teal/15";
+                    let unreadIconBoxClass = "bg-gradient-to-br from-teal/20 to-teal/10 dark:from-teal/20 dark:to-teal/10 border border-teal/20";
+                    let unreadTextClass = "text-teal";
+                    let unreadDotBg = "bg-teal";
 
                     if (n.type === "response") {
                       badgeLabel = "ثبت فرم";
                       badgeClass = "bg-teal/15 text-teal border border-teal/20 dark:bg-teal/10 dark:text-teal";
                       IconComponent = Inbox;
                       iconColorClass = "text-teal";
+                    } else if (n.type === "user_register") {
+                      badgeLabel = "کاربر جدید";
+                      badgeClass = "bg-amber-500/15 text-amber-700 border border-amber-500/20 dark:bg-amber-950/60 dark:text-amber-300";
+                      IconComponent = UserPlus;
+                      iconColorClass = "text-amber-600 dark:text-amber-400";
+                      unreadCardClass = "bg-gradient-to-l from-amber-500/10 via-white to-white dark:from-amber-500/30 dark:via-[#131B2E] dark:to-[#131B2E] border-amber-500/25 dark:border-amber-500/30 shadow-xs hover:from-amber-500/15";
+                      unreadIconBoxClass = "bg-gradient-to-br from-amber-500/20 to-amber-500/10 dark:from-amber-500/20 dark:to-amber-500/10 border border-amber-500/20";
+                      unreadTextClass = "text-amber-600 dark:text-amber-400";
+                      unreadDotBg = "bg-amber-500";
                     } else if (n.type === "ticket_new") {
                       badgeLabel = "تیکت جدید";
                       badgeClass = "bg-sky-500/15 text-sky-700 border border-sky-500/20 dark:bg-sky-950/60 dark:text-sky-300";
@@ -332,12 +345,12 @@ export default function NotificationBell() {
                         className={`group flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 border ${
                           n.read
                             ? "bg-white dark:bg-[#131B2E] border-black/5 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/80 opacity-80 hover:opacity-100"
-                            : "bg-gradient-to-l from-teal/10 via-white to-white dark:from-teal/40 dark:via-[#131B2E] dark:to-[#131B2E] border-teal/25 dark:border-teal/30 shadow-xs hover:from-teal/15"
+                            : unreadCardClass
                         }`}
                       >
                         <div
                           className={`shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center ${
-                            n.read ? "bg-ink/5 dark:bg-white/5" : "bg-gradient-to-br from-teal/20 to-teal/10 dark:from-teal/20 dark:to-teal/10 border border-teal/20"
+                            n.read ? "bg-ink/5 dark:bg-white/5" : unreadIconBoxClass
                           }`}
                         >
                           <IconComponent size={16} className={iconColorClass} />
@@ -355,8 +368,8 @@ export default function NotificationBell() {
                               {faDateTime(n.time)}
                             </span>
                             {!n.read && (
-                              <span className="inline-flex items-center gap-1 text-xs text-teal font-extrabold">
-                                <span className="w-1.5 h-1.5 rounded-full bg-teal animate-ping" />
+                              <span className={`inline-flex items-center gap-1 text-xs font-extrabold ${unreadTextClass}`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${unreadDotBg} animate-ping`} />
                                 جدید
                               </span>
                             )}

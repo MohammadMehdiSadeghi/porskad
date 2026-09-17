@@ -360,7 +360,43 @@ function NotificationProvider({ children }) {
         }
       }
 
-      // ۳. ادغام و اضافه کردن موارد جدید بدون تکرار
+      // ۳. استعلام ثبت‌نام کاربران جدید در زمان آفلاین (برای مدیر ارشد)
+      if (owner) {
+        try {
+          const { data: newRegisteredUsers } = await supabase
+            .from("profiles")
+            .select("id, full_name, email, phone, created_at")
+            .neq("id", user.id)
+            .gt("created_at", sinceTime)
+            .order("created_at", { ascending: false })
+            .limit(20);
+
+          if (newRegisteredUsers && newRegisteredUsers.length > 0) {
+            for (const regUser of newRegisteredUsers) {
+              const userName =
+                regUser.full_name ||
+                (regUser.email ? regUser.email.split("@")[0] : null) ||
+                regUser.phone ||
+                "کاربر جدید";
+
+              newOfflineItems.push({
+                id: `user_reg_${regUser.id}`,
+                type: "user_register",
+                title: "ثبت‌نام کاربر جدید",
+                message: `کاربر «${userName}» در سامانه ثبت‌نام کرد`,
+                link: "/admin/managers",
+                userId: regUser.id,
+                time: regUser.created_at,
+                read: false,
+              });
+            }
+          }
+        } catch (err) {
+          console.warn("Error syncing new registered users:", err);
+        }
+      }
+
+      // ۴. ادغام و اضافه کردن موارد جدید بدون تکرار
       if (newOfflineItems.length > 0) {
         setNotifications((prev) => {
           const existingIds = new Set(prev.map((n) => String(n.id)));
@@ -541,6 +577,34 @@ function NotificationProvider({ children }) {
                 time: updatedTicket.updated_at || new Date().toISOString(),
               });
             }
+          }
+        }
+      )
+      // ۴. ثبت‌نام کاربر جدید در سامانه (ارسال به مدیر ارشد)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "profiles" },
+        async (payload) => {
+          const newProfile = payload.new;
+          if (!newProfile) return;
+
+          const owner = Boolean(isOwner?.() || profile?.is_owner);
+          if (owner && newProfile.id !== user.id) {
+            const userName =
+              newProfile.full_name ||
+              (newProfile.email ? newProfile.email.split("@")[0] : null) ||
+              newProfile.phone ||
+              "کاربر جدید";
+
+            addNotificationRef.current?.({
+              id: `user_reg_${newProfile.id}`,
+              type: "user_register",
+              title: "ثبت‌نام کاربر جدید",
+              message: `کاربر «${userName}» با موفقیت در سامانه ثبت‌نام کرد`,
+              link: "/admin/managers",
+              userId: newProfile.id,
+              time: newProfile.created_at || new Date().toISOString(),
+            });
           }
         }
       )
