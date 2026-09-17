@@ -11,7 +11,7 @@ import EmptyState from "../../../components/ui/EmptyState";
 import Modal from "../../../components/ui/Modal";
 import { useToast } from "../../../components/ui/Toast";
 import { useAuth } from "../../../context/AuthContext";
-import { copyToClipboard, randomSlug, faNum, faDate } from "../../../lib/utils";
+import { copyToClipboard, randomSlug, faNum, faDate, getFormModelBadge } from "../../../lib/utils";
 import { FileText, Plus, AlignLeft, ClipboardList, Undo2, Trash2, User, Calendar, Link2, Copy, ExternalLink, Settings, BarChart3, Share2, Edit, Archive, ArchiveRestore, CheckCircle2, AlertTriangle, X, Sun, Moon, Monitor } from "lucide-react";
 import SEO from "../../../components/ui/SEO";
 
@@ -840,7 +840,11 @@ export default function FormsList() {
                       <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
                         {isTrashed && <Badge color="red">حذف شده</Badge>}
                         {!isTrashed && f.archived && <Badge color="gray">آرشیو</Badge>}
-                        {!isTrashed && isReg && !f.archived && <Badge color="orange">ثبت‌نامی</Badge>}
+                        {!isTrashed && !f.archived && (
+                          <Badge color={getFormModelBadge(f).color}>
+                            {getFormModelBadge(f).label}
+                          </Badge>
+                        )}
                         {!isTrashed && !f.archived && (f.published ? (
                           <Badge color="green">منتشر</Badge>
                         ) : (
@@ -961,7 +965,11 @@ export default function FormsList() {
                   <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
                     {isTrashed && <Badge color="red">حذف شده</Badge>}
                     {!isTrashed && f.archived && <Badge color="gray">آرشیو</Badge>}
-                    {!isTrashed && isReg && !f.archived && <Badge color="orange">ثبت‌نامی</Badge>}
+                    {!isTrashed && !f.archived && (
+                      <Badge color={getFormModelBadge(f).color}>
+                        {getFormModelBadge(f).label}
+                      </Badge>
+                    )}
                     {!isTrashed && !f.archived && (f.published ? (
                       <Badge color="green">منتشر</Badge>
                     ) : (

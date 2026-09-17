@@ -10,7 +10,7 @@ import Spinner from "../../components/ui/Spinner";
 import { FormsListSkeleton } from "../../components/ui/Skeleton";
 import EmptyState from "../../components/ui/EmptyState";
 import SEO from "../../components/ui/SEO";
-import { faNum } from "../../lib/utils";
+import { faNum, getFormModelBadge } from "../../lib/utils";
 import {
   Code,
   Link2,
@@ -232,7 +232,10 @@ function FormEmbedCard({ form, baseUrl, index }) {
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
               <h3 className="font-black text-navy dark:text-white leading-6 line-clamp-1">{form.title}</h3>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-1.5 mt-1">
+                <Badge color={getFormModelBadge(form).color}>
+                  {getFormModelBadge(form).label}
+                </Badge>
                 <Badge color={form.published ? "green" : "gray"}>
                   {form.published ? "منتشر" : "پیش‌نویس"}
                 </Badge>

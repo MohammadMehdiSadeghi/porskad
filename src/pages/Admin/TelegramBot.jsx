@@ -540,7 +540,7 @@ export default function TelegramBot() {
     { id: "links", label: "لینک فرم‌ها", icon: Link2 },
     { id: "log", label: "تاریخچه ارسال", icon: History },
     ...(isOwner()
-      ? [{ id: "manual", label: "ارسال دستی ورودی‌ها", icon: SendHorizonal, badge: "سوپرادمین" }]
+      ? [{ id: "manual", label: "ارسال دستی ورودی‌ها", icon: SendHorizonal }]
       : []),
   ];
 
@@ -1221,16 +1221,13 @@ export default function TelegramBot() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="text-base sm:text-lg font-black text-navy dark:text-slate-100 flex items-center gap-2">
-                    <SendHorizonal size={20} className="text-brand-purple" />
+                    <SendHorizonal size={20} className="text-teal" />
                     ارسال اختصاصی ورودی‌های فرم به تلگرام
                   </h2>
                   <p className="text-xs font-semibold text-ink-subtle dark:text-slate-400 mt-0.5">
                     هر ورودی دلخواه از هر فرمی را با حفظ تاریخ و زمان اصلی ثبت پاسخ به بات تلگرام مربوطه ارسال کنید.
                   </p>
                 </div>
-                <Badge color="purple" className="font-bold">
-                  ویژه سوپرادمین
-                </Badge>
               </div>
 
               {/* انتخاب فرم */}
