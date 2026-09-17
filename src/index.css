@@ -68,6 +68,32 @@
         font-weight: 800;
     }
 
+    /* ─── استایل متمایز گروه‌بندی کاربر در سلکت‌باکس‌ها (User Optgroup Styling) ─── */
+    optgroup {
+        font-family: inherit;
+        font-weight: 800 !important;
+        font-style: normal !important;
+        font-size: 0.86rem !important;
+        background-color: #E2E8F0 !important;
+        color: #0F172A !important;
+        padding: 6px 8px !important;
+    }
+    html.dark optgroup {
+        background-color: #1E293B !important;
+        color: #2DD4BF !important;
+    }
+    optgroup option {
+        font-weight: 500 !important;
+        font-size: 0.84rem !important;
+        background-color: #FFFFFF !important;
+        color: #1E293B !important;
+        padding: 6px 14px !important;
+    }
+    html.dark optgroup option {
+        background-color: #0B0F19 !important;
+        color: #E2E8F0 !important;
+    }
+
     /* ─── میکرواینترکشن‌های فیزیکی دکمه‌ها (Modern Refined Neo-brutalism) ─── */
     button:not(:disabled):not(.no-anim):not(.password-toggle-btn):not([class*="-translate-y-1/2"]):not([class*="translate-y-"]),
     [role="button"]:not([aria-disabled="true"]):not(.no-anim):not(.password-toggle-btn):not([class*="-translate-y-1/2"]):not([class*="translate-y-"]),

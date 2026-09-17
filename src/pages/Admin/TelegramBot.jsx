@@ -926,7 +926,7 @@ export default function TelegramBot() {
                                 )
                                   .sort((a, b) => a[0].localeCompare(b[0], "fa"))
                                   .map(([who, list]) => (
-                                    <optgroup key={who} label={who}>
+                                    <optgroup key={who} label={`👤 کاربر: ${who}`}>
                                       {list.map((f) => (
                                         <option key={f.id} value={f.id}>
                                           {f.title}
@@ -1260,7 +1260,7 @@ export default function TelegramBot() {
                       )
                         .sort((a, b) => a[0].localeCompare(b[0], "fa"))
                         .map(([who, list]) => (
-                          <optgroup key={who} label={who}>
+                          <optgroup key={who} label={`👤 کاربر: ${who}`}>
                             {list.map((f) => (
                               <option key={f.id} value={f.id}>
                                 {f.title}

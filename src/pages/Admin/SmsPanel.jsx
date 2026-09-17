@@ -105,6 +105,7 @@ export default function SmsPanel() {
 
   // ─── Form Contacts Extraction State ───
   const [formsList, setFormsList] = useState([]);
+  const [formOwnerNames, setFormOwnerNames] = useState({});
   const [loadingForms, setLoadingForms] = useState(false);
   const [selectedFormId, setSelectedFormId] = useState("");
   const [formSearchQuery, setFormSearchQuery] = useState("");
@@ -267,7 +268,7 @@ export default function SmsPanel() {
     try {
       let query = supabase
         .from("forms")
-        .select("id, title, slug, created_at, published")
+        .select("id, title, slug, created_at, published, created_by, manager_id, archived")
         .is("deleted_at", null)
         .eq("published", true)
         .order("created_at", { ascending: false });
@@ -278,8 +279,30 @@ export default function SmsPanel() {
 
       const { data, error } = await query;
       if (error) throw error;
-      const activeForms = (data || []).filter((f) => f.published === true);
+      const activeForms = (data || []).filter((f) => f.published === true && !f.archived);
       setFormsList(activeForms);
+
+      if (isGlobalAdmin) {
+        const ownerIds = new Set(
+          activeForms.map((f) => f.created_by || f.manager_id).filter(Boolean)
+        );
+        if (ownerIds.size > 0) {
+          const { data: ownerRows } = await supabase
+            .from("profiles")
+            .select("id, email, full_name")
+            .in("id", [...ownerIds]);
+          setFormOwnerNames(
+            Object.fromEntries(
+              (ownerRows || []).map((p) => [
+                p.id,
+                p.full_name || p.email || "کاربر حذف‌شده",
+              ])
+            )
+          );
+        } else {
+          setFormOwnerNames({});
+        }
+      }
     } catch (err) {
       console.error("Failed to load forms list:", err);
       showToast("خطا در بارگذاری لیست فرم‌ها", "error");
@@ -1227,9 +1250,15 @@ export default function SmsPanel() {
                         {/* سلکت‌باکس فرم‌های فعال */}
                         {(() => {
                           const q = formSearchQuery.trim().toLowerCase();
+                          const ownerOf = (f) => f.created_by || f.manager_id || "unknown";
                           const filtered = formsList.filter((f) => {
                             if (!q) return true;
-                            return (f.title || "").toLowerCase().includes(q) || (f.slug || "").toLowerCase().includes(q);
+                            const ownerName = (formOwnerNames[ownerOf(f)] || "").toLowerCase();
+                            return (
+                              (f.title || "").toLowerCase().includes(q) ||
+                              (f.slug || "").toLowerCase().includes(q) ||
+                              ownerName.includes(q)
+                            );
                           });
 
                           return (
@@ -1243,11 +1272,31 @@ export default function SmsPanel() {
                                   ? `-- ${faNum(filtered.length)} فرم پیدا شد (انتخاب کنید) --`
                                   : `-- انتخاب فرم برای استخراج شماره (${faNum(formsList.length)} فرم فعال) --`}
                               </option>
-                              {filtered.map((f) => (
-                                <option key={f.id} value={f.id}>
-                                  {f.title || "بدون عنوان"} ({f.slug})
-                                </option>
-                              ))}
+                              {isGlobalAdmin ? (
+                                Object.entries(
+                                  filtered.reduce((g, f) => {
+                                    const who = formOwnerNames[ownerOf(f)] || "سایر فرم‌ها";
+                                    (g[who] = g[who] || []).push(f);
+                                    return g;
+                                  }, {})
+                                )
+                                  .sort((a, b) => a[0].localeCompare(b[0], "fa"))
+                                  .map(([who, list]) => (
+                                    <optgroup key={who} label={`👤 کاربر: ${who}`}>
+                                      {list.map((f) => (
+                                        <option key={f.id} value={f.id}>
+                                          {f.title || "بدون عنوان"} ({f.slug})
+                                        </option>
+                                      ))}
+                                    </optgroup>
+                                  ))
+                              ) : (
+                                filtered.map((f) => (
+                                  <option key={f.id} value={f.id}>
+                                    {f.title || "بدون عنوان"} ({f.slug})
+                                  </option>
+                                ))
+                              )}
                             </select>
                           );
                         })()}
