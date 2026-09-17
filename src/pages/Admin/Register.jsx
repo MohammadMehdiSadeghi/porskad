@@ -911,12 +911,9 @@ export default function Register() {
 
                     {/* فیلد ایمیل */}
                     <label className="flex flex-col gap-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs sm:text-sm font-extrabold text-sec dark:text-slate-200">
-                          آدرس ایمیل <span className="text-teal font-black">*</span>
-                        </span>
-                        <span className="text-[11px] text-ink-subtle dark:text-slate-400">جهت ورود و اطلاعیه‌ها</span>
-                      </div>
+                      <span className="text-xs sm:text-sm font-extrabold text-sec dark:text-slate-200">
+                        آدرس ایمیل <span className="text-teal font-black">*</span>
+                      </span>
                       <div className="relative">
                         <input
                           type="email"
