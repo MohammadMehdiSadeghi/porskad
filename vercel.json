@@ -91,12 +91,6 @@
     { "source": "/api/telegram-send", "destination": "/api/v1/telegram-send" },
     { "source": "/api/webhooks/amoot", "destination": "/api/amoot-proxy?mode=webhook" },
     { "source": "/((?!api/|fonts/|assets/|favicon\\.svg|loader\\.js|embed-sdk\\.js|openapi\\.json).*)", "destination": "/index.html" }
-  ],
-  "crons": [
-    {
-      "path": "/api/cron/dispatch-scheduled-sms",
-      "schedule": "* * * * *"
-    }
   ]
 }
 
