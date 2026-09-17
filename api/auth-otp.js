@@ -89,8 +89,8 @@ export default async function handler(req, res) {
     }
 
     // ۲. خواندن تنظیمات الگو و خنک‌سازی از system_settings
-    let pattern = "کد تایید ثبت‌نام در پرس‌کاد: %code%";
-    let patternCode = "6516";
+    let pattern = "کد تایید ثبت نام در پرس کاد : %code%";
+    let patternCode = "6528";
     let lineNumber = "98";
     let cooldownSeconds = 90; // ۱:۳۰ دقیقه طبق درخواست کاربر
     let maxResends = 2; // حداکثر ۲ بار ارسال مجدد طبق درخواست کاربر
@@ -203,12 +203,76 @@ export default async function handler(req, res) {
       ? pattern.replace(/%code%/g, code)
       : `${pattern}\nکد شما: ${code}`;
 
-    // ۵. ارسال پیامک از طریق درگاه آموت (ارسال بر اساس الگو با اولویت بالا / SendWithPattern)
+    // ۵. ارسال پیامک از طریق درگاه آموت (ارسال سریع کد اعتبارسنجی SendQuickOTP و الگو SendWithPattern)
     let sendSuccess = false;
     let sendErrorMsg = null;
 
     if (amootToken) {
-      // الف) تلاش اول: ارسال مستقیم با الگو SendWithPattern از طریق REST JSON (فرمت استاندارد آموت)
+      // الف) تلاش اول: وب‌سرویس اختصاصی ارسال سریع کد اعتبارسنجی SendQuickOTP با REST JSON
+      if (patternCode && !sendSuccess) {
+        try {
+          const resp = await fetch("https://portal.amootsms.com/rest/SendQuickOTP", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              Token: amootToken,
+              token: amootToken,
+              PatternCode: String(patternCode).trim(),
+              Mobile: cleanPhone,
+              Mobiles: cleanPhone,
+              Code: code,
+              code: code,
+              PatternValues: { code: code },
+            }),
+            signal: AbortSignal.timeout(8000),
+          });
+
+          const data = await resp.json().catch(() => null);
+          if (data && (data.Status === "Success" || data.Status === "success" || data.Status === "OK")) {
+            sendSuccess = true;
+            sendErrorMsg = null;
+          } else if (data) {
+            sendErrorMsg = `QuickOTP_JSON: ${data.Status || data.Message || JSON.stringify(data)}`;
+          }
+        } catch (err) {
+          sendErrorMsg = `QuickOTP_JSON_Err: ${err.message}`;
+        }
+      }
+
+      // ب) تلاش دوم: ارسال سریع SendQuickOTP با فرمت Form-Urlencoded
+      if (patternCode && !sendSuccess) {
+        try {
+          const quickPostData = new URLSearchParams({
+            Token: amootToken,
+            token: amootToken,
+            PatternCode: String(patternCode).trim(),
+            Mobile: cleanPhone,
+            Mobiles: cleanPhone,
+            Code: code,
+            code: code,
+            PatternValues: `code:${code}`,
+          });
+
+          const resp = await fetch("https://portal.amootsms.com/rest/SendQuickOTP", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: quickPostData.toString(),
+            signal: AbortSignal.timeout(8000),
+          });
+
+          const data = await resp.json().catch(() => null);
+          if (data && (data.Status === "Success" || data.Status === "success" || data.Status === "OK")) {
+            sendSuccess = true;
+            sendErrorMsg = null;
+          } else if (data) {
+            sendErrorMsg = `QuickOTP_Form: ${data.Status || data.Message || JSON.stringify(data)}`;
+          }
+        } catch (err) {
+          sendErrorMsg = `QuickOTP_Form_Err: ${err.message}`;
+        }
+      }
+
+      // ج) تلاش سوم: ارسال مستقیم با الگو SendWithPattern از طریق REST JSON (فرمت استاندارد آموت)
       if (patternCode && !sendSuccess) {
         try {
           const resp = await fetch("https://portal.amootsms.com/rest/SendWithPattern", {
@@ -220,6 +284,7 @@ export default async function handler(req, res) {
               PatternCode: String(patternCode).trim(),
               Mobile: cleanPhone,
               Mobiles: cleanPhone,
+              Code: code,
               PatternValues: { code: code },
             }),
             signal: AbortSignal.timeout(8000),
@@ -237,7 +302,7 @@ export default async function handler(req, res) {
         }
       }
 
-      // ب) تلاش دوم: ارسال با الگو از طریق REST Form-Urlencoded (با فرمت code:12345 و 12345)
+      // د) تلاش چهارم: ارسال با الگو از طریق REST Form-Urlencoded (با فرمت code:12345 و 12345)
       if (patternCode && !sendSuccess) {
         try {
           const patternPostData = new URLSearchParams({
@@ -268,7 +333,7 @@ export default async function handler(req, res) {
         }
       }
 
-      // ج) تلاش سوم: وب‌سرویس ASMX SendWithPattern آموت
+      // هـ) تلاش پنجم: وب‌سرویس ASMX SendWithPattern آموت
       if (patternCode && !sendSuccess) {
         try {
           const asmxPostData = new URLSearchParams({

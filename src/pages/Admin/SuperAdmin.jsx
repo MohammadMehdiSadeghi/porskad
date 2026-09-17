@@ -672,8 +672,8 @@ export default function SuperAdmin() {
     registration_enabled: true,
     sms_otp_enabled: true,
     google_auth_enabled: true,
-    otp_sms_pattern: "کد تایید ثبت‌نام در پرس‌کاد: %code%",
-    otp_pattern_code: "6516",
+    otp_sms_pattern: "کد تایید ثبت نام در پرس کاد : %code%",
+    otp_pattern_code: "6528",
     otp_line_number: "98",
     otp_cooldown_seconds: 90,
     otp_max_resends: 2,
@@ -2932,7 +2932,7 @@ export default function SuperAdmin() {
                 <textarea
                   rows={3}
                   dir="rtl"
-                  value={sysSettings.otp_sms_pattern || "کد تایید ثبت‌نام در پرس‌کاد: %code%"}
+                  value={sysSettings.otp_sms_pattern || "کد تایید ثبت نام در پرس کاد : %code%"}
                   onChange={(e) => setSysSettings({ ...sysSettings, otp_sms_pattern: e.target.value })}
                   style={{
                     width: "100%",
@@ -2944,7 +2944,7 @@ export default function SuperAdmin() {
                     fontFamily: "inherit",
                     lineHeight: 1.6,
                   }}
-                  placeholder="کد تایید ثبت‌نام در پرس‌کاد: %code%"
+                  placeholder="کد تایید ثبت نام در پرس کاد : %code%"
                 />
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "0.35rem", flexWrap: "wrap", gap: "0.5rem" }}>
                   <div style={{ fontSize: "0.78rem", color: "var(--sa-text-2)" }}>
@@ -2998,7 +2998,7 @@ export default function SuperAdmin() {
                     <span>Just now</span>
                   </div>
                   <div style={{ fontWeight: 600 }}>
-                    {(sysSettings.otp_sms_pattern || "کد تایید ثبت‌نام در پرس‌کاد: %code%").replace(/%code%/g, "۴۸۲۹")}
+                    {(sysSettings.otp_sms_pattern || "کد تایید ثبت نام در پرس کاد : %code%").replace(/%code%/g, "۴۸۲۹")}
                   </div>
                 </div>
               </div>
@@ -3012,13 +3012,13 @@ export default function SuperAdmin() {
                   <input
                     type="text"
                     dir="ltr"
-                    value={sysSettings.otp_pattern_code || "6516"}
+                    value={sysSettings.otp_pattern_code || "6528"}
                     onChange={(e) => setSysSettings({ ...sysSettings, otp_pattern_code: e.target.value })}
                     style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--sa-field-border)", fontSize: "0.85rem", outline: "none", borderRadius: "4px", fontFamily: "monospace", color: "var(--sa-link)", fontWeight: 700 }}
-                    placeholder="6516"
+                    placeholder="6528"
                   />
                   <div style={{ fontSize: "0.75rem", color: "var(--sa-text-2)", marginTop: "0.25rem" }}>
-                    Fast OTP Template Code (Default: <code dir="ltr">6516</code>)
+                    Fast OTP Template Code (Default: <code dir="ltr">6528</code>)
                   </div>
                 </div>
 
