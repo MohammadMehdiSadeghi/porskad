@@ -12,7 +12,7 @@ import Modal from "../../../components/ui/Modal";
 import { useToast } from "../../../components/ui/Toast";
 import { useAuth } from "../../../context/AuthContext";
 import { copyToClipboard, randomSlug, faNum, faDate, getFormModelBadge } from "../../../lib/utils";
-import { FileText, Plus, AlignLeft, ClipboardList, Undo2, Trash2, User, Calendar, Link2, Copy, ExternalLink, Settings, BarChart3, Share2, Edit, Archive, ArchiveRestore, CheckCircle2, AlertTriangle, X, Sun, Moon, Monitor } from "lucide-react";
+import { FileText, Plus, AlignLeft, ClipboardList, Undo2, Trash2, User, Calendar, Link2, Copy, ExternalLink, Settings, BarChart3, Share2, Edit, Archive, ArchiveRestore, CheckCircle2, AlertTriangle, X, Sun, Moon, Monitor, Palette, LayoutGrid, Layers } from "lucide-react";
 import SEO from "../../../components/ui/SEO";
 
 const FORM_TYPES = [
@@ -1207,9 +1207,10 @@ export default function FormsList() {
         </p>
 
         {/* تم پیش‌فرض ظاهر فرم */}
-        <div className="mb-5 p-3.5 rounded-2xl bg-navy/5 dark:bg-slate-800/60 border border-navy/10 dark:border-slate-700">
-          <label className="block text-xs sm:text-sm font-black text-navy dark:text-slate-200 mb-2.5">
-            🎨 تم پیش‌فرض فرم:
+        <div className="mb-5 p-3.5 rounded-2xl bg-navy/5 dark:bg-[#1C2536] border border-gray-200 dark:border-gray-700">
+          <label className="flex items-center gap-2 text-xs sm:text-sm font-black text-sec dark:text-slate-200 mb-2.5">
+            <Palette size={16} className="text-teal" />
+            <span>تم پیش‌فرض فرم:</span>
           </label>
           <div className="grid grid-cols-3 gap-2">
             {[
@@ -1224,15 +1225,15 @@ export default function FormsList() {
                   key={t.id}
                   type="button"
                   onClick={() => setNewFormTheme(t.id)}
-                  className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer text-center ${
+                  className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer text-center whitespace-normal break-words ${
                     isSelected
                       ? "border-teal bg-teal/15 text-teal shadow-xs font-black scale-[1.02]"
-                      : "border-ink/10 dark:border-slate-700/80 bg-white dark:bg-slate-800 text-ink/70 dark:text-slate-300 hover:border-teal/40"
+                      : "border-gray-200 dark:border-gray-700 bg-white dark:bg-[#151C28] text-sec dark:text-slate-300 hover:border-teal/40"
                   }`}
                 >
-                  <Icon size={20} className={isSelected ? "text-teal" : "text-ink/60 dark:text-slate-400"} />
-                  <span className="text-xs font-black mt-1.5">{t.label}</span>
-                  <span className="text-[10px] opacity-70 mt-0.5 leading-tight">{t.desc}</span>
+                  <Icon size={20} className={isSelected ? "text-teal" : "text-ink-subtle dark:text-slate-400"} />
+                  <span className="text-xs font-black mt-1.5 whitespace-normal">{t.label}</span>
+                  <span className="text-[10px] opacity-70 mt-0.5 leading-tight whitespace-normal">{t.desc}</span>
                 </button>
               );
             })}
@@ -1240,22 +1241,28 @@ export default function FormsList() {
         </div>
 
         {/* انتخاب نوع نمایش فرم */}
-        <label className="block text-xs sm:text-sm font-black text-navy dark:text-slate-200 mb-2.5">
-          📋 ساختار سوالات:
+        <label className="flex items-center gap-2 text-xs sm:text-sm font-black text-sec dark:text-slate-200 mb-2.5">
+          <LayoutGrid size={16} className="text-teal" />
+          <span>ساختار سوالات:</span>
         </label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full min-w-0 max-w-full">
           {FORM_TYPES.map((ft) => (
             <button
               key={ft.key}
+              type="button"
               onClick={() => createForm(ft.key, newFormTheme)}
               disabled={busy}
-              className="text-right p-5 rounded-2xl border-[1.5px] border-gray-200 dark:border-[#242F42] bg-white dark:bg-slate-800 hover:border-primary dark:hover:border-primary hover:shadow-md transition-all group disabled:opacity-50 cursor-pointer"
+              className="w-full min-w-0 flex flex-col text-right whitespace-normal break-words p-4 sm:p-5 rounded-2xl border-[1.5px] border-gray-200 dark:border-[#242F42] bg-white dark:bg-[#1C2536] hover:border-teal dark:hover:border-teal hover:shadow-md transition-all group disabled:opacity-50 cursor-pointer overflow-hidden"
             >
-              <span className="block mb-3 group-hover:scale-110 transition-transform text-navy dark:text-white">
-                {ft.key === "step_by_step" ? <ClipboardList size={32} /> : <AlignLeft size={32} />}
-              </span>
-              <h3 className="text-base sm:text-lg font-black text-navy dark:text-white mb-1">{ft.title}</h3>
-              <p className="text-xs font-medium text-ink-subtle dark:text-slate-400 leading-5">{ft.description}</p>
+              <div className="w-11 h-11 rounded-xl bg-teal/10 dark:bg-teal/20 border border-teal/30 flex items-center justify-center text-teal mb-3 group-hover:scale-105 transition-transform shrink-0">
+                {ft.key === "step_by_step" ? <Layers size={22} /> : <AlignLeft size={22} />}
+              </div>
+              <h3 className="text-base font-black text-sec dark:text-white mb-1.5 whitespace-normal">
+                {ft.title}
+              </h3>
+              <p className="text-xs font-medium text-ink-subtle dark:text-slate-400 leading-relaxed whitespace-normal break-words">
+                {ft.description}
+              </p>
             </button>
           ))}
         </div>
