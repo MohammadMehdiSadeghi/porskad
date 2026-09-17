@@ -303,6 +303,9 @@ export default function SmsPanel() {
   const loadScheduledQueue = useCallback(async () => {
     setScheduledLoading(true);
     try {
+      // بررسی و ارسال خودکار پیام‌های سررسید شده در پس‌زمینه
+      await callAmootProxy("dispatch_scheduled_sms").catch(() => {});
+
       const data = await callAmootProxy("get_scheduled_sms_list", {
         status: scheduledStatusFilter,
         search: scheduledSearch,

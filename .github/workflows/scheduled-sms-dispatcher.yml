@@ -1,0 +1,16 @@
+name: Dispatch Scheduled SMS
+
+on:
+  schedule:
+    # اجرا هر ۵ دقیقه به صورت ابری و کاملا رایگان روی گیت‌هاب اکشنز (بدون نیاز به سرور)
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Porskad Scheduled SMS Dispatcher
+        run: |
+          curl -s -X POST https://porskad.vercel.app/api/cron/dispatch-scheduled-sms \
+            -H "Content-Type: application/json"
