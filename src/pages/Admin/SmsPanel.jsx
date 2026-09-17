@@ -2921,8 +2921,10 @@ export default function SmsPanel() {
               >
                 <option value="all">همه وضعیت‌ها</option>
                 <option value="sent">ارسال شده</option>
+                <option value="pending">در انتظار زمانبندی</option>
                 <option value="delivered">تحویل شده</option>
-                <option value="failed">خطا</option>
+                <option value="failed">خطا در ارسال</option>
+                <option value="canceled">لغو شده</option>
               </select>
 
               <Button variant="ghost" size="sm" onClick={loadHistory} disabled={logLoading}>
@@ -2999,7 +3001,9 @@ export default function SmsPanel() {
                                     ? "teal"
                                     : o.status === "failed"
                                     ? "red"
-                                    : "gray"
+                                    : o.status === "canceled"
+                                    ? "gray"
+                                    : "orange"
                                 }
                               >
                                 {o.status === "delivered"
@@ -3008,7 +3012,9 @@ export default function SmsPanel() {
                                   ? "ارسال شده"
                                   : o.status === "failed"
                                   ? "خطا در ارسال"
-                                  : "در انتظار"}
+                                  : o.status === "canceled"
+                                  ? "لغو شده"
+                                  : "در انتظار زمانبندی"}
                               </Badge>
                             </td>
                             <td className="px-4 py-3 text-xs font-semibold text-ink-subtle dark:text-slate-400">

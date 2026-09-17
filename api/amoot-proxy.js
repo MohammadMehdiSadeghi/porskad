@@ -749,6 +749,26 @@ export default async function handler(req, res) {
         }
       }
 
+      // درج در جدول تاریخچه کل (sms_outbox) با وضعیت pending و مشخصه زمان‌دار
+      // تا از همان لحظه ثبت زمان‌بندی در تب تاریخچه کل هم قابل رویت باشد
+      const initialOutboxRows = uniqueMobiles.map((mob) => ({
+        mobile: mob,
+        text: text.trim(),
+        line_number: finalLine,
+        status: "pending",
+        is_scheduled: true,
+        scheduled_sms_id: scheduledRow.id,
+      }));
+
+      for (let i = 0; i < initialOutboxRows.length; i += BATCH_SIZE) {
+        const batch = initialOutboxRows.slice(i, i + BATCH_SIZE);
+        try {
+          await adminClient.from("sms_outbox").insert(batch);
+        } catch (outboxErr) {
+          console.warn("Initial outbox insert note:", outboxErr);
+        }
+      }
+
       return res.status(200).json({
         success: true,
         id: scheduledRow.id,
@@ -884,6 +904,19 @@ export default async function handler(req, res) {
 
       if (updateErr) {
         return res.status(500).json({ success: false, message: "خطا در لغو زمانبندی: " + updateErr.message });
+      }
+
+      // به‌روزرسانی رکوردهای تاریخچه کل (sms_outbox) به وضعیت لغو شده
+      try {
+        await adminClient
+          .from("sms_outbox")
+          .update({
+            status: "canceled",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("scheduled_sms_id", id);
+      } catch (outboxCancelErr) {
+        console.warn("Cancel outbox update note:", outboxCancelErr);
       }
 
       return res.status(200).json({
@@ -1098,23 +1131,37 @@ export default async function handler(req, res) {
                 })
                 .in("id", batchIds);
 
-              // ثبت در تاریخچه سایت (sms_outbox) با برچسب زماندار
-              const outboxRows = batchMobiles.map((mob) => ({
-                message_id: campaignId,
-                mobile: mob,
-                text: item.message.trim(),
-                status: "sent",
-                line_number: lineToSend,
-                parts: partsCount,
-                cost: pricePerMsg,
-                is_scheduled: true,
-                scheduled_sms_id: item.id,
-              }));
-
+              // به‌روزرسانی یا درج در تاریخچه سایت (sms_outbox) با وضعیت sent
               try {
-                await adminClient.from("sms_outbox").insert(outboxRows);
+                const { data: updatedRows } = await adminClient
+                  .from("sms_outbox")
+                  .update({
+                    message_id: campaignId,
+                    status: "sent",
+                    parts: partsCount,
+                    cost: pricePerMsg,
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq("scheduled_sms_id", item.id)
+                  .in("mobile", batchMobiles)
+                  .select();
+
+                if (!updatedRows || updatedRows.length === 0) {
+                  const outboxRows = batchMobiles.map((mob) => ({
+                    message_id: campaignId,
+                    mobile: mob,
+                    text: item.message.trim(),
+                    status: "sent",
+                    line_number: lineToSend,
+                    parts: partsCount,
+                    cost: pricePerMsg,
+                    is_scheduled: true,
+                    scheduled_sms_id: item.id,
+                  }));
+                  await adminClient.from("sms_outbox").insert(outboxRows);
+                }
               } catch (outboxErr) {
-                console.warn("Outbox insert note:", outboxErr);
+                console.warn("Outbox sent update note:", outboxErr);
               }
 
               totalSuccess += batchMobiles.length;
@@ -1132,20 +1179,33 @@ export default async function handler(req, res) {
                 })
                 .in("id", batchIds);
 
-              const outboxRows = batchMobiles.map((mob) => ({
-                mobile: mob,
-                text: item.message.trim(),
-                status: "failed",
-                error_message: errorFa,
-                line_number: lineToSend,
-                is_scheduled: true,
-                scheduled_sms_id: item.id,
-              }));
-
+              // به‌روزرسانی یا درج در تاریخچه سایت (sms_outbox) با وضعیت failed
               try {
-                await adminClient.from("sms_outbox").insert(outboxRows);
+                const { data: updatedRows } = await adminClient
+                  .from("sms_outbox")
+                  .update({
+                    status: "failed",
+                    error_message: errorFa,
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq("scheduled_sms_id", item.id)
+                  .in("mobile", batchMobiles)
+                  .select();
+
+                if (!updatedRows || updatedRows.length === 0) {
+                  const outboxRows = batchMobiles.map((mob) => ({
+                    mobile: mob,
+                    text: item.message.trim(),
+                    status: "failed",
+                    error_message: errorFa,
+                    line_number: lineToSend,
+                    is_scheduled: true,
+                    scheduled_sms_id: item.id,
+                  }));
+                  await adminClient.from("sms_outbox").insert(outboxRows);
+                }
               } catch (outboxErr) {
-                console.warn("Outbox insert note:", outboxErr);
+                console.warn("Outbox failed update note:", outboxErr);
               }
 
               totalFailed += batchMobiles.length;
