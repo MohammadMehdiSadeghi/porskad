@@ -172,6 +172,48 @@ export default function Register() {
     }
   }
 
+  // ─── کنترل دقیق ورودی شماره موبایل (فقط ارقام مجاز، حداکثر ۱۱ رقم) ───
+  function handlePhoneChange(e) {
+    let val = toEnDigits(e.target.value);
+    if (val.startsWith("+98")) {
+      val = "0" + val.slice(3);
+    } else if (val.startsWith("0098")) {
+      val = "0" + val.slice(4);
+    } else if (val.startsWith("98") && val.length >= 12) {
+      val = "0" + val.slice(2);
+    }
+    const digitsOnly = val.replace(/\D/g, "").slice(0, 11);
+    setPhone(digitsOnly);
+    setError(null);
+    setIsDuplicateUser(false);
+  }
+
+  function handlePhoneKeyDown(e) {
+    if (
+      [
+        "Backspace",
+        "Delete",
+        "Tab",
+        "Escape",
+        "Enter",
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowUp",
+        "ArrowDown",
+        "Home",
+        "End",
+      ].includes(e.key) ||
+      e.ctrlKey === true ||
+      e.metaKey === true
+    ) {
+      return;
+    }
+    if (/^[0-9۰-۹٠-٩]$/.test(e.key)) {
+      return;
+    }
+    e.preventDefault();
+  }
+
   // ══════════════════════════════════════════════════════════════
   // مرحله ۱: ارسال کد تایید به شماره موبایل
   // ══════════════════════════════════════════════════════════════
@@ -182,7 +224,7 @@ export default function Register() {
 
     const clean = normalizeIranPhone(toEnDigits(phone));
     if (!isValidIranPhone(clean)) {
-      setError("شماره موبایل نامعتبر است. لطفاً شماره صحیح وارد کنید (مثال: ۰۹۱۲۳۴۵۶۷۸۹).");
+      setError("شماره تلفن همراه نامعتبر است. لطفاً شماره ۱۱ رقمی معتبر وارد کنید (مثال: ۰۹۱۲۳۴۵۶۷۸۹).");
       return;
     }
 
@@ -606,14 +648,29 @@ export default function Register() {
                       </div>
                       <div className="relative">
                         <input
-                          type="text"
-                          inputMode="tel"
+                          type="tel"
+                          inputMode="numeric"
                           dir={phone ? "ltr" : "rtl"}
                           required
                           autoFocus
+                          maxLength={11}
+                          pattern="[0-9]*"
                           value={phone}
-                          onChange={(e) => {
-                            setPhone(toEnDigits(e.target.value));
+                          onChange={handlePhoneChange}
+                          onKeyDown={handlePhoneKeyDown}
+                          onPaste={(e) => {
+                            e.preventDefault();
+                            const pasteText = (e.clipboardData || window.clipboardData)?.getData("text") || "";
+                            let val = toEnDigits(pasteText);
+                            if (val.startsWith("+98")) {
+                              val = "0" + val.slice(3);
+                            } else if (val.startsWith("0098")) {
+                              val = "0" + val.slice(4);
+                            } else if (val.startsWith("98") && val.length >= 12) {
+                              val = "0" + val.slice(2);
+                            }
+                            const digits = val.replace(/\D/g, "").slice(0, 11);
+                            setPhone(digits);
                             setError(null);
                             setIsDuplicateUser(false);
                           }}
@@ -624,8 +681,8 @@ export default function Register() {
                             textAlign: phone ? "left" : "right",
                             direction: phone ? "ltr" : "rtl",
                           }}
-                          placeholder="۰۹۱۲ ۳۴۵ ۶۷۸۹"
-                          autoComplete="tel"
+                          placeholder="۰۹۱۲۳۴۵۶۷۸۹"
+                          autoComplete="tel-national"
                         />
                         <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-subtle/60 dark:text-slate-400 pointer-events-none flex items-center justify-center">
                           <Phone size={17} />
