@@ -312,7 +312,7 @@ export default function JalaliDateTimePicker({
           <div className="grid grid-cols-7 gap-y-1.5 gap-x-1 text-center justify-items-center">
             {/* خانه‌های خالی قبل از شروع ماه */}
             {Array.from({ length: firstDayWeekday }).map((_, i) => (
-              <div key={`empty-${i}`} className="w-8.5 sm:w-9.5 h-8.5 sm:h-9.5" />
+              <div key={`empty-${i}`} className="w-8.5 sm:w-9.5 h-8.5 sm:h-9.5 rounded-[4px]" />
             ))}
 
             {/* روزهای ماه */}
@@ -339,17 +339,17 @@ export default function JalaliDateTimePicker({
                   type="button"
                   disabled={disabled || isPastDay}
                   onClick={() => handleSelectDay(dayNum)}
-                  className={`w-8.5 sm:w-9.5 h-8.5 sm:h-9.5 aspect-square rounded-xl text-xs font-bold transition-all flex items-center justify-center font-mono select-none cursor-pointer ${
+                  className={`w-8.5 sm:w-9.5 h-8.5 sm:h-9.5 aspect-square rounded-[4px] text-xs font-bold transition-all flex items-center justify-center text-center leading-none font-mono select-none cursor-pointer ${
                     isPastDay
                       ? "text-gray-300 dark:text-slate-600 opacity-40 cursor-not-allowed"
                       : isSelected
-                      ? "bg-teal text-navy font-black shadow-md scale-105 border border-teal"
+                      ? "bg-teal text-white font-black shadow-xs scale-105 border border-teal"
                       : isToday
                       ? "bg-teal/15 text-teal border border-teal/40 font-black hover:bg-teal/25"
                       : "text-ink-subtle dark:text-slate-200 hover:bg-white dark:hover:bg-[#1F2B42] hover:text-navy"
                   }`}
                 >
-                  {faNum(dayNum)}
+                  <span className="inline-block translate-y-[0.5px]">{faNum(dayNum)}</span>
                 </button>
               );
             })}
