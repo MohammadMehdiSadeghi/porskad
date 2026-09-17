@@ -13,6 +13,7 @@ import Skeleton, { TableSkeleton, DashboardSkeleton } from "../../components/ui/
 import SEO from "../../components/ui/SEO";
 import PasswordToggle from "../../components/ui/PasswordToggle";
 import JalaliDateTimePicker from "../../components/ui/JalaliDateTimePicker";
+import Modal from "../../components/ui/Modal";
 import {
   MessageSquare,
   Send,
@@ -357,16 +358,6 @@ export default function SmsPanel() {
     };
   }, [loadSettings, loadDashboard]);
 
-  // رفرش صف زمانبندی در زمان باز بودن تب زماندار
-  useEffect(() => {
-    if (tab === "scheduled") {
-      loadScheduledQueue();
-      if (formsList.length === 0) {
-        loadFormsList();
-      }
-    }
-  }, [tab, loadScheduledQueue]);
-
   // ─── بارگذاری فرم‌های فعال ───
   const loadFormsList = useCallback(async () => {
     setLoadingForms(true);
@@ -415,6 +406,16 @@ export default function SmsPanel() {
       setLoadingForms(false);
     }
   }, [isGlobalAdmin, user?.id]);
+
+  // رفرش صف زمانبندی در زمان باز بودن تب زماندار
+  useEffect(() => {
+    if (tab === "scheduled") {
+      loadScheduledQueue();
+      if (formsList.length === 0) {
+        loadFormsList();
+      }
+    }
+  }, [tab, loadScheduledQueue, loadFormsList, formsList.length]);
 
   useEffect(() => {
     if (tab === "form_import" && formsList.length === 0) {
