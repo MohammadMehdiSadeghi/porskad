@@ -1190,7 +1190,7 @@ export default function SmsPanel() {
   const getScheduledStatusBadge = (status) => {
     switch (status) {
       case "pending":
-        return <Badge color="gray">در انتظار ارسال</Badge>;
+        return <Badge color="orange">در انتظار ارسال</Badge>;
       case "processing":
         return <Badge color="blue">در حال ارسال</Badge>;
       case "sent":
@@ -1198,7 +1198,7 @@ export default function SmsPanel() {
       case "failed":
         return <Badge color="red">ناموفق</Badge>;
       case "canceled":
-        return <Badge color="orange">لغو شده</Badge>;
+        return <Badge color="gray">لغو شده</Badge>;
       default:
         return <Badge color="gray">{status}</Badge>;
     }
@@ -1574,25 +1574,29 @@ export default function SmsPanel() {
           <div>
             <StickerCard theme="white">
               <form onSubmit={handleCreateSchedule} className="p-5 sm:p-6 flex flex-col gap-5">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink/10 dark:border-slate-800 pb-3">
-                  <div>
-                    <h2 className="text-base sm:text-lg font-black text-navy dark:text-white flex items-center gap-2">
-                      <CalendarClock size={20} className="text-teal" />
-                      ثبت زمانبندی جدید ارسال پیامک
-                    </h2>
-                    <p className="text-xs font-semibold text-ink-subtle dark:text-slate-400 mt-1">
-                      پیامک شما در تاریخ و ساعت مقرر به‌صورت کاملاً خودکار به گیرندگان ارسال خواهد شد.
-                    </p>
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink/10 dark:border-slate-800 pb-3.5">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-teal/15 text-teal flex items-center justify-center border border-teal/25 shrink-0">
+                      <CalendarClock size={18} />
+                    </div>
+                    <div>
+                      <h2 className="text-base sm:text-lg font-black text-navy dark:text-white">
+                        ثبت زمان‌بندی جدید ارسال پیامک
+                      </h2>
+                      <p className="text-xs font-semibold text-ink-subtle dark:text-slate-400 mt-0.5">
+                        پیامک شما در تاریخ و ساعت مقرر به‌صورت خودکار توسط سیستم به گیرندگان ارسال خواهد شد.
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/60 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-slate-700">
                     <span className="text-xs font-bold text-ink-subtle dark:text-slate-400">خط ارسال:</span>
                     <select
                       value={schedLineNumber}
                       onChange={(e) => setSchedLineNumber(e.target.value)}
-                      className={`${inputCls} !py-1 !px-2.5 !w-auto text-xs font-mono`}
+                      className="bg-white dark:bg-[#1C2536] border border-gray-200 dark:border-slate-700 rounded-lg py-1 px-2.5 text-xs font-mono font-bold text-teal focus:border-teal focus:outline-none cursor-pointer"
                     >
-                      <option value="98">98 (خط پیش‌فرض)</option>
+                      <option value="98">98 (خط خدماتی پیش‌فرض)</option>
                       {availableLines
                         .filter((l) => l && !["Public", "Service", "98"].includes(l))
                         .map((line) => (
@@ -1605,72 +1609,78 @@ export default function SmsPanel() {
                 </div>
 
                 {/* ۱. انتخاب منبع شماره‌ها (استخراج از فرم یا دستی) */}
-                <div className="flex flex-col gap-3">
-                  <label className="text-xs font-bold text-ink-subtle dark:text-slate-400 flex items-center gap-1.5">
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-xs font-black text-navy dark:text-slate-200 flex items-center gap-1.5">
                     <Users size={15} className="text-teal" />
                     ۱. منبع شماره‌های گیرندگان:
                   </label>
 
                   <div className="grid sm:grid-cols-2 gap-3">
-                    <label
+                    <div
                       onClick={() => setSchedSourceType("manual")}
-                      className={`flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer select-none transition-all ${
+                      className={`flex items-start gap-3 p-3.5 sm:p-4 rounded-2xl border-2 cursor-pointer select-none transition-all duration-200 ${
                         schedSourceType === "manual"
                           ? "bg-teal/10 border-teal text-navy dark:text-white shadow-xs"
-                          : "bg-slate-50 dark:bg-slate-800/60 border-ink/5 dark:border-slate-700/60 text-ink-subtle dark:text-slate-300"
+                          : "bg-slate-50 dark:bg-slate-800/40 border-gray-200 dark:border-slate-700/60 text-ink-subtle dark:text-slate-300 hover:border-teal/40"
                       }`}
                     >
-                      <input
-                        type="radio"
-                        name="schedSource"
-                        checked={schedSourceType === "manual"}
-                        onChange={() => setSchedSourceType("manual")}
-                        className="text-teal focus:ring-teal"
-                      />
-                      <div className="flex flex-col">
-                        <span className="text-xs font-black">ورود دستی شماره‌ها</span>
-                        <span className="text-[11px] text-ink-subtle dark:text-slate-400">
+                      <div
+                        className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                          schedSourceType === "manual" ? "bg-teal text-navy" : "bg-ink/5 dark:bg-white/5 text-ink/50 dark:text-slate-400"
+                        }`}
+                      >
+                        <Smartphone size={16} />
+                      </div>
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black">ورود دستی شماره‌ها</span>
+                          {schedSourceType === "manual" && <Check size={14} className="text-teal" />}
+                        </div>
+                        <span className="text-[11px] text-ink-subtle dark:text-slate-400 mt-0.5">
                           جای‌گذاری مستقیم لیست شماره‌ها در کادر متنی
                         </span>
                       </div>
-                    </label>
+                    </div>
 
-                    <label
+                    <div
                       onClick={() => setSchedSourceType("form")}
-                      className={`flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer select-none transition-all ${
+                      className={`flex items-start gap-3 p-3.5 sm:p-4 rounded-2xl border-2 cursor-pointer select-none transition-all duration-200 ${
                         schedSourceType === "form"
                           ? "bg-teal/10 border-teal text-navy dark:text-white shadow-xs"
-                          : "bg-slate-50 dark:bg-slate-800/60 border-ink/5 dark:border-slate-700/60 text-ink-subtle dark:text-slate-300"
+                          : "bg-slate-50 dark:bg-slate-800/40 border-gray-200 dark:border-slate-700/60 text-ink-subtle dark:text-slate-300 hover:border-teal/40"
                       }`}
                     >
-                      <input
-                        type="radio"
-                        name="schedSource"
-                        checked={schedSourceType === "form"}
-                        onChange={() => setSchedSourceType("form")}
-                        className="text-teal focus:ring-teal"
-                      />
-                      <div className="flex flex-col">
-                        <span className="text-xs font-black">استخراج هوشمند از فرم‌های پرس‌کاد</span>
-                        <span className="text-[11px] text-ink-subtle dark:text-slate-400">
-                          انتخاب فرم و شماره تماس پاسخ‌دهندگان فرم‌ها
+                      <div
+                        className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                          schedSourceType === "form" ? "bg-teal text-navy" : "bg-ink/5 dark:bg-white/5 text-ink/50 dark:text-slate-400"
+                        }`}
+                      >
+                        <FileText size={16} />
+                      </div>
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black">استخراج از فرم‌های پرس‌کاد</span>
+                          {schedSourceType === "form" && <Check size={14} className="text-teal" />}
+                        </div>
+                        <span className="text-[11px] text-ink-subtle dark:text-slate-400 mt-0.5">
+                          استخراج هوشمند شماره پاسخ‌دهندگان فرم‌ها
                         </span>
                       </div>
-                    </label>
+                    </div>
                   </div>
                 </div>
 
                 {/* اگر منبع = استخراج از فرم */}
                 {schedSourceType === "form" && (
-                  <div className="flex flex-col gap-3 p-4 rounded-2xl bg-teal/5 dark:bg-teal/10 border border-teal/20">
+                  <div className="flex flex-col gap-3.5 p-4 sm:p-5 rounded-2xl bg-teal/5 dark:bg-teal/10 border border-teal/20">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <span className="text-xs font-bold text-navy dark:text-slate-200 flex items-center gap-1.5">
-                        <FileText size={14} className="text-teal" />
+                      <span className="text-xs font-black text-navy dark:text-slate-200 flex items-center gap-1.5">
+                        <FileText size={15} className="text-teal" />
                         فرم مورد نظر را انتخاب نمایید:
                       </span>
                       {schedUniquePhones.length > 0 && (
-                        <span className="text-xs font-black text-teal font-mono bg-teal/15 px-2.5 py-1 rounded-lg">
-                          {faNum(schedUniquePhones.length)} شماره یکتا آماده زمانبندی
+                        <span className="text-xs font-black text-teal font-mono bg-teal/15 px-3 py-1 rounded-xl border border-teal/20">
+                          {faNum(schedUniquePhones.length)} شماره یکتا آماده زمان‌بندی
                         </span>
                       )}
                     </div>
@@ -1680,7 +1690,7 @@ export default function SmsPanel() {
                       onChange={(e) => handleSelectSchedForm(e.target.value)}
                       className={inputCls}
                     >
-                      <option value="">-- انتخاب فرم فعال ({faNum(formsList.length)} فرم موجود) --</option>
+                      <option value="">-- انتخاب فرم ({faNum(formsList.length)} فرم موجود) --</option>
                       {formsList.map((f) => (
                         <option key={f.id} value={f.id}>
                           {f.title || "بدون عنوان"} ({f.slug})
@@ -1697,7 +1707,7 @@ export default function SmsPanel() {
                         {schedLoadingQuestions ? (
                           <Skeleton className="h-12 w-full" rounded="rounded-xl" />
                         ) : schedFormQuestions.length === 0 ? (
-                          <div className="text-xs font-semibold text-ink-subtle">سوالی در این فرم یافت نشد.</div>
+                          <div className="text-xs font-semibold text-ink-subtle">سوالی با نوع شماره تماس در این فرم یافت نشد.</div>
                         ) : (
                           <div className="grid sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
                             {schedFormQuestions.map((q) => {
@@ -1731,9 +1741,9 @@ export default function SmsPanel() {
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-bold text-ink-subtle dark:text-slate-400">
-                        شماره‌های موبایل گیرندگان (با اینتر یا کاما جدا کنید):
+                        شماره‌های موبایل گیرندگان (با اینتر، کاما یا فاصله جدا کنید):
                       </label>
-                      <span className="text-xs font-extrabold text-teal font-mono">
+                      <span className="text-xs font-black text-teal font-mono">
                         {schedUniqueManualMobiles.length > 0 ? `${faNum(schedUniqueManualMobiles.length)} شماره معتبر` : ""}
                       </span>
                     </div>
@@ -1754,10 +1764,10 @@ export default function SmsPanel() {
                 {/* ۲. متن پیامک */}
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-ink-subtle dark:text-slate-400">
-                      ۲. متن پیامک زماندار:
+                    <label className="text-xs font-black text-navy dark:text-slate-200">
+                      ۲. متن پیامک زمان‌دار:
                     </label>
-                    <div className="flex items-center gap-3 text-xs font-bold">
+                    <div className="flex items-center gap-2 sm:gap-3 text-xs font-bold">
                       <span className="text-ink-subtle dark:text-slate-400">
                         زبان: <strong className="text-navy dark:text-white">{isSchedPersian ? "فارسی" : "لاتین"}</strong>
                       </span>
@@ -1765,7 +1775,7 @@ export default function SmsPanel() {
                         کاراکتر: <strong className="text-teal font-mono">{faNum(schedCharCount)}</strong>
                       </span>
                       <span className="bg-teal/15 text-teal px-2 py-0.5 rounded-lg font-bold">
-                        تعداد صفحه: {faNum(schedPagesCount)}
+                        صفحه: {faNum(schedPagesCount)}
                       </span>
                     </div>
                   </div>
@@ -1780,7 +1790,7 @@ export default function SmsPanel() {
 
                 {/* ۳. انتخاب‌گر تاریخ و زمان شمسی (JalaliDateTimePicker) */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-ink-subtle dark:text-slate-400">
+                  <label className="text-xs font-black text-navy dark:text-slate-200">
                     ۳. زمان مقرر ارسال:
                   </label>
                   <JalaliDateTimePicker
@@ -1794,7 +1804,7 @@ export default function SmsPanel() {
                 {/* پیام فیدبک ثبت */}
                 {scheduleFeedback && (
                   <div
-                    className={`p-3.5 rounded-2xl border text-xs font-bold flex flex-col gap-2 transition-all shadow-sm ${
+                    className={`p-3.5 rounded-2xl border text-xs font-bold flex flex-col gap-2 transition-all shadow-xs ${
                       scheduleFeedback.success
                         ? "bg-teal/10 border-teal/30 text-navy dark:text-slate-100"
                         : "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300"
@@ -1836,7 +1846,7 @@ export default function SmsPanel() {
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-ink/10 dark:border-slate-800">
                   <div className="text-xs text-ink-subtle dark:text-slate-400 font-semibold flex items-center gap-1.5">
                     <Info size={14} className="text-teal shrink-0" />
-                    <span>پیام‌ها توسط کرون‌جاب خودکار سرور در لحظه موعود ارسال خواهند شد.</span>
+                    <span>پیام‌ها توسط سیستم ابری خودکار در تاریخ و ساعت مشخص‌شده ارسال خواهند شد.</span>
                   </div>
 
                   <Button
@@ -1847,7 +1857,7 @@ export default function SmsPanel() {
                     className="flex items-center justify-center gap-2 font-black px-6 py-2.5 cursor-pointer shadow-md"
                   >
                     {schedulingSubmitting ? <Spinner size="sm" /> : <CalendarClock size={16} />}
-                    <span>{schedulingSubmitting ? "در حال ثبت زمانبندی..." : `تایید و زمانبندی پیامک (${faNum(activeSchedMobiles.length)} گیرنده)`}</span>
+                    <span>{schedulingSubmitting ? "در حال ثبت زمان‌بندی..." : `تایید و زمان‌بندی پیامک (${faNum(activeSchedMobiles.length)} گیرنده)`}</span>
                   </Button>
                 </div>
               </form>
@@ -1860,7 +1870,7 @@ export default function SmsPanel() {
               <div>
                 <h2 className="text-base sm:text-lg font-black text-navy dark:text-white flex items-center gap-2">
                   <Layers size={18} className="text-teal" />
-                  صف پیام‌های زماندار ({faNum(scheduledTotal)} مورد)
+                  صف پیام‌های زمان‌دار ({faNum(scheduledTotal)} مورد)
                 </h2>
                 <p className="text-xs text-ink-subtle dark:text-slate-400 font-semibold mt-0.5">
                   لیست و وضعیت لحظه‌ای پیام‌های در انتظار، در حال ارسال و ارسالی
@@ -1878,7 +1888,7 @@ export default function SmsPanel() {
                       setScheduledPage(1);
                     }}
                     placeholder="جستجو در متن پیام..."
-                    className={inputCls + " !py-1.5 !pr-9 text-xs"}
+                    className={inputCls + " !py-1.5 !pr-9 text-xs !w-44 sm:!w-56"}
                   />
                 </div>
 
@@ -1898,7 +1908,7 @@ export default function SmsPanel() {
                   <option value="canceled">لغو شده</option>
                 </select>
 
-                <Button variant="ghost" size="sm" onClick={loadScheduledQueue} disabled={scheduledLoading}>
+                <Button variant="ghost" size="sm" onClick={loadScheduledQueue} disabled={scheduledLoading} className="cursor-pointer">
                   <RefreshCw size={14} className={scheduledLoading ? "animate-spin" : ""} />
                 </Button>
               </div>
@@ -1909,8 +1919,8 @@ export default function SmsPanel() {
             ) : scheduledList.length === 0 ? (
               <EmptyState
                 icon={<CalendarClock size={48} />}
-                title="پیام زمانداری در صف ثبت نشده است"
-                subtitle="می‌توانید با استفاده از فرم بالا، اولین پیامک زماندار خود را برای ارسال در آینده ثبت کنید."
+                title="پیام زمان‌داری در صف ثبت نشده است"
+                subtitle="می‌توانید با استفاده از فرم بالا، اولین پیامک زمان‌دار خود را برای ارسال در آینده ثبت کنید."
               />
             ) : (
               <div className="overflow-hidden">
@@ -1953,7 +1963,7 @@ export default function SmsPanel() {
                               <div className="flex flex-col">
                                 <span>{faDateTime(item.scheduled_at)}</span>
                                 {item.status === "pending" && (
-                                  <span className="text-[10px] text-teal font-medium">
+                                  <span className="text-[10px] text-teal font-bold mt-0.5">
                                     {(() => {
                                       const diff = new Date(item.scheduled_at).getTime() - Date.now();
                                       if (diff <= 0) return "سررسید شده";
@@ -1973,9 +1983,9 @@ export default function SmsPanel() {
                             <td className="px-4 py-3 text-center text-xs font-bold">
                               {item.status === "sent" || item.status === "failed" ? (
                                 <div className="flex items-center justify-center gap-1.5 text-[11px] font-mono">
-                                  <span className="text-emerald-600 dark:text-emerald-400">موفق {faNum(item.success_count)}</span>
+                                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">موفق {faNum(item.success_count)}</span>
                                   <span>/</span>
-                                  <span className="text-rose-500">ناموفق {faNum(item.failed_count)}</span>
+                                  <span className="text-rose-500 font-bold">ناموفق {faNum(item.failed_count)}</span>
                                 </div>
                               ) : (
                                 <span className="text-ink-subtle text-[11px]">—</span>
@@ -1988,7 +1998,7 @@ export default function SmsPanel() {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleOpenDetail(item)}
-                                  className="!py-1 !px-2 text-xs text-navy dark:text-slate-200 hover:text-teal font-bold"
+                                  className="!py-1 !px-2.5 text-xs text-navy dark:text-slate-200 hover:text-teal font-bold cursor-pointer"
                                   title="مشاهده جزئیات و گیرندگان"
                                 >
                                   <Eye size={14} />
@@ -2001,8 +2011,8 @@ export default function SmsPanel() {
                                     size="sm"
                                     onClick={() => handleCancelScheduled(item.id)}
                                     disabled={cancelingId === item.id}
-                                    className="!py-1 !px-2 text-xs text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 font-bold"
-                                    title="لغو زمانبندی پیامک"
+                                    className="!py-1 !px-2.5 text-xs text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 font-bold cursor-pointer"
+                                    title="لغو زمان‌بندی پیامک"
                                   >
                                     {cancelingId === item.id ? <Spinner size="sm" /> : <Ban size={14} />}
                                     <span className="hidden sm:inline">لغو</span>
@@ -2019,7 +2029,7 @@ export default function SmsPanel() {
                   {/* صفحه‌بندی */}
                   {scheduledTotal > 20 && (
                     <div className="flex items-center justify-between p-4 border-t border-ink/10 dark:border-slate-800 text-xs">
-                      <span className="text-ink-subtle">
+                      <span className="text-ink-subtle dark:text-slate-400 font-medium">
                         نمایش صفحه {faNum(scheduledPage)} از {faNum(Math.ceil(scheduledTotal / 20))} ({faNum(scheduledTotal)} کل)
                       </span>
                       <div className="flex items-center gap-1">
@@ -2028,6 +2038,7 @@ export default function SmsPanel() {
                           size="sm"
                           disabled={scheduledPage <= 1}
                           onClick={() => setScheduledPage((p) => Math.max(1, p - 1))}
+                          className="cursor-pointer"
                         >
                           <ChevronRight size={14} />
                           <span>قبلی</span>
@@ -2037,6 +2048,7 @@ export default function SmsPanel() {
                           size="sm"
                           disabled={scheduledPage >= Math.ceil(scheduledTotal / 20)}
                           onClick={() => setScheduledPage((p) => p + 1)}
+                          className="cursor-pointer"
                         >
                           <span>بعدی</span>
                           <ChevronLeft size={14} />
@@ -2050,149 +2062,132 @@ export default function SmsPanel() {
           </div>
 
           {/* Modal مشاهده جزئیات پیام زماندار */}
-          {detailModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-              <div className="bg-white dark:bg-[#131B2E] border-[1.5px] border-gray-200 dark:border-[#242F42] rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                {/* Modal Header */}
-                <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-slate-800">
-                  <div className="flex items-center gap-2">
-                    <CalendarClock size={20} className="text-teal" />
-                    <h3 className="text-base font-black text-navy dark:text-white">
-                      جزئیات پیام زماندار #{selectedScheduledItem?.id}
-                    </h3>
+          <Modal
+            open={detailModalOpen}
+            onClose={() => setDetailModalOpen(false)}
+            title={`جزئیات پیام زمان‌دار #${selectedScheduledItem?.id || ""}`}
+            wide={true}
+          >
+            <div className="flex flex-col gap-4">
+              {selectedScheduledItem && (
+                <div className="grid sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 text-xs">
+                  <div>
+                    <span className="text-ink-subtle dark:text-slate-400 block font-semibold">زمان مقرر ارسال:</span>
+                    <strong className="text-navy dark:text-white mt-0.5 block">{faDateTime(selectedScheduledItem.scheduled_at)}</strong>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setDetailModalOpen(false)}
-                    className="p-1.5 rounded-xl text-ink-subtle hover:text-navy hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-
-                {/* Modal Body */}
-                <div className="p-5 overflow-y-auto flex flex-col gap-4">
-                  {selectedScheduledItem && (
-                    <div className="grid sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 text-xs">
-                      <div>
-                        <span className="text-ink-subtle block font-semibold">زمان مقرر ارسال:</span>
-                        <strong className="text-navy dark:text-white mt-0.5 block">{faDateTime(selectedScheduledItem.scheduled_at)}</strong>
-                      </div>
-                      <div>
-                        <span className="text-ink-subtle block font-semibold">وضعیت کلی:</span>
-                        <div className="mt-1">{getScheduledStatusBadge(selectedScheduledItem.status)}</div>
-                      </div>
-                      <div>
-                        <span className="text-ink-subtle block font-semibold">خط فرستنده:</span>
-                        <strong className="font-mono text-teal mt-0.5 block">{selectedScheduledItem.sender_number || "98"}</strong>
-                      </div>
-                      <div>
-                        <span className="text-ink-subtle block font-semibold">نتیجه ارسال:</span>
-                        <strong className="font-mono text-navy dark:text-white mt-0.5 block">
-                          موفق: {faNum(selectedScheduledItem.success_count || 0)} / ناموفق: {faNum(selectedScheduledItem.failed_count || 0)}
-                        </strong>
-                      </div>
-                      <div className="sm:col-span-2 pt-2 border-t border-gray-200/60 dark:border-slate-700/60">
-                        <span className="text-ink-subtle block font-semibold">متن پیامک:</span>
-                        <p className="text-navy dark:text-slate-200 mt-1 font-medium leading-relaxed bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-gray-200 dark:border-slate-800">
-                          {selectedScheduledItem.message}
-                        </p>
-                      </div>
-                      {selectedScheduledItem.last_error && (
-                        <div className="sm:col-span-2 text-rose-500 bg-rose-50 dark:bg-rose-950/40 p-2.5 rounded-xl border border-rose-200 dark:border-rose-900 font-bold">
-                          علت خطا: {selectedScheduledItem.last_error}
-                        </div>
-                      )}
+                  <div>
+                    <span className="text-ink-subtle dark:text-slate-400 block font-semibold">وضعیت کلی:</span>
+                    <div className="mt-1">{getScheduledStatusBadge(selectedScheduledItem.status)}</div>
+                  </div>
+                  <div>
+                    <span className="text-ink-subtle dark:text-slate-400 block font-semibold">خط فرستنده:</span>
+                    <strong className="font-mono text-teal mt-0.5 block">{selectedScheduledItem.sender_number || "98"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-subtle dark:text-slate-400 block font-semibold">نتیجه ارسال:</span>
+                    <strong className="font-mono text-navy dark:text-white mt-0.5 block">
+                      موفق: {faNum(selectedScheduledItem.success_count || 0)} / ناموفق: {faNum(selectedScheduledItem.failed_count || 0)}
+                    </strong>
+                  </div>
+                  <div className="sm:col-span-2 pt-2 border-t border-gray-200/60 dark:border-slate-700/60">
+                    <span className="text-ink-subtle dark:text-slate-400 block font-semibold">متن پیامک:</span>
+                    <p className="text-navy dark:text-slate-200 mt-1 font-medium leading-relaxed bg-white dark:bg-slate-900 p-3 rounded-xl border border-gray-200 dark:border-slate-800">
+                      {selectedScheduledItem.message}
+                    </p>
+                  </div>
+                  {selectedScheduledItem.last_error && (
+                    <div className="sm:col-span-2 text-rose-500 bg-rose-50 dark:bg-rose-950/40 p-2.5 rounded-xl border border-rose-200 dark:border-rose-900 font-bold">
+                      علت خطا: {selectedScheduledItem.last_error}
                     </div>
                   )}
+                </div>
+              )}
 
-                  {/* لیست تک‌تک گیرندگان */}
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-black text-navy dark:text-white">
-                        لیست گیرندگان ({faNum(selectedRecipients.length)} شماره)
-                      </h4>
+              {/* لیست تک‌تک گیرندگان */}
+              <div className="flex flex-col gap-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h4 className="text-xs font-black text-navy dark:text-white">
+                    لیست گیرندگان ({faNum(selectedRecipients.length)} شماره)
+                  </h4>
 
-                      <input
-                        type="text"
-                        value={recipientSearchFilter}
-                        onChange={(e) => setRecipientSearchFilter(e.target.value)}
-                        placeholder="جستجو در شماره گیرنده..."
-                        className={`${inputCls} !py-1 !px-2.5 text-xs !w-48`}
-                      />
-                    </div>
+                  <input
+                    type="text"
+                    value={recipientSearchFilter}
+                    onChange={(e) => setRecipientSearchFilter(e.target.value)}
+                    placeholder="جستجو در شماره گیرنده..."
+                    className={`${inputCls} !py-1 !px-2.5 text-xs !w-48`}
+                  />
+                </div>
 
-                    {detailLoading ? (
-                      <Skeleton className="h-32 w-full" rounded="rounded-xl" />
-                    ) : selectedRecipients.length === 0 ? (
-                      <div className="text-center py-6 text-xs text-ink-subtle">گیرنده‌ای ثبت نشده است.</div>
-                    ) : (
-                      <div className="max-h-60 overflow-y-auto border border-gray-200 dark:border-slate-700 rounded-2xl">
-                        <table className="w-full text-right text-xs">
-                          <thead>
-                            <tr className="bg-slate-100 dark:bg-slate-900 text-ink-subtle font-bold border-b border-gray-200 dark:border-slate-700">
-                              <th className="px-3 py-2">ردیف</th>
-                              <th className="px-3 py-2">شماره موبایل</th>
-                              <th className="px-3 py-2 text-center">وضعیت</th>
-                              <th className="px-3 py-2">شناسه پیام درگاه</th>
+                {detailLoading ? (
+                  <Skeleton className="h-32 w-full" rounded="rounded-xl" />
+                ) : selectedRecipients.length === 0 ? (
+                  <div className="text-center py-6 text-xs text-ink-subtle dark:text-slate-400">گیرنده‌ای ثبت نشده است.</div>
+                ) : (
+                  <div className="max-h-60 overflow-y-auto border border-gray-200 dark:border-slate-700 rounded-2xl">
+                    <table className="w-full text-right text-xs">
+                      <thead>
+                        <tr className="bg-slate-100 dark:bg-slate-900 text-ink-subtle font-bold border-b border-gray-200 dark:border-slate-700">
+                          <th className="px-3 py-2">ردیف</th>
+                          <th className="px-3 py-2">شماره موبایل</th>
+                          <th className="px-3 py-2 text-center">وضعیت</th>
+                          <th className="px-3 py-2">شناسه پیام درگاه</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-slate-800 font-medium">
+                        {selectedRecipients
+                          .filter((r) => !recipientSearchFilter || r.mobile?.includes(recipientSearchFilter))
+                          .map((r, i) => (
+                            <tr key={r.id || i} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                              <td className="px-3 py-2 text-ink-subtle font-bold">{faNum(i + 1)}</td>
+                              <td className="px-3 py-2 font-mono font-bold text-navy dark:text-white" dir="ltr">{r.mobile}</td>
+                              <td className="px-3 py-2 text-center">
+                                <Badge
+                                  color={
+                                    r.status === "sent" ? "teal" : r.status === "failed" ? "red" : "orange"
+                                  }
+                                >
+                                  {r.status === "sent" ? "ارسال شد" : r.status === "failed" ? "ناموفق" : "در انتظار"}
+                                </Badge>
+                              </td>
+                              <td className="px-3 py-2 font-mono text-[11px] text-ink-subtle" dir="ltr">
+                                {r.provider_message_id || r.error_message || "—"}
+                              </td>
                             </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-100 dark:divide-slate-800 font-medium">
-                            {selectedRecipients
-                              .filter((r) => !recipientSearchFilter || r.mobile?.includes(recipientSearchFilter))
-                              .map((r, i) => (
-                                <tr key={r.id || i} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                                  <td className="px-3 py-2 text-ink-subtle font-bold">{faNum(i + 1)}</td>
-                                  <td className="px-3 py-2 font-mono font-bold text-navy dark:text-white" dir="ltr">{r.mobile}</td>
-                                  <td className="px-3 py-2 text-center">
-                                    <Badge
-                                      color={
-                                        r.status === "sent" ? "teal" : r.status === "failed" ? "red" : "gray"
-                                      }
-                                    >
-                                      {r.status === "sent" ? "ارسال شد" : r.status === "failed" ? "ناموفق" : "در انتظار"}
-                                    </Badge>
-                                  </td>
-                                  <td className="px-3 py-2 font-mono text-[11px] text-ink-subtle" dir="ltr">
-                                    {r.provider_message_id || r.error_message || "—"}
-                                  </td>
-                                </tr>
-                              ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
+                          ))}
+                      </tbody>
+                    </table>
                   </div>
-                </div>
+                )}
+              </div>
 
-                {/* Modal Footer */}
-                <div className="flex items-center justify-between p-4 border-t border-gray-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60">
-                  {selectedScheduledItem?.status === "pending" && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        handleCancelScheduled(selectedScheduledItem.id);
-                        setDetailModalOpen(false);
-                      }}
-                      className="text-rose-500 hover:bg-rose-50 font-bold text-xs"
-                    >
-                      <Ban size={14} />
-                      <span>لغو این زمانبندی</span>
-                    </Button>
-                  )}
+              {/* Modal Footer */}
+              <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-slate-800">
+                {selectedScheduledItem?.status === "pending" && (
                   <Button
-                    variant="teal"
+                    variant="ghost"
                     size="sm"
-                    onClick={() => setDetailModalOpen(false)}
-                    className="mr-auto font-bold text-xs"
+                    onClick={() => {
+                      handleCancelScheduled(selectedScheduledItem.id);
+                      setDetailModalOpen(false);
+                    }}
+                    className="text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 font-bold text-xs cursor-pointer"
                   >
-                    بستن
+                    <Ban size={14} />
+                    <span>لغو این زمان‌بندی</span>
                   </Button>
-                </div>
+                )}
+                <Button
+                  variant="teal"
+                  size="sm"
+                  onClick={() => setDetailModalOpen(false)}
+                  className="mr-auto font-bold text-xs cursor-pointer"
+                >
+                  بستن
+                </Button>
               </div>
             </div>
-          )}
+          </Modal>
         </div>
       )}
 
