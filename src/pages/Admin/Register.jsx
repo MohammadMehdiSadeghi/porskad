@@ -607,7 +607,7 @@ export default function Register() {
                       <div className="relative">
                         <input
                           type="tel"
-                          dir="ltr"
+                          dir={phone ? "ltr" : "rtl"}
                           required
                           autoFocus
                           value={phone}
@@ -616,8 +616,10 @@ export default function Register() {
                             setError(null);
                             setIsDuplicateUser(false);
                           }}
-                          className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-4 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all text-sm tracking-wider"
-                          placeholder="0912 345 6789"
+                          className={`w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-4 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder:text-right focus:outline-none transition-all text-sm ${
+                            phone ? "text-left tracking-wider font-mono" : "text-right tracking-normal"
+                          }`}
+                          placeholder="۰۹۱۲ ۳۴۵ ۶۷۸۹"
                           autoComplete="tel"
                         />
                         <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-subtle/60 dark:text-slate-400 pointer-events-none flex items-center justify-center">
@@ -903,7 +905,7 @@ export default function Register() {
                             required
                             value={password}
                             onChange={(e) => { setPassword(e.target.value); setError(null); }}
-                            className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-11 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all text-sm"
+                            className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-11 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder:text-right text-left focus:outline-none transition-all text-sm"
                             placeholder="حداقل ۶ کاراکتر"
                             autoComplete="new-password"
                           />
@@ -932,7 +934,7 @@ export default function Register() {
                             required
                             value={confirmPassword}
                             onChange={(e) => { setConfirmPassword(e.target.value); setError(null); }}
-                            className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-11 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all text-sm"
+                            className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-pill-md pr-11 pl-11 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder:text-right text-left focus:outline-none transition-all text-sm"
                             placeholder="تکرار رمز عبور"
                             autoComplete="new-password"
                           />
