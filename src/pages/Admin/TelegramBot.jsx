@@ -692,7 +692,7 @@ export default function TelegramBot() {
       {/* Toast */}
       {toast && (
         <div
-          className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-pill-md text-sm font-bold shadow-lg transition-all ${
+          className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl text-sm font-bold shadow-lg transition-all ${
             toast.type === "error"
               ? "bg-female-light border-2 border-female-normal text-female-dark"
               : "bg-ecosystem-light border-2 border-teal text-teal-text"
@@ -1231,7 +1231,7 @@ export default function TelegramBot() {
                                   onClick={() => handleResend(log.form_id, log.response_id)}
                                   disabled={resendingId === log.response_id || !canManage}
                                   title="ارسال مجدد این ورودی به تلگرام با تاریخ واقعی"
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill-sm border border-teal/30 bg-teal/10 hover:bg-teal/20 text-xs font-bold text-teal dark:text-teal transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border-[1.5px] border-teal/30 bg-teal/10 hover:bg-teal/20 text-xs font-bold text-teal dark:text-teal transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   <RefreshCw
                                     size={13}
@@ -1323,14 +1323,14 @@ export default function TelegramBot() {
                 {manualFormId && (
                   <div>
                     {links.filter((l) => l.form_id === manualFormId && l.is_active).length > 0 ? (
-                      <div className="flex items-center gap-2 text-xs font-bold text-teal bg-teal/10 border border-teal/30 px-3 py-2.5 rounded-pill-md">
+                      <div className="flex items-center gap-2 text-xs font-bold text-teal bg-teal/10 border-[1.5px] border-teal/30 px-3 py-2.5 rounded-xl">
                         <Bot size={16} />
                         <span>
                           متصل به {faNum(links.filter((l) => l.form_id === manualFormId && l.is_active).length)} چت تلگرام
                         </span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 text-xs font-bold text-orange bg-orange/10 border border-orange/30 px-3 py-2.5 rounded-pill-md">
+                      <div className="flex items-center gap-2 text-xs font-bold text-orange bg-orange/10 border-[1.5px] border-orange/30 px-3 py-2.5 rounded-xl">
                         <AlertTriangle size={16} />
                         <span>این فرم هنوز به چت تلگرام لینک نشده است</span>
                       </div>
@@ -1397,7 +1397,7 @@ export default function TelegramBot() {
                                 type="button"
                                 onClick={() => setManualSelectedIds([])}
                                 disabled={batchSending}
-                                className="px-3 py-1.5 rounded-pill-sm border border-ink/20 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-ink-subtle hover:text-rose-500 transition-colors cursor-pointer"
+                                className="px-3 py-1.5 rounded-lg border-[1.5px] border-gray-200 dark:border-[#242F42] bg-white dark:bg-slate-800 text-xs font-bold text-ink-subtle hover:text-rose-500 transition-colors cursor-pointer"
                               >
                                 لغو انتخاب
                               </button>
@@ -1405,7 +1405,7 @@ export default function TelegramBot() {
                                 type="button"
                                 onClick={handleBatchManualDispatch}
                                 disabled={batchSending}
-                                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-pill-sm bg-teal hover:bg-teal-600 text-white text-xs font-bold shadow-[2px_2px_0_#1F413D] active:translate-x-[1px] active:translate-y-[1px] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary hover:bg-teal-600 text-white text-xs font-bold shadow-[2px_2px_0_#1F413D] active:translate-x-[1px] active:translate-y-[1px] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <Send size={13} className={batchSending ? "animate-spin shrink-0" : "shrink-0"} />
                                 <span>
@@ -1525,7 +1525,7 @@ export default function TelegramBot() {
                                               setPreviewResponse(r);
                                               setPreviewModalOpen(true);
                                             }}
-                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill-sm border border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-navy dark:text-slate-200 hover:border-teal hover:text-teal dark:hover:text-teal hover:bg-teal/5 transition-all cursor-pointer shadow-sm active:scale-95"
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border-[1.5px] border-gray-200 dark:border-[#242F42] bg-white dark:bg-slate-800 text-xs font-bold text-navy dark:text-slate-200 hover:border-primary hover:text-teal dark:hover:text-teal hover:bg-teal/5 transition-all cursor-pointer shadow-sm active:scale-95"
                                             title="مشاهده متن کامل گزارش ارسالی"
                                           >
                                             <Eye size={13} className="text-teal shrink-0" />
@@ -1535,7 +1535,7 @@ export default function TelegramBot() {
                                             type="button"
                                             onClick={() => handleManualDispatch(r)}
                                             disabled={isSending || batchSending}
-                                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-pill-sm bg-teal hover:bg-teal-600 text-xs font-bold text-white transition-all cursor-pointer shadow-[2px_2px_0_#1F413D] active:translate-x-[1px] active:translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary hover:bg-teal-600 text-xs font-bold text-white transition-all cursor-pointer shadow-[2px_2px_0_#1F413D] active:translate-x-[1px] active:translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                                             title="ارسال مستقیم به چت تلگرام با تاریخ واقعی"
                                           >
                                             <Send

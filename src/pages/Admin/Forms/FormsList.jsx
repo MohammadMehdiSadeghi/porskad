@@ -1227,7 +1227,7 @@ export default function FormsList() {
               key={ft.key}
               onClick={() => createForm(ft.key, newFormTheme)}
               disabled={busy}
-              className="text-right p-5 rounded-2xl border-2 border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-teal dark:hover:border-teal hover:shadow-md transition-all group disabled:opacity-50 cursor-pointer"
+              className="text-right p-5 rounded-2xl border-[1.5px] border-gray-200 dark:border-[#242F42] bg-white dark:bg-slate-800 hover:border-primary dark:hover:border-primary hover:shadow-md transition-all group disabled:opacity-50 cursor-pointer"
             >
               <span className="block mb-3 group-hover:scale-110 transition-transform text-navy dark:text-white">
                 {ft.key === "step_by_step" ? <ClipboardList size={32} /> : <AlignLeft size={32} />}
