@@ -92,8 +92,8 @@ export default async function handler(req, res) {
     let pattern = "کد تایید ثبت نام در پرس کاد : %code%";
     let patternCode = "6528";
     let lineNumber = "98";
-    let cooldownSeconds = 90; // ۱:۳۰ دقیقه طبق درخواست کاربر
-    let maxResends = 2; // حداکثر ۲ بار ارسال مجدد طبق درخواست کاربر
+    let cooldownSeconds = 90;
+    let maxResends = 2;
     let amootToken = process.env.AMOOT_TOKEN || process.env.AMOOT_SMS_TOKEN || "";
     let smsOtpEnabled = true;
     let registrationEnabled = true;
@@ -109,7 +109,11 @@ export default async function handler(req, res) {
           if (row.key === "sms_otp_enabled" && row.value !== undefined) smsOtpEnabled = row.value === true || row.value === "true";
           if (row.key === "registration_enabled" && row.value !== undefined) registrationEnabled = row.value === true || row.value === "true";
           if (row.key === "otp_sms_pattern" && row.value) pattern = String(row.value);
-          if (row.key === "otp_pattern_code" && row.value) patternCode = String(row.value).trim();
+          if (row.key === "otp_pattern_code" && row.value) {
+            const val = String(row.value).trim();
+            // اگر هنوز در دیتابیس کد قدیمی 6516 مانده باشد، با کد جدید 6528 جایگزین شود
+            patternCode = (val === "6516" || !val) ? "6528" : val;
+          }
           if (row.key === "otp_line_number" && row.value) lineNumber = String(row.value);
           if (row.key === "otp_cooldown_seconds" && Number(row.value)) cooldownSeconds = Number(row.value);
           if (row.key === "otp_max_resends" && Number(row.value) !== undefined) maxResends = Number(row.value);
@@ -121,13 +125,21 @@ export default async function handler(req, res) {
           if (typeof rpcData.sms_otp_enabled === "boolean") smsOtpEnabled = rpcData.sms_otp_enabled;
           if (typeof rpcData.registration_enabled === "boolean") registrationEnabled = rpcData.registration_enabled;
           if (rpcData.otp_sms_pattern) pattern = String(rpcData.otp_sms_pattern);
-          if (rpcData.otp_pattern_code) patternCode = String(rpcData.otp_pattern_code).trim();
+          if (rpcData.otp_pattern_code) {
+            const val = String(rpcData.otp_pattern_code).trim();
+            patternCode = (val === "6516" || !val) ? "6528" : val;
+          }
           if (rpcData.otp_line_number) lineNumber = String(rpcData.otp_line_number);
           if (rpcData.otp_cooldown_seconds) cooldownSeconds = Number(rpcData.otp_cooldown_seconds);
           if (rpcData.otp_max_resends !== undefined) maxResends = Number(rpcData.otp_max_resends);
         }
       }
     } catch {}
+
+    // اگر همچنان کد الگو 6516 بود حتماً 6528 باشد
+    if (patternCode === "6516" || !patternCode) {
+      patternCode = "6528";
+    }
 
     if (registrationEnabled === false) {
       return res.status(403).json({ error: "ثبت‌نام عمومی در سامانه در حال حاضر غیرفعال است." });
@@ -203,76 +215,12 @@ export default async function handler(req, res) {
       ? pattern.replace(/%code%/g, code)
       : `${pattern}\nکد شما: ${code}`;
 
-    // ۵. ارسال پیامک از طریق درگاه آموت (ارسال سریع کد اعتبارسنجی SendQuickOTP و الگو SendWithPattern)
+    // ۵. ارسال پیامک از طریق درگاه آموت (ارسال بر اساس الگوی تاییدشده آموت / SendWithPattern)
     let sendSuccess = false;
     let sendErrorMsg = null;
 
     if (amootToken) {
-      // الف) تلاش اول: وب‌سرویس اختصاصی ارسال سریع کد اعتبارسنجی SendQuickOTP با REST JSON
-      if (patternCode && !sendSuccess) {
-        try {
-          const resp = await fetch("https://portal.amootsms.com/rest/SendQuickOTP", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              Token: amootToken,
-              token: amootToken,
-              PatternCode: String(patternCode).trim(),
-              Mobile: cleanPhone,
-              Mobiles: cleanPhone,
-              Code: code,
-              code: code,
-              PatternValues: { code: code },
-            }),
-            signal: AbortSignal.timeout(8000),
-          });
-
-          const data = await resp.json().catch(() => null);
-          if (data && (data.Status === "Success" || data.Status === "success" || data.Status === "OK")) {
-            sendSuccess = true;
-            sendErrorMsg = null;
-          } else if (data) {
-            sendErrorMsg = `QuickOTP_JSON: ${data.Status || data.Message || JSON.stringify(data)}`;
-          }
-        } catch (err) {
-          sendErrorMsg = `QuickOTP_JSON_Err: ${err.message}`;
-        }
-      }
-
-      // ب) تلاش دوم: ارسال سریع SendQuickOTP با فرمت Form-Urlencoded
-      if (patternCode && !sendSuccess) {
-        try {
-          const quickPostData = new URLSearchParams({
-            Token: amootToken,
-            token: amootToken,
-            PatternCode: String(patternCode).trim(),
-            Mobile: cleanPhone,
-            Mobiles: cleanPhone,
-            Code: code,
-            code: code,
-            PatternValues: `code:${code}`,
-          });
-
-          const resp = await fetch("https://portal.amootsms.com/rest/SendQuickOTP", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: quickPostData.toString(),
-            signal: AbortSignal.timeout(8000),
-          });
-
-          const data = await resp.json().catch(() => null);
-          if (data && (data.Status === "Success" || data.Status === "success" || data.Status === "OK")) {
-            sendSuccess = true;
-            sendErrorMsg = null;
-          } else if (data) {
-            sendErrorMsg = `QuickOTP_Form: ${data.Status || data.Message || JSON.stringify(data)}`;
-          }
-        } catch (err) {
-          sendErrorMsg = `QuickOTP_Form_Err: ${err.message}`;
-        }
-      }
-
-      // ج) تلاش سوم: ارسال مستقیم با الگو SendWithPattern از طریق REST JSON (فرمت استاندارد آموت)
+      // الف) تلاش اول: وب‌سرویس استاندارد ارسال با الگو SendWithPattern با متد JSON (توصیه‌شده آموت)
       if (patternCode && !sendSuccess) {
         try {
           const resp = await fetch("https://portal.amootsms.com/rest/SendWithPattern", {
@@ -284,7 +232,6 @@ export default async function handler(req, res) {
               PatternCode: String(patternCode).trim(),
               Mobile: cleanPhone,
               Mobiles: cleanPhone,
-              Code: code,
               PatternValues: { code: code },
             }),
             signal: AbortSignal.timeout(8000),
@@ -302,7 +249,39 @@ export default async function handler(req, res) {
         }
       }
 
-      // د) تلاش چهارم: ارسال با الگو از طریق REST Form-Urlencoded (با فرمت code:12345 و 12345)
+      // ب) تلاش دوم: ارسال با الگو SendWithPattern به صورت Form URL-encoded با شیء JSON رشته‌شده در PatternValues
+      if (patternCode && !sendSuccess) {
+        try {
+          const patternPostData = new URLSearchParams({
+            Token: amootToken,
+            token: amootToken,
+            PatternCode: String(patternCode).trim(),
+            Mobile: cleanPhone,
+            Mobiles: cleanPhone,
+            MobileNumbers: cleanPhone,
+            PatternValues: JSON.stringify({ code: code, Code: code }),
+          });
+
+          const resp = await fetch("https://portal.amootsms.com/rest/SendWithPattern", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: patternPostData.toString(),
+            signal: AbortSignal.timeout(8000),
+          });
+
+          const data = await resp.json().catch(() => null);
+          if (data && (data.Status === "Success" || data.Status === "success" || data.Status === "OK")) {
+            sendSuccess = true;
+            sendErrorMsg = null;
+          } else if (data) {
+            sendErrorMsg = `PatternForm_JSON: ${data.Status || data.Message || JSON.stringify(data)}`;
+          }
+        } catch (err) {
+          sendErrorMsg = `PatternForm_JSON_Err: ${err.message}`;
+        }
+      }
+
+      // ج) تلاش سوم: ارسال با الگو SendWithPattern به صورت Form URL-encoded با کلید code:1234
       if (patternCode && !sendSuccess) {
         try {
           const patternPostData = new URLSearchParams({
@@ -326,10 +305,41 @@ export default async function handler(req, res) {
             sendSuccess = true;
             sendErrorMsg = null;
           } else if (data) {
-            sendErrorMsg = `PatternForm: ${data.Status || data.Message || JSON.stringify(data)}`;
+            sendErrorMsg = `PatternForm_KeyValue: ${data.Status || data.Message || JSON.stringify(data)}`;
           }
         } catch (err) {
-          sendErrorMsg = `PatternForm_Err: ${err.message}`;
+          sendErrorMsg = `PatternForm_KeyValue_Err: ${err.message}`;
+        }
+      }
+
+      // د) تلاش چهارم: ارسال با الگو فقط با مقدار متغیر عددی به تنهایی
+      if (patternCode && !sendSuccess) {
+        try {
+          const patternPostData = new URLSearchParams({
+            Token: amootToken,
+            token: amootToken,
+            PatternCode: String(patternCode).trim(),
+            Mobile: cleanPhone,
+            Mobiles: cleanPhone,
+            PatternValues: code,
+          });
+
+          const resp = await fetch("https://portal.amootsms.com/rest/SendWithPattern", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: patternPostData.toString(),
+            signal: AbortSignal.timeout(8000),
+          });
+
+          const data = await resp.json().catch(() => null);
+          if (data && (data.Status === "Success" || data.Status === "success" || data.Status === "OK")) {
+            sendSuccess = true;
+            sendErrorMsg = null;
+          } else if (data) {
+            sendErrorMsg = `PatternForm_RawVal: ${data.Status || data.Message || JSON.stringify(data)}`;
+          }
+        } catch (err) {
+          sendErrorMsg = `PatternForm_RawVal_Err: ${err.message}`;
         }
       }
 
@@ -359,7 +369,7 @@ export default async function handler(req, res) {
         } catch {}
       }
 
-      // د) در صورت ناموفق بودن الگو، ارسال عادی SendSimple به عنوان آخرین Fallback
+      // و) در صورت ناموفق بودن تمام متدهای الگو، ارسال عادی SendSimple به عنوان آخرین لایه پشتیبان
       if (!sendSuccess) {
         try {
           const simpleUrl = "https://portal.amootsms.com/rest/SendSimple";
@@ -389,7 +399,7 @@ export default async function handler(req, res) {
         }
       }
 
-      // ج) در صورت خطا در متدهای REST، استفاده از وب‌سرویس ASMX به عنوان آخرین لایه پشتیبان
+      // ز) وب‌سرویس ASMX SendSimple به عنوان آخرین سنگر
       if (!sendSuccess) {
         try {
           const sendUrl = "https://portal.amootsoft.com/webservice2.asmx/SendSimple";
@@ -430,6 +440,15 @@ export default async function handler(req, res) {
         line_number: lineNumber,
       });
     } catch {}
+
+    if (!sendSuccess && amootToken) {
+      console.error(`[OTP FAILED] Mobile: ${cleanPhone}, PatternCode: ${patternCode}, Error: ${sendErrorMsg}`);
+      return res.status(502).json({
+        success: false,
+        error: `خطا در ارسال پیامک از درگاه آموت: ${sendErrorMsg || "عدم تایید سامانه پیامک"}`,
+        debugPatternCode: patternCode,
+      });
+    }
 
     // ۶. ذخیره سشن جدید با افزایش شمارنده ارسال مجدد در حافظه و دیتابیس
     const currentResends = existingSession ? existingSession.resends + 1 : 0;

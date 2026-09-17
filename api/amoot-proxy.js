@@ -584,28 +584,16 @@ export default async function handler(req, res) {
         PatternValues: typeof patternValues === "object" ? JSON.stringify(patternValues) : String(patternValues || ""),
       });
 
-      // ابتدا تلاش برای SendQuickOTP (ارسال سریع اعتبارسنجی) و سپس SendWithPattern
-      let sendRes = await fetch("https://portal.amootsms.com/rest/SendQuickOTP", {
+      // ارسال مستقیم به وب‌سرویس SendWithPattern آموت
+      let sendRes = await fetch("https://portal.amootsms.com/rest/SendWithPattern", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: patternPayload.toString(),
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(15000),
       }).catch(() => null);
 
       let sendData = sendRes ? await sendRes.json().catch(() => null) : null;
       let isSuccess = sendData && (sendData.Status === "Success" || sendData.Status === "success" || sendData.Status === "OK");
-
-      if (!isSuccess) {
-        sendRes = await fetch("https://portal.amootsms.com/rest/SendWithPattern", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: patternPayload.toString(),
-          signal: AbortSignal.timeout(15000),
-        }).catch(() => null);
-
-        sendData = sendRes ? await sendRes.json().catch(() => null) : sendData;
-        isSuccess = sendData && (sendData.Status === "Success" || sendData.Status === "success" || sendData.Status === "OK");
-      }
 
       if (!sendData) {
         return res.status(200).json({
