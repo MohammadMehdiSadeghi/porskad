@@ -19,11 +19,12 @@ const COLORS = {
   red: "bg-rose-50 dark:bg-rose-950/40 text-accent-red dark:text-rose-300 border-accent-red/30",
 };
 
-export default function Badge({ color = "teal", rotate = "", className = "", children }) {
+export default function Badge({ color = "teal", rotate = "", className = "", rounded = "rounded-md", children }) {
   return (
     <span
       className={clsx(
-        "inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full font-bold text-xs border whitespace-nowrap transition-colors",
+        "inline-flex items-center gap-1 px-2.5 py-0.5 font-bold text-xs border whitespace-nowrap transition-colors",
+        rounded,
         COLORS[color] ?? COLORS.teal,
         className,
       )}

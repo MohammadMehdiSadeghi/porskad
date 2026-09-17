@@ -389,26 +389,31 @@ export function generateUuid() {
 
 // ─── تشخیص مدل و نوع فرم برای نمایش بج متناسب با دیزاین سیستم ───
 export function getFormModelBadge(form) {
-  if (!form) return { label: "مرحله‌ای", color: "purple" };
-  const title = (form.title || "").trim().toLowerCase();
-  const fType = form.form_type;
+  if (!form) return { label: "مرحله به مرحله", color: "teal" };
 
-  // ۱. پیش‌ثبت‌نام (مانند فرم پیش ثبت نام هنرستان رکاد)
+  const fType = String(form.form_type || "").trim().toLowerCase();
+  const title = String(form.title || "").trim().toLowerCase();
+
+  // ۱. پیش‌ثبت‌نام صریح (مانند فرم پیش ثبت نام هنرستان رکاد)
   if (title.includes("پیش ثبت") || title.includes("پیش‌ثبت") || title.includes("پیشثبت")) {
     return { label: "پیش‌ثبت‌نام", color: "orange" };
   }
 
-  // ۲. عضویت
-  if (title.includes("عضویت")) {
-    return { label: "عضویت", color: "orange" };
+  // ۲. آزمون، کوئیز و تست
+  if (
+    form.settings?.is_quiz ||
+    form.settings?.has_score ||
+    title.includes("آزمون") ||
+    title.includes("ازمون") ||
+    title.includes("کوئیز") ||
+    title.includes("کوییز") ||
+    title.includes("امتحان") ||
+    title.includes("تست")
+  ) {
+    return { label: "آزمون", color: "purple" };
   }
 
-  // ۳. ثبت‌نام عمومی
-  if (title.includes("ثبت نام") || title.includes("ثبت‌نام") || title.includes("نام‌نویسی")) {
-    return { label: "ثبت‌نامی", color: "orange" };
-  }
-
-  // ۴. نظرسنجی و ارزیابی رضایت
+  // ۳. نظرسنجی و ارزیابی رضایت
   if (
     title.includes("نظرسنجی") ||
     title.includes("نظر سنجی") ||
@@ -420,21 +425,7 @@ export function getFormModelBadge(form) {
     return { label: "نظرسنجی", color: "teal" };
   }
 
-  // ۵. آزمون، کوئیز و تست
-  if (
-    title.includes("آزمون") ||
-    title.includes("ازمون") ||
-    title.includes("کوئیز") ||
-    title.includes("کوییز") ||
-    title.includes("امتحان") ||
-    title.includes("تست") ||
-    form.settings?.is_quiz ||
-    form.settings?.has_score
-  ) {
-    return { label: "آزمون", color: "purple" };
-  }
-
-  // ۶. استخدامی و همکاری
+  // ۴. استخدامی و همکاری
   if (
     title.includes("استخدام") ||
     title.includes("همکاری") ||
@@ -445,19 +436,18 @@ export function getFormModelBadge(form) {
     return { label: "استخدامی", color: "navy" };
   }
 
-  // ۷. تماس، ارتباط و مشاوره
+  // ۵. تماس، ارتباط و مشاوره
   if (
     title.includes("تماس") ||
     title.includes("ارتباط") ||
     title.includes("مشاوره") ||
     title.includes("پشتیبانی") ||
-    title.includes("درخواست") ||
     title.includes("شکایت")
   ) {
     return { label: "تماس و مشاوره", color: "magenta" };
   }
 
-  // ۸. ثبت سفارش و خرید
+  // ۶. ثبت سفارش و خرید
   if (
     title.includes("سفارش") ||
     title.includes("خرید") ||
@@ -469,11 +459,11 @@ export function getFormModelBadge(form) {
     return { label: "ثبت سفارش", color: "green" };
   }
 
-  // ۹. بر اساس ساختار فرم (form_type)
+  // ۷. بر اساس مدل ساختاری فرم در پلتفرم پرس‌کاد
   if (fType === "registration") {
     return { label: "ثبت‌نامی", color: "orange" };
   }
 
-  // پیش‌فرض ساختار مرحله به مرحله
-  return { label: "مرحله‌ای", color: "purple" };
+  // پیش‌فرض استاندارد پرس‌کاد: فرم ساختار مرحله به مرحله
+  return { label: "مرحله به مرحله", color: "teal" };
 }
