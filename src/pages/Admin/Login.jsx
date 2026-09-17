@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { KeyRound, Headphones, Send, ExternalLink } from "lucide-react";
+import {
+  KeyRound,
+  Headphones,
+  Send,
+  ExternalLink,
+  Lock,
+  User,
+  ArrowLeft,
+  HelpCircle,
+} from "lucide-react";
 import PasswordToggle from "../../components/ui/PasswordToggle";
 import StickerCard from "../../components/ui/StickerCard";
 import Button from "../../components/ui/Button";
@@ -182,7 +191,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen dot-pattern bg-bg-mint dark:bg-dark-canvas flex items-center justify-center p-4 relative">
+    <div className="min-h-screen dot-pattern bg-bg-mint dark:bg-dark-canvas flex items-center justify-center p-4 relative font-sans" dir="rtl">
       <div className="absolute top-4 left-4 z-20">
         <ThemeToggle />
       </div>
@@ -198,36 +207,45 @@ export default function Login() {
             onSubmit={handleSubmit}
             className="p-7 sm:p-9 flex flex-col gap-5"
           >
-            <div className="flex flex-col items-center gap-2 text-center">
+            {/* هدر یکپارچه و هماهنگ با ثبت‌نام */}
+            <div className="flex flex-col items-center gap-1.5 text-center">
               <Badge color="navy">
-                پرس‌کاد — فرم‌ساز آنلاین
+                پرس‌کاد — فرم‌ساز هوشمند
               </Badge>
-              <h1 className="text-xl sm:text-2xl font-black text-sec dark:text-white">ورود به حساب</h1>
-              <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-                ایمیل و رمز عبور خود را برای ورود وارد کنید.
+              <h1 className="text-xl sm:text-2xl font-black text-sec dark:text-white tracking-tight leading-snug">
+                ورود به حساب کاربری
+              </h1>
+              <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 max-w-sm leading-relaxed">
+                ایمیل یا شماره همراه و رمز عبور خود را وارد نمایید.
               </p>
             </div>
 
+            {/* فیلد ایمیل یا شماره موبایل */}
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-extrabold text-sec dark:text-slate-200">
-                {smsOtpEnabled !== false ? "ایمیل یا شماره موبایل" : "ایمیل"}
+              <span className="text-xs sm:text-sm font-extrabold text-sec dark:text-slate-200">
+                {smsOtpEnabled !== false ? "ایمیل یا شماره تلفن همراه" : "ایمیل حساب کاربری"}
               </span>
-              <input
-                type={smsOtpEnabled !== false ? "text" : "email"}
-                dir="ltr"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-gray-700 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/20
-                  rounded-xl px-4 py-2.5 font-semibold text-sec dark:text-white text-left focus:outline-none transition-all"
-                placeholder={smsOtpEnabled !== false ? "۰۹۱۲۳۴۵۶۷۸۹ یا name@example.com" : "name@example.com"}
-                autoComplete="username"
-              />
+              <div className="relative">
+                <input
+                  type={smsOtpEnabled !== false ? "text" : "email"}
+                  dir="ltr"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-white dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-gray-700 focus:border-teal focus:ring-2 focus:ring-teal/20 rounded-xl pr-11 pl-4 py-2.5 font-bold text-sm text-sec dark:text-white placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all"
+                  placeholder={smsOtpEnabled !== false ? "۰۹۱۲۳۴۵۶۷۸۹ یا name@example.com" : "name@example.com"}
+                  autoComplete="username"
+                />
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-subtle/60 dark:text-slate-400 pointer-events-none flex items-center justify-center">
+                  <User size={17} />
+                </div>
+              </div>
             </label>
 
+            {/* فیلد رمز عبور */}
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <label htmlFor="login-password-input" className="text-sm font-extrabold text-sec dark:text-slate-200 cursor-pointer">
+                <label htmlFor="login-password-input" className="text-xs sm:text-sm font-extrabold text-sec dark:text-slate-200 cursor-pointer">
                   رمز عبور
                 </label>
                 <button
@@ -237,7 +255,7 @@ export default function Login() {
                     e.stopPropagation();
                     setShowForgotModal(true);
                   }}
-                  className="text-xs font-bold text-ecosystem-normal hover:text-sec dark:hover:text-ecosystem-light transition-colors cursor-pointer whitespace-nowrap"
+                  className="text-xs font-bold text-teal hover:underline transition-colors cursor-pointer whitespace-nowrap"
                 >
                   فراموشی رمز عبور؟
                 </button>
@@ -250,36 +268,40 @@ export default function Login() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-gray-700 focus:border-ecosystem-normal focus:ring-2 focus:ring-ecosystem-normal/20
-                    rounded-xl px-4 py-3 pl-11 font-semibold text-sec dark:text-white text-left focus:outline-none transition-all"
+                  className="w-full bg-white dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-gray-700 focus:border-teal focus:ring-2 focus:ring-teal/20 rounded-xl pr-11 pl-11 py-2.5 font-bold text-sm text-sec dark:text-white placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder-right text-left focus:outline-none transition-all"
                   placeholder="••••••••"
                   autoComplete="current-password"
                 />
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-subtle/60 dark:text-slate-400 pointer-events-none flex items-center justify-center">
+                  <Lock size={17} />
+                </div>
                 <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
                   <PasswordToggle
                     visible={showPassword}
                     onToggle={() => setShowPassword(!showPassword)}
-                    size={18}
+                    size={16}
+                    ariaLabel="نمایش یا مخفی‌سازی رمز عبور"
                   />
                 </div>
               </div>
             </div>
 
+            {/* نمایش خطا و پشتیبانی */}
             {error && (
               <div className="flex flex-col gap-2.5">
-                <div className="bg-female-light dark:bg-pink-950/40 border-[1.5px] border-female-normal/40 rounded-xl px-3.5 py-2.5 text-sm font-bold text-female-normal dark:text-pink-300">
+                <div className="bg-female-light dark:bg-pink-950/40 border-[1.5px] border-female-normal/40 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-female-normal dark:text-pink-300">
                   {error}
                 </div>
                 <div className="bg-amber-50 dark:bg-amber-950/30 border-[1.5px] border-amber-200 dark:border-amber-700/60 rounded-xl p-3 flex items-center justify-between gap-2 text-xs font-bold text-sec dark:text-amber-200">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <Headphones size={15} className="text-ecosystem-normal shrink-0" />
-                    <span className="truncate">نیاز به کمک دارید؟ پشتیبانی:</span>
+                    <Headphones size={15} className="text-teal shrink-0" />
+                    <span className="truncate">نیاز به راهنمایی دارید؟ پشتیبانی:</span>
                   </div>
                   <a
                     href={`https://t.me/${telegramSupportId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 bg-white dark:bg-[#1C2536] hover:bg-ecosystem-normal hover:text-white border-[1.5px] border-primary/30 text-sec dark:text-white px-2.5 py-1 rounded-lg text-xs font-bold transition-all shadow-hard-sm shrink-0"
+                    className="inline-flex items-center gap-1.5 bg-white dark:bg-[#1C2536] hover:bg-teal hover:text-white border-[1.5px] border-primary/30 text-sec dark:text-white px-2.5 py-1 rounded-xl text-xs font-bold transition-all shadow-[2px_2px_0_#202A5A] dark:shadow-[2px_2px_0_#59BBAF] shrink-0"
                   >
                     <Send size={11} />
                     <span>@{telegramSupportId}</span>
@@ -288,31 +310,44 @@ export default function Login() {
               </div>
             )}
 
+            {/* دکمه‌های ورود */}
             <div className="flex flex-col gap-3 mt-1">
               <Button
                 type="submit"
                 variant="teal"
-                size="lg"
+                size="md"
                 disabled={busy}
-                className="w-full justify-center text-center"
+                className="w-full justify-center text-center mt-1"
               >
-                <span className="w-full text-center">{busy ? "در حال ورود..." : "ورود به پنل"}</span>
+                <span className="w-full text-center flex items-center justify-center gap-2">
+                  {busy ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>در حال ورود به پنل...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>ورود به حساب کاربری</span>
+                      <ArrowLeft size={16} />
+                    </>
+                  )}
+                </span>
               </Button>
 
               {/* ورود مستقیم با گوگل */}
               {googleAuthEnabled !== false && (
                 <>
                   <div className="flex items-center gap-3 my-0.5">
-                    <div className="flex-1 h-[1px] bg-ink/10 dark:bg-slate-700" />
+                    <div className="flex-1 h-[1px] bg-gray-200 dark:bg-gray-700" />
                     <span className="text-[11px] font-bold text-ink-subtle dark:text-slate-400">یا</span>
-                    <div className="flex-1 h-[1px] bg-ink/10 dark:bg-slate-700" />
+                    <div className="flex-1 h-[1px] bg-gray-200 dark:bg-gray-700" />
                   </div>
 
                   <button
                     type="button"
                     onClick={handleGoogleLogin}
                     disabled={googleBusy || busy}
-                    className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-ink dark:text-white border-2 border-ink dark:border-slate-600 font-bold py-2.5 px-4 rounded-xl transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-xs sm:text-sm cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-50 dark:bg-[#1C2536] dark:hover:bg-slate-800 text-sec dark:text-white border-[1.5px] border-gray-200 dark:border-gray-700 font-bold py-2.5 px-4 rounded-xl transition-all shadow-[2px_2px_0_#202A5A] dark:shadow-[2px_2px_0_#59BBAF] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-xs sm:text-sm cursor-pointer disabled:opacity-60"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24">
                       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -325,14 +360,28 @@ export default function Login() {
                 </>
               )}
 
-              <div className="flex items-center justify-center gap-2 text-[13px] font-bold text-ink-subtle pt-3 border-t border-ink/10 text-center flex-wrap">
-                <span>حساب کاربری ندارید؟</span>
-                <Link
-                  to="/register"
-                  className="text-[13px] font-extrabold text-teal hover:underline inline-flex items-center gap-1 bg-teal/10 hover:bg-teal/20 px-3 py-1.5 rounded-lg transition-all"
-                >
-                  ثبت‌نام رایگان
-                </Link>
+              {/* فوتر فرم هماهنگ با صفحه ثبت‌نام */}
+              <div className="flex flex-col gap-2.5 pt-2 border-t border-ink/10 dark:border-slate-800">
+                <div className="flex items-center justify-center gap-2 text-[13px] font-bold text-ink-subtle dark:text-slate-400 text-center flex-wrap">
+                  <span>حساب کاربری ندارید؟</span>
+                  <Link
+                    to="/register"
+                    className="text-[13px] font-extrabold text-teal hover:underline inline-flex items-center gap-1 bg-teal/10 hover:bg-teal/20 px-3 py-1.5 rounded-xl transition-all"
+                  >
+                    ثبت‌نام رایگان
+                  </Link>
+                </div>
+
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotModal(true)}
+                    className="text-[12px] font-bold text-ink-subtle hover:text-teal hover:underline inline-flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <HelpCircle size={13} />
+                    نیاز به راهنمایی یا بازیابی رمز عبور دارید؟
+                  </button>
+                </div>
               </div>
             </div>
           </form>

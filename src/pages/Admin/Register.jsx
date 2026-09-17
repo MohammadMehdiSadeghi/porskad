@@ -466,7 +466,7 @@ export default function Register() {
               <Badge color="navy">
                 {headerInfo.badge}
               </Badge>
-              <h1 className="text-lg sm:text-xl font-black text-sec dark:text-white transition-all tracking-tight leading-snug">
+              <h1 className="text-xl sm:text-2xl font-black text-sec dark:text-white transition-all tracking-tight leading-snug">
                 {headerInfo.title}
               </h1>
               <p className="text-xs sm:text-sm font-semibold text-ink-subtle dark:text-slate-400 max-w-sm leading-relaxed transition-all">
@@ -503,7 +503,7 @@ export default function Register() {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <h3 className="text-base sm:text-lg font-black text-navy dark:text-white">ثبت‌نام عمومی غیرفعال است</h3>
+                  <h3 className="text-base sm:text-lg font-black text-sec dark:text-white">ثبت‌نام عمومی غیرفعال است</h3>
                   <p className="text-xs sm:text-sm text-ink-subtle dark:text-slate-400 max-w-xs leading-relaxed">
                     در حال حاضر ثبت‌نام مستقیم کاربران موقتاً بسته شده است. کاربران جدید فقط توسط مدیریت سامانه ایجاد می‌شوند.
                   </p>
@@ -512,7 +512,7 @@ export default function Register() {
                 <div className="w-full flex flex-col gap-2.5 pt-2">
                   <Link
                     to="/admin/login"
-                    className="w-full flex items-center justify-center gap-2 bg-teal text-white font-bold py-2.5 px-4 rounded-xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-xs sm:text-sm cursor-pointer transition-all"
+                    className="w-full flex items-center justify-center gap-2 bg-teal text-white font-bold py-2.5 px-4 rounded-xl shadow-[2px_2px_0_#1F413D] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-xs sm:text-sm cursor-pointer transition-all"
                   >
                     ورود به حساب کاربری موجود
                   </Link>
@@ -521,7 +521,7 @@ export default function Register() {
                       href={`https://t.me/${telegramSupportId}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full flex items-center justify-center gap-2 bg-white dark:bg-slate-800 text-ink dark:text-white border-2 border-ink dark:border-slate-600 font-bold py-2.5 px-4 rounded-xl text-xs sm:text-sm transition-all hover:bg-slate-50 dark:hover:bg-slate-700"
+                      className="w-full flex items-center justify-center gap-2 bg-white dark:bg-[#1C2536] text-sec dark:text-white border-[1.5px] border-gray-200 dark:border-gray-700 font-bold py-2.5 px-4 rounded-xl text-xs sm:text-sm transition-all shadow-[2px_2px_0_#202A5A] dark:shadow-[2px_2px_0_#59BBAF]"
                     >
                       <Headphones size={15} className="text-teal" />
                       ارتباط با پشتیبانی در تلگرام
@@ -535,14 +535,14 @@ export default function Register() {
                   <HelpCircle size={32} />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <h3 className="text-base sm:text-lg font-black text-navy dark:text-white">امکان ثبت‌نام در دسترس نیست</h3>
+                  <h3 className="text-base sm:text-lg font-black text-sec dark:text-white">امکان ثبت‌نام در دسترس نیست</h3>
                   <p className="text-xs sm:text-sm text-ink-subtle dark:text-slate-400 max-w-xs leading-relaxed">
                     روش‌های ثبت‌نام در حال حاضر توسط مدیریت موقتاً غیرفعال شده‌اند.
                   </p>
                 </div>
                 <Link
                   to="/admin/login"
-                  className="w-full flex items-center justify-center gap-2 bg-teal text-white font-bold py-2.5 px-4 rounded-xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none text-xs sm:text-sm cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 bg-teal text-white font-bold py-2.5 px-4 rounded-xl shadow-[2px_2px_0_#1F413D] hover:shadow-none text-xs sm:text-sm cursor-pointer"
                 >
                   ورود به حساب کاربری
                 </Link>
@@ -552,7 +552,7 @@ export default function Register() {
                 {/* ══════════════ حالت فقط گوگل (وقتی پیامک غیرفعال است) ══════════════ */}
                 {smsOtpEnabled === false && googleAuthEnabled !== false && (
                   <div className="flex flex-col items-center gap-4 py-2 text-center animate-step-fade">
-                    <div className="w-16 h-16 rounded-2xl bg-white dark:bg-slate-800 border-2 border-ink dark:border-slate-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-2xl bg-white dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-gray-700 shadow-[2px_2px_0_#202A5A] dark:shadow-[2px_2px_0_#59BBAF] flex items-center justify-center">
                       <svg width="32" height="32" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -562,7 +562,7 @@ export default function Register() {
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <h3 className="text-base sm:text-lg font-black text-navy dark:text-white">ورود و ثبت‌نام با گوگل</h3>
+                      <h3 className="text-base sm:text-lg font-black text-sec dark:text-white">ورود و ثبت‌نام با گوگل</h3>
                       <p className="text-xs sm:text-sm text-ink-subtle dark:text-slate-400 max-w-xs leading-relaxed">
                         با یک کلیک و از طریق حساب جیمیل خود، به سادگی حساب کاربری ایجاد کنید و وارد شوید.
                       </p>
@@ -578,7 +578,7 @@ export default function Register() {
                       type="button"
                       onClick={handleGoogleAuth}
                       disabled={googleBusy}
-                      className="w-full flex items-center justify-center gap-3 bg-white hover:bg-teal/10 dark:bg-slate-800 dark:hover:bg-slate-700 text-ink dark:text-white border-2 border-ink dark:border-slate-600 font-black py-3 px-4 rounded-xl transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-sm cursor-pointer"
+                      className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-50 dark:bg-[#1C2536] dark:hover:bg-slate-800 text-sec dark:text-white border-[1.5px] border-gray-200 dark:border-gray-700 font-bold py-2.5 px-4 rounded-xl transition-all shadow-[2px_2px_0_#202A5A] dark:shadow-[2px_2px_0_#59BBAF] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-xs sm:text-sm cursor-pointer disabled:opacity-60"
                     >
                       <svg width="20" height="20" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -596,7 +596,7 @@ export default function Register() {
                   <form onSubmit={handleSendOtp} className="flex flex-col gap-4 animate-step-fade">
                     <label className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">
+                        <span className="text-xs sm:text-sm font-extrabold text-sec dark:text-slate-200">
                           شماره تلفن همراه
                         </span>
                         <span className="text-xs font-bold text-teal flex items-center gap-1">
@@ -617,7 +617,7 @@ export default function Register() {
                             setError(null);
                             setIsDuplicateUser(false);
                           }}
-                          className={`w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-xl pr-11 pl-4 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder-right focus:outline-none transition-all text-sm ${
+                          className={`w-full bg-white dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-gray-700 focus:border-teal focus:ring-2 focus:ring-teal/20 rounded-xl pr-11 pl-4 py-2.5 font-bold text-sec dark:text-white placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder-right focus:outline-none transition-all text-sm ${
                             phone ? "text-left tracking-wider font-mono" : "text-right tracking-normal"
                           }`}
                           style={{
@@ -628,7 +628,7 @@ export default function Register() {
                           autoComplete="tel"
                         />
                         <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-subtle/60 dark:text-slate-400 pointer-events-none flex items-center justify-center">
-                          <Phone size={18} />
+                          <Phone size={17} />
                         </div>
                       </div>
                       <span className="text-[11px] text-ink-subtle dark:text-slate-400">
@@ -675,16 +675,16 @@ export default function Register() {
                     {googleAuthEnabled !== false && (
                       <>
                         <div className="flex items-center gap-3 my-0.5">
-                          <div className="flex-1 h-[1px] bg-ink/10 dark:bg-slate-700" />
-                          <span className="text-[11px] font-bold text-ink-subtle dark:text-slate-400">یا ثبت‌نام سریع با</span>
-                          <div className="flex-1 h-[1px] bg-ink/10 dark:bg-slate-700" />
+                          <div className="flex-1 h-[1px] bg-gray-200 dark:bg-gray-700" />
+                          <span className="text-[11px] font-bold text-ink-subtle dark:text-slate-400">یا</span>
+                          <div className="flex-1 h-[1px] bg-gray-200 dark:bg-gray-700" />
                         </div>
 
                         <button
                           type="button"
                           onClick={handleGoogleAuth}
                           disabled={googleBusy}
-                          className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-ink dark:text-white border-2 border-ink dark:border-slate-600 font-bold py-2.5 px-4 rounded-xl transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-xs sm:text-sm cursor-pointer"
+                          className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-50 dark:bg-[#1C2536] dark:hover:bg-slate-800 text-sec dark:text-white border-[1.5px] border-gray-200 dark:border-gray-700 font-bold py-2.5 px-4 rounded-xl transition-all shadow-[2px_2px_0_#202A5A] dark:shadow-[2px_2px_0_#59BBAF] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-xs sm:text-sm cursor-pointer disabled:opacity-60"
                         >
                           <svg width="18" height="18" viewBox="0 0 24 24">
                             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -702,8 +702,8 @@ export default function Register() {
                 {/* ══════════════ مرحله ۲: تایید کد OTP ══════════════ */}
                 {smsOtpEnabled !== false && step === 2 && (
                   <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4 animate-step-fade">
-                    <div className="bg-bg-mint dark:bg-slate-800/80 border border-teal/30 rounded-2xl p-3 flex items-center justify-between shadow-sm">
-                      <div className="flex items-center gap-2 text-xs font-bold text-navy dark:text-slate-200">
+                    <div className="bg-ecosystem-light dark:bg-[#1C2536] border border-teal/30 rounded-xl p-3 flex items-center justify-between shadow-sm">
+                      <div className="flex items-center gap-2 text-xs font-bold text-sec dark:text-slate-200">
                         <Phone size={15} className="text-teal shrink-0" />
                         <span>کد ارسال شده به:</span>
                         <span dir="ltr" className="font-mono text-teal font-black text-sm">{phone}</span>
@@ -715,7 +715,7 @@ export default function Register() {
                           setError(null);
                           setOtpCode("");
                         }}
-                        className="inline-flex items-center gap-1 text-xs text-ink-subtle hover:text-teal font-bold transition-colors cursor-pointer bg-white dark:bg-slate-700/60 px-2.5 py-1 rounded-lg border border-ink/10 dark:border-slate-600"
+                        className="inline-flex items-center gap-1 text-xs text-ink-subtle hover:text-teal font-bold transition-colors cursor-pointer bg-white dark:bg-[#151C28] px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-700"
                       >
                         <Edit3 size={12} />
                         <span>تغییر شماره</span>
@@ -723,7 +723,7 @@ export default function Register() {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200 text-center">
+                      <span className="text-xs sm:text-sm font-extrabold text-sec dark:text-slate-200 text-center">
                         کد تایید ۴ رقمی را وارد کنید
                       </span>
 
@@ -759,12 +759,12 @@ export default function Register() {
                             <div
                               key={index}
                               dir="ltr"
-                              className={`w-11 sm:w-12 h-14 rounded-xl border-2 flex items-center justify-center font-mono text-xl sm:text-2xl font-black transition-all duration-200 select-none ${
+                              className={`w-11 sm:w-12 h-14 rounded-xl border-[1.5px] flex items-center justify-center font-mono text-xl sm:text-2xl font-black transition-all duration-200 select-none ${
                                 isCurrent
-                                  ? "border-teal ring-4 ring-teal/20 bg-white dark:bg-slate-800 text-teal scale-105 shadow-sm"
+                                  ? "border-teal ring-4 ring-teal/20 bg-white dark:bg-[#1C2536] text-teal scale-105 shadow-sm"
                                   : isFilled
-                                  ? "border-teal/70 bg-teal/5 dark:bg-teal/10 text-navy dark:text-white"
-                                  : "border-ink/20 dark:border-slate-700 bg-white dark:bg-slate-800/60 text-ink-subtle/30"
+                                  ? "border-teal/70 bg-teal/5 dark:bg-teal/10 text-sec dark:text-white"
+                                  : "border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C2536] text-ink-subtle/30"
                               }`}
                             >
                               {digit ? (
@@ -772,7 +772,7 @@ export default function Register() {
                               ) : isCurrent ? (
                                 <span className="w-1.5 h-6 bg-teal animate-pulse rounded-full" />
                               ) : (
-                                <span className="w-2 h-2 rounded-full bg-ink/15 dark:bg-slate-600" />
+                                <span className="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600" />
                               )}
                             </div>
                           );
@@ -784,7 +784,7 @@ export default function Register() {
                     </div>
 
                     {/* ثانیه‌شمار و دکمه ارسال مجدد */}
-                    <div className="flex items-center justify-between gap-2 text-xs font-bold px-3 py-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-ink/10 dark:border-slate-700/60 transition-all">
+                    <div className="flex items-center justify-between gap-2 text-xs font-bold px-3 py-2 bg-slate-50 dark:bg-[#1C2536] rounded-xl border border-gray-200 dark:border-gray-700 transition-all">
                       <span className="text-ink-subtle dark:text-slate-400 whitespace-nowrap">
                         {cooldown > 0 ? "امکان ارسال مجدد:" : "کد قبلی معتبر است"}
                       </span>
@@ -855,7 +855,7 @@ export default function Register() {
                     {/* فیلد ایمیل */}
                     <label className="flex flex-col gap-1">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">
+                        <span className="text-xs sm:text-sm font-extrabold text-sec dark:text-slate-200">
                           آدرس ایمیل <span className="text-teal font-black">*</span>
                         </span>
                         <span className="text-[11px] text-ink-subtle dark:text-slate-400">جهت ورود و اطلاعیه‌ها</span>
@@ -868,7 +868,7 @@ export default function Register() {
                           autoFocus
                           value={email}
                           onChange={(e) => { setEmail(e.target.value); setError(null); }}
-                          className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-xl pr-11 pl-4 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all text-sm"
+                          className="w-full bg-white dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-gray-700 focus:border-teal focus:ring-2 focus:ring-teal/20 rounded-xl pr-11 pl-4 py-2.5 font-bold text-sm text-sec dark:text-white placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 text-left focus:outline-none transition-all"
                           placeholder="name@example.com"
                           autoComplete="email"
                         />
@@ -880,7 +880,7 @@ export default function Register() {
 
                     {/* فیلد نام و نام خانوادگی */}
                     <label className="flex flex-col gap-1">
-                      <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">
+                      <span className="text-xs sm:text-sm font-extrabold text-sec dark:text-slate-200">
                         نام و نام خانوادگی <span className="text-teal font-black">*</span>
                       </span>
                       <div className="relative">
@@ -889,7 +889,7 @@ export default function Register() {
                           required
                           value={fullName}
                           onChange={(e) => { setFullName(e.target.value); setError(null); }}
-                          className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-xl pr-11 pl-4 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 focus:outline-none transition-all text-sm"
+                          className="w-full bg-white dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-gray-700 focus:border-teal focus:ring-2 focus:ring-teal/20 rounded-xl pr-11 pl-4 py-2.5 font-bold text-sm text-sec dark:text-white placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 focus:outline-none transition-all"
                           placeholder="مثلاً: سارا رضایی"
                           autoComplete="name"
                         />
@@ -902,7 +902,7 @@ export default function Register() {
                     {/* رمز عبور و تکرار */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <label className="flex flex-col gap-1">
-                        <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">
+                        <span className="text-xs sm:text-sm font-extrabold text-sec dark:text-slate-200">
                           رمز عبور <span className="text-teal font-black">*</span>
                         </span>
                         <div className="relative">
@@ -912,7 +912,7 @@ export default function Register() {
                             required
                             value={password}
                             onChange={(e) => { setPassword(e.target.value); setError(null); }}
-                            className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-xl pr-11 pl-11 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder-right text-left focus:outline-none transition-all text-sm"
+                            className="w-full bg-white dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-gray-700 focus:border-teal focus:ring-2 focus:ring-teal/20 rounded-xl pr-11 pl-11 py-2.5 font-bold text-sm text-sec dark:text-white placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder-right text-left focus:outline-none transition-all"
                             placeholder="حداقل ۶ کاراکتر"
                             autoComplete="new-password"
                           />
@@ -931,7 +931,7 @@ export default function Register() {
                       </label>
 
                       <label className="flex flex-col gap-1">
-                        <span className="text-xs sm:text-sm font-extrabold text-navy dark:text-slate-200">
+                        <span className="text-xs sm:text-sm font-extrabold text-sec dark:text-slate-200">
                           تکرار رمز عبور <span className="text-teal font-black">*</span>
                         </span>
                         <div className="relative">
@@ -941,7 +941,7 @@ export default function Register() {
                             required
                             value={confirmPassword}
                             onChange={(e) => { setConfirmPassword(e.target.value); setError(null); }}
-                            className="w-full bg-white dark:bg-slate-800 border-2 border-ink/25 dark:border-slate-700 focus:border-teal focus:ring-4 focus:ring-teal/20 rounded-xl pr-11 pl-11 py-2.5 font-bold text-ink dark:text-slate-100 placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder-right text-left focus:outline-none transition-all text-sm"
+                            className="w-full bg-white dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-gray-700 focus:border-teal focus:ring-2 focus:ring-teal/20 rounded-xl pr-11 pl-11 py-2.5 font-bold text-sm text-sec dark:text-white placeholder:text-ink-subtle/40 dark:placeholder:text-slate-500 placeholder-right text-left focus:outline-none transition-all"
                             placeholder="تکرار رمز عبور"
                             autoComplete="new-password"
                           />
@@ -962,7 +962,7 @@ export default function Register() {
 
                     {/* راهنمای زنده اعتبارسنجی رمز عبور */}
                     {password && (
-                      <div className="bg-bg-mint dark:bg-slate-800/70 border border-ink/10 dark:border-slate-700 rounded-xl p-2.5 flex flex-col gap-1 text-[11px] font-bold">
+                      <div className="bg-ecosystem-light dark:bg-[#1C2536] border border-teal/20 dark:border-teal/30 rounded-xl p-2.5 flex flex-col gap-1 text-[11px] font-bold">
                         <div className={`flex items-center gap-1.5 ${password.length >= 6 ? "text-emerald-600 dark:text-emerald-400" : "text-ink-subtle dark:text-slate-400"}`}>
                           <Check size={12} className={password.length >= 6 ? "stroke-[3]" : "opacity-40"} />
                           <span>حداقل ۶ نویسه</span>
@@ -1018,7 +1018,7 @@ export default function Register() {
                 <span>قبلاً حساب ساخته‌اید؟</span>
                 <Link
                   to="/admin/login"
-                  className="text-[13px] font-extrabold text-teal hover:underline inline-flex items-center gap-1 bg-teal/10 hover:bg-teal/20 px-3 py-1.5 rounded-pill-sm transition-all"
+                  className="text-[13px] font-extrabold text-teal hover:underline inline-flex items-center gap-1 bg-teal/10 hover:bg-teal/20 px-3 py-1.5 rounded-xl transition-all"
                 >
                   ورود به پنل کاربری
                 </Link>
@@ -1068,7 +1068,7 @@ export default function Register() {
               href={`https://t.me/${telegramSupportId}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary hover:bg-ecosystem-normal-hover text-white px-4 py-2.5 rounded-pill-md text-xs sm:text-sm font-black transition-all border border-ecosystem-dark shadow-[2px_2px_0_#1F413D] hover:shadow-none cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary hover:bg-ecosystem-normal-hover text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all border border-ecosystem-dark shadow-[2px_2px_0_#1F413D] hover:shadow-none cursor-pointer"
             >
               <Send size={14} />
               <span>ارسال پیام در تلگرام</span>
