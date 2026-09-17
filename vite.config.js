@@ -63,12 +63,13 @@ function apiDevPlugin() {
             let handlerModule = null;
             if (url.startsWith("/api/openapi")) {
               handlerModule = await import("./api/openapi.js");
+            } else if (url.startsWith("/api/telegram-send")) {
+              handlerModule = await import("./api/telegram-send.js");
             } else if (
               url.startsWith("/api/v1") ||
               url.startsWith("/api/admin-system-settings") ||
               url.startsWith("/api/admin-user-management") ||
-              url.startsWith("/api/system-storage") ||
-              url.startsWith("/api/telegram-send")
+              url.startsWith("/api/system-storage")
             ) {
               handlerModule = await import("./api/v1/[...route].js");
             } else if (url.startsWith("/api/webhooks/amoot") || url.startsWith("/api/amoot-proxy")) {

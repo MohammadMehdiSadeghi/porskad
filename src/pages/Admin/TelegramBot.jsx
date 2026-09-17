@@ -127,10 +127,10 @@ export default function TelegramBot() {
       }
       const userFormIds = new Set(allForms.map((f) => f.id));
 
-      // انتخاب‌گر ربات فقط فرم‌های فعال: منتشرشده + نه آرشیو + نه زباله‌دان
+      // انتخاب‌گر ربات: فرم‌های موجود (نه آرشیو + نه زباله‌دان)
       setActiveForms(
         allForms.filter(
-          (f) => f.published && !f.archived && !f.deleted_at,
+          (f) => !f.archived && !f.deleted_at,
         ),
       );
 
@@ -197,7 +197,9 @@ export default function TelegramBot() {
       showToast("شما مجوز مدیریت بات تلگرام را ندارید", "error");
       return;
     }
-    if (!configForm.bot_token.trim() || !configForm.chat_id.trim()) {
+    const cleanToken = configForm.bot_token.trim().replace(/^bot/i, "");
+    const cleanChatId = configForm.chat_id.trim();
+    if (!cleanToken || !cleanChatId) {
       showToast("توکن و شناسه چت الزامی هستند", "error");
       return;
     }
@@ -206,8 +208,8 @@ export default function TelegramBot() {
         const { error } = await supabase
           .from("telegram_config")
           .update({
-            bot_token: configForm.bot_token.trim(),
-            chat_id: configForm.chat_id.trim(),
+            bot_token: cleanToken,
+            chat_id: cleanChatId,
             chat_title: configForm.chat_title.trim(),
             updated_at: new Date().toISOString(),
           })
@@ -216,8 +218,8 @@ export default function TelegramBot() {
         showToast("تنظیمات بروزرسانی شد");
       } else {
         const payload = {
-          bot_token: configForm.bot_token.trim(),
-          chat_id: configForm.chat_id.trim(),
+          bot_token: cleanToken,
+          chat_id: cleanChatId,
           chat_title: configForm.chat_title.trim(),
         };
 
@@ -238,7 +240,6 @@ export default function TelegramBot() {
   }
 
   function editConfig(cfg) {
-    if (!canManage) return;
     setEditingConfig(cfg);
     setConfigForm({
       bot_token: cfg.bot_token,
@@ -253,14 +254,14 @@ export default function TelegramBot() {
       showToast("شما مجوز مدیریت بات تلگرام را ندارید", "error");
       return;
     }
-    if (!confirm("آیا از حذف این تنظیمات مطمئنید؟")) return;
+    if (!confirm("تنظیمات و تمام لینک‌های متصل به آن حذف شود؟")) return;
     try {
       const { error } = await supabase
         .from("telegram_config")
         .delete()
         .eq("id", id);
       if (error) throw error;
-      showToast("حذف شد");
+      showToast("تنظیمات حذف شد");
       loadAll();
     } catch (err) {
       showToast("خطا: " + err.message, "error");
@@ -272,7 +273,10 @@ export default function TelegramBot() {
     try {
       const { error } = await supabase
         .from("telegram_config")
-        .update({ is_active: !current, updated_at: new Date().toISOString() })
+        .update({
+          is_active: !current,
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", id);
       if (error) throw error;
       loadAll();
@@ -289,11 +293,6 @@ export default function TelegramBot() {
     }
     if (!selectedFormId || !selectedConfigId) {
       showToast("فرم و تنظیمات تلگرام را انتخاب کنید", "error");
-      return;
-    }
-    // فقط فرم فعال (منتشر + نه آرشیو + نه زباله‌دان) قابل لینک‌کردن است
-    if (!activeForms.some((f) => f.id === selectedFormId)) {
-      showToast("این فرم فعال نیست — فقط فرم‌های فعال قابل لینک‌کردن‌اند", "error");
       return;
     }
     try {
@@ -758,14 +757,14 @@ export default function TelegramBot() {
                                     <optgroup key={who} label={who}>
                                       {list.map((f) => (
                                         <option key={f.id} value={f.id}>
-                                          {f.title}
+                                          {f.title} {!f.published ? "(پیش‌نویس)" : ""}
                                         </option>
                                       ))}
                                     </optgroup>
                                   ))
                               : activeForms.map((f) => (
                                   <option key={f.id} value={f.id}>
-                                    {f.title}
+                                    {f.title} {!f.published ? "(پیش‌نویس)" : ""}
                                   </option>
                                 ))}
                           </select>
@@ -990,9 +989,9 @@ export default function TelegramBot() {
                                 ارسال شد
                               </Badge>
                             ) : (
-                              <Badge color="red">
+                              <Badge color="red" title={log.error_message || "خطا در ارسال"}>
                                 <XCircle size={11} className="ml-1 inline" />
-                                خطا
+                                {log.error_message ? `خطا: ${log.error_message.length > 25 ? log.error_message.slice(0, 25) + "..." : log.error_message}` : "خطا"}
                               </Badge>
                             )}
                           </td>

@@ -349,6 +349,290 @@ function sanitizeFormSettingsForPublic(settings) {
   return safe;
 }
 
+// قالب‌بندی هوشمند و خوانای تمام ۲۰ نوع سوال برای ارسال به پیام‌رسان تلگرام
+function formatAnswerForTelegram(val) {
+  if (val === null || val === undefined || val === "") return "—";
+  if (typeof val === "boolean") return val ? "بله" : "خیر";
+  if (typeof val === "number") return val.toLocaleString("fa-IR");
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (!trimmed) return "—";
+    if (trimmed.startsWith("data:image/") || (trimmed.startsWith("data:") && trimmed.includes(";base64,"))) {
+      return "✍️ [تصویر امضا ثبت شد]";
+    }
+    if (trimmed.length > 600) {
+      return trimmed.slice(0, 600) + "...";
+    }
+    return trimmed;
+  }
+  if (Array.isArray(val)) {
+    if (val.length === 0) return "—";
+    return val.map((item) => formatAnswerForTelegram(item)).join("، ");
+  }
+  if (typeof val === "object") {
+    if (val.url) {
+      return val.name ? `${val.name} (${val.url})` : val.url;
+    }
+    if (val.first_name !== undefined || val.last_name !== undefined) {
+      return `${val.first_name || ""} ${val.last_name || ""}`.trim() || "—";
+    }
+    if (val.lat !== undefined && val.lng !== undefined) {
+      return `📍 موقعیت: ${val.lat}, ${val.lng}`;
+    }
+    if (val.province || val.city || val.address) {
+      return [val.province, val.city, val.address].filter(Boolean).join(" - ");
+    }
+    const entries = Object.entries(val);
+    if (entries.length > 0) {
+      return entries.map(([k, v]) => `• ${k}: ${formatAnswerForTelegram(v)}`).join("\n   ");
+    }
+    try {
+      return JSON.stringify(val);
+    } catch {
+      return String(val);
+    }
+  }
+  return String(val);
+}
+
+// دیسپچ نوتیفیکیشن تلگرام با پایداری حداکثری و پشتیبانی از RPC امن و فالبک مستقیم
+async function dispatchTelegramNotification(clients, formId, responseId) {
+  if (!formId || !responseId) {
+    return { ok: false, error: "Missing form_id or response_id" };
+  }
+
+  let resolvedFormId = formId;
+  let formTitle = "—";
+  let entryNumber = 1;
+  let configs = [];
+  let questions = [];
+  let answerMap = {};
+
+  // ۱. اولویت اول: تلاش برای دریافت داده‌های کامل با RPC امن SECURITY DEFINER
+  let rpcSucceeded = false;
+  try {
+    const { data: rpcData, error: rpcErr } = await clients.adminClient.rpc("get_telegram_dispatch_payload", {
+      p_form_id: String(formId),
+      p_response_id: responseId,
+    });
+
+    if (!rpcErr && rpcData && typeof rpcData === "object") {
+      if (rpcData.skipped) {
+        return { ok: true, skipped: true, reason: rpcData.reason };
+      }
+      if (rpcData.ok && Array.isArray(rpcData.configs) && rpcData.configs.length > 0) {
+        rpcSucceeded = true;
+        resolvedFormId = rpcData.form_id || formId;
+        formTitle = rpcData.form_title || "—";
+        entryNumber = rpcData.entry_number || 1;
+        configs = rpcData.configs;
+        const items = rpcData.items || [];
+        questions = items.map((it) => ({ id: it.id, title: it.title, position: it.position, type: it.type }));
+        items.forEach((it) => {
+          answerMap[it.id] = it.value;
+        });
+      }
+    }
+  } catch {}
+
+  // ۲. فالبک: در صورتی که RPC فعال نبود، استعلام مستقیم جداول
+  if (!rpcSucceeded) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(formId));
+    if (!isUuid) {
+      const { data: f, error: fErr } = await clients.adminClient
+        .from("forms")
+        .select("id, title")
+        .or(`public_id.eq.${formId},slug.eq.${formId}`)
+        .is("deleted_at", null)
+        .maybeSingle();
+      if (!fErr && f) {
+        resolvedFormId = f.id;
+        formTitle = f.title;
+      } else {
+        return { ok: true, skipped: true, reason: "no_form_found" };
+      }
+    } else {
+      const { data: f } = await clients.adminClient
+        .from("forms")
+        .select("id, title")
+        .eq("id", resolvedFormId)
+        .maybeSingle();
+      if (f) formTitle = f.title;
+    }
+
+    const { data: respCheck, error: respCheckErr } = await clients.adminClient
+      .from("responses")
+      .select("id")
+      .eq("id", responseId)
+      .eq("form_id", resolvedFormId)
+      .maybeSingle();
+
+    if (respCheckErr || !respCheck) {
+      return { ok: false, error: "Invalid response_id for given form" };
+    }
+
+    const { data: alreadySent } = await clients.adminClient
+      .from("telegram_send_log")
+      .select("id")
+      .eq("response_id", responseId)
+      .eq("status", "sent")
+      .limit(1);
+
+    if (alreadySent && alreadySent.length > 0) {
+      return { ok: true, skipped: true, reason: "already_sent" };
+    }
+
+    const { data: links, error: linkError } = await clients.adminClient
+      .from("telegram_form_links")
+      .select("id, config_id, is_active")
+      .eq("form_id", resolvedFormId)
+      .eq("is_active", true);
+
+    if (linkError || !links || links.length === 0) {
+      return { ok: true, skipped: true, reason: "no_telegram_link" };
+    }
+
+    const configIds = [...new Set(links.map((l) => l.config_id))];
+    const { data: cfgRows, error: configError } = await clients.adminClient
+      .from("telegram_config")
+      .select("id, bot_token, chat_id, is_active")
+      .in("id", configIds)
+      .eq("is_active", true);
+
+    if (configError || !cfgRows || cfgRows.length === 0) {
+      return { ok: true, skipped: true, reason: "no_active_config" };
+    }
+    configs = cfgRows;
+
+    const { data: qRows } = await clients.adminClient
+      .from("questions")
+      .select("id, title, position, type")
+      .eq("form_id", resolvedFormId)
+      .order("position", { ascending: true });
+    questions = qRows || [];
+
+    const { data: ansRows } = await clients.adminClient
+      .from("answers")
+      .select("question_id, value")
+      .eq("response_id", responseId);
+    (ansRows || []).forEach((a) => {
+      answerMap[a.question_id] = a.value;
+    });
+
+    const { count } = await clients.adminClient
+      .from("responses")
+      .select("id", { count: "exact", head: true })
+      .eq("form_id", resolvedFormId);
+    entryNumber = count || 1;
+  }
+
+  // ۳. ساخت قالب پیام تلگرام
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Tehran" });
+  const dateStr = now.toLocaleDateString("fa-IR", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Tehran" });
+
+  const faNum = (n) => (n !== undefined && n !== null ? Number(n).toLocaleString("fa-IR") : "۰");
+
+  const lines = [
+    "━━━━━━━━━━━━━━━━━━",
+    "🔴 پرس‌کاد",
+    "━━━━━━━━━━━━━━━━━━",
+    "",
+    `📋 فرم: ${formTitle || "—"}`,
+    "",
+  ];
+
+  (questions || []).forEach((q, i) => {
+    const val = answerMap[q.id];
+    const displayVal = formatAnswerForTelegram(val);
+    lines.push(`${faNum(i + 1)}. ${q.title || "بدون عنوان"}: ${displayVal}`);
+  });
+
+  lines.push("");
+  lines.push(`⏰ زمان ثبت: ${timeStr} — ${dateStr}`);
+  lines.push(`🔢 ورودی شماره ${faNum(entryNumber)}`);
+  lines.push("━━━━━━━━━━━━━━━━━━");
+
+  let messageText = lines.join("\n");
+  // مهار محدودیت ۴۰۹۶ کاراکتری تلگرام
+  if (messageText.length > 3900) {
+    messageText = messageText.substring(0, 3850) + "\n\n⚠️ ... (ادامه پاسخ‌ها در پنل قابل مشاهده است)";
+  }
+
+  const results = [];
+
+  for (const config of configs) {
+    const botToken = String(config.bot_token || "").trim().replace(/^bot/i, "");
+    const chatId = String(config.chat_id || "").trim();
+    if (!botToken || !chatId) continue;
+
+    try {
+      const tgRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: messageText,
+        }),
+      });
+
+      const tgData = await tgRes.json().catch(() => ({ ok: false, description: "Invalid JSON from Telegram" }));
+      const isOk = Boolean(tgData.ok);
+      const errMsg = isOk ? null : (tgData.description || "Unknown error");
+
+      // ثبت لاگ از طریق RPC یا دیتابیس
+      try {
+        await clients.adminClient.rpc("log_telegram_send", {
+          p_form_id: resolvedFormId,
+          p_response_id: responseId,
+          p_config_id: config.id,
+          p_chat_id: chatId,
+          p_status: isOk ? "sent" : "failed",
+          p_error_message: errMsg,
+          p_message_text: messageText,
+        });
+      } catch {
+        await clients.adminClient.from("telegram_send_log").insert({
+          form_id: resolvedFormId,
+          response_id: responseId,
+          config_id: config.id,
+          chat_id: chatId,
+          status: isOk ? "sent" : "failed",
+          error_message: errMsg,
+          message_text: messageText,
+        }).catch(() => {});
+      }
+
+      results.push({ config_id: config.id, ok: isOk, error: errMsg });
+    } catch (err) {
+      try {
+        await clients.adminClient.rpc("log_telegram_send", {
+          p_form_id: resolvedFormId,
+          p_response_id: responseId,
+          p_config_id: config.id,
+          p_chat_id: chatId,
+          p_status: "error",
+          p_error_message: err.message,
+          p_message_text: messageText,
+        });
+      } catch {
+        await clients.adminClient.from("telegram_send_log").insert({
+          form_id: resolvedFormId,
+          response_id: responseId,
+          config_id: config.id,
+          chat_id: chatId,
+          status: "error",
+          error_message: err.message,
+          message_text: messageText,
+        }).catch(() => {});
+      }
+      results.push({ config_id: config.id, ok: false, error: err.message });
+    }
+  }
+
+  return { ok: true, results };
+}
+
 export default async function handler(req, res) {
   // هدرهای CORS برای دسترسی از هر پلتفرم خارجی
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -373,8 +657,13 @@ export default async function handler(req, res) {
       segments = String(req.query.route).split("/").filter(Boolean);
     }
   } else {
-    const cleanUrl = (req.url || "").replace(/^\/api\/v1\/?/, "").split("?")[0];
+    const cleanUrl = (req.url || "").replace(/^\/api\/(?:v1\/)?/, "").split("?")[0];
     segments = cleanUrl.split("/").filter(Boolean);
+  }
+
+  // حذف پیشوندهای احتمالی api یا v1 از ابتدای segments
+  while (segments.length > 0 && (segments[0] === "api" || segments[0] === "v1")) {
+    segments.shift();
   }
 
   const origin = getOrigin(req);
@@ -683,7 +972,8 @@ export default async function handler(req, res) {
     // ─────────────────────────────────────────────────────────────
     if (
       (segments.length === 1 && (segments[0] === "telegram-send" || segments[0] === "telegram")) ||
-      (segments.length === 2 && segments[0] === "telegram" && segments[1] === "send")
+      (segments.length === 2 && segments[0] === "telegram" && segments[1] === "send") ||
+      (segments.length >= 1 && segments[segments.length - 1] === "telegram-send")
     ) {
       if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
@@ -696,161 +986,12 @@ export default async function handler(req, res) {
         return res.status(429).json({ error: "Too many requests" });
       }
 
-      let resolvedFormId = form_id;
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(form_id));
-      if (!isUuid) {
-        const { data: f, error: fErr } = await clients.adminClient
-          .from("forms")
-          .select("id")
-          .or(`public_id.eq.${form_id},slug.eq.${form_id}`)
-          .is("deleted_at", null)
-          .maybeSingle();
-        if (!fErr && f) {
-          resolvedFormId = f.id;
-        } else {
-          return res.status(200).json({ ok: true, skipped: true, reason: "no_form_found" });
-        }
+      const dispatchResult = await dispatchTelegramNotification(clients, form_id, response_id);
+      if (!dispatchResult.ok && dispatchResult.error) {
+        const statusCode = dispatchResult.error.includes("Invalid response_id") ? 404 : 400;
+        return res.status(statusCode).json(dispatchResult);
       }
-
-      const { data: respCheck, error: respCheckErr } = await clients.adminClient
-        .from("responses")
-        .select("id")
-        .eq("id", response_id)
-        .eq("form_id", resolvedFormId)
-        .maybeSingle();
-
-      if (respCheckErr || !respCheck) {
-        return res.status(404).json({ error: "Invalid response_id for given form" });
-      }
-
-      const { data: alreadySent } = await clients.adminClient
-        .from("telegram_send_log")
-        .select("id")
-        .eq("response_id", response_id)
-        .eq("status", "sent")
-        .limit(1);
-
-      if (alreadySent && alreadySent.length > 0) {
-        return res.status(200).json({ ok: true, skipped: true, reason: "already_sent" });
-      }
-
-      const { data: links, error: linkError } = await clients.adminClient
-        .from("telegram_form_links")
-        .select("id, config_id, is_active")
-        .eq("form_id", resolvedFormId)
-        .eq("is_active", true);
-
-      if (linkError || !links || links.length === 0) {
-        return res.status(200).json({ ok: true, skipped: true, reason: "no_telegram_link" });
-      }
-
-      const configIds = [...new Set(links.map((l) => l.config_id))];
-      const { data: configs, error: configError } = await clients.adminClient
-        .from("telegram_config")
-        .select("id, bot_token, chat_id, is_active")
-        .in("id", configIds)
-        .eq("is_active", true);
-
-      if (configError || !configs || configs.length === 0) {
-        return res.status(200).json({ ok: true, skipped: true, reason: "no_active_config" });
-      }
-
-      const { data: form } = await clients.adminClient
-        .from("forms")
-        .select("id, title")
-        .eq("id", resolvedFormId)
-        .single();
-
-      const { data: questions } = await clients.adminClient
-        .from("questions")
-        .select("id, title, position")
-        .eq("form_id", resolvedFormId)
-        .order("position", { ascending: true });
-
-      const { data: answers } = await clients.adminClient
-        .from("answers")
-        .select("question_id, value")
-        .eq("response_id", response_id);
-
-      const { count: entryNumber } = await clients.adminClient
-        .from("responses")
-        .select("id", { count: "exact", head: true })
-        .eq("form_id", resolvedFormId);
-
-      const answerMap = {};
-      (answers || []).forEach((a) => {
-        answerMap[a.question_id] = a.value;
-      });
-
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Tehran" });
-      const dateStr = now.toLocaleDateString("fa-IR", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Tehran" });
-
-      const lines = [
-        "━━━━━━━━━━━━━━━━━━",
-        "🔴 پرس‌کاد",
-        "━━━━━━━━━━━━━━━━━━",
-        "",
-        `📋 فرم: ${form?.title || "—"}`,
-        "",
-      ];
-
-      (questions || []).forEach((q, i) => {
-        const faNum = (n) => n.toLocaleString("fa-IR");
-        const val = answerMap[q.id];
-        let displayVal = "—";
-        if (val !== null && val !== undefined) {
-          displayVal = Array.isArray(val) ? val.join(", ") : String(val);
-        }
-        lines.push(`${faNum(i + 1)}. ${q.title}: ${displayVal}`);
-      });
-
-      lines.push("");
-      lines.push(`⏰ ساعت ثبت: ${timeStr} — ${dateStr}`);
-      lines.push(`🔢 ورودی شماره ${(entryNumber || 0).toLocaleString("fa-IR")}`);
-      lines.push("━━━━━━━━━━━━━━━━━━");
-
-      const messageText = lines.join("\n");
-      const results = [];
-
-      for (const config of configs) {
-        try {
-          const tgRes = await fetch(`https://api.telegram.org/bot${config.bot_token}/sendMessage`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              chat_id: config.chat_id,
-              text: messageText,
-            }),
-          });
-
-          const tgData = await tgRes.json();
-          await clients.adminClient.from("telegram_send_log").insert({
-            form_id: resolvedFormId,
-            response_id,
-            config_id: config.id,
-            chat_id: config.chat_id,
-            status: tgData.ok ? "sent" : "failed",
-            error_message: tgData.ok ? null : tgData.description || "Unknown error",
-            message_text: messageText,
-          });
-
-          results.push({ config_id: config.id, ok: tgData.ok, error: tgData.description });
-        } catch (err) {
-          await clients.adminClient.from("telegram_send_log").insert({
-            form_id: resolvedFormId,
-            response_id,
-            config_id: config.id,
-            chat_id: config.chat_id,
-            status: "error",
-            error_message: err.message,
-            message_text: messageText,
-          });
-          results.push({ config_id: config.id, ok: false, error: err.message });
-        }
-      }
-
-      return res.status(200).json({ ok: true, results });
+      return res.status(200).json(dispatchResult);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -2055,13 +2196,9 @@ export default async function handler(req, res) {
             }
           }
 
-          // دیسپچ تلگرام
+          // دیسپچ تلگرام به صورت مستقیم و پایدار بدون وابستگی به فچ حلقه برگشتی
           try {
-            fetch(`${origin}/api/telegram-send`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ form_id: form.id, response_id: createdResponseId }),
-            }).catch(() => {});
+            dispatchTelegramNotification(clients, form.id, createdResponseId).catch(() => {});
           } catch {}
 
           // دیسپچ وب‌هوک
