@@ -81,6 +81,7 @@ class ErrorBoundary extends React.Component {
                   <pre className="mt-2 bg-bg-neutral p-2 rounded overflow-auto">
                     {this.state.error.toString()}
                   </pre>
+
                 </details>
               )}
             </div>
@@ -95,8 +96,8 @@ class ErrorBoundary extends React.Component {
 export default function App() {
   // همگام‌سازی تنظیمات انواع سوال و تب‌های کاربری با سرور در زمان لود برنامه
   React.useEffect(() => {
-    loadQuestionTypesConfigFromDb().catch(() => {});
-    loadUserTabsConfigFromDb().catch(() => {});
+    loadQuestionTypesConfigFromDb().catch(() => { });
+    loadUserTabsConfigFromDb().catch(() => { });
   }, []);
 
   if (!isSupabaseConfigured) {
@@ -108,63 +109,64 @@ export default function App() {
       <ThemeProvider>
         <AuthProvider>
           <ToastProvider>
-          <NotificationProvider>
-            <Routes>
-              {/* عمومی — فرم پر کردن */}
-              <Route path="/f/:slug" element={<FormFill />} />
+            <NotificationProvider>
+              <Routes>
+                {/* عمومی — فرم پر کردن */}
+                <Route path="/f/:slug" element={<FormFill />} />
 
-              {/* مستندات اختصاصی وب‌سرویس و سوئگر (فقط داخل پنل و با الزام لاگین کامل) */}
-              <Route path="/docs" element={<Navigate to="/admin/web-service" replace />} />
-              <Route path="/docs/*" element={<Navigate to="/admin/web-service" replace />} />
-              <Route path="/swagger" element={<Navigate to="/admin/web-service" replace />} />
-              <Route path="/swagger/*" element={<Navigate to="/admin/web-service" replace />} />
-              <Route path="/swagger-docs" element={<Navigate to="/admin/web-service" replace />} />
-              <Route path="/swagger-docs/*" element={<Navigate to="/admin/web-service" replace />} />
-              <Route path="/api-docs" element={<Navigate to="/admin/web-service" replace />} />
-              <Route path="/api-docs/*" element={<Navigate to="/admin/web-service" replace />} />
+                {/* مستندات اختصاصی وب‌سرویس و سوئگر (فقط داخل پنل و با الزام لاگین کامل) */}
+                <Route path="/docs" element={<Navigate to="/admin/web-service" replace />} />
+                <Route path="/docs/*" element={<Navigate to="/admin/web-service" replace />} />
+                <Route path="/swagger" element={<Navigate to="/admin/web-service" replace />} />
+                <Route path="/swagger/*" element={<Navigate to="/admin/web-service" replace />} />
+                <Route path="/swagger-docs" element={<Navigate to="/admin/web-service" replace />} />
+                <Route path="/swagger-docs/*" element={<Navigate to="/admin/web-service" replace />} />
+                <Route path="/api-docs" element={<Navigate to="/admin/web-service" replace />} />
+                <Route path="/api-docs/*" element={<Navigate to="/admin/web-service" replace />} />
 
-              {/* Embed — جاسازی فرم در سایت‌های دیگر */}
-              <Route path="/embed/:formId" element={<EmbedForm />} />
+                <a href=""></a>
+                {/* Embed — جاسازی فرم در سایت‌های دیگر */}
+                <Route path="/embed/:formId" element={<EmbedForm />} />
 
-              {/* ورود و ثبت‌نام عمومی */}
-              <Route path="/register" element={<Register />} />
-              <Route path="/admin/login" element={<Login />} />
+                {/* ورود و ثبت‌نام عمومی */}
+                <Route path="/register" element={<Register />} />
+                <Route path="/admin/login" element={<Login />} />
 
-              {/* پنل کاربری و ادمین */}
-              <Route
-                path="/admin"
-                element={
-                  <AuthGuard adminOnly={false}>
-                    <AdminLayout />
-                  </AuthGuard>
-                }
-              >
-                <Route index element={<AdminIndex />} />
-                <Route path="forms" element={<FormsList />} />
-                <Route path="forms/:id" element={<FormBuilder />} />
-                <Route path="forms/:id/responses" element={<Responses />} />
-                <Route path="forms/:id/share" element={<ShareForm />} />
-                <Route path="embed" element={<EmbedHub />} />
-                <Route path="telegram" element={<TelegramBot />} />
-                <Route path="support" element={<Support />} />
-                <Route path="subscriptions" element={<Subscriptions />} />
-                <Route path="profile" element={<Profile />} />
-                <Route path="web-service" element={<WebServiceDocs />} />
-                <Route path="api-docs" element={<Navigate to="/admin/web-service" replace />} />
+                {/* پنل کاربری و ادمین */}
+                <Route
+                  path="/admin"
+                  element={
+                    <AuthGuard adminOnly={false}>
+                      <AdminLayout />
+                    </AuthGuard>
+                  }
+                >
+                  <Route index element={<AdminIndex />} />
+                  <Route path="forms" element={<FormsList />} />
+                  <Route path="forms/:id" element={<FormBuilder />} />
+                  <Route path="forms/:id/responses" element={<Responses />} />
+                  <Route path="forms/:id/share" element={<ShareForm />} />
+                  <Route path="embed" element={<EmbedHub />} />
+                  <Route path="telegram" element={<TelegramBot />} />
+                  <Route path="support" element={<Support />} />
+                  <Route path="subscriptions" element={<Subscriptions />} />
+                  <Route path="profile" element={<Profile />} />
+                  <Route path="web-service" element={<WebServiceDocs />} />
+                  <Route path="api-docs" element={<Navigate to="/admin/web-service" replace />} />
 
-                {/* بخش‌های اختصاصی مالک و سوپرادمین */}
-                <Route path="managers" element={<AuthGuard ownerOnly={true}><Managers /></AuthGuard>} />
-                <Route path="settings" element={<AuthGuard ownerOnly={true}><Settings /></AuthGuard>} />
-                <Route path="sms" element={<AuthGuard adminOnly={false}><SmsPanel /></AuthGuard>} />
-                <Route path="superadmin" element={<AuthGuard ownerOnly={true}><SuperAdmin /></AuthGuard>} />
-              </Route>
+                  {/* بخش‌های اختصاصی مالک و سوپرادمین */}
+                  <Route path="managers" element={<AuthGuard ownerOnly={true}><Managers /></AuthGuard>} />
+                  <Route path="settings" element={<AuthGuard ownerOnly={true}><Settings /></AuthGuard>} />
+                  <Route path="sms" element={<AuthGuard adminOnly={false}><SmsPanel /></AuthGuard>} />
+                  <Route path="superadmin" element={<AuthGuard ownerOnly={true}><SuperAdmin /></AuthGuard>} />
+                </Route>
 
-              {/* هدایت پیش‌فرض */}
-              <Route path="/" element={<Navigate to="/admin" replace />} />
-              <Route path="/index.html" element={<Navigate to="/" replace />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </NotificationProvider>
+                {/* هدایت پیش‌فرض */}
+                <Route path="/" element={<Navigate to="/admin" replace />} />
+                <Route path="/index.html" element={<Navigate to="/" replace />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </NotificationProvider>
           </ToastProvider>
         </AuthProvider>
       </ThemeProvider>
