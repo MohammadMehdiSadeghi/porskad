@@ -47,7 +47,7 @@ import {
 } from "lucide-react";
 
 const inputCls =
-  "w-full bg-slate-50 dark:bg-slate-800/90 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md px-3.5 py-2.5 text-sm font-semibold text-navy dark:text-slate-100 focus:border-teal focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed";
+  "w-full bg-[#FAFAFA] dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-[#242F42] rounded-xl px-4 py-2.5 text-sm font-semibold text-sec dark:text-white placeholder:text-gray-400 focus:border-primary focus:bg-white dark:focus:bg-[#1C2536] focus:outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed";
 
 export default function SmsPanel() {
   const { user, hasPermission, isOwner } = useAuth();
@@ -803,7 +803,7 @@ export default function SmsPanel() {
       {/* Toast Notification */}
       {toast && (
         <div
-          className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-pill-md text-sm font-bold shadow-xl border-2 transition-all flex items-center gap-2 ${
+          className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl text-sm font-bold shadow-xl border-[1.5px] transition-all flex items-center gap-2 ${
             toast.type === "error"
               ? "bg-rose-50 dark:bg-rose-950/80 border-rose-500 text-rose-700 dark:text-rose-200"
               : "bg-emerald-50 dark:bg-emerald-950/80 border-teal text-teal-text dark:text-emerald-200"
@@ -829,17 +829,17 @@ export default function SmsPanel() {
         {/* بج وضعیت اتصال در هدر */}
         <div className="flex items-center gap-2">
           {!isActive ? (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-pill-md bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50 text-xs font-bold">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border-[1.5px] border-rose-200 dark:border-rose-900/50 text-xs font-bold">
               <span className="w-2 h-2 rounded-full bg-rose-500" />
               <span>ارسال پیامک: غیرفعال</span>
             </div>
           ) : (hasTokenInDb || liveAccount) ? (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-pill-md bg-teal/15 text-teal border border-teal/30 text-xs font-bold">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal/15 text-teal border-[1.5px] border-teal/30 text-xs font-bold">
               <Radio size={14} className="animate-pulse" />
               <span>آموت: فعال و آماده</span>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-pill-md bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs font-bold">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border-[1.5px] border-amber-500/30 text-xs font-bold">
               <AlertTriangle size={14} />
               <span>نیاز به تنظیم توکن</span>
             </div>
@@ -849,15 +849,15 @@ export default function SmsPanel() {
 
       {/* Navigation Tabs */}
       <div className="w-full min-w-0 max-w-full overflow-hidden">
-        <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800/90 border-2 border-ink/10 dark:border-slate-700/80 rounded-pill-md p-1.5 overflow-x-auto scroll-smooth touch-pan-x overscroll-x-contain shadow-xs">
+        <div className="flex gap-1.5 bg-gray-100 dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-[#242F42] rounded-2xl p-1.5 overflow-x-auto scrollbar-none max-w-full">
           {TABS.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`shrink-0 flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-pill-sm text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer select-none ${
+              className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer select-none ${
                 tab === t.id
-                  ? "bg-teal text-white shadow-sm"
-                  : "text-ink-subtle dark:text-slate-400 hover:text-navy dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/60"
+                  ? "bg-primary text-white shadow-[2px_2px_0_#1F413D]"
+                  : "text-ink-subtle dark:text-slate-400 hover:text-sec dark:hover:text-white hover:bg-white dark:hover:bg-slate-800"
               }`}
             >
               <t.icon size={15} className="shrink-0" /> {t.label}
@@ -914,7 +914,7 @@ export default function SmsPanel() {
                 </div>
 
                 {/* موجودی */}
-                <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/80 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md p-3.5 shrink-0">
+                <div className="flex items-center gap-3 bg-[#FAFAFA] dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-[#242F42] rounded-xl p-3.5 shrink-0">
                   <CreditCard size={22} className="text-teal shrink-0" />
                   <div>
                     <span className="text-[11px] font-bold text-ink-subtle dark:text-slate-400 block">مانده اعتبار آموت</span>
@@ -1015,7 +1015,7 @@ export default function SmsPanel() {
                       <button
                         type="button"
                         onClick={() => setTab("form_import")}
-                        className="flex items-center gap-1 text-[11px] font-bold text-teal bg-teal/10 hover:bg-teal/20 px-2.5 py-1 rounded-pill-sm border border-teal/25 transition-all cursor-pointer"
+                        className="flex items-center gap-1 text-[11px] font-bold text-teal bg-teal/10 hover:bg-teal/20 px-2.5 py-1 rounded-lg border-[1.5px] border-teal/25 transition-all cursor-pointer"
                         title="استخراج و درون‌ریزی شماره‌ها از پاسخ‌های فرم‌های پرس‌کاد"
                       >
                         <Users size={12} />
@@ -1052,7 +1052,7 @@ export default function SmsPanel() {
                       <span className="text-ink-subtle dark:text-slate-400">
                         کاراکتر: <strong className="text-teal font-mono">{faNum(charCount)}</strong>
                       </span>
-                      <span className="bg-teal/15 text-teal px-2 py-0.5 rounded-pill-sm font-bold">
+                      <span className="bg-teal/15 text-teal px-2 py-0.5 rounded-lg font-bold">
                         تعداد صفحه: {faNum(smsPagesCount)}
                       </span>
                     </div>
@@ -1692,7 +1692,7 @@ export default function SmsPanel() {
                           setAmootToken("");
                           showToast("توکن پاک شد؛ می‌توانید توکن جدید را وارد کنید.", "info");
                         }}
-                        className="absolute right-2 px-2.5 py-1 text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 rounded-pill-sm border border-rose-200 dark:border-rose-900/50 transition-all cursor-pointer"
+                        className="absolute right-2 px-2.5 py-1 text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 rounded-lg border-[1.5px] border-rose-200 dark:border-rose-900/50 transition-all cursor-pointer"
                       >
                         پاک کردن
                       </button>
@@ -1745,7 +1745,7 @@ export default function SmsPanel() {
                 </div>
 
                 {/* سوئیچ وضعیت فعال بودن */}
-                <div className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/60 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md transition-colors">
+                <div className="flex items-center justify-between p-3.5 bg-[#FAFAFA] dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-[#242F42] rounded-xl transition-colors">
                   <div>
                     <span className="text-xs sm:text-sm font-bold text-navy dark:text-white block">
                       فعال‌سازی ارسال پیامک
@@ -1880,14 +1880,14 @@ export default function SmsPanel() {
                   value={searchHistory}
                   onChange={(e) => setSearchHistory(e.target.value)}
                   placeholder="جستجو در شماره یا متن..."
-                  className="bg-white dark:bg-slate-800 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md pr-8 pl-3 py-1.5 text-xs font-semibold text-navy dark:text-slate-100 focus:outline-none focus:border-teal"
+                  className={inputCls + " !py-1.5 !pr-9 text-xs"}
                 />
               </div>
 
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="bg-white dark:bg-slate-800 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md px-3 py-1.5 text-xs font-semibold text-navy dark:text-slate-100 focus:outline-none focus:border-teal"
+                className={inputCls + " !py-1.5 text-xs !w-auto"}
               >
                 <option value="all">همه وضعیت‌ها</option>
                 <option value="sent">ارسال شده</option>

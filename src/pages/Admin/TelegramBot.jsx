@@ -35,7 +35,7 @@ import {
 } from "lucide-react";
 
 const inputCls =
-  "w-full bg-white dark:bg-slate-800 border-2 border-ink/15 dark:border-slate-700 rounded-pill-md px-4 py-2.5 text-sm font-semibold text-navy dark:text-slate-100 placeholder:text-ink-subtle/50 dark:placeholder:text-slate-500 focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none transition-all";
+  "w-full bg-[#FAFAFA] dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-[#242F42] rounded-xl px-4 py-2.5 text-sm font-semibold text-sec dark:text-white placeholder:text-gray-400 focus:border-primary focus:bg-white dark:focus:bg-[#1C2536] focus:outline-none transition-all";
 
 export default function TelegramBot() {
   const { user, profile, isOwner, hasPermission } = useAuth();
@@ -662,24 +662,24 @@ export default function TelegramBot() {
         </div>
       )}
 
-      {/* تب‌ها */}
-      <div className="flex gap-1 bg-white dark:bg-slate-900 border-2 border-ink/10 dark:border-slate-800 rounded-pill-md p-1 overflow-x-auto scrollbar-none max-w-full">
+      {/* تب‌ها بر اساس دیزاین سیستم رُکاد */}
+      <div className="flex gap-1.5 bg-gray-100 dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-[#242F42] rounded-2xl p-1.5 overflow-x-auto scrollbar-none max-w-full">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-pill-sm text-sm font-bold transition-all whitespace-nowrap ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer select-none ${
               tab === t.id
-                ? "bg-teal text-white shadow-[2px_2px_0_0_rgba(0,0,0,0.15)]"
-                : "text-ink-subtle dark:text-slate-400 hover:text-ink dark:hover:text-slate-200 hover:bg-bg-lavender dark:hover:bg-slate-800"
+                ? "bg-primary text-white shadow-[2px_2px_0_#1F413D]"
+                : "text-ink-subtle dark:text-slate-400 hover:text-sec dark:hover:text-white hover:bg-white dark:hover:bg-slate-800"
             }`}
           >
-            <t.icon size={14} />
+            <t.icon size={15} />
             <span>{t.label}</span>
             {t.badge && (
               <span
-                className={`text-[10px] px-1.5 py-0.5 rounded-pill-sm font-black mr-1 ${
-                  tab === t.id ? "bg-white/25 text-white" : "bg-brand-purple text-white"
+                className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold mr-1 ${
+                  tab === t.id ? "bg-white/25 text-white" : "bg-primary text-white"
                 }`}
               >
                 {t.badge}
