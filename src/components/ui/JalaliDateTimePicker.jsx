@@ -309,10 +309,10 @@ export default function JalaliDateTimePicker({
           </div>
 
           {/* جدول روزهای ماه */}
-          <div className="grid grid-cols-7 gap-1 text-center">
+          <div className="grid grid-cols-7 gap-y-1.5 gap-x-1 text-center justify-items-center">
             {/* خانه‌های خالی قبل از شروع ماه */}
             {Array.from({ length: firstDayWeekday }).map((_, i) => (
-              <div key={`empty-${i}`} className="h-8.5" />
+              <div key={`empty-${i}`} className="w-8.5 sm:w-9.5 h-8.5 sm:h-9.5" />
             ))}
 
             {/* روزهای ماه */}
@@ -339,7 +339,7 @@ export default function JalaliDateTimePicker({
                   type="button"
                   disabled={disabled || isPastDay}
                   onClick={() => handleSelectDay(dayNum)}
-                  className={`h-8.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center font-mono select-none cursor-pointer ${
+                  className={`w-8.5 sm:w-9.5 h-8.5 sm:h-9.5 aspect-square rounded-xl text-xs font-bold transition-all flex items-center justify-center font-mono select-none cursor-pointer ${
                     isPastDay
                       ? "text-gray-300 dark:text-slate-600 opacity-40 cursor-not-allowed"
                       : isSelected
