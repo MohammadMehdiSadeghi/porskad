@@ -11,6 +11,7 @@ import EmptyState from "../../components/ui/EmptyState";
 import Spinner from "../../components/ui/Spinner";
 import { TableSkeleton, TelegramBotSkeleton } from "../../components/ui/Skeleton";
 import SEO from "../../components/ui/SEO";
+import { sendToTelegram } from "../../lib/telegram";
 import {
   Send,
   Settings,
@@ -24,6 +25,12 @@ import {
   Bot,
   HelpCircle,
   Search,
+  RefreshCw,
+  Eye,
+  SendHorizonal,
+  Calendar,
+  User,
+  FileText,
 } from "lucide-react";
 
 const inputCls =
@@ -61,6 +68,18 @@ export default function TelegramBot() {
   // ─── Send Log ───
   const [sendLog, setSendLog] = useState([]);
   const [logLoading, setLogLoading] = useState(false);
+  const [resendingId, setResendingId] = useState(null);
+
+  // ─── Manual Dispatch (SuperAdmin Only) ───
+  const [manualFormId, setManualFormId] = useState("");
+  const [manualResponses, setManualResponses] = useState([]);
+  const [manualQuestions, setManualQuestions] = useState([]);
+  const [manualAnswers, setManualAnswers] = useState({});
+  const [manualLoading, setManualLoading] = useState(false);
+  const [manualSearch, setManualSearch] = useState("");
+  const [previewResponse, setPreviewResponse] = useState(null);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [sendingResponseId, setSendingResponseId] = useState(null);
 
   // ─── Toast ───
   const [toast, setToast] = useState(null);
@@ -189,6 +208,147 @@ export default function TelegramBot() {
   useEffect(() => {
     if (tab === "log") loadSendLog();
   }, [tab, loadSendLog]);
+
+  // ─── Manual Dispatch (SuperAdmin) ───
+  const loadManualFormResponses = useCallback(async (fId) => {
+    if (!fId) {
+      setManualResponses([]);
+      setManualQuestions([]);
+      setManualAnswers({});
+      return;
+    }
+    setManualLoading(true);
+    try {
+      const [{ data: respRows, error: respErr }, { data: qRows, error: qErr }] = await Promise.all([
+        supabase
+          .from("responses")
+          .select("id, form_id, is_complete, duration_seconds, device, browser, created_at, submitted_at")
+          .eq("form_id", fId)
+          .order("created_at", { ascending: false })
+          .limit(100),
+        supabase
+          .from("questions")
+          .select("id, title, type, position")
+          .eq("form_id", fId)
+          .order("position", { ascending: true }),
+      ]);
+      if (respErr) throw respErr;
+      if (qErr) throw qErr;
+
+      const responsesList = respRows || [];
+      const questionsList = qRows || [];
+
+      let answersMap = {};
+      if (responsesList.length > 0) {
+        const respIds = responsesList.map((r) => r.id);
+        const { data: ansRows, error: ansErr } = await supabase
+          .from("answers")
+          .select("response_id, question_id, value")
+          .in("response_id", respIds);
+
+        if (!ansErr && ansRows) {
+          ansRows.forEach((a) => {
+            if (!answersMap[a.response_id]) answersMap[a.response_id] = {};
+            answersMap[a.response_id][a.question_id] = a.value;
+          });
+        }
+      }
+
+      setManualResponses(responsesList);
+      setManualQuestions(questionsList);
+      setManualAnswers(answersMap);
+    } catch (err) {
+      console.error("Error loading manual form responses:", err);
+      showToast("خطا در بارگذاری پاسخ‌ها: " + err.message, "error");
+    } finally {
+      setManualLoading(false);
+    }
+  }, []);
+
+  async function handleResend(formId, responseId) {
+    if (!canManage) return;
+    setResendingId(responseId);
+    try {
+      const res = await sendToTelegram(formId, responseId, { force: true });
+      if (res.ok) {
+        showToast("پاسخ با موفقیت مجدداً به تلگرام ارسال شد.");
+        loadSendLog();
+      } else {
+        showToast("خطا در ارسال: " + (res.error || res.results?.[0]?.error || "عدم ارسال"), "error");
+      }
+    } catch (err) {
+      showToast("خطا: " + err.message, "error");
+    } finally {
+      setResendingId(null);
+    }
+  }
+
+  async function handleManualDispatch(responseObj) {
+    if (!manualFormId || !responseObj) return;
+    setSendingResponseId(responseObj.id);
+    try {
+      const res = await sendToTelegram(manualFormId, responseObj.id, { force: true });
+      if (res.ok) {
+        showToast("گزارش ورودی با موفقیت به بات تلگرام متصل به این فرم ارسال شد.");
+        loadSendLog();
+        setPreviewModalOpen(false);
+      } else {
+        showToast("خطا در ارسال: " + (res.error || res.results?.[0]?.error || "عدم ارسال"), "error");
+      }
+    } catch (err) {
+      showToast("خطا: " + err.message, "error");
+    } finally {
+      setSendingResponseId(null);
+    }
+  }
+
+  function buildPreviewMessage(responseObj) {
+    if (!responseObj) return "";
+    const fTitle = formTitleById[manualFormId] || "—";
+    const subDate = responseObj.submitted_at || responseObj.created_at;
+    const timeStr = subDate
+      ? new Date(subDate).toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Tehran" })
+      : "—";
+    const dateStr = subDate
+      ? new Date(subDate).toLocaleDateString("fa-IR", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Tehran" })
+      : "—";
+    const respAnswers = manualAnswers[responseObj.id] || {};
+
+    const lines = [
+      "━━━━━━━━━━━━━━━━━━",
+      "🔴 پرس‌کاد",
+      "━━━━━━━━━━━━━━━━━━",
+      "",
+      `📋 فرم: ${fTitle}`,
+      "",
+    ];
+
+    manualQuestions.forEach((q, i) => {
+      const val = respAnswers[q.id];
+      let display = "—";
+      if (val !== null && val !== undefined && val !== "") {
+        if (typeof val === "object") {
+          if (val.name || val.url) display = val.name ? `${val.name} (${val.url})` : val.url;
+          else if (val.province || val.city || val.address) display = [val.province, val.city, val.address].filter(Boolean).join(" - ");
+          else display = JSON.stringify(val);
+        } else if (Array.isArray(val)) {
+          display = val.join("، ");
+        } else if (String(val).startsWith("data:image/")) {
+          display = "✍️ [تصویر امضا ثبت شد]";
+        } else {
+          display = String(val);
+        }
+      }
+      lines.push(`${faNum(i + 1)}. ${q.title || "بدون عنوان"}: ${display}`);
+    });
+
+    lines.push("");
+    lines.push(`⏰ زمان ثبت: ${timeStr} — ${dateStr}`);
+    lines.push("📌 (ارسال مجدد دستی توسط مدیریت)");
+    lines.push("━━━━━━━━━━━━━━━━━━");
+
+    return lines.join("\n");
+  }
 
   // ─── Config CRUD ───
   async function saveConfig(e) {
@@ -379,6 +539,9 @@ export default function TelegramBot() {
     { id: "config", label: "تنظیمات ربات", icon: Settings },
     { id: "links", label: "لینک فرم‌ها", icon: Link2 },
     { id: "log", label: "تاریخچه ارسال", icon: History },
+    ...(isOwner()
+      ? [{ id: "manual", label: "ارسال دستی ورودی‌ها", icon: SendHorizonal, badge: "سوپرادمین" }]
+      : []),
   ];
 
   if (loading) {
@@ -464,7 +627,16 @@ export default function TelegramBot() {
             }`}
           >
             <t.icon size={14} />
-            {t.label}
+            <span>{t.label}</span>
+            {t.badge && (
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded-pill-sm font-black mr-1 ${
+                  tab === t.id ? "bg-white/25 text-white" : "bg-brand-purple text-white"
+                }`}
+              >
+                {t.badge}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -959,8 +1131,13 @@ export default function TelegramBot() {
                           وضعیت
                         </th>
                         <th className="text-right font-black px-4 py-3">
-                          زمان
+                          زمان ثبت / ارسال
                         </th>
+                        {isOwner() && (
+                          <th className="text-center font-black px-4 py-3">
+                            عملیات
+                          </th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -998,6 +1175,28 @@ export default function TelegramBot() {
                           <td className="px-4 py-3 text-xs font-semibold text-ink-subtle dark:text-slate-400">
                             {log.sent_at ? faRelative(log.sent_at) : "—"}
                           </td>
+                          {isOwner() && (
+                            <td className="px-4 py-3 text-center whitespace-nowrap">
+                              {log.form_id && log.response_id ? (
+                                <Button
+                                  variant="ghost"
+                                  size="xs"
+                                  onClick={() => handleResend(log.form_id, log.response_id)}
+                                  disabled={resendingId === log.response_id || !canManage}
+                                  title="ارسال مجدد این ورودی به تلگرام با تاریخ واقعی"
+                                  className="!text-teal hover:!bg-teal/10 font-bold"
+                                >
+                                  <RefreshCw
+                                    size={12}
+                                    className={resendingId === log.response_id ? "animate-spin ml-1" : "ml-1"}
+                                  />
+                                  {resendingId === log.response_id ? "در حال ارسال..." : "ارسال مجدد"}
+                                </Button>
+                              ) : (
+                                "—"
+                              )}
+                            </td>
+                          )}
                         </tr>
                       ))}
                     </tbody>
@@ -1014,6 +1213,263 @@ export default function TelegramBot() {
           )}
         </div>
       )}
+
+      {/* ═══════ تب ارسال دستی ورودی‌ها (ویژه سوپرادمین) ═══════ */}
+      {tab === "manual" && isOwner() && (
+        <div className="flex flex-col gap-6">
+          <StickerCard theme="white">
+            <div className="p-5 flex flex-col gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-base sm:text-lg font-black text-navy dark:text-slate-100 flex items-center gap-2">
+                    <SendHorizonal size={20} className="text-brand-purple" />
+                    ارسال اختصاصی ورودی‌های فرم به تلگرام
+                  </h2>
+                  <p className="text-xs font-semibold text-ink-subtle dark:text-slate-400 mt-0.5">
+                    هر ورودی دلخواه از هر فرمی را با حفظ تاریخ و زمان اصلی ثبت پاسخ به بات تلگرام مربوطه ارسال کنید.
+                  </p>
+                </div>
+                <Badge color="purple" className="font-bold">
+                  ویژه سوپرادمین
+                </Badge>
+              </div>
+
+              {/* انتخاب فرم */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end pt-2 border-t border-ink/5 dark:border-slate-800">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-navy dark:text-slate-200 mb-1">
+                    انتخاب فرم *
+                  </label>
+                  <select
+                    value={manualFormId}
+                    onChange={(e) => {
+                      const fId = e.target.value;
+                      setManualFormId(fId);
+                      loadManualFormResponses(fId);
+                    }}
+                    className={inputCls}
+                  >
+                    <option value="">یک فرم را انتخاب کنید...</option>
+                    {Object.entries(
+                      forms.reduce((g, f) => {
+                        const who = ownerNames[ownerOf(f)] || "سایر فرم‌ها";
+                        (g[who] = g[who] || []).push(f);
+                        return g;
+                      }, {}),
+                    )
+                      .sort((a, b) => a[0].localeCompare(b[0], "fa"))
+                      .map(([who, list]) => (
+                        <optgroup key={who} label={who}>
+                          {list.map((f) => (
+                            <option key={f.id} value={f.id}>
+                              {f.title} {!f.published ? "(پیش‌نویس)" : ""}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                  </select>
+                </div>
+
+                {manualFormId && (
+                  <div>
+                    {links.filter((l) => l.form_id === manualFormId && l.is_active).length > 0 ? (
+                      <div className="flex items-center gap-2 text-xs font-bold text-teal bg-teal/10 border border-teal/30 px-3 py-2.5 rounded-pill-md">
+                        <Bot size={16} />
+                        <span>
+                          متصل به {faNum(links.filter((l) => l.form_id === manualFormId && l.is_active).length)} چت تلگرام
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-xs font-bold text-orange bg-orange/10 border border-orange/30 px-3 py-2.5 rounded-pill-md">
+                        <AlertTriangle size={16} />
+                        <span>این فرم هنوز به چت تلگرام لینک نشده است</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </StickerCard>
+
+          {/* لیست پاسخ‌های فرم انتخاب شده */}
+          {manualFormId && (
+            <div>
+              {manualLoading ? (
+                <TableSkeleton rows={5} cols={4} />
+              ) : manualResponses.length > 0 ? (
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h3 className="text-sm sm:text-base font-extrabold text-navy dark:text-slate-100">
+                      پاسخ‌های ثبت‌شده ({faNum(manualResponses.length)})
+                    </h3>
+                    <div className="relative flex-1 max-w-xs">
+                      <Search
+                        size={14}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-subtle"
+                      />
+                      <input
+                        type="text"
+                        value={manualSearch}
+                        onChange={(e) => setManualSearch(e.target.value)}
+                        placeholder="جستجو در پاسخ‌ها..."
+                        className={inputCls + " !py-1.5 !pr-9 text-xs"}
+                      />
+                    </div>
+                  </div>
+
+                  <StickerCard theme="white">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="text-navy dark:text-slate-200 border-b-2 border-ink/10 dark:border-slate-700">
+                            <th className="text-center font-black px-4 py-3 w-16">ورودی #</th>
+                            <th className="text-right font-black px-4 py-3">زمان دقیق ثبت</th>
+                            <th className="text-right font-black px-4 py-3">چکیده پاسخ‌ها</th>
+                            <th className="text-center font-black px-4 py-3">عملیات ارسال</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {manualResponses
+                            .filter((r) => {
+                              if (!manualSearch.trim()) return true;
+                              const q = manualSearch.trim().toLowerCase();
+                              const rAns = manualAnswers[r.id] || {};
+                              return Object.values(rAns).some((v) =>
+                                String(v ?? "").toLowerCase().includes(q)
+                              );
+                            })
+                            .map((r, i) => {
+                              const rAns = manualAnswers[r.id] || {};
+                              const subDate = r.submitted_at || r.created_at;
+                              const isSending = sendingResponseId === r.id;
+
+                              // خلاصه سه پاسخ اول
+                              const summarySnippets = manualQuestions
+                                .slice(0, 3)
+                                .map((q) => {
+                                  const val = rAns[q.id];
+                                  if (!val) return null;
+                                  return `${q.title}: ${typeof val === "object" ? JSON.stringify(val) : String(val)}`;
+                                })
+                                .filter(Boolean);
+
+                              return (
+                                <tr
+                                  key={r.id}
+                                  className={`${
+                                    i % 2 ? "bg-bg-lavender/60 dark:bg-slate-800/40" : ""
+                                  } border-b border-ink/5 dark:border-slate-800 last:border-0`}
+                                >
+                                  <td className="px-4 py-3 text-center font-extrabold text-xs text-navy dark:text-slate-300">
+                                    {faNum(manualResponses.length - i)}
+                                  </td>
+                                  <td className="px-4 py-3 font-semibold text-xs text-ink-subtle dark:text-slate-400 whitespace-nowrap">
+                                    {subDate ? faDateTime(subDate) : "—"}
+                                    <span className="block text-[10px] text-ink-subtle/70">
+                                      ({subDate ? faRelative(subDate) : "—"})
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3 text-xs font-semibold text-ink dark:text-slate-200 max-w-md">
+                                    {summarySnippets.length > 0 ? (
+                                      <div className="flex flex-col gap-0.5 truncate">
+                                        {summarySnippets.map((s, idx) => (
+                                          <span key={idx} className="truncate">
+                                            • {s}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <span className="text-ink-subtle italic">بدون پاسخ متنی</span>
+                                    )}
+                                  </td>
+                                  <td className="px-4 py-3 text-center whitespace-nowrap">
+                                    <div className="flex items-center justify-center gap-1.5">
+                                      <Button
+                                        variant="outline"
+                                        size="xs"
+                                        onClick={() => {
+                                          setPreviewResponse(r);
+                                          setPreviewModalOpen(true);
+                                        }}
+                                        title="مشاهده متن کامل گزارش ارسالی"
+                                      >
+                                        <Eye size={12} className="ml-1" />
+                                        پیش‌نمایش
+                                      </Button>
+                                      <Button
+                                        variant="teal"
+                                        size="xs"
+                                        onClick={() => handleManualDispatch(r)}
+                                        disabled={isSending}
+                                        title="ارسال مستقیم به چت تلگرام با تاریخ واقعی"
+                                      >
+                                        <Send
+                                          size={12}
+                                          className={isSending ? "animate-spin ml-1" : "ml-1"}
+                                        />
+                                        {isSending ? "در حال ارسال..." : "ارسال به تلگرام"}
+                                      </Button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </StickerCard>
+                </div>
+              ) : (
+                <EmptyState
+                  icon={<FileText size={48} />}
+                  title="پاسخی برای این فرم ثبت نشده است"
+                  subtitle="به محض ثبت پاسخ، ورودی‌ها در این قسمت جهت ارسال دستی در دسترس خواهند بود."
+                />
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── مودال پیش‌نمایش کارت تلگرام ─── */}
+      <Modal
+        open={previewModalOpen}
+        onClose={() => {
+          setPreviewModalOpen(false);
+          setPreviewResponse(null);
+        }}
+        title="پیش‌نمایش گزارش ارسالی به تلگرام"
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-xs text-ink-subtle dark:text-slate-400">
+            این گزارش با حفظ زمان دقیق ثبت پاسخ به ربات و چت تلگرام ارسال می‌شود:
+          </p>
+          <div className="bg-[#1E293B] text-slate-100 p-4 rounded-xl font-mono text-xs leading-6 whitespace-pre-wrap dir-rtl select-all border border-slate-700 max-h-80 overflow-y-auto">
+            {buildPreviewMessage(previewResponse)}
+          </div>
+          <div className="flex justify-end gap-2 pt-2 border-t border-ink/10 dark:border-slate-800">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setPreviewModalOpen(false);
+                setPreviewResponse(null);
+              }}
+            >
+              انصراف
+            </Button>
+            <Button
+              variant="teal"
+              size="sm"
+              onClick={() => handleManualDispatch(previewResponse)}
+              disabled={sendingResponseId === previewResponse?.id}
+            >
+              <Send size={14} className={sendingResponseId === previewResponse?.id ? "animate-spin ml-1" : "ml-1"} />
+              {sendingResponseId === previewResponse?.id ? "در حال ارسال..." : "تایید و ارسال به تلگرام"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* ─── مودال راهنمای بات تلگرام ─── */}
       <Modal

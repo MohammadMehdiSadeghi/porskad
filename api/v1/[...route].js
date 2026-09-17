@@ -395,15 +395,17 @@ function formatAnswerForTelegram(val) {
   return String(val);
 }
 
-// دیسپچ نوتیفیکیشن تلگرام با پایداری حداکثری و پشتیبانی از RPC امن و فالبک مستقیم
-async function dispatchTelegramNotification(clients, formId, responseId) {
+// دیسپچ نوتیفیکیشن تلگرام با پایداری حداکثری و پشتیبانی از RPC امن، زمان واقعی ثبت و ارسال مجدد
+async function dispatchTelegramNotification(clients, formId, responseId, options = {}) {
   if (!formId || !responseId) {
     return { ok: false, error: "Missing form_id or response_id" };
   }
 
+  const isForce = Boolean(options.force);
   let resolvedFormId = formId;
   let formTitle = "—";
   let entryNumber = 1;
+  let submittedAt = null;
   let configs = [];
   let questions = [];
   let answerMap = {};
@@ -414,6 +416,7 @@ async function dispatchTelegramNotification(clients, formId, responseId) {
     const { data: rpcData, error: rpcErr } = await clients.adminClient.rpc("get_telegram_dispatch_payload", {
       p_form_id: String(formId),
       p_response_id: responseId,
+      p_force: isForce,
     });
 
     if (!rpcErr && rpcData && typeof rpcData === "object") {
@@ -425,6 +428,7 @@ async function dispatchTelegramNotification(clients, formId, responseId) {
         resolvedFormId = rpcData.form_id || formId;
         formTitle = rpcData.form_title || "—";
         entryNumber = rpcData.entry_number || 1;
+        submittedAt = rpcData.submitted_at || null;
         configs = rpcData.configs;
         const items = rpcData.items || [];
         questions = items.map((it) => ({ id: it.id, title: it.title, position: it.position, type: it.type }));
@@ -462,7 +466,7 @@ async function dispatchTelegramNotification(clients, formId, responseId) {
 
     const { data: respCheck, error: respCheckErr } = await clients.adminClient
       .from("responses")
-      .select("id")
+      .select("id, submitted_at, created_at")
       .eq("id", responseId)
       .eq("form_id", resolvedFormId)
       .maybeSingle();
@@ -471,15 +475,19 @@ async function dispatchTelegramNotification(clients, formId, responseId) {
       return { ok: false, error: "Invalid response_id for given form" };
     }
 
-    const { data: alreadySent } = await clients.adminClient
-      .from("telegram_send_log")
-      .select("id")
-      .eq("response_id", responseId)
-      .eq("status", "sent")
-      .limit(1);
+    submittedAt = respCheck.submitted_at || respCheck.created_at || null;
 
-    if (alreadySent && alreadySent.length > 0) {
-      return { ok: true, skipped: true, reason: "already_sent" };
+    if (!isForce) {
+      const { data: alreadySent } = await clients.adminClient
+        .from("telegram_send_log")
+        .select("id")
+        .eq("response_id", responseId)
+        .eq("status", "sent")
+        .limit(1);
+
+      if (alreadySent && alreadySent.length > 0) {
+        return { ok: true, skipped: true, reason: "already_sent" };
+      }
     }
 
     const { data: links, error: linkError } = await clients.adminClient
@@ -526,10 +534,10 @@ async function dispatchTelegramNotification(clients, formId, responseId) {
     entryNumber = count || 1;
   }
 
-  // ۳. ساخت قالب پیام تلگرام
-  const now = new Date();
-  const timeStr = now.toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Tehran" });
-  const dateStr = now.toLocaleDateString("fa-IR", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Tehran" });
+  // ۳. ساخت قالب پیام تلگرام با تاریخ و زمان واقعی ثبت پاسخ
+  const responseDate = submittedAt ? new Date(submittedAt) : new Date();
+  const timeStr = responseDate.toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Tehran" });
+  const dateStr = responseDate.toLocaleDateString("fa-IR", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Tehran" });
 
   const faNum = (n) => (n !== undefined && n !== null ? Number(n).toLocaleString("fa-IR") : "۰");
 
@@ -551,6 +559,9 @@ async function dispatchTelegramNotification(clients, formId, responseId) {
   lines.push("");
   lines.push(`⏰ زمان ثبت: ${timeStr} — ${dateStr}`);
   lines.push(`🔢 ورودی شماره ${faNum(entryNumber)}`);
+  if (isForce) {
+    lines.push("📌 (ارسال مجدد دستی توسط مدیریت)");
+  }
   lines.push("━━━━━━━━━━━━━━━━━━");
 
   let messageText = lines.join("\n");
@@ -977,16 +988,18 @@ export default async function handler(req, res) {
     ) {
       if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-      const { form_id, response_id } = req.body || {};
+      const { form_id, response_id, force } = req.body || {};
       if (!form_id || !response_id) {
         return res.status(400).json({ error: "Missing form_id or response_id" });
       }
 
-      if (isTgRateLimited(String(form_id))) {
+      if (!force && isTgRateLimited(String(form_id))) {
         return res.status(429).json({ error: "Too many requests" });
       }
 
-      const dispatchResult = await dispatchTelegramNotification(clients, form_id, response_id);
+      const dispatchResult = await dispatchTelegramNotification(clients, form_id, response_id, {
+        force: Boolean(force),
+      });
       if (!dispatchResult.ok && dispatchResult.error) {
         const statusCode = dispatchResult.error.includes("Invalid response_id") ? 404 : 400;
         return res.status(statusCode).json(dispatchResult);

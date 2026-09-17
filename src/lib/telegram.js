@@ -2,12 +2,16 @@
  * ارسال ورودی فرم به تلگرام
  * این تابع بعد از ثبت موفق پاسخ فراخوانی می‌شود.
  */
-export async function sendToTelegram(formId, responseId) {
+export async function sendToTelegram(formId, responseId, options = {}) {
   if (!formId || !responseId) {
     return { ok: false, error: "Missing formId or responseId" };
   }
 
-  const payload = JSON.stringify({ form_id: formId, response_id: responseId });
+  const payload = JSON.stringify({
+    form_id: formId,
+    response_id: responseId,
+    force: Boolean(options?.force),
+  });
   const headers = { "Content-Type": "application/json" };
 
   try {
