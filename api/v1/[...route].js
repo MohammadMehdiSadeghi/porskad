@@ -600,15 +600,17 @@ async function dispatchTelegramNotification(clients, formId, responseId, options
           p_message_text: messageText,
         });
       } catch {
-        await clients.adminClient.from("telegram_send_log").insert({
-          form_id: resolvedFormId,
-          response_id: responseId,
-          config_id: config.id,
-          chat_id: chatId,
-          status: isOk ? "sent" : "failed",
-          error_message: errMsg,
-          message_text: messageText,
-        }).catch(() => {});
+        try {
+          await clients.adminClient.from("telegram_send_log").insert({
+            form_id: resolvedFormId,
+            response_id: responseId,
+            config_id: config.id,
+            chat_id: chatId,
+            status: isOk ? "sent" : "failed",
+            error_message: errMsg,
+            message_text: messageText,
+          });
+        } catch {}
       }
 
       results.push({ config_id: config.id, ok: isOk, error: errMsg });
@@ -624,15 +626,17 @@ async function dispatchTelegramNotification(clients, formId, responseId, options
           p_message_text: messageText,
         });
       } catch {
-        await clients.adminClient.from("telegram_send_log").insert({
-          form_id: resolvedFormId,
-          response_id: responseId,
-          config_id: config.id,
-          chat_id: chatId,
-          status: "error",
-          error_message: err.message,
-          message_text: messageText,
-        }).catch(() => {});
+        try {
+          await clients.adminClient.from("telegram_send_log").insert({
+            form_id: resolvedFormId,
+            response_id: responseId,
+            config_id: config.id,
+            chat_id: chatId,
+            status: "error",
+            error_message: err.message,
+            message_text: messageText,
+          });
+        } catch {}
       }
       results.push({ config_id: config.id, ok: false, error: err.message });
     }
