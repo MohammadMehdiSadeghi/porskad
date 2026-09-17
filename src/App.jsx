@@ -124,7 +124,6 @@ export default function App() {
                 <Route path="/api-docs" element={<Navigate to="/admin/web-service" replace />} />
                 <Route path="/api-docs/*" element={<Navigate to="/admin/web-service" replace />} />
 
-                <a href=""></a>
                 {/* Embed — جاسازی فرم در سایت‌های دیگر */}
                 <Route path="/embed/:formId" element={<EmbedForm />} />
 
