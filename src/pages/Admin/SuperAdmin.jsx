@@ -390,22 +390,27 @@ export default function SuperAdmin() {
             user_purged: false,
             user_purged_at: null,
           };
+          let updatePayload = {
+            deleted_at: null,
+            user_purged_at: null,
+            settings: nextSettings,
+          };
           let { error: upErr } = await supabase
             .from("forms")
-            .update({
-              deleted_at: null,
-              user_purged_at: null,
-              settings: nextSettings,
-            })
+            .update(updatePayload)
             .eq("id", formId);
-          if (upErr && upErr.message?.includes("user_purged_at")) {
-            const retry = await supabase
-              .from("forms")
-              .update({
-                deleted_at: null,
-                settings: nextSettings,
-              })
-              .eq("id", formId);
+          if (upErr && (upErr.message?.includes("settings") || upErr.code === "PGRST204")) {
+            delete updatePayload.settings;
+            const retry = await supabase.from("forms").update(updatePayload).eq("id", formId);
+            upErr = retry.error;
+          }
+          if (upErr && (upErr.message?.includes("user_purged_at") || upErr.code === "PGRST204")) {
+            delete updatePayload.user_purged_at;
+            const retry = await supabase.from("forms").update(updatePayload).eq("id", formId);
+            upErr = retry.error;
+          }
+          if (upErr) {
+            const retry = await supabase.from("forms").update({ deleted_at: null }).eq("id", formId);
             upErr = retry.error;
           }
           if (!upErr) restoredOk = true;
@@ -471,10 +476,19 @@ export default function SuperAdmin() {
   async function restoreForm(formId) {
     setTrashActionBusy(true);
     try {
-      const { error } = await supabase
+      let updatePayload = { deleted_at: null, user_purged_at: null };
+      let { error } = await supabase
         .from("forms")
-        .update({ deleted_at: null })
+        .update(updatePayload)
         .eq("id", formId);
+      if (error && (error.message?.includes("user_purged_at") || error.code === "PGRST204")) {
+        delete updatePayload.user_purged_at;
+        const retry = await supabase
+          .from("forms")
+          .update(updatePayload)
+          .eq("id", formId);
+        error = retry.error;
+      }
       if (error) throw error;
       try {
         await supabase
@@ -604,18 +618,45 @@ export default function SuperAdmin() {
             user_purged: false,
             user_purged_at: null,
           };
+          let updatePayload = {
+            deleted_at: null,
+            user_purged_at: null,
+            settings: nextSettings,
+          };
           let { error } = await supabase
             .from("forms")
-            .update({ deleted_at: null, user_purged_at: null, settings: nextSettings })
+            .update(updatePayload)
             .eq("id", item.rawId);
-          if (error && error.message?.includes("user_purged_at")) {
+          if (error && (error.message?.includes("settings") || error.code === "PGRST204")) {
+            delete updatePayload.settings;
             const retry = await supabase
               .from("forms")
-              .update({ deleted_at: null, settings: nextSettings })
+              .update(updatePayload)
               .eq("id", item.rawId);
             error = retry.error;
           }
-          if (!error) successCount++;
+          if (error && (error.message?.includes("user_purged_at") || error.code === "PGRST204")) {
+            delete updatePayload.user_purged_at;
+            const retry = await supabase
+              .from("forms")
+              .update(updatePayload)
+              .eq("id", item.rawId);
+            error = retry.error;
+          }
+          if (error) {
+            const retry = await supabase.from("forms").update({ deleted_at: null }).eq("id", item.rawId);
+            error = retry.error;
+          }
+          if (!error) {
+            try {
+              await supabase
+                .from("trash")
+                .update({ restored_at: new Date().toISOString() })
+                .eq("entity_id", item.rawId)
+                .is("restored_at", null);
+            } catch {}
+            successCount++;
+          }
         } else if (item.kind === "user") {
           const { error } = await supabase.from("profiles").update({ is_active: true, deactivated_at: null, deactivated_by: null }).eq("id", item.rawId);
           if (!error) successCount++;
@@ -6257,7 +6298,7 @@ export default function SuperAdmin() {
                   payload: t.payload,
                   isSoftDelete: false,
                   isUserPurged: isForm,
-                  nonRestorable: isForm, // User-purged forms cannot be restored
+                  nonRestorable: false,
                 };
               }),
               ...purgedFormsOnly
@@ -6277,7 +6318,7 @@ export default function SuperAdmin() {
                     payload: f,
                     isSoftDelete: true,
                     isUserPurged: true,
-                    nonRestorable: true, // User-purged forms cannot be restored
+                    nonRestorable: false,
                   };
                 }),
               ...trashedUsers.map((u) => ({
@@ -6808,7 +6849,7 @@ export default function SuperAdmin() {
                                   }}
                                   disabled={trashActionBusy}
                                 >
-                                  ↩️ Restore Account
+                                  ↩️ {i.kind === "form" ? "Restore Form" : "Restore Account"}
                                 </button>
                               )}
 

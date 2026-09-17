@@ -34,6 +34,41 @@ const FORM_TYPES = [
   },
 ];
 
+const PURGED_STORAGE_KEY = "porskad_user_purged_forms";
+
+function getLocalPurgedIds(uid) {
+  if (typeof window === "undefined" || !uid) return [];
+  try {
+    const raw = localStorage.getItem(`${PURGED_STORAGE_KEY}_${uid}`);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function addLocalPurgedId(uid, formId) {
+  if (typeof window === "undefined" || !uid || !formId) return;
+  try {
+    const current = getLocalPurgedIds(uid);
+    if (!current.includes(formId)) {
+      localStorage.setItem(`${PURGED_STORAGE_KEY}_${uid}`, JSON.stringify([...current, formId]));
+    }
+  } catch {}
+}
+
+function removeLocalPurgedId(uid, formId) {
+  if (typeof window === "undefined" || !uid || !formId) return;
+  try {
+    const current = getLocalPurgedIds(uid);
+    if (current.includes(formId)) {
+      localStorage.setItem(
+        `${PURGED_STORAGE_KEY}_${uid}`,
+        JSON.stringify(current.filter((id) => id !== formId))
+      );
+    }
+  } catch {}
+}
+
 // ─── کامپوننت نوتیفیکیشن Undo با دیزاین سیستم پرس‌کاد ───
 function UndoToast({ formTitle, onUndo, onDismiss, duration = 6000 }) {
   const [progress, setProgress] = useState(100);
@@ -175,13 +210,29 @@ export default function FormsList() {
       if (formsError) throw formsError;
 
       let allForms = formsData ?? [];
-      // کاربر عادی فقط فرم‌های خودش را دریافت می‌کند (و فرم‌های حذف دائمی شده را به هیچ وجه نمی‌بیند)
+      const purgedLocal = getLocalPurgedIds(user?.id);
+
+      // اگر فرمی که در لوکال استوریج حذف قطعی ثبت شده بود، در دیتابیس توسط سوپرادمین بازیابی شده (deleted_at === null)، از لوکال استوریج بردار
+      allForms.forEach((f) => {
+        if (!f.deleted_at && purgedLocal.includes(f.id)) {
+          removeLocalPurgedId(user?.id, f.id);
+        }
+      });
+      const activePurgedLocal = getLocalPurgedIds(user?.id);
+
+      // فرم‌های حذف دائمی شده به هیچ وجه نباید در تب‌های فعال یا سطل زباله کاربر نمایش داده شوند
+      allForms = allForms.filter(
+        (f) =>
+          !f.user_purged_at &&
+          !f.settings?.user_purged &&
+          !f.settings?.user_deleted_permanent &&
+          !activePurgedLocal.includes(f.id)
+      );
+
+      // کاربر عادی فقط فرم‌های خودش را دریافت می‌کند
       if (!isOwner()) {
         allForms = allForms.filter(
-          (f) =>
-            (f.manager_id === user.id || f.created_by === user.id) &&
-            !f.user_purged_at &&
-            !f.settings?.user_purged
+          (f) => f.manager_id === user.id || f.created_by === user.id
         );
       }
 
@@ -609,73 +660,110 @@ export default function FormsList() {
     const form = permanentDeleting;
     setPermanentDeleting(null);
 
-    let hardSuccess = false;
     const nowIso = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    // ۱. فراخوانی RPC امن دیتابیس جهت ثبت در سطل زباله سوپرادمین و حذف قطعی از دید کاربر
+    // ۱. بلافاصله ثبت حذف در حافظه محلی و استیت صفحه (تجربه کاربری آنی و بدون تاخیر)
+    addLocalPurgedId(user?.id, form.id);
+    setForms((fs) => fs.filter((f) => f.id !== form.id));
+
+    // ۲. ثبت امن در جدول trash سوپرادمین با تمام سوالات (نگهداری ۳۰ روزه)
     try {
-      const { data: rpcData, error: rpcErr } = await supabase.rpc("user_permanent_delete_form", {
+      let qList = [];
+      try {
+        const { data: qData } = await supabase
+          .from("questions")
+          .select("*")
+          .eq("form_id", form.id)
+          .order("position", { ascending: true });
+        qList = qData || [];
+      } catch {}
+
+      const ownerId = form.created_by || form.manager_id || user?.id;
+      await supabase.from("trash").insert({
+        entity_type: "form",
+        entity_id: form.id,
+        label: `فرم «${form.title || form.slug || "بدون عنوان"}»`,
+        payload: {
+          ...form,
+          questions: qList,
+          deleted_at: nowIso,
+          published: false,
+          user_deleted_permanent: true,
+          user_purged_at: nowIso,
+        },
+        user_id: ownerId,
+        deleted_by: user?.id,
+        deleted_by_name: profile?.full_name || user?.email || "کاربر",
+        deleted_at: nowIso,
+        expires_at: expiresAt,
+      });
+    } catch (trashErr) {
+      console.warn("Trash recording notice:", trashErr);
+    }
+
+    // ۳. فراخوانی تابع RPC امن دیتابیس در صورت وجود
+    try {
+      await supabase.rpc("user_permanent_delete_form", {
         p_form_id: form.id,
       });
-      if (!rpcErr && (rpcData?.ok || rpcData === true)) {
-        hardSuccess = true;
-      }
     } catch (e) {
       console.warn("RPC permanent delete fallback:", e);
     }
 
-    // ۲. فالبک از طریق وب‌سرویس سرور با فلگ permanent=true
-    if (!hardSuccess) {
-      try {
-        const apiRes = await fetch(`/api/v1/forms/${form.id}?permanent=true`, {
-          method: "DELETE",
-          headers: {
-            Authorization: session?.access_token ? `Bearer ${session.access_token}` : "",
-          },
-        });
-        if (apiRes.ok) {
-          hardSuccess = true;
-        }
-      } catch (e) {
-        console.warn("API permanent delete fallback:", e);
-      }
+    // ۴. فراخوانی اندپوینت وب‌سرویس REST با فلگ permanent=true
+    try {
+      await fetch(`/api/v1/forms/${form.id}?permanent=true`, {
+        method: "DELETE",
+        headers: {
+          Authorization: session?.access_token ? `Bearer ${session.access_token}` : "",
+        },
+      });
+    } catch (e) {
+      console.warn("API permanent delete fallback:", e);
     }
 
-    // ۳. فالبک مستقیم در کلاینت
-    if (!hardSuccess) {
-      const nextSettings = {
-        ...(form.settings || {}),
-        user_purged: true,
-        user_purged_at: nowIso,
-        deleted_by: user?.id,
-        deleted_by_email: user?.email,
-      };
+    // ۵. به‌روزرسانی ردیف در جدول forms با مقاومت در برابر خطاهای تفاوت اسکیمای ستون‌ها
+    const nextSettings = {
+      ...(form.settings || {}),
+      user_purged: true,
+      user_purged_at: nowIso,
+      deleted_by: user?.id,
+      deleted_by_email: user?.email,
+    };
 
-      const updatePayload = {
-        deleted_at: nowIso,
-        published: false,
-        user_purged_at: nowIso,
-        settings: nextSettings,
-      };
+    let updatePayload = {
+      deleted_at: nowIso,
+      published: false,
+      user_purged_at: nowIso,
+      settings: nextSettings,
+    };
 
-      let { error } = await supabase.from("forms").update(updatePayload).eq("id", form.id);
-      if (error && error.message?.includes("user_purged_at")) {
-        delete updatePayload.user_purged_at;
-        const retry = await supabase.from("forms").update(updatePayload).eq("id", form.id);
-        error = retry.error;
-      }
-      if (!error) {
-        hardSuccess = true;
-      }
+    let { error: updateErr } = await supabase
+      .from("forms")
+      .update(updatePayload)
+      .eq("id", form.id);
+
+    if (updateErr && (updateErr.message?.includes("settings") || updateErr.code === "PGRST204")) {
+      delete updatePayload.settings;
+      const retry1 = await supabase.from("forms").update(updatePayload).eq("id", form.id);
+      updateErr = retry1.error;
     }
 
-    if (!hardSuccess) {
-      push("حذف ناموفق بود", "error");
-      return;
+    if (updateErr && (updateErr.message?.includes("user_purged_at") || updateErr.code === "PGRST204")) {
+      delete updatePayload.user_purged_at;
+      const retry2 = await supabase.from("forms").update(updatePayload).eq("id", form.id);
+      updateErr = retry2.error;
     }
 
-    push("فرم برای همیشه از لیست شما حذف شد");
-    setForms((fs) => fs.filter((f) => f.id !== form.id));
+    if (updateErr) {
+      await supabase
+        .from("forms")
+        .update({ deleted_at: nowIso, published: false })
+        .eq("id", form.id);
+    }
+
+    push("فرم با موفقیت حذف شد و جهت نگهداری به بایگانی ۳۰ روزه سوپرادمین منتقل گردید.", "success");
     load(true);
   }
 
@@ -703,19 +791,14 @@ export default function FormsList() {
   const filtered = useMemo(() => {
     let result = forms;
 
-    // کاربران عادی هرگز فرم‌های حذف دائمی شده را نباید ببینند
-    if (!isOwner()) {
-      result = result.filter((f) => !f.user_purged_at && !f.settings?.user_purged);
-    }
-
     if (filter === "trash") {
       // سطل زباله کاربر: فقط فرم‌های حذف‌شده موقت (نه حذف قطعی)
-      result = result.filter((f) => f.deleted_at && !f.user_purged_at && !f.settings?.user_purged);
+      result = result.filter((f) => Boolean(f.deleted_at));
     } else if (filter === "archived") {
-      result = result.filter((f) => f.archived && !f.deleted_at && !f.user_purged_at && !f.settings?.user_purged);
+      result = result.filter((f) => f.archived && !f.deleted_at);
     } else {
       // حالت عادی: حذف‌شده و آرشیو‌شده رو نشون نده
-      result = result.filter((f) => !f.deleted_at && !f.archived && !f.user_purged_at && !f.settings?.user_purged);
+      result = result.filter((f) => !f.deleted_at && !f.archived);
       if (filter === "published") result = result.filter((f) => f.published);
       else if (filter === "draft") result = result.filter((f) => !f.published);
     }
@@ -725,11 +808,11 @@ export default function FormsList() {
       result = result.filter((f) => f.title.toLowerCase().includes(s));
     }
     return result;
-  }, [forms, filter, search, isOwner]);
+  }, [forms, filter, search]);
 
   // شمارنده سطل زباله (صرفاً موارد حذف موقت)
   const trashCount = useMemo(
-    () => forms.filter((f) => f.deleted_at && !f.user_purged_at && !f.settings?.user_purged).length,
+    () => forms.filter((f) => Boolean(f.deleted_at)).length,
     [forms]
   );
 

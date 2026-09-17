@@ -2625,14 +2625,32 @@ export default async function handler(req, res) {
             .update(updatePayload)
             .eq("id", form.id);
 
-          // در صورت عدم وجود ستون user_purged_at در دیتابیس فعلی، بدون آن فیلد تلاش مجدد انجام شود
-          if (formUpdateErr && formUpdateErr.message?.includes("user_purged_at")) {
+          // در صورت عدم وجود ستون settings یا user_purged_at در دیتابیس، بدون آن فیلد تلاش مجدد انجام شود
+          if (formUpdateErr && (formUpdateErr.message?.includes("settings") || formUpdateErr.code === "PGRST204")) {
+            delete updatePayload.settings;
+            const retry = await clients.adminClient
+              .from("forms")
+              .update(updatePayload)
+              .eq("id", form.id);
+            formUpdateErr = retry.error;
+          }
+
+          if (formUpdateErr && (formUpdateErr.message?.includes("user_purged_at") || formUpdateErr.code === "PGRST204")) {
             delete updatePayload.user_purged_at;
             const retry = await clients.adminClient
               .from("forms")
               .update(updatePayload)
               .eq("id", form.id);
             formUpdateErr = retry.error;
+          }
+
+          // فالبک نهایی حداقل به‌روزرسانی deleted_at
+          if (formUpdateErr) {
+            const fallback = await clients.adminClient
+              .from("forms")
+              .update({ deleted_at: nowIso, published: false })
+              .eq("id", form.id);
+            formUpdateErr = fallback.error;
           }
 
           if (formUpdateErr) return res.status(400).json({ error: formUpdateErr.message });
