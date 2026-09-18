@@ -854,6 +854,21 @@ export function AuthProvider({ children }) {
     return data;
   }
 
+  const hasPermission = useCallback((permissionId) => {
+    if (profile?.is_owner === true || role === "admin") return true;
+    // مشاهده یا مدیریت سایر کاربران برای کاربر عادی اکیداً ممنوع است
+    if (permissionId === "manage_managers" || permissionId === "view_admins") return false;
+    if (permissionId === "manage_telegram") return Boolean(profile?.can_use_telegram);
+    if (permissions && permissions.length > 0) {
+      return permissions.includes(permissionId);
+    }
+    return DEFAULT_MANAGER_PERMISSIONS.includes(permissionId);
+  }, [profile?.is_owner, profile?.can_use_telegram, role, permissions]);
+
+  const canManage = useCallback(() => profile?.is_owner === true || role === "admin", [profile?.is_owner, role]);
+  const isOwner = useCallback(() => profile?.is_owner === true || role === "admin", [profile?.is_owner, role]);
+  const isPrimaryGod = useCallback(() => isPrimaryGodEmail(user?.email), [user?.email]);
+
   const value = {
     session,
     user,
@@ -864,19 +879,10 @@ export function AuthProvider({ children }) {
     loading,
     error,
     configured: isSupabaseConfigured,
-    hasPermission: (permissionId) => {
-      if (profile?.is_owner === true || role === "admin") return true;
-      // مشاهده یا مدیریت سایر کاربران برای کاربر عادی اکیداً ممنوع است
-      if (permissionId === "manage_managers" || permissionId === "view_admins") return false;
-      if (permissionId === "manage_telegram") return Boolean(profile?.can_use_telegram);
-      if (permissions && permissions.length > 0) {
-        return permissions.includes(permissionId);
-      }
-      return DEFAULT_MANAGER_PERMISSIONS.includes(permissionId);
-    },
-    canManage: () => profile?.is_owner === true || role === "admin",
-    isOwner: () => profile?.is_owner === true || role === "admin",
-    isPrimaryGod: () => isPrimaryGodEmail(user?.email),
+    hasPermission,
+    canManage,
+    isOwner,
+    isPrimaryGod,
     isPrimaryGodEmail,
     PRIMARY_GOD_EMAILS,
     login,

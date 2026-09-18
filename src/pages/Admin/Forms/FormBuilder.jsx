@@ -14,7 +14,7 @@ import { QUESTION_TYPE_ICONS } from "../../../lib/questionIcons";
 import ConditionBuilder from "../../../components/logic/ConditionBuilder";
 import { makeCondition, makeConditionGroup, makeJumpAction, GROUP_OPERATORS, JUMP_ACTION_TYPES, JUMP_ACTION_TYPE_ORDER } from "../../../lib/logic/types";
 import { faNum, slugify, copyToClipboard } from "../../../lib/utils";
-import { Link2, BarChart3, Share2, Puzzle, Settings, FileText, AlignLeft, ArrowRight, Eye, Save, Target, Check, ChevronDown, ChevronUp, LayoutGrid, Trash2, X, Sun, Moon, Monitor, Image, Sliders, Gauge, Grid, ListOrdered, Info, Layers, Upload, CreditCard, Globe, Lock, MapPin, Send, MessageCircle, Clock, ShieldCheck, Zap, Sparkles, AlertTriangle, Rocket } from "lucide-react";
+import { Link2, BarChart3, Share2, Puzzle, Settings, FileText, AlignLeft, ArrowRight, Eye, Save, Target, Check, ChevronDown, ChevronUp, LayoutGrid, Trash2, X, Sun, Moon, Monitor, Image, Sliders, Gauge, Grid, ListOrdered, Info, Layers, Upload, CreditCard, Globe, Lock, MapPin, Send, MessageCircle, Clock, ShieldCheck, Zap, Sparkles, AlertTriangle, Rocket, Plus, ArrowLeftRight, ChevronsUpDown, FoldVertical, UnfoldVertical } from "lucide-react";
 import FormPreview from "../../../components/form/FormPreview";
 import { logActivity } from "../../../lib/activityLogger";
 import SEO from "../../../components/ui/SEO";
@@ -51,7 +51,18 @@ function normalizeConditionGroup(cg) {
 }
 
 // ─── کارت ویرایش یک سوال ───
-function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDelete }) {
+function QuestionEditor({
+  q,
+  index,
+  total,
+  allQuestions,
+  onChange,
+  onMove,
+  onDelete,
+  isCollapsed = false,
+  onToggleCollapse,
+  isHighlighted = false,
+}) {
   const meta = QUESTION_TYPES[q.type];
   const isChoice = q.type === "choice" || q.type === "yes_no";
 
@@ -135,17 +146,34 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
   const sourceQuestions = allQuestions.filter((_, j) => j < index);
 
   return (
-    <div>
+    <div
+      id={`question-card-${q.localId}`}
+      className={`transition-all duration-300 rounded-2xl ${
+        isHighlighted ? "ring-4 ring-teal ring-offset-2 scale-[1.01]" : ""
+      }`}
+    >
       <StickerCard theme="white">
         <div className="p-4 sm:p-5 flex flex-col gap-3.5">
-          {/* هدر: شماره + نوع + عملیات */}
+          {/* هدر: شماره + نوع + عنوان خلاصه در حالت بسته + عملیات */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="w-8 h-8 flex items-center justify-center bg-sec dark:bg-[#1C2536] text-white rounded-full text-sm font-black border border-primary/30">
-              {faNum(index + 1)}
-            </span>
-            <Badge color={meta.color}>
-              {(() => { const Icon = QUESTION_TYPE_ICONS[q.type]; return Icon ? <Icon size={12} /> : null; })()} {meta.label}
-            </Badge>
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              className="flex items-center gap-2 group text-right cursor-pointer"
+              title={isCollapsed ? "باز کردن تنظیمات سوال" : "جمع کردن سوال"}
+            >
+              <span className="w-8 h-8 flex items-center justify-center bg-sec dark:bg-[#1C2536] text-white rounded-full text-sm font-black border border-primary/30 group-hover:bg-teal transition-colors">
+                {faNum(index + 1)}
+              </span>
+              <Badge color={meta.color}>
+                {(() => { const Icon = QUESTION_TYPE_ICONS[q.type]; return Icon ? <Icon size={12} /> : null; })()} {meta.label}
+              </Badge>
+              {isCollapsed && (
+                <span className="text-xs sm:text-sm font-extrabold text-sec dark:text-white truncate max-w-[180px] sm:max-w-[340px]">
+                  {q.title || "متن سوال..."}
+                </span>
+              )}
+            </button>
             <label className="flex items-center gap-1.5 text-xs font-bold text-gray-500 dark:text-gray-400 mr-auto cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -157,6 +185,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
             </label>
             <div className="flex items-center gap-1">
               <button
+                type="button"
                 onClick={() => onMove(-1)}
                 disabled={index === 0}
                 className="w-8 h-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C2536] flex items-center justify-center text-sec dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#151C28] disabled:opacity-30 transition-colors"
@@ -165,6 +194,7 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                 <ChevronUp size={15} />
               </button>
               <button
+                type="button"
                 onClick={() => onMove(1)}
                 disabled={index === total - 1}
                 className="w-8 h-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C2536] flex items-center justify-center text-sec dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#151C28] disabled:opacity-30 transition-colors"
@@ -173,17 +203,28 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
                 <ChevronDown size={15} />
               </button>
               <button
+                type="button"
                 onClick={onDelete}
                 className="w-8 h-8 rounded-xl border border-female-normal/40 bg-white dark:bg-[#1C2536] flex items-center justify-center text-female-normal hover:bg-female-light dark:hover:bg-pink-950/40 transition-colors"
                 title="حذف سوال"
               >
                 <Trash2 size={15} />
               </button>
+              <button
+                type="button"
+                onClick={onToggleCollapse}
+                className="w-8 h-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C2536] flex items-center justify-center text-sec dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#151C28] transition-colors"
+                title={isCollapsed ? "باز کردن" : "بستن"}
+              >
+                <ChevronDown size={15} className={`transition-transform duration-200 ${isCollapsed ? "" : "rotate-180"}`} />
+              </button>
             </div>
           </div>
 
-          <input
-            value={q.title}
+          {!isCollapsed && (
+            <>
+              <input
+                value={q.title}
             onChange={(e) => onChange({ title: e.target.value })}
             placeholder="متن سوال..."
             className={`${inputCls} !text-base !font-extrabold`}
@@ -1029,8 +1070,134 @@ function QuestionEditor({ q, index, total, allQuestions, onChange, onMove, onDel
               ) : null}
             </div>
           )}
+          </>
+          )}
         </div>
       </StickerCard>
+    </div>
+  );
+}
+
+// ─── سایدبار ناوبری و فهرست سریع سوالات (مخصوص دسکتاپ) ───
+function QuestionSidebarNav({
+  questions,
+  onAddQuestionClick,
+  onScrollToQuestion,
+  onMoveQuestion,
+  onDeleteQuestion,
+  collapsedAll,
+  onToggleCollapseAll,
+  activeId,
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      {/* هدر سایدبار */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm font-black text-sec dark:text-white">فهرست سوالات</span>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-teal/15 text-teal font-extrabold">
+            {faNum(questions.length)}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={onToggleCollapseAll}
+          className="text-[11px] font-bold text-gray-500 dark:text-gray-400 hover:text-teal transition-colors cursor-pointer"
+          title={collapsedAll ? "باز کردن همه" : "جمع کردن همه"}
+        >
+          {collapsedAll ? "باز کردن همه" : "جمع کردن همه"}
+        </button>
+      </div>
+
+      {/* دکمه افزودن سوال */}
+      <Button
+        variant="teal"
+        size="sm"
+        onClick={onAddQuestionClick}
+        className="w-full justify-center text-xs font-black shadow-xs py-2.5"
+      >
+        <Plus size={14} /> + افزودن سوال جدید
+      </Button>
+
+      {/* لیست اسکرول‌شونده سوالات */}
+      <div className="flex flex-col gap-1.5 max-h-[calc(100vh-320px)] overflow-y-auto pr-0.5 pl-1 custom-scrollbar">
+        {questions.length === 0 ? (
+          <div className="p-4 text-center text-xs text-gray-400 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
+            هنوز سوالی به فرم اضافه نشده است
+          </div>
+        ) : (
+          questions.map((q, idx) => {
+            const meta = QUESTION_TYPES[q.type] || {};
+            const Icon = QUESTION_TYPE_ICONS[q.type];
+            const isSelected = activeId === q.localId;
+            return (
+              <div
+                key={q.localId}
+                className={`group flex items-center gap-2 p-2 rounded-xl border transition-all text-right ${
+                  isSelected
+                    ? "border-teal bg-teal/10 dark:bg-teal/20 text-teal shadow-xs"
+                    : "border-gray-200 dark:border-gray-700/80 bg-white dark:bg-[#1C2536] text-sec dark:text-slate-200 hover:border-teal/40 hover:bg-gray-50 dark:hover:bg-[#151C28]"
+                }`}
+              >
+                {/* شماره */}
+                <span className="w-5 h-5 shrink-0 flex items-center justify-center rounded-full bg-gray-100 dark:bg-slate-800 text-[10px] font-black text-sec dark:text-slate-300">
+                  {faNum(idx + 1)}
+                </span>
+
+                {/* آیکون نوع */}
+                <span className="shrink-0 text-gray-400 dark:text-slate-400 group-hover:text-teal transition-colors">
+                  {Icon && <Icon size={13} />}
+                </span>
+
+                {/* عنوان با امکان کلیک و اسکرول سریع */}
+                <button
+                  type="button"
+                  onClick={() => onScrollToQuestion(q.localId)}
+                  className="flex-1 min-w-0 text-right cursor-pointer"
+                  title={q.title || "بدون عنوان"}
+                >
+                  <p className="text-xs font-bold truncate">
+                    {q.title || `سوال ${faNum(idx + 1)}`}
+                  </p>
+                  <span className="text-[10px] text-gray-400 dark:text-gray-500 block truncate">
+                    {meta.label || q.type} {q.required && <span className="text-female-normal font-black">*</span>}
+                  </span>
+                </button>
+
+                {/* دکمه‌های جابجایی سریع */}
+                <div className="flex items-center gap-0.5 opacity-40 group-hover:opacity-100 transition-opacity">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onMoveQuestion(q.localId, -1); }}
+                    disabled={idx === 0}
+                    className="p-1 rounded hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-20 transition-colors"
+                    title="بالا"
+                  >
+                    <ChevronUp size={12} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onMoveQuestion(q.localId, 1); }}
+                    disabled={idx === questions.length - 1}
+                    className="p-1 rounded hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-20 transition-colors"
+                    title="پایین"
+                  >
+                    <ChevronDown size={12} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onDeleteQuestion(q.localId); }}
+                    className="p-1 rounded hover:bg-female-light text-female-normal transition-colors"
+                    title="حذف"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }
@@ -1064,6 +1231,18 @@ export default function FormBuilder() {
   const [slugError, setSlugError] = useState(null);
   const [availableCategories, setAvailableCategories] = useState(() => getAvailableQuestionCategories());
 
+  // تب‌های اصلی و سایدبار دسکتاپ
+  const [activeTab, setActiveTab] = useState("questions"); // "questions" | "settings"
+  const [sidebarTab, setSidebarTab] = useState("questions"); // "questions" | "preview"
+  const [sidebarPosition, setSidebarPosition] = useState("left"); // "left" | "right"
+  const [collapsedQuestions, setCollapsedQuestions] = useState({});
+  const [showAddPicker, setShowAddPicker] = useState(false);
+  const [highlightedQuestionId, setHighlightedQuestionId] = useState(null);
+
+  const loadedFormIdRef = useRef(null);
+  const isOwnerRef = useRef(isOwner);
+  isOwnerRef.current = isOwner;
+
   useEffect(() => {
     loadQuestionTypesConfigFromDb().then(() => {
       setAvailableCategories(getAvailableQuestionCategories());
@@ -1079,6 +1258,9 @@ export default function FormBuilder() {
 
   useEffect(() => {
     if (authLoading) return;
+    // محافظت حیاتی: اگر فرم با این شناسه قبلاً لود شده است، هرگز نباید دیتای محلی بازنویسی یا پاک شود!
+    if (loadedFormIdRef.current === id) return;
+
     async function load() {
       const { data: f, error } = await supabase.from("forms").select("*").eq("id", id).maybeSingle();
       if (error || !f) {
@@ -1086,7 +1268,8 @@ export default function FormBuilder() {
         setLoading(false);
         return;
       }
-      if (!isOwner() && (!user || (f.manager_id !== user.id && f.created_by !== user.id))) {
+      const isOwnerVal = typeof isOwnerRef.current === "function" ? isOwnerRef.current() : false;
+      if (!isOwnerVal && (!user || (f.manager_id !== user.id && f.created_by !== user.id))) {
         push("شما به این فرم دسترسی ندارید.", "error");
         setNotFound(true);
         setLoading(false);
@@ -1106,7 +1289,7 @@ export default function FormBuilder() {
         time_limit_seconds: f.time_limit_seconds || f.settings?.time_limit_seconds || "",
       });
 
-      setQuestions((qs ?? []).map((q) => {
+      let initialQuestions = (qs ?? []).map((q) => {
         const resolved = resolveQuestion(q);
         return {
           ...resolved,
@@ -1119,12 +1302,35 @@ export default function FormBuilder() {
           conditions: normalizeConditionGroup(resolved.conditions ?? (resolved.condition ? { group_operator: "AND", conditions: [resolved.condition] } : null)),
           jump_actions: resolved.jump_actions ?? [],
         };
-      }));
+      });
 
+      // بررسی پیش‌نویس محلی ذخیره‌نشده در صورت وجود
+      try {
+        const rawDraft = sessionStorage.getItem(`porskad_draft_${id}`);
+        if (rawDraft) {
+          const parsed = JSON.parse(rawDraft);
+          if (parsed && Array.isArray(parsed.questions) && parsed.questions.length >= initialQuestions.length) {
+            initialQuestions = parsed.questions;
+            setDirty(true);
+            push("پیش‌نویس ذخیره‌نشده‌ی شما بازیابی شد.", "info");
+          }
+        }
+      } catch {}
+
+      setQuestions(initialQuestions);
+      loadedFormIdRef.current = id;
       setLoading(false);
     }
     load();
-  }, [id, user?.id, isOwner, authLoading]);
+  }, [id, authLoading, user?.id]);
+
+  // ذخیره پیش‌نویس لوکال برای اطمینان از عدم مفقودی دیتا در صورت بستن ناگهانی تب
+  useEffect(() => {
+    if (!id || !form || !dirty) return;
+    try {
+      sessionStorage.setItem(`porskad_draft_${id}`, JSON.stringify({ form, questions, timestamp: Date.now() }));
+    } catch {}
+  }, [id, form, questions, dirty]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -1147,10 +1353,32 @@ export default function FormBuilder() {
     setDirty(true);
   }, []);
 
-  const addQuestion = useCallback((type) => {
-    setQuestions((qs) => [...qs, makeQuestion(type, qs.length)]);
-    setDirty(true);
+  const scrollToQuestion = useCallback((localId) => {
+    setActiveTab("questions");
+    setCollapsedQuestions((prev) => ({ ...prev, [localId]: false }));
+    setHighlightedQuestionId(localId);
+    setTimeout(() => {
+      const el = document.getElementById(`question-card-${localId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 80);
+    setTimeout(() => {
+      setHighlightedQuestionId(null);
+    }, 2500);
   }, []);
+
+  const addQuestion = useCallback((type) => {
+    setQuestions((qs) => {
+      const newQ = makeQuestion(type, qs.length);
+      setTimeout(() => {
+        scrollToQuestion(newQ.localId);
+      }, 100);
+      return [...qs, newQ];
+    });
+    setDirty(true);
+    setShowAddPicker(false);
+  }, [scrollToQuestion]);
 
   const deleteQuestion = useCallback((localId) => {
     setQuestions((qs) => qs.filter((q) => q.localId !== localId));
@@ -1167,6 +1395,19 @@ export default function FormBuilder() {
       return copy;
     });
     setDirty(true);
+  }, []);
+
+  const toggleCollapseAll = useCallback(() => {
+    const areAllCollapsed = questions.length > 0 && questions.every((q) => collapsedQuestions[q.localId]);
+    const next = {};
+    questions.forEach((q) => {
+      next[q.localId] = !areAllCollapsed;
+    });
+    setCollapsedQuestions(next);
+  }, [questions, collapsedQuestions]);
+
+  const toggleCollapseQuestion = useCallback((localId) => {
+    setCollapsedQuestions((prev) => ({ ...prev, [localId]: !prev[localId] }));
   }, []);
 
   const publicUrl = useMemo(
@@ -1549,7 +1790,7 @@ export default function FormBuilder() {
 
   return (
     <>
-    <div className="flex flex-col lg:flex-row gap-5 max-w-7xl mx-auto">
+    <div className={`flex flex-col ${sidebarPosition === "right" ? "lg:flex-row-reverse" : "lg:flex-row"} gap-5 max-w-7xl mx-auto`}>
       {/* ─── ستون اصلی: ویرایشگر ─── */}
       <div className="flex flex-col gap-5 flex-1 min-w-0">
       <SEO
@@ -1563,7 +1804,7 @@ export default function FormBuilder() {
         <div className="flex items-center gap-2">
           <Button as={Link} to="/admin/forms" variant="ghost" size="sm"><ArrowRight size={14} className="ml-1" /> فرم‌ها</Button>
           <h1 className="text-xl sm:text-2xl font-black text-navy">فرم‌ساز</h1>
-          {dirty && <Badge color="orange">• تغییرات</Badge>}
+          {dirty && <Badge color="orange">• تغییرات ذخیره‌نشده</Badge>}
         </div>
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <Button variant="white" size="sm" onClick={async () => {
@@ -1590,369 +1831,519 @@ export default function FormBuilder() {
         </div>
       </div>
 
-      {/* تنظیمات فرم */}
-      <div>
-        <StickerCard theme="navy" radius="rounded-tl-[1.75rem] rounded-br-[1.75rem] rounded-tr-none rounded-bl-none">
-          <div className="p-5 sm:p-6 flex flex-col gap-4">
-            <h2 className="text-base sm:text-lg font-black text-navy flex items-center gap-2">
-              تنظیمات فرم
-              <label className="mr-auto flex items-center gap-2 text-sm font-extrabold cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={form.published}
-                  onChange={(e) => setFormField({ published: e.target.checked })}
-                  className="accent-teal w-5 h-5"
+      {/* ─── تب‌های بالایی: تفکیک طراحی سوالات از تنظیمات برای حذف اسکرول ─── */}
+      <div className="flex items-center justify-between gap-2 border-b-2 border-gray-200/80 dark:border-gray-800 pb-2">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab("questions")}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm transition-all cursor-pointer ${
+              activeTab === "questions"
+                ? "bg-teal text-white shadow-sm scale-[1.01]"
+                : "text-sec dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800"
+            }`}
+          >
+            <Layers size={16} />
+            طراحی سوالات
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full font-black ${
+                activeTab === "questions"
+                  ? "bg-white/20 text-white"
+                  : "bg-gray-200 dark:bg-slate-700 text-sec dark:text-slate-200"
+              }`}
+            >
+              {faNum(questions.length)}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("settings")}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm transition-all cursor-pointer ${
+              activeTab === "settings"
+                ? "bg-teal text-white shadow-sm scale-[1.01]"
+                : "text-sec dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800"
+            }`}
+          >
+            <Settings size={16} />
+            تنظیمات و ظاهر فرم
+          </button>
+        </div>
+
+        {activeTab === "questions" && (
+          <div className="hidden sm:flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleCollapseAll}
+              className="text-xs font-bold text-gray-500 dark:text-gray-400 hover:text-teal px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 transition-colors"
+              title="جمع کردن همه / باز کردن همه سوالات"
+            >
+              {questions.length > 0 && questions.every((q) => collapsedQuestions[q.localId]) ? "باز کردن همه" : "جمع کردن همه"}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ─── محتوای تب تنظیمات فرم ─── */}
+      {activeTab === "settings" && (
+        <div>
+          <StickerCard theme="navy" radius="rounded-tl-[1.75rem] rounded-br-[1.75rem] rounded-tr-none rounded-bl-none">
+            <div className="p-5 sm:p-6 flex flex-col gap-4">
+              <h2 className="text-base sm:text-lg font-black text-navy flex items-center gap-2">
+                تنظیمات فرم
+                <label className="mr-auto flex items-center gap-2 text-sm font-extrabold cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={form.published}
+                    onChange={(e) => setFormField({ published: e.target.checked })}
+                    className="accent-teal w-5 h-5"
+                  />
+                  {form.published ? "منتشرشده" : "پیش‌نویس"}
+                </label>
+              </h2>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                <Field label="عنوان فرم">
+                  <input value={form.title} onChange={(e) => setFormField({ title: e.target.value })} className={inputCls} />
+                </Field>
+                <Field label="اسلاگ لینک (انگلیسی)" hint={slugError ?? "لینک فرم: /f/اسلاگ"}>
+                  <input
+                    dir="ltr"
+                    value={form.slug}
+                    onChange={(e) => setFormField({ slug: e.target.value })}
+                    className={`${inputCls} text-left ${slugError ? "!border-magenta" : ""}`}
+                  />
+                </Field>
+              </div>
+
+              <Field label="توضیح فرم (اختیاری)">
+                <textarea
+                  rows={2}
+                  value={form.description ?? ""}
+                  onChange={(e) => setFormField({ description: e.target.value })}
+                  className={`${inputCls} resize-y`}
                 />
-                {form.published ? "منتشرشده" : "پیش‌نویس"}
-              </label>
-            </h2>
-
-            <div className="grid sm:grid-cols-2 gap-4">
-              <Field label="عنوان فرم">
-                <input value={form.title} onChange={(e) => setFormField({ title: e.target.value })} className={inputCls} />
               </Field>
-              <Field label="اسلاگ لینک (انگلیسی)" hint={slugError ?? "لینک فرم: /f/اسلاگ"}>
-                <input
-                  dir="ltr"
-                  value={form.slug}
-                  onChange={(e) => setFormField({ slug: e.target.value })}
-                  className={`${inputCls} text-left ${slugError ? "!border-magenta" : ""}`}
-                />
-              </Field>
-            </div>
 
-            <Field label="توضیح فرم (اختیاری)">
-              <textarea
-                rows={2}
-                value={form.description ?? ""}
-                onChange={(e) => setFormField({ description: e.target.value })}
-                className={`${inputCls} resize-y`}
-              />
-            </Field>
-
-            {/* انتخاب نوع فرم */}
-            <div className="border-t-2 border-dashed border-navy/15 pt-4">
-              <Field label={<><Settings size={14} /> نوع فرم</>}>
-                <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
-                  {[
-                    { key: "step_by_step", label: "مرحله به مرحله", desc: "هر سوال یک صفحه جداگانه" },
-                    { key: "registration", label: "ثبت‌نامی", desc: "همه فیلدها یکجا در یک صفحه" },
-                  ].map((t) => (
-                    <button
-                      key={t.key}
-                      type="button"
-                      onClick={() => setFormField({ form_type: t.key })}
-                      className={`flex-1 flex items-center gap-3 p-3 rounded-xl border-2 transition-all cursor-pointer ${
-                        form.form_type === t.key
-                          ? "border-teal bg-teal/10 dark:bg-teal/15 shadow-sm"
-                          : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-teal/40"
-                      }`}
-                    >
-                      <span className="text-navy dark:text-white">{t.key === "step_by_step" ? <FileText size={24} /> : <AlignLeft size={24} />}</span>
-                      <div className="text-right">
-                        <span className={`text-sm font-black block ${form.form_type === t.key ? "text-teal-text dark:text-teal" : "text-navy dark:text-white"}`}>
-                          {t.label}
-                        </span>
-                        <span className="text-xs text-ink/50 dark:text-slate-400">{t.desc}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </Field>
-            </div>
-
-            {/* ─── تم ظاهری پیش‌فرض فرم ─── */}
-            <div className="border-t-2 border-dashed border-navy/15 dark:border-slate-700/60 pt-4">
-              <Field
-                label={<><Sun size={14} className="text-teal" /> تم ظاهری پیش‌فرض فرم (برای پاسخ‌دهندگان)</>}
-                hint="این تم در لینک عمومی و کد امبد فرم به عنوان تم اولیه اعمال خواهد شد."
-              >
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                  {[
-                    { key: "light", label: "تم روشن", icon: Sun, desc: "سفید و شاداب رکاد" },
-                    { key: "dark", label: "تم دارک", icon: Moon, desc: "تیره اوبسیدین نئونی" },
-                    { key: "system", label: "هماهنگ با سیستم", icon: Monitor, desc: "تشخیص خودکار دستگاه" },
-                  ].map((t) => {
-                    const Icon = t.icon;
-                    const isSelected = (form.default_theme || "light") === t.key;
-                    return (
+              {/* انتخاب نوع فرم */}
+              <div className="border-t-2 border-dashed border-navy/15 pt-4">
+                <Field label={<><Settings size={14} /> نوع فرم</>}>
+                  <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
+                    {[
+                      { key: "step_by_step", label: "مرحله به مرحله", desc: "هر سوال یک صفحه جداگانه" },
+                      { key: "registration", label: "ثبت‌نامی", desc: "همه فیلدها یکجا در یک صفحه" },
+                    ].map((t) => (
                       <button
                         key={t.key}
                         type="button"
-                        onClick={() => setFormField({ default_theme: t.key })}
-                        className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer text-center ${
-                          isSelected
-                            ? "border-teal bg-teal/15 text-teal shadow-xs font-black scale-[1.02]"
-                            : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-ink/70 dark:text-slate-300 hover:border-teal/40"
+                        onClick={() => setFormField({ form_type: t.key })}
+                        className={`flex-1 flex items-center gap-3 p-3 rounded-xl border-2 transition-all cursor-pointer ${
+                          form.form_type === t.key
+                            ? "border-teal bg-teal/10 dark:bg-teal/15 shadow-sm"
+                            : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-teal/40"
                         }`}
                       >
-                        <Icon size={20} className={isSelected ? "text-teal" : "text-ink/60 dark:text-slate-400"} />
-                        <span className="text-xs font-black mt-1.5">{t.label}</span>
-                        <span className="text-[10px] opacity-70 mt-0.5">{t.desc}</span>
+                        <span className="text-navy dark:text-white">{t.key === "step_by_step" ? <FileText size={24} /> : <AlignLeft size={24} />}</span>
+                        <div className="text-right">
+                          <span className={`text-sm font-black block ${form.form_type === t.key ? "text-teal-text dark:text-teal" : "text-navy dark:text-white"}`}>
+                            {t.label}
+                          </span>
+                          <span className="text-xs text-ink/50 dark:text-slate-400">{t.desc}</span>
+                        </div>
                       </button>
-                    );
-                  })}
-                </div>
-              </Field>
-            </div>
-
-            {/* ─── شناسه‌های گروه‌بندی برای آنالیتیکس چندانتخابی ─── */}
-            <div className="border-t-2 border-dashed border-navy/15 pt-4">
-              <Field
-                label={<><BarChart3 size={14} /> شناسه‌های آنالیتیکس (گروه‌بندی گزارش چندانتخابی)</>}
-                hint="فیلدهای متنی که نقش «شناسه» دارند — مثل نام فرد (سطح ۱) و نام تیم (سطح ۲). گزارش تحلیل سوال‌های چندانتخابی به تفکیک همین سطح‌ها ساخته می‌شود. خالی بگذار = گزارش گروهی غیرفعال."
-              >
-                {questions.filter((q) => ["short_text", "long_text", "email", "phone_ir", "telegram_id"].includes(q.type)).length === 0 ? (
-                  <span className="text-xs font-bold text-ink/40 bg-bg-neutral rounded-pill-md px-3 py-2 block">
-                    اول یک فیلد متنی به فرم اضافه کن؛ بعد اینجا به‌عنوان شناسه انتخابش می‌کنی.
-                  </span>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    {questions
-                      .filter((q) => ["short_text", "long_text", "email", "phone_ir", "telegram_id"].includes(q.type))
-                      .map((q) => {
-                        const mapping = Array.isArray(form.identifier_mapping) ? form.identifier_mapping : [];
-                        const current = mapping.find((m) => m.field_id === q.id || m.field_id === q.localId);
-                        const currentLevel = current ? current.level : 0;
-                        const MAX_LEVELS = 3;
-                        return (
-                          <div key={q.localId || q.id} className="flex items-center gap-2 bg-white dark:bg-slate-800 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md px-3 py-2">
-                            <span className="text-xs font-bold text-navy dark:text-slate-100 flex-1 truncate">{q.title || "بدون عنوان"}</span>
-                            <select
-                              value={currentLevel}
-                              onChange={(e) => {
-                                const lvl = Number(e.target.value);
-                                let next = mapping.filter((m) => m.field_id !== q.id && m.field_id !== q.localId);
-                                if (lvl > 0) {
-                                  next = next.filter((m) => m.level !== lvl);
-                                  next.push({ level: lvl, field_id: q.id ?? q.localId, label: q.title });
-                                }
-                                next.sort((a, b) => a.level - b.level);
-                                setFormField({ identifier_mapping: next.length ? next : null });
-                              }}
-                              className={`text-xs font-bold rounded-pill-sm border-2 px-2 py-1.5 cursor-pointer focus:outline-none ${
-                                currentLevel > 0
-                                  ? "border-teal bg-teal/10 dark:bg-teal/20 text-teal-text dark:text-teal"
-                                  : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink/60 dark:text-slate-400"
-                              }`}
-                            >
-                              <option value={0}>— شناسه نیست</option>
-                              {Array.from({ length: MAX_LEVELS }, (_, i) => i + 1).map((lvl) => (
-                                <option key={lvl} value={lvl}>سطح {faNum(lvl)}</option>
-                              ))}
-                            </select>
-                          </div>
-                        );
-                      })}
+                    ))}
                   </div>
-                )}
-              </Field>
-            </div>
-
-            <div className="border-t-2 border-dashed border-navy/15 pt-4 grid sm:grid-cols-2 gap-4">
-              <Field label="عنوان پیام ورود">
-                <input value={form.welcome_title} onChange={(e) => setFormField({ welcome_title: e.target.value })} className={inputCls} />
-              </Field>
-              <Field label="عنوان پیام خروج">
-                <input value={form.exit_title} onChange={(e) => setFormField({ exit_title: e.target.value })} className={inputCls} />
-              </Field>
-              <Field label="متن پیام ورود">
-                <textarea rows={2} value={form.welcome_message} onChange={(e) => setFormField({ welcome_message: e.target.value })} className={`${inputCls} resize-y`} />
-              </Field>
-              <Field label="متن پیام خروج">
-                <textarea rows={2} value={form.exit_message} onChange={(e) => setFormField({ exit_message: e.target.value })} className={`${inputCls} resize-y`} />
-              </Field>
-            </div>
-
-            {/* ─── تنظیمات عمومی پاسخ‌دهی ─── */}
-            <div className="border-t-2 border-dashed border-navy/15 pt-4">
-              <label className="flex items-center gap-2.5 cursor-pointer select-none bg-white dark:bg-slate-800 p-3 rounded-xl border-2 border-ink/10 dark:border-slate-700 hover:border-teal/50 transition-colors max-w-sm">
-                <input
-                  type="checkbox"
-                  checked={!!form.prevent_duplicate}
-                  onChange={(e) => setFormField({ prevent_duplicate: e.target.checked })}
-                  className="w-4 h-4 text-teal rounded border-ink/30 focus:ring-teal cursor-pointer"
-                />
-                <div className="flex flex-col">
-                  <span className="text-xs font-black text-navy dark:text-slate-100">جلوگیری از ثبت پاسخ تکراری</span>
-                  <span className="text-[10px] text-ink/50 dark:text-slate-400">یک پاسخ به ازای هر مرورگر / دستگاه</span>
-                </div>
-              </label>
-            </div>
-
-            {/* ─── امکانات و قابلیت‌های پیشرفته — فقط طرح سازمانی ─── */}
-            <div className="border-t-2 border-dashed border-navy/15 pt-4">
-              <div className={`border-2 rounded-2xl p-4 sm:p-5 flex flex-col gap-4 ${enterpriseOnly ? "border-teal/40 bg-bg-lavender/30 dark:bg-slate-800/50" : "border-dashed border-orange/50 bg-orange/5 dark:bg-orange/10"}`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Zap size={18} className={enterpriseOnly ? "text-teal" : "text-orange"} />
-                    <span className="text-sm font-black text-navy dark:text-white">امکانات و قابلیت‌های پیشرفته فرم</span>
-                  </div>
-                  {enterpriseOnly ? (
-                    <span className="text-[11px] font-bold text-teal bg-teal/10 px-2.5 py-1 rounded-full border border-teal/20">طرح سازمانی ✦ فعال</span>
-                  ) : (
-                    <span className="text-[11px] font-bold text-orange bg-orange/10 px-2.5 py-1 rounded-full border border-orange/25">🔒 مخصوص طرح سازمانی</span>
-                  )}
-                </div>
-
-                {!enterpriseOnly && (
-                  <div className="text-xs font-bold text-orange leading-6 bg-white/70 dark:bg-slate-900/40 border border-orange/25 rounded-xl p-3">
-                    برای استفاده از این قابلیت‌ها (هدایت خودکار، وب‌هوک، سقف پاسخ و زمان‌سنج) اشتراک
-                    «سازمانی» لازم است. از بخش «اشتراک‌ها» درخواست ارتقا بدهید.
-                  </div>
-                )}
-
-                <div className={`grid sm:grid-cols-2 gap-4 ${enterpriseOnly ? "" : "opacity-50 pointer-events-none select-none"}`}>
-                  {/* هدایت بعد از ثبت (Redirect URL) */}
-                  <Field label={<><Globe size={13} className="text-teal" /> انتقال به آدرس اینترنتی دیگر (Redirect URL)</>} hint="پس از ثبت موفق، کاربر به این آدرس منتقل می‌شود.">
-                    <input
-                      type="url"
-                      dir="ltr"
-                      value={form.redirect_url || ""}
-                      onChange={(e) => setFormField({ redirect_url: e.target.value })}
-                      placeholder="https://mysite.com/thank-you"
-                      className={`${inputCls} !py-2 !text-xs text-left`}
-                    />
-                  </Field>
-
-                  {/* وب‌هوک (Webhook URL) */}
-                  <Field label={<><Send size={13} className="text-teal" /> وب‌هوک (ارسال لحظه‌ای پاسخ به سامانه شما)</>} hint="اطلاعات پاسخ به‌صورت JSON POST ارسال می‌شود.">
-                    <input
-                      type="url"
-                      dir="ltr"
-                      value={form.webhook_url || ""}
-                      onChange={(e) => setFormField({ webhook_url: e.target.value })}
-                      placeholder="https://api.mysite.com/webhooks/porskad"
-                      className={`${inputCls} !py-2 !text-xs text-left`}
-                    />
-                  </Field>
-
-                  {/* سقف تعداد پاسخ (نوبت‌دهی و ظرفیت) */}
-                  <Field label={<><ShieldCheck size={13} className="text-teal" /> سقف تعداد پاسخ (نوبت‌دهی و ظرفیت)</>} hint="پس از رسیدن به این تعداد، فرم به طور خودکار غیرفعال می‌شود (خالی = نامحدود).">
-                    <input
-                      type="number"
-                      min="1"
-                      value={form.max_responses_limit || ""}
-                      onChange={(e) => setFormField({ max_responses_limit: e.target.value ? Number(e.target.value) : "" })}
-                      placeholder="مثلاً: ۵۰"
-                      className={`${inputCls} !py-2 !text-xs`}
-                    />
-                  </Field>
-
-                  {/* محدودیت زمانی کل فرم (آزمون‌ساز) */}
-                  <Field label={<><Clock size={13} className="text-teal" /> زمان‌سنج کل آزمون / فرم (ثانیه)</>} hint="ثانیه‌شمار برای تکمیل کل فرم (مثلاً: ۱۸۰۰ ثانیه = ۳۰ دقیقه)">
-                    <input
-                      type="number"
-                      min="10"
-                      value={form.time_limit_seconds || ""}
-                      onChange={(e) => setFormField({ time_limit_seconds: e.target.value ? Number(e.target.value) : "" })}
-                      placeholder="مثلاً: ۱۸۰۰ (خالی = نامحدود)"
-                      className={`${inputCls} !py-2 !text-xs`}
-                    />
-                  </Field>
-                </div>
+                </Field>
               </div>
-            </div>
-          </div>
-        </StickerCard>
-      </div>
 
-      {/* سوال‌ها */}
-      <div className="flex flex-col gap-4 pb-20 lg:pb-6">
-        {/* افزودن سوال جدید — دسته‌بندی شده و شیک */}
-        <div>
-          <StickerCard theme="orange" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
-            <div className="p-4 sm:p-5 flex flex-col gap-4">
-              <span className="text-sm font-black text-orange flex items-center gap-2">
-                افزودن سوال جدید — نوع سوال را انتخاب کنید:
-              </span>
+              {/* ─── تم ظاهری پیش‌فرض فرم ─── */}
+              <div className="border-t-2 border-dashed border-navy/15 dark:border-slate-700/60 pt-4">
+                <Field
+                  label={<><Sun size={14} className="text-teal" /> تم ظاهری پیش‌فرض فرم (برای پاسخ‌دهندگان)</>}
+                  hint="این تم در لینک عمومی و کد امبد فرم به عنوان تم اولیه اعمال خواهد شد."
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    {[
+                      { key: "light", label: "تم روشن", icon: Sun, desc: "سفید و شاداب رکاد" },
+                      { key: "dark", label: "تم دارک", icon: Moon, desc: "تیره اوبسیدین نئونی" },
+                      { key: "system", label: "هماهنگ با سیستم", icon: Monitor, desc: "تشخیص خودکار دستگاه" },
+                    ].map((t) => {
+                      const Icon = t.icon;
+                      const isSelected = (form.default_theme || "light") === t.key;
+                      return (
+                        <button
+                          key={t.key}
+                          type="button"
+                          onClick={() => setFormField({ default_theme: t.key })}
+                          className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer text-center ${
+                            isSelected
+                              ? "border-teal bg-teal/15 text-teal shadow-xs font-black scale-[1.02]"
+                              : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-ink/70 dark:text-slate-300 hover:border-teal/40"
+                          }`}
+                        >
+                          <Icon size={20} className={isSelected ? "text-teal" : "text-ink/60 dark:text-slate-400"} />
+                          <span className="text-xs font-black mt-1.5">{t.label}</span>
+                          <span className="text-[10px] opacity-70 mt-0.5">{t.desc}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Field>
+              </div>
 
-              <div className="flex flex-col gap-3.5">
-                {availableCategories.map((cat) => (
-                  <div key={cat.key} className="flex flex-col gap-1.5">
-                    <span className="text-xs font-black text-navy dark:text-slate-200">
-                      {cat.title}
+              {/* ─── شناسه‌های گروه‌بندی برای آنالیتیکس چندانتخابی ─── */}
+              <div className="border-t-2 border-dashed border-navy/15 pt-4">
+                <Field
+                  label={<><BarChart3 size={14} /> شناسه‌های آنالیتیکس (گروه‌بندی گزارش چندانتخابی)</>}
+                  hint="فیلدهای متنی که نقش «شناسه» دارند — مثل نام فرد (سطح ۱) و نام تیم (سطح ۲). گزارش تحلیل سوال‌های چندانتخابی به تفکیک همین سطح‌ها ساخته می‌شود. خالی بگذار = گزارش گروهی غیرفعال."
+                >
+                  {questions.filter((q) => ["short_text", "long_text", "email", "phone_ir", "telegram_id"].includes(q.type)).length === 0 ? (
+                    <span className="text-xs font-bold text-ink/40 bg-bg-neutral rounded-pill-md px-3 py-2 block">
+                      اول یک فیلد متنی به فرم اضافه کن؛ بعد اینجا به‌عنوان شناسه انتخابش می‌کنی.
                     </span>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                      {cat.types.map((key) => {
-                        const t = getEffectiveQuestionType(key);
-                        if (!t) return null;
-                        const Icon = QUESTION_TYPE_ICONS[key];
-                        return (
-                          <button
-                            key={key}
-                            onClick={() => addQuestion(key)}
-                            title={t.hint}
-                            className="flex items-center justify-start gap-2 bg-white dark:bg-slate-800 border-2 border-orange/40 hover:border-orange rounded-pill-md px-2.5 py-2 text-xs font-extrabold text-ink dark:text-slate-100 hover:-translate-y-0.5 hover:shadow-xs transition-all cursor-pointer w-full text-right"
-                          >
-                            {Icon && <Icon size={14} className="text-orange shrink-0" />}
-                            <span className="truncate">{t.label}</span>
-                          </button>
-                        );
-                      })}
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      {questions
+                        .filter((q) => ["short_text", "long_text", "email", "phone_ir", "telegram_id"].includes(q.type))
+                        .map((q) => {
+                          const mapping = Array.isArray(form.identifier_mapping) ? form.identifier_mapping : [];
+                          const current = mapping.find((m) => m.field_id === q.id || m.field_id === q.localId);
+                          const currentLevel = current ? current.level : 0;
+                          const MAX_LEVELS = 3;
+                          return (
+                            <div key={q.localId || q.id} className="flex items-center gap-2 bg-white dark:bg-slate-800 border-2 border-ink/10 dark:border-slate-700 rounded-pill-md px-3 py-2">
+                              <span className="text-xs font-bold text-navy dark:text-slate-100 flex-1 truncate">{q.title || "بدون عنوان"}</span>
+                              <select
+                                value={currentLevel}
+                                onChange={(e) => {
+                                  const lvl = Number(e.target.value);
+                                  let next = mapping.filter((m) => m.field_id !== q.id && m.field_id !== q.localId);
+                                  if (lvl > 0) {
+                                    next = next.filter((m) => m.level !== lvl);
+                                    next.push({ level: lvl, field_id: q.id ?? q.localId, label: q.title });
+                                  }
+                                  next.sort((a, b) => a.level - b.level);
+                                  setFormField({ identifier_mapping: next.length ? next : null });
+                                }}
+                                className={`text-xs font-bold rounded-pill-sm border-2 px-2 py-1.5 cursor-pointer focus:outline-none ${
+                                  currentLevel > 0
+                                    ? "border-teal bg-teal/10 dark:bg-teal/20 text-teal-text dark:text-teal"
+                                    : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800 text-ink/60 dark:text-slate-400"
+                                }`}
+                              >
+                                <option value={0}>— شناسه نیست</option>
+                                {Array.from({ length: MAX_LEVELS }, (_, i) => i + 1).map((lvl) => (
+                                  <option key={lvl} value={lvl}>سطح {faNum(lvl)}</option>
+                                ))}
+                              </select>
+                            </div>
+                          );
+                        })}
                     </div>
-                  </div>
-                ))}
+                  )}
+                </Field>
               </div>
 
+              <div className="border-t-2 border-dashed border-navy/15 pt-4 grid sm:grid-cols-2 gap-4">
+                <Field label="عنوان پیام ورود">
+                  <input value={form.welcome_title} onChange={(e) => setFormField({ welcome_title: e.target.value })} className={inputCls} />
+                </Field>
+                <Field label="عنوان پیام خروج">
+                  <input value={form.exit_title} onChange={(e) => setFormField({ exit_title: e.target.value })} className={inputCls} />
+                </Field>
+                <Field label="متن پیام ورود">
+                  <textarea rows={2} value={form.welcome_message} onChange={(e) => setFormField({ welcome_message: e.target.value })} className={`${inputCls} resize-y`} />
+                </Field>
+                <Field label="متن پیام خروج">
+                  <textarea rows={2} value={form.exit_message} onChange={(e) => setFormField({ exit_message: e.target.value })} className={`${inputCls} resize-y`} />
+                </Field>
+              </div>
+
+              {/* ─── تنظیمات عمومی پاسخ‌دهی ─── */}
+              <div className="border-t-2 border-dashed border-navy/15 pt-4">
+                <label className="flex items-center gap-2.5 cursor-pointer select-none bg-white dark:bg-slate-800 p-3 rounded-xl border-2 border-ink/10 dark:border-slate-700 hover:border-teal/50 transition-colors max-w-sm">
+                  <input
+                    type="checkbox"
+                    checked={!!form.prevent_duplicate}
+                    onChange={(e) => setFormField({ prevent_duplicate: e.target.checked })}
+                    className="w-4 h-4 text-teal rounded border-ink/30 focus:ring-teal cursor-pointer"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-xs font-black text-navy dark:text-slate-100">جلوگیری از ثبت پاسخ تکراری</span>
+                    <span className="text-[10px] text-ink/50 dark:text-slate-400">یک پاسخ به ازای هر مرورگر / دستگاه</span>
+                  </div>
+                </label>
+              </div>
+
+              {/* ─── امکانات و قابلیت‌های پیشرفته — فقط طرح سازمانی ─── */}
+              <div className="border-t-2 border-dashed border-navy/15 pt-4">
+                <div className={`border-2 rounded-2xl p-4 sm:p-5 flex flex-col gap-4 ${enterpriseOnly ? "border-teal/40 bg-bg-lavender/30 dark:bg-slate-800/50" : "border-dashed border-orange/50 bg-orange/5 dark:bg-orange/10"}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Zap size={18} className={enterpriseOnly ? "text-teal" : "text-orange"} />
+                      <span className="text-sm font-black text-navy dark:text-white">امکانات و قابلیت‌های پیشرفته فرم</span>
+                    </div>
+                    {enterpriseOnly ? (
+                      <span className="text-[11px] font-bold text-teal bg-teal/10 px-2.5 py-1 rounded-full border border-teal/20">طرح سازمانی ✦ فعال</span>
+                    ) : (
+                      <span className="text-[11px] font-bold text-orange bg-orange/10 px-2.5 py-1 rounded-full border border-orange/25">🔒 مخصوص طرح سازمانی</span>
+                    )}
+                  </div>
+
+                  {!enterpriseOnly && (
+                    <div className="text-xs font-bold text-orange leading-6 bg-white/70 dark:bg-slate-900/40 border border-orange/25 rounded-xl p-3">
+                      برای استفاده از این قابلیت‌ها (هدایت خودکار، وب‌هوک، سقف پاسخ و زمان‌سنج) اشتراک
+                      «سازمانی» لازم است. از بخش «اشتراک‌ها» درخواست ارتقا بدهید.
+                    </div>
+                  )}
+
+                  <div className={`grid sm:grid-cols-2 gap-4 ${enterpriseOnly ? "" : "opacity-50 pointer-events-none select-none"}`}>
+                    <Field label={<><Globe size={13} className="text-teal" /> انتقال به آدرس اینترنتی دیگر (Redirect URL)</>} hint="پس از ثبت موفق، کاربر به این آدرس منتقل می‌شود.">
+                      <input
+                        type="url"
+                        dir="ltr"
+                        value={form.redirect_url || ""}
+                        onChange={(e) => setFormField({ redirect_url: e.target.value })}
+                        placeholder="https://mysite.com/thank-you"
+                        className={`${inputCls} !py-2 !text-xs text-left`}
+                      />
+                    </Field>
+
+                    <Field label={<><Send size={13} className="text-teal" /> وب‌هوک (ارسال لحظه‌ای پاسخ به سامانه شما)</>} hint="اطلاعات پاسخ به‌صورت JSON POST ارسال می‌شود.">
+                      <input
+                        type="url"
+                        dir="ltr"
+                        value={form.webhook_url || ""}
+                        onChange={(e) => setFormField({ webhook_url: e.target.value })}
+                        placeholder="https://api.mysite.com/webhooks/porskad"
+                        className={`${inputCls} !py-2 !text-xs text-left`}
+                      />
+                    </Field>
+
+                    <Field label={<><ShieldCheck size={13} className="text-teal" /> سقف تعداد پاسخ (نوبت‌دهی و ظرفیت)</>} hint="پس از رسیدن به این تعداد، فرم به طور خودکار غیرفعال می‌شود (خالی = نامحدود).">
+                      <input
+                        type="number"
+                        min="1"
+                        value={form.max_responses_limit || ""}
+                        onChange={(e) => setFormField({ max_responses_limit: e.target.value ? Number(e.target.value) : "" })}
+                        placeholder="مثلاً: ۵۰"
+                        className={`${inputCls} !py-2 !text-xs`}
+                      />
+                    </Field>
+
+                    <Field label={<><Clock size={13} className="text-teal" /> زمان‌سنج کل آزمون / فرم (ثانیه)</>} hint="ثانیه‌شمار برای تکمیل کل فرم (مثلاً: ۱۸۰۰ ثانیه = ۳۰ دقیقه)">
+                      <input
+                        type="number"
+                        min="10"
+                        value={form.time_limit_seconds || ""}
+                        onChange={(e) => setFormField({ time_limit_seconds: e.target.value ? Number(e.target.value) : "" })}
+                        placeholder="مثلاً: ۱۸۰۰ (خالی = نامحدود)"
+                        className={`${inputCls} !py-2 !text-xs`}
+                      />
+                    </Field>
+                  </div>
+                </div>
+              </div>
             </div>
           </StickerCard>
         </div>
+      )}
 
-        <div className="flex items-center justify-between mt-2">
-          <h2 className="text-base sm:text-lg font-black text-navy">
-            سوال‌های فرم ({faNum(questions.length)})
-          </h2>
-        </div>
-
-        {questions.length === 0 ? (
-          <div className="p-6 text-center bg-white/70 dark:bg-slate-850/60 border-2 border-dashed border-ink/15 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-bold text-ink-subtle dark:text-slate-400">
-            هنوز سوالی به این فرم اضافه نشده است. با انتخاب یکی از انواع بالا، اولین سوال در این بخش قرار می‌گیرد.
+      {/* ─── محتوای تب طراحی سوالات (بدون اسکرول و دسترسی سریع) ─── */}
+      {activeTab === "questions" && (
+        <div className="flex flex-col gap-4 pb-20 lg:pb-6">
+          {/* نوار بالایی سوالات */}
+          <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-white dark:bg-[#131B2E] border border-gray-200 dark:border-gray-800 rounded-2xl shadow-2xs">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-black text-sec dark:text-white">
+                سوال‌های فرم ({faNum(questions.length)})
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="teal"
+                size="sm"
+                onClick={() => setShowAddPicker((v) => !v)}
+                className="text-xs font-black shadow-xs"
+              >
+                <Plus size={14} /> {showAddPicker ? "بستن انواع سوال" : "افزودن سوال جدید"}
+              </Button>
+              <button
+                type="button"
+                onClick={toggleCollapseAll}
+                className="text-xs font-bold text-gray-500 dark:text-gray-400 hover:text-teal px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 transition-colors"
+                title="جمع کردن همه / باز کردن همه"
+              >
+                {questions.length > 0 && questions.every((q) => collapsedQuestions[q.localId]) ? "باز کردن همه" : "جمع کردن همه"}
+              </button>
+            </div>
           </div>
-        ) : (
-          questions.map((q, i) => (
-            <QuestionEditor
-              key={q.localId}
-              q={q}
-              index={i}
-              total={questions.length}
-              allQuestions={questions}
-              onChange={(patch) => updateQuestion(q.localId, patch)}
-              onMove={(dir) => moveQuestion(q.localId, dir)}
-              onDelete={() => deleteQuestion(q.localId)}
-            />
-          ))
-        )}
 
-        {/* دکمه ذخیره انتهای فرم مخصوص موبایل */}
-        <div className="lg:hidden mt-3">
-          <Button
-            variant="teal"
-            size="lg"
-            onClick={save}
-            disabled={saving || !dirty}
-            className="w-full justify-center text-base font-black shadow-md py-3"
-          >
-            {saving ? "در حال ذخیره..." : "ذخیره‌ی فرم"}
-          </Button>
+          {/* افزودن سوال جدید — دسته‌بندی شده و قابل باز/بسته شدن */}
+          {(showAddPicker || questions.length === 0) && (
+            <div>
+              <StickerCard theme="orange" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
+                <div className="p-4 sm:p-5 flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-black text-orange flex items-center gap-2">
+                      افزودن سوال جدید — نوع سوال را انتخاب کنید:
+                    </span>
+                    {questions.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAddPicker(false)}
+                        className="text-xs font-bold text-gray-400 hover:text-orange cursor-pointer"
+                      >
+                        ✕ بستن
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-3.5">
+                    {availableCategories.map((cat) => (
+                      <div key={cat.key} className="flex flex-col gap-1.5">
+                        <span className="text-xs font-black text-navy dark:text-slate-200">
+                          {cat.title}
+                        </span>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                          {cat.types.map((key) => {
+                            const t = getEffectiveQuestionType(key);
+                            if (!t) return null;
+                            const Icon = QUESTION_TYPE_ICONS[key];
+                            return (
+                              <button
+                                key={key}
+                                onClick={() => addQuestion(key)}
+                                title={t.hint}
+                                className="flex items-center justify-start gap-2 bg-white dark:bg-slate-800 border-2 border-orange/40 hover:border-orange rounded-pill-md px-2.5 py-2 text-xs font-extrabold text-ink dark:text-slate-100 hover:-translate-y-0.5 hover:shadow-xs transition-all cursor-pointer w-full text-right"
+                              >
+                                {Icon && <Icon size={14} className="text-orange shrink-0" />}
+                                <span className="truncate">{t.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </StickerCard>
+            </div>
+          )}
+
+          {questions.length === 0 ? (
+            <div className="p-8 text-center bg-white/70 dark:bg-slate-850/60 border-2 border-dashed border-ink/15 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-bold text-ink-subtle dark:text-slate-400">
+              هنوز سوالی به این فرم اضافه نشده است. با انتخاب یکی از انواع بالا، اولین سوال در این بخش قرار می‌گیرد.
+            </div>
+          ) : (
+            questions.map((q, i) => (
+              <QuestionEditor
+                key={q.localId}
+                q={q}
+                index={i}
+                total={questions.length}
+                allQuestions={questions}
+                onChange={(patch) => updateQuestion(q.localId, patch)}
+                onMove={(dir) => moveQuestion(q.localId, dir)}
+                onDelete={() => deleteQuestion(q.localId)}
+                isCollapsed={collapsedQuestions[q.localId] ?? false}
+                onToggleCollapse={() => toggleCollapseQuestion(q.localId)}
+                isHighlighted={highlightedQuestionId === q.localId}
+              />
+            ))
+          )}
+
+          {/* دکمه ذخیره انتهای فرم مخصوص موبایل */}
+          <div className="lg:hidden mt-3">
+            <Button
+              variant="teal"
+              size="lg"
+              onClick={save}
+              disabled={saving || !dirty}
+              className="w-full justify-center text-base font-black shadow-md py-3"
+            >
+              {saving ? "در حال ذخیره..." : "ذخیره‌ی فرم"}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
       </div>
 
-      {/* ─── ستون پیش‌نمایش و دکمه ذخیره دسکتاپ (سمت چپ) ─── */}
+      {/* ─── سایدبار چسبان دسکتاپ (ناوبری سوالات، پیش‌نمایش و ذخیره) ─── */}
       <div className="hidden lg:flex flex-col gap-3.5 w-[330px] shrink-0 sticky top-20 self-start">
-        <div className="rounded-2xl border-2 border-navy/20 dark:border-slate-700 bg-white dark:bg-[#131B2E] overflow-hidden shadow-sm">
-          <FormPreview form={form} questions={questions} />
-        </div>
+        {/* دکمه ذخیره چسبان بالای سایدبار */}
         <Button
           variant="teal"
           size="lg"
           onClick={save}
           disabled={saving || !dirty}
-          className="w-full justify-center shadow-md text-base font-black py-3.5 hover:scale-[1.01] transition-all"
+          className="w-full justify-center shadow-md text-base font-black py-3 hover:scale-[1.01] transition-all"
         >
-          {saving ? "در حال ذخیره..." : "ذخیره‌ی فرم"}
+          {saving ? "در حال ذخیره..." : dirty ? "ذخیره‌ی تغییرات *" : "فرم ذخیره است"}
         </Button>
+
+        {/* کارت سایدبار با قابلیت سوئیچ بین فهرست سوالات و پیش‌نمایش */}
+        <div className="rounded-2xl border-2 border-gray-200 dark:border-slate-700 bg-white dark:bg-[#131B2E] overflow-hidden shadow-sm p-3.5 flex flex-col gap-3">
+          {/* کنترل بالای سایدبار */}
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-2.5">
+            <div className="flex items-center gap-1 bg-gray-100 dark:bg-slate-800 p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => setSidebarTab("questions")}
+                className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${
+                  sidebarTab === "questions"
+                    ? "bg-white dark:bg-slate-700 text-teal shadow-xs"
+                    : "text-gray-500 hover:text-sec dark:hover:text-white"
+                }`}
+              >
+                <Layers size={12} /> سوالات ({faNum(questions.length)})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSidebarTab("preview")}
+                className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${
+                  sidebarTab === "preview"
+                    ? "bg-white dark:bg-slate-700 text-teal shadow-xs"
+                    : "text-gray-500 hover:text-sec dark:hover:text-white"
+                }`}
+              >
+                <Eye size={12} /> پیش‌نمایش
+              </button>
+            </div>
+
+            {/* جابجایی سایدبار به راست / چپ */}
+            <button
+              type="button"
+              onClick={() => setSidebarPosition((pos) => (pos === "right" ? "left" : "right"))}
+              className="p-1.5 rounded-lg border border-gray-200 dark:border-slate-700 text-gray-500 hover:text-teal hover:border-teal/50 transition-colors cursor-pointer"
+              title={sidebarPosition === "right" ? "انتقال سایدبار به سمت چپ" : "انتقال سایدبار به سمت راست"}
+            >
+              <ArrowLeftRight size={13} />
+            </button>
+          </div>
+
+          {/* بدنه سایدبار */}
+          {sidebarTab === "questions" ? (
+            <QuestionSidebarNav
+              questions={questions}
+              onAddQuestionClick={() => {
+                setActiveTab("questions");
+                setShowAddPicker(true);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              onScrollToQuestion={scrollToQuestion}
+              onMoveQuestion={moveQuestion}
+              onDeleteQuestion={deleteQuestion}
+              collapsedAll={questions.length > 0 && questions.every((q) => collapsedQuestions[q.localId])}
+              onToggleCollapseAll={toggleCollapseAll}
+              activeId={highlightedQuestionId}
+            />
+          ) : (
+            <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700">
+              <FormPreview form={form} questions={questions} />
+            </div>
+          )}
+        </div>
       </div>
     </div>
 
