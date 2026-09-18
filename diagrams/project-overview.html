@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سند جامع معرفی و پرزنتیشن محصول پرس‌کاد (Porskad Presentation Guide)</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --gold: #F59E0B;
+      --gold-glow: rgba(245, 158, 11, 0.2);
+    }
+    .hero-banner {
+      background: linear-gradient(135deg, rgba(19, 27, 46, 0.95), rgba(27, 37, 61, 0.95)), radial-gradient(circle at top right, rgba(45, 212, 191, 0.15), transparent 60%);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 36px 32px;
+      margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-banner::after {
+      content: '';
+      position: absolute;
+      top: -50px;
+      left: -50px;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.15), transparent 70%);
+      pointer-events: none;
+    }
+    .pitch-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(45, 212, 191, 0.12);
+      border: 1px solid rgba(45, 212, 191, 0.3);
+      color: var(--accent-teal);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .pitch-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      margin-bottom: 20px;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+    .pitch-card:hover {
+      border-color: var(--accent-teal);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px -10px rgba(0,0,0,0.5);
+    }
+    .quote-box {
+      background: rgba(11, 15, 25, 0.7);
+      border-right: 4px solid var(--accent-teal);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      padding: 16px 20px;
+      margin: 16px 0;
+      color: var(--text-main);
+      font-size: 14.5px;
+      line-height: 1.8;
+      font-weight: 500;
+    }
+    .talk-point {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .talk-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--accent-teal);
+    }
+    .talk-content strong {
+      display: block;
+      color: var(--text-main);
+      font-size: 14px;
+      margin-bottom: 3px;
+    }
+    .talk-content span {
+      color: var(--text-muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .matrix-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin: 20px 0;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+    }
+    .matrix-table th {
+      background: var(--bg-surface-elevated);
+      color: var(--text-main);
+      padding: 14px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: right;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .matrix-table td {
+      background: var(--bg-surface);
+      color: var(--text-muted);
+      padding: 12px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .matrix-table tr:last-child td {
+      border-bottom: none;
+    }
+    .matrix-table td.winner {
+      background: rgba(45, 212, 191, 0.08);
+      color: var(--accent-teal);
+      font-weight: 700;
+    }
+    .script-box {
+      background: #080C14;
+      border: 1px dashed rgba(45, 212, 191, 0.4);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin: 16px 0;
+    }
+    .script-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--accent-teal);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .script-text {
+      color: #E2E8F0;
+      font-size: 14px;
+      line-height: 1.85;
+      font-style: italic;
+    }
+    .objection-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      margin-bottom: 14px;
+    }
+    .objection-q {
+      font-size: 14px;
+      font-weight: 800;
+      color: #F43F5E;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .objection-a {
+      font-size: 13px;
+      color: #CBD5E1;
+      line-height: 1.7;
+      padding-right: 24px;
+    }
+    .pill-tag {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      display: inline-block;
+    }
+    .pill-green { background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .pill-red { background: rgba(244, 63, 94, 0.15); color: #F43F5E; border: 1px solid rgba(244, 63, 94, 0.3); }
+    .pill-yellow { background: rgba(245, 158, 11, 0.15); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.3); }
+  </style>
+</head>
+<body>
+
+  <!-- هدر ناوبری -->
+  <header class="top-nav">
+    <div class="nav-container">
+      <div class="brand-group">
+        <a href="index.html" class="brand-logo" title="بازگشت به هاب دیاگرام‌ها">
+          <div class="logo-icon">پ</div>
+          <div class="brand-text">
+            <span class="brand-name">پرس‌کاد (Porskad)</span>
+            <span class="brand-sub">سند پرزنتیشن و راهنمای جامع معرفی محصول</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="nav-actions">
+        <a href="index.html" class="nav-btn">
+          <i data-lucide="layout-grid"></i>
+          <span>هاب دیاگرام‌ها</span>
+        </a>
+        <a href="architecture-diagram.html" class="nav-btn">
+          <i data-lucide="cpu"></i>
+          <span>معماری فنی</span>
+        </a>
+        <button onclick="window.print()" class="nav-btn">
+          <i data-lucide="printer"></i>
+          <span>چاپ / PDF</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    
+    <!-- ۱. بنر اصلی پرزنتیشن -->
+    <section class="hero-banner">
+      <div class="pitch-badge">
+        <i data-lucide="sparkles" style="width:14px; height:14px;"></i>
+        راهنمای راهبردی پرزنتیشن برای بنیان‌گذاران، فروش و تیم فنی
+      </div>
+      <h1 style="font-size: 26px; font-weight: 900; color: #fff; margin-bottom: 12px; line-height: 1.4;">
+        راهنمای جامع معرفی، فروش و تشریح پلتفرم «پرس‌کاد»
+      </h1>
+      <p style="font-size: 14.5px; color: var(--text-muted); line-height: 1.8; max-width: 900px; margin-bottom: 20px;">
+        این سند بر اساس تمام ۱۵ سند معماری، دیاگرام‌های دیتابیس (ERD)، جریان داده (DFD) و سیستم طراحی پرس‌کاد تهیه شده است. هدف آن ارائه <strong>کامل‌ترین نقشه راه کلامی و استدلالی</strong> برای ارائه محصول به مشتریان شرکتی، سرمایه‌گذاران، مدیران محصول و سازمان‌ها است.
+      </p>
+
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <span class="pill-tag pill-green">SaaS فرم‌ساز و نظرسنجی مدرن</span>
+        <span class="pill-tag pill-yellow">امنیت سطح دیتابیس (RLS)</span>
+        <span class="pill-tag pill-green">خروجی اکسل ۱۰۰٪ فارسی بدون خرابی</span>
+        <span class="pill-tag pill-yellow">رندر اسلایدی مکالمه‌محور</span>
+      </div>
+    </section>
+
+    <!-- ۲. اسکریپت طلایی معرفی ۲ دقیقه‌ای (Elevator Pitch) -->
+    <section class="pitch-card">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+        <h2 style="font-size: 18px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="zap" style="color: var(--accent-teal);"></i>
+          ۱. اسکریپت طلایی معرفی ۲ دقیقه‌ای (اگر فقط ۲ دقیقه فرصت داری چی بگی؟)
+        </h2>
+        <span style="font-size: 12px; color: var(--accent-teal); font-weight: 700;">Elevator Pitch Script</span>
+      </div>
+
+      <p style="font-size: 13.5px; color: var(--text-muted); line-height: 1.7; margin-bottom: 14px;">
+        وقتی در یک جلسه، همایش یا تماس تلفنی از شما می‌پرسند <strong>«پرس‌کاد دقیقاً چیه؟»</strong> از این متن دقیق و هوشمندانه استفاده کنید:
+      </p>
+
+      <div class="script-box">
+        <div class="script-label">
+          <i data-lucide="mic" style="width:14px; height:14px;"></i>
+          اسکریپت معرفی کلامی (واو به واو):
+        </div>
+        <div class="script-text">
+          «پرس‌کاد یک فرم‌ساز و موتور پرسشنامه‌ساز آنلاین ابری است که جایگزین بومی و مدرن تایپ‌فرم (Typeform) و گوگل‌فرمز در ایران به شمار می‌آید. برخلاف فرم‌های سنتی که نرخ ریزش بالای ۶۰٪ دارند، پرسکاد سوالات را به صورت <strong>اسلایدی و مکالمه‌محور</strong> به کاربر نشان می‌دهد که نرخ تکمیل را تا ۸۷٪ افزایش می‌دهد.<br><br>
+          ما ۳ مشکل بزرگ شرکت‌های ایرانی را حل کردیم:<br>
+          <strong>اول:</strong> خروجی اکسل سالم با UTF-8 BOM بدون هیچ‌گونه به‌هم‌ریختگی حروف فارسی.<br>
+          <strong>دوم:</strong> منطق شرطی هوشمند (IF/THEN) که مسیر فرم را بر اساس پاسخ مشتری تغییر می‌دهد.<br>
+          <strong>سوم:</strong> امنیت فوق‌العاده در سطح دیتابیس (Row-Level Security) و پیش‌نویس خودکار ۷ روزه تا حتی با قطع اینترنت، پاسخ‌های هیچ کاربری از بین نرود.»
+        </div>
+      </div>
+    </section>
+
+    <!-- ۳. جدول ماتریس مقایسه پرسکاد با رقبا -->
+    <section class="pitch-card">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+        <h2 style="font-size: 18px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="check-check" style="color: var(--accent-cyan);"></i>
+          ۲. ماتریس مقایسه پرسکاد در برابر رقبا (Typeform، گوگل فرمز و ابزارهای داخلی)
+        </h2>
+        <span style="font-size: 12px; color: var(--accent-cyan); font-weight: 700;">Competitive Matrix</span>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>ویژگی و استاندارد کلیدی</th>
+              <th>پرس‌کاد (Porskad)</th>
+              <th>تایپ‌فرم (Typeform)</th>
+              <th>گوگل فرمز (Google Forms)</th>
+              <th>فرم‌سازهای سنتی</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>تجربه کاربری (UX)</strong></td>
+              <td class="winner">اسلایدی + انیمیشن + فونت IRANSansX</td>
+              <td>اسلایدی (انگلیسی)</td>
+              <td>طوماری بلند و خسته‌کننده</td>
+              <td>طوماری سنتی</td>
+            </tr>
+            <tr>
+              <td><strong>خروجی اکسل فارسی</strong></td>
+              <td class="winner">۱۰۰٪ سالم با UTF-8 BOM</td>
+              <td>خرابی حروف در اکسل ویندوز</td>
+              <td>نیازمند تبدیل با شیتس</td>
+              <td>ناسازگار در برخی فرمت‌ها</td>
+            </tr>
+            <tr>
+              <td><strong>اعتبارسنجی موبایل ایران</strong></td>
+              <td class="winner">زنده با پیش‌شماره‌های مجاز</td>
+              <td>ندارد (فقط جهانی)</td>
+              <td>نیازمند Regex دستی</td>
+              <td>پایه</td>
+            </tr>
+            <tr>
+              <td><strong>منطق شرطی (Logic Jump)</strong></td>
+              <td class="winner">پیشرفته با پرش، پایان و نمایش</td>
+              <td>دارد (با هزینه دلاری سنگین)</td>
+              <td>بسیار ساده و محدود</td>
+              <td>محدود</td>
+            </tr>
+            <tr>
+              <td><strong>پیش‌نویس خودکار (Auto-Save)</strong></td>
+              <td class="winner">تا ۷ روز ماندگار بدون ثبت‌نام</td>
+              <td>وابسته به کوکی مرورگر</td>
+              <td>نیاز به لاگین جیمیل</td>
+              <td>ندارد (با رفرش پاک می‌شود)</td>
+            </tr>
+            <tr>
+              <td><strong>سطل بازیافت ۳۰ روزه (God Trash)</strong></td>
+              <td class="winner">بازیابی تضمینی ۳۰ روزه</td>
+              <td>فقط در پلن سازمانی</td>
+              <td>سطل آشغال درایو</td>
+              <td>معمولاً غیرقابل بازیابی</td>
+            </tr>
+            <tr>
+              <td><strong>یکپارچه‌سازی با پیامک و تقویم جلالی</strong></td>
+              <td class="winner">کاوه‌نگار / آموت با تقویم شمسی</td>
+              <td>ندارد</td>
+              <td>ندارد</td>
+              <td>محدود</td>
+            </tr>
+            <tr>
+              <td><strong>کد Embed در وب‌سایت</strong></td>
+              <td class="winner">iFrame استاندارد و ریسپانسیو</td>
+              <td>دارد</td>
+              <td>ساده</td>
+              <td>دارد</td>
+            </tr>
+            <tr>
+              <td><strong>امنیت دیتابیس</strong></td>
+              <td class="winner">Row-Level Security ایزوله</td>
+              <td>ایزوله ابری</td>
+              <td>مجوزهای گوگل</td>
+              <td>متغیر</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ۴. تشریح ۸ ماژول اصلی محصول به زبان کسب‌وکار -->
+    <section class="pitch-card">
+      <h2 style="font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="layers" style="color: var(--accent-purple);"></i>
+        ۳. تشریح ماژول‌های فنی و عملکردی سیستم به زبان مدیران
+      </h2>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+        
+        <div class="talk-point">
+          <div class="talk-icon"><i data-lucide="move" style="width:16px; height:16px;"></i></div>
+          <div class="talk-content">
+            <strong>۱. موتور فرم‌ساز ماژولار (Form Engine)</strong>
+            <span>محیط درگ‌ان‌دراپ برای چیدمان سوالات، تغییر ترتیب، تنظیم الزامی بودن و پیش‌نمایش آنی دسکتاپ و موبایل بدون نوشتن یک خط کد.</span>
+          </div>
+        </div>
+
+        <div class="talk-point">
+          <div class="talk-icon"><i data-lucide="list-checks" style="width:16px; height:16px;"></i></div>
+          <div class="talk-content">
+            <strong>۲. فیلدهای ۸‌گانه هوشمند</strong>
+            <span>متن کوتاه، پاراگراف، تک‌گزینه‌ای، چندگزینه‌ای، امتیاز ستاره‌ای ۱ تا ۵، بله/خیر، ایمیل و فیلد شماره موبایل با اعتبارسنجی ارقام ایرانی.</span>
+          </div>
+        </div>
+
+        <div class="talk-point">
+          <div class="talk-icon"><i data-lucide="git-branch" style="width:16px; height:16px;"></i></div>
+          <div class="talk-content">
+            <strong>۳. موتور منطق شرطی (Flow Logic Engine)</strong>
+            <span>تعریف شروط اگر/آنگاه (IF/THEN) برای ایجاد پرسشنامه‌های شاخه‌ای؛ هدایت کاربر به سوال خاص یا خاتمه دادن به فرم بر اساس سن، شهر، شغل یا رضایت.</span>
+          </div>
+        </div>
+
+        <div class="talk-point">
+          <div class="talk-icon"><i data-lucide="bar-chart-3" style="width:16px; height:16px;"></i></div>
+          <div class="talk-content">
+            <strong>۴. داشبورد تحلیل و آنالیز لحظه‌ای</strong>
+            <span>سنجش دقیق نرخ تکمیل (Completion Rate)، میانگین زمان صرف‌شده روی هر سوال، نمودارهای توزیع پاسخ و کشف دقیق نقطه ریزش مخاطبان.</span>
+          </div>
+        </div>
+
+        <div class="talk-point">
+          <div class="talk-icon"><i data-lucide="share-2" style="width:16px; height:16px;"></i></div>
+          <div class="talk-content">
+            <strong>۵. هاب اشتراک‌گذاری چندکاناله</strong>
+            <span>تولید خودکار لینک کوتاه، QR Code باکیفیت و کد Embed واکنش‌گرا برای قرار دادن فرم داخل وردپرس، المنتور، لاراول و سایت‌های اختصاصی.</span>
+          </div>
+        </div>
+
+        <div class="talk-point">
+          <div class="talk-icon"><i data-lucide="message-square" style="width:16px; height:16px;"></i></div>
+          <div class="talk-content">
+            <strong>۶. سامانه اطلاع‌رسانی پیامک و تلگرام</strong>
+            <span>اتصال به وب‌سرویس کاوه‌نگار و آموت جهت ارسال پیامک تایید و ارسال آنی پاسخ‌های جدید به بات و گروه تلگرامی تیم پشتیبانی.</span>
+          </div>
+        </div>
+
+        <div class="talk-point">
+          <div class="talk-icon"><i data-lucide="shield-check" style="width:16px; height:16px;"></i></div>
+          <div class="talk-content">
+            <strong>۷. امنیت سازمانی و RLS دیتابیس</strong>
+            <span>جداسازی کامل داده‌های هر سازمان در PostgreSQL با Row-Level Security، تله ضد اسپم Honeypot و سیستم مدیریت سشن توکن JWT.</span>
+          </div>
+        </div>
+
+        <div class="talk-point">
+          <div class="talk-icon"><i data-lucide="trash-2" style="width:16px; height:16px;"></i></div>
+          <div class="talk-content">
+            <strong>۸. سطل بازیافت ۳۰ روزه (God Trash)</strong>
+            <span>قابلیت بازیابی تضمین‌شده فرم‌ها و پاسخ‌های حذف‌شده تا ۳۰ روز برای جلوگیری از خطاهای انسانی و از دست رفتن دیتای استخدامی یا پژوهشی.</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ۵. برای هر پرسونای مخاطب چی بگیم؟ (Pitch by Persona) -->
+    <section class="pitch-card">
+      <h2 style="font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="users" style="color: var(--accent-amber);"></i>
+        ۴. راهنمای ارائه اختصاصی برای ۴ دسته مخاطب اصلی (چه کسی، به چی اهمیت میده؟)
+      </h2>
+
+      <!-- پرسونای ۱: مارکتینگ و فروش -->
+      <div class="objection-item" style="border-right: 4px solid var(--accent-teal);">
+        <div style="font-weight: 900; font-size: 15px; color: var(--accent-teal); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+          <i data-lucide="trending-up" style="width:16px; height:16px;"></i>
+          مخاطب ۱: مدیران مارکتینگ، تبلیغات و فروش (Lead Generation & Survey)
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
+          <strong>دغدغه اصلی:</strong> افزایش لید، کاهش ریزش کاربر، ثبت شماره موبایل درست، اتصال به CRM.
+        </p>
+        <div class="quote-box" style="margin: 8px 0; font-size: 13.5px;">
+          «با پرسکاد نرخ پاسخگویی کمپین‌های شما تا ۴۰٪ بالاتر می‌ره چون فرم به صورت چت‌گونه و اسلایدی جلو می‌ره. کاربر خسته نمی‌شه، شماره موبایلش اعتبارسنجی می‌شه و درجا پیامک تایید می‌گیره. خروجی اکسل هم بدون ذره‌ای به‌هم‌ریختگی مستقیماً وارد سیستم فروش می‌شه.»
+        </div>
+      </div>
+
+      <!-- پرسونای ۲: منابع انسانی و استخدام -->
+      <div class="objection-item" style="border-right: 4px solid var(--accent-cyan);">
+        <div style="font-weight: 900; font-size: 15px; color: var(--accent-cyan); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+          <i data-lucide="user-check" style="width:16px; height:16px;"></i>
+          مخاطب ۲: مدیران منابع انسانی و استخدام (HR & Recruitment)
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
+          <strong>دغدغه اصلی:</strong> فیلتر کردن رزومه‌ها بر اساس سابقه و تخصص، آزمون ورودی با نمره‌دهی، امنیت رزومه‌ها.
+        </p>
+        <div class="quote-box" style="margin: 8px 0; font-size: 13.5px;">
+          «با سیستم منطق شرطی، می‌تونید متقاضیان غیرواجد شرایط رو در همون سوال اول فیلتر کنید و سوالات تخصصی رو فقط به واجدین شرایط نشون بدید. سیستم نمره‌دهی خودکار آزمون‌های بدو استخدام رو ارزیابی می‌کنه و خروجی تمیز اکسل تمام رزومه‌ها رو دسته‌بندی می‌کنه.»
+        </div>
+      </div>
+
+      <!-- پرسونای ۳: سازمان‌ها، پژوهشگاه‌ها و دانشگاه‌ها -->
+      <div class="objection-item" style="border-right: 4px solid var(--accent-purple);">
+        <div style="font-weight: 900; font-size: 15px; color: var(--accent-purple); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+          <i data-lucide="building" style="width:16px; height:16px;"></i>
+          مخاطب ۳: سازمان‌های دولتی، دانشگاه‌ها و شرکت‌های بزرگ (Enterprise & Research)
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
+          <strong>دغدغه اصلی:</strong> امنیت، ایزولاسیون داده، عدم نشت اطلاعات، پایداری در حجم بالای پرسش‌ها.
+        </p>
+        <div class="quote-box" style="margin: 8px 0; font-size: 13.5px;">
+          «پرسکاد روی دیتابیس Postgres با ۸۵ مایگریشن امنیتی سوار شده و مجهز به Row-Level Security است؛ یعنی حتی اگر میلیون‌ها پاسخ ثبت بشه داده‌های هر سازمان از بیخ ایزوله است. پشتیبانی از پیش‌نویس ۷ روزه هم مانع از دست رفتن پاسخ پرسشنامه‌های طولانی پژوهشی می‌شه.»
+        </div>
+      </div>
+
+      <!-- پرسونای ۴: توسعه‌دهندگان و آژانس‌های وب -->
+      <div class="objection-item" style="border-right: 4px solid var(--accent-emerald);">
+        <div style="font-weight: 900; font-size: 15px; color: #10B981; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+          <i data-lucide="code" style="width:16px; height:16px;"></i>
+          مخاطب ۴: برنامه‌نویسان، مدیران فنی و آژانس‌های وب (Developers & Agencies)
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
+          <strong>دغدغه اصلی:</strong> Embed راحت، عدم افت سرعت سایت، مستندات API و هوک‌ها.
+        </p>
+        <div class="quote-box" style="margin: 8px 0; font-size: 13.5px;">
+          «با یک خط تگ iFrame بدون هیچ وابستگی سنگین، فرم رو روی وردپرس یا لاراول سوار کنید. مستندات وب‌سرویس REST و استاندارد OpenAPI کاملاً مستند شده و وب‌هوک‌ها بلافاصله اطلاعات رو به سرور شما پاس می‌دن.»
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ۶. پاسخ به شبهات و چالش‌های متداول مشتری (Objection Handling) -->
+    <section class="pitch-card">
+      <h2 style="font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="help-circle" style="color: #F43F5E;"></i>
+        ۵. پاسخ قاطع به ۵ سوال و چالش سخت مشتریان (Objection Handling)
+      </h2>
+
+      <div class="objection-item">
+        <div class="objection-q">
+          <i data-lucide="alert-circle" style="width:16px; height:16px;"></i>
+          چالش ۱: «چرا از گوگل فرمز استفاده نکنیم که کاملاً رایگانه؟»
+        </div>
+        <div class="objection-a">
+          <strong>پاسخ شما:</strong> «گوگل فرمز برای فرم‌های ساده کلاسی مناسبه، اما در بیزینس باعث ریزش ۵۰ درصدی لیدها میشه چون طوماریه. حروف فارسی رو در خروجی اکسل خراب می‌کنه، اعتبارسنجی موبایل ایران و پنل پیامک نداره، منطق شرطی پیچیده رو پشتیبانی نمی‌کنه و برای پر کردن فرم در خیلی از حالت‌ها کاربر رو مجبور به لاگین جیمیل می‌کنه که مخاطب ایرانی درجا صفحه رو می‌بنده!»
+        </div>
+      </div>
+
+      <div class="objection-item">
+        <div class="objection-q">
+          <i data-lucide="alert-circle" style="width:16px; height:16px;"></i>
+          چالش ۲: «اگر اینترنت کاربر حین پر کردن قطع بشه دیتای ما می‌پره؟»
+        </div>
+        <div class="objection-a">
+          <strong>پاسخ شما:</strong> «خیر، پرسکاد دارای سیستم پیش‌نویس خودکار ۷ روزه در حافظه مرورگر است. حتی اگر کاربر تب رو ببنده یا برق و اینترنت قطع بشه، تا ۷ روز بعد با باز کردن همون لینک فرم از دقیقاً همون سوالی که رها کرده ادامه پیدا می‌کنه.»
+        </div>
+      </div>
+
+      <div class="objection-item">
+        <div class="objection-q">
+          <i data-lucide="alert-circle" style="width:16px; height:16px;"></i>
+          چالش ۳: «چرا خروجی اکسل ابزارهای دیگه به هم می‌ریزه ولی پرسکاد سالمه؟»
+        </div>
+        <div class="objection-a">
+          <strong>پاسخ شما:</strong> «ابزارهای خارجی فایل رو به صورت UTF-8 ساده صادر می‌کنند که اکسل ویندوز اون رو با انکودینگ پیش‌فرض ANSI باز می‌کنه و حروف به صورت علامت سوال یا علامت‌های عجیب درمیان. پرسکاد بایت‌های شناسایی استاندارد UTF-8 BOM رو به فایل تزریق می‌کنه تا اکسل دقیقاً بدونه زبان فارسی است و بدون خرابی باز بشه.»
+        </div>
+      </div>
+
+      <div class="objection-item">
+        <div class="objection-q">
+          <i data-lucide="alert-circle" style="width:16px; height:16px;"></i>
+          چالش ۴: «اگر کارمندی اشتباهی فرم مهمی رو پاک کنه چیکار کنیم؟»
+        </div>
+        <div class="objection-a">
+          <strong>پاسخ شما:</strong> «پرسکاد معماری سطل بازیافت ۳۰ روزه (God Trash) داره. هیچ فرمی بلافاصله از دیتابیس هارد دلیت نمی‌شه و تا ۳۰ روز با یک کلیک همراه تمام پاسخ‌ها و آمارهایش قابل بازگردانی کامل است.»
+        </div>
+      </div>
+
+      <div class="objection-item">
+        <div class="objection-q">
+          <i data-lucide="alert-circle" style="width:16px; height:16px;"></i>
+          چالش ۵: «آیا امنیت داده‌های ما تضمین شده است؟»
+        </div>
+        <div class="objection-a">
+          <strong>پاسخ شما:</strong> «بله، دیتابیس ما با استاندارد سازمانی Row-Level Security محافظت شده است. هیچ مدیری حتی با درخواست مستقیم API نمی‌تونه به داده‌های فرم‌های سازمان دیگه دسترسی پیدا کنه. همچنین ارسال‌های رباتیک با تله نامرئی Honeypot و Rate Limiting مسدود می‌شوند.»
+        </div>
+      </div>
+    </section>
+
+    <!-- ۷. مشخصات فنی سریع برای جلسات با تیم فنی (Tech Specs) -->
+    <section class="pitch-card">
+      <h2 style="font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="terminal" style="color: var(--accent-teal);"></i>
+        ۶. مشخصات فنی سریع (جهت پاسخ به سوالات CTO و مدیران فنی)
+      </h2>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+        <div style="background: var(--bg-surface-elevated); padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+          <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">فرانت‌اند</span>
+          <strong style="color: var(--accent-teal); font-size: 13px;">React 18 + Vite + Tailwind</strong>
+        </div>
+        <div style="background: var(--bg-surface-elevated); padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+          <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">دیتابیس و بک‌اند</span>
+          <strong style="color: var(--accent-cyan); font-size: 13px;">PostgreSQL 15 + Supabase RLS</strong>
+        </div>
+        <div style="background: var(--bg-surface-elevated); padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+          <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">ارتباط Realtime</span>
+          <strong style="color: var(--accent-amber); font-size: 13px;">WebSocket زیر ۳۰۰ میلی‌ثانیه</strong>
+        </div>
+        <div style="background: var(--bg-surface-elevated); padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+          <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">میزبانی ابری</span>
+          <strong style="color: #10B981; font-size: 13px;">Edge CDN با ۹۹.۹٪ Uptime</strong>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>
