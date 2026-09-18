@@ -1078,125 +1078,95 @@ function QuestionEditor({
   );
 }
 
-// ─── سایدبار ناوبری و فهرست سریع سوالات (مخصوص دسکتاپ) ───
-function QuestionSidebarNav({
-  questions,
-  onAddQuestionClick,
-  onScrollToQuestion,
-  onMoveQuestion,
-  onDeleteQuestion,
-  collapsedAll,
-  onToggleCollapseAll,
-  activeId,
-}) {
+// ─── باکس میانبر سوالات / پالت افزودن سریع (مخصوص سایدبار چپ) ───
+function QuickQuestionPalette({ availableCategories, onAddQuestion }) {
+  const [activeCategory, setActiveCategory] = useState("all");
+
+  const categories = useMemo(() => {
+    return [
+      { key: "all", title: "همه" },
+      ...(availableCategories || []),
+    ];
+  }, [availableCategories]);
+
+  const filteredTypes = useMemo(() => {
+    if (!availableCategories || availableCategories.length === 0) return [];
+    if (activeCategory === "all") {
+      const all = [];
+      availableCategories.forEach((cat) => {
+        (cat.types || []).forEach((key) => {
+          const t = getEffectiveQuestionType(key);
+          if (t && !all.some((item) => item.key === key)) {
+            all.push({ key, ...t, catKey: cat.key });
+          }
+        });
+      });
+      return all;
+    }
+    const targetCat = availableCategories.find((c) => c.key === activeCategory);
+    if (!targetCat) return [];
+    return (targetCat.types || [])
+      .map((key) => {
+        const t = getEffectiveQuestionType(key);
+        return t ? { key, ...t, catKey: targetCat.key } : null;
+      })
+      .filter(Boolean);
+  }, [activeCategory, availableCategories]);
+
   return (
-    <div className="flex flex-col gap-3">
-      {/* هدر سایدبار */}
+    <div className="rounded-2xl border-2 border-gray-200/90 dark:border-slate-700 bg-white dark:bg-[#131B2E] p-3 sm:p-3.5 flex flex-col gap-2.5 shadow-sm">
+      {/* هدر باکس میانبر سوالات */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <span className="text-sm font-black text-sec dark:text-white">فهرست سوالات</span>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-teal/15 text-teal font-extrabold">
-            {faNum(questions.length)}
+          <Sparkles size={15} className="text-teal" />
+          <span className="text-xs sm:text-sm font-black text-navy dark:text-white">
+            میانبر سوالات
           </span>
         </div>
-        <button
-          type="button"
-          onClick={onToggleCollapseAll}
-          className="text-[11px] font-bold text-gray-500 dark:text-gray-400 hover:text-teal transition-colors cursor-pointer"
-          title={collapsedAll ? "باز کردن همه" : "جمع کردن همه"}
-        >
-          {collapsedAll ? "باز کردن همه" : "جمع کردن همه"}
-        </button>
+        <span className="text-[10px] font-bold text-teal bg-teal/10 px-2 py-0.5 rounded-full border border-teal/20">
+          {faNum(filteredTypes.length)} نوع سوال
+        </span>
       </div>
 
-      {/* دکمه افزودن سوال */}
-      <Button
-        variant="teal"
-        size="sm"
-        onClick={onAddQuestionClick}
-        className="w-full justify-center text-xs font-black shadow-xs py-2.5"
-      >
-        <Plus size={14} /> + افزودن سوال جدید
-      </Button>
+      {/* تب‌های کوچک فیلتر دسته‌بندی */}
+      <div className="flex items-center gap-1 overflow-x-auto pb-1 custom-scrollbar">
+        {categories.map((cat) => (
+          <button
+            key={cat.key}
+            type="button"
+            onClick={() => setActiveCategory(cat.key)}
+            className={`text-[10px] font-black px-2 py-1 rounded-lg whitespace-nowrap transition-all cursor-pointer ${
+              activeCategory === cat.key
+                ? "bg-teal text-white shadow-2xs"
+                : "bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:text-navy dark:hover:text-white"
+            }`}
+          >
+            {cat.title}
+          </button>
+        ))}
+      </div>
 
-      {/* لیست اسکرول‌شونده سوالات */}
-      <div className="flex flex-col gap-1.5 max-h-[calc(100vh-320px)] overflow-y-auto pr-0.5 pl-1 custom-scrollbar">
-        {questions.length === 0 ? (
-          <div className="p-4 text-center text-xs text-gray-400 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
-            هنوز سوالی به فرم اضافه نشده است
-          </div>
-        ) : (
-          questions.map((q, idx) => {
-            const meta = QUESTION_TYPES[q.type] || {};
-            const Icon = QUESTION_TYPE_ICONS[q.type];
-            const isSelected = activeId === q.localId;
-            return (
-              <div
-                key={q.localId}
-                className={`group flex items-center gap-2 p-2 rounded-xl border transition-all text-right ${
-                  isSelected
-                    ? "border-teal bg-teal/10 dark:bg-teal/20 text-teal shadow-xs"
-                    : "border-gray-200 dark:border-gray-700/80 bg-white dark:bg-[#1C2536] text-sec dark:text-slate-200 hover:border-teal/40 hover:bg-gray-50 dark:hover:bg-[#151C28]"
-                }`}
-              >
-                {/* شماره */}
-                <span className="w-5 h-5 shrink-0 flex items-center justify-center rounded-full bg-gray-100 dark:bg-slate-800 text-[10px] font-black text-sec dark:text-slate-300">
-                  {faNum(idx + 1)}
-                </span>
-
-                {/* آیکون نوع */}
-                <span className="shrink-0 text-gray-400 dark:text-slate-400 group-hover:text-teal transition-colors">
-                  {Icon && <Icon size={13} />}
-                </span>
-
-                {/* عنوان با امکان کلیک و اسکرول سریع */}
-                <button
-                  type="button"
-                  onClick={() => onScrollToQuestion(q.localId)}
-                  className="flex-1 min-w-0 text-right cursor-pointer"
-                  title={q.title || "بدون عنوان"}
-                >
-                  <p className="text-xs font-bold truncate">
-                    {q.title || `سوال ${faNum(idx + 1)}`}
-                  </p>
-                  <span className="text-[10px] text-gray-400 dark:text-gray-500 block truncate">
-                    {meta.label || q.type} {q.required && <span className="text-female-normal font-black">*</span>}
-                  </span>
-                </button>
-
-                {/* دکمه‌های جابجایی سریع */}
-                <div className="flex items-center gap-0.5 opacity-40 group-hover:opacity-100 transition-opacity">
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onMoveQuestion(q.localId, -1); }}
-                    disabled={idx === 0}
-                    className="p-1 rounded hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-20 transition-colors"
-                    title="بالا"
-                  >
-                    <ChevronUp size={12} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onMoveQuestion(q.localId, 1); }}
-                    disabled={idx === questions.length - 1}
-                    className="p-1 rounded hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-20 transition-colors"
-                    title="پایین"
-                  >
-                    <ChevronDown size={12} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onDeleteQuestion(q.localId); }}
-                    className="p-1 rounded hover:bg-female-light text-female-normal transition-colors"
-                    title="حذف"
-                  >
-                    <Trash2 size={12} />
-                  </button>
-                </div>
-              </div>
-            );
-          })
-        )}
+      {/* شبکه کارت‌ها/دکمه‌های میانبر افزودن سوال */}
+      <div className="grid grid-cols-2 gap-1.5 max-h-[250px] overflow-y-auto pr-0.5 custom-scrollbar">
+        {filteredTypes.map((item) => {
+          const Icon = QUESTION_TYPE_ICONS[item.key] || Plus;
+          return (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => onAddQuestion(item.key)}
+              title={item.hint || item.label}
+              className="group flex items-center gap-1.5 p-2 rounded-xl border border-gray-200/80 dark:border-slate-700/80 bg-gray-50/70 dark:bg-[#1C2536] hover:border-teal hover:bg-teal/5 dark:hover:bg-teal/10 hover:shadow-xs transition-all cursor-pointer text-right w-full"
+            >
+              <span className="w-6 h-6 rounded-lg bg-white dark:bg-slate-800 flex items-center justify-center shrink-0 text-teal group-hover:scale-110 transition-transform shadow-2xs border border-gray-100 dark:border-slate-700">
+                <Icon size={13} />
+              </span>
+              <span className="text-[11px] font-black text-navy dark:text-slate-200 truncate group-hover:text-teal transition-colors">
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -1231,10 +1201,8 @@ export default function FormBuilder() {
   const [slugError, setSlugError] = useState(null);
   const [availableCategories, setAvailableCategories] = useState(() => getAvailableQuestionCategories());
 
-  // تب‌های اصلی و سایدبار دسکتاپ
+  // تب‌های اصلی
   const [activeTab, setActiveTab] = useState("questions"); // "questions" | "settings"
-  const [sidebarTab, setSidebarTab] = useState("questions"); // "questions" | "preview"
-  const [sidebarPosition, setSidebarPosition] = useState("left"); // "left" | "right"
   const [collapsedQuestions, setCollapsedQuestions] = useState({});
   const [showAddPicker, setShowAddPicker] = useState(false);
   const [highlightedQuestionId, setHighlightedQuestionId] = useState(null);
@@ -1790,7 +1758,7 @@ export default function FormBuilder() {
 
   return (
     <>
-    <div className={`flex flex-col ${sidebarPosition === "right" ? "lg:flex-row-reverse" : "lg:flex-row"} gap-5 max-w-7xl mx-auto`}>
+    <div className="flex flex-col lg:flex-row gap-5 max-w-7xl mx-auto">
       {/* ─── ستون اصلی: ویرایشگر ─── */}
       <div className="flex flex-col gap-5 flex-1 min-w-0">
       <SEO
@@ -2269,81 +2237,56 @@ export default function FormBuilder() {
       )}
       </div>
 
-      {/* ─── سایدبار چسبان دسکتاپ (ناوبری سوالات، پیش‌نمایش و ذخیره) ─── */}
-      <div className="hidden lg:flex flex-col gap-3.5 w-[330px] shrink-0 sticky top-20 self-start">
-        {/* دکمه ذخیره چسبان بالای سایدبار */}
+      {/* ─── سایدبار قفل سمت چپ: نمایش زنده فرم + میانبر سوالات + ذخیره ─── */}
+      <div className="hidden lg:flex flex-col gap-3.5 w-[350px] shrink-0 sticky top-20 self-start">
+        {/* ۱. نمایش زنده فرم (بدون هیچ تبی — همیشه در بالای سایدبار چپ حاضر است) */}
+        <div className="rounded-2xl border-2 border-gray-200/90 dark:border-slate-700 bg-white dark:bg-[#131B2E] overflow-hidden shadow-sm flex flex-col">
+          <div className="flex items-center justify-between px-3.5 py-2 border-b border-gray-100 dark:border-slate-800 bg-gray-50/80 dark:bg-[#172033]">
+            <div className="flex items-center gap-1.5">
+              <Eye size={14} className="text-teal" />
+              <span className="text-xs font-black text-navy dark:text-white">
+                نمایش زنده فرم
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-bold text-gray-500 dark:text-slate-400 bg-gray-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
+                {form?.form_type === "registration" ? "ثبت‌نامی" : "مرحله‌ای"}
+              </span>
+              {form?.published && (
+                <a
+                  href={`/f/${form.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-teal transition-colors"
+                  title="مشاهده فرم در تب جدید"
+                >
+                  <Globe size={13} />
+                </a>
+              )}
+            </div>
+          </div>
+          <div className="p-2 max-h-[300px] overflow-y-auto custom-scrollbar flex justify-center bg-gray-50/30 dark:bg-slate-900/40">
+            <FormPreview form={form} questions={questions} />
+          </div>
+        </div>
+
+        {/* ۲. باکس میانبر سوالات (تمام انواع سوالات برای افزودن سریع) */}
+        <QuickQuestionPalette
+          availableCategories={availableCategories}
+          onAddQuestion={addQuestion}
+        />
+
+        {/* ۳. دکمه ذخیره فرم (بزرگ و برجسته با نمایش وضعیت) */}
         <Button
           variant="teal"
           size="lg"
           onClick={save}
           disabled={saving || !dirty}
-          className="w-full justify-center shadow-md text-base font-black py-3 hover:scale-[1.01] transition-all"
+          className="w-full justify-center shadow-md text-sm sm:text-base font-black py-3 hover:scale-[1.01] transition-all cursor-pointer"
         >
-          {saving ? "در حال ذخیره..." : dirty ? "ذخیره‌ی تغییرات *" : "فرم ذخیره است"}
+          <Save size={16} className="ml-1" />
+          {saving ? "در حال ذخیره..." : dirty ? "ذخیره‌ی تغییرات *" : "فرم ذخیره است ✓"}
         </Button>
-
-        {/* کارت سایدبار با قابلیت سوئیچ بین فهرست سوالات و پیش‌نمایش */}
-        <div className="rounded-2xl border-2 border-gray-200 dark:border-slate-700 bg-white dark:bg-[#131B2E] overflow-hidden shadow-sm p-3.5 flex flex-col gap-3">
-          {/* کنترل بالای سایدبار */}
-          <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-2.5">
-            <div className="flex items-center gap-1 bg-gray-100 dark:bg-slate-800 p-1 rounded-xl">
-              <button
-                type="button"
-                onClick={() => setSidebarTab("questions")}
-                className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${
-                  sidebarTab === "questions"
-                    ? "bg-white dark:bg-slate-700 text-teal shadow-xs"
-                    : "text-gray-500 hover:text-sec dark:hover:text-white"
-                }`}
-              >
-                <Layers size={12} /> سوالات ({faNum(questions.length)})
-              </button>
-              <button
-                type="button"
-                onClick={() => setSidebarTab("preview")}
-                className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${
-                  sidebarTab === "preview"
-                    ? "bg-white dark:bg-slate-700 text-teal shadow-xs"
-                    : "text-gray-500 hover:text-sec dark:hover:text-white"
-                }`}
-              >
-                <Eye size={12} /> پیش‌نمایش
-              </button>
-            </div>
-
-            {/* جابجایی سایدبار به راست / چپ */}
-            <button
-              type="button"
-              onClick={() => setSidebarPosition((pos) => (pos === "right" ? "left" : "right"))}
-              className="p-1.5 rounded-lg border border-gray-200 dark:border-slate-700 text-gray-500 hover:text-teal hover:border-teal/50 transition-colors cursor-pointer"
-              title={sidebarPosition === "right" ? "انتقال سایدبار به سمت چپ" : "انتقال سایدبار به سمت راست"}
-            >
-              <ArrowLeftRight size={13} />
-            </button>
-          </div>
-
-          {/* بدنه سایدبار */}
-          {sidebarTab === "questions" ? (
-            <QuestionSidebarNav
-              questions={questions}
-              onAddQuestionClick={() => {
-                setActiveTab("questions");
-                setShowAddPicker(true);
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-              onScrollToQuestion={scrollToQuestion}
-              onMoveQuestion={moveQuestion}
-              onDeleteQuestion={deleteQuestion}
-              collapsedAll={questions.length > 0 && questions.every((q) => collapsedQuestions[q.localId])}
-              onToggleCollapseAll={toggleCollapseAll}
-              activeId={highlightedQuestionId}
-            />
-          ) : (
-            <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700">
-              <FormPreview form={form} questions={questions} />
-            </div>
-          )}
-        </div>
       </div>
     </div>
 
