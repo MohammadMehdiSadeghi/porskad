@@ -1081,7 +1081,7 @@ function QuestionEditor({
   );
 }
 
-// ─── باکس میانبر سوالات / پالت افزودن سریع (مخصوص سایدبار چپ با سیستم طراحی رکاد) ───
+// ─── باکس میانبر سوالات / پالت افزودن سریع (مخصوص سایدبار چپ با تم نارنجی ملایم و گوشه‌های گرد) ───
 function QuickQuestionPalette({ availableCategories, onAddQuestion }) {
   const allTypes = useMemo(() => {
     if (!availableCategories || availableCategories.length === 0) return [];
@@ -1103,41 +1103,43 @@ function QuickQuestionPalette({ availableCategories, onAddQuestion }) {
   }, [availableCategories]);
 
   return (
-    <StickerCard theme="orange" radius="rounded-2xl">
-      <div className="p-3.5 sm:p-4 flex flex-col gap-3">
-        {/* هدر باکس میانبر سوالات */}
-        <div className="flex items-center justify-between">
-          <span className="text-xs sm:text-sm font-black text-orange flex items-center gap-1.5">
-            <Sparkles size={15} className="text-orange" />
-            میانبر سوالات
-          </span>
-          <span className="text-[10px] font-bold text-orange bg-white dark:bg-slate-800 border border-orange/30 px-2 py-0.5 rounded-full">
-            {faNum(allTypes.length)} نوع سوال
-          </span>
-        </div>
-
-        {/* شبکه دکمه‌های میانبر افزودن سوال (استایل دقیقاً یکسان با فرم‌ساز و سیستم طراحی رکاد) */}
-        <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-0.5 custom-scrollbar">
-          {allTypes.map((item) => {
-            const Icon = QUESTION_TYPE_ICONS[item.key] || Plus;
-            return (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => onAddQuestion(item.key)}
-                title={item.hint ? `${item.label} — ${item.hint}` : item.label}
-                className={`flex items-center justify-start gap-2 bg-white dark:bg-slate-800 border-2 border-orange/40 hover:border-orange rounded-pill-md px-2.5 py-2 text-xs font-extrabold text-ink dark:text-slate-100 hover:-translate-y-0.5 hover:shadow-xs transition-all cursor-pointer text-right w-full ${
-                  item.isWide ? "col-span-2" : "col-span-1"
-                }`}
-              >
-                {Icon && <Icon size={14} className="text-orange shrink-0" />}
-                <span className="truncate min-w-0 flex-1">{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
+    <div className="rounded-2xl border-2 border-orange/30 dark:border-orange/40 bg-orange/5 dark:bg-[#131B2E] p-3.5 sm:p-4 flex flex-col gap-3 shadow-sm">
+      {/* هدر باکس میانبر سوالات */}
+      <div className="flex items-center justify-between border-b border-orange/20 dark:border-orange/30 pb-2">
+        <span className="text-xs sm:text-sm font-black text-orange flex items-center gap-1.5">
+          <Sparkles size={15} className="text-orange" />
+          میانبر سوالات
+        </span>
+        <span className="text-[10px] font-bold text-orange bg-orange/15 dark:bg-orange/20 border border-orange/30 px-2.5 py-0.5 rounded-full">
+          {faNum(allTypes.length)} نوع سوال
+        </span>
       </div>
-    </StickerCard>
+
+      {/* شبکه دکمه‌های میانبر افزودن سوال (گوشه‌های کاملاً گرد، بک‌گراند نارنجی ملایم و بدون حالت تیز) */}
+      <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-0.5 custom-scrollbar">
+        {allTypes.map((item) => {
+          const Icon = QUESTION_TYPE_ICONS[item.key] || Plus;
+          return (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => onAddQuestion(item.key)}
+              title={item.hint ? `${item.label} — ${item.hint}` : item.label}
+              className={`group flex items-center gap-2 p-2 sm:p-2.5 rounded-xl border border-orange/30 dark:border-orange/40 bg-white/90 dark:bg-slate-800/90 hover:bg-orange/15 dark:hover:bg-orange/25 hover:border-orange hover:shadow-xs hover:-translate-y-0.5 transition-all cursor-pointer text-right w-full ${
+                item.isWide ? "col-span-2" : "col-span-1"
+              }`}
+            >
+              <span className="w-7 h-7 rounded-lg bg-orange/10 dark:bg-orange/20 flex items-center justify-center shrink-0 text-orange group-hover:scale-110 transition-transform">
+                <Icon size={14} />
+              </span>
+              <span className="text-xs font-black text-navy dark:text-slate-100 group-hover:text-orange transition-colors truncate min-w-0 flex-1">
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
