@@ -1096,8 +1096,8 @@ function QuickQuestionPalette({ allTypes, onAddQuestion }) {
         </span>
       </div>
 
-      {/* شبکه دکمه‌های میانبر افزودن سوال (گوشه‌های کاملاً گرد، بک‌گراند نارنجی ملایم و بدون حالت تیز) */}
-      <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-0.5 custom-scrollbar">
+      {/* شبکه دکمه‌های میانبر افزودن سوال (گوشه‌های کاملاً گرد، بک‌گراند نارنجی ملایم و پدینگ بالا/پایین برای هاور) */}
+      <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto py-2.5 px-1 custom-scrollbar">
         {allTypes.map((item) => {
           const Icon = QUESTION_TYPE_ICONS[item.key] || Plus;
           return (
@@ -1113,7 +1113,7 @@ function QuickQuestionPalette({ allTypes, onAddQuestion }) {
               <span className="w-7 h-7 rounded-lg bg-orange/10 dark:bg-orange/20 flex items-center justify-center shrink-0 text-orange group-hover:scale-110 transition-transform">
                 <Icon size={14} />
               </span>
-              <span className="text-xs font-black text-navy dark:text-slate-100 group-hover:text-orange transition-colors truncate min-w-0 flex-1">
+              <span className="text-xs font-black text-navy dark:text-slate-100 truncate min-w-0 flex-1">
                 {item.label}
               </span>
             </button>
@@ -2142,8 +2142,8 @@ export default function FormBuilder() {
                 </div>
               </div>
 
-              {/* شبکه دکمه‌های افزودن سوال — استایل نرم، گوشه‌های گرد، بک‌گراند نارنجی ملایم و هماهنگ */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-[380px] overflow-y-auto pr-0.5 custom-scrollbar">
+              {/* شبکه دکمه‌های افزودن سوال — استایل نرم، گوشه‌های گرد، بک‌گراند نارنجی ملایم و پدینگ بالا/پایین برای هاور */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-[380px] overflow-y-auto py-2.5 px-1 custom-scrollbar">
                 {allQuestionTypesList.map((item) => {
                   const Icon = QUESTION_TYPE_ICONS[item.key] || Plus;
                   return (
@@ -2159,7 +2159,7 @@ export default function FormBuilder() {
                       <span className="w-7 h-7 rounded-lg bg-orange/10 dark:bg-orange/20 flex items-center justify-center shrink-0 text-orange group-hover:scale-110 transition-transform">
                         {Icon && <Icon size={14} />}
                       </span>
-                      <span className="text-xs font-black text-navy dark:text-slate-100 group-hover:text-orange transition-colors truncate min-w-0 flex-1">
+                      <span className="text-xs font-black text-navy dark:text-slate-100 truncate min-w-0 flex-1">
                         {item.label}
                       </span>
                     </button>
