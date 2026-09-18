@@ -2118,55 +2118,57 @@ export default function FormBuilder() {
             </div>
           </div>
 
-          {/* افزودن سوال جدید — دسته‌بندی شده و قابل باز/بسته شدن */}
+          {/* افزودن سوال جدید — با استایل کاملاً یکسان و هماهنگ با میانبر */}
           {(showAddPicker || questions.length === 0) && (
-            <div>
-              <StickerCard theme="orange" radius="rounded-tl-[1.25rem] rounded-br-[1.25rem] rounded-tr-none rounded-bl-none">
-                <div className="p-4 sm:p-5 flex flex-col gap-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-black text-orange flex items-center gap-2">
-                      افزودن سوال جدید — نوع سوال را انتخاب کنید:
-                    </span>
-                    {questions.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setShowAddPicker(false)}
-                        className="text-xs font-bold text-gray-400 hover:text-orange cursor-pointer"
-                      >
-                        ✕ بستن
-                      </button>
-                    )}
-                  </div>
+            <div className="rounded-2xl border-2 border-orange/30 dark:border-orange/40 bg-orange/5 dark:bg-[#131B2E] p-4 sm:p-5 flex flex-col gap-4 shadow-sm">
+              <div className="flex items-center justify-between border-b border-orange/20 dark:border-orange/30 pb-2.5">
+                <span className="text-xs sm:text-sm font-black text-orange flex items-center gap-2">
+                  <Sparkles size={16} className="text-orange" />
+                  افزودن سوال جدید — نوع سوال را انتخاب کنید:
+                </span>
+                {questions.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddPicker(false)}
+                    className="text-xs font-bold text-gray-400 hover:text-orange cursor-pointer px-2 py-0.5 rounded-lg hover:bg-orange/10 transition-colors"
+                  >
+                    ✕ بستن
+                  </button>
+                )}
+              </div>
 
-                  <div className="flex flex-col gap-3.5">
-                    {availableCategories.map((cat) => (
-                      <div key={cat.key} className="flex flex-col gap-1.5">
-                        <span className="text-xs font-black text-navy dark:text-slate-200">
-                          {cat.title}
-                        </span>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                          {cat.types.map((key) => {
-                            const t = getEffectiveQuestionType(key);
-                            if (!t) return null;
-                            const Icon = QUESTION_TYPE_ICONS[key];
-                            return (
-                              <button
-                                key={key}
-                                onClick={() => addQuestion(key)}
-                                title={t.hint}
-                                className="flex items-center justify-start gap-2 bg-white dark:bg-slate-800 border-2 border-orange/40 hover:border-orange rounded-pill-md px-2.5 py-2 text-xs font-extrabold text-ink dark:text-slate-100 hover:-translate-y-0.5 hover:shadow-xs transition-all cursor-pointer w-full text-right"
-                              >
-                                {Icon && <Icon size={14} className="text-orange shrink-0" />}
-                                <span className="truncate">{t.label}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
+              <div className="flex flex-col gap-3.5">
+                {availableCategories.map((cat) => (
+                  <div key={cat.key} className="flex flex-col gap-1.5">
+                    <span className="text-xs font-black text-navy dark:text-slate-200">
+                      {cat.title}
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                      {cat.types.map((key) => {
+                        const t = getEffectiveQuestionType(key);
+                        if (!t) return null;
+                        const Icon = QUESTION_TYPE_ICONS[key];
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            onClick={() => addQuestion(key)}
+                            title={t.hint ? `${t.label} — ${t.hint}` : t.label}
+                            className="group flex items-center gap-2 p-2 sm:p-2.5 rounded-xl border border-orange/30 dark:border-orange/40 bg-white/90 dark:bg-slate-800/90 hover:bg-orange/15 dark:hover:bg-orange/25 hover:border-orange hover:shadow-xs hover:-translate-y-0.5 transition-all cursor-pointer text-right w-full"
+                          >
+                            <span className="w-7 h-7 rounded-lg bg-orange/10 dark:bg-orange/20 flex items-center justify-center shrink-0 text-orange group-hover:scale-110 transition-transform">
+                              {Icon && <Icon size={14} />}
+                            </span>
+                            <span className="text-xs font-black text-navy dark:text-slate-100 group-hover:text-orange transition-colors truncate min-w-0 flex-1">
+                              {t.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              </StickerCard>
+                ))}
+              </div>
             </div>
           )}
 
