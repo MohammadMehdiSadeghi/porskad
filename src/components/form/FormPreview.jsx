@@ -352,12 +352,14 @@ export default function FormPreview({ form, questions }) {
   return (
     <div className="form-preview-container flex flex-col items-center w-full" data-preview-theme={previewTheme}>
       {/* هدر */}
-      <div className={`w-full text-center py-1.5 rounded-t-2xl transition-colors ${
+      <div className={`preview-header w-full text-center py-2 px-3 rounded-t-2xl transition-colors ${
         isDark ? "bg-slate-900 border-b border-slate-700 text-teal" : "bg-navy text-white"
       }`}>
-        <span className="text-xs font-bold flex items-center justify-center gap-1.5">
-          <span>{isRegistration ? "پیش‌نمایش ثبت‌نامی" : "پیش‌نمایش مرحله‌ای"}</span>
-          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-medium ${
+        <span className="text-xs font-black flex items-center justify-center gap-2">
+          <span className={isDark ? "text-teal" : "text-white"}>
+            {isRegistration ? "پیش‌نمایش ثبت‌نامی" : "پیش‌نمایش مرحله‌ای"}
+          </span>
+          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
             isDark ? "bg-teal/20 text-teal" : "bg-white/20 text-white"
           }`}>
             {form?.default_theme === "dark" ? "تم دارک" : form?.default_theme === "system" ? "سیستم" : "تم روشن"}

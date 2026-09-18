@@ -1067,9 +1067,21 @@ html.dark .shadow-lg {
 }
 
 .form-preview-container[data-preview-theme="light"] p,
-.form-preview-container[data-preview-theme="light"] span,
+.form-preview-container[data-preview-theme="light"] span:not(.preview-header *),
 .form-preview-container[data-preview-theme="light"] .text-ink {
     color: #334155 !important;
+}
+
+.form-preview-container .preview-header,
+.form-preview-container .preview-header span,
+.form-preview-container[data-preview-theme="light"] .preview-header,
+.form-preview-container[data-preview-theme="light"] .preview-header span {
+    color: #FFFFFF !important;
+}
+
+.form-preview-container[data-preview-theme="dark"] .preview-header,
+.form-preview-container[data-preview-theme="dark"] .preview-header span {
+    color: #2DD4BF !important;
 }
 
 .form-preview-container[data-preview-theme="light"] .border-ink\/10,
