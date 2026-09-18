@@ -165,7 +165,7 @@ function QuestionEditor({
               <span className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-sec dark:bg-[#1C2536] text-white rounded-full text-xs sm:text-sm font-black border border-primary/30 group-hover:bg-teal transition-colors shrink-0">
                 {faNum(index + 1)}
               </span>
-              <Badge color={meta.color} className="shrink-0 text-[10px] sm:text-xs">
+              <Badge color={meta.color} className="hidden sm:inline-flex shrink-0 text-[10px] sm:text-xs">
                 {(() => { const Icon = QUESTION_TYPE_ICONS[q.type]; return Icon ? <Icon size={12} /> : null; })()} {meta.label}
               </Badge>
               {isCollapsed && (
@@ -183,7 +183,7 @@ function QuestionEditor({
                   onChange={(e) => onChange({ required: e.target.checked })}
                   className="accent-ecosystem-normal w-3.5 h-3.5 sm:w-4 sm:h-4"
                 />
-                <span className="hidden xs:inline">اجباری</span>
+                <span className="text-[11px] sm:text-xs font-bold whitespace-nowrap">اجباری</span>
               </label>
               <div className="flex items-center gap-0.5 sm:gap-1">
                 <button
