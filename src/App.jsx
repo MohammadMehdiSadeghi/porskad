@@ -12,6 +12,7 @@ import { AlertTriangle } from "lucide-react";
 
 import FormFill from "./pages/Form";
 import EmbedForm from "./pages/Embed";
+import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
 import AdminLayout from "./components/layout/AdminLayout";
 import Login from "./pages/Admin/Login";
@@ -160,8 +161,8 @@ export default function App() {
                   <Route path="superadmin" element={<AuthGuard ownerOnly={true}><SuperAdmin /></AuthGuard>} />
                 </Route>
 
-                {/* هدایت پیش‌فرض */}
-                <Route path="/" element={<Navigate to="/admin" replace />} />
+                {/* صفحه فرود عمومی لندینگ */}
+                <Route path="/" element={<Landing />} />
                 <Route path="/index.html" element={<Navigate to="/" replace />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
