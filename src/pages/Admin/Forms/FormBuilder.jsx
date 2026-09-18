@@ -1082,26 +1082,7 @@ function QuestionEditor({
 }
 
 // ─── باکس میانبر سوالات / پالت افزودن سریع (مخصوص سایدبار چپ با تم نارنجی ملایم و گوشه‌های گرد) ───
-function QuickQuestionPalette({ availableCategories, onAddQuestion }) {
-  const allTypes = useMemo(() => {
-    if (!availableCategories || availableCategories.length === 0) return [];
-    const list = [];
-    availableCategories.forEach((cat) => {
-      (cat.types || []).forEach((key) => {
-        const t = getEffectiveQuestionType(key);
-        if (t && !list.some((item) => item.key === key)) {
-          // اگر عنوان سوال طولانی است یا دارای پرانتز/توضیح اضافی است، کل سطر را می‌گیرد
-          const isWide =
-            t.label.length > 13 ||
-            t.label.includes("(") ||
-            ["matrix", "picture_choice", "nps", "likert", "file_upload", "date_picker"].includes(key);
-          list.push({ key, ...t, isWide, catTitle: cat.title });
-        }
-      });
-    });
-    return list;
-  }, [availableCategories]);
-
+function QuickQuestionPalette({ allTypes, onAddQuestion }) {
   return (
     <div className="rounded-2xl border-2 border-orange/30 dark:border-orange/40 bg-orange/5 dark:bg-[#131B2E] p-3.5 sm:p-4 flex flex-col gap-3 shadow-sm">
       {/* هدر باکس میانبر سوالات */}
@@ -1171,6 +1152,25 @@ export default function FormBuilder() {
   const [saving, setSaving] = useState(false);
   const [slugError, setSlugError] = useState(null);
   const [availableCategories, setAvailableCategories] = useState(() => getAvailableQuestionCategories());
+
+  // لیست یکپارچه و بهینه شده انواع سوالات با احتساب عرض سطر برای سوالات طولانی
+  const allQuestionTypesList = useMemo(() => {
+    if (!availableCategories || availableCategories.length === 0) return [];
+    const list = [];
+    availableCategories.forEach((cat) => {
+      (cat.types || []).forEach((key) => {
+        const t = getEffectiveQuestionType(key);
+        if (t && !list.some((item) => item.key === key)) {
+          const isWide =
+            t.label.length > 13 ||
+            t.label.includes("(") ||
+            ["matrix", "picture_choice", "nps", "likert", "file_upload", "date_picker"].includes(key);
+          list.push({ key, ...t, isWide, catTitle: cat.title });
+        }
+      });
+    });
+    return list;
+  }, [availableCategories]);
 
   // تب‌های اصلی
   const [activeTab, setActiveTab] = useState("questions"); // "questions" | "settings"
@@ -2120,54 +2120,51 @@ export default function FormBuilder() {
 
           {/* افزودن سوال جدید — با استایل کاملاً یکسان و هماهنگ با میانبر */}
           {(showAddPicker || questions.length === 0) && (
-            <div className="rounded-2xl border-2 border-orange/30 dark:border-orange/40 bg-orange/5 dark:bg-[#131B2E] p-4 sm:p-5 flex flex-col gap-4 shadow-sm">
+            <div className="rounded-2xl border-2 border-orange/30 dark:border-orange/40 bg-orange/5 dark:bg-[#131B2E] p-3.5 sm:p-4.5 flex flex-col gap-3 shadow-sm">
               <div className="flex items-center justify-between border-b border-orange/20 dark:border-orange/30 pb-2.5">
                 <span className="text-xs sm:text-sm font-black text-orange flex items-center gap-2">
                   <Sparkles size={16} className="text-orange" />
                   افزودن سوال جدید — نوع سوال را انتخاب کنید:
                 </span>
-                {questions.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setShowAddPicker(false)}
-                    className="text-xs font-bold text-gray-400 hover:text-orange cursor-pointer px-2 py-0.5 rounded-lg hover:bg-orange/10 transition-colors"
-                  >
-                    ✕ بستن
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-orange bg-orange/15 dark:bg-orange/20 border border-orange/30 px-2.5 py-0.5 rounded-full">
+                    {faNum(allQuestionTypesList.length)} نوع سوال
+                  </span>
+                  {questions.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAddPicker(false)}
+                      className="text-xs font-bold text-gray-400 hover:text-orange cursor-pointer px-2 py-0.5 rounded-lg hover:bg-orange/10 transition-colors"
+                    >
+                      ✕ بستن
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <div className="flex flex-col gap-3.5">
-                {availableCategories.map((cat) => (
-                  <div key={cat.key} className="flex flex-col gap-1.5">
-                    <span className="text-xs font-black text-navy dark:text-slate-200">
-                      {cat.title}
-                    </span>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                      {cat.types.map((key) => {
-                        const t = getEffectiveQuestionType(key);
-                        if (!t) return null;
-                        const Icon = QUESTION_TYPE_ICONS[key];
-                        return (
-                          <button
-                            key={key}
-                            type="button"
-                            onClick={() => addQuestion(key)}
-                            title={t.hint ? `${t.label} — ${t.hint}` : t.label}
-                            className="group flex items-center gap-2 p-2 sm:p-2.5 rounded-xl border border-orange/30 dark:border-orange/40 bg-white/90 dark:bg-slate-800/90 hover:bg-orange/15 dark:hover:bg-orange/25 hover:border-orange hover:shadow-xs hover:-translate-y-0.5 transition-all cursor-pointer text-right w-full"
-                          >
-                            <span className="w-7 h-7 rounded-lg bg-orange/10 dark:bg-orange/20 flex items-center justify-center shrink-0 text-orange group-hover:scale-110 transition-transform">
-                              {Icon && <Icon size={14} />}
-                            </span>
-                            <span className="text-xs font-black text-navy dark:text-slate-100 group-hover:text-orange transition-colors truncate min-w-0 flex-1">
-                              {t.label}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
+              {/* شبکه دکمه‌های افزودن سوال — استایل نرم، گوشه‌های گرد، بک‌گراند نارنجی ملایم و هماهنگ */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-[380px] overflow-y-auto pr-0.5 custom-scrollbar">
+                {allQuestionTypesList.map((item) => {
+                  const Icon = QUESTION_TYPE_ICONS[item.key] || Plus;
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => addQuestion(item.key)}
+                      title={item.hint ? `${item.label} — ${item.hint}` : item.label}
+                      className={`group flex items-center gap-2 p-2 sm:p-2.5 rounded-xl border border-orange/30 dark:border-orange/40 bg-white/90 dark:bg-slate-800/90 hover:bg-orange/15 dark:hover:bg-orange/25 hover:border-orange hover:shadow-xs hover:-translate-y-0.5 transition-all cursor-pointer text-right w-full ${
+                        item.isWide ? "col-span-2" : "col-span-1"
+                      }`}
+                    >
+                      <span className="w-7 h-7 rounded-lg bg-orange/10 dark:bg-orange/20 flex items-center justify-center shrink-0 text-orange group-hover:scale-110 transition-transform">
+                        {Icon && <Icon size={14} />}
+                      </span>
+                      <span className="text-xs font-black text-navy dark:text-slate-100 group-hover:text-orange transition-colors truncate min-w-0 flex-1">
+                        {item.label}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -2247,7 +2244,7 @@ export default function FormBuilder() {
 
         {/* ۲. باکس میانبر سوالات (تمام انواع سوالات برای افزودن سریع) */}
         <QuickQuestionPalette
-          availableCategories={availableCategories}
+          allTypes={allQuestionTypesList}
           onAddQuestion={addQuestion}
         />
 
