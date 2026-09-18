@@ -154,70 +154,73 @@ function QuestionEditor({
     >
       <StickerCard theme="white">
         <div className="p-4 sm:p-5 flex flex-col gap-3.5">
-          {/* هدر: شماره + نوع + عنوان خلاصه در حالت بسته + عملیات */}
-          <div className="flex flex-wrap items-center gap-2">
+          {/* هدر: شماره + نوع + عنوان خلاصه در حالت بسته + عملیات (بدون شکست خط در موبایل) */}
+          <div className="flex items-center justify-between gap-1.5 sm:gap-2 min-w-0">
             <button
               type="button"
               onClick={onToggleCollapse}
-              className="flex items-center gap-2 group text-right cursor-pointer"
+              className="flex items-center gap-1.5 sm:gap-2 group text-right cursor-pointer min-w-0 flex-1 overflow-hidden"
               title={isCollapsed ? "باز کردن تنظیمات سوال" : "جمع کردن سوال"}
             >
-              <span className="w-8 h-8 flex items-center justify-center bg-sec dark:bg-[#1C2536] text-white rounded-full text-sm font-black border border-primary/30 group-hover:bg-teal transition-colors">
+              <span className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-sec dark:bg-[#1C2536] text-white rounded-full text-xs sm:text-sm font-black border border-primary/30 group-hover:bg-teal transition-colors shrink-0">
                 {faNum(index + 1)}
               </span>
-              <Badge color={meta.color}>
+              <Badge color={meta.color} className="shrink-0 text-[10px] sm:text-xs">
                 {(() => { const Icon = QUESTION_TYPE_ICONS[q.type]; return Icon ? <Icon size={12} /> : null; })()} {meta.label}
               </Badge>
               {isCollapsed && (
-                <span className="text-xs sm:text-sm font-extrabold text-sec dark:text-white truncate max-w-[180px] sm:max-w-[340px]">
+                <span className="text-xs sm:text-sm font-extrabold text-sec dark:text-white truncate min-w-0 flex-1">
                   {q.title || "متن سوال..."}
                 </span>
               )}
             </button>
-            <label className="flex items-center gap-1.5 text-xs font-bold text-gray-500 dark:text-gray-400 mr-auto cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={q.required}
-                onChange={(e) => onChange({ required: e.target.checked })}
-                className="accent-ecosystem-normal w-4 h-4"
-              />
-              اجباری
-            </label>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => onMove(-1)}
-                disabled={index === 0}
-                className="w-8 h-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C2536] flex items-center justify-center text-sec dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#151C28] disabled:opacity-30 transition-colors"
-                title="بالا"
-              >
-                <ChevronUp size={15} />
-              </button>
-              <button
-                type="button"
-                onClick={() => onMove(1)}
-                disabled={index === total - 1}
-                className="w-8 h-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C2536] flex items-center justify-center text-sec dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#151C28] disabled:opacity-30 transition-colors"
-                title="پایین"
-              >
-                <ChevronDown size={15} />
-              </button>
-              <button
-                type="button"
-                onClick={onDelete}
-                className="w-8 h-8 rounded-xl border border-female-normal/40 bg-white dark:bg-[#1C2536] flex items-center justify-center text-female-normal hover:bg-female-light dark:hover:bg-pink-950/40 transition-colors"
-                title="حذف سوال"
-              >
-                <Trash2 size={15} />
-              </button>
-              <button
-                type="button"
-                onClick={onToggleCollapse}
-                className="w-8 h-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C2536] flex items-center justify-center text-sec dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#151C28] transition-colors"
-                title={isCollapsed ? "باز کردن" : "بستن"}
-              >
-                <ChevronDown size={15} className={`transition-transform duration-200 ${isCollapsed ? "" : "rotate-180"}`} />
-              </button>
+
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <label className="flex items-center gap-1 text-xs font-bold text-gray-500 dark:text-gray-400 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={q.required}
+                  onChange={(e) => onChange({ required: e.target.checked })}
+                  className="accent-ecosystem-normal w-3.5 h-3.5 sm:w-4 sm:h-4"
+                />
+                <span className="hidden xs:inline">اجباری</span>
+              </label>
+              <div className="flex items-center gap-0.5 sm:gap-1">
+                <button
+                  type="button"
+                  onClick={() => onMove(-1)}
+                  disabled={index === 0}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C2536] flex items-center justify-center text-sec dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#151C28] disabled:opacity-30 transition-colors"
+                  title="بالا"
+                >
+                  <ChevronUp size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onMove(1)}
+                  disabled={index === total - 1}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C2536] flex items-center justify-center text-sec dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#151C28] disabled:opacity-30 transition-colors"
+                  title="پایین"
+                >
+                  <ChevronDown size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={onDelete}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl border border-female-normal/40 bg-white dark:bg-[#1C2536] flex items-center justify-center text-female-normal hover:bg-female-light dark:hover:bg-pink-950/40 transition-colors"
+                  title="حذف سوال"
+                >
+                  <Trash2 size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={onToggleCollapse}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C2536] flex items-center justify-center text-sec dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#151C28] transition-colors"
+                  title={isCollapsed ? "باز کردن" : "بستن"}
+                >
+                  <ChevronDown size={14} className={`transition-transform duration-200 ${isCollapsed ? "" : "rotate-180"}`} />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1078,90 +1081,60 @@ function QuestionEditor({
   );
 }
 
-// ─── باکس میانبر سوالات / پالت افزودن سریع (مخصوص سایدبار چپ) ───
+// ─── باکس میانبر سوالات / پالت افزودن سریع (مخصوص سایدبار چپ با تم نارنجی رکاد) ───
 function QuickQuestionPalette({ availableCategories, onAddQuestion }) {
-  const [activeCategory, setActiveCategory] = useState("all");
-
-  const categories = useMemo(() => {
-    return [
-      { key: "all", title: "همه" },
-      ...(availableCategories || []),
-    ];
+  const allTypes = useMemo(() => {
+    if (!availableCategories || availableCategories.length === 0) return [];
+    const list = [];
+    availableCategories.forEach((cat) => {
+      (cat.types || []).forEach((key) => {
+        const t = getEffectiveQuestionType(key);
+        if (t && !list.some((item) => item.key === key)) {
+          // اگر عنوان سوال طولانی است یا دارای پرانتز/توضیح اضافی است، کل سطر را می‌گیرد
+          const isWide =
+            t.label.length > 13 ||
+            t.label.includes("(") ||
+            ["matrix", "picture_choice", "nps", "likert", "file_upload", "date_picker"].includes(key);
+          list.push({ key, ...t, isWide, catTitle: cat.title });
+        }
+      });
+    });
+    return list;
   }, [availableCategories]);
 
-  const filteredTypes = useMemo(() => {
-    if (!availableCategories || availableCategories.length === 0) return [];
-    if (activeCategory === "all") {
-      const all = [];
-      availableCategories.forEach((cat) => {
-        (cat.types || []).forEach((key) => {
-          const t = getEffectiveQuestionType(key);
-          if (t && !all.some((item) => item.key === key)) {
-            all.push({ key, ...t, catKey: cat.key });
-          }
-        });
-      });
-      return all;
-    }
-    const targetCat = availableCategories.find((c) => c.key === activeCategory);
-    if (!targetCat) return [];
-    return (targetCat.types || [])
-      .map((key) => {
-        const t = getEffectiveQuestionType(key);
-        return t ? { key, ...t, catKey: targetCat.key } : null;
-      })
-      .filter(Boolean);
-  }, [activeCategory, availableCategories]);
-
   return (
-    <div className="rounded-2xl border-2 border-gray-200/90 dark:border-slate-700 bg-white dark:bg-[#131B2E] p-3 sm:p-3.5 flex flex-col gap-2.5 shadow-sm">
+    <div className="rounded-2xl border-2 border-orange/35 dark:border-orange/40 bg-white dark:bg-[#131B2E] p-3 sm:p-3.5 flex flex-col gap-2.5 shadow-sm">
       {/* هدر باکس میانبر سوالات */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <Sparkles size={15} className="text-teal" />
-          <span className="text-xs sm:text-sm font-black text-navy dark:text-white">
+          <Sparkles size={15} className="text-orange" />
+          <span className="text-xs sm:text-sm font-black text-orange">
             میانبر سوالات
           </span>
         </div>
-        <span className="text-[10px] font-bold text-teal bg-teal/10 px-2 py-0.5 rounded-full border border-teal/20">
-          {faNum(filteredTypes.length)} نوع سوال
+        <span className="text-[10px] font-bold text-orange bg-orange/10 px-2 py-0.5 rounded-full border border-orange/25">
+          {faNum(allTypes.length)} نوع سوال
         </span>
       </div>
 
-      {/* تب‌های کوچک فیلتر دسته‌بندی */}
-      <div className="flex items-center gap-1 overflow-x-auto pb-1 custom-scrollbar">
-        {categories.map((cat) => (
-          <button
-            key={cat.key}
-            type="button"
-            onClick={() => setActiveCategory(cat.key)}
-            className={`text-[10px] font-black px-2 py-1 rounded-lg whitespace-nowrap transition-all cursor-pointer ${
-              activeCategory === cat.key
-                ? "bg-teal text-white shadow-2xs"
-                : "bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:text-navy dark:hover:text-white"
-            }`}
-          >
-            {cat.title}
-          </button>
-        ))}
-      </div>
-
-      {/* شبکه کارت‌ها/دکمه‌های میانبر افزودن سوال */}
-      <div className="grid grid-cols-2 gap-1.5 max-h-[250px] overflow-y-auto pr-0.5 custom-scrollbar">
-        {filteredTypes.map((item) => {
+      {/* شبکه دکمه‌های میانبر افزودن سوال با تم نارنجی و تنظیم خودکار ردیف‌ها */}
+      <div className="grid grid-cols-2 gap-1.5 max-h-[300px] overflow-y-auto pr-0.5 custom-scrollbar">
+        {allTypes.map((item) => {
           const Icon = QUESTION_TYPE_ICONS[item.key] || Plus;
           return (
             <button
               key={item.key}
               type="button"
               onClick={() => onAddQuestion(item.key)}
-              title={item.hint || item.label}
-              className="group flex items-center gap-1.5 p-2 rounded-xl border border-gray-200/80 dark:border-slate-700/80 bg-gray-50/70 dark:bg-[#1C2536] hover:border-teal hover:bg-teal/5 dark:hover:bg-teal/10 hover:shadow-xs transition-all cursor-pointer text-right w-full"
+              title={item.hint ? `${item.label} — ${item.hint}` : item.label}
+              className={`group flex items-center gap-2 p-2 rounded-xl border border-orange/30 dark:border-orange/40 bg-white dark:bg-[#1C2536] hover:border-orange hover:bg-orange/5 dark:hover:bg-orange/15 hover:shadow-xs hover:-translate-y-0.5 transition-all cursor-pointer text-right ${
+                item.isWide ? "col-span-2" : "col-span-1"
+              }`}
             >
-              <span className="w-6 h-6 rounded-lg bg-white dark:bg-slate-800 flex items-center justify-center shrink-0 text-teal group-hover:scale-110 transition-transform shadow-2xs border border-gray-100 dark:border-slate-700">
+              <span className="w-6 h-6 rounded-lg bg-orange/10 dark:bg-orange/20 flex items-center justify-center shrink-0 text-orange group-hover:scale-110 transition-transform border border-orange/25">
                 <Icon size={13} />
               </span>
-              <span className="text-[11px] font-black text-navy dark:text-slate-200 truncate group-hover:text-teal transition-colors">
+              <span className="text-xs font-black text-ink dark:text-slate-100 group-hover:text-orange transition-colors truncate min-w-0 flex-1">
                 {item.label}
               </span>
             </button>
