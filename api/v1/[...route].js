@@ -868,6 +868,11 @@ export default async function handler(req, res) {
         };
       } catch {}
 
+      const uploadsDir = path.join(cwd, "uploads");
+      const uploadsStats = fs.existsSync(uploadsDir)
+        ? getDirSize(uploadsDir)
+        : { bytes: (dbStats.assetsCount || 0) * 50000, files: dbStats.assetsCount || 0 };
+
       const totalLocalBytes =
         publicStats.bytes +
         distStats.bytes +
