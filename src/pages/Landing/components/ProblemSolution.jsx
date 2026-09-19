@@ -44,7 +44,7 @@ export default function ProblemSolution() {
             <AlertCircle size={14} className="text-[#F59E0B]" />
             چرا ابزارهای قدیمی دیگر کافی نیستند؟
           </div>
-          <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white leading-tight mb-4">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white leading-tight mb-4 whitespace-normal lg:whitespace-nowrap">
             ساخت فرم‌های حرفه‌ای بدون دردسرهای معمول
           </h2>
           <p className="text-sm sm:text-base text-slate-600 dark:text-[#94A3B8]">

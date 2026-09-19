@@ -16,7 +16,7 @@ export default function FinalCTA() {
               شروع در کمتر از ۲ دقیقه
             </div>
 
-            <h2 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white leading-tight">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white leading-tight whitespace-normal lg:whitespace-nowrap">
               همین حالا اولین فرم حرفه‌ای‌ات را بساز
             </h2>
 

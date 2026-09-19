@@ -84,10 +84,9 @@ export default function Hero({ onOpenDemo }) {
           </div>
 
           {/* عنوان اصلی H1 */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.25] text-slate-900 dark:text-white mb-6">
-            فرم بساز، پاسخ بگیر، تصمیم درست بگیر —
-            <br className="hidden sm:inline" />
-            <span className="bg-gradient-to-r from-teal-600 via-sky-600 to-teal-500 dark:from-[#2DD4BF] dark:via-[#38BDF8] dark:to-[#2DD4BF] bg-clip-text text-transparent inline-block mt-2">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.3] text-slate-900 dark:text-white mb-6 max-w-5xl mx-auto whitespace-normal lg:whitespace-nowrap">
+            فرم بساز، پاسخ بگیر و تصمیم درست بگیر —{" "}
+            <span className="bg-gradient-to-r from-teal-600 via-sky-600 to-teal-500 dark:from-[#2DD4BF] dark:via-[#38BDF8] dark:to-[#2DD4BF] bg-clip-text text-transparent inline-block">
               در کمتر از ۲ دقیقه
             </span>
           </h1>

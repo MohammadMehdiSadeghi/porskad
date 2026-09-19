@@ -56,7 +56,7 @@ export default function ProductShowcase() {
             <Layers size={14} />
             رابط کاربری فرم‌ساز ماژولار
           </div>
-          <h2 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white leading-tight mb-4">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white leading-tight mb-4 whitespace-normal lg:whitespace-nowrap">
             فرمساز ماژولار؛ مرتب‌سازی، تنظیم، انتشار
           </h2>
           <p className="text-sm sm:text-base text-slate-600 dark:text-[#94A3B8]">
