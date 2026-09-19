@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { X, Check, ArrowLeft, CornerDownLeft, CheckCircle2, Star } from "lucide-react";
 import { Link } from "react-router-dom";
+import StickerCard from "../../../components/ui/StickerCard";
+import Badge from "../../../components/ui/Badge";
 
 export default function DemoModal({ isOpen, onClose }) {
   const [step, setStep] = useState(0);
@@ -55,12 +57,17 @@ export default function DemoModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-[#1E293B] w-full max-w-2xl rounded-3xl p-6 sm:p-10 relative shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <StickerCard
+        theme="white"
+        borderWidth="border-2"
+        shadow="shadow-[6px_6px_0_#202A5A] dark:shadow-[6px_6px_0_#59BBAF]"
+        className="w-full max-w-2xl p-6 sm:p-10 relative overflow-hidden"
+      >
         {/* دکمه بستن */}
         <button
           onClick={onClose}
-          className="absolute top-5 left-5 p-2 rounded-xl bg-slate-100 dark:bg-[#0B0F19] text-slate-500 dark:text-[#94A3B8] hover:text-slate-800 dark:hover:text-white border border-slate-200 dark:border-[#1E293B] transition-colors"
+          className="absolute top-5 left-5 p-2 rounded-xl bg-slate-100 dark:bg-[#131B2E] text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white border-2 border-[#202A5A]/20 dark:border-white/10 shadow-[2px_2px_0_#202A5A]/20 transition-all active:translate-x-[1px] active:translate-y-[1px]"
           aria-label="بستن پنجره"
         >
           <X size={18} />
@@ -69,21 +76,21 @@ export default function DemoModal({ isOpen, onClose }) {
         {!submitted ? (
           <div className="space-y-6">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-1 rounded-lg bg-teal-500/15 text-teal-700 dark:text-[#2DD4BF] text-xs font-black">
+              <Badge theme="teal" size="sm">
                 دموی تعاملی
-              </span>
-              <span className="text-xs text-slate-500 dark:text-[#94A3B8]">گام {step + 1} از {questions.length}</span>
+              </Badge>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">گام {step + 1} از {questions.length}</span>
             </div>
 
             {/* نوار پروگرس */}
-            <div className="w-full bg-slate-100 dark:bg-[#0B0F19] h-1.5 rounded-full overflow-hidden">
+            <div className="w-full bg-slate-100 dark:bg-[#0B0F17] h-2.5 rounded-full overflow-hidden border-2 border-[#202A5A]/15 dark:border-[#59BBAF]/30 p-0.5">
               <div
-                className="bg-gradient-to-r from-[#2DD4BF] to-[#38BDF8] h-full transition-all duration-300"
+                className="bg-[#59BBAF] h-full rounded-full transition-all duration-300"
                 style={{ width: `${((step + 1) / questions.length) * 100}%` }}
               />
             </div>
 
-            <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-snug">
+            <h3 className="text-xl sm:text-2xl font-black text-[#202A5A] dark:text-white leading-snug">
               {questions[step].title}
             </h3>
 
@@ -94,12 +101,12 @@ export default function DemoModal({ isOpen, onClose }) {
                   value={answers.name}
                   onChange={(e) => setAnswers({ ...answers, name: e.target.value })}
                   placeholder={questions[step].placeholder}
-                  className="w-full px-5 py-4 bg-slate-50 dark:bg-[#0B0F19] border border-slate-200 dark:border-[#1E293B] focus:border-teal-500 dark:focus:border-[#2DD4BF] rounded-2xl text-slate-900 dark:text-white text-base outline-none transition-all"
+                  className="w-full px-5 py-4 bg-slate-50 dark:bg-[#0B0F17] border-2 border-[#202A5A]/20 dark:border-[#59BBAF]/40 focus:border-[#59BBAF] rounded-2xl text-[#202A5A] dark:text-white text-base font-bold outline-none transition-all shadow-[2px_2px_0_#202A5A]/10"
                   autoFocus
                   onKeyDown={(e) => e.key === "Enter" && handleNext()}
                 />
-                <span className="text-xs text-slate-500 dark:text-[#94A3B8] flex items-center gap-1">
-                  <CornerDownLeft size={14} className="text-teal-600 dark:text-[#2DD4BF]" />
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                  <CornerDownLeft size={14} className="text-[#59BBAF]" />
                   برای رفتن به مرحله بعد کلید Enter را فشار دهید
                 </span>
               </div>
@@ -114,14 +121,14 @@ export default function DemoModal({ isOpen, onClose }) {
                       setAnswers({ ...answers, purpose: opt });
                       setTimeout(handleNext, 200);
                     }}
-                    className={`w-full p-4 rounded-2xl border-2 text-right transition-all flex items-center justify-between ${
+                    className={`w-full p-4 rounded-2xl border-2 text-right transition-all flex items-center justify-between active:translate-x-[1px] active:translate-y-[1px] ${
                       answers.purpose === opt
-                        ? "bg-teal-500/10 border-teal-500 dark:border-[#2DD4BF] text-slate-900 dark:text-white"
-                        : "bg-slate-50 dark:bg-[#0B0F19] border-slate-200 dark:border-[#1E293B] text-slate-700 dark:text-[#94A3B8] hover:text-slate-900 dark:hover:text-white hover:border-sky-400 dark:hover:border-[#38BDF8]/40"
+                        ? "bg-[#59BBAF]/20 border-[#59BBAF] text-[#202A5A] dark:text-white shadow-[2.5px_2.5px_0_#59BBAF]"
+                        : "bg-slate-50 dark:bg-[#0B0F17] border-[#202A5A]/20 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-[#59BBAF] shadow-[2px_2px_0_#202A5A]/10"
                     }`}
                   >
-                    <span className="text-sm font-bold">{opt}</span>
-                    {answers.purpose === opt && <Check size={16} className="text-teal-600 dark:text-[#2DD4BF]" />}
+                    <span className="text-sm font-black">{opt}</span>
+                    {answers.purpose === opt && <Check size={16} className="text-[#59BBAF]" />}
                   </button>
                 ))}
               </div>
@@ -141,16 +148,16 @@ export default function DemoModal({ isOpen, onClose }) {
                         size={36}
                         className={
                           star <= answers.rating
-                            ? "fill-[#F59E0B] text-[#F59E0B]"
-                            : "text-slate-300 dark:text-[#334155]"
+                            ? "fill-[#F8A41D] text-[#F8A41D]"
+                            : "text-slate-300 dark:text-slate-600"
                         }
                       />
                     </button>
                   ))}
                 </div>
-                <p className="text-xs text-slate-500 dark:text-[#94A3B8]">
+                <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
                   {answers.rating > 0 ? (
-                    <>امتیاز انتخاب‌شده: <strong className="text-[#F59E0B]">{answers.rating} از ۵ ستاره</strong></>
+                    <>امتیاز انتخاب‌شده: <strong className="text-[#F8A41D]">{answers.rating} از ۵ ستاره</strong></>
                   ) : (
                     <span>روی ستاره‌ها کلیک کنید</span>
                   )}
@@ -158,11 +165,11 @@ export default function DemoModal({ isOpen, onClose }) {
               </div>
             )}
 
-            <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-[#1E293B]">
+            <div className="flex items-center justify-between pt-4 border-t-2 border-[#202A5A]/10 dark:border-white/10">
               {step > 0 ? (
                 <button
                   onClick={() => setStep(step - 1)}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-[#94A3B8] hover:text-slate-900 dark:hover:text-white"
+                  className="px-4 py-2 text-xs font-black text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 >
                   گام قبلی
                 </button>
@@ -170,7 +177,7 @@ export default function DemoModal({ isOpen, onClose }) {
 
               <button
                 onClick={handleNext}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#2DD4BF] to-[#38BDF8] text-slate-950 text-xs font-black shadow-md shadow-teal-500/20"
+                className="rokad-btn-primary text-xs px-6 py-2.5 flex items-center gap-2"
               >
                 <span>{step === questions.length - 1 ? "پایان دمو" : "ادامه"}</span>
                 <ArrowLeft size={16} />
@@ -179,15 +186,15 @@ export default function DemoModal({ isOpen, onClose }) {
           </div>
         ) : (
           <div className="py-8 text-center space-y-6">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500 text-emerald-600 dark:text-[#10B981] flex items-center justify-center mx-auto">
+            <div className="w-16 h-16 rounded-2xl bg-[#59BBAF] border-2 border-[#202A5A] text-slate-950 flex items-center justify-center mx-auto shadow-[4px_4px_0_#202A5A]">
               <CheckCircle2 size={36} />
             </div>
 
             <div>
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
+              <h3 className="text-2xl font-black text-[#202A5A] dark:text-white mb-2">
                 تجربه فرم‌سازی حرفه‌ای را لمس کردید!
               </h3>
-              <p className="text-sm text-slate-600 dark:text-[#94A3B8] max-w-md mx-auto leading-relaxed">
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
                 همین حالا حساب کاربری رایگان خود را ایجاد کنید و در کمتر از ۲ دقیقه اولین پرسشنامه اختصاصی‌تان را بسازید.
               </p>
             </div>
@@ -196,20 +203,20 @@ export default function DemoModal({ isOpen, onClose }) {
               <Link
                 to="/register"
                 onClick={handleReset}
-                className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-[#2DD4BF] text-slate-950 font-black text-sm shadow-md shadow-teal-500/30"
+                className="rokad-btn-primary text-sm px-7 py-3.5"
               >
                 ساخت رایگان اولین فرم
               </Link>
               <button
                 onClick={handleReset}
-                className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-slate-100 dark:bg-[#0B0F19] text-slate-700 dark:text-[#94A3B8] hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-[#1E293B] text-xs font-bold"
+                className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-slate-100 dark:bg-[#131B2E] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border-2 border-[#202A5A]/20 dark:border-white/10 text-xs font-black shadow-[2px_2px_0_#202A5A]/20 active:translate-x-[1px] active:translate-y-[1px]"
               >
                 بستن پنجره
               </button>
             </div>
           </div>
         )}
-      </div>
+      </StickerCard>
     </div>
   );
 }
