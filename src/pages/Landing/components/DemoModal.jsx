@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Check, ArrowLeft, ArrowRight, CornerDownLeft, Sparkles, CheckCircle2, Star } from "lucide-react";
+import { X, Check, ArrowLeft, CornerDownLeft, CheckCircle2, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function DemoModal({ isOpen, onClose }) {
@@ -8,7 +8,7 @@ export default function DemoModal({ isOpen, onClose }) {
     name: "",
     purpose: "",
     experience: "",
-    rating: 5,
+    rating: 0,
   });
   const [submitted, setSubmitted] = useState(false);
 
@@ -50,20 +50,18 @@ export default function DemoModal({ isOpen, onClose }) {
   const handleReset = () => {
     setSubmitted(false);
     setStep(0);
-    setAnswers({ name: "", purpose: "", experience: "", rating: 5 });
+    setAnswers({ name: "", purpose: "", experience: "", rating: 0 });
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-fadeIn">
-      <div className="bg-[#131B2E] border border-[#1E293B] w-full max-w-2xl rounded-3xl p-6 sm:p-10 relative shadow-2xl overflow-hidden">
-        {/* هاله پس‌زمینه */}
-        <div className="absolute top-0 right-0 w-48 h-48 bg-[#2DD4BF]/10 blur-3xl pointer-events-none rounded-full" />
-
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md animate-fadeIn">
+      <div className="bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-[#1E293B] w-full max-w-2xl rounded-3xl p-6 sm:p-10 relative shadow-2xl overflow-hidden">
         {/* دکمه بستن */}
         <button
           onClick={onClose}
-          className="absolute top-5 left-5 p-2 rounded-xl bg-[#0B0F19] text-[#94A3B8] hover:text-white border border-[#1E293B] transition-colors"
+          className="absolute top-5 left-5 p-2 rounded-xl bg-slate-100 dark:bg-[#0B0F19] text-slate-500 dark:text-[#94A3B8] hover:text-slate-800 dark:hover:text-white border border-slate-200 dark:border-[#1E293B] transition-colors"
+          aria-label="بستن پنجره"
         >
           <X size={18} />
         </button>
@@ -71,21 +69,21 @@ export default function DemoModal({ isOpen, onClose }) {
         {!submitted ? (
           <div className="space-y-6">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-1 rounded-lg bg-[#2DD4BF]/15 text-[#2DD4BF] text-xs font-black">
+              <span className="px-2.5 py-1 rounded-lg bg-teal-500/15 text-teal-700 dark:text-[#2DD4BF] text-xs font-black">
                 دموی تعاملی
               </span>
-              <span className="text-xs text-[#94A3B8]">گام {step + 1} از {questions.length}</span>
+              <span className="text-xs text-slate-500 dark:text-[#94A3B8]">گام {step + 1} از {questions.length}</span>
             </div>
 
             {/* نوار پروگرس */}
-            <div className="w-full bg-[#0B0F19] h-1.5 rounded-full overflow-hidden">
+            <div className="w-full bg-slate-100 dark:bg-[#0B0F19] h-1.5 rounded-full overflow-hidden">
               <div
                 className="bg-gradient-to-r from-[#2DD4BF] to-[#38BDF8] h-full transition-all duration-300"
                 style={{ width: `${((step + 1) / questions.length) * 100}%` }}
               />
             </div>
 
-            <h3 className="text-xl sm:text-2xl font-black text-white leading-snug">
+            <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-snug">
               {questions[step].title}
             </h3>
 
@@ -96,12 +94,12 @@ export default function DemoModal({ isOpen, onClose }) {
                   value={answers.name}
                   onChange={(e) => setAnswers({ ...answers, name: e.target.value })}
                   placeholder={questions[step].placeholder}
-                  className="w-full px-5 py-4 bg-[#0B0F19] border border-[#1E293B] focus:border-[#2DD4BF] rounded-2xl text-white text-base outline-none transition-all"
+                  className="w-full px-5 py-4 bg-slate-50 dark:bg-[#0B0F19] border border-slate-200 dark:border-[#1E293B] focus:border-teal-500 dark:focus:border-[#2DD4BF] rounded-2xl text-slate-900 dark:text-white text-base outline-none transition-all"
                   autoFocus
                   onKeyDown={(e) => e.key === "Enter" && handleNext()}
                 />
-                <span className="text-xs text-[#94A3B8] flex items-center gap-1">
-                  <CornerDownLeft size={14} className="text-[#2DD4BF]" />
+                <span className="text-xs text-slate-500 dark:text-[#94A3B8] flex items-center gap-1">
+                  <CornerDownLeft size={14} className="text-teal-600 dark:text-[#2DD4BF]" />
                   برای رفتن به مرحله بعد کلید Enter را فشار دهید
                 </span>
               </div>
@@ -118,12 +116,12 @@ export default function DemoModal({ isOpen, onClose }) {
                     }}
                     className={`w-full p-4 rounded-2xl border-2 text-right transition-all flex items-center justify-between ${
                       answers.purpose === opt
-                        ? "bg-[#2DD4BF]/10 border-[#2DD4BF] text-white"
-                        : "bg-[#0B0F19] border-[#1E293B] text-[#94A3B8] hover:text-white hover:border-[#38BDF8]/40"
+                        ? "bg-teal-500/10 border-teal-500 dark:border-[#2DD4BF] text-slate-900 dark:text-white"
+                        : "bg-slate-50 dark:bg-[#0B0F19] border-slate-200 dark:border-[#1E293B] text-slate-700 dark:text-[#94A3B8] hover:text-slate-900 dark:hover:text-white hover:border-sky-400 dark:hover:border-[#38BDF8]/40"
                     }`}
                   >
                     <span className="text-sm font-bold">{opt}</span>
-                    {answers.purpose === opt && <Check size={16} className="text-[#2DD4BF]" />}
+                    {answers.purpose === opt && <Check size={16} className="text-teal-600 dark:text-[#2DD4BF]" />}
                   </button>
                 ))}
               </div>
@@ -137,29 +135,34 @@ export default function DemoModal({ isOpen, onClose }) {
                       key={star}
                       onClick={() => setAnswers({ ...answers, rating: star })}
                       className="p-1.5 hover:scale-125 transition-transform"
+                      aria-label={`امتیاز ${star}`}
                     >
                       <Star
                         size={36}
                         className={
                           star <= answers.rating
                             ? "fill-[#F59E0B] text-[#F59E0B]"
-                            : "text-[#334155]"
+                            : "text-slate-300 dark:text-[#334155]"
                         }
                       />
                     </button>
                   ))}
                 </div>
-                <p className="text-xs text-[#94A3B8]">
-                  امتیاز انتخاب‌شده: <strong className="text-[#F59E0B]">{answers.rating} از ۵ ستاره</strong>
+                <p className="text-xs text-slate-500 dark:text-[#94A3B8]">
+                  {answers.rating > 0 ? (
+                    <>امتیاز انتخاب‌شده: <strong className="text-[#F59E0B]">{answers.rating} از ۵ ستاره</strong></>
+                  ) : (
+                    <span>روی ستاره‌ها کلیک کنید</span>
+                  )}
                 </p>
               </div>
             )}
 
-            <div className="flex items-center justify-between pt-4 border-t border-[#1E293B]">
+            <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-[#1E293B]">
               {step > 0 ? (
                 <button
                   onClick={() => setStep(step - 1)}
-                  className="px-4 py-2 text-xs font-bold text-[#94A3B8] hover:text-white"
+                  className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-[#94A3B8] hover:text-slate-900 dark:hover:text-white"
                 >
                   گام قبلی
                 </button>
@@ -167,7 +170,7 @@ export default function DemoModal({ isOpen, onClose }) {
 
               <button
                 onClick={handleNext}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#2DD4BF] to-[#38BDF8] text-[#0B0F19] text-xs font-black shadow-lg shadow-[#2DD4BF]/20"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#2DD4BF] to-[#38BDF8] text-slate-950 text-xs font-black shadow-md shadow-teal-500/20"
               >
                 <span>{step === questions.length - 1 ? "پایان دمو" : "ادامه"}</span>
                 <ArrowLeft size={16} />
@@ -176,15 +179,15 @@ export default function DemoModal({ isOpen, onClose }) {
           </div>
         ) : (
           <div className="py-8 text-center space-y-6">
-            <div className="w-16 h-16 rounded-full bg-[#10B981]/20 border border-[#10B981] text-[#10B981] flex items-center justify-center mx-auto">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500 text-emerald-600 dark:text-[#10B981] flex items-center justify-center mx-auto">
               <CheckCircle2 size={36} />
             </div>
 
             <div>
-              <h3 className="text-2xl font-black text-white mb-2">
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
                 تجربه فرم‌سازی حرفه‌ای را لمس کردید!
               </h3>
-              <p className="text-sm text-[#94A3B8] max-w-md mx-auto leading-relaxed">
+              <p className="text-sm text-slate-600 dark:text-[#94A3B8] max-w-md mx-auto leading-relaxed">
                 همین حالا حساب کاربری رایگان خود را ایجاد کنید و در کمتر از ۲ دقیقه اولین پرسشنامه اختصاصی‌تان را بسازید.
               </p>
             </div>
@@ -193,13 +196,13 @@ export default function DemoModal({ isOpen, onClose }) {
               <Link
                 to="/register"
                 onClick={handleReset}
-                className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-[#2DD4BF] text-[#0B0F19] font-black text-sm shadow-lg shadow-[#2DD4BF]/30"
+                className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-[#2DD4BF] text-slate-950 font-black text-sm shadow-md shadow-teal-500/30"
               >
                 ساخت رایگان اولین فرم
               </Link>
               <button
                 onClick={handleReset}
-                className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-[#0B0F19] text-[#94A3B8] hover:text-white border border-[#1E293B] text-xs font-bold"
+                className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-slate-100 dark:bg-[#0B0F19] text-slate-700 dark:text-[#94A3B8] hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-[#1E293B] text-xs font-bold"
               >
                 بستن پنجره
               </button>

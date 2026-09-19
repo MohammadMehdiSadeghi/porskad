@@ -3,15 +3,11 @@ import {
   Layers,
   ListOrdered,
   GitFork,
-  History,
   BarChart3,
   FileSpreadsheet,
   Share2,
-  ShieldCheck,
-  Trash2,
   Sparkles,
-  CheckCircle,
-  ArrowLeft
+  CheckCircle
 } from "lucide-react";
 
 export default function Features() {
@@ -22,9 +18,9 @@ export default function Features() {
       title: "رندر اسلایدی و روان",
       desc: "تجربه‌ای شبیه گفت‌وگو؛ فوکوس خودکار، میانبر Enter، انیمیشن دقیق و روان بین سوالات برای حداکثر تمرکز کاربر.",
       badge: "تجربه کاربری",
-      color: "text-[#2DD4BF]",
-      bg: "bg-[#2DD4BF]/10",
-      border: "border-[#2DD4BF]/20",
+      color: "text-teal-600 dark:text-[#2DD4BF]",
+      bg: "bg-teal-500/10",
+      border: "border-teal-500/20",
     },
     {
       id: 2,
@@ -32,106 +28,76 @@ export default function Features() {
       title: "۸ نوع فیلد حرفه‌ای",
       desc: "از متن کوتاه و پاراگراف تا چندگزینه‌ای، ایمیل، امتیاز ستاره‌ای و اعتبارسنجی زنده شماره موبایل ایران.",
       badge: "انواع فیلد",
-      color: "text-[#38BDF8]",
-      bg: "bg-[#38BDF8]/10",
-      border: "border-[#38BDF8]/20",
+      color: "text-sky-600 dark:text-[#38BDF8]",
+      bg: "bg-sky-500/10",
+      border: "border-sky-500/20",
     },
     {
       id: 3,
       icon: GitFork,
       title: "منطق شرطی پیشرفته",
-      desc: "پرش هوشمند بین سوالات، نمایش یا پنهان‌سازی فیلدها و پایان زودهنگام فرم بر اساس پاسخ‌های قبلی کاربر.",
+      desc: "پرش هوشمند بین سوالات، نمایش یا پنهان‌سازی فیلدها و هدایت کاربر بر اساس پاسخ‌های انتخابی.",
       badge: "منطق شرطی",
-      color: "text-[#A855F7]",
-      bg: "bg-[#A855F7]/10",
-      border: "border-[#A855F7]/20",
+      color: "text-purple-600 dark:text-[#A855F7]",
+      bg: "bg-purple-500/10",
+      border: "border-purple-500/20",
     },
     {
       id: 4,
-      icon: History,
-      title: "پیش‌نویس خودکار ۷ روزه",
-      desc: "اگر پاسخ‌دهنده به هر دلیلی صفحه را ببندد، پاسخ‌های ثبت‌شده تا ۷ روز در مرورگر ذخیره می‌ماند و پاک نمی‌شود.",
-      badge: "بدون ریزش کاربر",
-      color: "text-[#10B981]",
-      bg: "bg-[#10B981]/10",
-      border: "border-[#10B981]/20",
+      icon: BarChart3,
+      title: "داشبورد تحلیلی زنده",
+      desc: "مشاهده لحظه‌ای پاسخ‌ها، تفکیک داده‌ها و نمودارهای توزیع پاسخ به صورت Realtime.",
+      badge: "گزارش‌گیری",
+      color: "text-amber-600 dark:text-[#F59E0B]",
+      bg: "bg-amber-500/10",
+      border: "border-amber-500/20",
     },
     {
       id: 5,
-      icon: BarChart3,
-      title: "داشبورد تحلیلی زنده",
-      desc: "مشاهده لحظه‌ای نرخ تکمیل، میانگین زمان پاسخ‌دهی، تفکیک دستگاه‌ها و نمودارهای توزیع پاسخ به صورت Realtime.",
-      badge: "گزارش‌گیری",
-      color: "text-[#F59E0B]",
-      bg: "bg-[#F59E0B]/10",
-      border: "border-[#F59E0B]/20",
-    },
-    {
-      id: 6,
       icon: FileSpreadsheet,
       title: "خروجی اکسل فارسیِ سالم",
       desc: "تولید مستقیم فایل CSV و Excel استاندارد با انکودینگ UTF-8 BOM بدون هیچ‌گونه به‌هم‌ریختگی یا خرابی حروف فارسی.",
       badge: "خروجی سازمانی",
-      color: "text-[#2DD4BF]",
-      bg: "bg-[#2DD4BF]/10",
-      border: "border-[#2DD4BF]/20",
+      color: "text-emerald-600 dark:text-[#10B981]",
+      bg: "bg-emerald-500/10",
+      border: "border-emerald-500/20",
     },
     {
-      id: 7,
+      id: 6,
       icon: Share2,
       title: "اشتراک‌گذاری چندکاناله",
       desc: "لینک اختصاصی، QR Code باکیفیت و کد Embed ریسپانسیو (iFrame) برای جاسازی آسان در سایت‌های وردپرس، لاراول و...",
       badge: "انتشار آسان",
-      color: "text-[#38BDF8]",
-      bg: "bg-[#38BDF8]/10",
-      border: "border-[#38BDF8]/20",
-    },
-    {
-      id: 8,
-      icon: ShieldCheck,
-      title: "امنیت در لایه دیتابیس",
-      desc: "پیاده‌سازی کامل Row-Level Security، تله ضد ربات (Honeypot) و اعمال محدودیت Rate Limiting به صورت پیش‌فرض.",
-      badge: "امنیت داده",
-      color: "text-[#F43F5E]",
-      bg: "bg-[#F43F5E]/10",
-      border: "border-[#F43F5E]/20",
-    },
-    {
-      id: 9,
-      icon: Trash2,
-      title: "سطل بازیافت ۳۰ روزه",
-      desc: "حذف تصادفی فرم یا داده‌ها دیگر فاجعه نیست؛ امکان بازیابی تضمین‌شده فرم‌ها و پاسخ‌ها تا ۳۰ روز با یک کلیک.",
-      badge: "بازیابی امن",
-      color: "text-[#A855F7]",
-      bg: "bg-[#A855F7]/10",
-      border: "border-[#A855F7]/20",
+      color: "text-indigo-600 dark:text-[#818CF8]",
+      bg: "bg-indigo-500/10",
+      border: "border-indigo-500/20",
     },
   ];
 
   return (
-    <section id="features" className="py-20 md:py-28 bg-[#0B0F19] relative">
+    <section id="features" className="py-20 md:py-28 bg-slate-50 dark:bg-[#0B0F19] relative transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#131B2E] border border-[#2DD4BF]/30 text-xs font-bold text-[#2DD4BF] mb-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#131B2E] border border-teal-500/30 text-xs font-bold text-teal-600 dark:text-[#2DD4BF] mb-4 shadow-sm">
             <Sparkles size={14} />
             امکانات و نوآوری‌های محصول
           </div>
-          <h2 className="text-3xl sm:text-5xl font-black text-white leading-tight mb-4">
+          <h2 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white leading-tight mb-4">
             هر آنچه برای ساخت پرسشنامه مدرن نیاز دارید
           </h2>
-          <p className="text-sm sm:text-base text-[#94A3B8]">
+          <p className="text-sm sm:text-base text-slate-600 dark:text-[#94A3B8]">
             طراحی شده با الهام از برترین فرم‌سازهای دنیا و بومی‌سازی دقیق برای کاربران فارسی‌زبان
           </p>
         </div>
 
-        {/* گرید ۳×۳ ویژگی‌ها */}
+        {/* گرید ویژگی‌ها */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((item) => {
             const Icon = item.icon;
             return (
               <div
                 key={item.id}
-                className="bg-[#131B2E] border border-[#1E293B] hover:border-[#2DD4BF]/40 rounded-3xl p-7 flex flex-col justify-between transition-all duration-300 hover:shadow-2xl hover:shadow-black/50 hover:-translate-y-1.5 group"
+                className="bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-[#1E293B] hover:border-teal-500/40 rounded-3xl p-7 flex flex-col justify-between transition-all duration-300 shadow-sm hover:shadow-xl dark:shadow-none hover:-translate-y-1 group"
               >
                 <div>
                   <div className="flex items-center justify-between mb-5">
@@ -140,22 +106,22 @@ export default function Features() {
                     >
                       <Icon size={24} />
                     </div>
-                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-[#0B0F19] text-[#94A3B8] border border-[#1E293B]">
+                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-[#0B0F19] text-slate-600 dark:text-[#94A3B8] border border-slate-200 dark:border-[#1E293B]">
                       {item.badge}
                     </span>
                   </div>
 
-                  <h3 className="text-lg font-black text-white mb-2.5 group-hover:text-[#2DD4BF] transition-colors">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2.5 group-hover:text-teal-600 dark:group-hover:text-[#2DD4BF] transition-colors">
                     {item.title}
                   </h3>
 
-                  <p className="text-xs sm:text-sm text-[#94A3B8] leading-relaxed font-normal">
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-[#94A3B8] leading-relaxed font-normal">
                     {item.desc}
                   </p>
                 </div>
 
-                <div className="pt-5 mt-5 border-t border-[#1E293B]/60 flex items-center gap-1.5 text-xs font-bold text-[#2DD4BF] opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span>تست شده در پروداکشن</span>
+                <div className="pt-5 mt-5 border-t border-slate-100 dark:border-[#1E293B]/60 flex items-center gap-1.5 text-xs font-bold text-teal-600 dark:text-[#2DD4BF] opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span>آماده استفاده</span>
                   <CheckCircle size={14} />
                 </div>
               </div>

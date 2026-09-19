@@ -74,8 +74,8 @@ export function ThemeProvider({ children }) {
   };
 
   const toggleTheme = () => {
-    if (theme === "light") setTheme("dark");
-    else setTheme("light");
+    const nextTheme = isDark ? "light" : "dark";
+    setTheme(nextTheme);
   };
 
   return (

@@ -1,51 +1,51 @@
 import React from "react";
-import { ShieldCheck, Database, Zap, Globe, Cpu, CheckCircle } from "lucide-react";
+import { Zap, Globe, Sparkles, CheckCircle2 } from "lucide-react";
 
 export default function SocialProof() {
   const stats = [
     {
-      value: "+۸۵",
-      label: "به‌روزرسانی امنیتی دیتابیس",
-      desc: "مایگریشن‌های تست‌شده و مستند",
-      icon: Database,
-      color: "text-[#2DD4BF]",
-      bg: "bg-[#2DD4BF]/10",
-      border: "border-[#2DD4BF]/20",
+      value: "۱۰۰٪",
+      label: "فارسی و راست‌چین",
+      desc: "طراحی شده برای زبان فارسی و تقویم شمسی",
+      icon: Sparkles,
+      color: "text-teal-600 dark:text-[#2DD4BF]",
+      bg: "bg-teal-500/10",
+      border: "border-teal-500/20",
     },
     {
-      value: "۱۰۰٪",
-      label: "ایزولاسیون چندمستأجری",
-      desc: "کنترل دسترسی با Row-Level Security",
-      icon: ShieldCheck,
-      color: "text-[#38BDF8]",
-      bg: "bg-[#38BDF8]/10",
-      border: "border-[#38BDF8]/20",
+      value: "UTF-8 BOM",
+      label: "خروجی اکسل استاندارد",
+      desc: "بدون به‌هم‌ریختگی حروف فارسی در Excel",
+      icon: CheckCircle2,
+      color: "text-sky-600 dark:text-[#38BDF8]",
+      bg: "bg-sky-500/10",
+      border: "border-sky-500/20",
     },
     {
       value: "< ۳۰۰ms",
-      label: "تاخیر پردازش Realtime",
-      desc: "اتصال زنده Realtime WebSocket",
+      label: "ثبت فوق‌سریع پاسخ‌ها",
+      desc: "عملکرد بهینه و سبک بدون سنگینی صفحه",
       icon: Zap,
-      color: "text-[#F59E0B]",
-      bg: "bg-[#F59E0B]/10",
-      border: "border-[#F59E0B]/20",
+      color: "text-amber-600 dark:text-[#F59E0B]",
+      bg: "bg-amber-500/10",
+      border: "border-amber-500/20",
     },
     {
       value: "۹۹.۹٪",
-      label: "پایداری زیرساخت Edge CDN",
+      label: "پایداری زیرساخت",
       desc: "شبکه توزیع محتوای پرسرعت ابری",
       icon: Globe,
-      color: "text-[#10B981]",
-      bg: "bg-[#10B981]/10",
-      border: "border-[#10B981]/20",
+      color: "text-emerald-600 dark:text-[#10B981]",
+      bg: "bg-emerald-500/10",
+      border: "border-emerald-500/20",
     },
   ];
 
   return (
-    <section className="py-14 bg-[#0B0F19] border-y border-[#1E293B]/60 relative z-10">
+    <section className="py-14 bg-slate-50 dark:bg-[#0B0F19] border-y border-slate-200 dark:border-[#1E293B]/60 relative z-10 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
-          <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#94A3B8]">
+          <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-[#94A3B8]">
             مورد اعتماد تیم‌های محصول‌محور، دانشگاه‌ها و سازمان‌های پیشرو
           </p>
         </div>
@@ -56,7 +56,7 @@ export default function SocialProof() {
             return (
               <div
                 key={i}
-                className="bg-[#131B2E]/60 hover:bg-[#131B2E] border border-[#1E293B] hover:border-[#2DD4BF]/40 rounded-2xl p-5 sm:p-6 text-center transition-all duration-300 group hover:-translate-y-1"
+                className="bg-white dark:bg-[#131B2E]/60 hover:bg-white dark:hover:bg-[#131B2E] border border-slate-200 dark:border-[#1E293B] hover:border-teal-500/40 rounded-2xl p-5 sm:p-6 text-center transition-all duration-300 shadow-sm dark:shadow-none group hover:-translate-y-1"
               >
                 <div
                   className={`w-12 h-12 rounded-xl ${stat.bg} ${stat.border} border flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform`}
@@ -66,8 +66,8 @@ export default function SocialProof() {
                 <div className={`text-2xl sm:text-3xl font-black ${stat.color} mb-1 tracking-tight`}>
                   {stat.value}
                 </div>
-                <div className="text-sm font-bold text-white mb-1">{stat.label}</div>
-                <div className="text-xs text-[#94A3B8]">{stat.desc}</div>
+                <div className="text-sm font-bold text-slate-900 dark:text-white mb-1">{stat.label}</div>
+                <div className="text-xs text-slate-500 dark:text-[#94A3B8]">{stat.desc}</div>
               </div>
             );
           })}
