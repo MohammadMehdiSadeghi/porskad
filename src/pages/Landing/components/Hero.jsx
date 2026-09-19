@@ -117,20 +117,16 @@ export default function Hero({ onOpenDemo }) {
             </button>
           </div>
 
-          {/* نوار قالب‌های محبوب و آماده */}
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs font-bold text-slate-600 dark:text-[#94A3B8]">
-            <span className="text-slate-400 dark:text-slate-500 text-[11px] ml-1">قالب‌های آماده:</span>
-            <span className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-[#1E293B] hover:border-teal-500/40 transition-colors shadow-sm">
-              🎯 استخدام و جذب نیرو
+          {/* خط اعتماد زیر دکمه‌ها */}
+          <div className="flex items-center justify-center gap-6 text-xs sm:text-sm text-slate-600 dark:text-[#94A3B8] font-medium">
+            <span className="flex items-center gap-1.5">
+              <CheckCircle2 size={16} className="text-teal-600 dark:text-[#2DD4BF]" />
+              بدون نیاز به کارت بانکی
             </span>
-            <span className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-[#1E293B] hover:border-teal-500/40 transition-colors shadow-sm">
-              ⭐ نظرسنجی رضایت مشتری
-            </span>
-            <span className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-[#1E293B] hover:border-teal-500/40 transition-colors shadow-sm">
-              🚀 ثبت‌نام وبینار و همایش
-            </span>
-            <span className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-[#1E293B] hover:border-teal-500/40 transition-colors shadow-sm">
-              💬 دریافت لید و مشاوره
+            <span className="text-slate-300 dark:text-[#1E293B]">•</span>
+            <span className="flex items-center gap-1.5">
+              <Zap size={16} className="text-sky-600 dark:text-[#38BDF8]" />
+              راه‌اندازی در کمتر از ۲ دقیقه
             </span>
           </div>
         </div>
