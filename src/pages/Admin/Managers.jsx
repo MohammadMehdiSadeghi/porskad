@@ -788,7 +788,7 @@ export default function Managers() {
               className="gap-1.5"
             >
               <Settings size={14} className="text-navy dark:text-slate-200" />
-              <span>تنظیمات و محدودیت‌های سامانه</span>
+              <span>تنظیمات سامانه</span>
             </Button>
           )}
           {canManage && (
@@ -1056,7 +1056,7 @@ export default function Managers() {
                         </div>
                       </div>
 
-                      {/* دکمه مشاهده و مدیریت کاربر */}
+                      {/* دکمه مدیریت کاربر */}
                       <div className="pt-0.5 mt-auto">
                         <button
                           type="button"
@@ -1068,7 +1068,7 @@ export default function Managers() {
                         >
                           <span className="flex items-center gap-1.5">
                             <Settings size={13} className="text-teal group-hover:text-white transition-colors" />
-                            <span>مشاهده و عملیات کاربر</span>
+                            <span>مدیریت کاربر</span>
                           </span>
                           <span className="text-xs font-bold text-ink/40 dark:text-slate-400 group-hover:text-white/90">مشاهده ←</span>
                         </button>
@@ -1088,6 +1088,7 @@ export default function Managers() {
         open={Boolean(selectedUserModal)}
         onClose={() => setSelectedUserModal(null)}
         title="مدیریت و مشخصات کاربر"
+        wide
       >
         {selectedUserModal && (() => {
           const m = selectedUserModal;
@@ -1121,11 +1122,11 @@ export default function Managers() {
                         ) : isSuperAdmin ? (
                           <span className="text-xs font-black text-amber-900 dark:text-amber-300 bg-amber-200 dark:bg-amber-950/60 border border-amber-400 dark:border-amber-700 rounded-full px-2.5 py-0.5 flex items-center gap-1">
                             <Shield size={11} />
-                            <span>سوپر ادمین (مدیر ارشد)</span>
+                            <span>سوپرادمین</span>
                           </span>
                         ) : (
                           <span className="text-xs font-bold text-navy dark:text-slate-200 bg-navy/10 dark:bg-slate-700 rounded-full px-2.5 py-0.5">
-                            کاربر عادی سیستم
+                            عضو عادی
                           </span>
                         )}
                       </div>
@@ -1144,23 +1145,23 @@ export default function Managers() {
 
                 <div className="flex items-center justify-between text-xs font-semibold text-ink-subtle dark:text-slate-400 pt-2 border-t border-navy/5 dark:border-slate-700">
                   <span className="flex items-center gap-1"><Calendar size={12} className="text-ink/40 dark:text-slate-400" /> تاریخ عضویت: <strong className="text-navy dark:text-slate-200">{faDate(m.created_at)}</strong></span>
-                  <span>کد شناسه: <code className="text-xs text-navy dark:text-slate-300 bg-white dark:bg-slate-900 px-1 py-0.5 rounded border border-ink/10 dark:border-slate-700 font-mono" dir="ltr">{m.id.slice(0, 8)}</code></span>
+                  <span>شناسه: <code className="text-xs text-navy dark:text-slate-300 bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-ink/10 dark:border-slate-700 font-mono" dir="ltr">{m.id.slice(0, 8)}</code></span>
                 </div>
               </div>
 
               {/* سهمیه و وضعیت فرم‌های کاربر */}
               <div className="bg-white dark:bg-slate-900 border-2 border-ink/10 dark:border-slate-700 rounded-2xl p-4 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-navy dark:text-slate-100 flex items-center gap-1.5">
-                    <BarChart3 size={15} className="text-teal" /> سهمیه، محدودیت‌ها و ظرفیت‌های کاربر
+                  <span className="text-xs sm:text-sm font-black text-navy dark:text-slate-100 flex items-center gap-1.5">
+                    <BarChart3 size={15} className="text-teal" /> سهمیه و دسترسی‌های کاربر
                   </span>
                   {m.is_owner ? (
                     <span className="text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/50 px-2 py-0.5 rounded-full">
-                      مالک کل — بدون محدودیت
+                      مالک (بدون محدودیت)
                     </span>
                   ) : (
                     <span className="text-xs font-bold text-teal dark:text-teal bg-teal/10 dark:bg-teal/10 px-2.5 py-0.5 rounded-full">
-                      قابل ویرایش دستی
+                      سهمیه سفارشی
                     </span>
                   )}
                 </div>
@@ -1168,17 +1169,17 @@ export default function Managers() {
                 {/* آمار خلاصه وضعیت */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
                   <div className="bg-bg-neutral dark:bg-slate-800 p-2.5 rounded-xl text-center">
-                    <span className="text-xs text-ink-subtle dark:text-slate-400 block font-semibold mb-0.5">فرم‌های فعال ایجاد شده</span>
+                    <span className="text-xs text-ink-subtle dark:text-slate-400 block font-semibold mb-0.5">فرم‌های ایجادشده</span>
                     <strong className="text-navy dark:text-slate-100 text-sm font-black">{faNum(createdForms)} فرم</strong>
                   </div>
                   <div className="bg-bg-neutral dark:bg-slate-800 p-2.5 rounded-xl text-center">
-                    <span className="text-xs text-ink-subtle dark:text-slate-400 block font-semibold mb-0.5">سقف مجاز فعلی</span>
+                    <span className="text-xs text-ink-subtle dark:text-slate-400 block font-semibold mb-0.5">سقف فرم مجاز</span>
                     <strong className="text-navy dark:text-slate-100 text-sm font-black">
                       {m.is_owner || m.max_forms >= 999999 || m.plan === "unlimited" ? "نامحدود ✨" : `${faNum(m.max_forms ?? 5)} فرم`}
                     </strong>
                   </div>
                   <div className="bg-bg-neutral dark:bg-slate-800 p-2.5 rounded-xl text-center col-span-2 sm:col-span-1">
-                    <span className="text-xs text-ink-subtle dark:text-slate-400 block font-semibold mb-0.5">باقیمانده فرم فعال</span>
+                    <span className="text-xs text-ink-subtle dark:text-slate-400 block font-semibold mb-0.5">فرم‌های باقیمانده</span>
                     <strong className={`text-sm font-black ${remainingForms === 0 && !m.is_owner && m.max_forms < 999999 ? "text-magenta-text dark:text-pink-400" : "text-teal-text dark:text-teal"}`}>
                       {m.is_owner || m.max_forms >= 999999 || m.plan === "unlimited" ? "نامحدود ✨" : `${faNum(remainingForms)} فرم`}
                     </strong>
@@ -1194,16 +1195,16 @@ export default function Managers() {
                           <Sparkles size={14} className="text-amber-500" />
                           <span>طرح اشتراک کاربر:</span>
                         </label>
-                        <span className="text-[11px] text-ink-subtle dark:text-slate-400">
-                          با انتخاب طرح، مقادیر پیش‌فرض جایگذاری می‌شوند ولی تک‌تک قابل ویرایشند.
+                        <span className="text-[11px] text-ink-subtle dark:text-slate-400 hidden sm:inline">
+                          با انتخاب طرح، مقادیر پیش‌فرض جایگذاری می‌شوند.
                         </span>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {[
-                          { id: "free", label: "رایگان (Free)", desc: "۵ فرم / ۱۰۰ ورودی" },
-                          { id: "pro", label: "حرفه‌ای (Pro)", desc: "۵۰ فرم / ۴هزار ورودی" },
-                          { id: "enterprise", label: "سازمانی (Enterprise)", desc: "نامحدود / ۱۲هزار ورودی" },
-                          { id: "unlimited", label: "کاملاً نامحدود ⚡", desc: "بدون هیچ سقفی" },
+                          { id: "free", label: "رایگان (Free)", desc: "۵ فرم · ۱۰۰ ورودی" },
+                          { id: "pro", label: "حرفه‌ای (Pro)", desc: "۵۰ فرم · ۴هزار ورودی" },
+                          { id: "enterprise", label: "سازمانی (Enterprise)", desc: "نامحدود · ۱۲هزار ورودی" },
+                          { id: "unlimited", label: "نامحدود (Unlimited)", desc: "بدون محدودیت سهمیه" },
                         ].map((p) => {
                           const isSel = userEditPlan === p.id;
                           return (
@@ -1211,17 +1212,17 @@ export default function Managers() {
                               key={p.id}
                               type="button"
                               onClick={() => handleSelectPresetPlanDirect(p.id)}
-                              className={`p-2 rounded-xl border-2 text-right transition-all cursor-pointer ${
+                              className={`p-2.5 rounded-xl border-2 text-right transition-all cursor-pointer ${
                                 isSel
                                   ? "border-teal bg-teal/10 dark:bg-teal/10 text-teal-text dark:text-teal font-black shadow-xs"
                                   : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy/70 dark:text-slate-300 hover:border-ink/30"
                               }`}
                             >
                               <div className="flex items-center justify-between">
-                                <span className="text-xs font-black">{p.label}</span>
-                                {isSel && <Check size={12} className="text-teal shrink-0" />}
+                                <span className="text-xs font-black truncate">{p.label}</span>
+                                {isSel && <Check size={12} className="text-teal shrink-0 mr-1" />}
                               </div>
-                              <span className="text-[10px] text-ink-subtle dark:text-slate-400 block mt-0.5">{p.desc}</span>
+                              <span className="text-[10px] text-ink-subtle dark:text-slate-400 block mt-1">{p.desc}</span>
                             </button>
                           );
                         })}
@@ -1233,7 +1234,7 @@ export default function Managers() {
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                         <label className="text-xs font-black text-navy dark:text-slate-100 flex items-center gap-1.5">
                           <Calendar size={13} className="text-teal" />
-                          <span>تاریخ تمدید / پایان دوره اشتراک:</span>
+                          <span>تاریخ تمدید / پایان دوره:</span>
                         </label>
                         <div className="flex items-center gap-1.5">
                           <button
@@ -1243,7 +1244,7 @@ export default function Managers() {
                               d.setDate(d.getDate() + 30);
                               setUserEditQuotaResetAt(d.toISOString().slice(0, 10));
                             }}
-                            className="px-2 py-0.5 text-[11px] font-bold bg-white dark:bg-slate-700 hover:bg-teal/10 hover:text-teal border border-ink/15 dark:border-slate-600 rounded-lg transition-colors cursor-pointer"
+                            className="px-2.5 py-1 text-[11px] font-bold bg-white dark:bg-slate-700 hover:bg-teal/10 hover:text-teal border border-ink/15 dark:border-slate-600 rounded-lg transition-colors cursor-pointer"
                           >
                             +۳۰ روز
                           </button>
@@ -1254,14 +1255,14 @@ export default function Managers() {
                               d.setFullYear(d.getFullYear() + 1);
                               setUserEditQuotaResetAt(d.toISOString().slice(0, 10));
                             }}
-                            className="px-2 py-0.5 text-[11px] font-bold bg-white dark:bg-slate-700 hover:bg-teal/10 hover:text-teal border border-ink/15 dark:border-slate-600 rounded-lg transition-colors cursor-pointer"
+                            className="px-2.5 py-1 text-[11px] font-bold bg-white dark:bg-slate-700 hover:bg-teal/10 hover:text-teal border border-ink/15 dark:border-slate-600 rounded-lg transition-colors cursor-pointer"
                           >
                             +۱ سال
                           </button>
                           <button
                             type="button"
                             onClick={() => setUserEditQuotaResetAt("")}
-                            className="px-2 py-0.5 text-[11px] font-bold text-magenta-text bg-white dark:bg-slate-700 hover:bg-magenta/10 border border-ink/15 dark:border-slate-600 rounded-lg transition-colors cursor-pointer"
+                            className="px-2.5 py-1 text-[11px] font-bold text-magenta-text bg-white dark:bg-slate-700 hover:bg-magenta/10 border border-ink/15 dark:border-slate-600 rounded-lg transition-colors cursor-pointer"
                           >
                             بدون انقضا
                           </button>
@@ -1278,7 +1279,7 @@ export default function Managers() {
                         <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400">
                           {userEditQuotaResetAt
                             ? `شمسی: ${faDate(userEditQuotaResetAt)}`
-                            : "نامحدود یا بدون تاریخ انقضا"}
+                            : "بدون تاریخ انقضا"}
                         </span>
                       </div>
                     </div>
@@ -1287,7 +1288,7 @@ export default function Managers() {
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                       <div>
                         <label className="block text-xs font-bold text-navy dark:text-slate-200 mb-1">
-                          سقف فرم‌های همزمان فعال
+                          سقف فرم‌های فعال
                         </label>
                         <input
                           type="number"
@@ -1303,7 +1304,7 @@ export default function Managers() {
 
                       <div>
                         <label className="block text-xs font-bold text-navy dark:text-slate-200 mb-1">
-                          سقف ورودی ماهانه
+                          سقف ورودی در ماه
                         </label>
                         <input
                           type="number"
@@ -1339,10 +1340,10 @@ export default function Managers() {
                     <div className="bg-bg-neutral/60 dark:bg-slate-800/60 p-3 rounded-xl border border-ink/10 dark:border-slate-700 space-y-2.5">
                       <div className="text-xs font-black text-navy dark:text-slate-100 flex items-center justify-between">
                         <span className="flex items-center gap-1.5">
-                          <Sliders size={13} className="text-teal" /> دسترسی‌ها و امکانات مجاز برای این کاربر:
+                          <Sliders size={13} className="text-teal" /> دسترسی‌ها و امکانات کاربر:
                         </span>
-                        <span className="text-[11px] text-ink-subtle dark:text-slate-400 font-semibold">
-                          شخصی‌سازی دقیق هر ویژگی
+                        <span className="text-[11px] text-ink-subtle dark:text-slate-400 font-semibold hidden sm:inline">
+                          شخصی‌سازی قابلیت‌ها
                         </span>
                       </div>
 
@@ -1384,7 +1385,7 @@ export default function Managers() {
                             onChange={(e) => setUserEditCanFileUpload(e.target.checked)}
                             className="rounded text-teal focus:ring-teal"
                           />
-                          <span className="font-bold text-navy dark:text-slate-200">آپلود فایل توسط کاربر</span>
+                          <span className="font-bold text-navy dark:text-slate-200">آپلود فایل توسط مخاطب</span>
                         </label>
 
                         <label className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 cursor-pointer">
@@ -1394,7 +1395,7 @@ export default function Managers() {
                             onChange={(e) => setUserEditCanSms(e.target.checked)}
                             className="rounded text-teal focus:ring-teal"
                           />
-                          <span className="font-bold text-navy dark:text-slate-200">احراز هویت و پیامک (SMS OTP)</span>
+                          <span className="font-bold text-navy dark:text-slate-200">احراز هویت و پیامک (SMS)</span>
                         </label>
 
                         <label className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 cursor-pointer">
@@ -1404,7 +1405,7 @@ export default function Managers() {
                             onChange={(e) => setUserEditCanWebhooks(e.target.checked)}
                             className="rounded text-teal focus:ring-teal"
                           />
-                          <span className="font-bold text-navy dark:text-slate-200">وب‌هوک و API اختصاصی</span>
+                          <span className="font-bold text-navy dark:text-slate-200">وب‌هوک و وب‌سرویس API</span>
                         </label>
 
                         <label className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 cursor-pointer sm:col-span-2">
@@ -1414,7 +1415,7 @@ export default function Managers() {
                             onChange={(e) => setUserEditCanRemoveBranding(e.target.checked)}
                             className="rounded text-teal focus:ring-teal"
                           />
-                          <span className="font-bold text-navy dark:text-slate-200">حذف واترمارک و لوگوی پرس‌کاد از انتهای فرم</span>
+                          <span className="font-bold text-navy dark:text-slate-200">حذف واترمارک پرس‌کاد از فرم</span>
                         </label>
                       </div>
                     </div>
@@ -1423,11 +1424,11 @@ export default function Managers() {
                       <button
                         type="button"
                         onClick={() => handleResetQuota(m)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-magenta-text dark:text-pink-400 bg-magenta/10 dark:bg-pink-950/30 hover:bg-magenta/20 transition-colors border border-magenta/20 dark:border-pink-800/40 cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-magenta-text dark:text-pink-400 bg-magenta/10 dark:bg-pink-950/30 hover:bg-magenta/20 transition-colors border border-magenta/20 dark:border-pink-800/40 cursor-pointer"
                         title="شمارنده ورودی‌های مصرف‌شده را ۰ کرده و دوره ۳۰ روزه را تازه می‌کند"
                       >
                         <RotateCcw size={13} />
-                        <span>ریست سهمیه ماهانه</span>
+                        <span>ریست مصرف ماهانه</span>
                       </button>
 
                       <Button
@@ -1438,7 +1439,7 @@ export default function Managers() {
                         className="text-xs font-black"
                       >
                         <Save size={13} className="ml-1" />
-                        {userEditSaving ? "در حال ذخیره..." : "ذخیره طرح، سهمیه و امکانات"}
+                        {userEditSaving ? "در حال ذخیره..." : "ذخیره تغییرات سهمیه"}
                       </Button>
                     </div>
                   </form>
@@ -1450,9 +1451,9 @@ export default function Managers() {
                 <div className="bg-white dark:bg-slate-900 border-2 border-ink/10 dark:border-slate-700 rounded-2xl p-3.5 flex flex-col gap-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black text-navy dark:text-slate-100 flex items-center gap-1.5">
-                      <Shield size={15} className="text-teal" /> تعیین نقش و سطح دسترسی کاربر
+                      <Shield size={14} className="text-teal" /> تعیین نقش کاربر
                     </span>
-                    <span className="text-[11px] font-bold text-ink-subtle dark:text-slate-400">فقط توسط مدیر ارشد</span>
+                    <span className="text-[11px] font-bold text-ink-subtle dark:text-slate-400">فقط مدیر ارشد</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1488,60 +1489,62 @@ export default function Managers() {
                         </span>
                         {m.role === "admin" && <Badge color="yellow">نقش فعلی</Badge>}
                       </div>
-                      <p className="text-[11px] text-ink-subtle dark:text-slate-400 leading-4">دسترسی کامل به پنل مدیریت کل و نظارت بر سیستم</p>
+                      <p className="text-[11px] text-ink-subtle dark:text-slate-400 leading-4">دسترسی کامل به پنل مدیریت کل سیستم</p>
                     </button>
                   </div>
                 </div>
               )}
 
               {/* دکمه‌های عملیات کاربر */}
-              <div className="border-t border-ink/10 dark:border-slate-700 pt-3 flex flex-wrap items-center gap-2">
-                {canManage && (
-                  <>
-                    <Button
-                      variant="teal"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedUserModal(null);
-                        openEdit(m);
-                      }}
-                    >
-                      <Edit size={13} className="ml-1" /> ویرایش مشخصات
-                    </Button>
-
-                    {/* غیرفعال/فعال‌سازی کاربر — سوپرادمین‌ها فقط توسط گاد اصلی */}
-                    {!m.is_owner && (isGod || m.role !== "admin") && (
+              <div className="border-t border-ink/10 dark:border-slate-700 pt-3 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {canManage && (
+                    <>
                       <Button
-                        variant="ghost"
+                        variant="teal"
                         size="sm"
-                        className={m.is_active ? "!text-amber-700 dark:!text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30" : "!text-teal-text dark:!text-teal hover:bg-teal/10"}
-                        onClick={() => handleDeactivate(m.id)}
-                      >
-                        {m.is_active ? "غیرفعال‌سازی کاربر" : "فعال‌سازی کاربر"}
-                      </Button>
-                    )}
-
-                    {/* حذف کاربر — سوپرادمین‌ها فقط توسط گاد اصلی */}
-                    {!m.is_owner && (isGod || m.role !== "admin") && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="!text-magenta-text dark:!text-pink-400 hover:bg-magenta/10 mr-auto"
                         onClick={() => {
                           setSelectedUserModal(null);
-                          setDeleteTarget(m);
+                          openEdit(m);
                         }}
                       >
-                        <Trash2 size={13} className="ml-1" /> حذف کاربر
+                        <Edit size={13} className="ml-1" /> ویرایش کاربر
                       </Button>
-                    )}
-                  </>
-                )}
+
+                      {/* غیرفعال/فعال‌سازی کاربر — سوپرادمین‌ها فقط توسط گاد اصلی */}
+                      {!m.is_owner && (isGod || m.role !== "admin") && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={m.is_active ? "!text-amber-700 dark:!text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 text-xs" : "!text-teal-text dark:!text-teal hover:bg-teal/10 text-xs"}
+                          onClick={() => handleDeactivate(m.id)}
+                        >
+                          {m.is_active ? "غیرفعال‌سازی" : "فعال‌سازی"}
+                        </Button>
+                      )}
+
+                      {/* حذف کاربر — سوپرادمین‌ها فقط توسط گاد اصلی */}
+                      {!m.is_owner && (isGod || m.role !== "admin") && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="!text-magenta-text dark:!text-pink-400 hover:bg-magenta/10 text-xs"
+                          onClick={() => {
+                            setSelectedUserModal(null);
+                            setDeleteTarget(m);
+                          }}
+                        >
+                          <Trash2 size={13} className="ml-1" /> حذف کاربر
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </div>
 
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="mr-auto"
+                  className="text-xs"
                   onClick={() => setSelectedUserModal(null)}
                 >
                   بستن
@@ -1785,7 +1788,7 @@ export default function Managers() {
       </Modal>
 
       {/* ─── مودال تنظیم سهمیه کاربر ─── */}
-      <Modal open={!!quotaModal} onClose={() => setQuotaModal(null)} title={`تنظیم سهمیه و دسترسی: ${quotaModal?.full_name || quotaModal?.email || ""}`}>
+      <Modal open={!!quotaModal} onClose={() => setQuotaModal(null)} title={`تنظیم سهمیه و دسترسی: ${quotaModal?.full_name || quotaModal?.email || ""}`} wide>
         <form onSubmit={handleSaveQuota} className="flex flex-col gap-4">
 
           {/* کلیدهای سریع پلن‌ها */}
@@ -1796,10 +1799,10 @@ export default function Managers() {
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {[
-                { id: "free", label: "رایگان", desc: "۵ فرم / ۱۰۰ ورودی" },
-                { id: "pro", label: "حرفه‌ای", desc: "۵۰ فرم / ۴هزار ورودی" },
-                { id: "enterprise", label: "سازمانی", desc: "نامحدود / ۱۲هزار ورودی" },
-                { id: "unlimited", label: "نامحدود ⚡", desc: "بدون هیچ سقفی" },
+                { id: "free", label: "رایگان (Free)", desc: "۵ فرم · ۱۰۰ ورودی" },
+                { id: "pro", label: "حرفه‌ای (Pro)", desc: "۵۰ فرم · ۴هزار ورودی" },
+                { id: "enterprise", label: "سازمانی (Enterprise)", desc: "نامحدود · ۱۲هزار ورودی" },
+                { id: "unlimited", label: "نامحدود (Unlimited)", desc: "بدون محدودیت سهمیه" },
               ].map((p) => {
                 const isSel = quotaPlan === p.id;
                 return (
@@ -1807,17 +1810,17 @@ export default function Managers() {
                     key={p.id}
                     type="button"
                     onClick={() => handleSelectPresetPlanQuota(p.id)}
-                    className={`p-2 rounded-xl border-2 text-right transition-all cursor-pointer ${
+                    className={`p-2.5 rounded-xl border-2 text-right transition-all cursor-pointer ${
                       isSel
                         ? "border-teal bg-teal/10 dark:bg-teal/10 text-teal-text dark:text-teal font-black shadow-xs"
                         : "border-ink/10 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy/70 dark:text-slate-300 hover:border-ink/30"
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-black">{p.label}</span>
-                      {isSel && <Check size={12} className="text-teal shrink-0" />}
+                      <span className="text-xs font-black truncate">{p.label}</span>
+                      {isSel && <Check size={12} className="text-teal shrink-0 mr-1" />}
                     </div>
-                    <span className="text-[10px] text-ink-subtle dark:text-slate-400 block mt-0.5">{p.desc}</span>
+                    <span className="text-[10px] text-ink-subtle dark:text-slate-400 block mt-1">{p.desc}</span>
                   </button>
                 );
               })}
@@ -1829,7 +1832,7 @@ export default function Managers() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
               <label className="text-xs font-black text-navy dark:text-slate-100 flex items-center gap-1.5">
                 <Calendar size={13} className="text-teal" />
-                <span>تاریخ تمدید / پایان دوره اشتراک:</span>
+                <span>تاریخ تمدید / پایان دوره:</span>
               </label>
               <div className="flex items-center gap-1.5">
                 <button
@@ -1839,7 +1842,7 @@ export default function Managers() {
                     d.setDate(d.getDate() + 30);
                     setQuotaResetAt(d.toISOString().slice(0, 10));
                   }}
-                  className="px-2 py-0.5 text-[11px] font-bold bg-white dark:bg-slate-700 hover:bg-teal/10 hover:text-teal border border-ink/15 dark:border-slate-600 rounded-lg transition-colors cursor-pointer"
+                  className="px-2.5 py-1 text-[11px] font-bold bg-white dark:bg-slate-700 hover:bg-teal/10 hover:text-teal border border-ink/15 dark:border-slate-600 rounded-lg transition-colors cursor-pointer"
                 >
                   +۳۰ روز
                 </button>
@@ -1850,14 +1853,14 @@ export default function Managers() {
                     d.setFullYear(d.getFullYear() + 1);
                     setQuotaResetAt(d.toISOString().slice(0, 10));
                   }}
-                  className="px-2 py-0.5 text-[11px] font-bold bg-white dark:bg-slate-700 hover:bg-teal/10 hover:text-teal border border-ink/15 dark:border-slate-600 rounded-lg transition-colors cursor-pointer"
+                  className="px-2.5 py-1 text-[11px] font-bold bg-white dark:bg-slate-700 hover:bg-teal/10 hover:text-teal border border-ink/15 dark:border-slate-600 rounded-lg transition-colors cursor-pointer"
                 >
                   +۱ سال
                 </button>
                 <button
                   type="button"
                   onClick={() => setQuotaResetAt("")}
-                  className="px-2 py-0.5 text-[11px] font-bold text-magenta-text bg-white dark:bg-slate-700 hover:bg-magenta/10 border border-ink/15 dark:border-slate-600 rounded-lg transition-colors cursor-pointer"
+                  className="px-2.5 py-1 text-[11px] font-bold text-magenta-text bg-white dark:bg-slate-700 hover:bg-magenta/10 border border-ink/15 dark:border-slate-600 rounded-lg transition-colors cursor-pointer"
                 >
                   بدون انقضا
                 </button>
@@ -1874,14 +1877,14 @@ export default function Managers() {
               <span className="text-xs font-semibold text-ink-subtle dark:text-slate-400">
                 {quotaResetAt
                   ? `شمسی: ${faDate(quotaResetAt)}`
-                  : "نامحدود یا بدون تاریخ انقضا"}
+                  : "بدون تاریخ انقضا"}
               </span>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-extrabold text-navy dark:text-slate-100 mb-1.5">حداکثر تعداد فرم‌های فعال</label>
+              <label className="block text-xs font-bold text-navy dark:text-slate-100 mb-1.5">حداکثر فرم‌های فعال</label>
               <input
                 type="number"
                 min="1"
@@ -1889,11 +1892,11 @@ export default function Managers() {
                 onChange={(e) => setQuotaMaxForms(e.target.value)}
                 className={inputCls}
               />
-              <span className="text-[11px] text-ink-subtle dark:text-slate-400 mt-1 block">پیش‌فرض: ۵ فرم. برای نامحدود ۹۹۹۹۹۹</span>
+              <span className="text-[11px] text-ink-subtle dark:text-slate-400 mt-1 block">پیش‌فرض: ۵ فرم (نامحدود: ۹۹۹۹۹۹)</span>
             </div>
 
             <div>
-              <label className="block text-xs font-extrabold text-navy dark:text-slate-100 mb-1.5">حداکثر پاسخ در ماه</label>
+              <label className="block text-xs font-bold text-navy dark:text-slate-100 mb-1.5">حداکثر پاسخ در ماه</label>
               <input
                 type="number"
                 min="1"
@@ -1901,7 +1904,7 @@ export default function Managers() {
                 onChange={(e) => setQuotaMaxResponses(e.target.value)}
                 className={inputCls}
               />
-              <span className="text-[11px] text-ink-subtle dark:text-slate-400 mt-1 block">پیش‌فرض: ۱۰۰ ورودی. برای نامحدود ۹۹۹۹۹۹</span>
+              <span className="text-[11px] text-ink-subtle dark:text-slate-400 mt-1 block">پیش‌فرض: ۱۰۰ ورودی (نامحدود: ۹۹۹۹۹۹)</span>
             </div>
           </div>
 
@@ -1909,7 +1912,7 @@ export default function Managers() {
           <div className="bg-bg-neutral/60 dark:bg-slate-800/60 p-3 rounded-xl border border-ink/10 dark:border-slate-700 space-y-2.5">
             <div className="text-xs font-black text-navy dark:text-slate-100 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <Sliders size={13} className="text-teal" /> دسترسی‌ها و امکانات مجاز برای این کاربر:
+                <Sliders size={13} className="text-teal" /> دسترسی‌ها و امکانات کاربر:
               </span>
             </div>
 
@@ -1951,7 +1954,7 @@ export default function Managers() {
                   onChange={(e) => setQuotaCanUploadFiles(e.target.checked)}
                   className="rounded text-teal focus:ring-teal"
                 />
-                <span className="font-bold text-navy dark:text-slate-200">آپلود فایل توسط کاربر</span>
+                <span className="font-bold text-navy dark:text-slate-200">آپلود فایل توسط مخاطب</span>
               </label>
 
               <label className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 cursor-pointer">
@@ -1961,7 +1964,7 @@ export default function Managers() {
                   onChange={(e) => setQuotaCanUseSms(e.target.checked)}
                   className="rounded text-teal focus:ring-teal"
                 />
-                <span className="font-bold text-navy dark:text-slate-200">احراز هویت و پیامک (SMS OTP)</span>
+                <span className="font-bold text-navy dark:text-slate-200">احراز هویت و پیامک (SMS)</span>
               </label>
 
               <label className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 cursor-pointer">
@@ -1971,7 +1974,7 @@ export default function Managers() {
                   onChange={(e) => setQuotaCanUseWebhooks(e.target.checked)}
                   className="rounded text-teal focus:ring-teal"
                 />
-                <span className="font-bold text-navy dark:text-slate-200">وب‌هوک و API اختصاصی</span>
+                <span className="font-bold text-navy dark:text-slate-200">وب‌هوک و وب‌سرویس API</span>
               </label>
 
               <label className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-ink/10 dark:border-slate-700 cursor-pointer sm:col-span-2">
@@ -1981,7 +1984,7 @@ export default function Managers() {
                   onChange={(e) => setQuotaCanRemoveBranding(e.target.checked)}
                   className="rounded text-teal focus:ring-teal"
                 />
-                <span className="font-bold text-navy dark:text-slate-200">حذف واترمارک و لوگوی پرس‌کاد از انتهای فرم</span>
+                <span className="font-bold text-navy dark:text-slate-200">حذف واترمارک پرس‌کاد از فرم</span>
               </label>
             </div>
           </div>
@@ -2009,7 +2012,7 @@ export default function Managers() {
                   }}
                 >
                   <RotateCcw size={12} />
-                  <span>ریست سهمیه همین الان</span>
+                  <span>ریست فوری سهمیه</span>
                 </Button>
               </div>
             )}
