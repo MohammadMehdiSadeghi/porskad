@@ -1928,15 +1928,26 @@ export default function FormBuilder() {
                     label={<><Target size={14} className="text-indigo" /> نمره کل آزمون</>}
                     hint="مجموع نمرات همه سوالات باید با این عدد برابر شود. سیستم هنگام ذخیره این مورد را بررسی می‌کند."
                   >
-                    <input
-                      type="number"
-                      min="1"
-                      step="any"
-                      value={form.total_score || ""}
-                      onChange={(e) => setFormField({ total_score: Number(e.target.value) || null })}
-                      className={`${inputCls} max-w-[200px] border-indigo/30 focus:border-indigo/50`}
-                      placeholder="مثال: 20 یا 100"
-                    />
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="number"
+                        min="1"
+                        step="any"
+                        value={form.total_score || ""}
+                        onChange={(e) => setFormField({ total_score: Number(e.target.value) || null })}
+                        className={`${inputCls} max-w-[200px] border-indigo/30 focus:border-indigo/50`}
+                        placeholder="مثال: 20 یا 100"
+                      />
+                      {form.total_score > 0 && (
+                        <div className={`text-xs font-bold px-3 py-1.5 rounded-pill-md border-2 ${
+                          questions.reduce((sum, q) => sum + (Number(q.weight) || 0), 0) === Number(form.total_score)
+                            ? "bg-teal/10 border-teal/30 text-teal-text"
+                            : "bg-orange/10 border-orange/30 text-orange-600"
+                        }`}>
+                          مجموع نمرات فعلی: {questions.reduce((sum, q) => sum + (Number(q.weight) || 0), 0)} / {form.total_score}
+                        </div>
+                      )}
+                    </div>
                   </Field>
                 </div>
               )}
