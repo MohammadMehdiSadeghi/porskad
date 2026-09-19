@@ -12,7 +12,7 @@ import Modal from "../../../components/ui/Modal";
 import { useToast } from "../../../components/ui/Toast";
 import { useAuth } from "../../../context/AuthContext";
 import { copyToClipboard, randomSlug, faNum, faDate, getFormModelBadge } from "../../../lib/utils";
-import { FileText, Plus, AlignLeft, ClipboardList, Undo2, Trash2, User, Calendar, Link2, Copy, ExternalLink, Settings, BarChart3, Share2, Edit, Archive, ArchiveRestore, CheckCircle2, AlertTriangle, X, Sun, Moon, Monitor, Palette, LayoutGrid, Layers } from "lucide-react";
+import { FileText, Plus, AlignLeft, FileQuestion, ClipboardList, Undo2, Trash2, User, Calendar, Link2, Copy, ExternalLink, Settings, BarChart3, Share2, Edit, Archive, ArchiveRestore, CheckCircle2, AlertTriangle, X, Sun, Moon, Monitor, Palette, LayoutGrid, Layers } from "lucide-react";
 import SEO from "../../../components/ui/SEO";
 
 const FORM_TYPES = [
@@ -1422,8 +1422,14 @@ export default function FormsList() {
               disabled={busy}
               className="w-full min-w-0 flex flex-col text-right whitespace-normal break-words p-4 sm:p-5 rounded-2xl border-[1.5px] border-gray-200 dark:border-[#242F42] bg-white dark:bg-[#1C2536] hover:border-teal dark:hover:border-teal hover:shadow-md transition-all group disabled:opacity-50 cursor-pointer overflow-hidden"
             >
-              <div className="w-11 h-11 rounded-xl bg-teal/10 dark:bg-teal/20 border border-teal/30 flex items-center justify-center text-teal mb-3 group-hover:scale-105 transition-transform shrink-0">
-                {ft.key === "step_by_step" ? <Layers size={22} /> : <AlignLeft size={22} />}
+              <div className={`w-11 h-11 rounded-xl border flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shrink-0 ${
+                ft.key === "exam" 
+                  ? "bg-indigo-500/10 dark:bg-indigo-500/20 border-indigo-500/30 text-indigo-500" 
+                  : ft.key === "registration"
+                  ? "bg-orange-500/10 dark:bg-orange-500/20 border-orange-500/30 text-orange-500"
+                  : "bg-teal/10 dark:bg-teal/20 border-teal/30 text-teal"
+              }`}>
+                {ft.key === "step_by_step" ? <Layers size={22} /> : ft.key === "registration" ? <AlignLeft size={22} /> : <FileQuestion size={22} />}
               </div>
               <h3 className="text-base font-black text-sec dark:text-white mb-1.5 whitespace-normal">
                 {ft.title}
