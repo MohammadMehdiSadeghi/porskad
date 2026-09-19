@@ -1615,7 +1615,7 @@ export default async function handler(req, res) {
           const newFormData = {
             title: cleanTitle.substring(0, 255),
             slug: cleanSlug,
-            form_type: ["step_by_step", "registration"].includes(form_type) ? form_type : "step_by_step",
+            form_type: ["step_by_step", "registration", "exam"].includes(form_type) ? form_type : "step_by_step",
             description: String(description || "").substring(0, 3000),
             welcome_title: String(welcome_title || "سلام!").substring(0, 255),
             welcome_message: String(welcome_message || "").substring(0, 1000),
@@ -2506,8 +2506,8 @@ export default async function handler(req, res) {
           }
 
           if (patch.form_type !== undefined) {
-            if (!["step_by_step", "registration"].includes(patch.form_type)) {
-              return res.status(400).json({ error: "نوع فرم نامعتبر است. مقادیر مجاز: step_by_step یا registration" });
+            if (!["step_by_step", "registration", "exam"].includes(patch.form_type)) {
+              return res.status(400).json({ error: "نوع فرم نامعتبر است. مقادیر مجاز: step_by_step, registration, exam" });
             }
           }
 
