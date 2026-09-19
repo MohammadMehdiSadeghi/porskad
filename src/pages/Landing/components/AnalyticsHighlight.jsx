@@ -1,12 +1,40 @@
 import React from "react";
-import { BarChart3, Download, Filter, Sparkles, TrendingUp, Clock, CheckCircle2 } from "lucide-react";
+import { BarChart3, Download, Filter, TrendingUp, Clock, CheckCircle2 } from "lucide-react";
 
 export default function AnalyticsHighlight() {
   const chartData = [
-    { label: "شبکه‌های اجتماعی (اینستاگرام / تلگرام)", count: "۶۸۰", percentDisplay: "۴۸٪", pct: 48, barGradient: "from-teal-500 to-teal-400" },
-    { label: "معرفی دوستان و همکاران", count: "۴۲۰", percentDisplay: "۳۰٪", pct: 30, barGradient: "from-sky-500 to-sky-400" },
-    { label: "جستجوی گوگل", count: "۲۱۰", percentDisplay: "۱۵٪", pct: 15, barGradient: "from-purple-500 to-purple-400" },
-    { label: "سایر کانال‌ها", count: "۱۱۰", percentDisplay: "۷٪", pct: 7, barGradient: "from-amber-500 to-amber-400" },
+    {
+      label: "شبکه‌های اجتماعی (اینستاگرام / تلگرام)",
+      count: "۶۸۰",
+      percentDisplay: "۴۸٪",
+      pct: 48,
+      gradient: "linear-gradient(90deg, #2DD4BF 0%, #0D9488 100%)",
+      glow: "rgba(45, 212, 191, 0.35)",
+    },
+    {
+      label: "معرفی دوستان و همکاران",
+      count: "۴۲۰",
+      percentDisplay: "۳۰٪",
+      pct: 30,
+      gradient: "linear-gradient(90deg, #38BDF8 0%, #0284C7 100%)",
+      glow: "rgba(56, 189, 248, 0.35)",
+    },
+    {
+      label: "جستجوی گوگل",
+      count: "۲۱۰",
+      percentDisplay: "۱۵٪",
+      pct: 15,
+      gradient: "linear-gradient(90deg, #A855F7 0%, #7C3AED 100%)",
+      glow: "rgba(168, 85, 247, 0.35)",
+    },
+    {
+      label: "سایر کانال‌ها",
+      count: "۱۱۰",
+      percentDisplay: "۷٪",
+      pct: 7,
+      gradient: "linear-gradient(90deg, #F59E0B 0%, #D97706 100%)",
+      glow: "rgba(245, 158, 11, 0.35)",
+    },
   ];
 
   return (
@@ -88,10 +116,17 @@ export default function AnalyticsHighlight() {
                     {bar.count} پاسخ <strong className="text-slate-900 dark:text-white mr-2">({bar.percentDisplay})</strong>
                   </span>
                 </div>
-                <div className="w-full bg-slate-100 dark:bg-[#0B0F19] h-3.5 rounded-full overflow-hidden p-0.5 border border-slate-200 dark:border-[#1E293B]">
+                {/* مسیر بیرونی نوار پیشرفت */}
+                <div className="w-full bg-slate-200/90 dark:bg-[#080C14] h-4 rounded-full overflow-hidden p-0.5 border border-slate-300/80 dark:border-[#1E293B]">
+                  {/* میله پر شونده با رنگ اختصاصی و افکت نوری */}
                   <div
-                    className={`h-full rounded-full bg-gradient-to-r ${bar.barGradient} transition-all duration-1000 shadow-sm`}
-                    style={{ width: `${bar.pct}%` }}
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{
+                      width: `${bar.pct}%`,
+                      background: bar.gradient,
+                      boxShadow: `0 0 12px ${bar.glow}`,
+                      minWidth: "12px",
+                    }}
                   />
                 </div>
               </div>
