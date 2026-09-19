@@ -1,360 +1,1329 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="fa" dir="rtl" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>سند جامع معرفی و پرزنتیشن محصول پرس‌کاد (Porskad Presentation Guide)</title>
+  <title>راهنمای جامع معرفی و پرزنتیشن محصول پرس‌کاد (Porskad Presentation Deck)</title>
   <link rel="stylesheet" href="assets/style.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
+    /* ══════════════════════════════════════════════════════════════════
+       استایل‌های اختصاصی سند پرزنتیشن و راهنمای جامع پرس‌کاد
+       طراحی لوکس، خوانا، بدون اصطلاحات پیچیده و با تعامل زنده
+       ══════════════════════════════════════════════════════════════════ */
+    
     :root {
-      --gold: #F59E0B;
+      --gold-accent: #F59E0B;
       --gold-glow: rgba(245, 158, 11, 0.2);
     }
-    .hero-banner {
-      background: linear-gradient(135deg, rgba(19, 27, 46, 0.95), rgba(27, 37, 61, 0.95)), radial-gradient(circle at top right, rgba(45, 212, 191, 0.15), transparent 60%);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      padding: 36px 32px;
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      line-height: 1.75;
+      padding-bottom: 80px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* هدر ناوبری شیشه‌ای */
+    .deck-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(11, 15, 25, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 12px 24px;
       margin-bottom: 32px;
+      transition: all 0.3s ease;
+    }
+
+    [data-theme="light"] .deck-nav {
+      background: rgba(255, 255, 255, 0.88);
+      border-bottom-color: var(--border-subtle);
+    }
+
+    .deck-nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .brand-icon-sq {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent-teal), var(--accent-cyan));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 20px;
+      color: #0B0F19;
+      box-shadow: 0 4px 14px var(--accent-teal-glow);
+    }
+
+    .brand-titles {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-titles .main-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-titles .sub-title {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .nav-actions-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .quick-link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-size: 12.5px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .quick-link-btn:hover {
+      color: var(--accent-teal);
+      border-color: var(--accent-teal);
+      background: rgba(45, 212, 191, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .theme-toggle-btn:hover {
+      border-color: var(--accent-teal);
+      color: var(--accent-teal);
+    }
+
+    /* کانتینر اصلی */
+    .deck-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* بنر اصلی هیرو */
+    .hero-presentation {
+      background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-surface-elevated) 100%);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      padding: 44px 36px;
+      margin-bottom: 36px;
       position: relative;
       overflow: hidden;
+      box-shadow: var(--shadow-card);
     }
-    .hero-banner::after {
+
+    .hero-presentation::before {
       content: '';
       position: absolute;
-      top: -50px;
-      left: -50px;
-      width: 200px;
-      height: 200px;
+      top: -80px;
+      left: -80px;
+      width: 280px;
+      height: 280px;
+      background: radial-gradient(circle, var(--accent-teal-glow), transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-presentation::after {
+      content: '';
+      position: absolute;
+      bottom: -60px;
+      right: -60px;
+      width: 240px;
+      height: 240px;
       background: radial-gradient(circle, rgba(56, 189, 248, 0.15), transparent 70%);
       pointer-events: none;
     }
-    .pitch-badge {
+
+    .hero-badge-pill {
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      padding: 6px 16px;
       background: rgba(45, 212, 191, 0.12);
-      border: 1px solid rgba(45, 212, 191, 0.3);
-      color: var(--accent-teal);
-      padding: 6px 14px;
+      border: 1px solid rgba(45, 212, 191, 0.35);
       border-radius: 9999px;
-      font-size: 12px;
+      color: var(--accent-teal);
+      font-size: 13px;
       font-weight: 700;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
     }
-    .pitch-card {
-      background: var(--bg-surface);
+
+    .hero-headline {
+      font-size: 32px;
+      font-weight: 900;
+      line-height: 1.4;
+      color: var(--text-main);
+      margin-bottom: 16px;
+      letter-spacing: -0.5px;
+    }
+
+    .hero-desc {
+      font-size: 16px;
+      color: var(--text-muted);
+      line-height: 1.9;
+      max-width: 960px;
+      margin-bottom: 28px;
+    }
+
+    .hero-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .metric-box {
+      background: var(--bg-card);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
-      padding: 24px;
-      margin-bottom: 20px;
+      padding: 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
       transition: all 0.25s ease;
-      position: relative;
     }
-    .pitch-card:hover {
+
+    .metric-box:hover {
       border-color: var(--accent-teal);
       transform: translateY(-2px);
-      box-shadow: 0 12px 30px -10px rgba(0,0,0,0.5);
     }
-    .quote-box {
-      background: rgba(11, 15, 25, 0.7);
-      border-right: 4px solid var(--accent-teal);
-      border-radius: 0 var(--radius-md) var(--radius-md) 0;
-      padding: 16px 20px;
-      margin: 16px 0;
-      color: var(--text-main);
-      font-size: 14.5px;
-      line-height: 1.8;
-      font-weight: 500;
-    }
-    .talk-point {
-      display: flex;
-      gap: 14px;
-      align-items: flex-start;
-      margin-bottom: 14px;
-    }
-    .talk-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
+
+    .metric-icon-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      background: var(--bg-surface-elevated);
-      border: 1px solid var(--border-subtle);
+      background: rgba(45, 212, 191, 0.12);
       color: var(--accent-teal);
+      border: 1px solid rgba(45, 212, 191, 0.25);
     }
-    .talk-content strong {
-      display: block;
-      color: var(--text-main);
-      font-size: 14px;
-      margin-bottom: 3px;
-    }
-    .talk-content span {
-      color: var(--text-muted);
-      font-size: 13px;
-      line-height: 1.6;
-    }
-    .matrix-table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      margin: 20px 0;
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      border: 1px solid var(--border-subtle);
-    }
-    .matrix-table th {
-      background: var(--bg-surface-elevated);
-      color: var(--text-main);
-      padding: 14px 16px;
-      font-size: 13px;
-      font-weight: 700;
-      text-align: right;
-      border-bottom: 1px solid var(--border-subtle);
-    }
-    .matrix-table td {
-      background: var(--bg-surface);
-      color: var(--text-muted);
-      padding: 12px 16px;
-      font-size: 13px;
-      border-bottom: 1px solid var(--border-subtle);
-    }
-    .matrix-table tr:last-child td {
-      border-bottom: none;
-    }
-    .matrix-table td.winner {
-      background: rgba(45, 212, 191, 0.08);
-      color: var(--accent-teal);
-      font-weight: 700;
-    }
-    .script-box {
-      background: #080C14;
-      border: 1px dashed rgba(45, 212, 191, 0.4);
-      border-radius: var(--radius-md);
-      padding: 20px;
-      margin: 16px 0;
-    }
-    .script-label {
-      font-size: 11px;
+
+    .metric-info h4 {
+      font-size: 15px;
       font-weight: 800;
-      color: var(--accent-teal);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .metric-info p {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* کارت‌های بخش‌های اصلی */
+    .presentation-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow-card);
+      position: relative;
+      transition: border-color 0.2s ease;
+    }
+
+    .card-header-row {
       display: flex;
       align-items: center;
-      gap: 6px;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 18px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
     }
-    .script-text {
-      color: #E2E8F0;
-      font-size: 14px;
-      line-height: 1.85;
-      font-style: italic;
+
+    .card-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
-    .objection-item {
-      background: var(--bg-surface);
+
+    .card-title-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(45, 212, 191, 0.12);
+      color: var(--accent-teal);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .card-title-group h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin: 0;
+    }
+
+    .card-tag {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      background: var(--bg-surface-elevated);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+    }
+
+    /* گرید ۳ مشکل بنیادین و راه‌حل پرس‌کاد */
+    .problems-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .problem-solution-card {
+      background: var(--bg-card);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
-      padding: 18px 20px;
-      margin-bottom: 14px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s ease;
     }
-    .objection-q {
-      font-size: 14px;
-      font-weight: 800;
-      color: #F43F5E;
+
+    .problem-solution-card:hover {
+      border-color: var(--accent-teal);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.3);
+    }
+
+    .problem-part {
+      background: rgba(244, 63, 94, 0.08);
+      border: 1px solid rgba(244, 63, 94, 0.2);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+
+    .problem-title {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 8px;
+      color: var(--accent-rose);
+      font-weight: 800;
+      font-size: 13.5px;
+      margin-bottom: 6px;
     }
-    .objection-a {
-      font-size: 13px;
-      color: #CBD5E1;
+
+    .problem-text {
+      font-size: 12.5px;
+      color: var(--text-muted);
       line-height: 1.7;
-      padding-right: 24px;
     }
-    .pill-tag {
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 4px;
+
+    .solution-part {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+    }
+
+    .solution-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent-emerald);
+      font-weight: 800;
+      font-size: 13.5px;
+      margin-bottom: 6px;
+    }
+
+    .solution-text {
+      font-size: 13px;
+      color: var(--text-main);
+      line-height: 1.7;
+    }
+
+    /* کارت‌های اسکریپت ارائه (Pitch Boxes) */
+    .pitch-script-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .pitch-script-card.featured {
+      border-color: rgba(45, 212, 191, 0.5);
+      background: linear-gradient(180deg, rgba(45, 212, 191, 0.04) 0%, var(--bg-card) 100%);
+    }
+
+    .pitch-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pitch-badge-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 15px;
+      color: var(--accent-teal);
+    }
+
+    .copy-script-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
+      font-size: 12px;
       font-weight: 700;
-      display: inline-block;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s ease;
     }
-    .pill-green { background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); }
-    .pill-red { background: rgba(244, 63, 94, 0.15); color: #F43F5E; border: 1px solid rgba(244, 63, 94, 0.3); }
-    .pill-yellow { background: rgba(245, 158, 11, 0.15); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+    .copy-script-btn:hover {
+      border-color: var(--accent-teal);
+      color: var(--accent-teal);
+      background: rgba(45, 212, 191, 0.1);
+    }
+
+    .script-bubble {
+      background: var(--bg-main);
+      border: 1px solid var(--border-subtle);
+      border-right: 4px solid var(--accent-teal);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      padding: 20px 24px;
+      font-size: 14.5px;
+      line-height: 1.9;
+      color: var(--text-main);
+    }
+
+    .script-bubble strong {
+      color: var(--accent-teal);
+    }
+
+    /* قابلیت‌های ۸ گانه با شرح روان */
+    .features-rich-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 18px;
+      margin-top: 20px;
+    }
+
+    .feature-rich-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 22px;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .feature-rich-box:hover {
+      border-color: var(--accent-teal);
+      transform: translateY(-2px);
+    }
+
+    .feature-icon-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .feature-box-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-surface-elevated);
+      color: var(--accent-teal);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .feature-step-num {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-dim);
+      background: var(--bg-surface-elevated);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .feature-rich-box h3 {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin: 0;
+    }
+
+    .feature-rich-box p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.75;
+      margin: 0;
+    }
+
+    /* تب‌های کاربرد و پرسونا */
+    .persona-tabs-nav {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+
+    .persona-tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: var(--text-muted);
+      font-size: 13.5px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .persona-tab-btn:hover {
+      color: var(--text-main);
+      border-color: var(--accent-teal);
+    }
+
+    .persona-tab-btn.active {
+      background: rgba(45, 212, 191, 0.12);
+      border-color: var(--accent-teal);
+      color: var(--accent-teal);
+      box-shadow: 0 4px 14px var(--accent-teal-glow);
+    }
+
+    .persona-content-panel {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .persona-content-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .persona-detail-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 26px;
+    }
+
+    .persona-why-box {
+      background: var(--bg-main);
+      border-right: 4px solid var(--accent-teal);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 16px 20px;
+      margin: 16px 0;
+      font-size: 14px;
+      line-height: 1.85;
+      color: var(--text-main);
+    }
+
+    /* جدول مقایسه شیک و خوانا */
+    .comparison-wrapper {
+      overflow-x: auto;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      margin-top: 16px;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: right;
+      font-size: 13.5px;
+    }
+
+    .comparison-table th {
+      background: var(--bg-surface-elevated);
+      color: var(--text-main);
+      font-weight: 800;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .comparison-table td {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .comparison-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .comparison-table td.porskad-col {
+      background: rgba(45, 212, 191, 0.07);
+      color: var(--text-main);
+      font-weight: 700;
+      border-right: 2px solid var(--accent-teal);
+      border-left: 2px solid var(--accent-teal);
+    }
+
+    .comparison-table th.porskad-header {
+      background: rgba(45, 212, 191, 0.15);
+      color: var(--accent-teal);
+      border-right: 2px solid var(--accent-teal);
+      border-left: 2px solid var(--accent-teal);
+      font-size: 14.5px;
+    }
+
+    .tag-yes {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: #10B981;
+      font-weight: 700;
+    }
+
+    .tag-no {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: #F43F5E;
+    }
+
+    /* آکاردئون رفع شبهات و سوالات متداول */
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .faq-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .faq-item:hover {
+      border-color: var(--accent-teal);
+    }
+
+    .faq-question {
+      padding: 18px 22px;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+      gap: 12px;
+    }
+
+    .faq-question-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .faq-icon-q {
+      color: var(--accent-teal);
+      flex-shrink: 0;
+    }
+
+    .faq-toggle-arrow {
+      color: var(--text-dim);
+      transition: transform 0.25s ease;
+    }
+
+    .faq-item.open .faq-toggle-arrow {
+      transform: rotate(180deg);
+      color: var(--accent-teal);
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      background: var(--bg-main);
+      border-top: 0 solid var(--border-subtle);
+      padding: 0 22px;
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.85;
+    }
+
+    .faq-item.open .faq-answer {
+      max-height: 400px;
+      padding: 18px 22px;
+      border-top-width: 1px;
+    }
+
+    .faq-answer strong {
+      color: var(--text-main);
+    }
+
+    /* توست کپی متن */
+    .toast-notice {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #10B981;
+      color: #FFFFFF;
+      padding: 10px 22px;
+      border-radius: 9999px;
+      font-size: 13.5px;
+      font-weight: 700;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 999;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    .toast-notice.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ریسپانسیو */
+    @media (max-width: 768px) {
+      .hero-headline {
+        font-size: 24px;
+      }
+      .hero-presentation {
+        padding: 26px 20px;
+      }
+      .presentation-card {
+        padding: 20px 16px;
+      }
+      .card-header-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <!-- هدر ناوبری -->
-  <header class="top-nav">
-    <div class="nav-container">
-      <div class="brand-group">
-        <a href="index.html" class="brand-logo" title="بازگشت به هاب دیاگرام‌ها">
-          <div class="logo-icon">پ</div>
-          <div class="brand-text">
-            <span class="brand-name">پرس‌کاد (Porskad)</span>
-            <span class="brand-sub">سند پرزنتیشن و راهنمای جامع معرفی محصول</span>
-          </div>
-        </a>
-      </div>
+  <!-- هدر ناوبری و دسترسی سریع -->
+  <nav class="deck-nav">
+    <div class="deck-nav-container">
+      <a href="index.html" class="brand-box">
+        <div class="brand-icon-sq">پ</div>
+        <div class="brand-titles">
+          <span class="main-title">سامانه هوشمند پرس‌کاد (Porskad)</span>
+          <span class="sub-title">سند راهبردی پرزنتیشن، فروش و تشریح کامل محصول</span>
+        </div>
+      </a>
 
-      <div class="nav-actions">
-        <a href="index.html" class="nav-btn">
-          <i data-lucide="layout-grid"></i>
-          <span>هاب دیاگرام‌ها</span>
+      <div class="nav-actions-group">
+        <a href="#why-porskad" class="quick-link-btn">
+          <i data-lucide="help-circle" style="width:14px; height:14px;"></i>
+          <span>چرا پرس‌کاد؟</span>
         </a>
-        <a href="architecture-diagram.html" class="nav-btn">
-          <i data-lucide="cpu"></i>
-          <span>معماری فنی</span>
+        <a href="#elevator-pitch" class="quick-link-btn">
+          <i data-lucide="mic" style="width:14px; height:14px;"></i>
+          <span>متن‌های ارائه</span>
         </a>
-        <button onclick="window.print()" class="nav-btn">
-          <i data-lucide="printer"></i>
-          <span>چاپ / PDF</span>
+        <a href="#features" class="quick-link-btn">
+          <i data-lucide="sparkles" style="width:14px; height:14px;"></i>
+          <span>امکانات کلیدی</span>
+        </a>
+        <a href="#use-cases" class="quick-link-btn">
+          <i data-lucide="users" style="width:14px; height:14px;"></i>
+          <span>کاربردها</span>
+        </a>
+        <a href="#comparison" class="quick-link-btn">
+          <i data-lucide="table" style="width:14px; height:14px;"></i>
+          <span>مقایسه با رقبا</span>
+        </a>
+        <a href="#faq" class="quick-link-btn">
+          <i data-lucide="message-circle" style="width:14px; height:14px;"></i>
+          <span>پاسخ به سوالات</span>
+        </a>
+
+        <!-- دکمه تغییر تم دارک / لایت -->
+        <button id="themeToggleBtn" class="theme-toggle-btn" title="تغییر تم (دارک / لایت)">
+          <i data-lucide="sun" id="themeIcon" style="width:16px; height:16px;"></i>
         </button>
+
+        <a href="index.html" class="quick-link-btn" style="background: rgba(45, 212, 191, 0.12); color: var(--accent-teal); border-color: rgba(45,212,191,0.3);">
+          <i data-lucide="layout-grid" style="width:14px; height:14px;"></i>
+          <span>مرکز دیاگرام‌ها</span>
+        </a>
       </div>
     </div>
-  </header>
+  </nav>
 
-  <main class="main-content">
-    
-    <!-- ۱. بنر اصلی پرزنتیشن -->
-    <section class="hero-banner">
-      <div class="pitch-badge">
-        <i data-lucide="sparkles" style="width:14px; height:14px;"></i>
-        راهنمای راهبردی پرزنتیشن برای بنیان‌گذاران، فروش و تیم فنی
+  <!-- کانتینر محتوایی پرزنتیشن -->
+  <main class="deck-container">
+
+    <!-- ۱. بنر هیرو و معرفی جامع -->
+    <section class="hero-presentation">
+      <div class="hero-badge-pill">
+        <i data-lucide="award" style="width:16px; height:16px;"></i>
+        راهنمای کامل ارائه و متقاعدسازی مشتریان، مدیران و سرمایه‌گذاران
       </div>
-      <h1 style="font-size: 26px; font-weight: 900; color: #fff; margin-bottom: 12px; line-height: 1.4;">
-        راهنمای جامع معرفی، فروش و تشریح پلتفرم «پرس‌کاد»
+      
+      <h1 class="hero-headline">
+        پرس‌کاد چیست؟ فرم‌ساز مدرن، مکالمه‌محور و نسل جدید ایرانی
       </h1>
-      <p style="font-size: 14.5px; color: var(--text-muted); line-height: 1.8; max-width: 900px; margin-bottom: 20px;">
-        این سند بر اساس تمام ۱۵ سند معماری، دیاگرام‌های دیتابیس (ERD)، جریان داده (DFD) و سیستم طراحی پرس‌کاد تهیه شده است. هدف آن ارائه <strong>کامل‌ترین نقشه راه کلامی و استدلالی</strong> برای ارائه محصول به مشتریان شرکتی، سرمایه‌گذاران، مدیران محصول و سازمان‌ها است.
+      
+      <p class="hero-desc">
+        پرس‌کاد (Porskad) یک پلتفرم ابری ساخت فرم و پرسشنامه تعاملی است. برخلاف فرم‌های سنتی و طوماری که مخاطب را با حجم زیادی از سوالات در یک صفحه شوکه و خسته می‌کنند، پرس‌کاد سوالات را <strong>قدم‌به‌قدم، اسلایدی و مثل یک گفت‌وگوی دوستانه</strong> از کاربر می‌پرسد. این تجربه روان باعث می‌شود نرخ تکمیل فرم‌ها به شدت افزایش یابد و مشتریان با رغبت پاسخ دهند.
       </p>
 
-      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-        <span class="pill-tag pill-green">SaaS فرم‌ساز و نظرسنجی مدرن</span>
-        <span class="pill-tag pill-yellow">امنیت سطح دیتابیس (RLS)</span>
-        <span class="pill-tag pill-green">خروجی اکسل ۱۰۰٪ فارسی بدون خرابی</span>
-        <span class="pill-tag pill-yellow">رندر اسلایدی مکالمه‌محور</span>
+      <!-- متریک‌های برجسته کسب‌وکار -->
+      <div class="hero-metrics-grid">
+        <div class="metric-box">
+          <div class="metric-icon-circle">
+            <i data-lucide="trending-up" style="width:20px; height:20px;"></i>
+          </div>
+          <div class="metric-info">
+            <h4>افزایش نرخ تکمیل تا ۴۰٪</h4>
+            <p>نمایش اسلایدی و روان باعث رفع خستگی و جلوگیری از انصراف مخاطب وسط فرم می‌شود.</p>
+          </div>
+        </div>
+
+        <div class="metric-box">
+          <div class="metric-icon-circle">
+            <i data-lucide="file-spreadsheet" style="width:20px; height:20px;"></i>
+          </div>
+          <div class="metric-info">
+            <h4>خروجی اکسل ۱۰۰٪ سالم</h4>
+            <p>حل همیشگی مشکل به‌هم‌ریختگی حروف و کاراکترهای فارسی در نرم‌افزار اکسل ویندوز.</p>
+          </div>
+        </div>
+
+        <div class="metric-box">
+          <div class="metric-icon-circle">
+            <i data-lucide="git-merge" style="width:20px; height:20px;"></i>
+          </div>
+          <div class="metric-info">
+            <h4>مسیردهی هوشمند (منطق شرطی)</h4>
+            <p>نمایش سوالات هدفمند بر اساس پاسخ‌های قبلی مخاطب؛ بدون پرسیدن سوالات نامربوط.</p>
+          </div>
+        </div>
+
+        <div class="metric-box">
+          <div class="metric-icon-circle">
+            <i data-lucide="smartphone" style="width:20px; height:20px;"></i>
+          </div>
+          <div class="metric-info">
+            <h4>طراحی بی‌نقص در موبایل</h4>
+            <p>پاسخ‌دهی فوق‌العاده سریع با دکمه‌های بزرگ و ارگونومیک بدون نیاز به زوم کردن.</p>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- ۲. اسکریپت طلایی معرفی ۲ دقیقه‌ای (Elevator Pitch) -->
-    <section class="pitch-card">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
-        <h2 style="font-size: 18px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
-          <i data-lucide="zap" style="color: var(--accent-teal);"></i>
-          ۱. اسکریپت طلایی معرفی ۲ دقیقه‌ای (اگر فقط ۲ دقیقه فرصت داری چی بگی؟)
-        </h2>
-        <span style="font-size: 12px; color: var(--accent-teal); font-weight: 700;">Elevator Pitch Script</span>
+    <!-- ۲. بخش چرا پرس‌کاد؟ ۳ مشکل بزرگ فرم‌سازهای قدیمی -->
+    <section id="why-porskad" class="presentation-card">
+      <div class="card-header-row">
+        <div class="card-title-group">
+          <div class="card-title-icon">
+            <i data-lucide="target" style="width:20px; height:20px;"></i>
+          </div>
+          <div>
+            <h2>چرا پرس‌کاد ساخته شد؟ (۳ دردسر بزرگی که حل کردیم)</h2>
+            <p style="font-size: 13px; color: var(--text-muted); margin-top: 3px;">مقایسه دردهای رایج فرم‌سازهای سنتی و راه‌حل روان پرس‌کاد به زبان ملموس</p>
+          </div>
+        </div>
+        <span class="card-tag">Core Value Proposition</span>
       </div>
 
-      <p style="font-size: 13.5px; color: var(--text-muted); line-height: 1.7; margin-bottom: 14px;">
-        وقتی در یک جلسه، همایش یا تماس تلفنی از شما می‌پرسند <strong>«پرس‌کاد دقیقاً چیه؟»</strong> از این متن دقیق و هوشمندانه استفاده کنید:
-      </p>
-
-      <div class="script-box">
-        <div class="script-label">
-          <i data-lucide="mic" style="width:14px; height:14px;"></i>
-          اسکریپت معرفی کلامی (واو به واو):
+      <div class="problems-grid">
+        
+        <!-- مشکل ۱: فرم‌های طوماری و ریزش -->
+        <div class="problem-solution-card">
+          <div>
+            <div class="problem-part">
+              <div class="problem-title">
+                <i data-lucide="x-circle" style="width:16px; height:16px;"></i>
+                مشکل قدیمی: فرم‌های دراز و طوماری (Drop-off Rate بالا)
+              </div>
+              <p class="problem-text">
+                در فرم‌های قدیمی مثل گوگل فرمز، کاربر به محض باز کردن صفحه با ۲۰ تا فیلد شلوغ و متراکم روبرو می‌شود. مخاطب احساس خستگی و سنگینی می‌کند و بیش از ۶۰٪ افراد قبل از رسیدن به پایان، صفحه را می‌بندند.
+              </p>
+            </div>
+          </div>
+          <div class="solution-part">
+            <div class="solution-title">
+              <i data-lucide="check-circle-2" style="width:16px; height:16px;"></i>
+              راه‌حل پرس‌کاد: نمایش اسلایدی و قدم‌به‌قدم
+            </div>
+            <p class="solution-text">
+              پرس‌کاد در هر لحظه فقط یک سوال را با تمرکز ۱۰۰٪ به کاربر نشان می‌دهد. کاربر بدون استرس و فقط با یک کلیک یا لمس ساده پاسخ می‌دهد و فرم سریع‌تر تمام می‌شود.
+            </p>
+          </div>
         </div>
-        <div class="script-text">
-          «پرس‌کاد یک فرم‌ساز و موتور پرسشنامه‌ساز آنلاین ابری است که جایگزین بومی و مدرن تایپ‌فرم (Typeform) و گوگل‌فرمز در ایران به شمار می‌آید. برخلاف فرم‌های سنتی که نرخ ریزش بالای ۶۰٪ دارند، پرسکاد سوالات را به صورت <strong>اسلایدی و مکالمه‌محور</strong> به کاربر نشان می‌دهد که نرخ تکمیل را تا ۸۷٪ افزایش می‌دهد.<br><br>
-          ما ۳ مشکل بزرگ شرکت‌های ایرانی را حل کردیم:<br>
-          <strong>اول:</strong> خروجی اکسل سالم با UTF-8 BOM بدون هیچ‌گونه به‌هم‌ریختگی حروف فارسی.<br>
-          <strong>دوم:</strong> منطق شرطی هوشمند (IF/THEN) که مسیر فرم را بر اساس پاسخ مشتری تغییر می‌دهد.<br>
-          <strong>سوم:</strong> امنیت فوق‌العاده در سطح دیتابیس (Row-Level Security) و پیش‌نویس خودکار ۷ روزه تا حتی با قطع اینترنت، پاسخ‌های هیچ کاربری از بین نرود.»
+
+        <!-- مشکل ۲: به‌هم‌ریختگی اکسل فارسی -->
+        <div class="problem-solution-card">
+          <div>
+            <div class="problem-part">
+              <div class="problem-title">
+                <i data-lucide="x-circle" style="width:16px; height:16px;"></i>
+                مشکل قدیمی: خروجی اکسل ناخوانا با فونت نامفهوم
+              </div>
+              <p class="problem-text">
+                ابزارهای خارجی وقتی خروجی اکسل (CSV) می‌دهند، به دلیل عدم پشتیبانی استاندارد از زبان فارسی در ویندوز، تمام کلمات و حروف فارسی به صورت علامت سوال یا نمادهای عجیب و غریب باز می‌شوند.
+              </p>
+            </div>
+          </div>
+          <div class="solution-part">
+            <div class="solution-title">
+              <i data-lucide="check-circle-2" style="width:16px; height:16px;"></i>
+              راه‌حل پرس‌کاد: خروجی اکسل کامپیوتر-پسند و ۱۰۰٪ سالم
+            </div>
+            <p class="solution-text">
+              فایل‌های دانلودی پرس‌کاد به طور پیش‌فرض دارای شناسه کدگذاری استاندارد هستند و در اکسل هر نسخه‌ای از ویندوز و مک، مستقیماً بدون هیچ به‌هم‌ریختگی و سالم باز می‌شوند.
+            </p>
+          </div>
+        </div>
+
+        <!-- مشکل ۳: پرسیدن سوالات نامربوط -->
+        <div class="problem-solution-card">
+          <div>
+            <div class="problem-part">
+              <div class="problem-title">
+                <i data-lucide="x-circle" style="width:16px; height:16px;"></i>
+                مشکل قدیمی: همه مخاطبان همه سوالات را می‌بینند
+              </div>
+              <p class="problem-text">
+                مثلاً اگر از کاربر بپرسید «آیا صاحب خودرو هستید؟» و بگوید «خیر»، فرم‌های سنتی همچنان سوالات بعدی مانند «مدل خودرو چیست؟» را می‌پرسند و کاربر سردرگم می‌شود.
+              </p>
+            </div>
+          </div>
+          <div class="solution-part">
+            <div class="solution-title">
+              <i data-lucide="check-circle-2" style="width:16px; height:16px;"></i>
+              راه‌حل پرس‌کاد: منطق شرطی هوشمند (مسیردهی خودکار)
+            </div>
+            <p class="solution-text">
+              تنها با یک شرط ساده، اگر کاربر گزینه «خیر» را انتخاب کرد، مستقیماً به سوالات بعدی هدایت می‌شود یا فرم به اتمام می‌رسد؛ کاملاً متناسب با شرایط هر فرد.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ۳. اسکریپت‌های آماده ارائه کلامی (Elevator Pitches) -->
+    <section id="elevator-pitch" class="presentation-card">
+      <div class="card-header-row">
+        <div class="card-title-group">
+          <div class="card-title-icon">
+            <i data-lucide="mic" style="width:20px; height:20px;"></i>
+          </div>
+          <div>
+            <h2>اسکریپت‌های آماده معرفی کلامی (اگر فرصت کمی داری چی بگی؟)</h2>
+            <p style="font-size: 13px; color: var(--text-muted); margin-top: 3px;">متن‌های تست‌شده و اقناع‌کننده برای تماس تلفنی، جلسات حضوری یا دمو محصول</p>
+          </div>
+        </div>
+        <span class="card-tag">Ready-to-Use Scripts</span>
+      </div>
+
+      <!-- اسکریپت ۱: ۳۰ ثانیه‌ای (معرفی برق‌آسا) -->
+      <div class="pitch-script-card">
+        <div class="pitch-top-bar">
+          <div class="pitch-badge-title">
+            <i data-lucide="zap" style="width:16px; height:16px;"></i>
+            سناریوی ۱: معرفی برق‌آسای ۳۰ ثانیه‌ای (برای لابی، آسانسور یا تماس کوتاه)
+          </div>
+          <button class="copy-script-btn" onclick="copyPitchText('pitch-30s')">
+            <i data-lucide="copy" style="width:13px; height:13px;"></i>
+            <span>کپی متن</span>
+          </button>
+        </div>
+        <div class="script-bubble" id="pitch-30s">
+          «<strong>پرس‌کاد</strong> یک فرم‌ساز آنلاین و مدرنه که جایگزین فرم‌های قدیمی و خسته‌کننده شده. به جای اینکه ۲۰ تا سوال رو تو یه صفحه دراز جلوی مشتری بذارید، پرس‌کاد سوالات رو <strong>یکی‌یکی، شیک و مثل یه گپ دوستانه</strong> نشون میده. اینطوری مشتری وسط فرم خسته نمیشه و نرخ جواب دادنش تا ۴۰٪ بالاتر میره. به علاوه خروجی اکسلش برای زبان فارسی کاملاً سالمه و حتی روی موبایل هم با یک انگشت پر میشه.»
+        </div>
+      </div>
+
+      <!-- اسکریپت ۲: ۲ دقیقه‌ای (معرفی استاندارد جلسات) -->
+      <div class="pitch-script-card featured">
+        <div class="pitch-top-bar">
+          <div class="pitch-badge-title">
+            <i data-lucide="clock" style="width:16px; height:16px;"></i>
+            سناریوی ۲: معرفی طلایی ۲ دقیقه‌ای (برای جلسات کاری و دمو اولیه)
+          </div>
+          <button class="copy-script-btn" onclick="copyPitchText('pitch-2m')">
+            <i data-lucide="copy" style="width:13px; height:13px;"></i>
+            <span>کپی متن</span>
+          </button>
+        </div>
+        <div class="script-bubble" id="pitch-2m">
+          «ببینید، اکثر شرکت‌ها وقتی برای استخدام، نظرسنجی رضایت مشتری یا ثبت‌نام دوره‌هاشون فرم می‌سازن، از ابزارهای قدیمی استفاده می‌کنن که ۶۰٪ کاربران وسط راه خسته میشن و فرم رو می‌بندن. خروجی اکسلشون هم وقتی باز میشه فونت‌های فارسیش به هم می‌ریزه.<br><br>
+          <strong>ما در پرس‌کاد این داستان رو کاملاً تغییر دادیم:</strong><br>
+          ۱. سوالات به صورت اسلایدی و قدم‌به‌قدم رندر میشن؛ کاربر حس سبکی و گفت‌وگو داره.<br>
+          ۲. منطق شرطی داره؛ یعنی بسته به جوابی که کاربر میده، مسیر فرم عوض میشه و سوال نامربوط نمی‌بینه.<br>
+          ۳. قابلیت ذخیره خودکار داره؛ اگر اینترنت کاربر قطع بشه، جواب‌هاش از بین نمیره و بعداً ادامه میده.<br>
+          ۴. خروجی اکسل با یک کلیک و بدون ذره‌ای خرابی تحویل مدیر داده میشه تا گزارش‌گیری درجا انجام بشه.»
+        </div>
+      </div>
+
+      <!-- اسکریپت ۳: ۵ دقیقه‌ای (ارائه عمیق برای مشتریان سازمانی) -->
+      <div class="pitch-script-card">
+        <div class="pitch-top-bar">
+          <div class="pitch-badge-title">
+            <i data-lucide="briefcase" style="width:16px; height:16px;"></i>
+            سناریوی ۳: معرفی ۵ دقیقه‌ای جامع (برای مدیران عامل و جلسات عقد قرارداد)
+          </div>
+          <button class="copy-script-btn" onclick="copyPitchText('pitch-5m')">
+            <i data-lucide="copy" style="width:13px; height:13px;"></i>
+            <span>کپی متن</span>
+          </button>
+        </div>
+        <div class="script-bubble" id="pitch-5m">
+          «در دنیای امروز، اولین نقطه تماس مشتری با برند شما اغلب یک فرمه (فرم استخدام، مشاوره، خرید یا فیدبک). اگر فرم شما زشت، دراز و کند باشه، برند شما غیرحرفه‌ای به نظر میرسه و لیدهای باارزشتون می‌سوزه.<br><br>
+          پرس‌کاد به شما اجازه میده در کمتر از ۳ دقیقه، زیباترین فرم‌های تعاملی رو با لوگو و هویت بصری خودتون بسازید. بدون نیاز به برنامه‌نویس، می‌تونید فرم رو مستقیم داخل وب‌سایتتون قرار بدید، لینک کوتاهش رو پیامک کنید یا کد QR بسازید.<br><br>
+          از طرف دیگه، پنل مدیریت پرس‌کاد آمار لحظه‌ای و نمودارهای تحلیلی دقیق بهتون میده؛ می‌فهمید چند نفر فرم رو دیدن، چند نفر کاملش کردن و دقیقا روی کدوم سوال افراد منصرف شدن. این یعنی بهینه‌سازی واقعی فرآیندهای کسب‌وکار.»
         </div>
       </div>
     </section>
 
-    <!-- ۳. جدول ماتریس مقایسه پرسکاد با رقبا -->
-    <section class="pitch-card">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
-        <h2 style="font-size: 18px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
-          <i data-lucide="check-check" style="color: var(--accent-cyan);"></i>
-          ۲. ماتریس مقایسه پرسکاد در برابر رقبا (Typeform، گوگل فرمز و ابزارهای داخلی)
-        </h2>
-        <span style="font-size: 12px; color: var(--accent-cyan); font-weight: 700;">Competitive Matrix</span>
+    <!-- ۴. امکانات و ویژگی‌های اصلی محصول با شرح کاربردی -->
+    <section id="features" class="presentation-card">
+      <div class="card-header-row">
+        <div class="card-title-group">
+          <div class="card-title-icon">
+            <i data-lucide="layers" style="width:20px; height:20px;"></i>
+          </div>
+          <div>
+            <h2>امکانات و قابلیت‌های اصلی پرس‌کاد (به زبان ساده)</h2>
+            <p style="font-size: 13px; color: var(--text-muted); margin-top: 3px;">هر قابلیت چه مزیتی برای کاربر و کسب‌وکار به همراه دارد؟</p>
+          </div>
+        </div>
+        <span class="card-tag">8 Key Features</span>
       </div>
 
-      <div style="overflow-x: auto;">
-        <table class="matrix-table">
+      <div class="features-rich-grid">
+
+        <div class="feature-rich-box">
+          <div class="feature-icon-row">
+            <div class="feature-box-icon"><i data-lucide="mouse-pointer-click" style="width:18px; height:18px;"></i></div>
+            <span class="feature-step-num">قابلیت ۱</span>
+          </div>
+          <h3>فرم‌ساز بصری بدون کدنویسی</h3>
+          <p>هر کسی بدون داشتن حتی یک خط دانش برنامه‌نویسی می‌تواند با کشیدن و رها کردن ساده، سوالات را بچیند و ترتیب را جابجا کند.</p>
+        </div>
+
+        <div class="feature-rich-box">
+          <div class="feature-icon-row">
+            <div class="feature-box-icon"><i data-lucide="smartphone" style="width:18px; height:18px;"></i></div>
+            <span class="feature-step-num">قابلیت ۲</span>
+          </div>
+          <h3>رندر اسلایدی و مکالمه‌محور</h3>
+          <p>تجربه پاسخ‌دهی شبیه به چت؛ تمرکز کامل روی هر سوال، دکمه‌های بزرگ و کاربری بسیار لذت‌بخش روی گوشی‌های موبایل.</p>
+        </div>
+
+        <div class="feature-rich-box">
+          <div class="feature-icon-row">
+            <div class="feature-box-icon"><i data-lucide="git-branch" style="width:18px; height:18px;"></i></div>
+            <span class="feature-step-num">قابلیت ۳</span>
+          </div>
+          <h3>منطق شرطی و پرش هوشمند</h3>
+          <p>شخصی‌سازی مسیر فرم بر اساس پاسخ مخاطب؛ حذف سوالات نامربوط و هدایت سریع کاربر به بخش‌های متناسب با نیازش.</p>
+        </div>
+
+        <div class="feature-rich-box">
+          <div class="feature-icon-row">
+            <div class="feature-box-icon"><i data-lucide="file-check-2" style="width:18px; height:18px;"></i></div>
+            <span class="feature-step-num">قابلیت ۴</span>
+          </div>
+          <h3>تنوع فیلدهای پاسخ‌دهی</h3>
+          <p>پشتیبانی از متن کوتاه، توضیحات بلند، چندگزینه‌ای، امتیاز ستاره‌ای (رضایت‌سنجی)، بله/خیر، ایمیل و شماره موبایل ایران.</p>
+        </div>
+
+        <div class="feature-rich-box">
+          <div class="feature-icon-row">
+            <div class="feature-box-icon"><i data-lucide="save" style="width:18px; height:18px;"></i></div>
+            <span class="feature-step-num">قابلیت ۵</span>
+          </div>
+          <h3>ذخیره خودکار پیش‌نویس</h3>
+          <p>اگر باتری گوشی تمام شود یا اینترنت قطع شود، پاسخ‌های ثبت‌شده تا زمان بازگشت کاربر حفظ می‌شوند و از اول شروع نمی‌شود.</p>
+        </div>
+
+        <div class="feature-rich-box">
+          <div class="feature-icon-row">
+            <div class="feature-box-icon"><i data-lucide="file-spreadsheet" style="width:18px; height:18px;"></i></div>
+            <span class="feature-step-num">قابلیت ۶</span>
+          </div>
+          <h3>دانلود اکسل ۱۰۰٪ فارسی و تمیز</h3>
+          <p>دریافت فایل خروجی تمیز و دسته‌بندی‌شده از تمام پاسخ‌ها، کاملاً سازگار با اکسل و بدون مشکل حروف فارسی برای گزارش‌گیری.</p>
+        </div>
+
+        <div class="feature-rich-box">
+          <div class="feature-icon-row">
+            <div class="feature-box-icon"><i data-lucide="bar-chart-2" style="width:18px; height:18px;"></i></div>
+            <span class="feature-step-num">قابلیت ۷</span>
+          </div>
+          <h3>داشبورد آمار و تحلیل نتایج</h3>
+          <p>مشاهده لحظه‌ای تعداد پاسخ‌ها، درصد انتخاب هر گزینه و نمودارهای تحلیلی برای اتخاذ تصمیم‌های مدیریتی دقیق‌تر.</p>
+        </div>
+
+        <div class="feature-rich-box">
+          <div class="feature-icon-row">
+            <div class="feature-box-icon"><i data-lucide="share-2" style="width:18px; height:18px;"></i></div>
+            <span class="feature-step-num">قابلیت ۸</span>
+          </div>
+          <h3>انتشار چندکاناله و تعبیه در سایت</h3>
+          <p>تولید آنی لینک مستقیم، QR Code برای بنر و کاتالوگ، و کد Embed برای قرار دادن فرم در وردپرس یا سایت‌های اختصاصی.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ۵. راهنمای ارائه به تفکیک پرسوناهای کاربردی -->
+    <section id="use-cases" class="presentation-card">
+      <div class="card-header-row">
+        <div class="card-title-group">
+          <div class="card-title-icon">
+            <i data-lucide="users" style="width:20px; height:20px;"></i>
+          </div>
+          <div>
+            <h2>راهنمای پرزنتیشن برای ۴ دسته مخاطب و شغل مختلف</h2>
+            <p style="font-size: 13px; color: var(--text-muted); margin-top: 3px;">برای هر مشتری روی چه نکاتی دست بگذاریم تا سریع‌تر قانع شود؟</p>
+          </div>
+        </div>
+        <span class="card-tag">Persona Talk Tracks</span>
+      </div>
+
+      <!-- تب‌های تعاملی انتخاب پرسونا -->
+      <div class="persona-tabs-nav">
+        <button class="persona-tab-btn active" onclick="switchPersonaTab('marketing')">
+          <i data-lucide="megaphone" style="width:15px; height:15px;"></i>
+          <span>۱. تیم‌های مارکتینگ و فروش</span>
+        </button>
+        <button class="persona-tab-btn" onclick="switchPersonaTab('hr')">
+          <i data-lucide="user-check" style="width:15px; height:15px;"></i>
+          <span>۲. منابع انسانی و استخدام</span>
+        </button>
+        <button class="persona-tab-btn" onclick="switchPersonaTab('support')">
+          <i data-lucide="smile" style="width:15px; height:15px;"></i>
+          <span>۳. پشتیبانی و رضایت مشتریان</span>
+        </button>
+        <button class="persona-tab-btn" onclick="switchPersonaTab('events')">
+          <i data-lucide="calendar" style="width:15px; height:15px;"></i>
+          <span>۴. رویدادها، آموزشگاه‌ها و وبینارها</span>
+        </button>
+      </div>
+
+      <!-- محتوای تب ۱: مارکتینگ و فروش -->
+      <div id="tab-marketing" class="persona-content-panel active">
+        <div class="persona-detail-card">
+          <h3 style="font-size: 16px; font-weight: 800; color: var(--accent-teal); margin-bottom: 8px;">
+            دغدغه اصلی مدیر بازاریابی: جذب لید بیشتر با هزینه تبلیغات کمتر
+          </h3>
+          <p style="font-size: 13.5px; color: var(--text-muted); line-height: 1.8;">
+            وقتی برای کمپین‌های تبلیغاتی در اینستاگرام، گوگل یا لندینگ‌پیج‌ها هزینه می‌کنید، بزرگ‌ترین سرمایه شما مشتریانی هستند که روی تبلیغ کلیک می‌کنند. اگر فرم ثبت‌نام کند یا خسته‌کننده باشد، بودجه تبلیغاتی شما هدر می‌رود.
+          </p>
+          <div class="persona-why-box">
+            <strong>نکته طلایی برای ارائه:</strong>
+            «با پرس‌کاد به خاطر ظاهر اسلایدی و تعاملی، کاربر به راحتی شماره موبایل و اطلاعاتش رو ثبت می‌کنه. درصد ریزش لیدها حداقل ۳۰٪ کم می‌شه و فایل اکسل مستقیماً در اختیار تیم فروش قرار می‌گیره.»
+          </div>
+        </div>
+      </div>
+
+      <!-- محتوای تب ۲: منابع انسانی و استخدام -->
+      <div id="tab-hr" class="persona-content-panel">
+        <div class="persona-detail-card">
+          <h3 style="font-size: 16px; font-weight: 800; color: var(--accent-cyan); margin-bottom: 8px;">
+            دغدغه اصلی مدیر منابع انسانی: غربالگری سریع متقاضیان و آزمون ورودی
+          </h3>
+          <p style="font-size: 13.5px; color: var(--text-muted); line-height: 1.8;">
+            بررسی صدها رزومه ایمیل‌شده ساعت‌ها وقت تیم منابع انسانی را تلف می‌کند. با پرس‌کاد یک فرم استخدام هوشمند طراحی می‌شود که متقاضیان غیرمرتبط را در همان مراحل اولیه فیلتر می‌کند.
+          </p>
+          <div class="persona-why-box">
+            <strong>نکته طلایی برای ارائه:</strong>
+            «با استفاده از منطق شرطی، اگر کارجویی سابقه کار لازم را نداشت فرم محترمانه بسته می‌شود و سوالات تخصصی فقط برای افراد واجد شرایط نمایش داده می‌شود. خروجی اکسل هم رزومه‌ها را مرتب و آماده مصاحبه تحویل می‌دهد.»
+          </div>
+        </div>
+      </div>
+
+      <!-- محتوای تب ۳: پشتیبانی و رضایت مشتری -->
+      <div id="tab-support" class="persona-content-panel">
+        <div class="persona-detail-card">
+          <h3 style="font-size: 16px; font-weight: 800; color: var(--accent-amber); margin-bottom: 8px;">
+            دغدغه اصلی مدیران محصول و پشتیبانی: دریافت فیدبک واقعی از مشتریان
+          </h3>
+          <p style="font-size: 13.5px; color: var(--text-muted); line-height: 1.8;">
+            مشتریان حوصله پر کردن فرم‌های طولانی نظرسنجی را ندارند. پرس‌کاد با فیلد امتیاز ستاره‌ای و گزینه‌های لمسی سریع، پروسه نظرسنجی پس از خرید یا تماس با پشتیبانی را به کمتر از ۳۰ ثانیه تبدیل می‌کند.
+          </p>
+          <div class="persona-why-box">
+            <strong>نکته طلایی برای ارائه:</strong>
+            «پرس‌کاد با ستاره‌های رضایت‌سنجی و امکان ارسال سریع لینک به صورت پیامک، فیدبک واقعی و بی‌دردسر را به داشبورد تحلیلی شما می‌آورد.»
+          </div>
+        </div>
+      </div>
+
+      <!-- محتوای تب ۴: رویدادها و وبینارها -->
+      <div id="tab-events" class="persona-content-panel">
+        <div class="persona-detail-card">
+          <h3 style="font-size: 16px; font-weight: 800; color: var(--accent-purple); margin-bottom: 8px;">
+            دغدغه برگزارکنندگان: پیش‌ثبت‌نام سریع و نظرسنجی پایان رویداد
+          </h3>
+          <p style="font-size: 13.5px; color: var(--text-muted); line-height: 1.8;">
+            در سمینارها و وبینارها، شما نیاز به ثبت‌نام سریع مخاطبان و دریافت نظر آن‌ها درباره کیفیت اساتید و پذیرایی دارید.
+          </p>
+          <div class="persona-why-box">
+            <strong>نکته طلایی برای ارائه:</strong>
+            «با یک کد QR ساده روی اسلاید پایانی یا استند سالن، حضار با اسکن بارکد در ۱۰ ثانیه وارد فرم اسلایدی شده و نظرسنجی را پر می‌کنند.»
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ۶. جدول مقایسه کامل با رقبا -->
+    <section id="comparison" class="presentation-card">
+      <div class="card-header-row">
+        <div class="card-title-group">
+          <div class="card-title-icon">
+            <i data-lucide="check-check" style="width:20px; height:20px;"></i>
+          </div>
+          <div>
+            <h2>جدول مقایسه شفاف: پرس‌کاد در برابر فرم‌سازهای سنتی و گوگل فرمز</h2>
+            <p style="font-size: 13px; color: var(--text-muted); margin-top: 3px;">تفاوت‌های کلیدی از دیدگاه سادگی، تجربه کاربری و کارایی در بازار ایران</p>
+          </div>
+        </div>
+        <span class="card-tag">Competitive Comparison</span>
+      </div>
+
+      <div class="comparison-wrapper">
+        <table class="comparison-table">
           <thead>
             <tr>
-              <th>ویژگی و استاندارد کلیدی</th>
-              <th>پرس‌کاد (Porskad)</th>
-              <th>تایپ‌فرم (Typeform)</th>
+              <th>ویژگی و معیار ارزیابی</th>
+              <th class="porskad-header">پرس‌کاد (Porskad)</th>
               <th>گوگل فرمز (Google Forms)</th>
               <th>فرم‌سازهای سنتی</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td><strong>تجربه کاربری (UX)</strong></td>
-              <td class="winner">اسلایدی + انیمیشن + فونت IRANSansX</td>
-              <td>اسلایدی (انگلیسی)</td>
-              <td>طوماری بلند و خسته‌کننده</td>
-              <td>طوماری سنتی</td>
+              <td><strong>تجربه کاربری و نحوه نمایش</strong></td>
+              <td class="porskad-col"><span class="tag-yes"><i data-lucide="check" style="width:14px; height:14px;"></i> اسلایدی و مکالمه‌محور</span></td>
+              <td>طوماری بلند و یک‌صفحه‌ای</td>
+              <td>فرم قدیمی و خشک اداری</td>
             </tr>
             <tr>
-              <td><strong>خروجی اکسل فارسی</strong></td>
-              <td class="winner">۱۰۰٪ سالم با UTF-8 BOM</td>
-              <td>خرابی حروف در اکسل ویندوز</td>
-              <td>نیازمند تبدیل با شیتس</td>
-              <td>ناسازگار در برخی فرمت‌ها</td>
+              <td><strong>خروجی اکسل فارسی بدون خرابی</strong></td>
+              <td class="porskad-col"><span class="tag-yes"><i data-lucide="check" style="width:14px; height:14px;"></i> ۱۰۰٪ تضمینی و خوانا</span></td>
+              <td>نیازمند تبدیل با گوگل‌شیتس</td>
+              <td>ناسازگار در برخی ویندوزها</td>
             </tr>
             <tr>
-              <td><strong>اعتبارسنجی موبایل ایران</strong></td>
-              <td class="winner">زنده با پیش‌شماره‌های مجاز</td>
-              <td>ندارد (فقط جهانی)</td>
-              <td>نیازمند Regex دستی</td>
+              <td><strong>طراحی اختصاصی برای موبایل</strong></td>
+              <td class="porskad-col"><span class="tag-yes"><i data-lucide="check" style="width:14px; height:14px;"></i> دکمه‌های بزرگ لمسی</span></td>
+              <td>متوسط (نیاز به اسکرول زیاد)</td>
+              <td>ضعیف در صفحات کوچک</td>
+            </tr>
+            <tr>
+              <td><strong>منطق شرطی و شاخه‌بندی سوالات</strong></td>
+              <td class="porskad-col"><span class="tag-yes"><i data-lucide="check" style="width:14px; height:14px;"></i> بسیار ساده و بصری</span></td>
+              <td>پیچیده و محدود به بخش‌ها</td>
+              <td>معمولاً غیرفعال یا پولی</td>
+            </tr>
+            <tr>
+              <td><strong>ذخیره خودکار پیش‌نویس (Auto-Save)</strong></td>
+              <td class="porskad-col"><span class="tag-yes"><i data-lucide="check" style="width:14px; height:14px;"></i> دارد (ماندگار در مرورگر)</span></td>
+              <td>اجبار به لاگین حساب جیمیل</td>
+              <td><span class="tag-no"><i data-lucide="x" style="width:14px; height:14px;"></i> ندارد (با رفرش پاک می‌شود)</span></td>
+            </tr>
+            <tr>
+              <td><strong>کد QR اختصاصی و کد Embed سایت</strong></td>
+              <td class="porskad-col"><span class="tag-yes"><i data-lucide="check" style="width:14px; height:14px;"></i> تولید آنی با یک کلیک</span></td>
               <td>پایه</td>
+              <td>نیازمند تنظیمات پیچیده</td>
             </tr>
             <tr>
-              <td><strong>منطق شرطی (Logic Jump)</strong></td>
-              <td class="winner">پیشرفته با پرش، پایان و نمایش</td>
-              <td>دارد (با هزینه دلاری سنگین)</td>
-              <td>بسیار ساده و محدود</td>
-              <td>محدود</td>
-            </tr>
-            <tr>
-              <td><strong>پیش‌نویس خودکار (Auto-Save)</strong></td>
-              <td class="winner">تا ۷ روز ماندگار بدون ثبت‌نام</td>
-              <td>وابسته به کوکی مرورگر</td>
-              <td>نیاز به لاگین جیمیل</td>
-              <td>ندارد (با رفرش پاک می‌شود)</td>
-            </tr>
-            <tr>
-              <td><strong>سطل بازیافت ۳۰ روزه (God Trash)</strong></td>
-              <td class="winner">بازیابی تضمینی ۳۰ روزه</td>
-              <td>فقط در پلن سازمانی</td>
-              <td>سطل آشغال درایو</td>
-              <td>معمولاً غیرقابل بازیابی</td>
-            </tr>
-            <tr>
-              <td><strong>یکپارچه‌سازی با پیامک و تقویم جلالی</strong></td>
-              <td class="winner">کاوه‌نگار / آموت با تقویم شمسی</td>
-              <td>ندارد</td>
-              <td>ندارد</td>
-              <td>محدود</td>
-            </tr>
-            <tr>
-              <td><strong>کد Embed در وب‌سایت</strong></td>
-              <td class="winner">iFrame استاندارد و ریسپانسیو</td>
-              <td>دارد</td>
-              <td>ساده</td>
-              <td>دارد</td>
-            </tr>
-            <tr>
-              <td><strong>امنیت دیتابیس</strong></td>
-              <td class="winner">Row-Level Security ایزوله</td>
-              <td>ایزوله ابری</td>
-              <td>مجوزهای گوگل</td>
+              <td><strong>زبان و فونت سازگار با فرهنگ ایرانی</strong></td>
+              <td class="porskad-col"><span class="tag-yes"><i data-lucide="check" style="width:14px; height:14px;"></i> فونت زیبا و کاملاً فارسی</span></td>
+              <td>فونت‌های سیستمی خشک</td>
               <td>متغیر</td>
             </tr>
           </tbody>
@@ -362,236 +1331,176 @@
       </div>
     </section>
 
-    <!-- ۴. تشریح ۸ ماژول اصلی محصول به زبان کسب‌وکار -->
-    <section class="pitch-card">
-      <h2 style="font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-        <i data-lucide="layers" style="color: var(--accent-purple);"></i>
-        ۳. تشریح ماژول‌های فنی و عملکردی سیستم به زبان مدیران
-      </h2>
+    <!-- ۷. پاسخ به سوالات متداول و شبهات مشتریان (Objection Handling) -->
+    <section id="faq" class="presentation-card">
+      <div class="card-header-row">
+        <div class="card-title-group">
+          <div class="card-title-icon">
+            <i data-lucide="help-circle" style="width:20px; height:20px;"></i>
+          </div>
+          <div>
+            <h2>پاسخ به ۵ سوال و چالش رایج مشتریان (Objection Handling)</h2>
+            <p style="font-size: 13px; color: var(--text-muted); margin-top: 3px;">اگر مشتری یا مدیری این سوالات را پرسید، اینگونه قاطعانه و منطقی پاسخ دهید</p>
+          </div>
+        </div>
+        <span class="card-tag">Objection Handling</span>
+      </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+      <div class="faq-list">
         
-        <div class="talk-point">
-          <div class="talk-icon"><i data-lucide="move" style="width:16px; height:16px;"></i></div>
-          <div class="talk-content">
-            <strong>۱. موتور فرم‌ساز ماژولار (Form Engine)</strong>
-            <span>محیط درگ‌ان‌دراپ برای چیدمان سوالات، تغییر ترتیب، تنظیم الزامی بودن و پیش‌نمایش آنی دسکتاپ و موبایل بدون نوشتن یک خط کد.</span>
+        <div class="faq-item open">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <div class="faq-question-title">
+              <i data-lucide="help-circle" class="faq-icon-q" style="width:18px; height:18px;"></i>
+              <span>چالش ۱: «چرا از گوگل فرمز استفاده نکنیم که کامپوننت رایگان و معروفیه؟»</span>
+            </div>
+            <i data-lucide="chevron-down" class="faq-toggle-arrow" style="width:18px; height:18px;"></i>
+          </div>
+          <div class="faq-answer">
+            <strong>پاسخ شما:</strong> «گوگل فرمز ابزار خوبیه اما برای بیزینس‌های ایرانی چند تا مانع جدی ایجاد می‌کنه: اولاً ظاهر طوماری و خشکش نرخ انصراف کاربر رو خیلی بالا می‌بره. دوماً فایل اکسل خروجیش حروف فارسی رو خراب می‌کنه. سوماً در خیلی از حالت‌ها کاربر رو مجبور به ورود با اکانت گوگل می‌کنه که باعث میشه خیلی از مشتریان ایرانی درجا صفحه رو ببندند. در حالی که پرس‌کاد فرم رو شبیه چت نشون میده، نیازی به لاگین نداره و اکسل ۱۰۰٪ تمیز تحویل میده.»
           </div>
         </div>
 
-        <div class="talk-point">
-          <div class="talk-icon"><i data-lucide="list-checks" style="width:16px; height:16px;"></i></div>
-          <div class="talk-content">
-            <strong>۲. فیلدهای ۸‌گانه هوشمند</strong>
-            <span>متن کوتاه، پاراگراف، تک‌گزینه‌ای، چندگزینه‌ای، امتیاز ستاره‌ای ۱ تا ۵، بله/خیر، ایمیل و فیلد شماره موبایل با اعتبارسنجی ارقام ایرانی.</span>
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <div class="faq-question-title">
+              <i data-lucide="help-circle" class="faq-icon-q" style="width:18px; height:18px;"></i>
+              <span>چالش ۲: «اگر حین پر کردن فرم، اینترنت کاربر قطع بشه یا گوشی خاموش بشه چی میشه؟»</span>
+            </div>
+            <i data-lucide="chevron-down" class="faq-toggle-arrow" style="width:18px; height:18px;"></i>
+          </div>
+          <div class="faq-answer">
+            <strong>پاسخ شما:</strong> «پرس‌کاد سیستم ذخیره‌سازی خودکار پیش‌نویس داره. یعنی به محض اینکه کاربر گزینه‌ای رو انتخاب می‌کنه یا متنی می‌نویسه، در حافظه ذخیره میشه. اگر اینترنت قطع بشه یا تب بسته بشه، دفعه بعد که روی لینک کلیک کنه فرم دقیقاً از همون سوالی که مونده بود باز میشه و هیچ جوابی از بین نمیره.»
           </div>
         </div>
 
-        <div class="talk-point">
-          <div class="talk-icon"><i data-lucide="git-branch" style="width:16px; height:16px;"></i></div>
-          <div class="talk-content">
-            <strong>۳. موتور منطق شرطی (Flow Logic Engine)</strong>
-            <span>تعریف شروط اگر/آنگاه (IF/THEN) برای ایجاد پرسشنامه‌های شاخه‌ای؛ هدایت کاربر به سوال خاص یا خاتمه دادن به فرم بر اساس سن، شهر، شغل یا رضایت.</span>
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <div class="faq-question-title">
+              <i data-lucide="help-circle" class="faq-icon-q" style="width:18px; height:18px;"></i>
+              <span>چالش ۳: «آیا برای ساختن فرم در پرس‌کاد نیاز به استخدام طراح یا برنامه‌نویس داریم؟»</span>
+            </div>
+            <i data-lucide="chevron-down" class="faq-toggle-arrow" style="width:18px; height:18px;"></i>
+          </div>
+          <div class="faq-answer">
+            <strong>پاسخ شما:</strong> «به هیچ وجه! محیط مدیریت پرس‌کاد کاملاً بصری و فارسی طراحی شده. هر کسی در عرض ۳ دقیقه می‌تونه فیلدها رو انتخاب کنه، متن سوال رو تایپ کنه، ترتیب رو با ماوس جابجا کنه و با زدن دکمه انتشار، لینک آماده رو تحویل بگیره.»
           </div>
         </div>
 
-        <div class="talk-point">
-          <div class="talk-icon"><i data-lucide="bar-chart-3" style="width:16px; height:16px;"></i></div>
-          <div class="talk-content">
-            <strong>۴. داشبورد تحلیل و آنالیز لحظه‌ای</strong>
-            <span>سنجش دقیق نرخ تکمیل (Completion Rate)، میانگین زمان صرف‌شده روی هر سوال، نمودارهای توزیع پاسخ و کشف دقیق نقطه ریزش مخاطبان.</span>
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <div class="faq-question-title">
+              <i data-lucide="help-circle" class="faq-icon-q" style="width:18px; height:18px;"></i>
+              <span>چالش ۴: «چطور فرم رو داخل وب‌سایت یا فروشگاه اینترنتی خودمون قرار بدیم؟»</span>
+            </div>
+            <i data-lucide="chevron-down" class="faq-toggle-arrow" style="width:18px; height:18px;"></i>
+          </div>
+          <div class="faq-answer">
+            <strong>پاسخ شما:</strong> «در بخش اشتراک‌گذاری، یک کد کوتاه Embed به شما داده میشه. این کد رو می‌تونید در هر وب‌سایتی (وردپرس، المنتور، لندینگ پیج اختصاصی یا فروشگاه) کپی کنید تا فرم دقیقاً در قالب سایت خودتون با ظاهری بسیار شیک نمایش داده بشه.»
           </div>
         </div>
 
-        <div class="talk-point">
-          <div class="talk-icon"><i data-lucide="share-2" style="width:16px; height:16px;"></i></div>
-          <div class="talk-content">
-            <strong>۵. هاب اشتراک‌گذاری چندکاناله</strong>
-            <span>تولید خودکار لینک کوتاه، QR Code باکیفیت و کد Embed واکنش‌گرا برای قرار دادن فرم داخل وردپرس، المنتور، لاراول و سایت‌های اختصاصی.</span>
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <div class="faq-question-title">
+              <i data-lucide="help-circle" class="faq-icon-q" style="width:18px; height:18px;"></i>
+              <span>چالش ۵: «آیا اطلاعات و شماره موبایل‌های ثبت‌شده در فرم امن هستند؟»</span>
+            </div>
+            <i data-lucide="chevron-down" class="faq-toggle-arrow" style="width:18px; height:18px;"></i>
+          </div>
+          <div class="faq-answer">
+            <strong>پاسخ شما:</strong> «بله، معماری داده‌های پرس‌کاد به طور کامل ایزوله است و هر سازمان فقط و فقط به پاسخ‌های فرم‌های خودش دسترسی دارد. همچنین فرم‌ها مجهز به لایه محافظتی در برابر ربات‌ها و اسپمرها هستند تا از ارسال پاسخ‌های فیک و جعلی جلوگیری شود.»
           </div>
         </div>
 
-        <div class="talk-point">
-          <div class="talk-icon"><i data-lucide="message-square" style="width:16px; height:16px;"></i></div>
-          <div class="talk-content">
-            <strong>۶. سامانه اطلاع‌رسانی پیامک و تلگرام</strong>
-            <span>اتصال به وب‌سرویس کاوه‌نگار و آموت جهت ارسال پیامک تایید و ارسال آنی پاسخ‌های جدید به بات و گروه تلگرامی تیم پشتیبانی.</span>
-          </div>
-        </div>
-
-        <div class="talk-point">
-          <div class="talk-icon"><i data-lucide="shield-check" style="width:16px; height:16px;"></i></div>
-          <div class="talk-content">
-            <strong>۷. امنیت سازمانی و RLS دیتابیس</strong>
-            <span>جداسازی کامل داده‌های هر سازمان در PostgreSQL با Row-Level Security، تله ضد اسپم Honeypot و سیستم مدیریت سشن توکن JWT.</span>
-          </div>
-        </div>
-
-        <div class="talk-point">
-          <div class="talk-icon"><i data-lucide="trash-2" style="width:16px; height:16px;"></i></div>
-          <div class="talk-content">
-            <strong>۸. سطل بازیافت ۳۰ روزه (God Trash)</strong>
-            <span>قابلیت بازیابی تضمین‌شده فرم‌ها و پاسخ‌های حذف‌شده تا ۳۰ روز برای جلوگیری از خطاهای انسانی و از دست رفتن دیتای استخدامی یا پژوهشی.</span>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ۵. برای هر پرسونای مخاطب چی بگیم؟ (Pitch by Persona) -->
-    <section class="pitch-card">
-      <h2 style="font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-        <i data-lucide="users" style="color: var(--accent-amber);"></i>
-        ۴. راهنمای ارائه اختصاصی برای ۴ دسته مخاطب اصلی (چه کسی، به چی اهمیت میده؟)
-      </h2>
-
-      <!-- پرسونای ۱: مارکتینگ و فروش -->
-      <div class="objection-item" style="border-right: 4px solid var(--accent-teal);">
-        <div style="font-weight: 900; font-size: 15px; color: var(--accent-teal); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-          <i data-lucide="trending-up" style="width:16px; height:16px;"></i>
-          مخاطب ۱: مدیران مارکتینگ، تبلیغات و فروش (Lead Generation & Survey)
-        </div>
-        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
-          <strong>دغدغه اصلی:</strong> افزایش لید، کاهش ریزش کاربر، ثبت شماره موبایل درست، اتصال به CRM.
-        </p>
-        <div class="quote-box" style="margin: 8px 0; font-size: 13.5px;">
-          «با پرسکاد نرخ پاسخگویی کمپین‌های شما تا ۴۰٪ بالاتر می‌ره چون فرم به صورت چت‌گونه و اسلایدی جلو می‌ره. کاربر خسته نمی‌شه، شماره موبایلش اعتبارسنجی می‌شه و درجا پیامک تایید می‌گیره. خروجی اکسل هم بدون ذره‌ای به‌هم‌ریختگی مستقیماً وارد سیستم فروش می‌شه.»
-        </div>
-      </div>
-
-      <!-- پرسونای ۲: منابع انسانی و استخدام -->
-      <div class="objection-item" style="border-right: 4px solid var(--accent-cyan);">
-        <div style="font-weight: 900; font-size: 15px; color: var(--accent-cyan); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-          <i data-lucide="user-check" style="width:16px; height:16px;"></i>
-          مخاطب ۲: مدیران منابع انسانی و استخدام (HR & Recruitment)
-        </div>
-        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
-          <strong>دغدغه اصلی:</strong> فیلتر کردن رزومه‌ها بر اساس سابقه و تخصص، آزمون ورودی با نمره‌دهی، امنیت رزومه‌ها.
-        </p>
-        <div class="quote-box" style="margin: 8px 0; font-size: 13.5px;">
-          «با سیستم منطق شرطی، می‌تونید متقاضیان غیرواجد شرایط رو در همون سوال اول فیلتر کنید و سوالات تخصصی رو فقط به واجدین شرایط نشون بدید. سیستم نمره‌دهی خودکار آزمون‌های بدو استخدام رو ارزیابی می‌کنه و خروجی تمیز اکسل تمام رزومه‌ها رو دسته‌بندی می‌کنه.»
-        </div>
-      </div>
-
-      <!-- پرسونای ۳: سازمان‌ها، پژوهشگاه‌ها و دانشگاه‌ها -->
-      <div class="objection-item" style="border-right: 4px solid var(--accent-purple);">
-        <div style="font-weight: 900; font-size: 15px; color: var(--accent-purple); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-          <i data-lucide="building" style="width:16px; height:16px;"></i>
-          مخاطب ۳: سازمان‌های دولتی، دانشگاه‌ها و شرکت‌های بزرگ (Enterprise & Research)
-        </div>
-        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
-          <strong>دغدغه اصلی:</strong> امنیت، ایزولاسیون داده، عدم نشت اطلاعات، پایداری در حجم بالای پرسش‌ها.
-        </p>
-        <div class="quote-box" style="margin: 8px 0; font-size: 13.5px;">
-          «پرسکاد روی دیتابیس Postgres با ۸۵ مایگریشن امنیتی سوار شده و مجهز به Row-Level Security است؛ یعنی حتی اگر میلیون‌ها پاسخ ثبت بشه داده‌های هر سازمان از بیخ ایزوله است. پشتیبانی از پیش‌نویس ۷ روزه هم مانع از دست رفتن پاسخ پرسشنامه‌های طولانی پژوهشی می‌شه.»
-        </div>
-      </div>
-
-      <!-- پرسونای ۴: توسعه‌دهندگان و آژانس‌های وب -->
-      <div class="objection-item" style="border-right: 4px solid var(--accent-emerald);">
-        <div style="font-weight: 900; font-size: 15px; color: #10B981; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-          <i data-lucide="code" style="width:16px; height:16px;"></i>
-          مخاطب ۴: برنامه‌نویسان، مدیران فنی و آژانس‌های وب (Developers & Agencies)
-        </div>
-        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
-          <strong>دغدغه اصلی:</strong> Embed راحت، عدم افت سرعت سایت، مستندات API و هوک‌ها.
-        </p>
-        <div class="quote-box" style="margin: 8px 0; font-size: 13.5px;">
-          «با یک خط تگ iFrame بدون هیچ وابستگی سنگین، فرم رو روی وردپرس یا لاراول سوار کنید. مستندات وب‌سرویس REST و استاندارد OpenAPI کاملاً مستند شده و وب‌هوک‌ها بلافاصله اطلاعات رو به سرور شما پاس می‌دن.»
-        </div>
-      </div>
-
-    </section>
-
-    <!-- ۶. پاسخ به شبهات و چالش‌های متداول مشتری (Objection Handling) -->
-    <section class="pitch-card">
-      <h2 style="font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-        <i data-lucide="help-circle" style="color: #F43F5E;"></i>
-        ۵. پاسخ قاطع به ۵ سوال و چالش سخت مشتریان (Objection Handling)
-      </h2>
-
-      <div class="objection-item">
-        <div class="objection-q">
-          <i data-lucide="alert-circle" style="width:16px; height:16px;"></i>
-          چالش ۱: «چرا از گوگل فرمز استفاده نکنیم که کاملاً رایگانه؟»
-        </div>
-        <div class="objection-a">
-          <strong>پاسخ شما:</strong> «گوگل فرمز برای فرم‌های ساده کلاسی مناسبه، اما در بیزینس باعث ریزش ۵۰ درصدی لیدها میشه چون طوماریه. حروف فارسی رو در خروجی اکسل خراب می‌کنه، اعتبارسنجی موبایل ایران و پنل پیامک نداره، منطق شرطی پیچیده رو پشتیبانی نمی‌کنه و برای پر کردن فرم در خیلی از حالت‌ها کاربر رو مجبور به لاگین جیمیل می‌کنه که مخاطب ایرانی درجا صفحه رو می‌بنده!»
-        </div>
-      </div>
-
-      <div class="objection-item">
-        <div class="objection-q">
-          <i data-lucide="alert-circle" style="width:16px; height:16px;"></i>
-          چالش ۲: «اگر اینترنت کاربر حین پر کردن قطع بشه دیتای ما می‌پره؟»
-        </div>
-        <div class="objection-a">
-          <strong>پاسخ شما:</strong> «خیر، پرسکاد دارای سیستم پیش‌نویس خودکار ۷ روزه در حافظه مرورگر است. حتی اگر کاربر تب رو ببنده یا برق و اینترنت قطع بشه، تا ۷ روز بعد با باز کردن همون لینک فرم از دقیقاً همون سوالی که رها کرده ادامه پیدا می‌کنه.»
-        </div>
-      </div>
-
-      <div class="objection-item">
-        <div class="objection-q">
-          <i data-lucide="alert-circle" style="width:16px; height:16px;"></i>
-          چالش ۳: «چرا خروجی اکسل ابزارهای دیگه به هم می‌ریزه ولی پرسکاد سالمه؟»
-        </div>
-        <div class="objection-a">
-          <strong>پاسخ شما:</strong> «ابزارهای خارجی فایل رو به صورت UTF-8 ساده صادر می‌کنند که اکسل ویندوز اون رو با انکودینگ پیش‌فرض ANSI باز می‌کنه و حروف به صورت علامت سوال یا علامت‌های عجیب درمیان. پرسکاد بایت‌های شناسایی استاندارد UTF-8 BOM رو به فایل تزریق می‌کنه تا اکسل دقیقاً بدونه زبان فارسی است و بدون خرابی باز بشه.»
-        </div>
-      </div>
-
-      <div class="objection-item">
-        <div class="objection-q">
-          <i data-lucide="alert-circle" style="width:16px; height:16px;"></i>
-          چالش ۴: «اگر کارمندی اشتباهی فرم مهمی رو پاک کنه چیکار کنیم؟»
-        </div>
-        <div class="objection-a">
-          <strong>پاسخ شما:</strong> «پرسکاد معماری سطل بازیافت ۳۰ روزه (God Trash) داره. هیچ فرمی بلافاصله از دیتابیس هارد دلیت نمی‌شه و تا ۳۰ روز با یک کلیک همراه تمام پاسخ‌ها و آمارهایش قابل بازگردانی کامل است.»
-        </div>
-      </div>
-
-      <div class="objection-item">
-        <div class="objection-q">
-          <i data-lucide="alert-circle" style="width:16px; height:16px;"></i>
-          چالش ۵: «آیا امنیت داده‌های ما تضمین شده است؟»
-        </div>
-        <div class="objection-a">
-          <strong>پاسخ شما:</strong> «بله، دیتابیس ما با استاندارد سازمانی Row-Level Security محافظت شده است. هیچ مدیری حتی با درخواست مستقیم API نمی‌تونه به داده‌های فرم‌های سازمان دیگه دسترسی پیدا کنه. همچنین ارسال‌های رباتیک با تله نامرئی Honeypot و Rate Limiting مسدود می‌شوند.»
-        </div>
-      </div>
-    </section>
-
-    <!-- ۷. مشخصات فنی سریع برای جلسات با تیم فنی (Tech Specs) -->
-    <section class="pitch-card">
-      <h2 style="font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-        <i data-lucide="terminal" style="color: var(--accent-teal);"></i>
-        ۶. مشخصات فنی سریع (جهت پاسخ به سوالات CTO و مدیران فنی)
-      </h2>
-
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
-        <div style="background: var(--bg-surface-elevated); padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
-          <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">فرانت‌اند</span>
-          <strong style="color: var(--accent-teal); font-size: 13px;">React 18 + Vite + Tailwind</strong>
-        </div>
-        <div style="background: var(--bg-surface-elevated); padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
-          <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">دیتابیس و بک‌اند</span>
-          <strong style="color: var(--accent-cyan); font-size: 13px;">PostgreSQL 15 + Supabase RLS</strong>
-        </div>
-        <div style="background: var(--bg-surface-elevated); padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
-          <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">ارتباط Realtime</span>
-          <strong style="color: var(--accent-amber); font-size: 13px;">WebSocket زیر ۳۰۰ میلی‌ثانیه</strong>
-        </div>
-        <div style="background: var(--bg-surface-elevated); padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
-          <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">میزبانی ابری</span>
-          <strong style="color: #10B981; font-size: 13px;">Edge CDN با ۹۹.۹٪ Uptime</strong>
-        </div>
       </div>
     </section>
 
   </main>
 
+  <!-- پیام توست کپی متن -->
+  <div id="toastNotice" class="toast-notice">
+    <i data-lucide="check-circle" style="width:16px; height:16px;"></i>
+    <span>متن اسکریپت با موفقیت در کلیپ‌بورد کپی شد!</span>
+  </div>
+
   <script>
+    // راه‌اندازی آیکون‌های Lucide
     lucide.createIcons();
+
+    // مدیریت تغییر تم (دارک / لایت) با ذخیره در حافظه محلی
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
+    const htmlElem = document.documentElement;
+
+    const savedTheme = localStorage.getItem('porskad_presentation_theme') || 'dark';
+    setTheme(savedTheme);
+
+    themeToggleBtn.addEventListener('click', () => {
+      const currentTheme = htmlElem.getAttribute('data-theme') || 'dark';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      setTheme(newTheme);
+      localStorage.setItem('porskad_presentation_theme', newTheme);
+    });
+
+    function setTheme(theme) {
+      htmlElem.setAttribute('data-theme', theme);
+      if (theme === 'light') {
+        themeIcon.setAttribute('data-lucide', 'moon');
+      } else {
+        themeIcon.setAttribute('data-lucide', 'sun');
+      }
+      lucide.createIcons();
+    }
+
+    // تب‌های تعاملی پرسونا
+    function switchPersonaTab(tabKey) {
+      const buttons = document.querySelectorAll('.persona-tab-btn');
+      const panels = document.querySelectorAll('.persona-content-panel');
+
+      buttons.forEach(btn => btn.classList.remove('active'));
+      panels.forEach(panel => panel.classList.remove('active'));
+
+      const targetBtn = Array.from(buttons).find(b => b.getAttribute('onclick').includes(tabKey));
+      const targetPanel = document.getElementById('tab-' + tabKey);
+
+      if (targetBtn) targetBtn.classList.add('active');
+      if (targetPanel) targetPanel.classList.add('active');
+    }
+
+    // آکاردئون پرسش و پاسخ
+    function toggleFaq(elem) {
+      const item = elem.closest('.faq-item');
+      item.classList.toggle('open');
+    }
+
+    // کپی متن اسکریپت با توست پیام
+    function copyPitchText(elementId) {
+      const textElem = document.getElementById(elementId);
+      if (!textElem) return;
+
+      const rawText = textElem.innerText || textElem.textContent;
+      navigator.clipboard.writeText(rawText).then(() => {
+        showToast();
+      }).catch(() => {
+        // روش فال‌بک
+        const tempTextArea = document.createElement('textarea');
+        tempTextArea.value = rawText;
+        document.body.appendChild(tempTextArea);
+        tempTextArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempTextArea);
+        showToast();
+      });
+    }
+
+    function showToast() {
+      const toast = document.getElementById('toastNotice');
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
   </script>
 </body>
 </html>
