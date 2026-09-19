@@ -20,8 +20,8 @@ export default function Landing() {
     <div className="min-h-screen bg-slate-50 dark:bg-[#0B0F19] text-slate-800 dark:text-[#F8FAFC] selection:bg-[#2DD4BF] selection:text-[#0B0F19] overflow-x-hidden font-sans transition-colors duration-200">
       <SEO
         title="فرمساز آنلاین فارسی با منطق شرطی و تحلیل زنده"
-        description="با پرسکاد فرم و پرسشنامه حرفه‌ای بساز؛ منطق شرطی هوشمند، داشبورد تحلیلی زنده و خروجی اکسل فارسی سالم — رایگان شروع کن."
-        keywords="فرمساز فارسی, ساخت فرم آنلاین, پرسشنامه آنلاین, فرمساز با منطق شرطی, تایپ فرم فارسی, خروجی اکسل سالم فارسی, پرسکاد, porskad"
+        description="با پرس‌کاد فرم و پرسشنامه حرفه‌ای بساز؛ منطق شرطی هوشمند، داشبورد تحلیلی زنده و خروجی اکسل فارسی سالم — رایگان شروع کن."
+        keywords="فرمساز فارسی, ساخت فرم آنلاین, پرسشنامه آنلاین, فرمساز با منطق شرطی, تایپ فرم فارسی, خروجی اکسل سالم فارسی, پرس‌کاد, porskad"
       />
 
       {/* ۱. Navbar */}

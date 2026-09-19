@@ -30,7 +30,7 @@ export default function Pricing() {
     {
       id: "pro",
       name: "حرفه‌ای (Pro)",
-      badge: "پیشنهاد پرسکاد",
+      badge: "پیشنهاد پرس‌کاد",
       tagline: "مناسب برای استارتاپ‌ها، کسب‌وکارها و تیم‌های مارکتینگ",
       priceMonthly: "۱۸۹,۰۰۰",
       priceYearly: "۱۴۹,۰۰۰",
