@@ -422,7 +422,7 @@ export function AuthProvider({ children }) {
 
   async function loginWithGoogle() {
     const redirectTo = typeof window !== "undefined"
-      ? `${window.location.origin}/admin`
+      ? `${window.location.origin}/admin/forms`
       : undefined;
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
