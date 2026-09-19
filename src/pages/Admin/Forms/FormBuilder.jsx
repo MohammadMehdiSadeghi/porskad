@@ -1871,23 +1871,26 @@ export default function FormBuilder() {
                     {[
                       { key: "step_by_step", label: "مرحله به مرحله", desc: "هر سوال یک صفحه جداگانه" },
                       { key: "registration", label: "ثبت‌نامی", desc: "همه فیلدها یکجا در یک صفحه" },
+                      { key: "exam", label: "آزمون", desc: "با سیستم نمره و تحلیل" },
                     ].map((t) => (
                       <button
                         key={t.key}
                         type="button"
                         onClick={() => setFormField({ form_type: t.key })}
-                        className={`flex-1 flex items-center gap-3 p-3 rounded-xl border-2 transition-all cursor-pointer ${
+                        className={`flex-1 flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all cursor-pointer ${
                           form.form_type === t.key
                             ? "border-teal bg-teal/10 dark:bg-teal/15 shadow-sm"
                             : "border-ink/15 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-teal/40"
                         }`}
                       >
-                        <span className="text-navy dark:text-white">{t.key === "step_by_step" ? <FileText size={24} /> : <AlignLeft size={24} />}</span>
+                        <span className="text-navy dark:text-white">
+                          {t.key === "step_by_step" ? <FileText size={20} /> : t.key === "registration" ? <AlignLeft size={20} /> : <FileQuestion size={20} />}
+                        </span>
                         <div className="text-right">
-                          <span className={`text-sm font-black block ${form.form_type === t.key ? "text-teal-text dark:text-teal" : "text-navy dark:text-white"}`}>
-                            {t.label}
+                          <strong className="block text-[0.8rem] text-navy dark:text-white mb-0.5 text-center">{t.label}</strong>
+                          <span className="block text-[0.6rem] text-ink/70 dark:text-slate-400 text-center leading-tight">
+                            {t.desc}
                           </span>
-                          <span className="text-xs text-ink/50 dark:text-slate-400">{t.desc}</span>
                         </div>
                       </button>
                     ))}

@@ -387,12 +387,15 @@ export function generateUuid() {
   );
 }
 
-// ─── تشخیص مدل فرم (منحصراً دو مدل: مرحله به مرحله یا ثبت‌نامی) ───
+// ─── تشخیص مدل فرم ───
 export function getFormModelBadge(form) {
   if (!form) return { label: "مرحله به مرحله", color: "teal" };
   const fType = String(form.form_type || "").trim().toLowerCase();
   if (fType === "registration") {
     return { label: "ثبت‌نامی", color: "orange" };
+  }
+  if (fType === "exam") {
+    return { label: "آزمون", color: "indigo" };
   }
   return { label: "مرحله به مرحله", color: "teal" };
 }

@@ -26,11 +26,19 @@ const FORM_TYPES = [
   },
   {
     key: "registration",
-    title: "فرم ثبت‌نامی",
+    title: "ثبت‌نامی",
     icon: "registration",
-    description: "تمام سوالات و فیلدها در یک صفحه واحد زیر هم قرار می‌گیرند و کاربر با یک دکمه ارسال، فرم را ثبت می‌کند.",
+    description: "همه سوالات و فیلدها در یک صفحه به صورت یکجا نمایش داده می‌شوند.",
     color: "orange",
     theme: "orange",
+  },
+  {
+    key: "exam",
+    title: "آزمون",
+    icon: "exam",
+    description: "سیستم برگزاری آزمون با نمره‌دهی، نمره منفی و تحلیل پیشرفته نتایج.",
+    color: "indigo",
+    theme: "indigo",
   },
 ];
 
