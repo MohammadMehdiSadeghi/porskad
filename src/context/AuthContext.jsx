@@ -210,8 +210,37 @@ export function AuthProvider({ children }) {
             withTimeout(fetchProfile(uid), 10000),
             withTimeout(fetchRole(uid), 10000),
           ]);
-          const pProfile = profileData.status === 'fulfilled' ? profileData.value : null;
+          let pProfile = profileData.status === 'fulfilled' ? profileData.value : null;
           const pRole = roleData.status === 'fulfilled' ? roleData.value : null;
+
+          // اگر پروفایل در دیتابیس وجود نداشت (ثبت‌نام جدید با گوگل)، به صورت خودکار از متادیتای گوگل می‌سازیم
+          if (!pProfile && newSession.user) {
+            const meta = newSession.user.user_metadata || {};
+            const isGod = isPrimaryGodEmail(newSession.user.email);
+            pProfile = {
+              id: uid,
+              email: newSession.user.email,
+              full_name: meta.full_name || meta.name || newSession.user.email?.split('@')[0] || "کاربر پرس‌کاد",
+              avatar_url: meta.avatar_url || meta.picture || null,
+              is_owner: isGod,
+              is_active: true,
+              plan: isGod ? "enterprise" : "free",
+              max_forms: isGod ? 999999 : 5,
+              max_responses_per_month: isGod ? 999999 : 100,
+              monthly_responses_used: 0,
+              can_export_excel: true,
+              can_use_telegram: isGod,
+              can_use_logic: true,
+              can_upload_files: true,
+              can_use_sms: isGod,
+              can_use_webhooks: isGod,
+              can_remove_branding: isGod,
+            };
+            try {
+              supabase.from("profiles").upsert(pProfile, { onConflict: "id" }).then(() => {});
+            } catch {}
+          }
+
           const isSuperAdmin = pRole === 'admin' || pProfile?.is_owner === true || isPrimaryGodEmail(newSession.user.email);
 
           if (isSuperAdmin && pProfile) {
