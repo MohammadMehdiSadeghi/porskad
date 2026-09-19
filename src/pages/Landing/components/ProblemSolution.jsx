@@ -1,32 +1,32 @@
 import React from "react";
-import { AlertCircle, FileSpreadsheet, GitBranch, Smartphone, Sparkles, Check, X } from "lucide-react";
+import { AlertCircle, FileSpreadsheet, GitBranch, Smartphone, Sparkles, Check, X, ArrowDown } from "lucide-react";
 
 export default function ProblemSolution() {
   const problems = [
     {
-      icon: FileSpreadsheet,
-      badge: "مشکل ۱: گزارش‌گیری معیوب",
-      title: "به‌هم‌ریختگی حروف فارسی در اکسل",
-      desc: "خروجی CSV ابزارهای متفرقه حروف فارسی را در Excel ناخوانا، علامت سوالی یا وارونه نشان می‌دهد و تحلیل داده را دچار مشکل می‌کند.",
-      solution: "خروجی بومی با استاندارد UTF-8 BOM و فایل مستقیم Excel بدون نیاز به تبدیل فرمت یا تنظیم دستی.",
+      icon: Smartphone,
+      badge: "مشکل شماره ۱",
+      title: "فرم‌های طوماری و خسته‌کننده",
+      desc: "وقتی کاربر با ۲۰ تا سوال در یک صفحه دراز مواجه می‌شود، حس وحشت و خستگی به او دست می‌دهد و بیش از ۶۰٪ افراد قبل از پایان، صفحه را می‌بندند.",
+      solution: "نمایش تک‌سواله و اسلایدی؛ کاربر با تمرکز کامل و مثل یک گفت‌وگوی روان و لذت‌بخش در چند ثانیه به سوالات پاسخ می‌دهد.",
       iconColor: "text-rose-500",
       tagColor: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
     },
     {
       icon: GitBranch,
-      badge: "مشکل ۲: تجربه کاربری خسته‌کننده",
-      title: "نبود منطق شرطی و پرش هوشمند",
-      desc: "فرم‌سازهای سنتی همه سوالات را به همه نشان می‌دهند. پاسخ‌دهنده مجبور است سوالات غیرمرتبط را رد کند که باعث افت نرخ پاسخ می‌شود.",
-      solution: "منطق شرطی هوشمند (IF/THEN)، نمایش سوالات مرتبط و پرش خودکار به بخش‌های هدف بر اساس پاسخ کاربر.",
+      badge: "مشکل شماره ۲",
+      title: "پرسیدن سوالات نامربوط به کاربر",
+      desc: "در فرم‌های سنتی همه مخاطبان مجبورند تمام سوالات را ببینند حتی اگر ارتباطی به شغل، سن یا پاسخ‌های قبلی آن‌ها نداشته باشد.",
+      solution: "منطق شرطی هوشمند (IF/THEN)؛ سوالات بعدی به صورت خودکار بر اساس پاسخ‌های قبلی کاربر شخصی‌سازی و باز می‌شوند.",
       iconColor: "text-amber-500",
       tagColor: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
     },
     {
-      icon: Smartphone,
-      badge: "مشکل ۳: عدم سازگاری با موبایل",
-      title: "فرم‌های شلوغ و غیر ریسپانسیو",
-      desc: "فرم‌های سنتی با فونت‌های ریز و طراحی نامناسب در موبایل، تجربه بدی برای کاربر ایجاد می‌کنند.",
-      solution: "رابط اسلایدی، فونت استاندارد و سازگاری کامل با انواع گوشی‌ها و تبلت‌ها به صورت واکنش‌گرا.",
+      icon: FileSpreadsheet,
+      badge: "مشکل شماره ۳",
+      title: "خرابی حروف فارسی در اکسل",
+      desc: "خروجی اکسل و CSV در ابزارهای خارجی کلمات فارسی را به صورت علامت سوال یا علامت‌های نامفهوم و به‌هم‌ریخته باز می‌کند.",
+      solution: "خروجی اکسل ۱۰۰٪ استاندارد و سالم با انکودینگ بومی، آماده و تمیز برای گزارش‌گیری و ارسال به تیم فروش یا مدیریت.",
       iconColor: "text-sky-500",
       tagColor: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
     },
@@ -39,16 +39,16 @@ export default function ProblemSolution() {
       <div className="absolute bottom-0 -left-40 w-80 h-80 bg-sky-500/5 blur-[100px] pointer-events-none rounded-full" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-4xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-[#1E293B] text-xs font-bold text-slate-600 dark:text-[#94A3B8] mb-4 shadow-sm">
             <AlertCircle size={14} className="text-[#F59E0B]" />
-            چرا ابزارهای قدیمی دیگر کافی نیستند؟
+            چرا فرم‌های قدیمی دیگر جواب نمی‌دهند؟
           </div>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white leading-tight mb-4 whitespace-normal lg:whitespace-nowrap">
-            ساخت فرم‌های حرفه‌ای بدون دردسرهای معمول
+            تفاوت یک فرم معمولی با فرمی که مردم کامل پر می‌کنند
           </h2>
-          <p className="text-sm sm:text-base text-slate-600 dark:text-[#94A3B8]">
-            ابزارهای خارجی هزینه سنگین دارند و برای زبان فارسی بهینه‌سازی نشده‌اند. پرسکاد این چالش‌ها را به طور کامل برطرف کرده است.
+          <p className="text-sm sm:text-base text-slate-600 dark:text-[#94A3B8] max-w-2xl mx-auto">
+            وقتی فرم شما خسته‌کننده باشد، مشتری درجا صفحه را می‌بندد و بودجه تبلیغات شما می‌سوزد. پرس‌کاد این بازی را به نفع شما تغییر می‌دهد.
           </p>
         </div>
 
@@ -94,7 +94,7 @@ export default function ProblemSolution() {
                       <Check size={14} className="stroke-[3]" />
                     </span>
                     <div>
-                      <strong className="text-teal-700 dark:text-[#2DD4BF] font-black block mb-0.5">راه‌حل پرسکاد:</strong>
+                      <strong className="text-teal-700 dark:text-[#2DD4BF] font-black block mb-0.5">راه‌حل پرس‌کاد:</strong>
                       <span className="text-slate-700 dark:text-[#E2E8F0] font-medium">{p.solution}</span>
                     </div>
                   </div>
@@ -110,20 +110,21 @@ export default function ProblemSolution() {
             <div className="text-right sm:max-w-xl">
               <div className="flex items-center gap-2 text-xs font-bold text-teal-700 dark:text-[#2DD4BF] mb-2">
                 <Sparkles size={16} />
-                <span>طراحی‌شده برای نیازهای کسب‌وکارهای ایرانی</span>
+                <span>طراحی‌شده برای افزایش بازدهی کسب‌وکارهای ایرانی</span>
               </div>
               <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2">
-                پرسکاد همه این‌ها را از پایه و بومی حل کرده است.
+                پرس‌کاد فرم‌سازی را از یک وظیفه خسته‌کننده به تجربه‌ای لذت‌بخش تبدیل کرده است.
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-[#94A3B8]">
-                بدون نیاز به دور زدن تحریم‌ها یا ابزارهای واسط، با بالاترین سرعت و کیفیت فرم بسازید.
+                بدون نیاز به دور زدن فیلترها، بدون نیاز به دانش برنامه‌نویسی و در کمتر از ۲ دقیقه.
               </p>
             </div>
             <a
               href="#features"
-              className="px-6 py-3.5 bg-[#2DD4BF] text-slate-950 text-sm font-black rounded-xl hover:shadow-lg hover:shadow-teal-500/30 hover:scale-105 transition-all shrink-0"
+              className="px-6 py-3.5 bg-[#2DD4BF] text-slate-950 text-sm font-black rounded-xl hover:shadow-lg hover:shadow-teal-500/30 hover:scale-105 transition-all shrink-0 flex items-center gap-2"
             >
-              مشاهده امکانات کلیدی ↓
+              <span>مشاهده قابلیت‌های کلیدی</span>
+              <ArrowDown size={16} />
             </a>
           </div>
         </div>

@@ -79,25 +79,25 @@ export default function Hero({ onOpenDemo }) {
           <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white dark:bg-[#131B2E] border border-teal-500/30 shadow-md shadow-teal-500/10 mb-6 backdrop-blur-md animate-fadeIn">
             <span className="flex h-2 w-2 rounded-full bg-[#2DD4BF] animate-ping" />
             <span className="text-xs sm:text-sm font-bold bg-gradient-to-l from-teal-600 to-sky-600 dark:from-[#2DD4BF] dark:to-[#38BDF8] bg-clip-text text-transparent">
-              فرمساز حرفه‌ای فارسی | نسخه تولیدی
+              نسل جدید فرم‌ساز آنلاین و مکالمه‌محور
             </span>
           </div>
 
           {/* عنوان اصلی H1 */}
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.3] text-slate-900 dark:text-white mb-6 max-w-5xl mx-auto whitespace-normal lg:whitespace-nowrap">
-            فرم بساز، پاسخ بگیر و تصمیم درست بگیر —{" "}
+            فرم‌هایی بسازید که مخاطب{" "}
             <span className="bg-gradient-to-r from-teal-600 via-sky-600 to-teal-500 dark:from-[#2DD4BF] dark:via-[#38BDF8] dark:to-[#2DD4BF] bg-clip-text text-transparent inline-block">
-              در کمتر از ۲ دقیقه
+              عاشق پاسخ دادن به آن‌هاست
             </span>
           </h1>
 
-          {/* زیرعنوان توضیحی */}
+          {/* زیرعنوان توضیحی جذاب */}
           <p className="text-base sm:text-lg md:text-xl text-slate-600 dark:text-[#94A3B8] font-normal leading-relaxed max-w-3xl mx-auto mb-10">
-            پرسکاد پلتفرمی برای ساخت فرم و پرسشنامه‌های حرفه‌ای، سریع و کاملاً فارسی است؛ با منطق شرطی هوشمند، تحلیل زنده پاسخ‌ها و خروجی اکسل بدون به‌هم‌ریختگی حروف فارسی.
+            خداحافظی با فرم‌های کسل‌کننده و طوماری؛ پرس‌کاد سوالات شما را به یک گفت‌وگوی اسلایدی و تعاملی تبدیل می‌کند تا بیشترین پاسخ را با کمترین ریزش دریافت کنید.
           </p>
 
           {/* دکمه‌های اقدام (CTAs) */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
             <Link
               to="/register"
               className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 text-base font-black text-slate-950 bg-gradient-to-r from-[#2DD4BF] via-[#2DD4BF] to-[#38BDF8] rounded-2xl shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40 hover:scale-[1.03] active:scale-[0.98] transition-all duration-200"
@@ -117,16 +117,20 @@ export default function Hero({ onOpenDemo }) {
             </button>
           </div>
 
-          {/* خط اعتماد زیر دکمه‌ها */}
-          <div className="flex items-center justify-center gap-6 text-xs sm:text-sm text-slate-600 dark:text-[#94A3B8] font-medium">
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 size={16} className="text-teal-600 dark:text-[#2DD4BF]" />
-              بدون نیاز به کارت بانکی
+          {/* نوار قالب‌های محبوب و آماده */}
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs font-bold text-slate-600 dark:text-[#94A3B8]">
+            <span className="text-slate-400 dark:text-slate-500 text-[11px] ml-1">قالب‌های آماده:</span>
+            <span className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-[#1E293B] hover:border-teal-500/40 transition-colors shadow-sm">
+              🎯 استخدام و جذب نیرو
             </span>
-            <span className="text-slate-300 dark:text-[#1E293B]">•</span>
-            <span className="flex items-center gap-1.5">
-              <Zap size={16} className="text-sky-600 dark:text-[#38BDF8]" />
-              راه‌اندازی سریع در ۲ دقیقه
+            <span className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-[#1E293B] hover:border-teal-500/40 transition-colors shadow-sm">
+              ⭐ نظرسنجی رضایت مشتری
+            </span>
+            <span className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-[#1E293B] hover:border-teal-500/40 transition-colors shadow-sm">
+              🚀 ثبت‌نام وبینار و همایش
+            </span>
+            <span className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-[#1E293B] hover:border-teal-500/40 transition-colors shadow-sm">
+              💬 دریافت لید و مشاوره
             </span>
           </div>
         </div>

@@ -7,7 +7,9 @@ import {
   FileSpreadsheet,
   Share2,
   Sparkles,
-  CheckCircle
+  CheckCircle,
+  Zap,
+  ShieldCheck
 } from "lucide-react";
 
 export default function Features() {
@@ -15,59 +17,59 @@ export default function Features() {
     {
       id: 1,
       icon: Layers,
-      title: "رندر اسلایدی و روان",
-      desc: "تجربه‌ای شبیه گفت‌وگو؛ فوکوس خودکار، میانبر Enter، انیمیشن دقیق و روان بین سوالات برای حداکثر تمرکز کاربر.",
-      badge: "تجربه کاربری",
+      title: "رندر اسلایدی؛ مثل یک گفت‌وگوی روان",
+      desc: "سوالات یکی‌یکی، شیک و بدون استرس جلوی مخاطب باز می‌شوند. دکمه‌های بزرگ لمسی، انیمیشن نرم و فوکوس کامل روی هر سوال.",
+      badge: "تجربه کاربری جذاب",
       color: "text-teal-600 dark:text-[#2DD4BF]",
       bg: "bg-teal-500/10",
       border: "border-teal-500/20",
     },
     {
       id: 2,
-      icon: ListOrdered,
-      title: "تنوع فیلدهای استاندارد",
-      desc: "متن کوتاه و بلند، چندگزینه‌ای، کشویی، ایمیل، موبایل، امتیاز ستاره‌ای، ماتریسی، طیف لیکرت و...",
-      badge: "انواع فیلد",
-      color: "text-sky-600 dark:text-[#38BDF8]",
-      bg: "bg-sky-500/10",
-      border: "border-sky-500/20",
-    },
-    {
-      id: 3,
       icon: GitFork,
-      title: "منطق شرطی پیشرفته",
-      desc: "پرش هوشمند بین سوالات، نمایش یا پنهان‌سازی فیلدها و هدایت کاربر بر اساس پاسخ‌های انتخابی.",
-      badge: "منطق شرطی",
+      title: "منطق شرطی هوشمند (فرمی که فکر می‌کند)",
+      desc: "با تعریف شروط ساده، مسیر فرم بر اساس انتخاب کاربر تغییر می‌کند. کاربر هیچ سوال نامربوط یا تکراری نخواهد دید.",
+      badge: "هوشمندی و شخصی‌سازی",
       color: "text-purple-600 dark:text-[#A855F7]",
       bg: "bg-purple-500/10",
       border: "border-purple-500/20",
     },
     {
-      id: 4,
-      icon: BarChart3,
-      title: "داشبورد تحلیلی زنده",
-      desc: "مشاهده لحظه‌ای پاسخ‌ها، تفکیک داده‌ها و نمودارهای توزیع پاسخ به صورت Realtime.",
-      badge: "گزارش‌گیری",
-      color: "text-amber-600 dark:text-[#F59E0B]",
-      bg: "bg-amber-500/10",
-      border: "border-amber-500/20",
-    },
-    {
-      id: 5,
+      id: 3,
       icon: FileSpreadsheet,
-      title: "خروجی اکسل فارسیِ سالم",
-      desc: "تولید مستقیم فایل CSV و Excel استاندارد با انکودینگ UTF-8 BOM بدون هیچ‌گونه به‌هم‌ریختگی یا خرابی حروف فارسی.",
-      badge: "خروجی سازمانی",
+      title: "خروجی اکسل سالم؛ خیالتان کاملاً تخت!",
+      desc: "دانلود فوری فایل اکسل و CSV کامپیوتر-پسند با حروف فارسی کاملاً خوانا، بدون علامت سوال و بدون نیاز به تبدیل فرمت.",
+      badge: "گزارش‌گیری بی‌نقص",
       color: "text-emerald-600 dark:text-[#10B981]",
       bg: "bg-emerald-500/10",
       border: "border-emerald-500/20",
     },
     {
+      id: 4,
+      icon: ListOrdered,
+      title: "فیلدهای متنوع برای هر سناریو",
+      desc: "متن کوتاه، توضیحات بلند، چندگزینه‌ای، امتیاز ستاره‌ای رضایت‌سنجی، بله/خیر، ایمیل و دریافت شماره موبایل معتبر.",
+      badge: "انعطاف‌پذیری کامل",
+      color: "text-sky-600 dark:text-[#38BDF8]",
+      bg: "bg-sky-500/10",
+      border: "border-sky-500/20",
+    },
+    {
+      id: 5,
+      icon: Zap,
+      title: "ذخیره خودکار پیش‌نویس (Auto-Save)",
+      desc: "اگر اینترنت کاربر قطع شود یا دستش بخورد و صفحه بسته شود، پاسخ‌های قبلی حفظ می‌شوند و بعداً فرم از همان‌جا ادامه می‌یابد.",
+      badge: "نجات پاسخ‌ها",
+      color: "text-amber-600 dark:text-[#F59E0B]",
+      bg: "bg-amber-500/10",
+      border: "border-amber-500/20",
+    },
+    {
       id: 6,
       icon: Share2,
-      title: "اشتراک‌گذاری چندکاناله",
-      desc: "لینک اختصاصی، QR Code باکیفیت و کد Embed ریسپانسیو (iFrame) برای جاسازی آسان در سایت‌های وردپرس، لاراول و...",
-      badge: "انتشار آسان",
+      title: "انتشار چندکاناله در کمتر از ۳ ثانیه",
+      desc: "تولید لینک کوتاه برای پیامک و شبکه‌های اجتماعی، کد QR باکیفیت برای چاپ، و کد Embed برای قرار دادن مستقیم داخل سایت.",
+      badge: "انتشار سریع",
       color: "text-indigo-600 dark:text-[#818CF8]",
       bg: "bg-indigo-500/10",
       border: "border-indigo-500/20",
@@ -77,16 +79,16 @@ export default function Features() {
   return (
     <section id="features" className="py-20 md:py-28 bg-slate-50 dark:bg-[#0B0F19] relative transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-4xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#131B2E] border border-teal-500/30 text-xs font-bold text-teal-600 dark:text-[#2DD4BF] mb-4 shadow-sm">
             <Sparkles size={14} />
-            امکانات و نوآوری‌های محصول
+            امکاناتی که کسب‌وکار شما را متمایز می‌کند
           </div>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white leading-tight mb-4 whitespace-normal lg:whitespace-nowrap">
-            هر آنچه برای ساخت پرسشنامه مدرن نیاز دارید
+            هر آنچه برای ساخت یک پرسشنامه حرفه‌ای نیاز دارید
           </h2>
-          <p className="text-sm sm:text-base text-slate-600 dark:text-[#94A3B8]">
-            طراحی شده با الهام از برترین فرم‌سازهای دنیا و بومی‌سازی دقیق برای کاربران فارسی‌زبان
+          <p className="text-sm sm:text-base text-slate-600 dark:text-[#94A3B8] max-w-2xl mx-auto">
+            ابزاری ساده برای شما، تجربه‌ای فوق‌العاده لذت‌بخش برای کاربر؛ همه چیز از قبل فکر شده است.
           </p>
         </div>
 
@@ -121,7 +123,7 @@ export default function Features() {
                 </div>
 
                 <div className="pt-5 mt-5 border-t border-slate-100 dark:border-[#1E293B]/60 flex items-center gap-1.5 text-xs font-bold text-teal-600 dark:text-[#2DD4BF] opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span>آماده استفاده</span>
+                  <span>فعال و در دسترس</span>
                   <CheckCircle size={14} />
                 </div>
               </div>
