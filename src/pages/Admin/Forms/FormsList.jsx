@@ -375,12 +375,16 @@ export default function FormsList() {
 
     setBusy(false);
     setShowTypeModal(false);
-    push(isRegistration ? "فرم ثبت‌نامی ساخته شد!" : "فرم جدید ساخته شد!");
+    push(isRegistration ? "فرم ثبت‌نامی ساخته شد!" : formType === "exam" ? "آزمون جدید ساخته شد!" : "فرم جدید ساخته شد!");
     push("فرم فعلاً پیش‌نویس است — بعد از انتشار، لینک آن قابل کپی و بازدید می‌شود.", "warning", 5500);
-    // پس از ساخت فرم، کاربر به تب فرم‌ها هدایت شده و لیست فرم‌ها به‌روزرسانی می‌شود
-    setFilter("all");
-    await load();
-    navigate("/admin/forms", { replace: true });
+    
+    if (createdFormData && createdFormData.id) {
+      navigate(`/admin/forms/${createdFormData.id}`);
+    } else {
+      setFilter("all");
+      await load();
+      navigate("/admin/forms", { replace: true });
+    }
   }
 
   async function togglePublish(form) {

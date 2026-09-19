@@ -62,6 +62,7 @@ function QuestionEditor({
   isCollapsed = false,
   onToggleCollapse,
   isHighlighted = false,
+  formType,
 }) {
   const meta = QUESTION_TYPES[q.type];
   const isChoice = q.type === "choice" || q.type === "yes_no";
@@ -791,13 +792,13 @@ function QuestionEditor({
           )}
 
           {/* ─── گزینه صحیح (Correct Answer) ─── */}
-          {isChoice && (
+          {isChoice && formType === "exam" && (
             <div className="flex flex-col gap-2 border-2 border-dashed border-teal/40 dark:border-teal/40 rounded-pill-md bg-teal/5 dark:bg-teal/10 p-3">
               <span className="text-xs font-extrabold text-teal-text dark:text-teal flex items-center gap-1">
-                <Target size={14} /> گزینه صحیح (برای نمره‌دهی)
+                <Target size={14} /> گزینه صحیح (کلید آزمون)
               </span>
               <span className="text-xs font-medium text-ink-subtle dark:text-slate-400">
-                اگه گزینه صحیح مشخص کنید، بعد از ارسال فرم به کاربر نمره نمایش داده می‌شود.
+                مشخص کردن کلید صحیح برای نمره‌دهی و محاسبه نتایج آزمون الزامی است.
               </span>
 
               {/* choice با max_selections > 1 → چند انتخابی */}
@@ -855,14 +856,15 @@ function QuestionEditor({
                 </div>
               )}
 
-              {/* امتیاز هر سوال */}
-              <Field label="امتیاز این سوال" hint="تعداد نمره برای پاسخ صحیح">
+              {/* نمره (وزن) هر سوال */}
+              <Field label="نمره این سوال" hint="سهم این سوال از نمره کل آزمون">
                 <input
                   type="number"
+                  step="any"
                   min="0"
-                  value={q.points ?? ""}
-                  onChange={(e) => onChange({ points: e.target.value ? Number(e.target.value) : undefined })}
-                  placeholder="مثلاً ۱۰"
+                  value={q.weight ?? ""}
+                  onChange={(e) => onChange({ weight: e.target.value ? Number(e.target.value) : undefined })}
+                  placeholder="مثلاً ۱.۵"
                   className={`${inputCls} !py-1.5 !text-xs w-32`}
                 />
               </Field>
@@ -1365,6 +1367,19 @@ export default function FormBuilder() {
       push("عنوان فرم خالی است", "error");
       return;
     }
+
+    if (form.form_type === "exam") {
+      if (!form.total_score || form.total_score <= 0) {
+        push("برای فرم آزمون، تعیین «نمره کل آزمون» در بخش تنظیمات الزامی است.", "error");
+        return;
+      }
+      const currentSum = questions.reduce((acc, q) => acc + (Number(q.weight) || 0), 0);
+      if (currentSum !== Number(form.total_score)) {
+        push(`مجموع نمره سوالات (${currentSum}) با نمره کل آزمون (${form.total_score}) برابر نیست. لطفاً نمرات را اصلاح کنید.`, "error");
+        return;
+      }
+    }
+
     const emptyQ = questions.find((q) => !q.title.trim());
     if (emptyQ) {
       push("یکی از سوال‌ها متن خالی دارد", "error");
@@ -1399,6 +1414,8 @@ export default function FormBuilder() {
         exit_message: form.exit_message ?? "از اینکه جواب دادی خیلی ممنونیم. نظراتت برای ما طلاست!",
         published: !!form.published,
         form_type: form.form_type || "step_by_step",
+        total_score: form.form_type === "exam" ? (form.total_score || null) : null,
+        negative_ratio: form.form_type === "exam" ? (form.negative_ratio || 0) : 0,
         identifier_mapping: form.identifier_mapping ?? null,
         default_theme: form.default_theme || "light",
         settings: advancedSettings,
@@ -1474,6 +1491,9 @@ export default function FormBuilder() {
           points: parsedPoints,
           display_mode: q.display_mode ?? null,
           max_selections: parsedMaxSelections,
+          weight: q.weight ? Number(q.weight) : 0,
+          bloom_level: q.bloom_level ?? null,
+          topic_ids: Array.isArray(q.topic_ids) ? q.topic_ids : null,
         };
       });
 
@@ -1570,6 +1590,9 @@ export default function FormBuilder() {
             points: q.points,
             display_mode: q.display_mode,
             max_selections: q.max_selections,
+            weight: q.weight,
+            bloom_level: q.bloom_level,
+            topic_ids: q.topic_ids,
           };
 
           if (q.id) {
@@ -1898,6 +1921,26 @@ export default function FormBuilder() {
                 </Field>
               </div>
 
+              {/* ─── تنظیمات ویژه آزمون ─── */}
+              {form.form_type === "exam" && (
+                <div className="border-t-2 border-dashed border-navy/15 dark:border-slate-700/60 pt-4 p-4 rounded-xl bg-indigo/5 dark:bg-indigo/10 border-indigo/20">
+                  <Field
+                    label={<><Target size={14} className="text-indigo" /> نمره کل آزمون</>}
+                    hint="مجموع نمرات همه سوالات باید با این عدد برابر شود. سیستم هنگام ذخیره این مورد را بررسی می‌کند."
+                  >
+                    <input
+                      type="number"
+                      min="1"
+                      step="any"
+                      value={form.total_score || ""}
+                      onChange={(e) => setFormField({ total_score: Number(e.target.value) || null })}
+                      className={`${inputCls} max-w-[200px] border-indigo/30 focus:border-indigo/50`}
+                      placeholder="مثال: 20 یا 100"
+                    />
+                  </Field>
+                </div>
+              )}
+
               {/* ─── تم ظاهری پیش‌فرض فرم ─── */}
               <div className="border-t-2 border-dashed border-navy/15 dark:border-slate-700/60 pt-4">
                 <Field
@@ -2184,6 +2227,7 @@ export default function FormBuilder() {
                 index={i}
                 total={questions.length}
                 allQuestions={questions}
+                formType={form.form_type}
                 onChange={(patch) => updateQuestion(q.localId, patch)}
                 onMove={(dir) => moveQuestion(q.localId, dir)}
                 onDelete={() => deleteQuestion(q.localId)}
