@@ -34,18 +34,13 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* ستون محصول */}
+          {/* ستون امکانات محصول */}
           <div className="space-y-3">
-            <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">محصول</h4>
+            <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">امکانات محصول</h4>
             <ul className="space-y-2.5 text-xs">
               <li>
                 <a href="#features" className="hover:text-teal-600 dark:hover:text-[#2DD4BF] transition-colors">
                   ویژگی‌ها و قابلیت‌ها
-                </a>
-              </li>
-              <li>
-                <a href="#pricing" className="hover:text-teal-600 dark:hover:text-[#2DD4BF] transition-colors">
-                  قیمت‌گذاری و پلن‌ها
                 </a>
               </li>
               <li>
@@ -54,53 +49,58 @@ export default function Footer() {
                 </a>
               </li>
               <li>
+                <a href="#analytics" className="hover:text-teal-600 dark:hover:text-[#2DD4BF] transition-colors">
+                  تحلیل زنده و خروجی اکسل
+                </a>
+              </li>
+              <li>
+                <a href="#pricing" className="hover:text-teal-600 dark:hover:text-[#2DD4BF] transition-colors">
+                  قیمت‌گذاری و پلن‌ها
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* ستون مستندات و توسعه */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">مستندات و توسعه</h4>
+            <ul className="space-y-2.5 text-xs">
+              <li>
                 <Link to="/admin/web-service" className="hover:text-teal-600 dark:hover:text-[#2DD4BF] transition-colors">
                   مستندات API و وب‌سرویس
                 </Link>
               </li>
-            </ul>
-          </div>
-
-          {/* ستون شرکت و ارتباط */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">شرکت</h4>
-            <ul className="space-y-2.5 text-xs">
-              <li>
-                <span className="hover:text-teal-600 dark:hover:text-[#2DD4BF] transition-colors cursor-pointer">
-                  درباره پرسکاد
-                </span>
-              </li>
-              <li>
-                <span className="hover:text-teal-600 dark:hover:text-[#2DD4BF] transition-colors cursor-pointer">
-                  وبلاگ آموزشی
-                </span>
-              </li>
-              <li>
-                <Link to="/admin/support" className="hover:text-teal-600 dark:hover:text-[#2DD4BF] transition-colors">
-                  تماس با ما
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* ستون پشتیبانی */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">پشتیبانی</h4>
-            <ul className="space-y-2.5 text-xs">
               <li>
                 <a href="#faq" className="hover:text-teal-600 dark:hover:text-[#2DD4BF] transition-colors">
-                  مرکز راهنما و سوالات
+                  سوالات متداول
                 </a>
               </li>
               <li>
                 <Link to="/admin/support" className="hover:text-teal-600 dark:hover:text-[#2DD4BF] transition-colors">
-                  ارسال تیکت پشتیبانی
+                  پشتیبانی و تیکتینگ
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* ستون دسترسی سریع */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">دسترسی سریع</h4>
+            <ul className="space-y-2.5 text-xs">
+              <li>
+                <Link to="/register" className="hover:text-teal-600 dark:hover:text-[#2DD4BF] transition-colors">
+                  ثبت‌نام و شروع رایگان
                 </Link>
               </li>
               <li>
-                <span className="hover:text-teal-600 dark:hover:text-[#2DD4BF] transition-colors cursor-pointer">
-                  بات تلگرام پرسکاد
-                </span>
+                <Link to="/admin/login" className="hover:text-teal-600 dark:hover:text-[#2DD4BF] transition-colors">
+                  ورود به حساب کاربری
+                </Link>
+              </li>
+              <li>
+                <Link to="/admin" className="hover:text-teal-600 dark:hover:text-[#2DD4BF] transition-colors">
+                  داشبورد مدیریت فرم‌ها
+                </Link>
               </li>
             </ul>
           </div>
