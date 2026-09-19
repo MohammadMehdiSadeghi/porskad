@@ -11,9 +11,11 @@ import {
   Activity,
   FileSpreadsheet
 } from "lucide-react";
+import Badge from "../../../components/ui/Badge";
+import StickerCard from "../../../components/ui/StickerCard";
 
 export default function Hero({ onOpenDemo }) {
-  // شبیه‌ساز زنده فرم اسلایدی در Hero - بدون مقدار پیش‌فرض اولیه
+  // شبیه‌ساز زنده فرم اسلایدی در Hero
   const [activeStep, setActiveStep] = useState(0);
   const [nameVal, setNameVal] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
@@ -58,131 +60,119 @@ export default function Hero({ onOpenDemo }) {
   };
 
   return (
-    <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden bg-slate-50 dark:bg-[#0B0F19] text-slate-900 dark:text-[#F8FAFC] transition-colors duration-200">
-      {/* الگو و جلوه‌های نوری گرادیان پس‌زمینه */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-teal-500/15 via-sky-500/10 to-transparent blur-[120px] pointer-events-none rounded-full" />
-      <div className="absolute top-1/3 -right-40 w-96 h-96 bg-sky-500/10 blur-[100px] pointer-events-none rounded-full" />
-      <div className="absolute top-1/2 -left-40 w-96 h-96 bg-purple-500/10 blur-[120px] pointer-events-none rounded-full" />
-
-      {/* الگو نقطه توری مهندسی‌شده (Dot Grid) */}
-      <div
-        className="absolute inset-0 opacity-[0.12] dark:opacity-[0.15] pointer-events-none"
-        style={{
-          backgroundImage: `radial-gradient(#2DD4BF 1px, transparent 1px)`,
-          backgroundSize: "28px 28px",
-        }}
-      />
-
+    <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden dot-pattern bg-[#F8F9FA] dark:bg-[#0B0F17] text-sec dark:text-[#F1F5F9] transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center max-w-4xl mx-auto mb-12 md:mb-16">
-          {/* نشان وضعیت / Eyebrow Badge */}
-          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white dark:bg-[#131B2E] border border-teal-500/30 shadow-md shadow-teal-500/10 mb-6 backdrop-blur-md animate-fadeIn">
-            <span className="flex h-2 w-2 rounded-full bg-[#2DD4BF] animate-ping" />
-            <span className="text-xs sm:text-sm font-bold bg-gradient-to-l from-teal-600 to-sky-600 dark:from-[#2DD4BF] dark:to-[#38BDF8] bg-clip-text text-transparent">
-              نسل جدید فرم‌ساز آنلاین و مکالمه‌محور
-            </span>
+          {/* نشان وضعیت / Eyebrow Badge به سبک رُکاد */}
+          <div className="inline-flex items-center gap-2 mb-5">
+            <Badge color="teal">
+              <span className="flex h-2 w-2 rounded-full bg-primary animate-ping" />
+              <span>نسل جدید فرم‌ساز آنلاین و مکالمه‌محور</span>
+            </Badge>
           </div>
 
           {/* عنوان اصلی H1 */}
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.3] text-slate-900 dark:text-white mb-6 max-w-5xl mx-auto whitespace-normal lg:whitespace-nowrap">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-sec dark:text-white leading-[1.35] mb-5 max-w-5xl mx-auto whitespace-normal lg:whitespace-nowrap">
             فرم‌هایی بسازید که مخاطب{" "}
-            <span className="bg-gradient-to-r from-teal-600 via-sky-600 to-teal-500 dark:from-[#2DD4BF] dark:via-[#38BDF8] dark:to-[#2DD4BF] bg-clip-text text-transparent inline-block">
+            <span className="text-primary underline decoration-primary/40 underline-offset-8">
               عاشق پاسخ دادن به آن‌هاست
             </span>
           </h1>
 
-          {/* زیرعنوان توضیحی جذاب */}
-          <p className="text-base sm:text-lg md:text-xl text-slate-600 dark:text-[#94A3B8] font-normal leading-relaxed max-w-3xl mx-auto mb-10">
+          {/* زیرعنوان توضیحی */}
+          <p className="text-xs sm:text-sm md:text-base text-ink-subtle dark:text-gray-300 font-medium leading-relaxed max-w-2xl mx-auto mb-8">
             خداحافظی با فرم‌های کسل‌کننده و طوماری؛ پرس‌کاد سوالات شما را به یک گفت‌وگوی اسلایدی و تعاملی تبدیل می‌کند تا بیشترین پاسخ را با کمترین ریزش دریافت کنید.
           </p>
 
-          {/* دکمه‌های اقدام (CTAs) */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+          {/* دکمه‌های اقدام (CTAs) با سایه‌های سخت فیزیکی نئوبروتالیسم */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-6">
             <Link
               to="/register"
-              className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 text-base font-black text-slate-950 bg-gradient-to-r from-[#2DD4BF] via-[#2DD4BF] to-[#38BDF8] rounded-2xl shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40 hover:scale-[1.03] active:scale-[0.98] transition-all duration-200"
+              className="w-full sm:w-auto flex items-center justify-center gap-2.5 bg-primary text-white font-black py-3 px-7 rounded-xl border-[1.5px] border-ecosystem-dark shadow-[2.75px_2.75px_0_#1F413D] hover:shadow-[3.5px_3.5px_0_#1F413D] active:translate-x-[1.5px] active:translate-y-[1.5px] active:shadow-none text-sm transition-all"
             >
               <span>ساخت رایگان اولین فرم</span>
-              <ArrowLeft size={20} />
+              <ArrowLeft size={18} />
             </Link>
 
             <button
               onClick={onOpenDemo}
-              className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-7 py-4 text-base font-bold text-slate-800 dark:text-[#F8FAFC] bg-white dark:bg-[#131B2E] hover:bg-slate-100 dark:hover:bg-[#1B253D] border border-slate-200 dark:border-[#1E293B] hover:border-teal-500/50 rounded-2xl shadow-sm transition-all duration-200 group"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white dark:bg-[#151C28] text-sec dark:text-white font-bold py-3 px-6 rounded-xl border-[1.5px] border-gray-200 dark:border-[#242F42] shadow-[2.75px_2.75px_0_#202A5A] dark:shadow-[2.75px_2.75px_0_#59BBAF] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] text-sm transition-all"
             >
-              <div className="w-6 h-6 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-600 dark:text-[#2DD4BF] group-hover:scale-110 transition-transform">
-                <Play size={12} className="fill-teal-600 dark:fill-[#2DD4BF] translate-x-[-0.5px]" />
-              </div>
+              <Play size={14} className="fill-primary text-primary" />
               <span>مشاهده دمو تعاملی</span>
             </button>
           </div>
 
           {/* خط اعتماد زیر دکمه‌ها */}
-          <div className="flex items-center justify-center gap-6 text-xs sm:text-sm text-slate-600 dark:text-[#94A3B8] font-medium">
+          <div className="flex items-center justify-center gap-6 text-xs text-ink-subtle dark:text-gray-400 font-semibold">
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 size={16} className="text-teal-600 dark:text-[#2DD4BF]" />
+              <CheckCircle2 size={15} className="text-primary" />
               بدون نیاز به کارت بانکی
             </span>
-            <span className="text-slate-300 dark:text-[#1E293B]">•</span>
+            <span className="text-gray-300 dark:text-gray-600">•</span>
             <span className="flex items-center gap-1.5">
-              <Zap size={16} className="text-sky-600 dark:text-[#38BDF8]" />
+              <Zap size={15} className="text-third" />
               راه‌اندازی در کمتر از ۲ دقیقه
             </span>
           </div>
         </div>
 
-        {/* ماک‌آپ بصری تعاملی Hero (اسلایدر فرم ریسپانسیو اتوماتیک) */}
-        <div className="max-w-4xl mx-auto relative">
+        {/* ماک‌آپ بصری تعاملی Hero (اسلایدر فرم ریسپانسیو رُکاد) */}
+        <div className="max-w-3xl mx-auto relative">
           {/* نشان شناور ثبت Realtime */}
-          <div className="hidden sm:flex absolute -top-4 left-2 sm:-left-4 z-20 bg-white/90 dark:bg-[#131B2E]/90 backdrop-blur-xl border border-teal-500/40 rounded-2xl p-3 shadow-lg dark:shadow-2xl flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-teal-500/15 flex items-center justify-center text-teal-600 dark:text-[#2DD4BF]">
-              <Activity size={18} />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-black text-slate-900 dark:text-white">ثبت آنی پاسخ</span>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="hidden sm:flex absolute -top-4 left-2 sm:-left-5 z-20">
+            <StickerCard theme="teal" className="p-2.5 flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center text-primary">
+                <Activity size={16} />
               </div>
-              <span className="text-[11px] text-slate-500 dark:text-[#94A3B8]">بدون تاخیر و لگ</span>
-            </div>
+              <div className="text-right">
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-black text-sec dark:text-white">ثبت آنی پاسخ</span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                </div>
+                <span className="text-[10px] text-ink-subtle dark:text-gray-400 font-bold">بدون تاخیر و لگ</span>
+              </div>
+            </StickerCard>
           </div>
 
           {/* نشان شناور خروجی اکسل سالم */}
-          <div className="hidden md:flex absolute -bottom-4 right-2 sm:-right-4 z-20 bg-white/90 dark:bg-[#131B2E]/90 backdrop-blur-xl border border-sky-500/40 rounded-2xl p-3 shadow-lg dark:shadow-2xl items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-sky-500/15 flex items-center justify-center text-sky-600 dark:text-[#38BDF8]">
-              <FileSpreadsheet size={18} />
-            </div>
-            <div>
-              <span className="text-xs font-black text-slate-900 dark:text-white block">خروجی اکسل سالم</span>
-              <span className="text-[11px] text-slate-500 dark:text-[#94A3B8]">استاندارد UTF-8 BOM</span>
-            </div>
+          <div className="hidden md:flex absolute -bottom-4 right-2 sm:-right-5 z-20">
+            <StickerCard theme="navy" className="p-2.5 flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-sec/10 dark:bg-primary/15 flex items-center justify-center text-sec dark:text-primary">
+                <FileSpreadsheet size={16} />
+              </div>
+              <div className="text-right">
+                <span className="text-xs font-black text-sec dark:text-white block">خروجی اکسل سالم</span>
+                <span className="text-[10px] text-ink-subtle dark:text-gray-400 font-bold">استاندارد UTF-8 BOM</span>
+              </div>
+            </StickerCard>
           </div>
 
-          {/* قاب کارت ماک‌آپ */}
-          <div className="bg-white dark:bg-[#131B2E]/90 backdrop-blur-2xl rounded-3xl border border-slate-200 dark:border-[#1E293B] shadow-xl dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] overflow-hidden transition-all duration-300">
+          {/* قاب کارت ماک‌آپ فرم با کارت رُکاد */}
+          <StickerCard theme="white" className="overflow-hidden">
             {/* نوار بالای پنجره سیستم */}
-            <div className="bg-slate-100/90 dark:bg-[#0B0F19]/90 px-5 py-3.5 border-b border-slate-200 dark:border-[#1E293B] flex items-center justify-between">
+            <div className="bg-[#F8F9FA] dark:bg-[#1C2536] px-5 py-3 border-b-[1.5px] border-gray-200 dark:border-[#242F42] flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-[#F43F5E]/80 inline-block" />
-                <span className="w-3 h-3 rounded-full bg-[#F59E0B]/80 inline-block" />
-                <span className="w-3 h-3 rounded-full bg-[#10B981]/80 inline-block" />
-                <span className="text-xs text-slate-500 dark:text-[#64748B] font-mono mr-3 hidden sm:inline">
+                <span className="w-3 h-3 rounded-full bg-[#E0195B]" />
+                <span className="w-3 h-3 rounded-full bg-[#F8A41D]" />
+                <span className="w-3 h-3 rounded-full bg-[#59BBAF]" />
+                <span className="text-xs text-ink-subtle dark:text-gray-400 font-mono mr-3 hidden sm:inline">
                   https://porskad.ir/f/product-survey
                 </span>
               </div>
 
               {/* درصد پیشرفت فرم */}
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-teal-600 dark:text-[#2DD4BF]">
+                <Badge color="teal">
                   {isSubmitted ? "۱۰۰٪" : `${Math.round(((activeStep + 1) / steps.length) * 100)}٪`}
-                </span>
+                </Badge>
               </div>
             </div>
 
             {/* نوار پروگرس لودینگ زنده */}
-            <div className="w-full bg-slate-100 dark:bg-[#1E293B] h-1">
+            <div className="w-full bg-gray-100 dark:bg-[#1C2536] h-1.5">
               <div
-                className="bg-gradient-to-r from-[#2DD4BF] to-[#38BDF8] h-full transition-all duration-500 ease-out"
+                className="bg-primary h-full transition-all duration-300 ease-out"
                 style={{
                   width: isSubmitted ? "100%" : `${((activeStep + 1) / steps.length) * 100}%`,
                 }}
@@ -190,64 +180,64 @@ export default function Hero({ onOpenDemo }) {
             </div>
 
             {/* بدنه رندر اسلایدی فرم */}
-            <div className="p-6 sm:p-10 transition-all duration-300">
+            <div className="p-6 sm:p-8">
               {!isSubmitted ? (
-                <div className="space-y-6 sm:space-y-8 animate-fadeIn" key={activeStep}>
+                <div className="space-y-6" key={activeStep}>
                   {/* شماره سوال و عنوان */}
                   <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-teal-500/15 text-teal-600 dark:text-[#2DD4BF] font-black text-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="flex items-center justify-center w-6 h-6 rounded-md bg-ecosystem-light dark:bg-[#1C2536] text-primary font-black text-xs border border-primary/30">
                         {activeStep + 1}
                       </span>
-                      <span className="text-xs text-slate-500 dark:text-[#94A3B8] font-bold">
+                      <span className="text-xs text-ink-subtle dark:text-gray-400 font-bold">
                         سوال {activeStep + 1} از {steps.length}
                       </span>
                     </div>
-                    <h3 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white leading-snug">
+                    <h3 className="text-base sm:text-lg font-black text-sec dark:text-white leading-snug">
                       {steps[activeStep].title}
                     </h3>
                   </div>
 
                   {/* نوع فیلد سوال */}
                   {steps[activeStep].type === "text" && (
-                    <div className="space-y-3">
+                    <div className="space-y-2.5">
                       <input
                         type="text"
                         value={nameVal}
                         onChange={(e) => setNameVal(e.target.value)}
                         placeholder={steps[activeStep].placeholder}
-                        className="w-full px-5 py-4 bg-slate-50 dark:bg-[#0B0F19] border-2 border-slate-200 dark:border-[#2DD4BF]/40 focus:border-teal-500 dark:focus:border-[#2DD4BF] rounded-2xl text-base sm:text-lg text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#64748B] outline-none transition-all"
+                        className="w-full px-4 py-3 bg-[#FAFAFA] dark:bg-[#1C2536] border-[1.5px] border-gray-200 dark:border-gray-700 focus:border-primary rounded-xl text-sm font-bold text-sec dark:text-white placeholder:text-ink-subtle/40 focus:outline-none transition-all"
                         onKeyDown={(e) => e.key === "Enter" && handleNext()}
                       />
-                      <div className="flex items-center justify-between text-xs text-slate-500 dark:text-[#94A3B8]">
-                        <span className="flex items-center gap-1 text-teal-600 dark:text-[#2DD4BF]">
-                          <CornerDownLeft size={14} />
+                      <div className="flex items-center justify-between text-xs text-ink-subtle dark:text-gray-400">
+                        <span className="flex items-center gap-1 text-primary font-bold">
+                          <CornerDownLeft size={13} />
                           {steps[activeStep].hint}
                         </span>
-                        <span>اعتبارسنجی خودکار زنده</span>
+                        <span>اعتبارسنجی خودکار</span>
                       </div>
                     </div>
                   )}
 
                   {steps[activeStep].type === "choice" && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       {steps[activeStep].options.map((opt, idx) => {
                         const isSelected = selectedRole === opt;
-                        const keyBadge = ["A", "B", "C", "D"][idx];
+                        const keyBadge = ["الف", "ب", "ج", "د"][idx];
                         return (
                           <button
                             key={opt}
                             onClick={() => setSelectedRole(opt)}
-                            className={`flex items-center justify-between p-4 rounded-2xl border-2 text-right transition-all duration-200 ${
+                            className={`flex items-center justify-between p-3.5 rounded-xl border-[1.5px] text-right transition-all ${
                               isSelected
-                                ? "bg-teal-500/10 border-teal-500 dark:border-[#2DD4BF] text-slate-900 dark:text-white shadow-md shadow-teal-500/10"
-                                : "bg-slate-50 dark:bg-[#0B0F19]/80 border-slate-200 dark:border-[#1E293B] text-slate-700 dark:text-[#94A3B8] hover:border-sky-400 dark:hover:border-[#38BDF8]/50 hover:text-slate-900 dark:hover:text-white"
+                                ? "bg-ecosystem-light dark:bg-[#1C2536] border-primary text-sec dark:text-white shadow-[2px_2px_0_#59BBAF]"
+                                : "bg-white dark:bg-[#1C2536] border-gray-200 dark:border-gray-700 text-sec dark:text-gray-300 hover:border-primary shadow-[1.5px_1.5px_0_#202A5A] dark:shadow-[1.5px_1.5px_0_#59BBAF]"
                             }`}
                           >
-                            <span className="font-bold text-sm sm:text-base">{opt}</span>
+                            <span className="font-bold text-xs sm:text-sm">{opt}</span>
                             <span
-                              className={`flex items-center justify-center w-7 h-7 rounded-lg text-xs font-black transition-colors ${
-                                isSelected ? "bg-[#2DD4BF] text-slate-950" : "bg-slate-200 dark:bg-[#1E293B] text-slate-600 dark:text-[#94A3B8]"
+                              className={`flex items-center justify-center w-6 h-6 rounded-md text-xs font-black ${
+                                isSelected ? "bg-primary text-white" : "bg-gray-100 dark:bg-[#151C28] text-ink-subtle"
                               }`}
                             >
                               {keyBadge}
@@ -259,29 +249,29 @@ export default function Hero({ onOpenDemo }) {
                   )}
 
                   {steps[activeStep].type === "rating" && (
-                    <div className="space-y-4 text-center py-4">
-                      <div className="flex items-center justify-center gap-3">
+                    <div className="space-y-3 text-center py-2">
+                      <div className="flex items-center justify-center gap-2">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <button
                             key={star}
                             onClick={() => setRating(star)}
-                            className="p-2 rounded-2xl hover:scale-125 transition-transform"
+                            className="p-1.5 hover:scale-125 transition-transform"
                             aria-label={`امتیاز ${star}`}
                           >
                             <Star
-                              size={36}
+                              size={32}
                               className={
                                 star <= rating
-                                  ? "fill-[#F59E0B] text-[#F59E0B] drop-shadow-[0_0_12px_rgba(245,158,11,0.4)]"
-                                  : "text-slate-300 dark:text-[#334155]"
+                                  ? "fill-third text-third"
+                                  : "text-gray-300 dark:text-gray-600"
                               }
                             />
                           </button>
                         ))}
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-[#94A3B8]">
+                      <p className="text-xs text-ink-subtle dark:text-gray-400">
                         {rating > 0 ? (
-                          <>امتیاز انتخاب‌شده: <strong className="text-[#F59E0B]">{rating} از ۵ ستاره</strong></>
+                          <>امتیاز: <strong className="text-third font-black">{rating} از ۵ ستاره</strong></>
                         ) : (
                           <span>برای ثبت امتیاز روی ستاره‌ها کلیک کنید</span>
                         )}
@@ -290,12 +280,12 @@ export default function Hero({ onOpenDemo }) {
                   )}
 
                   {/* دکمه مرحله بعد / ثبت نهایی */}
-                  <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-[#1E293B]">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between pt-4 border-t-[1.5px] border-gray-200 dark:border-[#242F42]">
+                    <div>
                       {activeStep > 0 && (
                         <button
                           onClick={() => setActiveStep((prev) => prev - 1)}
-                          className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-[#94A3B8] hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#0B0F19] border border-slate-200 dark:border-[#1E293B]"
+                          className="px-3.5 py-2 rounded-xl text-xs font-bold text-sec dark:text-white bg-gray-100 dark:bg-[#1C2536] border border-gray-200 dark:border-gray-700"
                         >
                           قبلی
                         </button>
@@ -304,7 +294,7 @@ export default function Hero({ onOpenDemo }) {
 
                     <button
                       onClick={handleNext}
-                      className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#2DD4BF] to-[#38BDF8] text-slate-950 font-black text-sm rounded-xl shadow-md shadow-teal-500/20 hover:scale-105 active:scale-95 transition-all"
+                      className="flex items-center gap-2 bg-primary text-white font-bold text-xs sm:text-sm py-2 px-5 rounded-xl border-[1.5px] border-ecosystem-dark shadow-[2.5px_2.5px_0_#1F413D] hover:shadow-[3px_3px_0_#1F413D] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all"
                     >
                       <span>{activeStep === steps.length - 1 ? "ثبت پاسخ" : "مرحله بعد"}</span>
                       <ArrowLeft size={16} />
@@ -313,18 +303,18 @@ export default function Hero({ onOpenDemo }) {
                 </div>
               ) : (
                 /* وضعیت موفقیت و پایان ثبت */
-                <div className="py-12 text-center space-y-4 animate-fadeIn">
-                  <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center text-emerald-600 dark:text-[#10B981] mx-auto animate-bounce">
-                    <Check size={36} />
+                <div className="py-8 text-center space-y-3">
+                  <div className="w-14 h-14 rounded-2xl bg-ecosystem-light dark:bg-[#1C2536] border-2 border-primary flex items-center justify-center text-primary mx-auto shadow-[2px_2px_0_#59BBAF]">
+                    <Check size={30} className="stroke-[3]" />
                   </div>
-                  <h3 className="text-2xl font-black text-slate-900 dark:text-white">پاسخ شما با موفقیت ثبت شد!</h3>
-                  <p className="text-sm text-slate-600 dark:text-[#94A3B8] max-w-md mx-auto">
+                  <h3 className="text-base sm:text-lg font-black text-sec dark:text-white">پاسخ شما با موفقیت ثبت شد!</h3>
+                  <p className="text-xs text-ink-subtle dark:text-gray-400 max-w-sm mx-auto">
                     داده‌ها به صورت زنده ذخیره و در داشبورد تحلیلی در دسترس قرار گرفت.
                   </p>
                 </div>
               )}
             </div>
-          </div>
+          </StickerCard>
         </div>
       </div>
     </section>
